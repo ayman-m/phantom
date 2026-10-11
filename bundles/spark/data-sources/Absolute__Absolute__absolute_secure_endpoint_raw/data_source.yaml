@@ -1,0 +1,219 @@
+schema_version: 1
+id: Absolute
+pack_name: Absolute
+rule_name: Absolute
+dataset_name: absolute_secure_endpoint_raw
+vendor: Absolute Software
+product: Absolute
+description: Absolute is an adaptive endpoint security solution that delivers device
+  security, data security and asset management of endpoints
+categories:
+- Endpoint
+version: 2.0.10
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDYgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDc0Q0MiPkFic29sdXRlIFNvZnR3YXJlPC90ZXh0Pjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: actorDisplayId
+  type: string
+  description: Vendor-emitted field 'ActorDisplayId'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_actordisplayid
+- name: actorDisplayName
+  type: string
+  description: Vendor-emitted field 'ActorDisplayName'. Free-form text; may contain
+    whitespace and punctuation.
+  example: John Doe
+- name: actorObjectType
+  type: string
+  description: Vendor-emitted field 'ActorObjectType'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_actorobjecttype
+- name: eventType
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Absolute Software. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: abs-1a9f1ef3
+- name: objectDisplayId
+  type: string
+  description: Vendor-emitted field 'ObjectDisplayId'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_objectdisplayid
+- name: objectDisplayName
+  type: string
+  description: Vendor-emitted field 'ObjectDisplayName'. Free-form text; may contain
+    whitespace and punctuation.
+  example: John Doe
+- name: objectObjectType
+  type: string
+  description: Vendor-emitted field 'ObjectObjectType'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_objectobjecttype
+- name: objectProperties
+  type: string
+  description: Vendor-emitted field 'ObjectProperties'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_objectproperties
+- name: parsed_fields_NewValue
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: BrowserAgent,
+    DeviceSystemInformationUpdated_LocalIpAddr, DeviceSystemInformationUpdated_LocalIpV6Addr,
+    DeviceSystemInformationUpdated_PublicIpAddr, DeviceSystemInformationUpdated_PublicIpV6Addr,
+    IpAddress (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: parsed_fields_OldValue
+  type: json
+  description: 'Destination resource before value. JSON object with keys: City, CountryName,
+    Latitude, Longitude (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: secondaryObjectDisplayId
+  type: string
+  description: Vendor-emitted field 'SecondaryObjectDisplayId'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_secondaryobjectd
+- name: secondaryObjectDisplayName
+  type: string
+  description: Vendor-emitted field 'SecondaryObjectDisplayName'. Free-form text;
+    may contain whitespace and punctuation.
+  example: John Doe
+- name: secondaryObjectType
+  type: string
+  description: Vendor-emitted field 'SecondaryObjectType'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_secondaryobjectt
+- name: verb
+  type: string
+  description: Vendor-emitted field 'Verb'. Free-form text; may contain whitespace
+    and punctuation.
+  example: GET
+- name: parsed_fields_NewValue.BrowserAgent
+  type: string
+  description: Vendor-emitted field 'Parsed fields NewValue › BrowserAgent'. Leaf
+    of the 'parsed_fields_NewValue' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_browseragent
+- name: parsed_fields_NewValue.DeviceSystemInformationUpdated_LocalIpAddr
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields NewValue › DeviceSystemInformationUpdated
+    LocalIpAddr'. Leaf of the 'parsed_fields_NewValue' composite. Dotted-quad IPv4
+    literal (e.g., 192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: parsed_fields_NewValue.DeviceSystemInformationUpdated_LocalIpV6Addr
+  type: ipv6
+  description: Vendor-emitted field 'Parsed fields NewValue › DeviceSystemInformationUpdated
+    LocalIpV6Addr'. Leaf of the 'parsed_fields_NewValue' composite. Colon-separated
+    hexadecimal IPv6 literal (RFC 4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: parsed_fields_NewValue.DeviceSystemInformationUpdated_PublicIpAddr
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields NewValue › DeviceSystemInformationUpdated
+    PublicIpAddr'. Leaf of the 'parsed_fields_NewValue' composite. Dotted-quad IPv4
+    literal (e.g., 192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: parsed_fields_NewValue.DeviceSystemInformationUpdated_PublicIpV6Addr
+  type: ipv6
+  description: Vendor-emitted field 'Parsed fields NewValue › DeviceSystemInformationUpdated
+    PublicIpV6Addr'. Leaf of the 'parsed_fields_NewValue' composite. Colon-separated
+    hexadecimal IPv6 literal (RFC 4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: parsed_fields_NewValue.IpAddress
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields NewValue › IpAddress'. Leaf of
+    the 'parsed_fields_NewValue' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: parsed_fields_OldValue.City
+  type: string
+  description: Vendor-emitted field 'Parsed fields OldValue › City'. Leaf of the 'parsed_fields_OldValue'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: San Francisco
+- name: parsed_fields_OldValue.CountryName
+  type: country_code
+  description: Vendor-emitted field 'Parsed fields OldValue › CountryName'. Leaf of
+    the 'parsed_fields_OldValue' composite. ISO 3166-1 alpha-2 uppercase country code
+    (e.g., US, DE, JP).
+  example: US
+- name: parsed_fields_OldValue.Latitude
+  type: string
+  description: Vendor-emitted field 'Parsed fields OldValue › Latitude'. Leaf of the
+    'parsed_fields_OldValue' composite. Free-form text; may contain whitespace and
+    punctuation.
+  example: '37.7749'
+- name: parsed_fields_OldValue.Longitude
+  type: string
+  description: Vendor-emitted field 'Parsed fields OldValue › Longitude'. Leaf of
+    the 'parsed_fields_OldValue' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: '-122.4194'
+use_cases:
+- Endpoint
+how_to_use: |
+  ## absolute secure endpoint → Cortex XSIAM (dataset `absolute_secure_endpoint_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `absolute_secure_endpoint_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `absolute`
+    - **product**: `secure_endpoint`
+
+    These normalize → `absolute_secure_endpoint_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `parsed_fields_NewValue -> IpAddress`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~27 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.id`, `xdm.event.operation_sub_type`, `xdm.event.type`, `xdm.source.application.name`, `xdm.source.application.version`, `xdm.source.host.device_id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = absolute_secure_endpoint_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

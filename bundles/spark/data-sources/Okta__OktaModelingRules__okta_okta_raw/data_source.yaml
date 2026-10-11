@@ -1,0 +1,407 @@
+schema_version: 1
+id: Okta
+pack_name: Okta
+rule_name: OktaModelingRules
+dataset_name: okta_okta_raw
+vendor: Okta
+product: Okta
+description: 'Okta is an identity and access-management platform — single sign-on, MFA, lifecycle management
+  — that emits an audit stream covering user logins, MFA challenges, group changes, application assignments,
+  and administrative actions. The Okta primary stream (`okta_okta_raw`) carries the full system-log envelope:
+  every actor, target, transaction id, geolocation, and outcome of every authentication or admin event.
+  Simulate this to validate detections that look for impossible travel, password-spray patterns, privileged-role
+  assignments, or MFA fatigue.'
+how_to_use: |
+  ## Analytics: read this before you simulate
+
+  This is the **syslog/CEF** Okta source. Use it to check **parsing and modeling**: events land in `okta_okta_raw` and fill the `xdm.*` fields.
+
+  **Do not expect Cortex Analytics alerts from it.** Cortex collects Okta with its own Okta API collector (not an HTTP collector), and Analytics reads data that arrives with that source's identity. `http-sender` reproduces that through the Cribl integration with the Okta SSO source UUID (destination `cribl_okta_sso`; native collector type, stories and 25 detectors) or, for FastPass only, through the generic HTTP collector. The same Okta FastPass event lands in `okta_sso_raw` over both paths with the same columns, parsing result and 58 `xdm.*` fields, yet it raises an Analytics alert (typically within a minute) only through the HTTP collector and none over CEF, escaped correctly or not. The reason is not established (the collector-type stamp and the collector being a registered Okta source both fit).
+
+  **To test Analytics, use the HTTP data source (`delivery: http`, product `Okta HTTP`) with the `http-sender` connector.** Its guide has the destinations, profiles and scenarios.
+
+  **This dataset has a second gate.** The one Okta detector seen to fire (FastPass) reads `okta_sso_raw`, and the same body sent through an HTTP collector into `okta_okta_raw` did not fire it either. For Analytics send to the HTTP source's `okta_sso` destination.
+
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `Okta`
+  - **product**: `Okta`
+
+  Broker derives → `okta_okta_raw`.
+
+  Both `okta_okta_raw` and `okta_sso_raw` share the same broker route — XSIAM's operator-installed PR splits them inside the tenant by reading the `eventType` raw field. For events to land here (`okta_okta_raw`), set `eventType` to any non-SSO Okta event (e.g. `user.account.update_password`, `policy.evaluate_sign_on`).
+
+  **MR pattern**: Nested-JSON. The MR uses `json_extract_scalar(actor, "$.alternateId")` style lookups against composite fields (`actor`, `client`, `outcome`, `target`, `securityContext`, `debugContext`, `authenticationContext`).
+
+  **Composite (nested-JSON) fields**: Pack each composite as a single CEF extension whose value is the JSON-string of the inner object. Example: `actor={"id":"00uA","type":"User","alternateId":"a@example.com"}`. L15 confirms this survives CEF-extension wrapping; the MR's `json_extract_scalar` parses at query time.
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: `uuid` must be present + unique; `published` must be RFC-3339 (`2026-05-28T05:00:00Z`).
+
+  **Saturation strategy**: Keep single event under 1500 bytes to avoid UDP MTU truncation (L18). For >10 XDM fields, split into 2 events sharing `uuid` marker: event-1 carries `actor + outcome + client`, event-2 carries `target + securityContext + debugContext`. Lean Okta saturation at 1224 bytes still ceilings at 10 XDM (L20) — splitting is required.
+
+  **Single-event XDM ceiling**: ~10 XDM (genuine nested-JSON ceiling, not MTU-related per L20).
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = okta_okta_raw
+  | filter xdm.event.id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+categories:
+- Identity and Access Management
+version: 3.3.40
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTY5cHgiIHZpZXdCb3g9IjAgMCA1MTIgMTY5IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDx0aXRsZT5va3RhPC90aXRsZT4KICAgIDxnPgogICAgICAgIDxwYXRoIGQ9Ik00NjMuOTg5NDk4LDExMC45MzA1MTUgQzQ0OS42ODk0OTUsMTEwLjkzMDUxNSA0MzkuNjA5MTY1LDk5Ljc3MTgyNDQgNDM5LjYwOTE2NSw4NS4wOTY3MzkzIEM0MzkuNjA5MTY1LDcwLjQyMTY1NDIgNDQ5LjY4OTQ5NSw1OS4yNjI5NjMzIDQ2My45ODk0OTgsNTkuMjYyOTYzMyBDNDc4LjI4OTUwMSw1OS4yNjI5NjMzIDQ4OC4wODg1Miw3MC40MjE2NTQyIDQ4OC4wODg1Miw4NS4wOTY3MzkzIEM0ODguMDg4NTIsOTkuNzcxODI0NCA0NzguMTQ4ODQ1LDExMC45MzA1MTUgNDYzLjk4OTQ5OCwxMTAuOTMwNTE1IFogTTQ2MS42OTIxMjEsMTI2LjMwODg3OSBDNDczLjIyNTg5MywxMjYuMzA4ODc5IDQ4My4wMjQ5MTIsMTIxLjgwNzg5NSA0ODkuMjEzNzY2LDExMi4zODM5NTggQzQ5MC4zODU4OTcsMTIxLjUyNjU4MyA0OTYuOTk2NzE4LDEyNC44NTU0MzYgNTA1LjM0MjI5NCwxMjQuODU1NDM2IEw1MTIsMTI0Ljg1NTQzNiBMNTEyLDExMC4zNjc4OTIgTDUwOS4xMzk5OTksMTEwLjM2Nzg5MiBDNTA0LjQwNDU4OSwxMTAuMzY3ODkyIDUwMy4yMzI0NTcsMTA4LjA3MDUxNSA1MDMuMjMyNDU3LDEwMi42Nzg3MSBMNTAzLjIzMjQ1Nyw0NS4zODQ5Mjc2IEw0ODcuOTQ3ODY0LDQ1LjM4NDkyNzYgTDQ4Ny45NDc4NjQsNTcuMTUzMTI2OCBDNDgyLjc0MzYsNDguOTAxMzIxOCA0NzIuOTQ0NTgyLDQzLjkzMTQ4NDcgNDYxLjY5MjEyMSw0My45MzE0ODQ3IEM0NDEuNjI1MjMxLDQzLjkzMTQ4NDcgNDIzLjE5OTMyNSw2MC43NjMyOTE1IDQyMy4xOTkzMjUsODUuMDk2NzM5MyBDNDIzLjE5OTMyNSwxMDkuNDMwMTg3IDQ0MS42NzIxMTYsMTI2LjI2MTk5NCA0NjEuNjkyMTIxLDEyNi4yNjE5OTQgTDQ2MS42OTIxMjEsMTI2LjMwODg3OSBaIE0zODIuOTcxNzc2LDEwNi40Mjk1MzEgQzM4Mi45NzE3NzYsMTE5LjQ2MzYzMiAzOTEuMDM2MDQsMTI0Ljg1NTQzNiA0MDAuNjk0NDAzLDEyNC44NTU0MzYgTDQxOS4zMDc4NDksMTI0Ljg1NTQzNiBMNDE5LjMwNzg0OSwxMTAuMzY3ODkyIEw0MDUuNzU4MDEsMTEwLjM2Nzg5MiBDNDAwLjEzMTc4LDExMC4zNjc4OTIgMzk4Ljk1OTY0OCwxMDguMjExMTcgMzk4Ljk1OTY0OCwxMDIuNjc4NzEgTDM5OC45NTk2NDgsNTkuODcyNDcxNyBMNDE5LjMwNzg0OSw1OS44NzI0NzE3IEw0MTkuMzA3ODQ5LDQ1LjM4NDkyNzYgTDM5OC45NTk2NDgsNDUuMzg0OTI3NiBMMzk4Ljk1OTY0OCwxOC43MDcyMTcxIEwzODIuOTcxNzc2LDE4LjcwNzIxNzEgTDM4Mi45NzE3NzYsMTA2LjQyOTUzMSBaIE0zMTAuMTU4OTc0LDEyNC44NTU0MzYgTDMyNi4xNDY4NDYsMTI0Ljg1NTQzNiBMMzI2LjE0Njg0Niw5MC43Njk4NTUzIEwzMzEuNDkxNzY1LDkwLjc2OTg1NTMgTDM1OC43MzIwOTksMTI0Ljg1NTQzNiBMMzc4LjkzOTY0NCwxMjQuODU1NDM2IEwzNDQuMTk3NjY5LDgxLjYyNzIzMDQgTDM3MC44NzUzOCw0NS4zODQ5Mjc2IEwzNTIuODcxNDQyLDQ1LjM4NDkyNzYgTDMzMS4wNjk3OTgsNzYuMDAwOTk5NyBMMzI2LjE0Njg0Niw3Ni4wMDA5OTk3IEwzMjYuMTQ2ODQ2LDE4LjcwNzIxNzEgTDMxMC4xNTg5NzQsMTguNzA3MjE3MSBMMzEwLjE1ODk3NCwxMjQuODU1NDM2IFogTTI1OC4yNTY5OTYsNDMuOTMxNDg0NyBDMjM1Ljg5MjcyOSw0My45MzE0ODQ3IDIxNy40NjY4MjMsNjAuNzYzMjkxNSAyMTcuNDY2ODIzLDg1LjA5NjczOTMgQzIxNy40NjY4MjMsMTA5LjQzMDE4NyAyMzUuOTM5NjE0LDEyNi4yNjE5OTQgMjU4LjI1Njk5NiwxMjYuMjYxOTk0IEMyODAuNTc0Mzc3LDEyNi4yNjE5OTQgMjk5LjA0NzE2OCwxMDkuNDMwMTg3IDI5OS4wNDcxNjgsODUuMDk2NzM5MyBDMjk5LjA0NzE2OCw2MC43NjMyOTE1IDI4MC41NzQzNzcsNDMuOTMxNDg0NyAyNTguMjU2OTk2LDQzLjkzMTQ4NDcgTDI1OC4yNTY5OTYsNDMuOTMxNDg0NyBaIE0yNTguMjU2OTk2LDExMC45MzA1MTUgQzI0My45NTY5OTMsMTEwLjkzMDUxNSAyMzMuODc2NjYzLDk5Ljc3MTgyNDQgMjMzLjg3NjY2Myw4NS4wOTY3MzkzIEMyMzMuODc2NjYzLDcwLjQyMTY1NDIgMjQzLjk1Njk5Myw1OS4yNjI5NjMzIDI1OC4yNTY5OTYsNTkuMjYyOTYzMyBDMjcyLjU1Njk5OSw1OS4yNjI5NjMzIDI4Mi42MzczMjksNzAuNDIxNjU0MiAyODIuNjM3MzI5LDg1LjA5NjczOTMgQzI4Mi42MzczMjksOTkuNzcxODI0NCAyNzIuNTU2OTk5LDExMC45MzA1MTUgMjU4LjI1Njk5NiwxMTAuOTMwNTE1IEwyNTguMjU2OTk2LDExMC45MzA1MTUgWiIgZmlsbD0iIzAwMDAwMCI+PC9wYXRoPgogICAgICAgIDxwYXRoIGQ9Ik05Mi43OTg5Mjc4LDEuMTcyMTMxNCBMODkuMzI5NDE4OCw0My45MzE0ODQ3IEM4Ny42ODg0MzQ5LDQzLjc0Mzk0MzcgODYuMDQ3NDUwOSw0My42NTAxNzMyIDg0LjM1OTU4MTcsNDMuNjUwMTczMiBDODIuMjQ5NzQ1Miw0My42NTAxNzMyIDgwLjE4Njc5NCw0My43OTA4Mjg5IDc4LjE3MDcyOCw0NC4xMTkwMjU3IEw3Ni4yMDE1NDcyLDIzLjM5NTc0MjcgQzc2LjE1NDY2MiwyMi43MzkzNDkxIDc2LjY3MDM5OTgsMjIuMTc2NzI2IDc3LjMyNjc5MzQsMjIuMTc2NzI2IEw4MC44NDMxODc1LDIyLjE3NjcyNiBMNzkuMTU1MzE4MywxLjIxOTAxNjY1IEM3OS4xMDg0MzMxLDAuNTYyNjIzMDcgNzkuNjI0MTcwOSwwIDgwLjIzMzY3OTIsMCBMOTEuNzIwNTY2OSwwIEM5Mi4zNzY5NjA1LDAgOTIuODkyNjk4MywwLjU2MjYyMzA3IDkyLjc5ODkyNzgsMS4yMTkwMTY2NSBMOTIuNzk4OTI3OCwxLjIxOTAxNjY1IEw5Mi43OTg5Mjc4LDEuMTcyMTMxNCBaIE02My44MjM4Mzk3LDMuMjgxOTY3OTEgQzYzLjYzNjI5ODcsMi42NzI0NTk1OCA2Mi45Nzk5MDUxLDIuMjk3Mzc3NTMgNjIuMzcwMzk2NywyLjUzMTgwMzgxIEw1MS41ODY3ODc5LDYuNDcwMTY1MyBDNTAuOTc3Mjc5Niw2LjcwNDU5MTU4IDUwLjY5NTk2ODEsNy40MDc4NzA0MiA1MC45NzcyNzk2LDcuOTcwNDkzNDkgTDU5Ljc0NDgyMjQsMjcuMDk5Njc3OSBMNTYuNDE1OTY5MywyOC4zMTg2OTQ1IEM1NS44MDY0NjA5LDI4LjU1MzEyMDggNTUuNTI1MTQ5NCwyOS4yNTYzOTk2IDU1LjgwNjQ2MDksMjkuODE5MDIyNyBMNjQuNzYxNTQ0OCw0OC42MjAwMTAzIEM2Ny45OTY2Mjc0LDQ2LjgzODM3MDYgNzEuNTEzMDIxNiw0NS40Nzg2OTgxIDc1LjIxNjk1NjgsNDQuNjM0NzYzNSBMNjMuODcwNzI0OSwzLjI4MTk2NzkxIEw2My44MjM4Mzk3LDMuMjgxOTY3OTEgWiBNMzcuMzgwNTU1NCwxNS4xOTA4MjI5IEw2Mi4xODI4NTU3LDUwLjE2NzIyMzcgQzU5LjA0MTU0MzYsNTIuMjMwMTc1IDU2LjE4MTU0Myw1NC42NjgyMDgzIDUzLjc0MzUwOTcsNTcuNDgxMzIzNiBMMzguODgwODgzNiw0Mi44NTMxMjM4IEMzOC40MTIwMzEsNDIuMzg0MjcxMyAzOC40NTg5MTYzLDQxLjYzNDEwNzIgMzguOTI3NzY4OCw0MS4yMTIxMzk5IEw0MS42NDcxMTM3LDM4Ljk2MTY0NzYgTDI2Ljg3ODI1ODEsMjQuMDA1MjUxIEMyNi40MDk0MDU1LDIzLjUzNjM5ODQgMjYuNDU2MjkwOCwyMi43ODYyMzQzIDI2Ljk3MjAyODYsMjIuMzY0MjY3IEwzNS43Mzk1NzE0LDE1LjAwMzI4MTkgQzM2LjI1NTMwOTMsMTQuNTgxMzE0NiAzNi45NTg1ODgxLDE0LjY3NTA4NTEgMzcuMzMzNjcwMSwxNS4xOTA4MjI5IEwzNy4zODA1NTU0LDE1LjE5MDgyMjkgWiBNMTYuNTYzNTAxOCwzNS40NDUyNTM0IEMxNi4wNDc3NjQsMzUuMDcwMTcxMyAxNS4yOTc1OTk5LDM1LjI1NzcxMjQgMTQuOTY5NDAzMSwzNS44MjAzMzU0IEw5LjI0OTQwMTkxLDQ1Ljc2MDAwOTcgQzguOTIxMjA1MTIsNDYuMzIyNjMyNyA5LjE1NTYzMTQsNDcuMDI1OTExNiA5LjcxODI1NDQ3LDQ3LjMwNzIyMzEgTDI4Ljc1MzY2ODMsNTYuMzA5MTkyMiBMMjYuOTcyMDI4Niw1OS4zNTY3MzM5IEMyNi42NDM4MzE4LDU5LjkxOTM1NjkgMjYuODc4MjU4MSw2MC42Njk1MjEgMjcuNDg3NzY2NCw2MC45MDM5NDczIEw0Ni40Mjk0MDk4LDY5LjU3NzcxOTYgQzQ3Ljc4OTA4MjIsNjYuMDYxMzI1NCA0OS42MTc2MDcyLDYyLjc3OTM1NzUgNTEuODY4MDk5NCw1OS44MjU1ODY0IEwxNi41NjM1MDE4LDM1LjQ0NTI1MzQgWiBNMi41NDQ4MTAzMyw2Mi40NTExNjA3IEMyLjYzODU4MDg0LDYxLjc5NDc2NzIgMy4yOTQ5NzQ0Miw2MS40MTk2ODUxIDMuOTA0NDgyNzUsNjEuNTYwMzQwOSBMNDUuMzk3OTM0MSw3Mi4zOTA4MzUgQzQ0LjMxOTU3MzMsNzUuOTA3MjI5MiA0My43MTAwNjQ5LDc5LjYxMTE2NDQgNDMuNjE2Mjk0NCw4My40NTU3NTUzIEwyMi44NDYxMjYxLDgxLjc2Nzg4NjEgQzIyLjE4OTczMjUsODEuNzIxMDAwOSAyMS43MjA4OCw4MS4xMTE0OTI2IDIxLjg2MTUzNTcsODAuNDU1MDk5IEwyMi40NzEwNDQxLDc2Ljk4NTU5IEwxLjUxMzMzNDcsNzUuMDE2NDA5MyBDMC44NTY5NDExMiw3NC45Njk1MjQgMC40MzQ5NzM4MTgsNzQuMzYwMDE1NyAwLjUyODc0NDMzLDczLjcwMzYyMjEgTDIuNDk3OTI1MDcsNjIuNDA0Mjc1NSBMMi40OTc5MjUwNyw2Mi40MDQyNzU1IEwyLjU0NDgxMDMzLDYyLjQ1MTE2MDcgWiBNMC45OTc1OTY4ODgsOTAuNDg4NTQzNyBDMC4zNDEyMDMzMDYsOTAuNTM1NDI5IC0wLjA4MDc2Mzk5Niw5MS4xNDQ5MzczIDAuMDEzMDA2NTE1Niw5MS44MDEzMzA5IEwyLjAyOTA3MjUyLDEwMy4xMDA2NzggQzIuMTIyODQzMDMsMTAzLjc1NzA3MSAyLjc3OTIzNjYxLDEwNC4xMzIxNTMgMy4zODg3NDQ5MywxMDMuOTkxNDk3IEwyMy43MzY5NDYsOTguNjkzNDYzNSBMMjQuMzQ2NDU0MywxMDIuMTYyOTcyIEMyNC40NDAyMjQ4LDEwMi44MTkzNjYgMjUuMDk2NjE4NCwxMDMuMTk0NDQ4IDI1LjcwNjEyNjcsMTAzLjA1Mzc5MiBMNDUuNzczMDE2Miw5Ny41MjEzMzIxIEM0NC42MDA4ODQ4LDk0LjA1MTgyMzIgNDMuODUwNzIwNyw5MC4zNDc4ODggNDMuNjYzMTc5Nyw4Ni41NTAxODIyIEwwLjk1MDcxMTYzMiw5MC40ODg1NDM3IEwwLjk5NzU5Njg4OCw5MC40ODg1NDM3IFogTTcuNjU1MzAzMjEsMTIwLjIxMzc5NiBDNy4zMjcxMDY0MiwxMTkuNjUxMTczIDcuNTYxNTMyNywxMTguOTQ3ODk0IDguMTI0MTU1NzcsMTE4LjY2NjU4MiBMNDYuODUxMzc3MSwxMDAuMjg3NTYyIEM0OC4zMDQ4MiwxMDMuNzU3MDcxIDUwLjI3NDAwMDcsMTA2Ljk5MjE1NCA1Mi42MTgyNjM1LDEwOS44OTkwNCBMMzUuNjQ1ODAwOSwxMjEuOTk1NDM2IEMzNS4xMzAwNjMxLDEyMi4zNzA1MTggMzQuMzc5ODk5LDEyMi4yMjk4NjIgMzQuMDUxNzAyMiwxMjEuNjY3MjM5IEwzMi4yNzAwNjI1LDExOC41NzI4MTIgTDE0Ljk2OTQwMzEsMTMwLjUyODU1MiBDMTQuNDUzNjY1MywxMzAuOTAzNjM0IDEzLjcwMzUwMTIsMTMwLjcxNjA5MyAxMy4zNzUzMDQ0LDEzMC4xNTM0NyBMNy42MDg0MTc5NiwxMjAuMjEzNzk2IEw3LjY1NTMwMzIxLDEyMC4yMTM3OTYgWiBNNTQuNTg3NDQ0MywxMTIuMTQ5NTMyIEwyNC40NDAyMjQ4LDE0Mi42NzE4MzMgQzIzLjk3MTM3MjIsMTQzLjE0MDY4NiAyNC4wMTgyNTc1LDE0My44OTA4NSAyNC41MzM5OTUzLDE0NC4zMTI4MTcgTDMzLjM0ODQyMzQsMTUxLjY3MzgwMyBDMzMuODY0MTYxMiwxNTIuMDk1NzcgMzQuNTY3NDQwMSwxNTIuMDAxOTk5IDM0Ljk0MjUyMjEsMTUxLjQ4NjI2MiBMNDcuMTMyNjg4NiwxMzQuMzI2MjU4IEw0OS44NTIwMzM0LDEzNi42MjM2MzUgQzUwLjM2Nzc3MTMsMTM3LjA0NTYwMyA1MS4xMTc5MzU0LDEzNi45NTE4MzIgNTEuNDkzMDE3NCwxMzYuMzg5MjA5IEw2My4zMDgxMDE5LDExOS4yMjkyMDYgQzYwLjExOTkwNDUsMTE3LjI2MDAyNSA1Ny4xNjYxMzM0LDExNC44Njg4NzcgNTQuNjM0MzI5NSwxMTIuMTQ5NTMyIEw1NC41ODc0NDQzLDExMi4xNDk1MzIgWiBNNDguNjMzMDE2OCwxNjEuMTQ0NjI0IEM0OC4wMjM1MDg1LDE2MC45MTAxOTggNDcuNzQyMTk2OSwxNjAuMjA2OTE5IDQ4LjAyMzUwODUsMTU5LjY0NDI5NiBMNjUuODg2NzkwOSwxMjAuNjM1NzYzIEM2OS4xNjg3NTg4LDEyMi4zMjM2MzIgNzIuNzMyMDM4MywxMjMuNTg5NTM0IDc2LjQzNTk3MzUsMTI0LjI5MjgxMyBMNzEuMTg0ODI0OCwxNDQuNDUzNDczIEM3MS4wNDQxNjkxLDE0NS4wNjI5ODEgNzAuMzQwODkwMiwxNDUuNDM4MDY0IDY5LjczMTM4MTksMTQ1LjIwMzYzNyBMNjYuNDAyNTI4NywxNDMuOTg0NjIxIEw2MC44MjMxODMzLDE2NC4yODU5MzYgQzYwLjYzNTY0MjMsMTY0Ljg5NTQ0NSA1OS45NzkyNDg3LDE2NS4yNzA1MjcgNTkuMzY5NzQwNCwxNjUuMDM2MSBMNDguNTg2MTMxNSwxNjEuMDk3NzM5IEw0OC41ODYxMzE1LDE2MS4wOTc3MzkgTDQ4LjYzMzAxNjgsMTYxLjE0NDYyNCBaIE03OS4zODk3NDQ2LDEyNC44MDg1NTEgTDc1LjkyMDIzNTcsMTY3LjU2NzkwNCBDNzUuODczMzUwNCwxNjguMjI0Mjk4IDc2LjM4OTA4ODIsMTY4Ljc4NjkyMSA3Ni45OTg1OTY2LDE2OC43ODY5MjEgTDg4LjQ4NTQ4NDIsMTY4Ljc4NjkyMSBDODkuMTQxODc3OCwxNjguNzg2OTIxIDg5LjY1NzYxNTYsMTY4LjIyNDI5OCA4OS41NjM4NDUxLDE2Ny41Njc5MDQgTDg3Ljg3NTk3NTksMTQ2LjYxMDE5NSBMOTEuMzkyMzcwMSwxNDYuNjEwMTk1IEM5Mi4wNDg3NjM3LDE0Ni42MTAxOTUgOTIuNTY0NTAxNSwxNDYuMDQ3NTcyIDkyLjUxNzYxNjIsMTQ1LjM5MTE3OCBMOTAuNTQ4NDM1NSwxMjQuNjY3ODk1IEM4OC41MzIzNjk1LDEyNC45OTYwOTIgODYuNDY5NDE4MiwxMjUuMTM2NzQ4IDg0LjM1OTU4MTcsMTI1LjEzNjc0OCBDODIuNjcxNzEyNSwxMjUuMTM2NzQ4IDgxLjAzMDcyODYsMTI1LjA0Mjk3NyA3OS4zODk3NDQ2LDEyNC44MDg1NTEgTDc5LjM4OTc0NDYsMTI0LjgwODU1MSBaIE0xMjAuNzQyNTQsOS4wNDg4NTQzNyBDMTIxLjAyMzg1Miw4LjQzOTM0NjA1IDEyMC43NDI1NCw3Ljc4Mjk1MjQ3IDEyMC4xMzMwMzIsNy41NDg1MjYxOSBMMTA5LjM0OTQyMywzLjYxMDE2NDcgQzEwOC43Mzk5MTUsMy4zNzU3Mzg0MiAxMDguMDgzNTIxLDMuNzUwODIwNDcgMTA3Ljg5NTk4LDQuMzYwMzI4NzkgTDEwMi4zMTY2MzUsMjQuNjYxNjQ0NiBMOTguOTg3NzgxNSwyMy40NDI2Mjc5IEM5OC4zNzgyNzMyLDIzLjIwODIwMTYgOTcuNzIxODc5NiwyMy41ODMyODM3IDk3LjUzNDMzODYsMjQuMTkyNzkyIEw5Mi4yODMxOSw0NC4zNTM0NTIgQzk2LjAzNDAxMDQsNDUuMTAzNjE2MSA5OS41NTA0MDQ2LDQ2LjM2OTUxOCAxMDIuODMyMzczLDQ4LjAxMDUwMiBMMTIwLjc0MjU0LDkuMDQ4ODU0MzcgTDEyMC43NDI1NCw5LjA0ODg1NDM3IFogTTE0NC4yNzg5MzksMjYuMDY4MjAyMiBMMTE0LjEzMTcxOSw1Ni41OTA1MDM4IEMxMTEuNTk5OTE1LDUzLjg3MTE1ODkgMTA4LjY5MzAyOSw1MS40ODAwMTA5IDEwNS40NTc5NDcsNDkuNTEwODMwMSBMMTE3LjI3MzAzMSwzMi4zNTA4MjY1IEMxMTcuNjQ4MTEzLDMxLjgzNTA4ODcgMTE4LjM5ODI3NywzMS42OTQ0MzI5IDExOC45MTQwMTUsMzIuMTE2NDAwMiBMMTIxLjYzMzM2LDM0LjQxMzc3NzggTDEzMy44MjM1MjcsMTcuMjUzNzc0MSBDMTM0LjE5ODYwOSwxNi43MzgwMzYzIDEzNC45NDg3NzMsMTYuNjQ0MjY1OCAxMzUuNDE3NjI1LDE3LjA2NjIzMzEgTDE0NC4yMzIwNTMsMjQuNDI3MjE4MyBDMTQ0Ljc0Nzc5MSwyNC44NDkxODU2IDE0NC43NDc3OTEsMjUuNTk5MzQ5NyAxNDQuMzI1ODI0LDI2LjA2ODIwMjIgTDE0NC4yNzg5MzksMjYuMDY4MjAyMiBaIE0xNjAuNTk1MDA4LDUwLjA3MzQ1MzIgQzE2MS4yMDQ1MTYsNDkuNzkyMTQxNyAxNjEuMzkyMDU3LDQ5LjA4ODg2MjggMTYxLjA2Mzg2LDQ4LjUyNjIzOTggTDE1NS4yOTY5NzQsMzguNTg2NTY1NSBDMTU0Ljk2ODc3NywzOC4wMjM5NDI1IDE1NC4yMTg2MTMsMzcuODgzMjg2NyAxNTMuNzAyODc1LDM4LjIxMTQ4MzUgTDEzNi40MDIyMTYsNTAuMTY3MjIzNyBMMTM0LjYyMDU3Niw0Ny4xMTk2ODIxIEMxMzQuMjkyMzc5LDQ2LjU1NzA1OSAxMzMuNTQyMjE1LDQ2LjM2OTUxOCAxMzMuMDI2NDc3LDQ2Ljc5MTQ4NTMgTDExNi4wNTQwMTUsNTguODg3ODgxMyBDMTE4LjM5ODI3Nyw2MS43OTQ3NjcyIDEyMC4zMjA1NzMsNjUuMDI5ODQ5OCAxMjEuODIwOTAxLDY4LjQ5OTM1ODcgTDE2MC41NDgxMjIsNTAuMTIwMzM4NSBMMTYwLjU5NTAwOCw1MC4wNzM0NTMyIFogTTE2Ni42OTAwOTEsNjUuNjM5MzU4MSBMMTY4LjY1OTI3Miw3Ni45Mzg3MDQ4IEMxNjguNzUzMDQyLDc3LjU5NTA5ODQgMTY4LjMzMTA3NSw3OC4xNTc3MjE0IDE2Ny42NzQ2ODEsNzguMjUxNDkyIEwxMjQuOTYyMjEzLDgyLjIzNjczODcgQzEyNC43NzQ2NzIsNzguMzkyMTQ3NyAxMjQuMDI0NTA4LDc0LjczNTA5NzggMTIyLjg1MjM3Nyw3MS4yNjU1ODg4IEwxNDIuOTE5MjY2LDY1LjczMzEyODcgQzE0My41Mjg3NzUsNjUuNTQ1NTg3NiAxNDQuMTg1MTY4LDY1Ljk2NzU1NDkgMTQ0LjI3ODkzOSw2Ni42MjM5NDg1IEwxNDQuODg4NDQ3LDcwLjA5MzQ1NzQgTDE2NS4yMzY2NDgsNjQuNzk1NDIzNSBDMTY1Ljg0NjE1Niw2NC42NTQ3Njc4IDE2Ni41MDI1NSw2NS4wMjk4NDk4IDE2Ni41OTYzMiw2NS42ODYyNDM0IEwxNjYuNTk2MzIsNjUuNjg2MjQzNCBMMTY2LjY5MDA5MSw2NS42MzkzNTgxIFogTTE2NC43Njc3OTUsMTA3LjEzMjgxIEMxNjUuMzc3MzA0LDEwNy4yNzM0NjUgMTY2LjAzMzY5NywxMDYuODk4MzgzIDE2Ni4xMjc0NjgsMTA2LjI0MTk5IEwxNjguMDk2NjQ5LDk0Ljk0MjY0MyBDMTY4LjE5MDQxOSw5NC4yODYyNDk0IDE2Ny43Njg0NTIsOTMuNzIzNjI2NCAxNjcuMTEyMDU4LDkzLjYyOTg1NTkgTDE0Ni4xNTQzNDksOTEuNjYwNjc1MSBMMTQ2Ljc2Mzg1Nyw4OC4xOTExNjYyIEMxNDYuODU3NjI4LDg3LjUzNDc3MjYgMTQ2LjQzNTY2LDg2Ljk3MjE0OTUgMTQ1Ljc3OTI2Nyw4Ni44NzgzNzkgTDEyNS4wMDkwOTksODUuMTkwNTA5OCBDMTI0LjkxNTMyOCw4OS4wMzUxMDA4IDEyNC4zMDU4Miw5Mi43MzkwMzYgMTIzLjIyNzQ1OSw5Ni4yNTU0MzAyIEwxNjQuNzIwOTEsMTA3LjA4NTkyNCBMMTY0LjcyMDkxLDEwNy4wODU5MjQgTDE2NC43Njc3OTUsMTA3LjEzMjgxIFogTTE1My43MDI4NzUsMTMyLjkxOTcgQzE1My4zNzQ2NzgsMTMzLjQ4MjMyMyAxNTIuNjI0NTE0LDEzMy42MjI5NzkgMTUyLjEwODc3NiwxMzMuMjk0NzgyIEwxMTYuODA0MTc5LDEwOC45MTQ0NDkgQzExOS4wNTQ2NzEsMTA1Ljk2MDY3OCAxMjAuODgzMTk2LDEwMi42Nzg3MSAxMjIuMjQyODY4LDk5LjE2MjMxNiBMMTQxLjE4NDUxMiwxMDcuODM2MDg4IEMxNDEuNzk0MDIsMTA4LjExNzQgMTQyLjAyODQ0NiwxMDguODIwNjc5IDE0MS43MDAyNSwxMDkuMzgzMzAyIEwxMzkuOTE4NjEsMTEyLjQzMDg0MyBMMTU4Ljk1NDAyNCwxMjEuNDMyODEzIEMxNTkuNTE2NjQ3LDEyMS43MTQxMjQgMTU5Ljc1MTA3MywxMjIuNDE3NDAzIDE1OS40MjI4NzYsMTIyLjk4MDAyNiBMMTUzLjcwMjg3NSwxMzIuOTE5NyBMMTUzLjcwMjg3NSwxMzIuOTE5NyBMMTUzLjcwMjg3NSwxMzIuOTE5NyBaIE0xMDYuNDg5NDIyLDExOC41MjU5MjcgTDEzMS4yOTE3MjMsMTUzLjUwMjMyOCBDMTMxLjY2NjgwNSwxNTQuMDE4MDY1IDEzMi40MTY5NjksMTU0LjExMTgzNiAxMzIuODg1ODIxLDE1My42ODk4NjkgTDE0MS42NTMzNjQsMTQ2LjMyODg4MyBDMTQyLjE2OTEwMiwxNDUuOTA2OTE2IDE0Mi4xNjkxMDIsMTQ1LjE1Njc1MiAxNDEuNzQ3MTM1LDE0NC42ODc4OTkgTDEyNi45NzgyNzksMTI5LjczMTUwMyBMMTI5LjY5NzYyNCwxMjcuNDgxMDExIEMxMzAuMjEzMzYyLDEyNy4wNTkwNDMgMTMwLjIxMzM2MiwxMjYuMzA4ODc5IDEyOS43NDQ1MDksMTI1Ljg0MDAyNyBMMTE0Ljg4MTg4MywxMTEuMjExODI3IEMxMTIuMzk2OTY1LDExNC4wMjQ5NDIgMTA5LjU4Mzg0OSwxMTYuNTA5ODYxIDEwNi40NDI1MzcsMTE4LjUyNTkyNyBMMTA2LjQ0MjUzNywxMTguNTI1OTI3IEwxMDYuNDg5NDIyLDExOC41MjU5MjcgWiBNMTA2LjI1NDk5NiwxNjYuMTYxMzQ3IEMxMDUuNjQ1NDg4LDE2Ni4zOTU3NzMgMTA0Ljk4OTA5NCwxNjYuMDIwNjkxIDEwNC44MDE1NTMsMTY1LjQxMTE4MyBMOTMuNDU1MzIxNCwxMjQuMDU4Mzg3IEM5Ny4xNTkyNTY2LDEyMy4yMTQ0NTIgMTAwLjY3NTY1MSwxMjEuODU0NzggMTAzLjkxMDczMywxMjAuMDczMTQgTDExMi44NjU4MTcsMTM4Ljg3NDEyOCBDMTEzLjE0NzEyOSwxMzkuNDgzNjM2IDExMi44NjU4MTcsMTQwLjE4NjkxNSAxMTIuMjU2MzA5LDE0MC4zNzQ0NTYgTDEwOC45Mjc0NTYsMTQxLjU5MzQ3MyBMMTE3LjY5NDk5OSwxNjAuNzIyNjU3IEMxMTcuOTc2MzEsMTYxLjMzMjE2NSAxMTcuNjk0OTk5LDE2MS45ODg1NTkgMTE3LjA4NTQ5LDE2Mi4yMjI5ODUgTDEwNi4zMDE4ODEsMTY2LjE2MTM0NyBMMTA2LjMwMTg4MSwxNjYuMTYxMzQ3IEwxMDYuMjU0OTk2LDE2Ni4xNjEzNDcgWiIgZmlsbD0iIzAwMDAwMCI+PC9wYXRoPgogICAgPC9nPgo8L3N2Zz4K
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: actor
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: alternateId, displayName,
+    id, type (each key defined as a dotted-path leaf below).'
+  example: '{"id":"00u1ab2c3d","type":"User","alternateId":"alice@example.com"}'
+- name: authenticationContext
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: authenticationProvider, credentialProvider,
+    credentialType, externalSessionId, issuer (each key defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: client
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: device, geographicalContext,
+    id, ipAddress, userAgent, zone (each key defined as a dotted-path leaf below).'
+  example: '{"id":"web","userAgent":{"rawUserAgent":"Mozilla/5.0"},"ipAddress":"203.0.113.42"}'
+- name: debugContext
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: debugData (each key defined
+    as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: displayMessage
+  type: string_long
+  description: Human-readable event message. Free-form text; may span multiple lines or contain large
+    payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: eventType
+  is_gate: true
+  type: string_short
+  description: Event type slug (user.session.start, user.account.lock, etc.). Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: user.session.start
+- name: legacyEventType
+  type: string_short
+  description: Legacy event type name (pre-v2 system log). Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: outcome
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: reason, result (each key defined
+    as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: published
+  type: datetime
+  description: When the event was emitted by the Okta system. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: request
+  type: json
+  description: '— see leaf entries for nested paths. JSON array; each element is an object with keys:
+    ipChain (each key defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: securityContext
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: asNumber, asOrg, domain, isProxy,
+    isp (each key defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: severity
+  type: enum
+  description: 'Event severity. One of: DEBUG, INFO, WARN, ERROR (case-sensitive).'
+  example: DEBUG
+  enum_values:
+  - DEBUG
+  - INFO
+  - WARN
+  - ERROR
+- name: target
+  type: json
+  description: Array of target entities (user, app, group, etc.). JSON object or array; structured payload
+    — see dotted-path leaves below.
+  example: '{"id":"res-abc123","type":"S3Object","displayName":"reports.csv"}'
+  is_array: true
+- name: transaction
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: detail, id, type (each key
+    defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: uuid
+  type: string_short
+  description: Unique event identifier. Short opaque token, typically without whitespace; max ~64 chars.
+  example: f23a4b56-...
+- name: actor.alternateId
+  type: email
+  description: Actor alternate identifier (typically email). RFC 5322 `local@domain`; one address only.
+  example: user@example.com
+- name: actor.displayName
+  type: string
+  description: Actor display name. Free-form text; may contain whitespace and punctuation.
+  example: John Doe
+- name: actor.id
+  type: string_short
+  description: Actor (user/app/system) that performed the action. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: actor.type
+  type: enum
+  description: 'Actor type. One of: User, AppUser, SystemPrincipal, Client (case-sensitive).'
+  example: User
+  enum_values:
+  - User
+  - AppUser
+  - SystemPrincipal
+  - Client
+- name: authenticationContext.authenticationProvider.credentialProvider
+  type: string
+  description: Vendor-emitted field 'AuthenticationContext › authenticationProvider › credentialProvider'.
+    Leaf of the 'authenticationContext' composite. Free-form text; may contain whitespace and punctuation.
+  example: 00u1ab2c3d4e5f6
+- name: authenticationContext.authenticationProvider.credentialType
+  type: string
+  description: Vendor-emitted field 'AuthenticationContext › authenticationProvider › credentialType'.
+    Leaf of the 'authenticationContext' composite. Free-form text; may contain whitespace and punctuation.
+  example: AuditEvent
+- name: authenticationContext.authenticationProvider.externalSessionId
+  type: string
+  description: Vendor-emitted field 'AuthenticationContext › authenticationProvider › externalSessionId'.
+    Leaf of the 'authenticationContext' composite. Free-form text; may contain whitespace and punctuation.
+  example: sess-0e7c3ce6-354
+- name: client.device
+  type: string
+  description: Vendor-emitted field 'Client › device'. Leaf of the 'client' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: host-prod-01
+- name: client.geographicalContext.city
+  type: string_short
+  description: Resolved city of source IP. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: client.geographicalContext.country
+  type: country_code
+  description: Resolved country of source IP. ISO 3166-1 alpha-2 uppercase country code.
+  example: US
+- name: client.geographicalContext.geolocation.lat
+  type: string
+  description: Vendor-emitted field 'Client › geographicalContext › geolocation › lat'. Leaf of the 'client'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: '37.7749'
+- name: client.geographicalContext.geolocation.lon
+  type: string
+  description: Vendor-emitted field 'Client › geographicalContext › geolocation › lon'. Leaf of the 'client'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: '-122.4194'
+- name: client.geographicalContext.state
+  type: string
+  description: Vendor-emitted field 'Client › geographicalContext › state'. Leaf of the 'client' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: CA
+- name: client.id
+  type: string_short
+  description: Opaque identifier emitted by Okta. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: okt-a95ae98d
+- name: client.ipAddress
+  type: ipv4
+  description: Source IP of the request. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: client.userAgent.browser
+  type: string_short
+  description: Client browser family. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: client.userAgent.os
+  type: string_short
+  description: Client OS family. Short opaque token, typically without whitespace; max ~64 chars.
+  example: Mac OS X
+- name: client.userAgent.rawUserAgent
+  type: string_long
+  description: Raw User-Agent header. Free-form text; may span multiple lines or contain large payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: client.zone
+  type: string
+  description: Vendor-emitted field 'Client › zone'. Leaf of the 'client' composite. Free-form text; may
+    contain whitespace and punctuation.
+  example: us-east-1a
+- name: debugContext.debugData.deviceFingerprint
+  type: string
+  description: Vendor-emitted field 'DebugContext › debugData › deviceFingerprint'. Leaf of the 'debugContext'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: host-prod-01
+- name: debugContext.debugData.factor
+  type: string
+  description: Vendor-emitted field 'DebugContext › debugData › factor'. Leaf of the 'debugContext' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: debugContext.debugData.origin
+  type: string
+  description: Vendor-emitted field 'DebugContext › debugData › origin'. Leaf of the 'debugContext' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: debugContext.debugData.proxyType
+  type: string
+  description: Vendor-emitted field 'DebugContext › debugData › proxyType'. Leaf of the 'debugContext'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: AuditEvent
+- name: debugContext.debugData.threatDetections
+  type: string
+  description: Vendor-emitted field 'DebugContext › debugData › threatDetections'. Leaf of the 'debugContext'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: debugContext.debugData.url
+  type: url
+  description: Full URL of the request. Full URL with scheme (http/https/ftp); percent-encoded if it contains
+    non-ASCII characters.
+  example: https://example.com/path
+- name: outcome.reason
+  type: string_long
+  description: Reason for the outcome (free text). Free-form text; may span multiple lines or contain
+    large payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: outcome.result
+  type: enum
+  description: 'Event outcome. One of: SUCCESS, FAILURE, SKIPPED, ALLOW, DENY, CHALLENGE, UNKNOWN (case-sensitive).'
+  example: SUCCESS
+  enum_values:
+  - SUCCESS
+  - FAILURE
+  - SKIPPED
+  - ALLOW
+  - DENY
+  - CHALLENGE
+  - UNKNOWN
+- name: request.ipChain
+  type: json
+  is_array: true
+  description: Chain of IPs the request traversed (proxies). JSON object or array; structured payload
+    — see dotted-path leaves below.
+  example: '{"key":"value"}'
+- name: request.ipChain[].ip
+  type: ipv4
+  description: Vendor-emitted field 'Request › ipChain[] › ip'. Leaf of the 'request' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: securityContext.asNumber
+  type: integer
+  description: Autonomous System number of the source IP. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: securityContext.asOrg
+  type: string
+  description: AS organization name. Free-form text; may contain whitespace and punctuation.
+  example: tenant-acme-prod
+- name: securityContext.domain
+  type: domain
+  description: DNS domain reported by Okta — bare domain, no scheme/path/port. Bare DNS domain name; no
+    scheme, no path, no port.
+  example: example.com
+- name: securityContext.isProxy
+  type: boolean
+  description: True if source IP is a known proxy. Literal 'true' or 'false' (case-insensitive); not '1'/'0'.
+  example: 'true'
+- name: securityContext.isp
+  type: string
+  description: ISP of the source IP. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: transaction.detail.requestApiTokenId
+  type: string
+  description: Vendor-emitted field 'Transaction › detail › requestApiTokenId'. Leaf of the 'transaction'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: create
+- name: transaction.id
+  type: string_short
+  description: Okta transaction id for correlation. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: transaction.type
+  type: string_short
+  description: Transaction type (WEB, APP, etc.). Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: authenticationContext.authenticationProvider
+  type: string_short
+  description: Authentication provider used. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: authenticationContext.credentialProvider
+  type: string_short
+  description: Credential provider (e.g. OKTA_CREDENTIAL_PROVIDER). Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: authenticationContext.credentialType
+  type: string_short
+  description: Credential type (OTP, PASSWORD, SAML_ASSERTION, etc.). Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: authenticationContext.externalSessionId
+  type: string_short
+  description: External session id (Okta sso session). Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: authenticationContext.issuer.id
+  type: string_short
+  description: Issuer id (Okta org). Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: debugContext.debugData.requestUri
+  type: url
+  description: Request URI of the event. Full URL with scheme (http/https/ftp); percent-encoded if it
+    contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: version
+  type: integer
+  description: Event schema version. Short opaque token, typically without whitespace; max ~64 chars.
+  example: '0'
+use_cases:
+- Identity
+- MFA
+validated: true

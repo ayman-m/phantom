@@ -1,0 +1,39 @@
+- id: 8b2f4d56-3a78-4e92-b145-c876d3e5f0a1
+  name: "Phantom: Super Spy (curated)"
+  description: >
+    Phantom-curated variant of stockpile Super Spy (564ae20d). Stock Super Spy has
+    the same staging chain pattern as Ransack (Create staging dir → Find files →
+    Stage sensitive files → Compress → Exfil) plus screen-capture, microphone,
+    clipboard, Chrome bookmarks, WIFI discovery, packet sniff steps. Same
+    environmental gap as Ransack: T1005 Find files returns zero results on a clean
+    lab without decoys, so the staging chain skips. This curated variant prepends
+    the Phantom decoy-files ability so the full chain runs end-to-end and Cortex
+    sees the complete behavioral fingerprint (staging + compression + exfil +
+    audio/video collection + clipboard scrape).
+
+    Phantom-bundled: ships in the caldera image.
+  atomic_ordering:
+    # Phantom pre-condition (shared with Ransack curated): drop decoy files
+    - 7e88a8b1-1c4f-4dcb-9c92-aef82a7c5d11
+    # Stockpile Super Spy atomic_ordering, verbatim
+    - 316251ed-6a28-4013-812b-ddf5b5b007f8  # T1113 Screen Capture
+    - b007fe0c-c6b0-4fda-915c-255bbc070de2  # T1115 Copy Clipboard
+    - b007fc38-9eb7-4320-92b3-9a3ad3e6ec25  # T1217 Get Chrome Bookmarks (may skip if no Chrome)
+    - 78524da1-f347-4fbb-9295-209f1f408330  # T1496 Record microphone
+    - 6469befa-748a-4b9c-a96d-f191fde47d89  # T1074.001 Create staging dir
+    - 90c2efaa-8205-480d-8bb6-61d90dbaf81b  # T1005 Find files
+    - 4e97e699-93d7-4040-b5a3-2e906a58199e  # T1074.001 Stage sensitive files
+    - 300157e5-f4ad-4569-b533-9d1fa0e74d74  # T1560.001 Compress staged dir
+    - ea713bc4-63f0-491c-9a6f-0b01d560b87e  # T1041 Exfil staged dir
+    - 90c2efaa-8205-480d-8bb6-61d90dbaf81b  # T1005 Find files (re-fire)
+    - a52d1e10-c19c-4d51-8bf3-7e4c9a3f8e91  # T1518.001 Phantom AV/EDR multi-path discovery
+    - 9a30740d-3aa8-4c23-8efa-d51215e8a5b9  # T1016 Scan WIFI networks
+    - a0676fe1-cd52-482e-8dde-349b73f9aa69  # T1016 Preferred WIFI
+    - 1b4fb81c-8090-426c-93ab-0a633e7a16a7  # T1040 Sniff network traffic
+    - de52784d-4de6-4d4e-b79e-e7b68fe037fb  # T1059.002 Add bookmark
+  objective: 495a9828-cc81-44fe-a4b5-d3b41882a6b5
+  has_repeatable_abilities: true
+  tags:
+    - phantom-curated
+    - super-spy
+    - multi-tactic

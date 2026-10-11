@@ -1,0 +1,337 @@
+schema_version: 1
+id: AWS_WAF
+pack_name: AWS_WAF
+rule_name: AWS_WAF
+dataset_name: aws_waf_raw
+vendor: Amazon Web Services
+product: AWS_WAF
+description: AWS WAF (Web Application Firewall) logs every HTTP/HTTPS request evaluated by a Web ACL —
+  including the matching rule, the action taken (`ALLOW`/`BLOCK`/`COUNT`), the request's headers, the
+  URI, the source IP, the country code, and any rate-limit context. Simulate AWS WAF to validate detections
+  for application-layer attacks like SQL injection, XSS attempts, credential stuffing, or scraping bots.
+how_to_use: |
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `aws`
+  - **product**: `waf`
+
+  Broker derives → `aws_waf_raw`.
+
+  Use `aws` / `waf` to broker-derive `aws_waf_raw`. The display-name path `Amazon Web Services` / `AWS_WAF` derives a different dataset name.
+
+  **MR pattern**: Heavy-nested. MR consumes `httpRequest.headers[].name`/`headers[].value` array indexing plus nested `terminatingRuleMatchDetails[].matchedData[]`.
+
+  **Composite (nested-JSON) fields**: `httpRequest` carries deeply-nested JSON with `clientIp`, `country`, `httpMethod`, `uri`, `requestId`, and `headers[]` array. Pack as a JSON-string. L15 confirms array indexing survives CEF-extension wrapping when the MR uses `json_extract_scalar` with JSONPath array indices.
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: `timestamp` must be epoch-ms (13 digits). `action` must be one of `ALLOW`/`BLOCK`/`COUNT`/`CAPTCHA`/`CHALLENGE`/`EXCLUDED_AS_COUNT` (case-sensitive).
+
+  **Saturation strategy**: Heavy-nested ceiling ~5-8 XDM per L19. Splitting events helps minimally because the same nested objects feed multiple XDM fields.
+
+  **Single-event XDM ceiling**: ~5-8 XDM single-event (heavy-nested MR).
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = aws_waf_raw
+  | filter xdm.session_context_id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  **Simulation recipe — reverse-engineered from this pack's parsing + modeling rules.**
+
+  Routing: vendor `aws` / product `waf`.
+  (Verbatim from the parsing rule's INGEST block (scripts/maintainer/parsing_rules/AWS_WAF__AWS_WAF.xif line 1): [INGEST:vendor="aws", product="waf", target_dataset="aws_waf_raw", no_hit=keep]. Derivation agrees (aws + waf -> aws_waf_raw). Grepped every INGEST block: the aws/waf pair is claimed exactly once (siblings are aws/elb, aws/guardduty), so no discriminator. Do NOT use the schema's display labels 'Amazon Web Services'/'AWS_WAF' -- they derive amazon_web_services_aws_waf_raw and miss the dataset.)
+
+  Composite: `httpRequest` must be a JSON OBJECT on the wire. Leaves read: `httpRequest.clientIp`, `httpRequest.country`, `httpRequest.httpMethod`, `httpRequest.requestId`, `httpRequest.uri`, `httpRequest.headers`
+
+  Pass this verbatim as `observables_dict` (keys are schema field names; values are LISTS):
+
+  ```json
+  {
+    "action": [
+      "BLOCK"
+    ],
+    "httpsourceid": [
+      "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/prod-alb/50dc6c495c0c9188"
+    ],
+    "httpSourceId": [
+      "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/prod-alb/50dc6c495c0c9188"
+    ],
+    "httpsourcename": [
+      "ALB"
+    ],
+    "httpSourceName": [
+      "ALB"
+    ],
+    "terminatingruleid": [
+      "rule-block-known-bad-ips"
+    ],
+    "terminatingRuleId": [
+      "rule-block-known-bad-ips"
+    ],
+    "httpRequest.clientIp": [
+      "203.0.113.42"
+    ],
+    "httpRequest.country": [
+      "US"
+    ],
+    "httpRequest.httpMethod": [
+      "POST"
+    ],
+    "httpRequest.requestId": [
+      "req-phantom-waf-0001"
+    ],
+    "httpRequest.uri": [
+      "/api/v1/login"
+    ],
+    "httpRequest.headers": [
+      "{\"name\": \"Host\", \"value\": \"shop.example.com\"}"
+    ]
+  }
+  ```
+
+  Populates: `xdm.observer.action`, `xdm.source.ipv4`, `xdm.source.location.country`, `xdm.network.http.method`, `xdm.session_context_id`, `xdm.target.resource.id`, `xdm.target.resource.name`, `xdm.network.rule`, `xdm.network.http.url`, `xdm.target.host.hostname`
+
+  - GATE: none. The [MODEL: dataset="aws_waf_raw"] block has no leading filter -- mapping is unconditional and the modeling rule drops nothing. The only filter anywhere is in the PARSING rule and it is a _time derivation, not a gate; with no_hit=keep, an event whose timestamp fails the epoch regex still lands as a raw row.
+  - The recipe was checked end to end by generating records from this exact schema and simulating the rule's arraymap -> arraystring -> replace -> cast chain. It populates 10 XDM fields; user_agent and referrer stay null for the arity reason above.
+  - BIGGEST TRAP -- the parameters decoy. The schema invites you to pin parameters.Host / parameters.User-Agent / parameters.Referer because the rule visibly does json_extract_scalar(parameters, "$.Host"). It reads the REBUILT parameters, not the wire one: line 4 assigns it from headers and line 5 reassigns it again. Pin httpRequest.headers instead.
+  - CASE RESOLUTION IS INSENSITIVE. The rule mixes httpRequest (line 3) and httprequest (lines 6, 9, 10, 12, 16). Evidence they are the same column: the pack's generated MR schema JSON collapses both spellings into a single httpRequest entry. If resolution were case-sensitive, five of the rule's own alters would be dead and the shipped pack would map only ~4 fields. Emit the composite as httpRequest exactly as the schema declares it.
+  - action's case is a live bug, not a nicety. type:enum is not in _generate_value's type branch, so 'action' matches the _ACTION_PATTERNS heuristic and draws from _ACTION_VOCAB = [allow, deny, block, pass, drop, accept, reject] -- all LOWERCASE, and missing COUNT/CAPTCHA/CHALLENGE entirely. Unpinned, xdm.observer.action gets 'block' instead of 'BLOCK'. Marking action is_gate:true in the YAML would auto-pin it to its example (ALLOW) and fix this class of drift permanently.
+  - httpRequest.uri must be pinned. The leaf name matches _URL_PATTERNS ('uri'), so the generator emits a full https:// URL; AWS WAF emits a bare request path. Unpinned, xdm.network.http.url is shaped wrong even though it is non-null.
+  - Verify on a field the rule sets from a value you control: filter xdm.session_context_id = "req-phantom-waf-0001" (seeded via httpRequest.requestId). Do not filter on xdm.event.id, which this modeling rule never assigns.
+  - OPTIONAL, UNTESTED, USE AT YOUR OWN RISK -- reaching user_agent and referrer anyway. Line 4 builds the object by naive unescaped string concat, so a single header whose value closes and reopens the JSON yields all three keys: name="Host", value=shop.example.com","User-Agent":"Mozilla/5.0","Referer":"https://shop.example.com/cart . This has not been tested on the wire and it is genuinely risky: the embedded quotes have to survive JSON serialization AND CEF escaping intact, and if a backslash leaks through, the concatenated text is invalid JSON, the cast to {} nulls, and you lose Host as well -- trading 1 confirmed field for 3 speculative ones. Test it in isolation before adopting it.
+  - Fields the rule never reads (safe to leave random): httpRequest.args, httpRequest.httpVersion, formatVersion, ja3Fingerprint, ja4Fingerprint, labels, nonTerminatingMatchingRules, rateBasedRuleList, requestHeadersInserted, responseCodeSent, ruleGroupList, terminatingRuleMatchDetails, terminatingRuleType, webaclId, captchaResponse.*. Note this contradicts the schema's how_to_use, which claims the MR consumes terminatingRuleMatchDetails[].matchedData[] -- it does not; the rule is 19 lines and never mentions it.
+  - No meta (underscore-prefixed) field appears in the recipe. _time is derived by the parsing rule from timestamp; _raw_log is broker-populated and is not declared by this schema.
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+
+categories:
+- Network Security
+version: 1.0.21
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMjU2cHgiIGhlaWdodD0iMTUzcHgiIHZpZXdCb3g9IjAgMCAyNTYgMTUzIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KCQk8Zz4KCQkJCTxwYXRoIGQ9Ik03Mi4zOTIwNTMsNTUuNDM4NDEwNiBDNzIuMzkyMDUzLDU4LjU3NDgzNDQgNzIuNzMxMTI1OCw2MS4xMTc4ODA4IDczLjMyNDUwMzMsNjIuOTgyNzgxNSBDNzQuMDAyNjQ5LDY0Ljg0NzY4MjEgNzQuODUwMzMxMSw2Ni44ODIxMTkyIDc2LjAzNzA4NjEsNjkuMDg2MDkyNyBDNzYuNDYwOTI3Miw2OS43NjQyMzg0IDc2LjYzMDQ2MzYsNzAuNDQyMzg0MSA3Ni42MzA0NjM2LDcxLjAzNTc2MTYgQzc2LjYzMDQ2MzYsNzEuODgzNDQzNyA3Ni4xMjE4NTQzLDcyLjczMTEyNTggNzUuMDE5ODY3NSw3My41Nzg4MDc5IEw2OS42Nzk0NzAyLDc3LjEzOTA3MjggQzY4LjkxNjU1NjMsNzcuNjQ3NjgyMSA2OC4xNTM2NDI0LDc3LjkwMTk4NjggNjcuNDc1NDk2Nyw3Ny45MDE5ODY4IEM2Ni42Mjc4MTQ2LDc3LjkwMTk4NjggNjUuNzgwMTMyNSw3Ny40NzgxNDU3IDY0LjkzMjQ1MDMsNzYuNzE1MjMxOCBDNjMuNzQ1Njk1NCw3NS40NDM3MDg2IDYyLjcyODQ3NjgsNzQuMDg3NDE3MiA2MS44ODA3OTQ3LDcyLjczMTEyNTggQzYxLjAzMzExMjYsNzEuMjkwMDY2MiA2MC4xODU0MzA1LDY5LjY3OTQ3MDIgNTkuMjUyOTgwMSw2Ny43Mjk4MDEzIEM1Mi42NDEwNTk2LDc1LjUyODQ3NjggNDQuMzMzNzc0OCw3OS40Mjc4MTQ2IDM0LjMzMTEyNTgsNzkuNDI3ODE0NiBDMjcuMjEwNTk2LDc5LjQyNzgxNDYgMjEuNTMxMTI1OCw3Ny4zOTMzNzc1IDE3LjM3NzQ4MzQsNzMuMzI0NTAzMyBDMTMuMjIzODQxMSw2OS4yNTU2MjkxIDExLjEwNDYzNTgsNjMuODMwNDYzNiAxMS4xMDQ2MzU4LDU3LjA0OTAwNjYgQzExLjEwNDYzNTgsNDkuODQzNzA4NiAxMy42NDc2ODIxLDQzLjk5NDcwMiAxOC44MTg1NDMsMzkuNTg2NzU1IEMyMy45ODk0MDQsMzUuMTc4ODA3OSAzMC44NTU2MjkxLDMyLjk3NDgzNDQgMzkuNTg2NzU1LDMyLjk3NDgzNDQgQzQyLjQ2ODg3NDIsMzIuOTc0ODM0NCA0NS40MzU3NjE2LDMzLjIyOTEzOTEgNDguNTcyMTg1NCwzMy42NTI5ODAxIEM1MS43MDg2MDkzLDM0LjA3NjgyMTIgNTQuOTI5ODAxMywzNC43NTQ5NjY5IDU4LjMyMDUyOTgsMzUuNTE3ODgwOCBMNTguMzIwNTI5OCwyOS4zMjk4MDEzIEM1OC4zMjA1Mjk4LDIyLjg4NzQxNzIgNTYuOTY0MjM4NCwxOC4zOTQ3MDIgNTQuMzM2NDIzOCwxNS43NjY4ODc0IEM1MS42MjM4NDExLDEzLjEzOTA3MjggNDcuMDQ2MzU3NiwxMS44Njc1NDk3IDQwLjUxOTIwNTMsMTEuODY3NTQ5NyBDMzcuNTUyMzE3OSwxMS44Njc1NDk3IDM0LjUwMDY2MjMsMTIuMjA2NjIyNSAzMS4zNjQyMzg0LDEyLjk2OTUzNjQgQzI4LjIyNzgxNDYsMTMuNzMyNDUwMyAyNS4xNzYxNTg5LDE0LjY2NDkwMDcgMjIuMjA5MjcxNSwxNS44NTE2NTU2IEMyMC44NTI5ODAxLDE2LjQ0NTAzMzEgMTkuODM1NzYxNiwxNi43ODQxMDYgMTkuMjQyMzg0MSwxNi45NTM2NDI0IEMxOC42NDkwMDY2LDE3LjEyMzE3ODggMTguMjI1MTY1NiwxNy4yMDc5NDcgMTcuODg2MDkyNywxNy4yMDc5NDcgQzE2LjY5OTMzNzcsMTcuMjA3OTQ3IDE2LjEwNTk2MDMsMTYuMzYwMjY0OSAxNi4xMDU5NjAzLDE0LjU4MDEzMjUgTDE2LjEwNTk2MDMsMTAuNDI2NDkwMSBDMTYuMTA1OTYwMyw5LjA3MDE5ODY4IDE2LjI3NTQ5NjcsOC4wNTI5ODAxMyAxNi42OTkzMzc3LDcuNDU5NjAyNjUgQzE3LjEyMzE3ODgsNi44NjYyMjUxNyAxNy44ODYwOTI3LDYuMjcyODQ3NjggMTkuMDcyODQ3Nyw1LjY3OTQ3MDIgQzIyLjAzOTczNTEsNC4xNTM2NDIzOCAyNS42LDIuODgyMTE5MjEgMjkuNzUzNjQyNCwxLjg2NDkwMDY2IEMzMy45MDcyODQ4LDAuNzYyOTEzOTA3IDM4LjMxNTIzMTgsMC4yNTQzMDQ2MzYgNDIuOTc3NDgzNCwwLjI1NDMwNDYzNiBDNTMuMDY0OTAwNywwLjI1NDMwNDYzNiA2MC40Mzk3MzUxLDIuNTQzMDQ2MzYgNjUuMTg2NzU1LDcuMTIwNTI5OCBDNjkuODQ5MDA2NiwxMS42OTgwMTMyIDcyLjIyMjUxNjYsMTguNjQ5MDA2NiA3Mi4yMjI1MTY2LDI3Ljk3MzUwOTkgTDcyLjIyMjUxNjYsNTUuNDM4NDEwNiBMNzIuMzkyMDUzLDU1LjQzODQxMDYgWiBNMzcuOTc2MTU4OSw2OC4zMjMxNzg4IEM0MC43NzM1MDk5LDY4LjMyMzE3ODggNDMuNjU1NjI5MSw2Ny44MTQ1Njk1IDQ2LjcwNzI4NDgsNjYuNzk3MzUxIEM0OS43NTg5NDA0LDY1Ljc4MDEzMjUgNTIuNDcxNTIzMiw2My45MTUyMzE4IDU0Ljc2MDI2NDksNjEuMzcyMTg1NCBDNTYuMTE2NTU2Myw1OS43NjE1ODk0IDU3LjEzMzc3NDgsNTcuOTgxNDU3IDU3LjY0MjM4NDEsNTUuOTQ3MDE5OSBDNTguMTUwOTkzNCw1My45MTI1ODI4IDU4LjQ5MDA2NjIsNTEuNDU0MzA0NiA1OC40OTAwNjYyLDQ4LjU3MjE4NTQgTDU4LjQ5MDA2NjIsNDUuMDExOTIwNSBDNTYuMDMxNzg4MSw0NC40MTg1NDMgNTMuNDAzOTczNSw0My45MDk5MzM4IDUwLjY5MTM5MDcsNDMuNTcwODYwOSBDNDcuOTc4ODA3OSw0My4yMzE3ODgxIDQ1LjM1MDk5MzQsNDMuMDYyMjUxNyA0Mi43MjMxNzg4LDQzLjA2MjI1MTcgQzM3LjA0MzcwODYsNDMuMDYyMjUxNyAzMi44OTAwNjYyLDQ0LjE2NDIzODQgMzAuMDkyNzE1Miw0Ni40NTI5ODAxIEMyNy4yOTUzNjQyLDQ4Ljc0MTcyMTkgMjUuOTM5MDcyOCw1MS45NjI5MTM5IDI1LjkzOTA3MjgsNTYuMjAxMzI0NSBDMjUuOTM5MDcyOCw2MC4xODU0MzA1IDI2Ljk1NjI5MTQsNjMuMTUyMzE3OSAyOS4wNzU0OTY3LDY1LjE4Njc1NSBDMzEuMTA5OTMzOCw2Ny4zMDU5NjAzIDM0LjA3NjgyMTIsNjguMzIzMTc4OCAzNy45NzYxNTg5LDY4LjMyMzE3ODggWiBNMTA2LjA0NTAzMyw3Ny40NzgxNDU3IEMxMDQuNTE5MjA1LDc3LjQ3ODE0NTcgMTAzLjUwMTk4Nyw3Ny4yMjM4NDExIDEwMi44MjM4NDEsNzYuNjMwNDYzNiBDMTAyLjE0NTY5NSw3Ni4xMjE4NTQzIDEwMS41NTIzMTgsNzQuOTM1MDk5MyAxMDEuMDQzNzA5LDczLjMyNDUwMzMgTDgxLjEyMzE3ODgsNy43OTg2NzU1IEM4MC42MTQ1Njk1LDYuMTAzMzExMjYgODAuMzYwMjY0OSw1LjAwMTMyNDUgODAuMzYwMjY0OSw0LjQwNzk0NzAyIEM4MC4zNjAyNjQ5LDMuMDUxNjU1NjMgODEuMDM4NDEwNiwyLjI4ODc0MTcyIDgyLjM5NDcwMiwyLjI4ODc0MTcyIEw5MC43MDE5ODY4LDIuMjg4NzQxNzIgQzkyLjMxMjU4MjgsMi4yODg3NDE3MiA5My40MTQ1Njk1LDIuNTQzMDQ2MzYgOTQuMDA3OTQ3LDMuMTM2NDIzODQgQzk0LjY4NjA5MjcsMy42NDUwMzMxMSA5NS4xOTQ3MDIsNC44MzE3ODgwOCA5NS43MDMzMTEzLDYuNDQyMzg0MTEgTDEwOS45NDQzNzEsNjIuNTU4OTQwNCBMMTIzLjE2ODIxMiw2LjQ0MjM4NDExIEMxMjMuNTkyMDUzLDQuNzQ3MDE5ODcgMTI0LjEwMDY2MiwzLjY0NTAzMzExIDEyNC43Nzg4MDgsMy4xMzY0MjM4NCBDMTI1LjQ1Njk1NCwyLjYyNzgxNDU3IDEyNi42NDM3MDksMi4yODg3NDE3MiAxMjguMTY5NTM2LDIuMjg4NzQxNzIgTDEzNC45NTA5OTMsMi4yODg3NDE3MiBDMTM2LjU2MTU4OSwyLjI4ODc0MTcyIDEzNy42NjM1NzYsMi41NDMwNDYzNiAxMzguMzQxNzIyLDMuMTM2NDIzODQgQzEzOS4wMTk4NjgsMy42NDUwMzMxMSAxMzkuNjEzMjQ1LDQuODMxNzg4MDggMTM5Ljk1MjMxOCw2LjQ0MjM4NDExIEwxNTMuMzQ1Njk1LDYzLjIzNzA4NjEgTDE2OC4wMTA1OTYsNi40NDIzODQxMSBDMTY4LjUxOTIwNSw0Ljc0NzAxOTg3IDE2OS4xMTI1ODMsMy42NDUwMzMxMSAxNjkuNzA1OTYsMy4xMzY0MjM4NCBDMTcwLjM4NDEwNiwyLjYyNzgxNDU3IDE3MS40ODYwOTMsMi4yODg3NDE3MiAxNzMuMDExOTIxLDIuMjg4NzQxNzIgTDE4MC44OTUzNjQsMi4yODg3NDE3MiBDMTgyLjI1MTY1NiwyLjI4ODc0MTcyIDE4My4wMTQ1NywyLjk2Njg4NzQyIDE4My4wMTQ1Nyw0LjQwNzk0NzAyIEMxODMuMDE0NTcsNC44MzE3ODgwOCAxODIuOTI5ODAxLDUuMjU1NjI5MTQgMTgyLjg0NTAzMyw1Ljc2NDIzODQxIEMxODIuNzYwMjY1LDYuMjcyODQ3NjggMTgyLjU5MDcyOCw2Ljk1MDk5MzM4IDE4Mi4yNTE2NTYsNy44ODM0NDM3MSBMMTYxLjgyMjUxNyw3My40MDkyNzE1IEMxNjEuMzEzOTA3LDc1LjEwNDYzNTggMTYwLjcyMDUzLDc2LjIwNjYyMjUgMTYwLjA0MjM4NCw3Ni43MTUyMzE4IEMxNTkuMzY0MjM4LDc3LjIyMzg0MTEgMTU4LjI2MjI1Miw3Ny41NjI5MTM5IDE1Ni44MjExOTIsNzcuNTYyOTEzOSBMMTQ5LjUzMTEyNiw3Ny41NjI5MTM5IEMxNDcuOTIwNTMsNzcuNTYyOTEzOSAxNDYuODE4NTQzLDc3LjMwODYwOTMgMTQ2LjE0MDM5Nyw3Ni43MTUyMzE4IEMxNDUuNDYyMjUyLDc2LjEyMTg1NDMgMTQ0Ljg2ODg3NCw3NS4wMTk4Njc1IDE0NC41Mjk4MDEsNzMuMzI0NTAzMyBMMTMxLjM5MDcyOCwxOC42NDkwMDY2IEwxMTguMzM2NDI0LDczLjIzOTczNTEgQzExNy45MTI1ODMsNzQuOTM1MDk5MyAxMTcuNDAzOTc0LDc2LjAzNzA4NjEgMTE2LjcyNTgyOCw3Ni42MzA0NjM2IEMxMTYuMDQ3NjgyLDc3LjIyMzg0MTEgMTE0Ljg2MDkyNyw3Ny40NzgxNDU3IDExMy4zMzUwOTksNzcuNDc4MTQ1NyBMMTA2LjA0NTAzMyw3Ny40NzgxNDU3IFogTTIxNC45NzIxODUsNzkuNzY2ODg3NCBDMjEwLjU2NDIzOCw3OS43NjY4ODc0IDIwNi4xNTYyOTEsNzkuMjU4Mjc4MSAyMDEuOTE3ODgxLDc4LjI0MTA1OTYgQzE5Ny42Nzk0Nyw3Ny4yMjM4NDExIDE5NC4zNzM1MSw3Ni4xMjE4NTQzIDE5Mi4xNjk1MzYsNzQuODUwMzMxMSBDMTkwLjgxMzI0NSw3NC4wODc0MTcyIDE4OS44ODA3OTUsNzMuMjM5NzM1MSAxODkuNTQxNzIyLDcyLjQ3NjgyMTIgQzE4OS4yMDI2NDksNzEuNzEzOTA3MyAxODkuMDMzMTEzLDcwLjg2NjIyNTIgMTg5LjAzMzExMyw3MC4xMDMzMTEzIEwxODkuMDMzMTEzLDY1Ljc4MDEzMjUgQzE4OS4wMzMxMTMsNjQgMTg5LjcxMTI1OCw2My4xNTIzMTc5IDE5MC45ODI3ODEsNjMuMTUyMzE3OSBDMTkxLjQ5MTM5MSw2My4xNTIzMTc5IDE5Miw2My4yMzcwODYxIDE5Mi41MDg2MDksNjMuNDA2NjIyNSBDMTkzLjAxNzIxOSw2My41NzYxNTg5IDE5My43ODAxMzIsNjMuOTE1MjMxOCAxOTQuNjI3ODE1LDY0LjI1NDMwNDYgQzE5Ny41MDk5MzQsNjUuNTI1ODI3OCAyMDAuNjQ2MzU4LDY2LjU0MzA0NjQgMjAzLjk1MjMxOCw2Ny4yMjExOTIxIEMyMDcuMzQzMDQ2LDY3Ljg5OTMzNzcgMjEwLjY0OTAwNyw2OC4yMzg0MTA2IDIxNC4wMzk3MzUsNjguMjM4NDEwNiBDMjE5LjM4MDEzMiw2OC4yMzg0MTA2IDIyMy41MzM3NzUsNjcuMzA1OTYwMyAyMjYuNDE1ODk0LDY1LjQ0MTA1OTYgQzIyOS4yOTgwMTMsNjMuNTc2MTU4OSAyMzAuODIzODQxLDYwLjg2MzU3NjIgMjMwLjgyMzg0MSw1Ny4zODgwNzk1IEMyMzAuODIzODQxLDU1LjAxNDU2OTUgMjMwLjA2MDkyNyw1My4wNjQ5MDA3IDIyOC41MzUwOTksNTEuNDU0MzA0NiBDMjI3LjAwOTI3Miw0OS44NDM3MDg2IDIyNC4xMjcxNTIsNDguNDAyNjQ5IDIxOS45NzM1MSw0Ny4wNDYzNTc2IEwyMDcuNjgyMTE5LDQzLjIzMTc4ODEgQzIwMS40OTQwNCw0MS4yODIxMTkyIDE5Ni45MTY1NTYsMzguNCAxOTQuMTE5MjA1LDM0LjU4NTQzMDUgQzE5MS4zMjE4NTQsMzAuODU1NjI5MSAxODkuODgwNzk1LDI2LjcwMTk4NjggMTg5Ljg4MDc5NSwyMi4yOTQwMzk3IEMxODkuODgwNzk1LDE4LjczMzc3NDggMTkwLjY0MzcwOSwxNS41OTczNTEgMTkyLjE2OTUzNiwxMi44ODQ3NjgyIEMxOTMuNjk1MzY0LDEwLjE3MjE4NTQgMTk1LjcyOTgwMSw3Ljc5ODY3NTUgMTk4LjI3Mjg0OCw1LjkzMzc3NDgzIEMyMDAuODE1ODk0LDMuOTg0MTA1OTYgMjAzLjY5ODAxMywyLjU0MzA0NjM2IDIwNy4wODg3NDIsMS41MjU4Mjc4MSBDMjEwLjQ3OTQ3LDAuNTA4NjA5MjcyIDIxNC4wMzk3MzUsMC4wODQ3NjgyMTE5IDIxNy43Njk1MzYsMC4wODQ3NjgyMTE5IEMyMTkuNjM0NDM3LDAuMDg0NzY4MjExOSAyMjEuNTg0MTA2LDAuMTY5NTM2NDI0IDIyMy40NDkwMDcsMC40MjM4NDEwNiBDMjI1LjM5ODY3NSwwLjY3ODE0NTY5NSAyMjcuMTc4ODA4LDEuMDE3MjE4NTQgMjI4Ljk1ODk0LDEuMzU2MjkxMzkgQzIzMC42NTQzMDUsMS43ODAxMzI0NSAyMzIuMjY0OTAxLDIuMjAzOTczNTEgMjMzLjc5MDcyOCwyLjcxMjU4Mjc4IEMyMzUuMzE2NTU2LDMuMjIxMTkyMDUgMjM2LjUwMzMxMSwzLjcyOTgwMTMyIDIzNy4zNTA5OTMsNC4yMzg0MTA2IEMyMzguNTM3NzQ4LDQuOTE2NTU2MjkgMjM5LjM4NTQzLDUuNTk0NzAxOTkgMjM5Ljg5NDA0LDYuMzU3NjE1ODkgQzI0MC40MDI2NDksNy4wMzU3NjE1OSAyNDAuNjU2OTU0LDcuOTY4MjExOTIgMjQwLjY1Njk1NCw5LjE1NDk2Njg5IEwyNDAuNjU2OTU0LDEzLjEzOTA3MjggQzI0MC42NTY5NTQsMTQuOTE5MjA1MyAyMzkuOTc4ODA4LDE1Ljg1MTY1NTYgMjM4LjcwNzI4NSwxNS44NTE2NTU2IEMyMzguMDI5MTM5LDE1Ljg1MTY1NTYgMjM2LjkyNzE1MiwxNS41MTI1ODI4IDIzNS40ODYwOTMsMTQuODM0NDM3MSBDMjMwLjY1NDMwNSwxMi42MzA0NjM2IDIyNS4yMjkxMzksMTEuNTI4NDc2OCAyMTkuMjEwNTk2LDExLjUyODQ3NjggQzIxNC4zNzg4MDgsMTEuNTI4NDc2OCAyMTAuNTY0MjM4LDEyLjI5MTM5MDcgMjA3LjkzNjQyNCwxMy45MDE5ODY4IEMyMDUuMzA4NjA5LDE1LjUxMjU4MjggMjAzLjk1MjMxOCwxNy45NzA4NjA5IDIwMy45NTIzMTgsMjEuNDQ2MzU3NiBDMjAzLjk1MjMxOCwyMy44MTk4Njc1IDIwNC44LDI1Ljg1NDMwNDYgMjA2LjQ5NTM2NCwyNy40NjQ5MDA3IEMyMDguMTkwNzI4LDI5LjA3NTQ5NjcgMjExLjMyNzE1MiwzMC42ODYwOTI3IDIxNS44MTk4NjgsMzIuMTI3MTUyMyBMMjI3Ljg1Njk1NCwzNS45NDE3MjE5IEMyMzMuOTYwMjY1LDM3Ljg5MTM5MDcgMjM4LjM2ODIxMiw0MC42MDM5NzM1IDI0MC45OTYwMjYsNDQuMDc5NDcwMiBDMjQzLjYyMzg0MSw0Ny41NTQ5NjY5IDI0NC44OTUzNjQsNTEuNTM5MDcyOCAyNDQuODk1MzY0LDU1Ljk0NzAxOTkgQzI0NC44OTUzNjQsNTkuNTkyMDUzIDI0NC4xMzI0NSw2Mi44OTgwMTMyIDI0Mi42OTEzOTEsNjUuNzgwMTMyNSBDMjQxLjE2NTU2Myw2OC42NjIyNTE3IDIzOS4xMzExMjYsNzEuMjA1Mjk4IDIzNi41MDMzMTEsNzMuMjM5NzM1MSBDMjMzLjg3NTQ5Nyw3NS4zNTg5NDA0IDIzMC43MzkwNzMsNzYuODg0NzY4MiAyMjcuMDk0MDQsNzcuOTg2NzU1IEMyMjMuMjc5NDcsNzkuMTczNTA5OSAyMTkuMjk1MzY0LDc5Ljc2Njg4NzQgMjE0Ljk3MjE4NSw3OS43NjY4ODc0IFoiIGZpbGw9IiMyNTJGM0UiIGZpbGwtcnVsZT0ibm9uemVybyI+PC9wYXRoPgoJCQkJPHBhdGggZD0iTTIzMC45OTMzNzcsMTIwLjk2NDIzOCBDMjAzLjEwNDYzNiwxNDEuNTYyOTE0IDE2Mi41ODU0MywxNTIuNDk4MDEzIDEyNy43NDU2OTUsMTUyLjQ5ODAxMyBDNzguOTE5MjA1MywxNTIuNDk4MDEzIDM0LjkyNDUwMzMsMTM0LjQ0MjM4NCAxLjY5NTM2NDI0LDEwNC40MzQ0MzcgQy0wLjkzMjQ1MDMzMSwxMDIuMDYwOTI3IDEuNDQxMDU5Niw5OC44Mzk3MzUxIDQuNTc3NDgzNDQsMTAwLjcwNDYzNiBDNDAuNTE5MjA1MywxMjEuNTU3NjE2IDg0Ljg1Mjk4MDEsMTM0LjE4ODA3OSAxMzAuNzEyNTgzLDEzNC4xODgwNzkgQzE2MS42NTI5OCwxMzQuMTg4MDc5IDE5NS42NDUwMzMsMTI3Ljc0NTY5NSAyMjYuOTI0NTAzLDExNC41MjE4NTQgQzIzMS41ODY3NTUsMTEyLjQwMjY0OSAyMzUuNTcwODYxLDExNy41NzM1MSAyMzAuOTkzMzc3LDEyMC45NjQyMzggWiBNMjQyLjYwNjYyMywxMDcuNzQwMzk3IEMyMzkuMDQ2MzU4LDEwMy4xNjI5MTQgMjE5LjA0MTA2LDEwNS41MzY0MjQgMjA5Ljk3MDg2MSwxMDYuNjM4NDExIEMyMDcuMjU4Mjc4LDEwNi45Nzc0ODMgMjA2LjgzNDQzNywxMDQuNjAzOTc0IDIwOS4yOTI3MTUsMTAyLjgyMzg0MSBDMjI1LjIyOTEzOSw5MS42MzQ0MzcxIDI1MS40MjI1MTcsOTQuODU1NjI5MSAyNTQuNDc0MTcyLDk4LjU4NTQzMDUgQzI1Ny41MjU4MjgsMTAyLjQgMjUzLjYyNjQ5LDEyOC41OTMzNzcgMjM4LjcwNzI4NSwxNDEuMTM5MDczIEMyMzYuNDE4NTQzLDE0My4wODg3NDIgMjM0LjIxNDU3LDE0Mi4wNzE1MjMgMjM1LjIzMTc4OCwxMzkuNTI4NDc3IEMyMzguNjIyNTE3LDEzMS4xMzY0MjQgMjQ2LjE2Njg4NywxMTIuMjMzMTEzIDI0Mi42MDY2MjMsMTA3Ljc0MDM5NyBaIiBmaWxsPSIjRkY5OTAwIj48L3BhdGg+CgkJPC9nPgo8L3N2Zz4K
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: action
+  type: enum
+  description: 'Terminating rule action. One of: ALLOW, BLOCK, COUNT, CAPTCHA, CHALLENGE, EXCLUDED_AS_COUNT
+    (case-sensitive).'
+  example: ALLOW
+  enum_values:
+  - ALLOW
+  - BLOCK
+  - COUNT
+  - CAPTCHA
+  - CHALLENGE
+  - EXCLUDED_AS_COUNT
+- name: httpRequest
+  type: string
+  description: Vendor-emitted field 'HttpRequest'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: httpsourceid
+  type: string
+  description: Vendor-emitted field 'Httpsourceid'. Free-form text; may contain whitespace and punctuation.
+  example: 00u1ab2c3d4e5f6
+- name: httpsourcename
+  type: string
+  description: Vendor-emitted field 'Httpsourcename'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: parameters
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: Host, Referer, User-Agent
+    (each key defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: terminatingruleid
+  type: string
+  description: Vendor-emitted field 'Terminatingruleid'. Free-form text; may contain whitespace and punctuation.
+  example: rule-block-known-bad-ips
+- name: timestamp
+  type: timestamp_ms
+  description: Request time (ms epoch). Unsigned epoch milliseconds since 1970-01-01 UTC; bare digits.
+  example: '1748263381000'
+- name: parameters.Host
+  type: host
+  description: Vendor-emitted field 'Parameters › Host'. Leaf of the 'parameters' composite. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: parameters.Referer
+  type: url
+  description: HTTP Referer header value. Full URL with scheme (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path?q=1
+- name: parameters.User-Agent
+  type: string
+  description: Vendor-emitted field 'Parameters › User-Agent'. Leaf of the 'parameters' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: captchaResponse.failureReason
+  type: string
+  description: CAPTCHA failure reason. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: captchaResponse.responseCode
+  type: integer
+  description: CAPTCHA response code. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: captchaResponse.solveTimestamp
+  type: timestamp_ms
+  description: When CAPTCHA was solved. Unsigned epoch milliseconds since 1970-01-01 UTC; bare digits.
+  example: '1748263381000'
+- name: formatVersion
+  type: integer
+  description: Log format version. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: httpRequest.args
+  type: string_long
+  description: Query string. Free-form text; may span multiple lines or contain large payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: httpRequest.clientIp
+  type: ipv4
+  description: Client IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding
+    brackets or quotes.
+  example: 192.0.2.45
+- name: httpRequest.country
+  type: country_code
+  description: Resolved country. ISO 3166-1 alpha-2 uppercase country code.
+  example: US
+- name: httpRequest.headers
+  type: json
+  is_array: true
+  description: Request headers. JSON object or array; structured payload — see dotted-path leaves below.
+  example: '{"clientIp":"203.0.113.42","uri":"/login","httpMethod":"POST","headers":[{"name":"User-Agent","value":"Mozilla/5.0"}]}'
+- name: httpRequest.httpMethod
+  type: string_short
+  description: HTTP method. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: httpRequest.httpVersion
+  type: string_short
+  description: HTTP version. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: httpRequest.requestId
+  type: string_short
+  description: Request id. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: httpRequest.uri
+  type: string
+  description: Request URI. Free-form text; may contain whitespace and punctuation.
+  example: /api/v1/path?q=1
+- name: httpSourceId
+  type: string
+  description: Source id (CF distribution id, ALB ARN, etc.). Free-form text; may contain whitespace and
+    punctuation.
+  example: 00u1ab2c3d4e5f6
+- name: httpSourceName
+  type: string_short
+  description: Source of the request (CF=CloudFront, ALB, APIGW, etc.). Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token
+- name: ja3Fingerprint
+  type: hash_md5
+  description: JA3 TLS fingerprint. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: ja4Fingerprint
+  type: string
+  description: JA4 TLS fingerprint. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: labels
+  type: json
+  is_array: true
+  description: Labels assigned by rules. JSON object or array; structured payload — see dotted-path leaves
+    below.
+  example: '{"key":"value"}'
+- name: nonTerminatingMatchingRules
+  type: json
+  is_array: true
+  description: Non-terminating matched rules (COUNT mode). JSON object or array; structured payload —
+    see dotted-path leaves below.
+  example: '{"key":"value"}'
+- name: rateBasedRuleList
+  type: json
+  is_array: true
+  description: Rate-based rules evaluated. JSON object or array; structured payload — see dotted-path
+    leaves below.
+  example: '{"key":"value"}'
+- name: requestHeadersInserted
+  type: json
+  is_array: true
+  description: Headers inserted by WAF rules. JSON object or array; structured payload — see dotted-path
+    leaves below.
+  example: '{"key":"value"}'
+- name: responseCodeSent
+  type: integer
+  description: HTTP response code sent. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: ruleGroupList
+  type: json
+  is_array: true
+  description: Rule groups evaluated. JSON object or array; structured payload — see dotted-path leaves
+    below.
+  example: '{"key":"value"}'
+- name: terminatingRuleId
+  type: string
+  description: ID of the terminating rule. Free-form text; may contain whitespace and punctuation.
+  example: rule-block-known-bad-ips
+- name: terminatingRuleMatchDetails
+  type: json
+  is_array: true
+  description: Match details for the terminating rule. JSON object or array; structured payload — see
+    dotted-path leaves below.
+  example: '{"key":"value"}'
+- name: terminatingRuleType
+  type: enum
+  description: 'Terminating rule type. One of: REGULAR, RATE_BASED, GROUP, MANAGED_RULE_GROUP (case-sensitive).'
+  enum_values:
+  - REGULAR
+  - RATE_BASED
+  - GROUP
+  - MANAGED_RULE_GROUP
+  example: REGULAR
+- name: webaclId
+  type: string
+  description: ARN of the matched Web ACL. Free-form text; may contain whitespace and punctuation.
+  example: acl-31860ea2
+use_cases:
+- Cloud
+validated: true

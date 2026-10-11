@@ -1,0 +1,285 @@
+schema_version: 1
+id: panw_ngfw_threat_raw
+pack_name: PANW_NGFW
+rule_name: PANW_NGFW
+dataset_name: panw_ngfw_threat_raw
+vendor: Palo Alto Networks
+product: NGFW Threat
+description: Palo Alto Networks NGFW — threat detection events (IPS signatures, antivirus, anti-spyware,
+  WildFire verdicts, DNS security).
+categories:
+- Network Security
+- Firewall
+- IDS/IPS
+version: 1.0.0
+origin: bundle
+author: phantom-maintainer (PANW NGFW hand-curated)
+formats:
+- CEF
+- SYSLOG
+is_rawlog_only: false
+fields:
+- name: action
+  type: string
+  description: 'Action taken by the firewall on the session/packet. Common values: allow, deny, drop,
+    reset-client, reset-server, reset-both, block-url, block-continue, continue, override.'
+  example: allow
+- name: app
+  type: string
+  description: 'Application identified by App-ID (PANW''s content classification engine). Examples: web-browsing,
+    ssl, ssh, smtp, dns, ms-rdp, microsoft-teams.'
+  example: web-browsing
+- name: app_category
+  type: string
+  description: 'High-level application category (App-ID tier 1). Examples: general-internet, business-systems,
+    networking, collaboration, media.'
+  example: general-internet
+- name: app_sub_category
+  type: string
+  description: 'App-ID tier 2 subcategory. Examples: internet-utility, file-sharing, encrypted-tunnel,
+    ip-protocol.'
+  example: internet-utility
+- name: dest_device_category
+  type: string
+  description: 'Device category of the destination host (when PANW Device-ID identifies it). Examples:
+    server, mobile, iot, router, switch.'
+  example: server
+- name: dest_device_host
+  type: string
+  description: Hostname of the destination host as resolved by PANW Device-ID. Used for `xdm.target.host.hostname`
+    only if it doesn't contain ':' (which would suggest a MAC).
+  example: dst-host.corp.example.com
+- name: dest_device_mac
+  type: mac
+  description: MAC address of the destination host (Device-ID). Six colon-separated hex octets.
+  example: 00:50:56:aa:bb:02
+- name: dest_device_model
+  type: string
+  description: 'Device model string from PANW Device-ID inventory. Examples: VMware ESXi, MacBookPro18,3,
+    iPhone13,4.'
+  example: Dell PowerEdge R740
+- name: dest_device_os
+  type: string
+  description: Operating system of the destination host (Device-ID). Free-form, vendor-supplied.
+  example: Ubuntu 22.04
+- name: dest_device_osfamily
+  type: string
+  description: 'OS family of destination host. Drives `xdm.target.host.os_family` enum: Windows, MacOS/Mac,
+    ios/iOS, Chromeos, Linux, Android.'
+  example: Linux
+- name: dest_device_vendor
+  type: string
+  description: 'Hardware vendor of the destination host (Device-ID). Examples: Dell, Apple, Cisco, HP.'
+  example: Dell Inc.
+- name: dest_ip
+  type: ipv4
+  description: Destination IP address — IPv4 or IPv6. The MR detects IPv6 by the presence of ':' and routes
+    to `xdm.target.ipv6` accordingly. Sentinel value `00000000000000000000ffff00000000` is treated as
+    empty.
+  example: 10.20.30.40
+- name: dest_port
+  type: integer
+  description: Destination TCP/UDP port (1-65535). Cast to integer in the MR; non-numeric values become
+    null.
+  example: '443'
+- name: dest_user
+  type: string
+  description: 'Destination user as identified by PANW User-ID (LDAP/AD/RADIUS lookup on dest_ip). Examples:
+    corp\\jdoe, jdoe@example.com.'
+  example: corp\\bob
+- name: file_name
+  type: string
+  description: Filename when threat involves a file artifact. When file_sha_256 is non-null, maps to `xdm.target.file.filename`;
+    otherwise maps to `xdm.network.http.url` (treated as the URL the threat was found on).
+  example: malware.exe
+- name: file_sha_256
+  type: hash_sha256
+  description: SHA-256 hash of the threat artifact. Maps to `xdm.target.file.sha256`.
+  example: 44d88612fea8a8f36de82e1278abb02f8c6f3a0a8c70b1cd62f0d8bf2e1f00ab
+- name: file_type
+  type: string
+  description: File type of the threat artifact.
+  example: PE32
+- name: from_zone
+  type: string
+  description: 'Source security zone (the firewall zone the session originated from). Examples: trust,
+    untrust, dmz, internal, guest.'
+  example: trust
+- name: http_method
+  type: string
+  description: 'HTTP method when threat detected on HTTP traffic. Lowercase enum routed by `url_threat_common_fields`
+    RULE: get/post/connect/head/put/delete/options. Maps to `xdm.network.http.method`.'
+  example: get
+- name: inbound_if
+  type: string
+  description: 'Inbound interface name (the firewall interface that received the session). Examples: ethernet1/1,
+    ae1.100, tunnel.5.'
+  example: ethernet1/1
+- name: is_nat
+  type: string
+  description: 'Whether source/dest NAT was applied to the session. Cast to boolean. Values: ''true'',
+    ''false'', ''True'', ''False''.'
+  example: 'false'
+- name: is_proxy
+  type: string
+  description: Whether the firewall proxied the session (e.g. SSL decrypt, explicit proxy). Cast to boolean.
+    When true, `xdm.intermediate.ipv4/ipv6/port` get populated from dest_ip/dest_port.
+  example: 'false'
+- name: log_source
+  type: string
+  description: Log source type identifier (PANW's Cortex Cloud Identity Engine value or similar). Maps
+    to `xdm.observer.type`.
+  example: panw-ngfw
+- name: log_source_id
+  type: string
+  description: Unique identifier of the log source instance (serial number or UUID of the firewall emitting
+    the log).
+  example: 001801000001
+- name: log_source_name
+  type: string
+  description: Friendly name of the log source (firewall hostname or assigned name).
+  example: pa-fw-hq-01
+- name: log_type
+  type: string
+  description: 'PANW log subsystem that produced this event. Drives `xdm.event.type`. Common values: traffic,
+    threat, url, file, hipmatch, globalprotect, system, config.'
+  example: traffic
+- name: outbound_if
+  type: string
+  description: 'Outbound interface name (the firewall interface forwarding the session). Examples: ethernet1/2,
+    ae2.200.'
+  example: ethernet1/2
+- name: protocol
+  type: string
+  description: IP protocol — lowercase string. The MR maps icmp/tcp/udp to XDM enums; other values pass
+    through as-is.
+  example: tcp
+- name: rt
+  type: string
+  example: '1788700000000'
+  description: Event time as a CEF epoch integer (10/13/16/19 digits). The broker honours the CEF `rt`
+    extension as `_time` during generic extraction, with NO parsing rule involved — so this is the back-dating
+    handle for this source even on the derived route. Omit it and `_time` falls back to ingestion time.
+- name: rule_matched
+  type: string
+  description: Name of the security policy rule that matched this session. Maps to `xdm.network.rule`.
+  example: Allow-Web-Browsing
+- name: session_id
+  type: string
+  description: Unique session identifier (PANW's session number for this flow). Maps to `xdm.event.id`
+    AND `xdm.session_context_id` in the standalone RULE.
+  example: '1234567'
+- name: severity
+  type: string
+  description: 'Threat severity assigned by PANW. Values: informational, low, medium, high, critical.
+    Maps to `xdm.alert.severity`.'
+  example: high
+- name: source_device_category
+  type: string
+  description: 'Device category of the source host (Device-ID). Examples: workstation, mobile, iot, server.'
+  example: workstation
+- name: source_device_host
+  type: string
+  description: Hostname of the source host (Device-ID). Used for `xdm.source.host.hostname` only if it
+    doesn't contain ':' (which would suggest a MAC).
+  example: src-host.corp.example.com
+- name: source_device_mac
+  type: mac
+  description: MAC address of the source host (Device-ID).
+  example: 00:50:56:aa:bb:01
+- name: source_device_model
+  type: string
+  description: Device model of the source host (Device-ID).
+  example: MacBookPro18,3
+- name: source_device_os
+  type: string
+  description: OS of the source host (Device-ID).
+  example: macOS 14.0
+- name: source_device_osfamily
+  type: string
+  description: OS family of source host. Drives `xdm.source.host.os_family` enum.
+  example: MacOS
+- name: source_device_vendor
+  type: string
+  description: Hardware vendor of the source host (Device-ID).
+  example: Apple Inc.
+- name: source_ip
+  type: ipv4
+  description: Source IP address — IPv4 or IPv6. IPv6 detected by ':'.
+  example: 10.1.2.3
+- name: source_port
+  type: integer
+  description: Source TCP/UDP port.
+  example: '54321'
+- name: source_user
+  type: string
+  description: Source user (PANW User-ID).
+  example: corp\\alice
+- name: sub_type
+  type: string
+  description: 'Log subtype — discriminator within a log_type. For traffic: start, end, drop, deny. For
+    threat: vulnerability, virus, spyware, wildfire-virus, file. For url: url. Maps to `xdm.event.operation_sub_type`.'
+  example: end
+- name: subject_of_email
+  type: string
+  description: Subject line when threat detected in email (SMTP traffic). Maps to `xdm.email.subject`.
+  example: 'Urgent: Invoice attached'
+- name: threat_category
+  type: string
+  description: 'Threat category — lowercased and mapped to XDM enum. Recognized values include: apk, dmg,
+    flash, java-class, macho, office, openoffice, pdf, pe, pkg, adware, autogen, backdoor, botnet, browser-hijack,
+    cryptominer, data-theft, dns, dns-security, dns-wildfire, downloader, fraud, hacktool, keylogger,
+    networm, phishing-kit, post-exploitation, webshell, spyware, brute force (with space), code execution,
+    code-obfuscation, dos, exploit-kit, info-leak, insecure-credentials, overflow, phishing, protocol-anomaly,
+    sql-injection. Unrecognized values fall through as the raw string.'
+  example: backdoor
+- name: threat_id
+  type: integer
+  description: Unique PANW threat ID (signature ID for IPS, hash ID for AV, etc.). Cast to string. Maps
+    to `xdm.alert.original_threat_id`.
+  example: '31337'
+- name: threat_name
+  type: string
+  description: Human-readable threat name (e.g. signature title). Maps to `xdm.alert.original_threat_name`.
+  example: Generic.Trojan.Backdoor
+- name: to_zone
+  type: string
+  description: Destination security zone.
+  example: untrust
+- name: url_domain
+  type: string
+  description: Domain extracted from the URL where the threat was observed. Maps to `xdm.source.host.fqdn`.
+  example: malicious-host.example
+- name: verdict
+  type: string
+  description: WildFire verdict for files (malicious, benign, grayware, phishing) or other vendor verdict
+    string. Maps to `xdm.alert.description`.
+  example: malicious
+validated: false
+use_cases:
+- Firewall traffic & threat analysis
+- Network security monitoring
+- Threat hunting
+how_to_use: "Palo Alto Networks NGFW Threat logs. Simulate with type=CEF to your XSIAM Broker (UDP syslog).\n\
+  \nRouting: Cortex ingests PAN-OS NGFW logs NATIVELY — the parsing and modeling for\nthe `panw_ngfw_*_raw`\
+  \ datasets are built into the platform, NOT shipped by an\ninstallable content pack. The Cortex Marketplace\
+  \ \"PAN-OS by Palo Alto Networks\"\npack is an XSOAR automation pack (integration, classifier, mapper,\
+  \ playbooks) that\nmanages firewalls over the API; it ships no parsing or modeling rules, and\ninstalling\
+  \ it does NOT create these datasets.\n\nRequired CEF header for XSIAM:\n- vendor: `panw`\n- product:\
+  \ `ngfw_threat`\n\nThat pair derives the target dataset directly (`<lower(vendor)>_<lower(product)>_raw`\n\
+  = `panw_ngfw_threat_raw`), which is the dataset this modeling rule binds to. Modeling rules\nbind by\
+  \ dataset NAME only, so the derived route reaches the rule without any\nparsing rule being consulted\
+  \ — the same mechanism documented for `microsoft`/`adfs`.\n\nDo NOT send `product=ngfw_cef`. That pair\
+  \ is claimed by an INGEST block targeting\nthe catch-all `panw_ngfw_cef_raw` with `no_hit=drop`: no\
+  \ modeling rule binds there,\nand non-matching events are silently DISCARDED. There is no mechanism\
+  \ that reads the\n`log_type` extension to fan one CEF stream out into the six per-log-type datasets\
+  \ —\nINGEST blocks route, MODEL blocks only bind to a dataset that already exists.\n\nNot yet XDM-validated end to end (validated: false). The routing\nliteral above is derived from the broker's naming rule and the microsoft/adfs\nprecedent. Confirm events land in the intended dataset before\ntrusting the mapping.\n\n**How simulation\
+  \ works — read this before generating.** `phantom_create_data_worker`\nresolves each field's value in\
+  \ this order:\n\n  1. `observables_dict[field]` — explicit; always wins. Values are LISTS.\n  2. `is_gate`\
+  \ + `example` — gate fields are auto-pinned to their example.\n  3. declared `type` — ipv4/user/url/datetime\
+  \ are synthesized plausibly.\n  4. field-name heuristic.\n  5. random token.\n\n**A field's `example`\
+  \ below is DOCUMENTATION ONLY unless that field is marked\n`is_gate`.** So every field the modeling\
+  \ rule reads expecting a specific SHAPE --\nan enum, an HTTP method, a status code, a resource path,\
+  \ a numeric type code, an\nXML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled\n\
+  exactly as `fields[]` spells them (dotted leaves included, e.g.\n`event_data.param2`). Anything you\
+  \ leave out is randomly generated, and the rule\nwill map it to garbage or drop the event."

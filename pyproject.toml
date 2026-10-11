@@ -1,0 +1,74 @@
+# Repo-root pyproject.toml — Phantom AI Layer LSP configuration.
+#
+# Phantom is a polyglot repo (Next.js + TypeScript for the agent UI, Python
+# for the embedded MCP, xlog, updater, connectors). This file does NOT
+# package Phantom as a Python distribution — each Python subsystem manages
+# its own requirements (`bundles/spark/mcp/requirements*.txt`, `xlog/...`,
+# `updater/requirements.txt`). The root pyproject exists solely to:
+#
+#   1. Configure pyright (the LSP the article recommends, Pattern 1).
+#   2. Declare a single, coordinated set of dev-tools so contributors
+#      install them once instead of per-subsystem.
+#
+# Install dev tools (recommended once per workstation):
+#
+#     pip install pyright "mcp[cli]<2"
+#
+# The validator at tooling/validate/validate_all.py asserts pyright is
+# mentioned here; CI runs it on every push touching AI Layer paths.
+
+
+# --- pyright configuration (LSP) -------------------------------------------
+#
+# Coverage scope: every Python source tree in Phantom EXCEPT vendor data +
+# generated build artifacts. The exclude of cortex-content/baked is
+# load-bearing — 576 vendor JSON/SVG files that would otherwise flood the
+# pyright index with parse errors on non-Python data.
+
+[tool.pyright]
+include = [
+  "bundles/spark/mcp/src",
+  "bundles/spark/mcp/tests",
+  "bundles/spark/connectors",
+  "xlog",
+  "updater/src",
+  "updater/tests",
+  "scripts",
+  "tooling",
+  ".claude/hooks",
+  "phantom-connector-runtime",
+]
+exclude = [
+  "**/__pycache__",
+  "**/.venv",
+  "**/venv",
+  "**/node_modules",
+  "**/.next",
+  "**/dist",
+  "**/build",
+  "**/*.egg-info",
+  "bundles/spark/connectors/cortex-content/baked",
+  "reports",
+  "tmp",
+]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+reportMissingImports = "warning"
+reportMissingTypeStubs = "none"
+reportUnknownMemberType = "none"
+reportUnknownArgumentType = "none"
+reportUnknownVariableType = "none"
+
+
+# --- dev tools (informational — Phantom is not a single Python package) ----
+#
+# The list below is the SAME set of tools `pip install pyright "mcp[cli]<2"`
+# would give you; we duplicate it here as documentation + so tooling that
+# parses pyproject.toml can discover the expected dev surface.
+
+[tool.phantom-ai-layer.dev-tools]
+required = [
+  "pyright>=1.1.300",
+  "mcp[cli]>=1.21.2,<2",
+]
+purpose = "AI Layer tooling — LSP (pyright) + FastMCP SDK (codebase-search MCP server)"

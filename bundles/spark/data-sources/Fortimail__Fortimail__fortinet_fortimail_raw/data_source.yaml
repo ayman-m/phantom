@@ -1,0 +1,578 @@
+schema_version: 1
+id: Fortimail
+pack_name: Fortimail
+rule_name: Fortimail
+dataset_name: fortinet_fortimail_raw
+vendor: Fortinet
+product: Fortimail
+description: FortiMail is a comprehensive email security solution by Fortinet, offering
+  advanced threat protection, data loss prevention, encryption, and email authentication
+  to safeguard organizations against email-based cyber threats and protect sensitive
+  information.
+categories:
+- Email
+version: 1.0.16
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+Rm9ydGluZXQ8L3RpdGxlPjxwYXRoIGQ9Ik0wIDkuNzg1aDYuNzg4djQuNDU0SDB6bTguNjY2LTYuMzNoNi42Njh2NC40NTNIOC42NjZ6bTAgMTIuNjM3aDYuNjY4djQuNDU0SDguNjY2em04LjUyMi02LjMwN0gyNHY0LjQ1NGgtNi44MTJ6TTIuNzkyIDMuNDU1QzEuMzcyIDMuODE0LjI2NSA1LjQwNCAwIDcuNDI1di41MDZoNi43ODhWMy40NTR6TTAgMTYuMDkxdi41NTRjLjI0IDEuOTI2IDEuMjc2IDMuNDY2IDIuNjI0IDMuOWg0LjE4OHYtNC40NTR6bTI0LTguMTg0di0uNTA2Yy0uMjY1LTEuOTk4LTEuMzcyLTMuNTg3LTIuNzkyLTMuOTcyaC00LjAydjQuNDU0SDI0ek0yMS4zNzYgMjAuNTdjMS4zMjQtLjQ1OCAyLjM2LTEuOTc0IDIuNjI0LTMuOXYtLjU1NGgtNi44MTJ2NC40NTRaIi8+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: Classifier
+  type: string
+  description: Vendor-emitted field 'Classifier'. Free-form text; may contain whitespace
+    and punctuation.
+  example: authentication
+- name: Client_IP
+  type: ipv4
+  description: Vendor-emitted field 'Client IP'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: Client_Name
+  type: string
+  description: Human-readable name as displayed by Fortinet. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: Destination_IP
+  type: ipv4
+  description: Destination address of the connection target. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: Direction
+  type: string
+  description: Vendor-emitted field 'Direction'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_direction
+- name: Disposition
+  type: string
+  description: Vendor-emitted field 'Disposition'. Free-form text; may contain whitespace
+    and punctuation.
+  example: clean
+- name: Domain
+  type: domain
+  description: DNS domain reported by Fortinet — bare domain, no scheme/path/port.
+    Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: Endpoint
+  type: string
+  description: Vendor-emitted field 'Endpoint'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_endpoint
+- name: From
+  type: string
+  description: Vendor-emitted field 'From'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_from
+- name: Header_From
+  type: string
+  description: Vendor-emitted field 'Header From'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_from
+- name: Level
+  type: string_short
+  description: Severity level (string label, e.g., info/warn/error). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: info
+- name: Location
+  type: string
+  description: Location label (region/site/zone) emitted by Fortinet. Free-form text;
+    may contain whitespace and punctuation.
+  example: us-east
+- name: Log_ID
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Free-form
+    text; may contain whitespace and punctuation.
+  example: for-aa3ff2bb
+- name: Message
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: Operation completed successfully.
+- name: Message_ID
+  type: string_short
+  description: Opaque identifier emitted by Fortinet. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: for-9cc09cc6
+- name: Policy_ID
+  type: string_short
+  description: Opaque identifier emitted by Fortinet. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: for-f8d1b0d5
+- name: Session_ID
+  type: string_short
+  description: Unique identifier — assigned by Fortinet per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: sess-0777e7c8-dd8
+- name: Subject
+  type: string
+  description: Subject line — typically email subject or event summary. Free-form
+    text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: Subtype
+  type: string
+  description: Vendor-emitted field 'Subtype'. Free-form text; may contain whitespace
+    and punctuation.
+  example: login
+- name: To
+  type: string
+  description: Vendor-emitted field 'To'. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_to
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'fortinet: fortimail=Fortimail action=allow user=jdoe'
+- name: parsed_fields
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: classifier,
+    client_cc, client_ip, client_name, device_id, disposition, domain, dst_ip, from,
+    message_id, session_id, subject, subtype, to, type, url (each key defined as a
+    dotted-path leaf below).'
+  example: '{}'
+- name: parsed_fields.classifier
+  type: string
+  description: Vendor-emitted field 'Parsed fields › classifier'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: parsed_fields.client_cc
+  type: country_code
+  description: Vendor-emitted field 'Parsed fields › client cc'. Leaf of the 'parsed_fields'
+    composite. ISO 3166-1 alpha-2 uppercase country code (e.g., US, DE, JP).
+  example: US
+- name: parsed_fields.client_ip
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields › client ip'. Leaf of the 'parsed_fields'
+    composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding
+    brackets or quotes.
+  example: 203.0.113.42
+- name: parsed_fields.client_name
+  type: host
+  description: Human-readable name as displayed by Fortinet. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: parsed_fields.device_id
+  type: string_short
+  description: Opaque identifier emitted by Fortinet. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: for-b3158aa9
+- name: parsed_fields.disposition
+  type: string
+  description: Vendor-emitted field 'Parsed fields › disposition'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: clean
+- name: parsed_fields.domain
+  type: domain
+  description: DNS domain reported by Fortinet — bare domain, no scheme/path/port.
+    Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: parsed_fields.dst_ip
+  type: ipv4
+  description: Destination IPv4/IPv6 address of the target. Dotted-quad IPv4 literal
+    (e.g., 192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: parsed_fields.from
+  type: email
+  description: Vendor-emitted field 'Parsed fields › from'. Leaf of the 'parsed_fields'
+    composite. RFC 5322 'local@domain' address; one address only — use an array field
+    for multiple addresses.
+  example: user@example.com
+- name: parsed_fields.message_id
+  type: string_short
+  description: Opaque identifier emitted by Fortinet. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: for-0394ae89
+- name: parsed_fields.session_id
+  type: string_short
+  description: Opaque identifier emitted by Fortinet. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: sess-a6bdac53-c79
+- name: parsed_fields.subject
+  type: string
+  description: Subject line — typically email subject or event summary. Free-form
+    text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: parsed_fields.subtype
+  type: string
+  description: Vendor-emitted field 'Parsed fields › subtype'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: parsed_fields.to
+  type: email
+  description: Vendor-emitted field 'Parsed fields › to'. Leaf of the 'parsed_fields'
+    composite. RFC 5322 'local@domain' address; one address only — use an array field
+    for multiple addresses.
+  example: user@example.com
+- name: parsed_fields.type
+  type: string_short
+  description: Type/category classifier emitted by Fortinet. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: parsed_fields.url
+  type: url
+  description: Full URL with scheme — as Fortinet captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: action
+  type: enum
+  description: 'Firewall action taken. One of: accept, deny, drop, reject, blocked,
+    monitor, ipsec, tunnel, client-rst, server-rst, timeout (case-sensitive).'
+  enum_values:
+  - accept
+  - deny
+  - drop
+  - reject
+  - blocked
+  - monitor
+  - ipsec
+  - tunnel
+  - client-rst
+  - server-rst
+  - timeout
+  example: accept
+- name: app
+  type: string_short
+  description: Detected application. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: appcat
+  type: string_short
+  description: Application category. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: apprisk
+  type: enum
+  description: 'Application risk level. One of: unknown, low, elevated, medium, high,
+    critical (case-sensitive).'
+  enum_values:
+  - unknown
+  - low
+  - elevated
+  - medium
+  - high
+  - critical
+  example: unknown
+- name: attack
+  type: string_short
+  description: IPS attack signature. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: attackid
+  type: integer
+  description: IPS attack signature id. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: date
+  type: string_short
+  description: Log date (YYYY-MM-DD). Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: '2024-01-15'
+- name: devid
+  type: string_short
+  description: FortiGate serial number. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: devname
+  type: host
+  description: FortiGate device name. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: dstcountry
+  type: country_code
+  description: Destination country. ISO 3166-1 alpha-2 uppercase country code.
+  example: US
+- name: dstintf
+  type: string_short
+  description: Destination interface name. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: dstintfrole
+  type: string_short
+  description: Destination interface role. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: dstip
+  type: ipv4
+  description: Destination IP address. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: dstport
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: duration
+  type: integer
+  description: Session duration (seconds). Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: eventtime
+  type: timestamp_ms
+  description: Epoch nanoseconds the event occurred. Unsigned epoch milliseconds since
+    1970-01-01 UTC; bare digits.
+  example: '1748263381000'
+- name: filehash
+  type: hash_sha256
+  description: SHA-256 of the file. 64-character lowercase hex SHA-256 digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: filehashsrc
+  type: string_short
+  description: Hash source (av-engine, sandbox, etc.). Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token
+- name: filename
+  type: file_path
+  description: Filename in transfer / attached. Absolute filesystem path; vendor-native
+    separator.
+  example: /var/log/app.log
+- name: group
+  type: string_short
+  description: User group. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: hostname
+  type: host
+  description: Destination hostname (HTTP/SSL SNI). Hostname or fully-qualified domain
+    name (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: level
+  type: enum
+  description: 'Log severity. One of: emergency, alert, critical, error, warning,
+    notice, information, debug (case-sensitive).'
+  enum_values:
+  - emergency
+  - alert
+  - critical
+  - error
+  - warning
+  - notice
+  - information
+  - debug
+  example: emergency
+- name: logid
+  type: string_short
+  description: Log message id. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: '0000000013'
+- name: method
+  type: string_short
+  description: HTTP method (when applicable). Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: msg
+  type: string_long
+  description: Free-text log message. Free-form text; may span multiple lines or contain
+    large payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: policyid
+  type: integer
+  description: Policy ID matched. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: policytype
+  type: string_short
+  description: Policy type (policy, dnat, etc.). Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: poluuid
+  type: string_short
+  description: Policy UUID matched. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: proto
+  type: integer
+  description: IP protocol number. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: rcvdbyte
+  type: integer_byte_count
+  description: Bytes received. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: rcvdpkt
+  type: integer
+  description: Packets received. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: ref
+  type: url
+  description: Reference URL (CVE, vendor advisory). Full URL with scheme (http/https/ftp);
+    percent-encoded if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: sentbyte
+  type: integer_byte_count
+  description: Bytes sent. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: sentpkt
+  type: integer
+  description: Packets sent. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: service
+  type: string_short
+  description: Service name matched. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: HTTPS
+- name: sessionid
+  type: integer
+  description: Session id. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: srccountry
+  type: country_code
+  description: Source country. ISO 3166-1 alpha-2 uppercase country code.
+  example: US
+- name: srcintf
+  type: string_short
+  description: Source interface name. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: srcintfrole
+  type: string_short
+  description: Source interface role (wan/lan/dmz). Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token
+- name: srcip
+  type: ipv4
+  description: Source IP address. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: srcport
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: status
+  type: string_short
+  description: HTTP status / detection status. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: subtype
+  type: string_short
+  description: Log subtype (per log type). Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: forward
+- name: time
+  type: string_short
+  description: Log time (HH:MM:SS). Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: '14:23:01'
+- name: type
+  type: enum
+  description: 'Log type. One of: traffic, utm, event, anomaly, voip, dns, ssh, ssl,
+    app-ctrl, webfilter, ips, virus, dlp, spam (case-sensitive).'
+  enum_values:
+  - traffic
+  - utm
+  - event
+  - anomaly
+  - voip
+  - dns
+  - ssh
+  - ssl
+  - app-ctrl
+  - webfilter
+  - ips
+  - virus
+  - dlp
+  - spam
+  example: traffic
+- name: tz
+  type: string_short
+  description: Timezone string. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: '+0300'
+- name: url
+  type: url
+  description: URL (when applicable). Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: user
+  type: user
+  description: Source user (when known). Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jdoe
+- name: vd
+  type: string_short
+  description: Virtual domain. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: root
+use_cases:
+- Firewall
+- Network
+- WAF
+how_to_use: |
+  ## fortinet fortimail → Cortex XSIAM (dataset `fortinet_fortimail_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `fortinet` / product `fortimail`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `fortinet_fortimail_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `fortinet`
+    - **product**: `fortimail`
+
+    These normalize → `fortinet_fortimail_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `parsed_fields -> device_id`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~41 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.severity`, `xdm.email.message_id`, `xdm.email.recipients`, `xdm.email.sender`, `xdm.email.subject`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `fortinet`, Product = `fortimail`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = fortinet_fortimail_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

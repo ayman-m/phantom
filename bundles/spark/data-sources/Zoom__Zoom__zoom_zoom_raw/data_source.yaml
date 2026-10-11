@@ -1,0 +1,138 @@
+schema_version: 1
+id: Zoom
+pack_name: Zoom
+rule_name: Zoom
+dataset_name: zoom_zoom_raw
+vendor: Zoom
+product: Zoom
+description: Use the Zoom integration manage your Zoom users and meetings
+categories:
+- Messaging and Conferencing
+version: 1.6.38
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTE3cHgiIHZpZXdCb3g9IjAgMCA1MTIgMTE3IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDx0aXRsZT5ab29tPC90aXRsZT4KICAgIDxnPgogICAgICAgIDxwYXRoIGQ9Ik0xMDcuNDcxNzQ0LDExNC43MDU2NTUgTDE2LjM0NzcwODgsMTE0LjcwNTY1NSBDMTAuMzc5NTIxMiwxMTQuNzA1NjU1IDQuNTU2ODk5MDgsMTExLjUwMzIxMyAxLjc5MTE1MzU5LDEwNi4xMTcyODcgQy0xLjQxMTI4ODU1LDk5Ljg1Nzk2ODcgLTAuMjQ2NzY0MTM2LDkyLjQzNDEyNTUgNC43MDI0NjQ2Myw4Ny42MzA0NjIzIEw2OC4xNjkwNDUzLDI0LjE2Mzg4MTYgTDIyLjYwNzAyNzUsMjQuMTYzODgxNiBDMTAuMDg4MzkwMSwyNC4xNjM4ODE2IDAuMDQ0MzY2OTY4NSwxMy45NzQyOTMgMC4wNDQzNjY5Njg1LDEuNjAxMjIxMDcgTDg0LjAzNTY5MDUsMS42MDEyMjEwNyBDOTAuMDAzODc4MSwxLjYwMTIyMTA3IDk1LjgyNjUwMDIsNC44MDM2NjMyMiA5OC41OTIyNDU3LDEwLjE4OTU4ODYgQzEwMS43OTQ2ODgsMTYuNDQ4OTA3NCAxMDAuNjMwMTYzLDIzLjg3Mjc1MDUgOTUuNjgwOTM0NiwyOC42NzY0MTM3IEwzMi4yMTQzNTQsOTIuMTQyOTk0NCBMODQuNzYzNTE4Miw5Mi4xNDI5OTQ0IEM5Ny4yODIxNTU3LDkyLjE0Mjk5NDQgMTA3LjQ3MTc0NCwxMDIuMzMyNTgzIDEwNy40NzE3NDQsMTE0LjcwNTY1NSBaIE00NjguMTgzMTgyLDAgQzQ1NS4wODIyODMsMCA0NDMuNDM3MDM4LDUuNjc3MDU2NTMgNDM1LjI4NTM2NywxNC43MDIxMjA4IEM0MjcuMTMzNjk3LDUuNjc3MDU2NTMgNDE1LjQ4ODQ1MiwwIDQwMi4zODc1NTMsMCBDMzc4LjIyMzY3MSwwIDM1OC40MjY3NTYsMjAuNjcwMzA4NCAzNTguNDI2NzU2LDQ0LjgzNDE5IEwzNTguNDI2NzU2LDExNC43MDU2NTUgQzM3MC45NDUzOTMsMTE0LjcwNTY1NSAzODAuOTg5NDE3LDEwNC41MTYwNjYgMzgwLjk4OTQxNyw5Mi4xNDI5OTQ0IEwzODAuOTg5NDE3LDQ0LjY4ODYyNDUgQzM4MC45ODk0MTcsMzMuMDQzMzgwMyAzOTAuMDE0NDgxLDIzLjE0NDkyMjggNDAxLjY1OTcyNSwyMi43MDgyMjYxIEM0MTMuODg3MjMxLDIyLjI3MTUyOTUgNDIzLjkzMTI1NCwzMi4wMjQ0MjE0IDQyMy45MzEyNTQsNDQuMTA2MzYyMyBMNDIzLjkzMTI1NCw5Mi4xNDI5OTQ0IEM0MjMuOTMxMjU0LDEwNC42NjE2MzIgNDM0LjEyMDg0MywxMTQuNzA1NjU1IDQ0Ni40OTM5MTUsMTE0LjcwNTY1NSBMNDQ2LjQ5MzkxNSw0NC41NDMwNTg5IEM0NDYuNDkzOTE1LDMyLjg5NzgxNDggNDU1LjUxODk3OSwyMi45OTkzNTcyIDQ2Ny4xNjQyMjMsMjIuNTYyNjYwNiBDNDc5LjM5MTczLDIyLjEyNTk2MzkgNDg5LjQzNTc1MywzMS44Nzg4NTU5IDQ4OS40MzU3NTMsNDMuOTYwNzk2NyBMNDg5LjQzNTc1Myw5MS45OTc0Mjg5IEM0ODkuNDM1NzUzLDEwNC41MTYwNjYgNDk5LjYyNTM0MSwxMTQuNTYwMDg5IDUxMS45OTkyMTEsMTE0LjU2MDA4OSBMNTExLjk5OTIxMSw0NC42ODg2MjQ1IEM1MTIuMTQzOTc5LDIwLjY3MDMwODQgNDkyLjM0NzA2NCwwIDQ2OC4xODMxODIsMCBaIE0yMjEuNTk1MTM3LDU4LjIyNjIyMDggQzIyMS41OTUxMzcsOTAuMzk2MjA3OCAxOTUuNTM4OTAzLDExNi40NTI0NDIgMTYzLjM2ODkxNiwxMTYuNDUyNDQyIEMxMzEuMTk4OTI5LDExNi40NTI0NDIgMTA1LjE0MjY5Niw5MC4zOTYyMDc4IDEwNS4xNDI2OTYsNTguMjI2MjIwOCBDMTA1LjE0MjY5NiwyNi4wNTYyMzM4IDEzMS4xOTg5MjksMCAxNjMuMzY4OTE2LDAgQzE5NS41Mzg5MDMsMCAyMjEuNTk1MTM3LDI2LjA1NjIzMzggMjIxLjU5NTEzNyw1OC4yMjYyMjA4IFogTTE5OS4wMzI0NzcsNTguMjI2MjIwOCBDMTk5LjAzMjQ3NywzOC41NzQ4NzEzIDE4My4wMjAyNjYsMjIuNTYyNjYwNiAxNjMuMzY4OTE2LDIyLjU2MjY2MDYgQzE0My43MTc1NjcsMjIuNTYyNjYwNiAxMjcuNzA1MzU2LDM4LjU3NDg3MTMgMTI3LjcwNTM1Niw1OC4yMjYyMjA4IEMxMjcuNzA1MzU2LDc3Ljg3NzU3MDMgMTQzLjcxNzU2Nyw5My44ODk3ODEgMTYzLjM2ODkxNiw5My44ODk3ODEgQzE4My4wMjAyNjYsOTMuODg5NzgxIDE5OS4wMzI0NzcsNzcuODc3NTcwMyAxOTkuMDMyNDc3LDU4LjIyNjIyMDggWiBNMzQ3LjA3MjY0Myw1OC4yMjYyMjA4IEMzNDcuMDcyNjQzLDkwLjM5NjIwNzggMzIxLjAxNjQwOSwxMTYuNDUyNDQyIDI4OC44NDY0MjIsMTE2LjQ1MjQ0MiBDMjU2LjY3NjQzNSwxMTYuNDUyNDQyIDIzMC42MjAyMDEsOTAuMzk2MjA3OCAyMzAuNjIwMjAxLDU4LjIyNjIyMDggQzIzMC42MjAyMDEsMjYuMDU2MjMzOCAyNTYuNjc2NDM1LDAgMjg4Ljg0NjQyMiwwIEMzMjEuMDE2NDA5LDAgMzQ3LjA3MjY0MywyNi4wNTYyMzM4IDM0Ny4wNzI2NDMsNTguMjI2MjIwOCBaIE0zMjQuNTA5OTgyLDU4LjIyNjIyMDggQzMyNC41MDk5ODIsMzguNTc0ODcxMyAzMDguNDk3NzcyLDIyLjU2MjY2MDYgMjg4Ljg0NjQyMiwyMi41NjI2NjA2IEMyNjkuMTk1MDczLDIyLjU2MjY2MDYgMjUzLjE4Mjg2MiwzOC41NzQ4NzEzIDI1My4xODI4NjIsNTguMjI2MjIwOCBDMjUzLjE4Mjg2Miw3Ny44Nzc1NzAzIDI2OS4xOTUwNzMsOTMuODg5NzgxIDI4OC44NDY0MjIsOTMuODg5NzgxIEMzMDguNDk3NzcyLDkzLjg4OTc4MSAzMjQuNTA5OTgyLDc3Ljg3NzU3MDMgMzI0LjUwOTk4Miw1OC4yMjYyMjA4IFoiIGZpbGw9IiMwQjVDRkYiPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+Cg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: action
+  type: string
+  description: Action taken by the vendor's enforcement engine. Free-form text; may
+    contain whitespace and punctuation.
+  example: allow
+- name: category_type
+  type: string_short
+  description: Type/category classifier emitted by Zoom. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: client_type
+  type: string_short
+  description: Type/category classifier emitted by Zoom. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: event_type
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'activity_log'
+- name: ip_address
+  type: ipv4
+  description: IPv4/IPv6 address — vendor-emitted, no version split. Dotted-quad IPv4
+    literal (e.g., 192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: operation_detail
+  type: string
+  description: Vendor-emitted field 'Operation detail'. Free-form text; may contain
+    whitespace and punctuation.
+  example: see message
+- name: operator
+  type: string
+  description: Vendor-emitted field 'Operator'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_operator
+- name: time
+  type: datetime
+  description: Time-of-day emitted by Zoom. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by Zoom. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+use_cases:
+- Collab
+how_to_use: |
+  ## Zoom Zoom → Cortex XSIAM (dataset `zoom_zoom_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `zoom_zoom_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `Zoom`
+    - **product**: `Zoom`
+
+    These normalize → `zoom_zoom_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `event_type = "operation_log"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~9 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.description`, `xdm.event.operation`, `xdm.event.original_event_type`, `xdm.event.outcome_reason`, `xdm.event.type`, `xdm.observer.version`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = zoom_zoom_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

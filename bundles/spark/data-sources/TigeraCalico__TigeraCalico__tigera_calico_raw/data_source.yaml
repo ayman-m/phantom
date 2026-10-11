@@ -1,0 +1,254 @@
+schema_version: 1
+id: TigeraCalico
+pack_name: TigeraCalico
+rule_name: TigeraCalico
+dataset_name: tigera_calico_raw
+vendor: Tigera
+product: TigeraCalico
+description: Calico Open Source is a networking and security solution for containers,
+  virtual machines, and native host-based workloads.
+categories:
+- Analytics & SIEM
+- Network Security
+version: 1.0.5
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB2aWV3Qm94PSIwIDAgNTAwIDEwOC4wMyI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOnVybCgjbGluZWFyLWdyYWRpZW50KTt9LmNscy0ye2ZpbGw6IzIzMWYxZjt9PC9zdHlsZT48bGluZWFyR3JhZGllbnQgaWQ9ImxpbmVhci1ncmFkaWVudCIgeTE9IjU0LjAxIiB4Mj0iMTMyLjQiIHkyPSI1NC4wMSIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiPjxzdG9wIG9mZnNldD0iMCIgc3RvcC1jb2xvcj0ib3JhbmdlIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjZTc2ZDJjIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PGcgaWQ9IkxheWVyXzIiIGRhdGEtbmFtZT0iTGF5ZXIgMiI+PGcgaWQ9IkxheWVyXzEtMiIgZGF0YS1uYW1lPSJMYXllciAxIj48cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0xMTIuNDYsMzdsLTEuMTktOC4xNUw4OC4wOCwxNy43M2wtOS40MSw1LjE0LTEuNzUsNS4yMi02LjQxLTUuNDZMODIuMzksMTYsNjQuMSwxMiw0Ni44NSwwbC02LDkuNzMsNi4wOSwxOS4wOEwzOSwxOC43NiwxNi4yMiwzMS44OSwwLDUwLjQ5LDE3LDQzLDcsNjIuODQsMTguMTIsNzMuNTIsMzIuODQsMzYuNjRsLTUuNjksNDVMNTUuNCwxMDhsMi42OS04TDM5LDY4LjYxbDcuNDQtMjgsMTEuMjMtOC4yM0w0OC43NSw1OS43NSw1OS4yLDg0LjY4bDIxLjY4LDYuNTcsOC42Myw1LjQ2LTIuMDYsMy40OCw5LjI2LDYuNzMsMTAuNTMtMi4xNCw1Ljc3LTgsLjExLTEwLjUtMi43Miw0Ljg4aC00bDEuMzUtNS43LTYuODksNi4xUzkyLjEyLDg3LjIxLDg3LjM3LDgxLjJsMS45LTcuMjgsOC45NC04LjE1LTYtNy44NCwxMC4zNy0xMS41NSwxMi4yNiw2LjU2LTEwLjY4LTMuMTZMMTAyLDUyLjQ3bDEzLjc3LDYtMTUuMTEtMy43MS0uMzIsMy4zMiwxNSw1LjA2LTE0LjU3LTEuOSw3LDcuMTNoMGwtMS4xMSw4LjE4LDYuNDktOC4xMSwyLDBMMTEzLjQ5LDc2bDUuNDItNy41MmMuNDUtLjEyLDYuMzgtMS45LDYuNzctOC4zN2w2LjcyLTdaTTUxLjc2LDI0LjgzLDQ3LjYsMTEuNzdsMS43Mi0zLjA4TDU5Ljg5LDE4Wk03My4yLDY1LjUzLDU5LjU5LDU5LjJsNi0yOC44MSw2LjcyLDMuODgtMy40LDMuNEw2Ni43OSw1NGwxMC45Myw2LjY1czMuNCwxNy43MywzLjMyLDE4UzczLjIsNjUuNTMsNzMuMiw2NS41M1pNOTksNDEuMTVsLTcuNjcuMzItNy4zNi03LDEzLDEuMTgsNy43NSw4LjE1Wm0yNS43MywxNmEyMC43LDIwLjcsMCwwLDAtNC4zNi0yLjM4VjUyLjM3bDguMTUuOTNaIi8+PHBhdGggY2xhc3M9ImNscy0yIiBkPSJNMTczLjE2LDg2LjQ2VjM1LjA2SDE1My44OVYyMS41N2g1NC41MlYzNS4wNkgxODkuMTV2NTEuNFoiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik0yMTcsODYuNDZWMjEuNTdIMjMzVjg2LjQ2WiIvPjxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTI3Ni4zOCw4Ny43NmEzNC43NCwzNC43NCwwLDAsMS0xNy4zMS00LjExQTI3LjYzLDI3LjYzLDAsMCwxLDI0Ny44NSw3MmEzOC4zNiwzOC4zNiwwLDAsMS0zLjkxLTE3LjkxLDM4LjU4LDM4LjU4LDAsMCwxLDMuOTEtMTgsMjguMTQsMjguMTQsMCwwLDEsMTEuMDgtMTEuNzMsMzMsMzMsMCwwLDEsMTYuODEtNC4xNSwzNC41NCwzNC41NCwwLDAsMSwxNC45NSwzLjA3LDI0LjYsMjQuNiwwLDAsMSwxMC4xMyw4LjQ0LDIxLjM5LDIxLjM5LDAsMCwxLDMuNjQsMTIuMjhIMjg4LjFhMTAuNzgsMTAuNzgsMCwwLDAtMy43Mi03LjUzLDEyLjY2LDEyLjY2LDAsMCwwLTguNjQtMi45NGMtNC45LDAtOC43MSwxLjgzLTExLjQsNS41cy00LDguNTgtNCwxNC43NXEwLDkuNiw0LjI3LDE1LjE0YTE0LjA4LDE0LjA4LDAsMCwwLDExLjgxLDUuNTQsMTIuNzgsMTIuNzgsMCwwLDAsOC40LTIuODFxMy40Mi0yLjgyLDQuNTktOC43OEgyNzYuODNWNTAuNTVoMTYuNTRxNi43MiwwLDkuNjMsMi45NGMxLjk0LDIsMi45MSw0LjczLDIuOTEsOC4zMWEyNi4xNiwyNi4xNiwwLDAsMS0xLjU0LDguNDgsMjUuMjQsMjUuMjQsMCwwLDEtMTQuMTMsMTVBMzQuMywzNC4zLDAsMCwxLDI3Ni4zOCw4Ny43NloiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik0zMTYuODEsODYuNDZWMjEuNTdoNDYuMzVWMzQuNjNIMzMyLjYydjEyLjJoMjguNjNWNTkuMzhIMzMyLjYydjE0aDMwLjU0Vjg2LjQ2WiIvPjxwYXRoIGNsYXNzPSJjbHMtMiIgZD0iTTM3NC4zMyw4Ni40NlYyMS41N2gyNy4wOHExMi43MiwwLDE5LjU0LDQuODh0Ni44MSwxNGExNS4wNiwxNS4wNiwwLDAsMS0zLDkuMzQsMTguOTQsMTguOTQsMCwwLDEtOC41NCw2LjE1cTYuMjcsMS45LDguNDUsNS42NmExOC44MywxOC44MywwLDAsMSwyLjE4LDkuNTdWODYuNDZINDExLjIyVjcyLjdxMC05Ljk1LTkuODEtMTBIMzkwLjE0Vjg2LjQ2Wk0zOTAuMTQsNTBoMTEuMjdjMy4yMSwwLDUuNjgtLjcsNy40MS0yLjEyYTcuMzMsNy4zMywwLDAsMCwyLjU5LTYsNi41LDYuNSwwLDAsMC0yLjU5LTUuNXEtMi42LTEuOTMtNy40MS0xLjk0SDM5MC4xNFoiLz48cGF0aCBjbGFzcz0iY2xzLTIiIGQ9Ik00MzQuMyw4Ni40NmwxOS42My01Mi45NWE1Mi45MSw1Mi45MSwwLDAsMSwzLjE0LTcuMTgsMTEuODIsMTEuODIsMCwwLDEsNC00LjUsMTEuMjgsMTEuMjgsMCwwLDEsNi4yMy0xLjU2LDExLjcsMTEuNywwLDAsMSw2LjM2LDEuNTYsMTIuNjMsMTIuNjMsMCwwLDEsNC4xMyw0LjQ1LDQxLjM2LDQxLjM2LDAsMCwxLDMuMTQsN0w1MDAsODYuNDZINDgzLjgzTDQ3OS4zNyw3Mi43SDQ1NC45M0w0NTAuMyw4Ni40NlpNNDY3LjExLDM3LDQ1OS4yOSw1OS45SDQ3NS4xTDQ2Ny42NSwzN2MtLjA2LS4yMy0uMTUtLjM1LS4yNy0uMzVTNDY3LjE3LDM2Ljc0LDQ2Ny4xMSwzN1oiLz48L2c+PC9nPjwvc3ZnPg==
+  source: direct:https://www.tigera.io/app/uploads/2026/01/Tigera-logo-2026-black-text.svg
+  license: tigera.io / vendor trademark
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: tigera_secure.action
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.action.
+  example: sample value
+- name: tigera_secure.bytes_in
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.bytes_in.
+  example: sample value
+- name: tigera_secure.bytes_out
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.bytes_out.
+  example: sample value
+- name: tigera_secure.dest_ip
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.dest_ip.
+  example: sample value
+- name: tigera_secure.dest_name
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.dest_name.
+  example: sample value
+- name: tigera_secure.dest_namespace
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.dest_namespace.
+  example: sample value
+- name: tigera_secure.dest_port
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.dest_port.
+  example: sample value
+- name: tigera_secure.dest_type
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.dest_type.
+  example: sample value
+- name: tigera_secure.host
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.host.
+  example: sample value
+- name: tigera_secure.proto
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.proto.
+  example: sample value
+- name: tigera_secure.source_ip
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.source_ip.
+  example: sample value
+- name: tigera_secure.source_name
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.source_name.
+  example: sample value
+- name: tigera_secure.source_namespace
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.source_namespace.
+  example: sample value
+- name: tigera_secure.source_port
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.source_port.
+  example: sample value
+- name: tigera_secure.source_type
+  type: string_short
+  description: Nested leaf of `tigera_secure` — the modeling rule reads it at $.source_type.
+  example: sample value
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'tigera: tigeracalico=TigeraCalico action=allow user=jdoe'
+- name: action
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: allow
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: bytes_in
+  type: string
+  description: Destination sent bytes. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_in
+- name: bytes_out
+  type: string
+  description: Source sent bytes. Free-form text; may contain whitespace and punctuation.
+  example: sample_out
+- name: dest_ip
+  type: ipv4
+  description: Dest ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: dest_name
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: dest_namespace
+  type: string
+  description: Destination resource value. Free-form text; may contain whitespace
+    and punctuation.
+  example: tenant-2726c616
+- name: dest_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: dest_type
+  type: string
+  description: Destination host device category. Free-form text; may contain whitespace
+    and punctuation.
+  example: authentication
+- name: fA
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: hopopt
+  type: string
+  description: Network IP protocol. Free-form text; may contain whitespace and punctuation.
+  example: sample_hopopt
+- name: host
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: ip_proto
+  type: string
+  description: Network IP protocol. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: source_ip
+  type: ipv4
+  description: Source ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_name
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: source_namespace
+  type: domain
+  description: Source host FQDN. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: source_port
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: source_type
+  type: string
+  description: Source host device category. Free-form text; may contain whitespace
+    and punctuation.
+  example: authentication
+- name: tigera_secure
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+use_cases:
+- Container
+how_to_use: |
+  ## tigera calico → Cortex XSIAM (dataset `tigera_calico_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `tigera` / product `calico`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `tigera_calico_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `tigera`
+    - **product**: `calico`
+
+    These normalize → `tigera_calico_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `tigera_secure -> action`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~21 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.outcome`, `xdm.event.outcome_reason`, `xdm.network.ip_protocol`, `xdm.observer.name`, `xdm.observer.type`, `xdm.source.cloud.source_type`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `tigera`, Product = `calico`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = tigera_calico_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

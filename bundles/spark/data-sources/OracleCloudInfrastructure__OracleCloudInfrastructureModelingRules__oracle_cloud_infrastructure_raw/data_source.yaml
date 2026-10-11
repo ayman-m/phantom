@@ -1,0 +1,210 @@
+schema_version: 1
+id: OracleCloudInfrastructure
+pack_name: OracleCloudInfrastructure
+rule_name: OracleCloudInfrastructureModelingRules
+dataset_name: oracle_cloud_infrastructure_raw
+vendor: Oracle
+product: OracleCloudInfrastructure
+description: Oracle Cloud Infrastructure (OCI)
+categories:
+- Identity and Access Management
+version: 1.0.36
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjY3cHgiIHZpZXdCb3g9IjAgMCA1MTIgNjciIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQiPgogICAgPGc+CiAgICAgICAgPHBhdGggZD0iTTIyMS4wMzQyMjQsNDMuMzAyODU4NSBMMjU0Ljg2NjEzOSw0My4zMDI4NTg1IEwyMzYuOTc3MDI5LDE0LjUyMTk1NjUgTDIwNC4xNDQzNDQsNjYuNTU5MDg5NCBMMTg5LjIwMTYxOCw2Ni41NTkwODk0IEwyMjkuMTM3MTA3LDQuMDUxMzk5OTYgQzIzMC44NzM0NzIsMS41MjU4MjY3NSAyMzMuNzY3MjY4LDAgMjM2Ljk3NzAyOSwwIEMyNDAuMDgxMTYzLDAgMjQyLjk3NTAwOCwxLjQ3MzIzNzg2IDI0NC42NTg3ODUsMy45NDYxNzIyNSBMMjg0Ljc1MjA5LDY2LjU1OTA4OTQgTDI2OS44MDkzMjMsNjYuNTU5MDg5NCBMMjYyLjc1ODcxNyw1NC45MzA5NzgxIEwyMjguNTA1NTkxLDU0LjkzMDk3ODEgTDIyMS4wMzQyMjQsNDMuMzAyODU4NSBMMjIxLjAzNDIyNCw0My4zMDI4NTg1IFogTTM3Ni4yNTExNzgsNTQuOTMwOTc4MSBMMzc2LjI1MTE3OCwwLjYzMTM5MTIyMiBMMzYzLjU3MDc1NywwLjYzMTM5MTIyMiBMMzYzLjU3MDc1Nyw2MC4yNDUyMDIxIEMzNjMuNTcwNzU3LDYxLjg3NjI5ODIgMzY0LjIwMjI1Niw2My40NTQ3NTU0IDM2NS40MTIzMjUsNjQuNjY0OTA3NCBDMzY2LjYyMjMxLDY1Ljg3NTEwMDkgMzY4LjI1MzQ5LDY2LjU1OTA4OTQgMzcwLjA0MjQ2MSw2Ni41NTkwODk0IEw0MjcuODY3NDM0LDY2LjU1OTA4OTQgTDQzNS4zMzg4MTgsNTQuOTMwOTc4MSBMMzc2LjI1MTE3OCw1NC45MzA5NzgxIEwzNzYuMjUxMTc4LDU0LjkzMDk3ODEgWiBNMTY2LjQ3MTU1OSw0NS4xOTcwNDA1IEMxNzguNzgzODY3LDQ1LjE5NzA0MDUgMTg4Ljc4MDg5MSwzNS4yNTI2NTU4IDE4OC43ODA4OTEsMjIuOTQwNTE0NSBDMTg4Ljc4MDg5MSwxMC42Mjg0MTQ3IDE3OC43ODM4NjcsMC42MzEzOTEyMjIgMTY2LjQ3MTU1OSwwLjYzMTM5MTIyMiBMMTEwLjk5ODQzLDAuNjMxMzkxMjIyIEwxMTAuOTk4NDMsNjYuNTU5MDg5NCBMMTIzLjY3MzgyNSw2Ni41NTkwODk0IEwxMjMuNjczODI1LDEyLjI1OTUxMDggTDE2NS42Mjk2NzEsMTIuMjU5NTEwOCBDMTcxLjUyMjg3MiwxMi4yNTk1MTA4IDE3Ni4yNTgyMTEsMTcuMDQ3NTIxNCAxNzYuMjU4MjExLDIyLjk0MDUxNDUgQzE3Ni4yNTgyMTEsMjguODMzNDk5MiAxNzEuNTIyODcyLDMzLjYyMTU1OTcgMTY1LjYyOTY3MSwzMy42MjE1NTk3IEwxMjkuODgyNTc2LDMzLjU2ODkyMDkgTDE2Ny43MzQxNzUsNjYuNTU5MDg5NCBMMTg2LjE1MDA0OCw2Ni41NTkwODk0IEwxNjAuNjgzOTY5LDQ1LjE5NzA0MDUgTDE2Ni40NzE1NTksNDUuMTk3MDQwNSBMMTY2LjQ3MTU1OSw0NS4xOTcwNDA1IFogTTMyLjk2OTQyMDksNjYuNTU5MDg5NCBDMTQuNzY5Mzc5OCw2Ni41NTkwODk0IDkuMjM3MDU1NTZlLTE0LDUxLjgyNjY0NDIgOS4yMzcwNTU1NmUtMTQsMzMuNjIxNTU5NyBDOS4yMzcwNTU1NmUtMTQsMTUuNDE2NDMzNiAxNC43NjkzNzk4LDAuNjMxMzkxMjIyIDMyLjk2OTQyMDksMC42MzEzOTEyMjIgTDcxLjI4OTI5MjksMC42MzEzOTEyMjIgQzg5LjQ5NDM3NzQsMC42MzEzOTEyMjIgMTA0LjI1MzI0NiwxNS40MTY0MzM2IDEwNC4yNTMyNDYsMzMuNjIxNTU5NyBDMTA0LjI1MzI0Niw1MS44MjY2NDQyIDg5LjQ5NDM3NzQsNjYuNTU5MDg5NCA3MS4yODkyOTI5LDY2LjU1OTA4OTQgTDMyLjk2OTQyMDksNjYuNTU5MDg5NCBMMzIuOTY5NDIwOSw2Ni41NTkwODk0IFogTTcwLjQzNjg5MzYsNTQuOTMwOTc4MSBDODIuMjI4MzMwOCw1NC45MzA5NzgxIDkxLjc3ODExMTYsNDUuNDA3NDg3NiA5MS43NzgxMTE2LDMzLjYyMTU1OTcgQzkxLjc3ODExMTYsMjEuODM1NTgxOSA4Mi4yMjgzMzA4LDEyLjI1OTUxMDggNzAuNDM2ODkzNiwxMi4yNTk1MTA4IEwzMy44MTYzNTI1LDEyLjI1OTUxMDggQzIyLjAzMDM4MywxMi4yNTk1MTA4IDEyLjQ3NTEyNjEsMjEuODM1NTgxOSAxMi40NzUxMjYxLDMzLjYyMTU1OTcgQzEyLjQ3NTEyNjEsNDUuNDA3NDg3NiAyMi4wMzAzODMsNTQuOTMwOTc4MSAzMy44MTYzNTI1LDU0LjkzMDk3ODEgTDcwLjQzNjg5MzYsNTQuOTMwOTc4MSBMNzAuNDM2ODkzNiw1NC45MzA5NzgxIFogTTMxMS4yMTc4MDgsNjYuNTU5MDg5NCBDMjkzLjAxMjY4Miw2Ni41NTkwODk0IDI3OC4yMjc3ODksNTEuODI2NjQ0MiAyNzguMjI3Nzg5LDMzLjYyMTU1OTcgQzI3OC4yMjc3ODksMTUuNDE2NDMzNiAyOTMuMDEyNjgyLDAuNjMxMzkxMjIyIDMxMS4yMTc4MDgsMC42MzEzOTEyMjIgTDM1Ni43MzA1NCwwLjYzMTM5MTIyMiBMMzQ5LjMxMTc1MywxMi4yNTk1MTA4IEwzMTIuMDU5Njk2LDEyLjI1OTUxMDggQzMwMC4yNzM2NzYsMTIuMjU5NTEwOCAyOTAuNjk3ODIyLDIxLjgzNTU4MTkgMjkwLjY5NzgyMiwzMy42MjE1NTk3IEMyOTAuNjk3ODIyLDQ1LjQwNzQ4NzYgMzAwLjI3MzY3Niw1NC45MzA5NzgxIDMxMi4wNTk2OTYsNTQuOTMwOTc4MSBMMzU3Ljc4MjczMyw1NC45MzA5NzgxIEwzNTAuMzExNDMzLDY2LjU1OTA4OTQgTDMxMS4yMTc4MDgsNjYuNTU5MDg5NCBMMzExLjIxNzgwOCw2Ni41NTkwODk0IFogTTQ2Ni4yNzY5NjIsNTQuOTMwOTc4MSBDNDU2LjU0MjksNTQuOTMwOTc4MSA0NDguMjgyMjI1LDQ4LjQwNjU5MzggNDQ1Ljc1NjU2LDM5LjQwOTI3NTEgTDQ5OS45NTEwNzgsMzkuNDA5Mjc1MSBMNTA3LjQyMjQ2MSwyNy43ODExNjM5IEw0NDUuNzU2NTYsMjcuNzgxMTYzOSBDNDQ4LjI4MjIyNSwxOC44MzY0NzU3IDQ1Ni41NDI5LDEyLjI1OTUxMDggNDY2LjI3Njk2MiwxMi4yNTk1MTA4IEw1MDMuNDc2NDIyLDEyLjI1OTUxMDggTDUxMS4wMDA0MDMsMC42MzEzOTEyMjIgTDQ2NS40MzUwNzQsMC42MzEzOTEyMjIgQzQ0Ny4yMjk5NDgsMC42MzEzOTEyMjIgNDMyLjQ0NTA1NiwxNS40MTY0MzM2IDQzMi40NDUwNTYsMzMuNjIxNTU5NyBDNDMyLjQ0NTA1Niw1MS44MjY2NDQyIDQ0Ny4yMjk5NDgsNjYuNTU5MDg5NCA0NjUuNDM1MDc0LDY2LjU1OTA4OTQgTDUwNC41Mjg2OTksNjYuNTU5MDg5NCBMNTEyLDU0LjkzMDk3ODEgTDQ2Ni4yNzY5NjIsNTQuOTMwOTc4MSBMNDY2LjI3Njk2Miw1NC45MzA5NzgxIFoiIGZpbGw9IiNFQTFCMjIiPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: cloudEventsVersion
+  type: string
+  description: Vendor-emitted field 'CloudEventsVersion'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cloudeventsversi
+- name: contentType
+  type: string
+  description: Vendor-emitted field 'ContentType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_contenttype
+- name: data
+  type: json
+  description: 'Destination resource before value. JSON object with keys: availabilityDomain,
+    eventName, identity, request, resourceId, resourceName, response, stateChange
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: eventId
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Free-form
+    text; may contain whitespace and punctuation.
+  example: evt-3a02eace
+- name: eventTime
+  type: string
+  description: Event timestamp as reported by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_eventtime
+- name: eventType
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: eventTypeVersion
+  type: string
+  description: Vendor-emitted field 'EventTypeVersion'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_eventtypeversion
+- name: data.availabilityDomain
+  type: string
+  description: Vendor-emitted field 'Data › availabilityDomain'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_availabilitydoma
+- name: data.eventName
+  type: string
+  description: Vendor-emitted field 'Data › eventName'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: data.identity.authType
+  type: string
+  description: Vendor-emitted field 'Data › identity › authType'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_authtype
+- name: data.identity.callerId
+  type: string
+  description: Vendor-emitted field 'Data › identity › callerId'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_callerid
+- name: data.identity.callerName
+  type: user
+  description: Vendor-emitted field 'Data › identity › callerName'. Leaf of the 'data'
+    composite. Account name as the vendor reports it — login name, UPN, or sAMAccountName
+    depending on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: data.identity.ipAddress
+  type: ipv4
+  description: Vendor-emitted field 'Data › identity › ipAddress'. Leaf of the 'data'
+    composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding
+    brackets or quotes.
+  example: 203.0.113.42
+- name: data.identity.principalId
+  type: string
+  description: Vendor-emitted field 'Data › identity › principalId'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: AIDAJDPLRKLG7UEXAMPLE
+- name: data.identity.tenantId
+  type: string
+  description: Vendor-emitted field 'Data › identity › tenantId'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: tenant-83c84b43
+- name: data.identity.userAgent
+  type: string
+  description: Vendor-emitted field 'Data › identity › userAgent'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: data.request.action
+  type: string_short
+  description: Action taken by Oracle's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: data.request.headers
+  type: string
+  description: Vendor-emitted field 'Data › request › headers'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 'Content-Type: application/json'
+- name: data.request.id
+  type: string_short
+  description: Opaque identifier emitted by Oracle. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: ora-b60c8d90
+- name: data.request.path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: https://example.com/path
+- name: data.resourceId
+  type: string
+  description: Vendor-emitted field 'Data › resourceId'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: res-5c46d7f7
+- name: data.resourceName
+  type: string
+  description: Vendor-emitted field 'Data › resourceName'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_resourcename
+- name: data.response.message
+  type: string_long
+  description: Human-readable event message. Free-form text; may span multiple lines
+    or contain large payloads.
+  example: Operation completed successfully.
+- name: data.response.status
+  type: string_short
+  description: Status code returned by Oracle. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: data.stateChange.current
+  type: string
+  description: Vendor-emitted field 'Data › stateChange › current'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_current
+- name: data.stateChange.previous
+  type: string
+  description: Vendor-emitted field 'Data › stateChange › previous'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_previous
+use_cases:
+- Database
+how_to_use: |
+  ## Oracle OracleCloudInfrastructure → Cortex XSIAM (dataset `oracle_cloud_infrastructure_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `oracle_cloud_infrastructure_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `oracle_cloud_infrastructure`. The marketplace pack's display name `Oracle` / `OracleCloudInfrastructure` normalizes to `oracle_oraclecloudinfrastructure_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `oracle_cloud_infrastructure` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.availabilityDomain`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~25 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.auth_method`, `xdm.event.description`, `xdm.event.id`, `xdm.event.operation_sub_type`, `xdm.event.outcome_reason`, `xdm.event.type`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = oracle_cloud_infrastructure_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

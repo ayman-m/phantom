@@ -1,0 +1,389 @@
+schema_version: 1
+id: SynopsysCoverity
+pack_name: SynopsysCoverity
+rule_name: SynopsysCoverity
+dataset_name: synopsys_coverity_raw
+vendor: Synopsys
+product: SynopsysCoverity
+description: Parsing and modeling rules for Synopsys Coverity logs
+categories:
+- Analytics & SIEM
+- IT Services
+- Cloud Services
+version: 1.0.4
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDNGNzEiPlN5bm9wc3lzPC90ZXh0Pjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: action,
+    authenticationSource, cid, clientUserName, details, duration, endpoint, eventType,
+    failureReason, filename, hostname, id, issueInstanceId, level, logInSucceeded,
+    method, projectId, projectName, protocol, queueType, remoteHost, sessionId, stream,
+    targetId, url, userAgent, userId, userName, username, version, viewId (each key
+    defined as a dotted-path leaf below).'
+  example: '{}'
+- name: event_type
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: log_level
+  type: string_short
+  description: Severity level (string label, e.g., info/warn/error). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: info
+- name: src_hostname
+  type: host
+  description: Source hostname or FQDN reported by the vendor. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: src_ip
+  type: ipv4
+  description: Source address of the connection initiator. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: src_username
+  type: user
+  description: Source/initiating user account name. Account name as the vendor reports
+    it — login name, UPN, or sAMAccountName depending on the source; no domain prefix
+    unless the vendor emits one.
+  example: jsmith
+- name: _raw_log.action
+  type: string_short
+  description: Action taken by Synopsys's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: _raw_log.authenticationSource
+  type: string
+  description: Vendor-emitted field ' raw log › authenticationSource'. Leaf of the
+    '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.cid
+  type: string
+  description: Vendor-emitted field ' raw log › cid'. Leaf of the '_raw_log' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.clientUserName
+  type: string
+  description: Vendor-emitted field ' raw log › clientUserName'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.details
+  type: string_long
+  description: Additional details payload emitted by Synopsys. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: raw_value
+- name: _raw_log.duration
+  type: integer
+  description: Vendor-emitted field ' raw log › duration'. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: _raw_log.endpoint
+  type: string
+  description: Vendor-emitted field ' raw log › endpoint'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.eventType
+  type: string
+  description: Event type or category as the vendor classifies it. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.failureReason
+  type: string
+  description: Vendor-emitted field ' raw log › failureReason'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.filename
+  type: file_path
+  description: File or process name reported by the vendor. Leaf of the '_raw_log'
+    composite. Absolute filesystem path; vendor-native separator (forward slash on
+    POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: _raw_log.hostname
+  type: host
+  description: Hostname or FQDN as reported by Synopsys. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: _raw_log.id
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Leaf of
+    the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.issueInstanceId
+  type: string
+  description: Vendor-emitted field ' raw log › issueInstanceId'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.level
+  type: string_short
+  description: Severity level (string label, e.g., info/warn/error). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.logInSucceeded
+  type: string
+  description: Vendor-emitted field ' raw log › logInSucceeded'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.method
+  type: string
+  description: Vendor-emitted field ' raw log › method'. Leaf of the '_raw_log' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.projectId
+  type: string
+  description: Vendor-emitted field ' raw log › projectId'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.projectName
+  type: string
+  description: Vendor-emitted field ' raw log › projectName'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.protocol
+  type: string
+  description: Vendor-emitted field ' raw log › protocol'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: _raw_log.queueType
+  type: string
+  description: Vendor-emitted field ' raw log › queueType'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.remoteHost
+  type: string
+  description: Vendor-emitted field ' raw log › remoteHost'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.sessionId
+  type: string
+  description: Vendor-emitted field ' raw log › sessionId'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.stream
+  type: string
+  description: Vendor-emitted field ' raw log › stream'. Leaf of the '_raw_log' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.targetId
+  type: string
+  description: Vendor-emitted field ' raw log › targetId'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.url
+  type: url
+  description: Full URL with scheme — as Synopsys captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: _raw_log.userAgent
+  type: string
+  description: Vendor-emitted field ' raw log › userAgent'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.userId
+  type: string
+  description: Vendor-emitted field ' raw log › userId'. Leaf of the '_raw_log' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.userName
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jdoe
+- name: _raw_log.username
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jdoe
+- name: _raw_log.version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.viewId
+  type: string
+  description: Vendor-emitted field ' raw log › viewId'. Leaf of the '_raw_log' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: CRITICAL
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_critical
+- name: authenticationSource
+  type: string
+  description: Auth service. Free-form text; may contain whitespace and punctuation.
+  example: sample_authenticationso
+- name: cid
+  type: string
+  description: Destination resource ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_cid
+- name: details
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: see message
+- name: duration
+  type: integer
+  description: Event duration. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: endpoint
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_endpoint
+- name: failureReason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: filename
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: document.pdf
+- name: id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: in
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_in
+- name: logInSucceeded
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: method
+  type: string
+  description: Event operation. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: projectId
+  type: string
+  description: Destination resource parent ID. Free-form text; may contain whitespace
+    and punctuation.
+  example: proj-f30574fc
+- name: projectName
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_projectname
+- name: sessionId
+  type: string
+  description: Session context id. Free-form text; may contain whitespace and punctuation.
+  example: sess-ab4af273-fba
+- name: targetId
+  type: string
+  description: Destination user identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_targetid
+- name: url
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: userAgent
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: userId
+  type: string
+  description: Source user identifier. Free-form text; may contain whitespace and
+    punctuation.
+  example: usr-0c11b99a
+- name: version
+  type: string
+  description: Source application version. Free-form text; may contain whitespace
+    and punctuation.
+  example: 1.0.0
+- name: viewId
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_viewid
+use_cases:
+- DevOps
+- Vuln
+how_to_use: |
+  ## synopsys coverity → Cortex XSIAM (dataset `synopsys_coverity_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `synopsys` / product `coverity`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `synopsys_coverity_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `synopsys`
+    - **product**: `coverity`
+
+    These normalize → `synopsys_coverity_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `_raw_log -> level`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~25 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.service`, `xdm.event.description`, `xdm.event.duration`, `xdm.event.id`, `xdm.event.log_level`, `xdm.event.operation`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `synopsys`, Product = `coverity`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = synopsys_coverity_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

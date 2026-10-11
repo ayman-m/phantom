@@ -1,0 +1,417 @@
+schema_version: 1
+id: ProofpointCasb
+pack_name: ProofpointCasb
+rule_name: ProofpointCasb
+dataset_name: proofpoint_casb_raw
+vendor: Proofpoint
+product: ProofpointCasb
+description: Parsing and modeling rules for Proofpoint CASB logs
+categories:
+- Analytics & SIEM
+version: 1.0.7
+origin: bundle
+raw_validated: true  # raw-shape validated: named-column rule, pack not installed on tenant; raw query confirmed rule columns land
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDc5QUEiPlByb29mcG9pbnQ8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: event
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: activity,
+    feed, id, incident, remote, resources, rver, user (each key defined as a dotted-path
+    leaf below).'
+  example: '{}'
+- name: event.activity.primaryCategory
+  type: string
+  description: Vendor-emitted field 'Event › activity › primaryCategory'. Leaf of
+    the 'event' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_primarycategory
+- name: event.activity.stats.size
+  type: integer_byte_count
+  description: Size in bytes of the payload/object. Unsigned decimal byte count; bare
+    digits, no unit suffix.
+  example: '1024'
+- name: event.feed.data.source.kind
+  type: string
+  description: Vendor-emitted field 'Event › feed › data › source › kind'. Leaf of
+    the 'event' composite. Free-form text; may contain whitespace and punctuation.
+  example: event
+- name: event.feed.kind
+  type: string
+  description: Vendor-emitted field 'Event › feed › kind'. Leaf of the 'event' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: event
+- name: event.id
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Leaf of
+    the 'event' composite. Free-form text; may contain whitespace and punctuation.
+  example: pro-59c32282
+- name: event.incident.reasons
+  type: string
+  description: Vendor-emitted field 'Event › incident › reasons'. Leaf of the 'event'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_reasons
+- name: event.incident.severity
+  type: string_short
+  description: Event severity as classified by Proofpoint. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: INFO
+- name: event.remote.client.agent.description
+  type: string_long
+  description: Free-form human-readable description from Proofpoint. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Proofpoint.
+- name: event.remote.client.device.os.name
+  type: string
+  description: Human-readable name as displayed by Proofpoint. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: event.remote.client.geo.address.area1.name
+  type: ipv4
+  description: Human-readable name as displayed by Proofpoint. Free-form text; may
+    contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: event.remote.client.geo.address.area2.name
+  type: ipv4
+  description: Human-readable name as displayed by Proofpoint. Free-form text; may
+    contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: event.remote.client.geo.address.country.name
+  type: country_code
+  description: Human-readable name as displayed by Proofpoint. ISO 3166-1 alpha-2
+    uppercase country code (e.g., US, DE, JP).
+  example: US
+- name: event.remote.client.geo.coordinates.lat
+  type: string
+  description: Vendor-emitted field 'Event › remote › client › geo › coordinates ›
+    lat'. Leaf of the 'event' composite. Free-form text; may contain whitespace and
+    punctuation.
+  example: '37.7749'
+- name: event.remote.client.geo.coordinates.lon
+  type: string
+  description: Vendor-emitted field 'Event › remote › client › geo › coordinates ›
+    lon'. Leaf of the 'event' composite. Free-form text; may contain whitespace and
+    punctuation.
+  example: '-122.4194'
+- name: event.remote.client.ip
+  type: ipv4
+  description: Vendor-emitted field 'Event › remote › client › ip'. Leaf of the 'event'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: event.remote.host.ip.isp.name
+  type: string
+  description: Human-readable name as displayed by Proofpoint. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: event.remote.protocol
+  type: string
+  description: Vendor-emitted field 'Event › remote › protocol'. Leaf of the 'event'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: event.resources
+  type: url
+  description: (and 6 more). Leaf of the 'event' composite. Full URL with scheme (http/https/ftp);
+    percent-encoded if it contains non-ASCII characters.
+  example: https://example.com/path
+- name: event.rver
+  type: string
+  description: Vendor-emitted field 'Event › rver'. Leaf of the 'event' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_rver
+- name: event.user.email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: event.user.firstName
+  type: string
+  description: Vendor-emitted field 'Event › user › firstName'. Leaf of the 'event'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: John
+- name: event.user.groups
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Event › user › groups'. Leaf of the 'event' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_groups
+- name: event.user.id
+  type: string_short
+  description: Opaque identifier emitted by Proofpoint. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: pro-d3ff920c
+- name: event.user.lastName
+  type: string
+  description: Vendor-emitted field 'Event › user › lastName'. Leaf of the 'event'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Doe
+- name: event.user.name
+  type: user
+  description: Human-readable name as displayed by Proofpoint. Account name as the
+    vendor reports it — login name, UPN, or sAMAccountName; no domain prefix unless
+    vendor emits one.
+  example: jsmith
+- name: activity
+  type: string
+  description: Alert subcategory. Free-form text; may contain whitespace and punctuation.
+  example: sample_activity
+- name: address
+  type: ipv4
+  description: Source location region. Free-form text; may contain whitespace and
+    punctuation.
+  example: 192.0.2.45
+- name: agent
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: phantom-agent-01
+- name: area1
+  type: string
+  description: Source location region. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_area1
+- name: area2
+  type: string
+  description: Source location city. Free-form text; may contain whitespace and punctuation.
+  example: sample_area2
+- name: client
+  type: string
+  description: Source location latitude. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_client
+- name: coordinates
+  type: string
+  description: Source location latitude. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_coordinates
+- name: data
+  type: string
+  description: Observer name. Free-form text; may contain whitespace and punctuation.
+  example: sample_data
+- name: description
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Proofpoint.
+- name: email
+  type: email
+  description: Event description. RFC 5322 'local@domain' address; one address only
+    — use an array field for multiple addresses.
+  example: user@example.com
+- name: extension
+  type: string
+  description: Destination file extension. Free-form text; may contain whitespace
+    and punctuation.
+  example: pdf
+- name: feed
+  type: string
+  description: Observer type. Free-form text; may contain whitespace and punctuation.
+  example: sample_feed
+- name: firstName
+  type: string
+  description: Source user first name. Free-form text; may contain whitespace and
+    punctuation.
+  example: John
+- name: geo
+  type: string
+  description: Source location latitude. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_geo
+- name: groups
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: sample_groups
+- name: host
+  type: host
+  description: Source ASN isp. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: incident
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_incident
+- name: ip
+  type: ipv4
+  description: Source ASN isp. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: isp
+  type: string
+  description: Source ASN isp. Free-form text; may contain whitespace and punctuation.
+  example: sample_isp
+- name: kind
+  type: string
+  description: Destination file type. Free-form text; may contain whitespace and punctuation.
+  example: event
+- name: lastName
+  type: string
+  description: Source user last name. Free-form text; may contain whitespace and punctuation.
+  example: Doe
+- name: last_modified
+  type: string
+  description: Last modified. Free-form text; may contain whitespace and punctuation.
+  example: sample_modified
+- name: lat
+  type: string
+  description: Source location latitude. Free-form text; may contain whitespace and
+    punctuation.
+  example: '37.7749'
+- name: lon
+  type: string
+  description: Source location longitude. Free-form text; may contain whitespace and
+    punctuation.
+  example: '-122.4194'
+- name: name
+  type: string
+  description: Source location region. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: os
+  type: string
+  description: Source host OS. Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: owner
+  type: string
+  description: Owner. Free-form text; may contain whitespace and punctuation.
+  example: sample_owner
+- name: path
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: primaryCategory
+  type: string
+  description: Alert subcategory. Free-form text; may contain whitespace and punctuation.
+  example: sample_primarycategory
+- name: protocol
+  type: string
+  description: Network application protocol. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: reasons
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_reasons
+- name: remote
+  type: string
+  description: Source location latitude. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_remote
+- name: resources
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: sample_resources
+- name: rver
+  type: string
+  description: Observer content version. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_rver
+- name: severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: size
+  type: integer_byte_count
+  description: Destination file size. Free-form text; may contain whitespace and punctuation.
+  example: '1024'
+- name: source
+  type: ipv4
+  description: Observer name. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: src_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: stats
+  type: string
+  description: Destination file size. Free-form text; may contain whitespace and punctuation.
+  example: sample_stats
+- name: url
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: user
+  type: string
+  description: Source user first name. Free-form text; may contain whitespace and
+    punctuation.
+  example: jdoe
+- name: windows
+  type: string
+  description: Source host OS family. Free-form text; may contain whitespace and punctuation.
+  example: sample_windows
+use_cases:
+- Email
+- DLP
+how_to_use: |
+  ## proofpoint casb → Cortex XSIAM (dataset `proofpoint_casb_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `proofpoint_casb_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `proofpoint`
+    - **product**: `casb`
+
+    These normalize → `proofpoint_casb_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `event -> remote.client.device.os.name`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~32 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.event.description`, `xdm.event.id`, `xdm.network.application_protocol`, `xdm.network.rule`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = proofpoint_casb_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

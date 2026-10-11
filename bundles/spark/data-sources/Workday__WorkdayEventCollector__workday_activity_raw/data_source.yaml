@@ -1,0 +1,150 @@
+schema_version: 1
+id: Workday
+pack_name: Workday
+rule_name: WorkdayEventCollector
+dataset_name: workday_activity_raw
+vendor: Workday
+product: Workday
+description: Workday offers enterprise-level software solutions for financial management,
+  human resources, and planning.
+categories:
+- IT Services
+version: 1.5.13
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwNzZGRDUiPldvcmtkYXk8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: activityAction
+  type: string
+  description: Vendor-emitted field 'ActivityAction'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_activityaction
+- name: deviceType
+  type: string
+  description: Vendor-emitted field 'DeviceType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_devicetype
+- name: ipAddress
+  type: ipv4
+  description: IPv4/IPv6 address — vendor-emitted, no version split. Free-form text;
+    may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: requestTime
+  type: datetime
+  description: Vendor-emitted field 'RequestTime'. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: sessionId
+  type: string_short
+  description: Unique identifier — assigned by Workday per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: sess-435bb02e-c1a
+- name: systemAccount
+  type: user
+  description: Vendor-emitted field 'SystemAccount'. Account name as the vendor reports
+    it — login name, UPN, or sAMAccountName depending on the source; no domain prefix
+    unless the vendor emits one.
+  example: jsmith
+- name: target
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: descriptor,
+    href, id (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: taskDisplayName
+  type: string
+  description: Vendor-emitted field 'TaskDisplayName'. Free-form text; may contain
+    whitespace and punctuation.
+  example: John Doe
+- name: taskId
+  type: string
+  description: Vendor-emitted field 'TaskId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_taskid
+- name: userAgent
+  type: string_long
+  description: Client User-Agent header value as received by Workday. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: target.descriptor
+  type: string
+  description: Vendor-emitted field 'Target › descriptor'. Leaf of the 'target' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_descriptor
+- name: target.href
+  type: url
+  description: Vendor-emitted field 'Target › href'. Leaf of the 'target' composite.
+    Full URL with scheme (http/https/ftp); percent-encoded if it contains non-ASCII
+    characters.
+  example: https://example.com/path
+- name: target.id
+  type: string_short
+  description: Opaque identifier emitted by Workday. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: wor-51d08821
+use_cases:
+- Identity
+how_to_use: |
+  ## workday activity → Cortex XSIAM (dataset `workday_activity_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `workday_activity_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `workday`
+    - **product**: `activity`
+
+    These normalize → `workday_activity_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.id`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~30 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.auth_method`, `xdm.auth.is_mfa_needed`, `xdm.auth.mfa.method`, `xdm.event.description`, `xdm.event.id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = workday_activity_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

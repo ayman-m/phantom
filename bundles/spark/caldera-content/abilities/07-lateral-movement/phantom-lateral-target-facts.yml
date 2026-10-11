@@ -1,0 +1,54 @@
+- id: a4f1b2c8-9d3e-4506-b8a1-c25d4f6e8b07
+  name: "Phantom: Pre-populate lateral movement target facts (win-host-02)"
+  description: >
+    Pre-condition for Phantom-curated lateral movement adversaries. Writes a marker
+    file on disk that downstream lateral abilities can probe to confirm targeting
+    setup. The atomic planner SOURCE-side fact injection happens via Caldera's
+    operation-source mechanism (see phantom-lateral-sweep adversary), so this
+    ability serves more as a documentation step + telemetry marker than a fact
+    producer.
+
+    The "real" fact setup happens at adversary-start time via the curated source
+    `phantom-lateral-target-source` which provides:
+      - remote.host.fqdn = win-host-02
+      - remote.host.ip   = 10.0.0.16
+      - local.host.fqdn  = win-host-01 (auto-extracted on attacker side)
+      - server           = http://10.0.0.14:8888 (caldera C2 URL)
+      - exe_name         = splunkd.exe (sandcat default)
+      - location         = C:\\Users\\Public\\splunkd.exe (sandcat default deploy path)
+
+    Stock Caldera lateral adversaries (Worm, Lateral Movement Certutil/Esentutl/
+    Service Creation, Super Spy) fail in our workgroup environment because the
+    upstream Find Hostname / Reverse nslookup IP abilities cannot resolve PTR
+    records for internal IPs (no DNS PTR records for workgroup hosts). Their
+    output: "Host not found." → no remote.host.fqdn fact extracted → lateral
+    abilities never dispatch.
+
+    This pre-condition + the curated source bypasses that gap. Lab-safe: only
+    targets win-host-02; doesn't touch any production host.
+  tactic: discovery
+  technique:
+    attack_id: T1018
+    name: 'Remote System Discovery'
+  platforms:
+    windows:
+      psh:
+        command: |
+          $ErrorActionPreference = "Continue"
+          Write-Output "[+] Phantom lateral target fact-injection point reached"
+          Write-Output "[+] Hardcoded target: win-host-02 / 10.0.0.16"
+          Write-Output "[+] Source override should provide:"
+          Write-Output "    remote.host.fqdn = win-host-02"
+          Write-Output "    remote.host.ip   = 10.0.0.16"
+          Write-Output "    server           = http://10.0.0.14:8888"
+          Write-Output "    exe_name         = splunkd.exe"
+          $marker = "C:\Users\Public\phantom-lateral-target-marker.txt"
+          Set-Content -Path $marker -Value "win-host-02 @ 10.0.0.16" -Force
+          Write-Output "[+] Marker written to $marker"
+        cleanup: |
+          $marker = "C:\Users\Public\phantom-lateral-target-marker.txt"
+          if (Test-Path $marker) {
+            Remove-Item -Path $marker -Force -ErrorAction SilentlyContinue
+            Write-Output "[+] Marker removed"
+          }
+        timeout: 30

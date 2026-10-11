@@ -1,0 +1,143 @@
+# http-sender: a Phantom bundle connector (pinned by digest in the release manifest, installed from the marketplace).
+#
+# Sends JSON events for any data source to a Cortex XSIAM HTTP Log Collector. A collector is
+# configured in the tenant with Log Format JSON and a Vendor and Product, which fix the dataset
+# (`<vendor>_<product>_raw`). With the source's content pack installed, its parsing rule reads
+# the event's own timestamp into `_time` and its modeling rule maps the columns to XDM. Without
+# the pack the dataset is raw-only and `_time` is the ingestion time.
+#
+# The same instance can also post to the Cortex Cribl integration endpoint (criblUrl + the criblToken secret). Under a source's
+# dedicated Source-Identifier UUID Cortex treats the events as that vendor's native feed, so the native Analytics detectors
+# fire (25 distinct ones in testing). Each Cribl source is a `cribl_<source>` destination;
+# see src/cribl.py. The `cribl_windows_events` destination takes the same structured Windows events as
+# wec-sender.send_events and renders them to Windows Event XML itself (src/winevent.py is a copy of wec-sender's renderer), so
+# the nine Windows identity detectors can fire with no Broker, certificate or WEC subscription.
+#
+# Built-in scenarios a scheduler can call with fixed arguments: a `benign_activity` baseline for the three cloud profiles (stable
+# identities, nothing a detector fires on) and a `windows` profile whose events are the structured Windows events of
+# wec-sender.send_events: baseline_logons and admin_activity (benign) and one attack scenario per Windows trigger skill (each the
+# skill's own event block, every identity new per call).
+#
+# One collector = one destination. Phantom allows a single active instance per connector, so an
+# instance carries a primary destination in plain fields and more in `additionalDestinations`
+# (see src/destinations.py). Built-in event profiles (okta, proofpoint_tap, google_workspace, aws_cloudtrail, gcp_audit, azure_ad_audit, windows) live in src/profiles/.
+#
+# This is a deliberate, scoped exception to Phantom's syslog/CEF-only delivery for data-source
+# validation (root CLAUDE.md): it is the sanctioned HTTP path for sources the operator chooses to
+# send over HTTP.
+
+id: "http-sender"
+version: "1.0.0"
+description: "Send JSON events for any data source to a Cortex XSIAM HTTP Log Collector, or to the Cortex Cribl integration endpoint under a source's dedicated UUID (native feed treatment and Analytics detectors). Built-in event profiles: Okta System Log, Proofpoint TAP, Google Workspace (Drive/Login), AWS CloudTrail, GCP Cloud Audit, Azure AD audit, Windows Security events. Each Cribl profile has benign baseline scenarios (stable identities) and one scenario per proven detector (fresh identities every call). The Cribl Windows Event Logs destination accepts structured Windows events (as wec-sender does) and renders the XML itself."
+displayName: "HTTP Sender (XSIAM HTTP collector)"
+tags: ["http", "http-collector", "cribl", "log-generation", "xsiam", "okta", "aws", "gcp", "azure", "windows"]
+logo: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMxMjMwM2IiLz48cGF0aCBkPSJNMTQgMzJoMjYiIHN0cm9rZT0iIzdmZDFjNyIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMzIgMTlsMTQgMTMtMTQgMTMiIHN0cm9rZT0iIzdmZDFjNyIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNNTAgMTR2MzYiIHN0cm9rZT0iI2YyYjg0YiIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg=="
+
+source:
+  language: "python"
+  entrypoint: "src.connector"
+
+runtimeMapping:
+  style: "container"
+  functionPrefix: "phantom_"
+
+executionMode: "persistent"
+
+configSchema:
+  type: "object"
+  required: ["collectorUrl", "vendor", "product"]
+  properties:
+    collectorUrl:
+      type: "string"
+      widget: "url"
+      description: "The primary destination's HTTP Log Collector URL (Settings > Data Sources & Integrations > Custom Collectors), e.g. https://api-<tenant>/logs/v1/event. Must be https."
+      default: ""
+    vendor:
+      type: "string"
+      description: "Vendor configured on that collector, e.g. Okta. The collector, not the request, decides the dataset (<vendor>_<product>_raw)."
+      default: ""
+    product:
+      type: "string"
+      description: "Product configured on that collector, e.g. SSO."
+      default: ""
+    additionalDestinations:
+      type: "string"
+      widget: "textarea"
+      description: 'Optional: more collectors, as a JSON array, e.g. [{"url": "https://api-<tenant>/logs/v1/event", "vendor": "Proofpoint", "product": "Email Security"}]. Put each one''s key in the additionalKeys secret, keyed by destination name (the dataset without _raw, e.g. proofpoint_email_security).'
+      default: ""
+    userDomain:
+      type: "string"
+      description: "Domain for the synthetic users' login in profiles that generate identities, e.g. example.com gives noura.alharbi@example.com."
+      default: "phantom-lab.example"
+    verifyTls:
+      type: "boolean"
+      description: "Verify the collector's TLS certificate. Turn off only behind a TLS-inspecting proxy."
+      default: true
+    timeoutSeconds:
+      type: "number"
+      description: "Per-request timeout in seconds."
+      default: 15
+    criblUrl:
+      type: "string"
+      widget: "url"
+      description: "Optional: the tenant's Cribl integration endpoint (a Cribl collector created in Settings > Data Sources & Integrations), e.g. https://api-<tenant>/logs/v1/integrated/cribl/data. Must be https. With the criblToken secret it registers one cribl_<source> destination per Cribl source."
+      default: ""
+    criblIntegration:
+      type: "string"
+      description: "Name sent as the Integration-Identifier header; it becomes _collector_name on the rows. 1-64 letters, digits, spaces, dots, dashes or underscores."
+      default: "phantom-http-sender"
+    windowsDnsSuffix:
+      type: "string"
+      description: "DNS suffix added to short computer names in Windows events sent to cribl_windows_events (PHDC02 becomes PHDC02.phantom.lab), as wec-sender does with its domainDns. A name that already has a dot is left alone."
+      default: "phantom.lab"
+
+secretSlots:
+  - name: "collectorKey"
+    description: "The primary collector's API key, shown once by Save & Generate Token. Sent as the raw Authorization header (no Bearer prefix)."
+    required: true
+  - name: "additionalKeys"
+    description: 'Keys for the additional destinations, as a JSON object keyed by destination name, e.g. {"proofpoint_email_security": "<key>"}. Leave empty when there are none.'
+    required: false
+  - name: "criblToken"
+    description: "Optional: the Cribl collector's token (shown once on creation). Sent as the raw Authorization header. Needed together with criblUrl; without both, no cribl_<source> destination exists."
+    required: false
+
+spec:
+  tools:
+    - name: "list_destinations"
+      method: "GET /destinations"
+      description: "List the destinations this instance can send to (HTTP collectors and, when criblUrl and criblToken are set, one cribl_<source> destination per Cribl source: name, mode, vendor, product, dataset, host, whether ready) and the built-in event profiles. Use it first, or before targeting a destination you have not used. Keys and the Cribl token are never shown."
+      args: []
+      returns:
+        description: "{ok, destinations: [{destination, mode (http|cribl), source (cribl only), vendor, product, dataset, host, default, ready, problem}], problems, profiles}"
+    - name: "send_test_event"
+      method: "POST /logs/v1/event"
+      description: "Send ONE identifiable test event to a destination and report whether it was accepted. Use it first after creating or changing an instance. Without a profile the event is a generic JSON object; with a profile it is that source's own sample event (a cribl_<source> destination with no profile uses its source's profile; cribl_windows_events sends one benign Windows 4624 logon, rendered to Windows Event XML for you, and takes no profile). Returns a test id and an XQL query that proves the event landed in the destination's dataset."
+      args:
+        - {name: "destination", type: "string", description: "Which destination, by name (see list_destinations). Default: the primary one."}
+        - {name: "profile", type: "string", description: "Optional built-in profile for a realistic sample event (okta, aws_cloudtrail, gcp_audit, azure_ad_audit, ...)."}
+      returns:
+        description: "{ok, sent, http_status, response, destination, dataset, test_id, sent_at, verify_with_xql; cribl destinations add num_records, batch_status; cribl_windows_events also adds actor, logon_id, event_id, test_id_field, events, computers, first_time, last_time, sample_record_ids} or {ok: false, error, http_status}"
+    - name: "generate_events"
+      method: "POST /logs/v1/event"
+      description: "Generate synthetic events from a built-in profile and send them to a destination. Profile okta (Okta System Log objects, for the okta_okta or okta_sso destination) has scenarios benign_logins, failed_then_success, password_spray, mfa_fatigue, tor_signin and fastpass_phishing (when cribl_okta_sso is configured, the last four default to it: through Cribl the native Okta detectors fire, e.g. Multiple Okta MFA requests from mfa_fatigue / failed_then_success; without Cribl they stay on the primary destination); proofpoint_tap (for proofpoint_tap) and google_workspace (for google_workspace_drive) have their own. The cloud profiles aws_cloudtrail (cribl_aws_audit), gcp_audit (cribl_gcp_cloud_logging) and azure_ad_audit (cribl_azure_ad_audit) reproduce one proven Cortex Analytics detector per scenario with fresh identities, and each has a benign_activity scenario that is the BASELINE: the same stable twelve people (one real Saudi home IP each) plus fixed roles, service accounts or admins doing ordinary read-heavy work that no detector fires on (default 20 events). The windows profile (cribl_windows_events; structured Windows events, rendered to Windows Event XML for you) has two benign scenarios, baseline_logons (4624, 4672, 4634 of a stable 30-account domain, default 30) and admin_activity (helpdesk resets and unlocks, ordinary account creation, department group changes, 4738 changes; default 10), and one attack scenario per Windows trigger skill (machine_account_domain_admins, privileged_group_add, dcsync, guest_account_enabled, sms_admins, weak_service_tickets, excessive_lockouts, samaccountname_change, multiple_account_deletions, hidden_user_created, default_account_masquerade, spoofed_samaccountname_tickets, shadow_credentials, delegation_to_krbtgt, privileged_certificate_request): exactly the skill's events with every identity new per call, so one call fires its detector; the result's actors name the accounts to look the alert up by. The cloud and windows profiles default to their cribl destination and refuse to send when Cribl is not configured (dry_run still works); windows accepts no other destination. Benign users get one stable real Saudi home IP each; attack scenarios default to a real out-of-country IP. Supports back-dating and a dry_run preview. For a source without a profile use send_events."
+      args:
+        - {name: "profile", type: "string", required: true, description: "The built-in profile: okta, proofpoint_tap, google_workspace, aws_cloudtrail, gcp_audit, azure_ad_audit or windows."}
+        - {name: "scenario", type: "string", required: true, description: "One of the profile's scenarios (okta: benign_logins | failed_then_success | password_spray | mfa_fatigue | tor_signin | fastpass_phishing; aws_cloudtrail: guardduty_detector_deleted | s3_public_exposure | security_group_open | bedrock_logging_deleted | route53_logging_deleted | backup_vault_policy_modified | pentest_tool | snapshot_public_share | ebs_encryption_disabled | tor_api_call | iam_new_admin_identity | iam_admin_user_credentials; gcp_audit: data_asset_public | sensitive_role_to_group | k8s_anonymous | k8s_vuln_scanner | tor_api_call | new_admin_service_account; azure_ad_audit: ca_policy_deleted | pim_alert_disabled | pim_role_setting_changed | federation_modified | unverified_domain_added | benign_activity; aws_cloudtrail and gcp_audit also take benign_activity (baseline: stable identities, ordinary reads); windows: baseline_logons | admin_activity (benign) | machine_account_domain_admins | privileged_group_add | dcsync | guest_account_enabled | sms_admins | weak_service_tickets | excessive_lockouts | samaccountname_change | multiple_account_deletions | hidden_user_created | default_account_masquerade | spoofed_samaccountname_tickets | shadow_credentials | delegation_to_krbtgt | privileged_certificate_request)."}
+        - {name: "count", type: "integer", description: "Total events, 1-5000 (default 20; a cloud or Windows attack scenario defaults to its step count; benign_activity 20, baseline_logons 30, admin_activity 10). A cloud scenario needs at least its step count (1-6) and repeats its recipe beyond that; a Windows attack scenario needs a whole number of recipes (its event count: 1, 2, 4, 5, 6, 16 or 19, then 2x, 3x...)."}
+        - {name: "spread_seconds", type: "integer", description: "Width of the time window the events are spread across (default 120)."}
+        - {name: "start_offset_minutes", type: "integer", description: "End the window this many minutes in the past, to back-date the event time (default 0). `_time` follows it only when the source's content pack is installed on the tenant."}
+        - {name: "target_user", type: "string", description: "Victim login for okta failed_then_success / mfa_fatigue / tor_signin, the actor for Google Workspace, the cloud profiles and the Windows attack scenarios (instead of a new one), bare name or email. Ignored by the benign scenarios. Never DOMAIN\\user."}
+        - {name: "source_ip", type: "string", description: "Attacker address for the attack scenarios (default a random real out-of-country IP). Proofpoint TAP: the sending mail server. Google Workspace: the actor's address. Cloud profiles and okta tor_signin / fastpass_phishing: the external or Tor address (the built-in Tor list is a dated snapshot). Windows dcsync / weak_service_tickets / spoofed_samaccountname_tickets: the IPv4 address of the attacking host. Ignored by the benign scenarios."}
+        - {name: "destination", type: "string", description: "Which destination, by name (see list_destinations). Default: the primary one."}
+        - {name: "dry_run", type: "boolean", description: "Build and return the first 3 events without sending."}
+      returns:
+        description: "{ok, sent, batches, http_status, destination, dataset, profile, scenario, first_time, last_time, sample_ids, warning?; cribl destinations add num_records, batch_status; the windows profile adds actors (the accounts that acted), events, computers, sample_record_ids}"
+    - name: "send_events"
+      method: "POST /logs/v1/event"
+      description: "Send caller-supplied JSON objects to a destination exactly as given, for any data source. Each should be one event in the shape that source's collector and its parsing and modeling rules expect, with its time in the field the parsing rule reads. For a cribl_<source> destination send the vendor's own event object; the connector wraps each in the {data: ...} envelope. For cribl_windows_events pass STRUCTURED Windows events exactly as for wec-sender.send_events (event_id, computer, time, provider, rendering, event_data, outcome, ...): the connector renders the Windows Event XML for you, so do not hand-build XML (an XML string that starts with <Event is passed through unchanged). Every item is validated first; a bad one returns an error naming it and nothing is sent. No Broker, certificate or WEC subscription is needed; rows land in microsoft_windows_raw with _transport = cribl and no _collector_type; AD FS events still need wec-sender."
+      args:
+        - {name: "events", type: "array", required: true, description: "List of 1-5000 JSON objects. For cribl_windows_events: structured Windows events, each {event_id (int, required), computer (required; short names get windowsDnsSuffix), time (ISO-8601 UTC or epoch seconds), provider, channel, event_data (object = named Data, list = positional Data), outcome (success|failure), rendering {message, task, level, opcode, channel, provider, keywords}, optional version/level/task/opcode/record_id/process_id/thread_id/activity_id/message}. Catalogued ids 4624, 4625, 4634 and 4672 need only event_id, computer and event_data; any other id also needs provider, rendering.message and rendering.task. Example: {event_id: 4728, computer: PHDC02, time: now-300s, provider: Microsoft-Windows-Security-Auditing, rendering: {message: <the 4728 text>, task: Security Group Management}, event_data: {MemberName: ..., MemberSid: ..., SubjectUserName: ..., SubjectDomainName: PHANTOM, TargetUserName: Domain Admins, TargetSid: S-1-5-21-...-512}}."}
+        - {name: "destination", type: "string", description: "Which destination, by name (see list_destinations). Default: the primary one."}
+      returns:
+        description: "{ok, sent, batches, http_status, destination, dataset; cribl destinations add num_records, batch_status; cribl_windows_events also adds events, computers, first_time, last_time, sample_record_ids}"

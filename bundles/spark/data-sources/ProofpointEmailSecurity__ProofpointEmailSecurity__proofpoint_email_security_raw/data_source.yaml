@@ -1,0 +1,445 @@
+schema_version: 1
+id: ProofpointEmailSecurity
+pack_name: ProofpointEmailSecurity
+rule_name: ProofpointEmailSecurity
+dataset_name: proofpoint_email_security_raw
+vendor: Proofpoint
+product: ProofpointEmailSecurity
+description: 'Proofpoint Email Security (legacy name: Email Protection) is a cloud email gateway that
+  scans inbound and outbound mail for phishing, malware, BEC, and policy violations. Each event carries
+  the message id, sender / recipient envelopes, verdict (clean / spam / phish / malware), the matching
+  rule, and any quarantine metadata. Simulate Proofpoint to validate detections for advanced phishing
+  campaigns, malicious attachments, and BEC indicators that the gateway already classified.'
+how_to_use: |
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `proofpoint`
+  - **product**: `email_security`
+
+  Broker derives → `proofpoint_email_security_raw`.
+
+  Use lowercased forms (`proofpoint` / `email_security`) — display form `Proofpoint` / `Email Security` also auto-derives the same name (the broker lowercases + replaces spaces with `_`).
+
+  **MR pattern**: Heavy-nested. Reads `messageParts[]`, `headers[]`, `policyRoutes[]`, plus `recipient[]`, `sender`, `subject`.
+
+  **Composite (nested-JSON) fields**: Pack `messageParts`, `headers`, `policyRoutes` as JSON-string arrays. The MR's filter-by-key extraction over `headers[].name == 'From'` may not survive deeply-nested CEF-stored JSON (L20).
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: `messageID` must be unique. `ts` (epoch ms) is the timestamp field.
+
+  **Saturation strategy**: Heavy-nested — ~5 XDM single-event.
+
+  **Single-event XDM ceiling**: ~5 XDM single-event (heavy-nested + array filter).
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = proofpoint_email_security_raw
+  | filter xdm.event.id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  ### Make it map to XDM
+
+  The `proofpoint_email_security_raw` modeling rule only runs when `event_type = "message"`. When simulating, pass `observables_dict={"event_type": "message"}` to `phantom_create_data_worker` so the gate matches. The rule then populates core XDM: `xdm.event.type` <- `event_type`, `xdm.event.id` <- `guid`, `xdm.email.sender` <- `msg.normalizedHeader.from[0]` (falls back to `envelope.from`), `xdm.email.recipients` <- `msg.normalizedHeader.to`, `xdm.email.subject` <- `msg.normalizedHeader.subject`, `xdm.email.message_id` <- `msg.normalizedHeader.message-id`, `xdm.source.host.hostname` <- `connection.host`, and `xdm.network.session_id` <- `connection.sid`. (The other branches gate on `event_type = "maillog"` and `event_type = "audit"`.)
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+categories:
+- Analytics & SIEM
+version: 1.0.25
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-26T00:00:00Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDc5QUEiPlByb29mcG9pbnQ8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: audit
+  type: json
+  description: 'Administrative audit-log event payload object. Carries user (sub-object with ipAddress
+    / id / email — the actor), resourceType, action, level. JSON object with keys: action, level, resourceType,
+    user (each key defined as a dotted-path leaf below).'
+  example: '{"user":{"ipAddress":"198.51.100.7","id":"u-1001","email":"admin@corp.example.com"},"resourceType":"policy","action":"update","level":"INFO"}'
+- name: connection
+  type: json
+  description: 'Inbound SMTP connection metadata. Carries ip, sid (session id), country, host (hostname),
+    protocol, and nested tls.inbound.cipher /.version. JSON object with keys: country, host, ip, protocol,
+    sid, tls (each key defined as a dotted-path leaf below).'
+  example: '{"ip":"203.0.113.42","sid":"sess-abc123","country":"US","host":"mx-edge-01.example.com","protocol":"smtp","tls":{"inbound":{"cipher":"TLS_AES_256_GCM_SHA384","version":"TLSv1.3"}}}'
+- name: data
+  type: string
+  description: Free-text event description string emitted on maillog events. Free-form text; may contain
+    whitespace and punctuation.
+  example: from=<alice@corp.example.com> size=4096 class=0 nrcpts=1
+- name: envelope
+  type: json
+  description: 'SMTP envelope wrapper for message events. Carries the MAIL FROM address (envelope.from).
+    See leaf entry envelope.from for per-path type metadata. JSON object with keys: from (each key defined
+    as a dotted-path leaf below).'
+  example: '{"from":"alice@corp.example.com","to":["bob@target.example.com"]}'
+- name: event_type
+  is_gate: true
+  type: enum
+  description: 'Modeling-rule GATE — must equal "message" for XDM to map. Discriminator selecting which
+    downstream modeling-rule branch parses the record. "message" = SMTP-message metadata with parsed headers;
+    "maillog" = sendmail-style transport log; "audit" = administrative audit-log entry. One of: message,
+    maillog, audit (case-sensitive).'
+  example: message
+  enum_values:
+  - message
+  - maillog
+  - audit
+- name: filter
+  type: json
+  description: 'Email-filter outcome object. Carries actions[] (array of {isFinal, action}) and modules.av.virusNames[]
+    (array of detected AV signature names). JSON array; each element is an object with keys: actions,
+    modules (each key defined as a dotted-path leaf below).'
+  example: '{"actions":[{"isFinal":true,"action":"reject"}],"modules":{"av":{"virusNames":["Emotet"]}}}'
+- name: guid
+  type: string
+  description: Event GUID — globally-unique identifier for the event record. "message" and "audit" event
+    types. Free-form text; may contain whitespace and punctuation.
+  example: 7c8b9a0e-3f4d-4a5b-9c2d-1e8f7a6b5c4d
+- name: id
+  type: string
+  description: Maillog-event identifier. = "maillog". Smaller cardinality than guid; tied to the sendmail-style
+    transport log. Free-form text; may contain whitespace and punctuation.
+  example: maillog-2026-05-26-001a2b3c
+- name: metadata
+  type: json
+  description: 'Audit-event observer metadata object. Carries customerId (tenant) and a nested origin
+    object with type, schemaVersion, and a nested data sub-object holding agent, version, cid. JSON object
+    with keys: customerId, origin (each key defined as a dotted-path leaf below).'
+  example: '{"customerId":"cust-9001","origin":{"type":"web-ui","schemaVersion":"3.2","data":{"agent":"203.0.113.10","version":"2.5.1","cid":"client-id-abc"}}}'
+- name: msg
+  type: json
+  description: 'Parsed email message metadata object. Carries normalizedHeader sub-paths for from, to,
+    cc, subject, message-id, and return-path. JSON object with keys: normalizedHeader (each key defined
+    as a dotted-path leaf below).'
+  example: '{"normalizedHeader":{"from":["alice@corp.example.com"],"to":["bob@target.example.com"],"cc":[],"subject":["Q3
+    financials"],"message-id":["<a1b2@mail.example.com>"],"return-path":["bounce@corp.example.com"]}}'
+- name: msgParts
+  type: json
+  is_array: true
+  description: Array of email-attachment metadata objects. Each element carries detectedExt (file extension),
+    detectedMime (MIME type), detectedName (filename), md5, and sha256. Empty array when the message has
+    no attachments. See leaf entries msgParts[].* for per-path type metadata. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '[{"detectedExt":"pdf","detectedMime":"application/pdf","detectedName":"invoice.pdf","md5":"5d41402abc4b2a76b9719d911017c592","sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}]'
+- name: parsed_fields
+  type: json
+  description: 'Pre-parsed audit-event details object. Carries eventSubCategory and eventDetails. JSON
+    object with keys: eventDetails, eventSubCategory (each key defined as a dotted-path leaf below).'
+  example: '{"eventSubCategory":"authentication","eventDetails":"User session created via SSO"}'
+- name: pps
+  type: json
+  description: 'Proofpoint Postfix Service (PPS) metadata object. Carries.agent (the source MTA agent
+    identifier). JSON object with keys: agent (each key defined as a dotted-path leaf below).'
+  example: '{"agent":"pps-edge-01"}'
+- name: sm
+  type: json
+  description: 'Sendmail-style maillog payload object. Carries from, daemon, msgid, proto, stat, to[],
+    sizeBytes. JSON object with keys: daemon, from, msgid, proto, sizeBytes, stat, to (each key defined
+    as a dotted-path leaf below).'
+  example: '{"from":"alice@corp.example.com","daemon":"sendmail-MTA","msgid":"<a1b2@mail.example.com>","proto":"smtp","stat":"Sent
+    (250 OK)","to":["bob@target.example.com"],"sizeBytes":4096}'
+- name: tls
+  type: json
+  description: 'Maillog-event TLS metadata object. Carries cipher and version. Distinct from connection.tls.inbound
+    (the message-event TLS path). JSON object with keys: cipher, version (each key defined as a dotted-path
+    leaf below).'
+  example: '{"cipher":"TLS_AES_256_GCM_SHA384","version":"TLSv1.3"}'
+- name: audit.action
+  type: string
+  description: Action verb performed against the resource (e.g. create, update, delete). Leaf of the 'audit'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: update
+- name: audit.level
+  type: string
+  description: Severity level of the audit entry (INFO, WARN, ERROR). Leaf of the 'audit' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: INFO
+- name: audit.resourceType
+  type: string
+  description: Type label of the resource the audit-log entry acted on (e.g. policy, user, dlp_rule).
+    Leaf of the 'audit' composite. Free-form text; may contain whitespace and punctuation.
+  example: policy
+- name: audit.user.email
+  type: email
+  description: Actor email address for the audit-log event \u2014 leaf of the `audit` composite. RFC 5322
+    `local@domain`; exactly one address (Proofpoint never emits multiple here).
+  example: admin@corp.example.com
+- name: audit.user.id
+  type: string
+  description: Opaque Proofpoint-internal user identifier for the actor \u2014 leaf of the `audit` composite.
+    Short token (8-20 chars typical) emitted by Proofpoint's identity store; NOT an email and NOT a domain
+    account name.
+  example: u-1001
+- name: audit.user.ipAddress
+  type: ipv4
+  description: Source IP address from which the actor performed the audited action \u2014 leaf of the
+    `audit` composite. Either IPv4 dotted-quad OR IPv6 colon-separated literal in a single field (Proofpoint
+    emits both forms interchangeably).
+  example: 198.51.100.7
+- name: connection.country
+  type: country_code
+  description: Country of the inbound SMTP connection's source IP, as resolved by Proofpoint's geo-IP
+    lookup — leaf of the `connection` composite. ISO 3166-1 alpha-2 uppercase code (e.g., `US`, `DE`,
+    `JP`); pure letters only.
+  example: US
+- name: connection.host
+  type: host
+  description: Inbound connection hostname (rDNS or HELO). Leaf of the 'connection' composite. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: mx-edge-01.example.com
+- name: connection.ip
+  type: ipv4
+  description: Inbound connection source IP (v4 or v6). Modeling rule type-coerces via regex into or.
+    Leaf of the 'connection' composite. Free-form text; may contain whitespace and punctuation.
+  example: 203.0.113.42
+- name: connection.protocol
+  type: string
+  description: Application-layer protocol (typically "smtp" / "esmtp" / "smtps"). Leaf of the 'connection'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: smtp
+- name: connection.sid
+  type: string
+  description: SMTP session identifier. Leaf of the 'connection' composite. Free-form text; may contain
+    whitespace and punctuation.
+  example: sess-abc123
+- name: connection.tls.inbound.cipher
+  type: string
+  description: Negotiated TLS cipher suite on the inbound connection. Leaf of the 'connection' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: TLS_AES_256_GCM_SHA384
+- name: connection.tls.inbound.version
+  type: string
+  description: Negotiated TLS protocol version on the inbound connection. Leaf of the 'connection' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: TLSv1.3
+- name: envelope.from
+  type: email
+  description: SMTP envelope MAIL FROM address. Leaf of the 'envelope' composite. RFC 5322 'local@domain'
+    address; one address only — use an array field for multiple addresses.
+  example: alice@corp.example.com
+- name: filter.actions
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured payload — see
+    dotted-path leaves below for full shape.
+  example: '{"key":"value"}'
+- name: filter.actions[].action
+  type: string
+  description: The disposition verb (reject, quarantine, deliver, etc.). =true. Leaf of the 'filter' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: reject
+- name: filter.actions[].isFinal
+  type: string
+  description: Whether this action is the final disposition for the message. Modeling rule selects the
+    action whose isFinal=true for. Leaf of the 'filter' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'true'
+- name: filter.modules.av.virusNames
+  type: string
+  is_array: true
+  description: AV-module detection names. (comma-joined across elements). Leaf of the 'filter' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: Emotet
+- name: metadata.customerId
+  type: string
+  description: Proofpoint tenant identifier. Leaf of the 'metadata' composite. Free-form text; may contain
+    whitespace and punctuation.
+  example: cust-9001
+- name: metadata.origin.data.agent
+  type: ipv4
+  description: Origin-agent identifier (often an IP). Modeling rule type-coerces into /.ipv6 when it matches
+    an IP regex. Leaf of the 'metadata' composite. Free-form text; may contain whitespace and punctuation.
+  example: 203.0.113.10
+- name: metadata.origin.data.cid
+  type: string
+  description: Client/observer identifier (CID). Leaf of the 'metadata' composite. Free-form text; may
+    contain whitespace and punctuation.
+  example: client-id-abc
+- name: metadata.origin.data.version
+  type: string
+  description: Software/protocol version reported by the origin. Leaf of the 'metadata' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: 2.5.1
+- name: metadata.origin.schemaVersion
+  type: string
+  description: Schema version of the origin payload. Leaf of the 'metadata' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: '3.2'
+- name: metadata.origin.type
+  type: string
+  description: Origin classification (web-ui, api, sso). Leaf of the 'metadata' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: web-ui
+- name: msg.normalizedHeader.cc
+  type: email
+  is_array: true
+  description: RFC-5322 Cc-header recipient(s). Same parsing path as msg.normalizedHeader.to. Leaf of
+    the 'msg' composite. Free-form text; may contain whitespace and punctuation.
+  example: cco@corp.example.com
+- name: msg.normalizedHeader.from
+  type: email
+  is_array: true
+  description: RFC-5322 From-header address(es). Modeling rule takes the first element + extracts the
+    bare email from any "Display Name <addr@host>" form. (with envelope.from fallback). Leaf of the 'msg'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: alice@corp.example.com
+- name: msg.normalizedHeader.message-id
+  type: string
+  is_array: true
+  description: RFC-5322 Message-ID header value. — the YAML key uses literal "message-id". Leaf of the
+    'msg' composite. Free-form text; may contain whitespace and punctuation.
+  example: <a1b2c3d4@mail.example.com>
+- name: msg.normalizedHeader.return-path
+  type: email
+  is_array: true
+  description: RFC-5322 Return-Path header value(s). Bounces route here. Leaf of the 'msg' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: bounce@corp.example.com
+- name: msg.normalizedHeader.subject
+  type: string
+  is_array: true
+  description: RFC-5322 Subject header value(s). Modeling rule strips surrounding quotes. Leaf of the
+    'msg' composite. Free-form text; may contain whitespace and punctuation.
+  example: Q3 financials
+- name: msg.normalizedHeader.to
+  type: email
+  is_array: true
+  description: RFC-5322 To-header recipient(s). Modeling rule splits on commas + filters elements containing
+    "@". Leaf of the 'msg' composite. Free-form text; may contain whitespace and punctuation.
+  example: bob@target.example.com
+- name: msgParts[].detectedExt
+  type: string
+  description: File extension detected for the attachment. (comma-joined across elements). Free-form text;
+    may contain whitespace and punctuation.
+  example: operator-visible value
+- name: msgParts[].detectedMime
+  type: string
+  description: MIME type detected for the attachment. (comma-joined). Free-form text; may contain whitespace
+    and punctuation.
+  example: application/pdf
+- name: msgParts[].detectedName
+  type: string
+  description: Filename detected for the attachment. (comma-joined). Free-form text; may contain whitespace
+    and punctuation.
+  example: invoice.pdf
+- name: msgParts[].md5
+  type: hash_md5
+  description: MD5 hash of the attachment bytes. (comma-joined). 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: msgParts[].sha256
+  type: hash_sha256
+  description: SHA-256 hash of the attachment bytes. (comma-joined). 64-character lowercase hex SHA-256
+    digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: parsed_fields.eventDetails
+  type: string
+  description: Free-text human-readable description of the audit event. Leaf of the 'parsed_fields' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: User session created via SSO
+- name: parsed_fields.eventSubCategory
+  type: string
+  description: Sub-category for the audit event (e.g. authentication, authorization, data_access). Leaf
+    of the 'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: pps.agent
+  type: string
+  description: Identifier of the PPS agent (MTA) that emitted the maillog event. Leaf of the 'pps' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: pps-edge-01
+- name: sm.daemon
+  type: string
+  description: Sendmail daemon name (e.g. sendmail-MTA, sendmail-MSA). Leaf of the 'sm' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: sendmail-MTA
+- name: sm.from
+  type: email
+  description: Sender address from the sendmail-style log. Leaf of the 'sm' composite. RFC 5322 'local@domain'
+    address; one address only — use an array field for multiple addresses.
+  example: alice@corp.example.com
+- name: sm.msgid
+  type: string
+  description: Message-ID from the sendmail-style log. Modeling rule strips surrounding angle brackets.
+    Leaf of the 'sm' composite. Free-form text; may contain whitespace and punctuation.
+  example: <a1b2c3d4@mail.example.com>
+- name: sm.proto
+  type: string
+  description: Application protocol on the maillog event. Leaf of the 'sm' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: smtp
+- name: sm.sizeBytes
+  type: integer_byte_count
+  description: Total message size in bytes. Modeling rule coerces to integer. Leaf of the 'sm' composite.
+    Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '4096'
+- name: sm.stat
+  type: string
+  description: Sendmail status string. Modeling rule extracts the leading verb via regex (typically "Sent",
+    "Deferred", "Rejected") for. Leaf of the 'sm' composite. Free-form text; may contain whitespace and
+    punctuation.
+  example: Sent (250 2.0.0 OK)
+- name: sm.to
+  type: email
+  is_array: true
+  description: Recipient address list. Modeling rule applies four-deep ltrim/rtrim for quotes + angle
+    brackets. Leaf of the 'sm' composite. RFC 5322 'local@domain' address; one address only — use an array
+    field for multiple addresses.
+  example: bob@target.example.com
+- name: tls.cipher
+  type: string
+  description: TLS cipher on the maillog event. Modeling rule maps literal "none" to null; otherwise.
+    Leaf of the 'tls' composite. Free-form text; may contain whitespace and punctuation.
+  example: TLS_AES_256_GCM_SHA384
+- name: tls.version
+  type: string
+  description: TLS protocol version on the maillog event. Modeling rule maps literal "none" to null; otherwise.
+    Leaf of the 'tls' composite. Free-form text; may contain whitespace and punctuation.
+  example: TLSv1.3
+use_cases:
+- Email
+- DLP
+validated: true

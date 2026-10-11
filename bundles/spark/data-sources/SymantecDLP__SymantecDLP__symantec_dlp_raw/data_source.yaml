@@ -1,0 +1,211 @@
+schema_version: 1
+id: SymantecDLP
+pack_name: SymantecDLP
+rule_name: SymantecDLP
+dataset_name: symantec_dlp_raw
+vendor: Symantec
+product: SymantecDLP
+description: Symantec Data Loss Prevention enables you to discover, monitor and protect
+  your sensitive corporate information.
+categories:
+- Network Security
+version: 2.1.10
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA3MiAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik0xOS4wNzI3IDNWMy41NUgxOS42MzMyVjNIMTkuMDcyN1pNMTkuMDcyNyA0LjFWNC42NUgxOS42MzMyVjQuMUgxOS4wNzI3Wk0xNy4zOTExIDQuNjVWNS4ySDE3Ljk1MTZWNC42NUgxNy4zOTExWiIgZmlsbD0iI0ZEQjUxMSIvPgogICAgPHBhdGggZD0iTTEwLjA1NzYgNS4wNjI1QzUuNjA2NzkgNS4wNjI1IDIgOC42MDE1NiAyIDEyLjk2ODhDMiAxNy4zMzU5IDUuNjA2NzkgMjAuODc1IDEwLjA1NzYgMjAuODc1QzE0LjUwODMgMjAuODc1IDE4LjExNTEgMTcuMzM1OSAxOC4xMTUxIDEyLjk2ODhDMTguMTE1MSA4LjYwMTU2IDE0LjUwODMgNS4wNjI1IDEwLjA1NzYgNS4wNjI1Wk0xMC4wNTc2IDcuNTgzMzNDMTMuMDg1OSA3LjU4MzMzIDE1LjU0NjEgOS45OTcyNiAxNS41NDYxIDEyLjk2ODhDMTUuNTQ2MSAxNS45NDAyIDEzLjA4NTkgMTguMzU0MiAxMC4wNTc2IDE4LjM1NDJDNy4wMjkyIDE4LjM1NDIgNC41OTI0MyAxNS45NDAyIDQuNTkyNDMgMTIuOTY4OEM0LjU5MjQzIDkuOTk3MjYgNy4wMjkyIDcuNTgzMzMgMTAuMDU3NiA3LjU4MzMzWiIgZmlsbD0iI0ZEQjUxMSIvPgogICAgPHBhdGggZD0iTTIyLjc5MDcgMTcuMTUyNEMyMS42MzIzIDE3LjE1MjQgMjAuNjYwNyAxNi44NzAxIDE5Ljg3NiAxNi4zMDU0TDIwLjYyNzEgMTUuMDk1NEMyMS4yNTQ5IDE1LjUyODEgMjEuOTY0OSAxNS43NDQ0IDIyLjc1NzEgMTUuNzQ0NEMyMy4xNDU3IDE1Ljc0NDQgMjMuNDUyMSAxNS42NzExIDIzLjY3NjMgMTUuNTI0NEMyMy45MDA2IDE1LjM3MDQgMjQuMDEyNyAxNS4xNTc4IDI0LjAxMjcgMTQuODg2NEMyNC4wMTI3IDE0LjgxMzEgMjQuMDA1MiAxNC43NDcxIDIzLjk5MDIgMTQuNjg4NEMyMy45NzUzIDE0LjYyOTggMjMuOTQ5MSAxNC41NzQ4IDIzLjkxMTggMTQuNTIzNEMyMy44NzQ0IDE0LjQ2NDggMjMuODM3IDE0LjQxNzEgMjMuNzk5NyAxNC4zODA0QzIzLjc2MjMgMTQuMzM2NCAyMy43MDI1IDE0LjI5MjQgMjMuNjIwMyAxNC4yNDg0QzIzLjU0NTYgMTQuMjA0NCAyMy40NzgzIDE0LjE2NzggMjMuNDE4NSAxNC4xMzg0QzIzLjM2NjIgMTQuMTA5MSAyMy4yODAyIDE0LjA3MjQgMjMuMTYwNyAxNC4wMjg0QzIzLjA0MTEgMTMuOTg0NCAyMi45NDAyIDEzLjk1MTQgMjIuODU4IDEzLjkyOTRDMjIuNzgzMiAxMy45MDAxIDIyLjY2NzQgMTMuODU5OCAyMi41MTA1IDEzLjgwODRDMjIuMzUzNSAxMy43NTcxIDIyLjIyMjcgMTMuNzEzMSAyMi4xMTgxIDEzLjY3NjRDMjEuODQxNiAxMy41ODExIDIxLjYwNjEgMTMuNDgyMSAyMS40MTE4IDEzLjM3OTRDMjEuMjE3NSAxMy4yNjk0IDIxLjAxOTQgMTMuMTMwMSAyMC44MTc3IDEyLjk2MTRDMjAuNjE1OSAxMi43ODU0IDIwLjQ2MjcgMTIuNTY1NCAyMC4zNTggMTIuMzAxNEMyMC4yNTM0IDEyLjAzMDEgMjAuMjAxMSAxMS43MjIxIDIwLjIwMTEgMTEuMzc3NEMyMC4yMDExIDEwLjY4MDggMjAuNDQ3NyAxMC4xNDE4IDIwLjk0MSA5Ljc2MDQzQzIxLjQzNDIgOS4zNzE3NyAyMi4wODQ0IDkuMTc3NDQgMjIuODkxNiA5LjE3NzQzQzIzLjg2MzIgOS4xNzc0NCAyNC42NTE3IDkuMzUzNDQgMjUuMjU3IDkuNzA1NDNMMjQuNjg1MyAxMC45NzA0QzI0LjExNzMgMTAuNzA2NCAyMy41MzgxIDEwLjU3NDQgMjIuOTQ3NyAxMC41NzQ0QzIyLjE3MDQgMTAuNTc0NCAyMS43ODE4IDEwLjgyMzggMjEuNzgxOCAxMS4zMjI0QzIxLjc4MTggMTEuNDM5OCAyMS44MDQyIDExLjU0MjQgMjEuODQ5IDExLjYzMDRDMjEuODkzOSAxMS43MTg0IDIxLjk0MjQgMTEuNzkxOCAyMS45OTQ4IDExLjg1MDRDMjIuMDQ3MSAxMS45MDkxIDIyLjE0MDUgMTEuOTY3OCAyMi4yNzUgMTIuMDI2NEMyMi40MTcgMTIuMDg1MSAyMi41MzI5IDEyLjEyOTEgMjIuNjIyNiAxMi4xNTg0QzIyLjcxOTcgMTIuMTg3OCAyMi44NzY3IDEyLjIzNTQgMjMuMDkzNCAxMi4zMDE0QzIzLjE5MDYgMTIuMzMwOCAyMy4yNjUzIDEyLjM1MjggMjMuMzE3NiAxMi4zNjc0QzIzLjU3OTIgMTIuNDQ4MSAyMy44MDM0IDEyLjUyNTEgMjMuOTkwMiAxMi41OTg0QzI0LjE3NzEgMTIuNjcxOCAyNC4zODI2IDEyLjc3ODEgMjQuNjA2OCAxMi45MTc0QzI0LjgzMSAxMy4wNDk0IDI1LjAxNDEgMTMuMTk5OCAyNS4xNTYxIDEzLjM2ODRDMjUuMjk4MSAxMy41MzcxIDI1LjQxNzcgMTMuNzQ5OCAyNS41MTQ5IDE0LjAwNjRDMjUuNjEyIDE0LjI2MzEgMjUuNjYwNiAxNC41NDkxIDI1LjY2MDYgMTQuODY0NEMyNS42NjA2IDE1LjU1MzggMjUuNDEwMiAxNi4xMDc0IDI0LjkwOTUgMTYuNTI1NEMyNC40MTYyIDE2Ljk0MzQgMjMuNzEgMTcuMTUyNCAyMi43OTA3IDE3LjE1MjRaIiBmaWxsPSJ3aGl0ZSIvPgogICAgPHBhdGggZD0iTTI4LjQyNzQgMTcuMzA2NEwyNi4zMDg2IDExLjM1NTRIMjguMDY4NkwyOS4xNTYxIDE1LjUxMzRMMzAuMDc1MyAxMS4zNTU0SDMxLjcyMzNMMjkuOTg1NiAxNy4xMTk0QzI5LjU4MjEgMTguNDU0MSAyOC43NDEzIDE5LjEyMTQgMjcuNDYzMyAxOS4xMjE0QzI3LjE2NDMgMTkuMTIxNCAyNi44NDY3IDE5LjA4ODQgMjYuNTEwNCAxOS4wMjI0TDI2LjY4OTggMTcuODU2NEMyNi45ODg3IDE3Ljg4NTggMjcuMTc5MyAxNy45MDA0IDI3LjI2MTUgMTcuOTAwNEMyNy41Njc5IDE3LjkwMDQgMjcuODA3MSAxNy44NTI4IDI3Ljk3OSAxNy43NTc0QzI4LjE1MDkgMTcuNjY5NCAyOC4zMDAzIDE3LjUxOTEgMjguNDI3NCAxNy4zMDY0WiIgZmlsbD0id2hpdGUiLz4KICAgIDxwYXRoIGQ9Ik0zNy4yODE3IDEyLjEwMzRDMzcuODQyMiAxMS41MTY4IDM4LjQ0MDEgMTEuMjIzNCAzOS4wNzU0IDExLjIyMzRDMzkuNjY1OCAxMS4yMjM0IDQwLjA4MDYgMTEuNDIxNCA0MC4zMTk4IDExLjgxNzRDNDAuNTY2NCAxMi4yMTM0IDQwLjY4OTcgMTIuNzA4NCA0MC42ODk3IDEzLjMwMjRWMTcuMDQyNEgzOC45ODU3VjEzLjI4MDRDMzguOTg1NyAxMi44MjU4IDM4LjgwNjMgMTIuNTk4NCAzOC40NDc2IDEyLjU5ODRDMzguMTYzNiAxMi41OTg0IDM3Ljg0NiAxMi43NTI0IDM3LjQ5NDcgMTMuMDYwNFYxNy4wNDI0SDM1Ljc5MDdWMTMuMjgwNEMzNS43OTA3IDEyLjgyNTggMzUuNjExMyAxMi41OTg0IDM1LjI1MjYgMTIuNTk4NEMzNC45MjM4IDEyLjU5ODQgMzQuNjA2MSAxMi43NTk4IDM0LjI5OTcgMTMuMDgyNFYxNy4wNDI0SDMyLjU5NTdWMTEuMzU1NEgzMy42NDk1TDMzLjk4NTggMTIuMjI0NEMzNC41NzYyIDExLjU1NzEgMzUuMjA3OCAxMS4yMjM0IDM1Ljg4MDQgMTEuMjIzNEMzNi41NTMgMTEuMjIzNCAzNy4wMjAxIDExLjUxNjggMzcuMjgxNyAxMi4xMDM0WiIgZmlsbD0id2hpdGUiLz4KICAgIDxwYXRoIGQ9Ik00NC45NDYgMTMuNDAxNFYxMy4yNTg0QzQ0Ljk0NiAxMy4wMDE4IDQ0Ljg4NjIgMTIuODE0OCA0NC43NjY2IDEyLjY5NzRDNDQuNjU0NSAxMi41ODAxIDQ0LjQ1NjUgMTIuNTIxNCA0NC4xNzI1IDEyLjUyMTRDNDMuNzMxNSAxMi41MjE0IDQzLjE4OTcgMTIuNjY4MSA0Mi41NDcgMTIuOTYxNEw0MS45NjQgMTEuODYxNEM0Mi43MTE0IDExLjQzNjEgNDMuNDk2MSAxMS4yMjM0IDQ0LjMxODIgMTEuMjIzNEM0NS4wODggMTEuMjIzNCA0NS42NjcyIDExLjQxMDQgNDYuMDU1OSAxMS43ODQ0QzQ2LjQ1MiAxMi4xNTExIDQ2LjY1IDEyLjY3NTQgNDYuNjUgMTMuMzU3NFYxNy4wNDI0SDQ1LjU5NjJDNDUuNDAxOSAxNi42MzkxIDQ1LjMwMSAxNi40Mzc0IDQ1LjI5MzUgMTYuNDM3NEM0NC43NjI5IDE2LjkxNDEgNDQuMTk0OSAxNy4xNTI0IDQzLjU4OTUgMTcuMTUyNEM0My4wNzM5IDE3LjE1MjQgNDIuNjQwNCAxNy4wMDU4IDQyLjI4OTEgMTYuNzEyNEM0MS45NDUzIDE2LjQxMTggNDEuNzczNCAxNi4wMDQ4IDQxLjc3MzQgMTUuNDkxNEM0MS43NzM0IDE0Ljg5MDEgNDEuOTcxNSAxNC40NTAxIDQyLjM2NzYgMTQuMTcxNEM0Mi44MzEgMTMuODM0MSA0My42OTA0IDEzLjU3NzQgNDQuOTQ2IDEzLjQwMTRaTTQ0Ljk0NiAxNS42MzQ0VjE0LjQzNTRDNDQuMjA2MSAxNC41ODIxIDQzLjc1NzcgMTQuNzQzNCA0My42MDA4IDE0LjkxOTRDNDMuNDk2MSAxNS4wMjk0IDQzLjQ0MzggMTUuMTc5OCA0My40NDM4IDE1LjM3MDRDNDMuNDQzOCAxNS43NzM4IDQzLjY0MTkgMTUuOTc1NCA0NC4wMzggMTUuOTc1NEM0NC4zNjY4IDE1Ljk3NTQgNDQuNjY5NSAxNS44NjE4IDQ0Ljk0NiAxNS42MzQ0WiIgZmlsbD0id2hpdGUiLz4KICAgIDxwYXRoIGQ9Ik00OC4wMTAzIDE3LjA0MjRWMTEuMzU1NEg0OS4wNjRMNDkuNDAwNCAxMi4yMjQ0QzQ5Ljk5MDggMTEuNTU3MSA1MC42MzcyIDExLjIyMzQgNTEuMzM5OCAxMS4yMjM0QzUyLjQ0NTkgMTEuMjIzNCA1Mi45OTg5IDExLjkxNjQgNTIuOTk4OSAxMy4zMDI0VjE3LjA0MjRINTEuMjk0OVYxMy4yODA0QzUxLjI5NDkgMTIuODI1OCA1MS4xMDA2IDEyLjU5ODQgNTAuNzEyIDEyLjU5ODRDNTAuMzUzMyAxMi41OTg0IDUwLjAyMDcgMTIuNzU5OCA0OS43MTQzIDEzLjA4MjRWMTcuMDQyNEg0OC4wMTAzWiIgZmlsbD0id2hpdGUiLz4KICAgIDxwYXRoIGQ9Ik01NC43NjI2IDEyLjQ5OTRINTMuOTEwNlYxMS4zNTU0SDU0Ljc4NTFMNTUuMDc2NSA5LjczODQzSDU2LjQ2NjZWMTEuMzU1NEg1Ny42OTk4VjEyLjQ5OTRINTYuNDY2NlYxNS4yMzg0QzU2LjQ2NjYgMTUuNDg3OCA1Ni41MDc3IDE1LjY2MDEgNTYuNTkgMTUuNzU1NEM1Ni42NzIyIDE1Ljg1MDggNTYuODQwMyAxNS44OTg0IDU3LjA5NDQgMTUuODk4NEM1Ny4yMzY0IDE1Ljg5ODQgNTcuNDM0NSAxNS44NjE4IDU3LjY4ODYgMTUuNzg4NEw1Ny44OTA0IDE2Ljk0MzRDNTcuNDY0NCAxNy4wODI4IDU3LjAzMDkgMTcuMTUyNCA1Ni41OSAxNy4xNTI0QzU1LjM3MTcgMTcuMTUyNCA1NC43NjI2IDE2LjU0MzggNTQuNzYyNiAxNS4zMjY0VjEyLjQ5OTRaIiBmaWxsPSJ3aGl0ZSIvPgogICAgPHBhdGggZD0iTTYwLjM0OTQgMTQuNjg4NEM2MC4zODY4IDE1LjA3NzEgNjAuNDk1MSAxNS4zNjMxIDYwLjY3NDUgMTUuNTQ2NEM2MC44NjE0IDE1LjcyOTggNjEuMTM3OSAxNS44MjE0IDYxLjUwNDEgMTUuODIxNEM2MS43MDU5IDE1LjgyMTQgNjEuOTA3NyAxNS43OTIxIDYyLjEwOTUgMTUuNzMzNEM2Mi4zMTg3IDE1LjY3NDggNjIuNDcxOSAxNS42MTk4IDYyLjU2OTEgMTUuNTY4NEM2Mi42NzM3IDE1LjUxNzEgNjIuODI2OSAxNS40MzY0IDYzLjAyODcgMTUuMzI2NEw2My43MDE0IDE2LjM4MjRDNjMuNDY5NyAxNi41NTExIDYzLjI3MTYgMTYuNjgzMSA2My4xMDcyIDE2Ljc3ODRDNjIuOTQyOCAxNi44NjY0IDYyLjcwNzQgMTYuOTUwOCA2Mi40MDA5IDE3LjAzMTRDNjIuMDk0NSAxNy4xMTIxIDYxLjc1NDUgMTcuMTUyNCA2MS4zODA4IDE3LjE1MjRDNjAuNTI4OCAxNy4xNTI0IDU5Ljg0ODcgMTYuODk1OCA1OS4zNDA1IDE2LjM4MjRDNTguODM5NyAxNS44NjE4IDU4LjU4OTQgMTUuMTU0MSA1OC41ODk0IDE0LjI1OTRDNTguNTg5NCAxMy4zNjQ4IDU4LjgyODUgMTIuNjM1MSA1OS4zMDY4IDEyLjA3MDRDNTkuNzg1MSAxMS41MDU4IDYwLjQ0MjggMTEuMjIzNCA2MS4yNzk5IDExLjIyMzRDNjIuMTM5NCAxMS4yMjM0IDYyLjc4MjEgMTEuNTA1OCA2My4yMDgxIDEyLjA3MDRDNjMuNjM0MSAxMi42MzUxIDYzLjg0NzEgMTMuMzYxMSA2My44NDcxIDE0LjI0ODRWMTQuNjg4NEg2MC4zNDk0Wk02MC4zNDk0IDEzLjcwOTRINjIuMTA5NUM2Mi4xMDk1IDEyLjg1MTQgNjEuODI5MiAxMi40MjI0IDYxLjI2ODcgMTIuNDIyNEM2MC45OTk2IDEyLjQyMjQgNjAuNzkwNCAxMi41MjUxIDYwLjY0MDkgMTIuNzMwNEM2MC40OTE0IDEyLjkyODQgNjAuMzk0MyAxMy4yNTQ4IDYwLjM0OTQgMTMuNzA5NFoiIGZpbGw9IndoaXRlIi8+CiAgICA8cGF0aCBkPSJNNjcuNDg5NyAxNy4xNTI0QzY2LjU2MjkgMTcuMTUyNCA2NS44NjQxIDE2Ljg4NDggNjUuMzkzMyAxNi4zNDk0QzY0LjkyOTkgMTUuODA2OCA2NC42OTgyIDE1LjA5OTEgNjQuNjk4MiAxNC4yMjY0QzY0LjY5ODIgMTMuMzUzOCA2NC45NDExIDEyLjYzNTEgNjUuNDI2OSAxMi4wNzA0QzY1LjkxMjcgMTEuNTA1OCA2Ni42MDAzIDExLjIyMzQgNjcuNDg5NyAxMS4yMjM0QzY4LjI3NDQgMTEuMjIzNCA2OC45MTM0IDExLjQzNjEgNjkuNDA2NyAxMS44NjE0TDY4LjYxMDcgMTIuOTcyNEM2OC40MDg5IDEyLjgyNTggNjguMjMzMyAxMi43MjY4IDY4LjA4MzggMTIuNjc1NEM2Ny45MzQzIDEyLjYxNjggNjcuNzQgMTIuNTg3NCA2Ny41MDA5IDEyLjU4NzRDNjYuODA1OCAxMi41ODc0IDY2LjQ1ODMgMTMuMTI2NCA2Ni40NTgzIDE0LjIwNDRDNjYuNDU4MyAxNS4yNjA0IDY2LjgxMzMgMTUuNzg4NCA2Ny41MjMzIDE1Ljc4ODRDNjcuOTA0NCAxNS43ODg0IDY4LjI4OTMgMTUuNjM4MSA2OC42NzggMTUuMzM3NEw2OS40OTY0IDE2LjM3MTRDNjguOTY1NyAxNi44OTIxIDY4LjI5NjggMTcuMTUyNCA2Ny40ODk3IDE3LjE1MjRaIiBmaWxsPSJ3aGl0ZSIvPgogICAgPHBhdGggZD0iTTEyLjM0NjIgOS4wNDk5OUMxMC44ODMxIDEwLjg0NDIgMTAuNTE0NCAxMS42MzIxIDkuOTMxNTMgMTMuMDgyN0M5LjI3MDIxIDExLjc3MDMgOC40ODA5NyAxMC44NjQ1IDcuMTE0NiAxMC4yNjQ2QzYuODU1NzUgMTAuMTk5NyA2LjcyODQ3IDEwLjE2MjEgNi41NTQwNyAxMC40MDIxQzYuMzc5NjcgMTAuNjQyIDYuNDg1NDIgMTAuODU3OSA2LjY5NDIgMTEuMTEyNUM3LjI0MTMyIDExLjc3OTcgNy44NTYxNiAxMi4zOTYyIDguMjgyMzYgMTMuMTUyMUM4Ljc4MjAxIDE0LjAzODMgOS40MDQwOSAxNS40OTg4IDkuNjEzNjEgMTUuODc5MkM5Ljc4MDI1IDE2LjE4MTYgMTAuMTgzMyAxNi4zMTQ2IDEwLjMzNzYgMTYuMzE0NkMxMS4xNjQ1IDE2LjIxODYgMTEuMTY0OCAxNS44MDYxIDExLjMyMjQgMTUuMDkxQzExLjU3OCAxMy45MTg1IDExLjkwOTEgMTIuNzA2MyAxMy40NjcyIDExLjI1VjkuMDQ5OTlIMTIuMzQ2MloiIGZpbGw9IndoaXRlIi8+CiAgICA8cGF0aCBkPSJNMTguNTEyIDMuNTQ5OTlWNC4wOTk5OUgxOS4wNzI1VjMuNTQ5OTlIMTguNTEyWk0xOC41MTIgNC4wOTk5OUgxNy4zOTA5VjQuNjQ5OTlIMTguNTEyVjQuMDk5OTlaTTE3LjM5MDkgNC42NDk5OUgxNi44MzA0VjUuNzQ5OTlIMTcuMzkwOVY0LjY0OTk5Wk0xNy4zOTA5IDUuNzQ5OTlWNi4yOTk5OUgxNy45NTE1VjUuNzQ5OTlIMTcuMzkwOVpNMTcuOTUxNSA1Ljc0OTk5SDE4LjUxMlY1LjE5OTk5SDE3Ljk1MTVWNS43NDk5OVpNMTcuMzkwOSA2LjI5OTk5SDE2LjgzMDRWNi44NDk5OUgxNi4yNjk5VjYuMjk5OTlIMTUuMTQ4OFY2Ljg0OTk5SDE0LjU4ODNWNy4zOTk5OUgxNS4xNDg4VjcuOTQ5OTlIMTQuNTg4M1Y3LjM5OTk5SDE0LjAyNzhWNy45NDk5OUgxMy40NjczVjguNDk5OTlIMTIuOTA2N1YxMC43SDE0LjAyNzhWMTAuMTVIMTQuNTg4M1Y5LjU5OTk5SDE1LjE0ODhWOS4wNDk5OUgxNC41ODgzVjguNDk5OTlIMTUuMTQ4OFY5LjA0OTk5SDE1LjcwOTRWOC40OTk5OUgxNi4yNjk5VjcuOTQ5OTlIMTYuODMwNFY3LjM5OTk5SDE3LjM5MDlWNi4yOTk5OVpNMTYuMjY5OSA2LjI5OTk5SDE2LjgzMDRWNS43NDk5OUgxNi4yNjk5VjYuMjk5OTlaTTE2LjI2OTkgNS43NDk5OVY1LjE5OTk5SDE1LjcwOTRWNS43NDk5OUgxNi4yNjk5WiIgZmlsbD0id2hpdGUiLz4KPC9zdmc+Cg==
+  source: baked/Packs/SymantecDLP/Integrations/SymantecDLP/SymantecDLP_dark.svg
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: json_content.APPLICATION_NAME
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.APPLICATION_NAME.
+  example: sample value
+- name: json_content.APPLICATION_USER
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.APPLICATION_USER.
+  example: sample value
+- name: json_content.BLOCKED
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.BLOCKED.
+  example: sample value
+- name: json_content.DESTINATION_IP
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.DESTINATION_IP.
+  example: sample value
+- name: json_content.ENDPOINT_DEVICE_ID
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.ENDPOINT_DEVICE_ID.
+  example: sample value
+- name: json_content.ENDPOINT_MACHINE
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.ENDPOINT_MACHINE.
+  example: sample value
+- name: json_content.ENDPOINT_USERNAME
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.ENDPOINT_USERNAME.
+  example: sample value
+- name: json_content.FILE_NAME
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.FILE_NAME.
+  example: sample value
+- name: json_content.INCIDENT_ID
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.INCIDENT_ID.
+  example: sample value
+- name: json_content.MACHINE_IP
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.MACHINE_IP.
+  example: sample value
+- name: json_content.MONITOR_NAME
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.MONITOR_NAME.
+  example: sample value
+- name: json_content.PARENT_PATH
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.PARENT_PATH.
+  example: sample value
+- name: json_content.PATH
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.PATH.
+  example: sample value
+- name: json_content.POLICY
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.POLICY.
+  example: sample value
+- name: json_content.PROTOCOL
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.PROTOCOL.
+  example: sample value
+- name: json_content.RECIPIENTS
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.RECIPIENTS.
+  example: sample value
+- name: json_content.RULES
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.RULES.
+  example: sample value
+- name: json_content.SEVERITY
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.SEVERITY.
+  example: sample value
+- name: json_content.SUBJECT
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.SUBJECT.
+  example: sample value
+- name: json_content.TARGET
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.TARGET.
+  example: sample value
+- name: json_content.USER_JUSTIFICATION
+  type: string_short
+  description: Nested leaf of `json_content` — the modeling rule reads it at $.USER_JUSTIFICATION.
+  example: sample value
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'symantec: symantecdlp=SymantecDLP action=allow user=jdoe'
+- name: F0
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: Justification
+  type: string
+  description: Alert description. Free-form text; may contain whitespace and punctuation.
+  example: sample_justification
+- name: User
+  type: string
+  description: Alert description. Free-form text; may contain whitespace and punctuation.
+  example: jdoe
+- name: fA
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: json_SUBJECT
+  type: string
+  description: Json SUBJECT. Free-form text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: json_TARGET
+  type: string
+  description: Json TARGET. Free-form text; may contain whitespace and punctuation.
+  example: target_object
+- name: json_content
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_content
+use_cases:
+- AV
+- EDR
+- Email
+- DLP
+- CASB
+how_to_use: |
+  ## Symantec SymantecDLP → Cortex XSIAM (dataset `symantec_dlp_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire, and a Broker syslog collector row must
+  supply them. The local parsing-rule snapshot has no INGEST block for this
+  pack, so the literal is UNCONFIRMED -- do not assume the display
+  `vendor`/`product` fields are it (for the 75 sources where the literal IS
+  known, all 75 differ from the display values). Confirm empirically that
+  events land in `symantec_dlp_raw` and that `unknown_unknown_raw` did not grow.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `symantec_dlp_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `symantec_dlp`. The marketplace pack's display name `Symantec` / `SymantecDLP` normalizes to `symantec_symantecdlp_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `symantec_dlp` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.DESTINATION_IP`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `_raw_log ~= "{.*\"APPLICATION_NAME\":"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~23 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.event.description`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `Symantec`, Product = `SymantecDLP`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = symantec_dlp_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

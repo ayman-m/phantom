@@ -1,0 +1,300 @@
+# Xlog tool connector for the Phantom SOC simulation agent.
+#
+# Per Spark agent bundle spec v1.2 §7.4. Tool names are auto-namespaced
+# as `xlog/<tool_name>` by the embedded MCP. Manifest tools.allow lists
+# `xlog/*`. Xlog is a separate service that owns synthetic
+# log generation, scenario execution, and detection-validation
+# bookkeeping; this connector calls its GraphQL API.
+
+id: "xlog"
+version: "1.0.0"
+description: "Xlog log-generation connector — synthetic telemetry workers, scenario execution, observable catalog, detection validation runs, ATT&CK coverage reports."
+displayName: "Xlog (synthetic telemetry)"
+tags: ["xlog", "log-generation", "siem", "telemetry", "scenarios", "mitre-attack"]
+logo: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMwYjNiMmUiLz48cGF0aCBkPSJNOCAzMmg2bDMtOCA0IDE2IDQtMTAgNCA2IDQtNCA0IDEwIDQtMTQgNCAxMiA0LTYgNS0yIiBzdHJva2U9IiMzNGQzOTkiIHN0cm9rZS13aWR0aD0iMi41IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjQ2IiByPSIyLjUiIGZpbGw9IiMzNGQzOTkiLz48L3N2Zz4="
+
+source:
+  language: "python"
+  entrypoint: "src.connector"
+
+# Tool dispatch — `phantom_` prefix.
+# src/connector.py is an aggregator that re-exports `phantom_<tool>`
+# functions from src/{workers,scenarios,simulation_runs,observables_catalog,field_info}.py.
+#
+# runtimeMapping.style is "container" (see
+# docs/spec-per-instance-connector-containers.md): each connector instance
+# runs as its own container (phantom-connector-<id>:<version>); the agent's
+# MCP is a routing proxy over MCP-over-HTTP. The `functionPrefix` field is
+# ignored for style: container; the container exposes tools by their bare
+# names per the runtime contract.
+runtimeMapping:
+  # Universal connector container model.
+  # xlog's connector wrapper talks to the xlog SERVICE (the `xlog`
+  # container in docker-compose.yml — Strawberry GraphQL + worker
+  # registry, unchanged). The connector wrapper is stateless; the
+  # worker registry lives in the xlog service's own process. See
+  # architecture page #marketplace-logic.
+  style: "container"
+  functionPrefix: "phantom_"
+
+executionMode: "persistent"
+
+configSchema:
+  type: "object"
+  required: ["baseUrl"]
+  properties:
+    baseUrl:
+      type: "string"
+      description: "Xlog service base URL (e.g. https://xlog:8000). xlog serves HTTPS unconditionally (TLS via the shared phantom_tls volume); the connector verify=False's the self-signed cert against compose-internal hostnames. Operators with a custom xlog deployment behind their own TLS reverse proxy override this via the /instances form."
+      default: "https://xlog:8000"
+    webhookEndpoint:
+      type: "string"
+      description: "Default sink for generated logs when create_data_worker omits a destination (typically the operator's XSIAM webhook URL)."
+      default: ""
+    defaultLogFormat:
+      type: "string"
+      description: "Default wire format ('JSON' | 'CEF' | 'KV' | 'RAW') when not specified per-call."
+      default: "JSON"
+
+secretSlots:
+  - name: "apiToken"
+    description: "Xlog service API token (sent as Authorization header on every connector call)."
+    required: true
+  - name: "webhookKey"
+    description: "Default webhook Authorization header value (raw, NOT 'Bearer') for the configured webhookEndpoint."
+    required: false
+
+spec:
+  tools:
+    # ─── Workers ────────────────────────────────────────────────
+    - name: "create_data_worker"
+      method: "POST /workers/data"
+      description: |
+        Spin up a worker that generates synthetic log events at a target rate
+        and ships them to the configured destination.
+
+        Wire formats: SYSLOG | CEF | LEEF | JSON | RAW. CEF over a UDP/TCP
+        broker destination lands in `<lowercased-vendor>_<lowercased-product>_raw`
+        on XSIAM (broker auto-routes by CEF header). XSIAM_WEBHOOK lands in
+        `phantom_logs_raw` (XSIAM wraps the batch in an events JSON array).
+
+        RAW ships the vendor's OWN log line, syslog-framed, verbatim. Use it
+        when the source's how_to_use says its modeling rule extracts from
+        `_raw_log`: a CEF event's extensions become dataset COLUMNS and the
+        broker leaves `_raw_log` EMPTY, so those rules map NOTHING over CEF
+        however the schema is shaped. The line comes from the schema's
+        `_raw_log` field — its example, or an observables_dict override.
+        CAVEAT: a raw line carries no CEF header, so the broker cannot derive
+        vendor/product from the wire; routing must come from a Broker syslog
+        collector row or the event lands in `unknown_unknown_raw`.
+
+        For vendor-faithful streaming pass `schema_override`: fields[] from
+        `data_sources_get_schema(pack, rule, dataset)`. The worker emits records
+        whose top-level keys match the vendor's actual field names so the
+        matching modeling rule parses cleanly into XDM.
+        Without `schema_override`, the worker uses generic Rosetta observables.
+
+        SEND A REALISTIC SUBSET, NOT EVERY FIELD. A syslog collector accepts
+        roughly 4 KB and truncates beyond it silently: a live
+        Broker drops byte offsets past ~4096 with no error anywhere.
+        A full vendor schema overflows that easily: FortiGate's 222 declared
+        fields encode to 5,259 bytes, so the tail (`spt`, `out`) never arrived
+        and read as null in XDM, looking like a mapping bug rather than a
+        transport one. A real vendor event carries TENS of fields, not hundreds.
+        Choose the fields the modeling rule actually reads plus the ones the
+        scenario needs; 20-40 is typical and encodes to well under 1 KB. The
+        sender now trims oversized events at a field boundary and logs what it
+        dropped, but trimming is a backstop -- selecting well is the fix.
+
+        VALUE RESOLUTION — how each field's value is chosen, in order:
+          1) observables_dict[field] — explicit; always wins. Values are LISTS.
+          2) is_gate + example — gate fields are auto-pinned to their example.
+          3) type — ipv4/user/url/datetime synthesized plausibly.
+          4) field-name pattern — heuristic on the name.
+          5) random token — everything else.
+        A field's `example` is DOCUMENTATION ONLY unless that field is is_gate.
+        So any field the modeling rule reads expecting a SHAPE — an HTTP method,
+        a status code, an enum, an ARM resource path, an XML blob, a numeric DNS
+        record type — is a RANDOM TOKEN unless you seed it in observables_dict.
+        That is the difference between an event that maps 15 XDM fields and one
+        that maps 2. Read the source's how_to_use Simulation recipe and pass it.
+
+        ENTITY GROUPS — fields that must describe the SAME machine.
+        Each field above is drawn INDEPENDENTLY, so
+        {shost: [a, b], src: [ip1, ip2]} emits the CROSS-PRODUCT: host `a` gets
+        ip1 on one event and ip2 on the next. That destroys endpoint identity,
+        and Cortex analytics are entity-PROFILING detectors -- they learn what is
+        normal for an endpoint, and the Analytics Engine will not even activate
+        without network logs from >=30 stable ENDPOINTS over >=2 weeks. With the
+        cross-product, hosts end up with many distinct src values and the
+        profiling engine raises no alerts.
+
+        Use the reserved `__entities__` key for anything that identifies a
+        machine or a person -- hostname, IP, MAC, logged-on user. One entity is
+        drawn per EVENT and its fields applied together:
+
+          observables_dict = {
+            "app": ["HTTP", "HTTPS"],          # independent, as before
+            "__entities__": [
+              {"shost": "wks-001", "src": "10.20.5.1", "suser": "ahmed"},
+              {"shost": "wks-002", "src": "10.20.5.2", "suser": "sameh"}
+            ]
+          }
+
+        One worker can present 30+ coherent endpoints. The alternative is one
+        worker per endpoint, which the install-wide WORKERS_NUMBER cap of 25
+        makes impossible to scale.
+
+        ROUTING — pass the vendor/product the operator's parsing rules route
+        from. Start with the `vendor`/`product` from `data_sources_get_schema`
+        (or its how_to_use); never PRETTIFY a product (use `Okta`, never
+        `Okta SSO` — a prettified name derives a dataset nothing parses). For
+        multi-dataset packs the discriminator in `observables_dict` (e.g.
+        eventType=user.authentication.sso) selects the sibling dataset. ALWAYS
+        verify landing with an XQL count on the target dataset; if it's 0, the
+        tenant's rules route from a different CEF string — adjust the
+        vendor/product (the broker normalizes them to
+        `<lowercased-vendor>_<lowercased-product>_raw`) until events land.
+
+        FIRE DIRECTLY — if the operator already asked to send / stream / fire /
+        simulate logs, that IS your authorization: call this tool immediately
+        and report the result. Do NOT pause to ask "shall I fire it?" or print
+        "about to call …" and stop — the operator already told you to send them.
+      args:
+        - { name: "type",            type: "string",  description: "Wire format: 'SYSLOG' | 'CEF' | 'LEEF' | 'JSON' | 'RAW'. Use 'RAW' when the data source's how_to_use says its modeling rule reads _raw_log — CEF leaves _raw_log EMPTY and those rules then map nothing.",                                          required: true  }
+        - { name: "destination",     type: "string",  description: "Where to send logs. PREFERRED: 'logdest:<id>' referencing a configured destination from log_destinations_list — the platform resolves it (and injects credentials) server-side, so you never handle destination secrets. Also accepts raw 'udp:host:port' / 'tcp:host:port' for ad-hoc sends, or 'XSIAM_WEBHOOK' (default, legacy env webhook).", required: false }
+        - { name: "count",           type: "integer", description: "Events per BATCH TICK — NOT a total. With `interval` this is a SUSTAINED RATE of count/interval events per second, running until stopped: count=200,interval=1 is 200 events/SECOND (~17M/day), not '200 events'. Sustained rates above 10/sec are REJECTED. Keep count small and interval >= 2 (count=1,interval=5 = 0.2/sec). To send a lot quickly, do NOT raise count — declare a burst via duration_seconds/max_events.", required: false }
+        - { name: "interval",        type: "integer", description: "Seconds between ticks (default 2). Must be >= 1 — 0 or less does not throttle at all and is rejected. Raising interval is the simplest way to lower the sustained rate.", required: false }
+        - { name: "duration_seconds", type: "integer", description: "How long the worker lives; when neither this nor max_events is set the worker stops by itself after 900 seconds. Declares a BOUNDED BURST of this many seconds. Setting this (or max_events) allows a far higher rate than sustained generation — up to 500 events/sec, capped at 50,000 events total, one burst at a time. Use when the operator wants large volume QUICKLY (seeding a dataset, load test). Leave unset for ongoing background telemetry.", required: false }
+        - { name: "max_events",      type: "integer", description: "Declare a BOUNDED BURST of at most this many events. Same effect as duration_seconds — promising the run is finite is what buys the higher rate ceiling.", required: false }
+        - { name: "continuous",      type: "boolean", description: "Set true ONLY when the operator explicitly asked for a worker that keeps running until it is stopped; default false (the worker then stops after 900 seconds unless duration_seconds or max_events says otherwise).", required: false }
+        - { name: "vendor",          type: "string",  description: "EXACT CEF vendor LITERAL — use the `vendor` value from data_sources_get_schema (or its how_to_use 'Required CEF header' block), NOT a prettified/display name. Drives broker → <vendor>_<product>_raw routing.", required: false }
+        - { name: "product",         type: "string",  description: "EXACT CEF product LITERAL — use the `product` value from data_sources_get_schema, NOT a friendly or expanded name. TRAP: the 'Okta — SSO' source's product is `Okta` (NOT `Okta SSO`); the SSO dataset split comes from the eventType discriminator in observables_dict, not the product string.", required: false }
+        - { name: "version",         type: "string",  description: "CEF version (header position 4); default '1.0'.",                                            required: false }
+        - { name: "name",            type: "string",  description: "Worker name (scenario tag); auto-generated when omitted.",                                  required: false }
+        - { name: "tags",            type: "array",   description: "Scenario tags (free-form labels).",                                                          required: false }
+        - { name: "tactic",          type: "string",  description: "MITRE ATT&CK tactic (e.g. 'discovery').",                                                    required: false }
+        - { name: "technique",       type: "string",  description: "MITRE ATT&CK technique (e.g. 'T1046').",                                                      required: false }
+        - { name: "procedure",       type: "string",  description: "Free-form procedure description.",                                                            required: false }
+        - { name: "fields",          type: "array",   description: "Custom fields to include in each event (legacy Rosetta path).",                              required: false }
+        - { name: "datetime_iso",    type: "string",  description: "Anchor ISO timestamp ('YYYY-MM-DD HH:MM:SS'); records jitter ± random seconds.",             required: false }
+        - { name: "observables_dict",type: "object",  description: "THE ONLY CHANNEL THAT CONTROLS A GENERATED VALUE. Keys are field names EXACTLY as the schema spells them, dotted leaves included (event_data.param2, user.name); values are LISTS (a scalar fails validation). A field you do not seed here gets a RANDOM value, which the rule maps to garbage or drops. Two jobs: seed the parsing-rule discriminator that selects a sibling dataset, AND pin every field the modeling rule reads with an expected shape. Each source's how_to_use carries a ready-to-paste Simulation recipe. For multi-dataset packs the discriminator (not the product) selects the dataset — e.g. {'eventType': ['user.authentication.sso']} routes Okta → okta_sso_raw, {'Workload': ['Exchange']} routes O365 → exchange. Get the required discriminator from data_sources_get_schema's how_to_use; phantom_get_field_info for the field catalog. Consistent identities (schema_override only): the reserved key '__entities__' takes a LIST OF FIELD-MAPS with scalar values, e.g. {'__entities__': [{'source_device_host': 'WS-1001', 'source_ip': '10.20.14.11', 'source_user': 'ahmed.alharbi'}]}; one map is drawn per record and applied together, so a host, its IP and its user stay bound.", required: false }
+        - { name: "required_fields", type: "array",   description: "Required field enums (legacy path), e.g. ['SRC_HOST', 'DST_HOST'].",                          required: false }
+        - { name: "schema_override", type: "array",   description: "Vendor-faithful field schema. Pass the `fields[]` list from data_sources_get_schema verbatim. Each item: {name, type?, is_array?, is_meta?, is_gate?, example?}. is_gate marks a field the parsing/modeling rule FILTERS on; the generator auto-pins those to their example. Every other field's example is documentation only. When present with a udp/tcp destination, routes through OverrideSender.", required: false }
+        - { name: "verify_ssl",      type: "boolean", description: "Verify TLS on HTTPS destinations (XSIAM_WEBHOOK).",                                          required: false }
+      returns: { type: "array", description: "Worker descriptor objects (worker UUID, type, status, count, interval, destination)." }
+
+    - name: "list_workers"
+      method: "GET /workers"
+      description: "List every worker the xlog service currently knows about (running and recently terminated)."
+      args: []
+      returns: { type: "array", description: "Worker descriptor objects with status." }
+
+    - name: "kill_worker"
+      method: "POST /workers/{id}/action (STOP)"
+      description: |
+        Stop a running synthetic-log worker.
+
+        The worker transitions to 'stopped' immediately. In-flight
+        events that were already dispatched to the destination keep
+        flying; events that hadn't yet been emitted are dropped.
+        Idempotent — calling on an already-stopped worker returns
+        success with the current status, not an error.
+
+        Use list_workers first to find the worker_id (the `worker`
+        field). Useful when a worker created with duration_seconds=0
+        is running forever, or when you misconfigured a worker and
+        need to halt it before re-creating with the right config.
+      args:
+        - { name: "worker_id", type: "string", description: "Worker UUID from list_workers (the `worker` field).", required: true }
+      returns: { type: "object", description: "{ worker_id, status } — status is 'stopped' on success." }
+
+    # ─── Scenarios ──────────────────────────────────────────────
+    - name: "create_scenario_worker"
+      method: "POST /workers/scenario"
+      description: |
+        Create workers from an inline multi-step scenario definition and
+        ship the generated logs to a destination. Each step is a MITRE
+        ATT&CK stage carrying one or more log configurations.
+      args:
+        - { name: "name",        type: "string", description: "Scenario name (free-form label). Example: 'Internal Port Scan and Lateral Movement'.", required: true  }
+        - { name: "destination", type: "string", description: "Where to send logs: 'udp:host:port' | 'tcp:host:port' | 'XSIAM_WEBHOOK'.",            required: true  }
+        - { name: "steps",       type: "array",  description: "Scenario steps. Each step: { tactic?, tactic_id?, technique?, technique_id?, procedure?, type?, logs: [{ type, vendor?, product?, version?, count?, datetimeIso?, fields?, requiredFields?, observablesDict? }] }. Observables use camelCase keys.", required: true  }
+        - { name: "tags",        type: "array",  description: "Scenario tags (free-form labels).",                                                     required: false }
+      returns: { type: "array", description: "Worker descriptors for each created worker." }
+
+    - name: "generate_scenario_fake_data"
+      method: "POST /scenarios/preview"
+      description: "Render a one-shot preview of an inline scenario's events WITHOUT shipping them anywhere — useful for inspecting what a scenario produces before creating workers."
+      args:
+        - { name: "name",  type: "string", description: "Scenario name (free-form label).", required: true  }
+        - { name: "steps", type: "array",  description: "Scenario steps (same shape as create_scenario_worker's steps). Each step carries a logs[] list; observablesDict keys are camelCase.", required: true  }
+        - { name: "tags",  type: "array",  description: "Scenario tags (free-form labels).", required: false }
+      returns: { type: "object", description: "{ name, tags, steps }." }
+
+    # ─── Vendor-faithful log simulation ──────────────────────────
+    - name: "generate_fake_data_v2"
+      method: "POST /generate_fake_data_v2"
+      description: "Generate fake log data with optional vendor-faithful schema override. When schema_override is supplied (from data_sources_get_schema), records' top-level keys match the vendor's actual field names from a Cortex ModelingRule, so the matching modeling rule parses them into XDM correctly. When schema_override is omitted, behavior is identical to the legacy Rosetta path. Typical chain in the simulate_vendor_logs skill: data_sources_list → semantic match → data_sources_get_schema → generate_fake_data_v2(schema_override=fields). Reports schema_applied + vendor_field_count + fallback_reason so the agent can echo back to the operator what schema was actually used."
+      args:
+        - { name: "request",         type: "object", description: "FakeDataRequest shape — type, count, vendor, product, version, observables_dict, etc.", required: true }
+        - { name: "schema_override", type: "object", description: "Optional. {vendor_fields: [{name, type?, is_array?, is_meta?}], dataset_name?, pack_name?, rule_name?}. Get the vendor_fields list from data_sources_get_schema.", required: false }
+      returns: { type: "object", description: "{ data: [...], type, count, schema_applied, schema_dataset, vendor_field_count, fallback_reason }." }
+
+    # ─── Observables / field metadata / technology stack ────────
+    - name: "generate_observables"
+      method: "POST /observables/generate"
+      description: "Generate observable values (malicious/benign IPs, URLs, file hashes, CVEs, search terms) from threat-intel feeds. Useful when composing custom workers."
+      args:
+        - { name: "observable_type", type: "string",  description: "Observable type: 'IP' | 'URL' | 'SHA256' | 'CVE' | 'TERMS'.",        required: true  }
+        - { name: "count",           type: "integer", description: "How many values to generate (1-1000, default 10).",                  required: false }
+        - { name: "known",           type: "string",  description: "'BAD' (known-malicious, default) | 'GOOD' (known-benign).",          required: false }
+      returns: { type: "object", description: "{ observables, observable_type, known, count }." }
+
+    - name: "get_field_info"
+      method: "GET /fields/{log_type}"
+      description: "Return the documented field support + observable/required-field whitelists for a log type (SYSLOG, CEF, LEEF, WINEVENT, JSON, Incident, XSIAM_Parsed, XSIAM_CEF). Omit log_type to list supported types only."
+      args:
+        - { name: "log_type",            type: "string",  description: "Log type to query (case-insensitive): 'SYSLOG' | 'CEF' | 'LEEF' | 'WINEVENT' | 'JSON' | 'Incident' | 'XSIAM_Parsed' | 'XSIAM_CEF'.", required: true  }
+        - { name: "include_observables", type: "boolean", description: "Deprecated; observable catalog is no longer returned. Default false.",                                                              required: false }
+      returns: { type: "object", description: "{ naming_convention, available_fields, supported_types | log_type + per-format support flags }." }
+
+    # ─── Detection validation + coverage ────────────────────────
+    - name: "run_detection_validation"
+      method: "POST /simulations/{simulation_id}/validations"
+      description: |
+        Record a detection-validation result for a completed or running
+        simulation run. Persisted in Phantom and rolled into the coverage
+        report. Requires a Phantom simulation_id (NOT a raw ATT&CK
+        technique id) — discover one via generate_coverage_report with
+        include_simulations=true.
+      args:
+        - { name: "simulation_id",     type: "string", description: "Phantom simulation run id (e.g. 'sim_abc123def456'). NOT an ATT&CK technique id.",  required: true  }
+        - { name: "status",            type: "string", description: "Validation status: 'pass' | 'detected' | 'fail' | 'missed' | 'noisy' | 'review' (default 'review').", required: false }
+        - { name: "query",             type: "string", description: "Detection query used to validate (e.g. XQL).",                                       required: false }
+        - { name: "expected",          type: "object", description: "Expected detection details, alert names, counts, or ATT&CK mapping.",               required: false }
+        - { name: "observed",          type: "object", description: "Observed XSIAM results, alert counts, case IDs, or evidence.",                       required: false }
+        - { name: "missed",            type: "array",  description: "Missed detections or missing ATT&CK techniques.",                                    required: false }
+        - { name: "noisy_fields",      type: "array",  description: "Fields that were noisy, low-quality, or created parsing friction.",                  required: false }
+        - { name: "recommended_rules", type: "array",  description: "Detection or parsing rules recommended after validation.",                          required: false }
+        - { name: "notes",             type: "string", description: "Analyst notes.",                                                                     required: false }
+      returns: { type: "object", description: "The persisted validation record." }
+
+    - name: "get_simulation_result"
+      method: "GET /simulations/{simulation_id}"
+      description: "Fetch a persisted simulation run — worker IDs, ATT&CK mapping, Caldera linkage, metadata, and validation results."
+      args:
+        - { name: "simulation_id", type: "string", description: "Phantom simulation run id (e.g. 'sim_abc123def456').", required: true }
+      returns: { type: "object", description: "The persisted simulation run." }
+
+    - name: "generate_coverage_report"
+      method: "GET /coverage-report"
+      description: |
+        Roll up stored simulation + detection-validation results into an
+        aggregate SOC coverage report. Used by the daily-soc-coverage-summary
+        cron job in the manifest. Optionally include the latest simulation
+        runs alongside the aggregate.
+      args:
+        - { name: "include_simulations", type: "boolean", description: "When true, include the latest simulation runs alongside the aggregate report (default false).", required: false }
+        - { name: "limit",               type: "integer", description: "Maximum simulations to include when include_simulations=true (1-250, default 50).",              required: false }
+      returns: { type: "object", description: "Aggregate coverage report; includes `simulations[]` when include_simulations=true." }

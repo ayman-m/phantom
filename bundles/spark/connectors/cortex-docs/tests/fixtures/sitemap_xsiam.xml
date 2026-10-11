@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url><loc>https://cortex-docs.paloaltonetworks.com/cortex-xsiam</loc></url>
+<url><loc>https://cortex-docs.paloaltonetworks.com/cortex-xsiam/learn-about-cortex-xsiam/get-started-cortex-xsiam</loc></url>
+<url><loc>https://cortex-docs.paloaltonetworks.com/cortex-xsiam/configure-cortex-xsiam/cortex-xsiam-data-sources/vendor-specific-data-sources-and-connectors/cribl/ingest-data-from-cribl</loc></url>
+<url><loc>https://cortex-docs.paloaltonetworks.com/cortex-xsiam/configure-cortex-xsiam/data-management/parsing-rules/parsing-rules-file-structure-and-syntax/ingest/parse_cef</loc></url>
+</urlset>

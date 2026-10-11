@@ -1,0 +1,333 @@
+schema_version: 1
+id: CiscoSMA
+pack_name: CiscoSMA
+rule_name: CiscoSMAModelingRules
+dataset_name: Cisco_SMA_raw
+vendor: Cisco
+product: CiscoSMA
+description: The Security Management Appliance (SMA) is used to centralize services
+  from Email Security Appliances (ESAs) and Web Security Appliances (WSAs).
+categories:
+- Email
+version: 1.1.42
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA3MiAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik0zNi4yMTE2IDE1LjcxODRDMzYuMTU4MSAxNS43MDM1IDM1LjMzNDUgMTUuNDg3MyAzNC40NTkyIDE1LjQ4NzNDMzIuODAyMSAxNS40ODczIDMxLjgwNDUgMTYuMzk4MyAzMS44MDQ1IDE3Ljc1NDhDMzEuODA0NSAxOC45NTU3IDMyLjYzOTEgMTkuNTU0NSAzMy42NDA3IDE5Ljg3NjdDMzMuNzUxOCAxOS45MTQgMzMuOTE1NCAxOS45NjYxIDM0LjAyNDQgMjAuMDAyOUMzNC40NzAyIDIwLjE0NTcgMzQuODI2MSAyMC4zNTc5IDM0LjgyNjEgMjAuNzI1NEMzNC44MjYxIDIxLjEzNjQgMzQuNDE0OCAyMS40MDI1IDMzLjUyMDYgMjEuNDAyNUMzMi43MzQ3IDIxLjQwMjUgMzEuOTgxNCAyMS4xNzM3IDMxLjgyMjcgMjEuMTMzVjIyLjgwMkMzMS45MTExIDIyLjgyMTIgMzIuODA2NSAyMy4wMDAxIDMzLjc2MyAyMy4wMDAxQzM1LjEzODggMjMuMDAwMSAzNi43MTI1IDIyLjM4ODEgMzYuNzEyNSAyMC41NjYyQzM2LjcxMjUgMTkuNjgyNSAzNi4xODEgMTguODY4OSAzNS4wMTQyIDE4LjQ5MTNMMzQuNTE4MiAxOC4zMzA1QzM0LjIyMjMgMTguMjM1NCAzMy42OTQxIDE4LjA4MTQgMzMuNjk0MSAxNy42Mzk5QzMzLjY5NDEgMTcuMjkxMSAzNC4wODU1IDE3LjA0NTQgMzQuODA2MiAxNy4wNDU0QzM1LjQyOCAxNy4wNDU0IDM2LjE4NDggMTcuMjU4MiAzNi4yMTE2IDE3LjI2NjdWMTUuNzE4NFpNNTEuNDA0NiAxOS4yNDM4QzUxLjQwNDYgMjAuMjk5MSA1MC42MTA2IDIxLjE1MjkgNDkuNTQ1MSAyMS4xNTI5QzQ4LjQ3ODYgMjEuMTUyOSA0Ny42ODY3IDIwLjI5OTEgNDcuNjg2NyAxOS4yNDM4QzQ3LjY4NjcgMTguMTkwNiA0OC40Nzg2IDE3LjMzNjUgNDkuNTQ1MSAxNy4zMzY1QzUwLjYxMDYgMTcuMzM2NSA1MS40MDQ2IDE4LjE5MDYgNTEuNDA0NiAxOS4yNDM4Wk00OS41NDUxIDE1LjQ4OTZDNDcuMzUzOSAxNS40ODk2IDQ1Ljc4MjQgMTcuMTcyMiA0NS43ODI0IDE5LjI0MzhDNDUuNzgyNCAyMS4zMTg3IDQ3LjM1MzkgMjMuMDAwMSA0OS41NDUxIDIzLjAwMDFDNTEuNzM2MiAyMy4wMDAxIDUzLjMwOTkgMjEuMzE4NyA1My4zMDk5IDE5LjI0MzhDNTMuMzA5OSAxNy4xNzIyIDUxLjczNjIgMTUuNDg5NiA0OS41NDUxIDE1LjQ4OTZaTTI5LjM5MzYgMjIuODcxSDI3LjU5NTdWMTUuNjE4MUgyOS4zOTM2IiBmaWxsPSIjMDQ5RkQ5Ii8+CiAgICA8cGF0aCBkPSJNMjUuMTI0NSAxNS43NDk0QzI0Ljk1NTUgMTUuNjk4NCAyNC4zMzEgMTUuNDg5NSAyMy40ODUyIDE1LjQ4OTVDMjEuMjk3NCAxNS40ODk1IDE5LjY5MTQgMTcuMDc3NiAxOS42OTE0IDE5LjI0MzdDMTkuNjkxNCAyMS41ODA2IDIxLjQ2NDMgMjMgMjMuNDg1MiAyM0MyNC4yODgyIDIzIDI0LjkwMTEgMjIuODA2MyAyNS4xMjQ1IDIyLjc0MThWMjAuNzk0OUMyNS4wNDcyIDIwLjgzODUgMjQuNDU5NiAyMS4xNzk4IDIzLjYxNDEgMjEuMTc5OEMyMi40MTY0IDIxLjE3OTggMjEuNjQzOCAyMC4zMjE2IDIxLjY0MzggMTkuMjQzN0MyMS42NDM4IDE4LjEzMjkgMjIuNDQ5OCAxNy4zMDkxIDIzLjYxNDEgMTcuMzA5MUMyNC40NzQgMTcuMzA5MSAyNS4wNTIyIDE3LjY1NzkgMjUuMTI0NSAxNy42OTY0IiBmaWxsPSIjMDQ5RkQ5Ii8+CiAgICA8cGF0aCBkPSJNNDMuODg5NiAxNS43NDk0QzQzLjcyMDcgMTUuNjk4NCA0My4wOTYyIDE1LjQ4OTUgNDIuMjUwNCAxNS40ODk1QzQwLjA2MjYgMTUuNDg5NSAzOC40NTY1IDE3LjA3NzYgMzguNDU2NSAxOS4yNDM3QzM4LjQ1NjUgMjEuNTgwNiA0MC4yMjk0IDIzIDQyLjI1MDQgMjNDNDMuMDUzMyAyMyA0My42NjYyIDIyLjgwNjMgNDMuODg5NiAyMi43NDE4VjIwLjc5NDlDNDMuODEyNCAyMC44Mzg1IDQzLjIyNDcgMjEuMTc5OCA0Mi4zNzkzIDIxLjE3OThDNDEuMTgxNSAyMS4xNzk4IDQwLjQwOSAyMC4zMjE2IDQwLjQwOSAxOS4yNDM3QzQwLjQwOSAxOC4xMzI5IDQxLjIxNDkgMTcuMzA5MSA0Mi4zNzkzIDE3LjMwOTFDNDMuMjM5MSAxNy4zMDkxIDQzLjgxNzMgMTcuNjU3OSA0My44ODk2IDE3LjY5NjQiIGZpbGw9IiMwNDlGRDkiLz4KICAgIDxwYXRoIGQ9Ik0yNy41OTAzIDEuOTA1MzVDMjcuNTkwMyAxLjQwNTQzIDI3LjE4OTIgMSAyNi42OTc2IDFDMjYuMjA2MiAxIDI1LjgwNTEgMS40MDU0MyAyNS44MDUxIDEuOTA1MzVWMTEuNTM2N0MyNS44MDUxIDEyLjAzOTUgMjYuMjA2MiAxMi40NDQ4IDI2LjY5NzYgMTIuNDQ0OEMyNy4xODkyIDEyLjQ0NDggMjcuNTkwMyAxMi4wMzk1IDI3LjU5MDMgMTEuNTM2N1YxLjkwNTM1Wk0yMi42ODc2IDUuMzI0MjVDMjIuNjg3NiA0LjgyNDUyIDIyLjI4NjcgNC40MTg1MSAyMS43OTUgNC40MTg1MUMyMS4zMDM0IDQuNDE4NTEgMjAuOTAyNSA0LjgyNDUyIDIwLjkwMjUgNS4zMjQyNVY5LjcyNzM0QzIwLjkwMjUgMTAuMjMgMjEuMzAzNCAxMC42MzU0IDIxLjc5NSAxMC42MzU0QzIyLjI4NjcgMTAuNjM1NCAyMi42ODc2IDEwLjIzIDIyLjY4NzYgOS43MjczNFY1LjMyNDI1Wk0xNy43ODUgNy44MjMyOUMxNy43ODUgNy4zMjMzNyAxNy4zODQxIDYuOTE4MTMgMTYuODkyNSA2LjkxODEzQzE2LjQwMTUgNi45MTgxMyAxNiA3LjMyMzM3IDE2IDcuODIzMjlWOS43MjczNEMxNiAxMC4yMyAxNi40MDE1IDEwLjYzNTQgMTYuODkyNSAxMC42MzU0QzE3LjM4NDEgMTAuNjM1NCAxNy43ODUgMTAuMjMgMTcuNzg1IDkuNzI3MzQiIGZpbGw9IiMwNDlGRDkiLz4KICAgIDxwYXRoIGQ9Ik0yNS44MDUyIDEuOTA1MzVDMjUuODA1MiAxLjQwNTQzIDI2LjIwNjMgMSAyNi42OTc5IDFDMjcuMTg5NCAxIDI3LjU5MDQgMS40MDU0MyAyNy41OTA0IDEuOTA1MzVWMTEuNTM2N0MyNy41OTA0IDEyLjAzOTUgMjcuMTg5NCAxMi40NDQ4IDI2LjY5NzkgMTIuNDQ0OEMyNi4yMDYzIDEyLjQ0NDggMjUuODA1MiAxMi4wMzk1IDI1LjgwNTIgMTEuNTM2N1YxLjkwNTM1Wk0zMC43MDggNS4zMjQyNUMzMC43MDggNC44MjQ1MiAzMS4xMDg4IDQuNDE4NTEgMzEuNjAwNSA0LjQxODUxQzMyLjA5MjEgNC40MTg1MSAzMi40OTMgNC44MjQ1MiAzMi40OTMgNS4zMjQyNVY5LjcyNzM0QzMyLjQ5MyAxMC4yMyAzMi4wOTIxIDEwLjYzNTQgMzEuNjAwNSAxMC42MzU0QzMxLjEwODggMTAuNjM1NCAzMC43MDggMTAuMjMgMzAuNzA4IDkuNzI3MzRWNS4zMjQyNVpNMzUuNjEwNSA3LjgyMzI5QzM1LjYxMDUgNy4zMjMzNyAzNi4wMTE0IDYuOTE4MTMgMzYuNTAzIDYuOTE4MTNDMzYuOTk0IDYuOTE4MTMgMzcuMzk1NSA3LjMyMzM3IDM3LjM5NTUgNy44MjMyOVY5LjcyNzM0QzM3LjM5NTUgMTAuMjMgMzYuOTk0IDEwLjYzNTQgMzYuNTAzIDEwLjYzNTRDMzYuMDExNCAxMC42MzU0IDM1LjYxMDUgMTAuMjMgMzUuNjEwNSA5LjcyNzM0IiBmaWxsPSIjMDQ5RkQ5Ii8+CiAgICA8cGF0aCBkPSJNNDUuNDA5NyAxLjkwNTM1QzQ1LjQwOTcgMS40MDU0MyA0NS44MTA4IDEgNDYuMzAyNCAxQzQ2Ljc5MzggMSA0Ny4xOTQ5IDEuNDA1NDMgNDcuMTk0OSAxLjkwNTM1VjExLjUzNjdDNDcuMTk0OSAxMi4wMzk1IDQ2Ljc5MzggMTIuNDQ0OCA0Ni4zMDI0IDEyLjQ0NDhDNDUuODEwOCAxMi40NDQ4IDQ1LjQwOTcgMTIuMDM5NSA0NS40MDk3IDExLjUzNjdWMS45MDUzNVpNNTAuMzEyNCA1LjMyNDI1QzUwLjMxMjQgNC44MjQ1MiA1MC43MTMzIDQuNDE4NTEgNTEuMjA1IDQuNDE4NTFDNTEuNjk2NiA0LjQxODUxIDUyLjA5NzUgNC44MjQ1MiA1Mi4wOTc1IDUuMzI0MjVWOS43MjczNEM1Mi4wOTc1IDEwLjIzIDUxLjY5NjYgMTAuNjM1NCA1MS4yMDUgMTAuNjM1NEM1MC43MTMzIDEwLjYzNTQgNTAuMzEyNCAxMC4yMyA1MC4zMTI0IDkuNzI3MzRWNS4zMjQyNVpNNTUuMjE1IDcuODIzMjlDNTUuMjE1IDcuMzIzMzcgNTUuNjE1OSA2LjkxODEzIDU2LjEwNzUgNi45MTgxM0M1Ni41OTg1IDYuOTE4MTMgNTcgNy4zMjMzNyA1NyA3LjgyMzI5VjkuNzI3MzRDNTcgMTAuMjMgNTYuNTk4NSAxMC42MzU0IDU2LjEwNzUgMTAuNjM1NEM1NS42MTU5IDEwLjYzNTQgNTUuMjE1IDEwLjIzIDU1LjIxNSA5LjcyNzM0IiBmaWxsPSIjMDQ5RkQ5Ii8+CiAgICA8cGF0aCBkPSJNNDcuMTk0OCAxLjkwNTM1QzQ3LjE5NDggMS40MDU0MyA0Ni43OTM3IDEgNDYuMzAyMSAxQzQ1LjgxMDYgMSA0NS40MDk2IDEuNDA1NDMgNDUuNDA5NiAxLjkwNTM1VjExLjUzNjdDNDUuNDA5NiAxMi4wMzk1IDQ1LjgxMDYgMTIuNDQ0OCA0Ni4zMDIxIDEyLjQ0NDhDNDYuNzkzNyAxMi40NDQ4IDQ3LjE5NDggMTIuMDM5NSA0Ny4xOTQ4IDExLjUzNjdWMS45MDUzNVpNNDIuMjkyIDUuMzI0MjVDNDIuMjkyIDQuODI0NTIgNDEuODkxMiA0LjQxODUxIDQxLjM5OTUgNC40MTg1MUM0MC45MDc5IDQuNDE4NTEgNDAuNTA3IDQuODI0NTIgNDAuNTA3IDUuMzI0MjVWOS43MjczNEM0MC41MDcgMTAuMjMgNDAuOTA3OSAxMC42MzU0IDQxLjM5OTUgMTAuNjM1NEM0MS44OTEyIDEwLjYzNTQgNDIuMjkyIDEwLjIzIDQyLjI5MiA5LjcyNzM0VjUuMzI0MjVaTTM3LjM4OTUgNy44MjMyOUMzNy4zODk1IDcuMzIzMzcgMzYuOTg4NiA2LjkxODEzIDM2LjQ5NyA2LjkxODEzQzM2LjAwNiA2LjkxODEzIDM1LjYwNDUgNy4zMjMzNyAzNS42MDQ1IDcuODIzMjlWOS43MjczNEMzNS42MDQ1IDEwLjIzIDM2LjAwNiAxMC42MzU0IDM2LjQ5NyAxMC42MzU0QzM2Ljk4ODYgMTAuNjM1NCAzNy4zODk1IDEwLjIzIDM3LjM4OTUgOS43MjczNCIgZmlsbD0iIzA0OUZEOSIvPgo8L3N2Zz4K
+  source: baked/Packs/CiscoSMA/Integrations/CiscoSMA/CiscoSMA_dark.svg
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'cisco: ciscosma=CiscoSMA action=allow user=jdoe'
+- name: Command
+  type: string
+  description: Command. Free-form text; may contain whitespace and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: Filename
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: document.pdf
+- name: Hostname
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: InternalId
+  type: string
+  description: Observer unique identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_internalid
+- name: Mailer_Identifier
+  type: string
+  description: Cisco SMA internal mail-routing identifier — opaque token identifying
+    which mailer process handled the message. Short alphanumeric; vendor-internal
+    use only.
+  example: MAILER-3812
+- name: Message
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: Message2
+  type: string
+  description: Message2. Free-form text; may contain whitespace and punctuation.
+  example: sample_message2
+- name: Message_ID
+  type: email
+  description: Email message ID. RFC 5322 'local@domain' address; one address only
+    — use an array field for multiple addresses.
+  example: user@example.com
+- name: Process_id
+  type: string_short
+  description: Source process PID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: Session
+  type: string
+  description: Destination user identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_session
+- name: Source_ip
+  type: ipv4
+  description: Source host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: Sourceip
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: Subject
+  type: email
+  description: Email subject. RFC 5322 'local@domain' address; one address only —
+    use an array field for multiple addresses.
+  example: user@example.com
+- name: Username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: Username1
+  type: string
+  description: Username1. Free-form text; may contain whitespace and punctuation.
+  example: sample_username1
+- name: appliance
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_appliance
+- name: attachment
+  type: email
+  description: Email attachment filename. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: command
+  type: string
+  description: Intermediate process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: destination_ip
+  type: ipv4
+  description: Source host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: event
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: hostname1
+  type: host
+  description: Hostname1. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: hostname2
+  type: host
+  description: Hostname2. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: httpMethod
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: sample_httpmethod
+- name: http_method
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: http_status_code
+  type: string
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: id
+  type: string_short
+  description: Source user identifier. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: location
+  type: string
+  description: Destination resource value. Free-form text; may contain whitespace
+    and punctuation.
+  example: us-east
+- name: log_category
+  type: string
+  description: Observer type. Free-form text; may contain whitespace and punctuation.
+  example: access_control
+- name: protocol
+  type: string
+  description: Network application protocol. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: reciver
+  type: email
+  description: Email recipients. RFC 5322 'local@domain' address; one address only
+    — use an array field for multiple addresses.
+  example: user@example.com
+- name: reciver1
+  type: string
+  description: Reciver1. Free-form text; may contain whitespace and punctuation.
+  example: sample_reciver1
+- name: reciver2
+  type: string
+  description: Reciver2. Free-form text; may contain whitespace and punctuation.
+  example: sample_reciver2
+- name: reciver3
+  type: string
+  description: Reciver3. Free-form text; may contain whitespace and punctuation.
+  example: sample_reciver3
+- name: sender
+  type: email
+  description: Email sender. RFC 5322 'local@domain' address; one address only — use
+    an array field for multiple addresses.
+  example: user@example.com
+- name: sender1
+  type: string
+  description: Sender1. Free-form text; may contain whitespace and punctuation.
+  example: sample_sender1
+- name: sender2
+  type: string
+  description: Sender2. Free-form text; may contain whitespace and punctuation.
+  example: sample_sender2
+- name: sender3
+  type: string
+  description: Sender3. Free-form text; may contain whitespace and punctuation.
+  example: sample_sender3
+- name: sender4
+  type: string
+  description: Sender4. Free-form text; may contain whitespace and punctuation.
+  example: sample_sender4
+- name: sender5
+  type: string
+  description: Sender5. Free-form text; may contain whitespace and punctuation.
+  example: sample_sender5
+- name: sender6
+  type: string
+  description: Sender6. Free-form text; may contain whitespace and punctuation.
+  example: sample_sender6
+- name: signature_status
+  type: email
+  description: Email attachment signature status. RFC 5322 'local@domain' address;
+    one address only — use an array field for multiple addresses.
+  example: user@example.com
+- name: source_ip
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_ip1
+  type: string
+  description: Source ip1. Free-form text; may contain whitespace and punctuation.
+  example: sample_ip1
+- name: source_ip2
+  type: string
+  description: Source ip2. Free-form text; may contain whitespace and punctuation.
+  example: sample_ip2
+- name: source_ip3
+  type: string
+  description: Source ip3. Free-form text; may contain whitespace and punctuation.
+  example: sample_ip3
+- name: sourceip
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: url
+  type: url
+  description: Network HTTP URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: user_agent
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: username2
+  type: string
+  description: Username2. Free-form text; may contain whitespace and punctuation.
+  example: sample_username2
+- name: username3
+  type: string
+  description: Username3. Free-form text; may contain whitespace and punctuation.
+  example: sample_username3
+- name: verified
+  type: email
+  description: Email attachment is signed. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+use_cases:
+- Network
+- Firewall
+- EDR
+how_to_use: |
+  ## Cisco CiscoSMA → Cortex XSIAM (dataset `Cisco_SMA_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `cisco` / product `sma`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `Cisco_SMA_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `Cisco_SMA`. The marketplace pack's display name `Cisco` / `CiscoSMA` normalizes to `cisco_ciscosma_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `Cisco_SMA` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log contains "system_logs" or _raw_log contains "ftpd_logs"  or _raw_log contains "euqgui_logs: Info:"or _raw_log contains"euqgui_logs: Info: login:" and _` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~76 fields mapped to the unified data model (`xdm.*`), including: `XDM.Audit.TriggeredBy.identity.name`, `XDM.Audit.TriggeredBy.ipv4`, `XDM.Audit.audited_resource.name`, `XDM.Audit.audited_resource.value`, `XDM.Audit.identity.uuid`, `XDM.Audit.observation_timestamp`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `Cisco`, Product = `CiscoSMA`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = Cisco_SMA_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

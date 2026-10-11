@@ -1,0 +1,341 @@
+schema_version: 1
+id: HashiCorp-Vault
+pack_name: HashiCorp-Vault
+rule_name: HashiCorpVault
+dataset_name: hashicorp_vault_raw
+vendor: HashiCorp
+product: HashiCorp-Vault
+description: Manage Secrets and Protect Sensitive Data through HashiCorp Vault. Ingest
+  and normalize Vault Audit logs.
+categories:
+- Identity and Access Management
+version: 1.1.37
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/png
+  data: iVBORw0KGgoAAAANSUhEUgAAAHgAAAAyCAYAAACXpx/YAAAAAXNSR0IArs4c6QAADAJJREFUeAHtWXuMXFUZ/865szszbbe7e2fbUlpIgUITaHikAUJtaqgWKCBCiSgPIYBaYyh/KAiGFrQkaEUNSPBRawVF0USDSkAhCI0QGipCFVIEin1QSku7M9vt7jx25p7P33fv3Jl7d2a7j66siedkd+6553znO9/5fa9zziWyxSJgEbAIWAQsAhYBi4BFwCJgEbAIWAQsAhYBi4BFwCJgEbAIWAQsAhYBi8CHi8AprZRqPz4+5+w0JaedGG+zb/8LCDijESKRdheqRN/DStEsrhSfro2dYjo1678oJ30sp9u30EBfvtZnKxOKgB7R7OnOY3U686Bh9SyTXkykTGyc8t/bSKlbdKW8iZLuBbF++zJhCAyj4NlpnczcrFm9SExfIuIk/iEsN/N8L+ijE7SmZf6KktPmTtjK7MQ+AkMq2El2LnNS+Y2k6H5QzqoqTwZBw/pdf/RQP4YGpMtRZr1OuRso1TFnKNIJbk9SW1sXZBgSh0C+OSnq7Gynrq42vKsJlnlU0yeaUDsIxw8w8wr0YeHisVIUarxJs7nbK+b+FLQN98utGHe9JmeZSXbeQKXIuGTXPEeb0xDWB7y8foZof1+EW8KZ1LmUWLVppd8p5w/8PdI3LlUn5X6eSd2sylTyXHcJZbO9QzHWqUNfoaJewWx2Mc04n2hff4128vQZjqksZlYnEZk0YOpTrHdrrbZC7i2gi6ez2sAPp9JMwQlisxSKqVq1b7BvQb1rTTH7Mz8OpzOzqND93ghEhHWIgaijtKIzsNKaYWjlLWfW92CuMiXLJ1OJttX5daXZmHUYN9tj8xDar6/3jU8NBnwSjGs+jPbw0UimU5wh1scAA81kah7spDOXsVe5H4ZyjC+VQFZdsWf4HaKjTyXaM6EbzmYKlhWVfIH9H95gWiu3Um9vtiWdOavCvAYL3QplfblOM4KaonKMSlElCA4ylwrDRJXEf/fDPBoqsXHj9SLzBwU2O0xhtR+a2wXN7kBQC2RF2oFxrMdItxrl3obU3axoMtY1DbQ7odzCMJz/691DKLg+ryK1UZSrk+59HtMKRTqFqPNGnWLCaiK7gD2cglpAI2FyaLqpUwcQokHiF+EbKt9vMMXue4nmfo9om/DxDdUh56PMolwpvMYUW75dDd2tyOtTqdICnAIT9knqP7JBlSgQm6PePapag6yDRw+rYMgIGmwyVO81qIvQKCr0ruC17VCBsu4gLwy6xvU36Z6nlboGEWQOPGUqjK8C1W0HjI94A91/qM919CSdLtyEXHg+K+5CVPVwdod3madNIQdlxQon9vacbVLuEqD+EfDNwBNf9Vort4hhC6WT7vwUc+5iYnevKU29A45c9PmCGKVk2HkkkpcH6NChA9IRLdi0XoSU8Fm0zcUwByPfg9yPecXsz9EWRDfsS7Qyd6H9fZM2d+uCc7WkB6TGNZR2P61JL1fMjyOt5aCD61nTCZC1D+nml6aUQ0przPcjUHBNzGJYA8MzsEm5Ee9+nuYcwhL5/yHJ6J5ax8M3teM912AwyOMLBSR4DmwNAVJmUbQAICzHpuxSL597XJp0qngb0uWdfr/8AAWc3zHEP68PVvBsQ/oZ8E2E9HiergcSO+Gu3xB+yLFngclVmGsPUf9d0lYvLJHBH1pvi9d0snMFK/VD8PAtQqhlDlBdhA3tAlPovgl1Q8qbDumvhLwVXdTnYb75GCAbzDXayDrpCoy7BGzgcOgJ+AjbRTDCg14h92h8ZqLRKLg6FsslWopfbMRqTahgtrGVFPB/iNIZ7EwDlyDOShibCcljHE2Cf+tUDHKh2llRVHDYm8vkfAd009jQVSD2FRzIJ6P5BeBwG5K9csjMNGwaPAtjJIQXYLTPKqXeBs6fAcgZjDszMjkMTtbHNSOP9Ek1Lmi0U45XBfU1kICGX1eKv4n9az8ZXgGOy8D2Cy2Tp60r9+/fAi5GDBcFelHzQd8PnJ/22SlEq0CGFNb1HOg2gGUZ5LJ+MdIrQTceCvanw8+YFRoyCJ8JpfS5wUsVJ3kECw1pgmdf7nW4y+thI+ovqnQGYYs+CaXD+mvFN1zcvB3gYvdmtFbEzZoXtR/74otxKtgsK0JkOg5mdiGWl2xOP8rWfjoWwWOWjML+5Vte4cCvfA6t7tta8xIYU9J4BsokOVLVCpT4lOeZ26ncE2sHwXtekZcT9fQIsU5lPoHH1Zr5KKxRIqrsE2plDB7sjxUshFFVI36bH6792uh+BqDMXwBQEbjKj1tIq2vR1t7AKu3OTsiZk+WMTcZj5NhgWE0WWP2baDsTN6iXqpQrBvE8ctfvvVLuKdQHbW64jzKTXqPd1ZmAbLU2Lo+WhNPqGQNswJZVb42p9gq4EByA6EmcryXFxQqMYS2Vs4OVKzSIJgjY9RLKK/jXMAi7x6Bgn8ejRle+C4kRSuE/itq154hlRr0onGO4Z8no4p2UzyO/1YqGZV6It5iCnbR7OfLoDxDHpvsRDwTN9GHIW40LEvHAjwPUeXjOQw78nH+fXuheifcQFFTBIp/3w7S8jLFE+R2ORVQBtTpSQ+N4NiJTs4Jx1VTWrHdQ29i8TvEeyh98hfK9f8PzZUq3SBis7qx9uUfDV5HXko7LNW1Sk0VIXr4N/2JE/4IHI/fQWiDzFp7xUuzZYQrZK2AIp8OLZdPyT5+A+XJqb++IEx/pmxg59rMjKxHPU5I1QiU3Kviw/GIGEeHZOGikgg0eKWDXS6mEcBkcobBZeQy5b321c5SC11k21makwBvhGEXRT00peyvOp7dDeVsbaf2NE7ZOuV3YWf4ax6SfBDRQRiUpof2Ii0J+D5ioJG7lriXXnYp34Ikj5ZQZ0wlf4KS/7A1IWIbxI9YoPk3a/MLYRCkKDFvLRcqIS2gUARuqYkIkG8AGZY8hRDcRBHeO+HtBO2q9yR94AhQtOBp8Edo9uQn1GJv2lXBE7QbP4xBgr8NHjDYwmgfUgi9XEa5OKvN9eO8JiHzwbtyUMYPGx+Ug9bfW82BkzGirnjLP4StbN8ZlwPsOnacrOeXmFPVOoorKYLatcNElVOrdgX3Ay5B7EWhXqWTmLKU5D5k+hnHiKPs9UhIBR1pm4pD0Z2CxHae+yfDlpTIQefI1/zGIyxAKVshfo3C+vr4sztuXScxxJnVdgiPAKozGMSPCgxuOZNUoIJulpjklzEGhjHJM+DFAWYB/sf75AEkm2Ib/E9EXoecF2FVjfjnKiWKFjMvI2w8S7Q6uD0WewBfCcaARsrC9xk9aQxnqtIgOKtlxAyuNr21qDmiOl4NQuGTMCEOagVSzr99zzErt6UdAdwquqy8JZPIn3wsjXEn57mD/IYf1eonW661wHqztHMh+DjZi1XbeYQw9ECUK66Hg4bs8yxDyPoCxCvWjIHEAQ5Sise7hHHu2MrwaHwkuinfLNoj/yh4/GW03JvE7h82bEBTfc5J7o30w6qJm90aor02zsz2MO7j1WZ9IurtwrDkb8mWN5udhUh84ZbNQOfxBlYfnkbnC4cSpsPDjYQTtoM3hFuElHIVeCudBGnnIYdoEpfSZbDYftuMy5evGo3XwrX1hG7bqGxxScqY+ZCBb2O6Vev5IU6ZscrzkInyEmAuogq9JxHt0hd8wtC8wpv6eLYY6cBnhnAs6RB2dwMZjp6f0Ripk3w35UUtlqyq1Xop3VWlNvIIPME2Keh8K+Sow7QKwuM2jvZ6iJ2kgu7sJ8WGacJmOnezDCHfXEOHDf8rdjX9GG+u0i3vZSOno6EDfLr/Pp6nSpdx/y2c5UNYtPzLMVkeOALC9p4rvdowa8Rm9mQcHs8pOlOg6US61H0pRKSGhtLlEnodwq/Ev/eLw3A/P+ZFJ4Japf/8g72zOwraOGAEA3IlvArmm/j2YSxjEB7dH3pGzDh7sRaC9HY2wHlFgLfhH6CRnyU6RHjdaL8Yu9xar3Ag8R1rlAF9gXP3gMzKGQ3twfLyH/LeBJk9/QhtvNbyzL9Ytu2hS/9CK1+P8+ZtYn30ZFwRwF7ZZG3MvduCvwnv7x4Xp0Ez8M1+0G96LUG6LRcAiYBGwCFgELAIWAYuARcAiYBGwCFgELAIWAYuARcAiYBGwCFgELAL/dwj8BxZwQNUd0pBGAAAAAElFTkSuQmCC
+  source: baked/Packs/HashiCorp-Vault/Integrations/HashiCorpVault/HashiCorpVault_image.png
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: auth,
+    error, request, response, type (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: _raw_log.auth.client_token
+  type: string
+  description: Vendor-emitted field ' raw log › auth › client token'. Leaf of the
+    '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.auth.entity_id
+  type: string_short
+  description: Opaque identifier emitted by HashiCorp. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.auth.metadata.role
+  type: string
+  description: Vendor-emitted field ' raw log › auth › metadata › role'. Leaf of the
+    '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.auth.metadata.role_name
+  type: string
+  description: Human-readable name as displayed by HashiCorp. Free-form text; may
+    contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.auth.metadata.service_account_name
+  type: user
+  description: Human-readable name as displayed by HashiCorp. Account name as the
+    vendor reports it — login name, UPN, or sAMAccountName; no domain prefix unless
+    vendor emits one.
+  example: jsmith
+- name: _raw_log.auth.metadata.service_account_uid
+  type: string
+  description: Vendor-emitted field ' raw log › auth › metadata › service account
+    uid'. Leaf of the '_raw_log' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: raw_value
+- name: _raw_log.auth.policy_results.allowed
+  type: string
+  description: Vendor-emitted field ' raw log › auth › policy results › allowed'.
+    Leaf of the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.error
+  type: string
+  description: Vendor-emitted field ' raw log › error'. Leaf of the '_raw_log' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.request.client_id
+  type: string_short
+  description: Opaque identifier emitted by HashiCorp. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.request.client_token
+  type: string
+  description: Vendor-emitted field ' raw log › request › client token'. Leaf of the
+    '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.request.id
+  type: string_short
+  description: Opaque identifier emitted by HashiCorp. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.request.mount_class
+  type: string
+  description: Vendor-emitted field ' raw log › request › mount class'. Leaf of the
+    '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.request.mount_point
+  type: string
+  description: Vendor-emitted field ' raw log › request › mount point'. Leaf of the
+    '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.request.mount_running_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.request.mount_type
+  type: string_short
+  description: Type/category classifier emitted by HashiCorp. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.request.operation
+  type: string
+  description: Vendor-emitted field ' raw log › request › operation'. Leaf of the
+    '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.request.path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/app.log
+- name: _raw_log.request.remote_address
+  type: string
+  description: Vendor-emitted field ' raw log › request › remote address'. Leaf of
+    the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.request.remote_port
+  type: integer_port
+  description: TCP/UDP port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: _raw_log.response.data.http_status_code
+  type: string
+  description: Vendor-emitted field ' raw log › response › data › http status code'.
+    Leaf of the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.response.mount_class
+  type: string
+  description: Vendor-emitted field ' raw log › response › mount class'. Leaf of the
+    '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.response.mount_point
+  type: string
+  description: Vendor-emitted field ' raw log › response › mount point'. Leaf of the
+    '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.response.mount_running_plugin_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.response.mount_type
+  type: string_short
+  description: Type/category classifier emitted by HashiCorp. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.type
+  type: string
+  description: Event type or category as the vendor classifies it. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: AUDIT
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_audit
+- name: auth
+  type: string
+  description: Auth method. Free-form text; may contain whitespace and punctuation.
+  example: sample_auth
+- name: client_id
+  type: string_short
+  description: Source user identifier. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: client_ip
+  type: ipv4
+  description: Client ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: client_ipv4
+  type: ipv4
+  description: Source host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: client_ipv6
+  type: ipv6
+  description: Source host IPv6 addresses. Colon-separated hexadecimal IPv6 literal
+    (RFC 4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: client_port
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: client_token
+  type: string
+  description: Network session ID. Free-form text; may contain whitespace and punctuation.
+  example: sample_token
+- name: entity_id
+  type: string_short
+  description: Entity id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: error_msg
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: event_type
+  type: string
+  description: Event original event type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: http_status_code
+  type: string
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: is_access_denied
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: mount_class
+  type: string
+  description: Auth method. Free-form text; may contain whitespace and punctuation.
+  example: access_control
+- name: mount_point
+  type: string
+  description: Destination resource ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_point
+- name: mount_type
+  type: string
+  description: Destination resource sub type. Free-form text; may contain whitespace
+    and punctuation.
+  example: authentication
+- name: operation
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: create
+- name: policies
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_policies
+- name: request_id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: request_path
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: /var/log/app.log
+- name: roles
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: sample_roles
+- name: service_account_name
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: service_account_uid
+  type: string
+  description: Destination user identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uid
+- name: vault_version
+  type: string
+  description: Observer version. Free-form text; may contain whitespace and punctuation.
+  example: 1.0.0
+use_cases:
+- DevOps
+how_to_use: |
+  ## hashicorp vault → Cortex XSIAM (dataset `hashicorp_vault_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `hashicorp` / product `vault`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `hashicorp_vault_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `hashicorp`
+    - **product**: `vault`
+
+    These normalize → `hashicorp_vault_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `_raw_log -> request.client_id`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~26 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.auth_method`, `xdm.event.id`, `xdm.event.operation_sub_type`, `xdm.event.original_event_type`, `xdm.event.outcome`, `xdm.event.outcome_reason`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `hashicorp`, Product = `vault`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = hashicorp_vault_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

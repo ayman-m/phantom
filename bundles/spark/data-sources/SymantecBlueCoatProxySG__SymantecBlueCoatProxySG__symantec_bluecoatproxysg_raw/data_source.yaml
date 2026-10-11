@@ -1,0 +1,386 @@
+schema_version: 1
+id: SymantecBlueCoatProxySG
+pack_name: SymantecBlueCoatProxySG
+rule_name: SymantecBlueCoatProxySG
+dataset_name: symantec_bluecoatproxysg_raw
+vendor: Symantec
+product: SymantecBlueCoatProxySG
+description: A component for on-premises deployment and web security.
+categories:
+- Analytics & SIEM
+- Network Security
+version: 1.0.16
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+U3ltYW50ZWM8L3RpdGxlPjxwYXRoIGQ9Ik0yMi44NzcgMHYuNzM4aC43MzhWMGgtLjczOHptMCAuNzM4aC0uNzM4di43MzloLjczOFYuNzM4em0wIC43Mzl2LjczOGguNzM4di0uNzM4aC0uNzM4em0tLjczOCAwaC0xLjQ3N3YuNzM4aC0uNzM4VjMuNjloLS43Mzh2Ljc0aC0xLjQ3OXYuNzI1QTEwLjU3MiAxMC41NzIgMCAwMDExIDIuNzdDNS4xMzYgMi43Ny4zODUgNy41Mi4zODUgMTMuMzg1LjM4NSAxOS4yNDggNS4xMzYgMjQgMTEgMjRzMTAuNjE1LTQuNzUyIDEwLjYxNS0xMC42MTVjMC0yLjU2LS45MDQtNC45MDYtMi40MTItNi43MzloLjcydi0uNzM4aC43NFY0LjQzaC43MzdWMy42OWguNzM5di0uNzM4SDIxLjR2LS43MzhoLjczOXYtLjczOHpNMTkuMTg2IDMuNjl2LS43MzhoLS43NHYuNzM4aC43NHpNMTEgNi4xNTRhNy4xOTMgNy4xOTMgMCAwMTQuMDMzIDEuMjNoLS4yOHYuNzM5aC0uNzM3Yy0xLjkyNyAyLjQwOS0yLjQxNCAzLjQ2Ni0zLjE4MiA1LjQxNC0uODcxLTEuNzYzLTEuOTExLTIuOTc4LTMuNzExLTMuNzgzbC0uMDItLjAwNmMtLjMyNy0uMDgzLS40OTMtLjEyNS0uNzE4LjE5LS4yMy4zMjItLjA5Mi42MTMuMTgzLjk1NWEzNS4yMTIgMzUuMjEyIDAgMDAuNTg2LjcwM2MuNTQ3LjY0NiAxLjA5NSAxLjI4OSAxLjUwOCAyLjAzNS40MDguNzM4Ljg3NyAxLjc3MiAxLjI0MiAyLjU3NC4yMjMuNDkuNDA2Ljg5NC41MSAxLjA4OC4yMi40MDYuNzUyLjU4NC45NTUuNTg0Ljk4NS0uMTE3IDEuMDgtLjU4MiAxLjI0Mi0xLjM3OWwuMDU3LS4yNjRjLjMzNi0xLjU3NC43NzEtMy4yMDMgMi44MjQtNS4xNTh2LS43MzZoLjczOFY5LjZoLjc0di0uMjk1YTcuMTkzIDcuMTkzIDAgMDExLjI2IDQuMDhjMCAzLjk5LTMuMjQgNy4yMy03LjIzIDcuMjNzLTcuMi0zLjI0LTcuMi03LjIzIDMuMjEtNy4yMyA3LjItNy4yM3oiLz48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: '<14>2024-01-15T14:23:01+0000 symantec: symantecbluecoatproxysg=SymantecBlueCoatProxySG
+    action=allow user=jdoe'
+- name: parsed_fields
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: c_ip,
+    cs_auth_group, cs_bytes, cs_categories, cs_host, cs_method, cs_referer, cs_uri_path,
+    cs_uri_port, cs_uri_query, cs_uri_scheme, cs_user_agent, cs_username, r_ip, rs_content_type,
+    s_action, s_ip, s_supplier_name, sc_bytes, sc_filter_result, sc_status, time_taken,
+    x_virus_id (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: raw_log_cleaned
+  type: string
+  description: Vendor-emitted field 'Raw log cleaned'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cleaned
+- name: parsed_fields.c_ip
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields › c ip'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: parsed_fields.cs_auth_group
+  type: string
+  description: Vendor-emitted field 'Parsed fields › cs auth group'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: grp-e0dad722
+- name: parsed_fields.cs_bytes
+  type: integer_byte_count
+  description: Byte count. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: parsed_fields.cs_categories
+  type: url
+  description: Vendor-emitted field 'Parsed fields › cs categories'. Leaf of the 'parsed_fields'
+    composite. Full URL with scheme (http/https/ftp); percent-encoded if it contains
+    non-ASCII characters.
+  example: https://example.com/path
+- name: parsed_fields.cs_host
+  type: host
+  description: Vendor-emitted field 'Parsed fields › cs host'. Leaf of the 'parsed_fields'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: parsed_fields.cs_method
+  type: string
+  description: Vendor-emitted field 'Parsed fields › cs method'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: parsed_fields.cs_referer
+  type: url
+  description: HTTP Referer header value. Full URL with scheme (http/https/ftp); percent-encoded
+    if non-ASCII.
+  example: https://example.com/path?q=1
+- name: parsed_fields.cs_uri_path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/app.log
+- name: parsed_fields.cs_uri_port
+  type: integer_port
+  description: TCP/UDP port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: parsed_fields.cs_uri_query
+  type: string
+  description: Vendor-emitted field 'Parsed fields › cs uri query'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: q=search&page=1
+- name: parsed_fields.cs_uri_scheme
+  type: string
+  description: Vendor-emitted field 'Parsed fields › cs uri scheme'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_scheme
+- name: parsed_fields.cs_user_agent
+  type: string
+  description: Vendor-emitted field 'Parsed fields › cs user agent'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: parsed_fields.cs_username
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jdoe
+- name: parsed_fields.r_ip
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields › r ip'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: parsed_fields.rs_content_type
+  type: string_short
+  description: Type/category classifier emitted by Symantec. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: parsed_fields.s_action
+  type: string_short
+  description: Action taken by Symantec's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: parsed_fields.s_ip
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields › s ip'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: parsed_fields.s_supplier_name
+  type: string
+  description: Human-readable name as displayed by Symantec. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: parsed_fields.sc_bytes
+  type: integer_byte_count
+  description: Byte count. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: parsed_fields.sc_filter_result
+  type: string_short
+  description: Result string emitted by Symantec. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: parsed_fields.sc_status
+  type: string_short
+  description: Status code returned by Symantec. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: parsed_fields.time_taken
+  type: string
+  description: Vendor-emitted field 'Parsed fields › time taken'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_taken
+- name: parsed_fields.x_virus_id
+  type: string_short
+  description: Opaque identifier emitted by Symantec. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: sym-ba3d9180
+- name: DENIED
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: TCP
+  type: string
+  description: Network IP protocol. Free-form text; may contain whitespace and punctuation.
+  example: sample_tcp
+- name: c_ip
+  type: ipv4
+  description: C ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: c_ip_v4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: c_ip_v6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: cs_auth_group
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: grp-2e779589
+- name: cs_bytes
+  type: integer_byte_count
+  description: Source sent bytes. Unsigned decimal byte count; bare digits, no unit
+    suffix.
+  example: '1024'
+- name: cs_categories
+  type: url
+  description: Network HTTP URL category. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: cs_host
+  type: host
+  description: Network HTTP domain. Hostname or fully-qualified domain name (RFC 1035
+    dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: cs_http_method
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: cs_method
+  type: string
+  description: Cs method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: cs_protocol
+  type: string
+  description: Network IP protocol. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: cs_referer
+  type: url
+  description: Network HTTP referrer. Free-form text; may contain whitespace and punctuation.
+  example: https://example.com/
+- name: cs_uri_path
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: /var/log/app.log
+- name: cs_uri_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: cs_uri_query
+  type: string
+  description: Cs uri query. Free-form text; may contain whitespace and punctuation.
+  example: q=search&page=1
+- name: cs_uri_scheme
+  type: string
+  description: Cs uri scheme. Free-form text; may contain whitespace and punctuation.
+  example: sample_scheme
+- name: cs_url
+  type: url
+  description: Network HTTP URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: cs_user_agent
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: cs_username
+  type: string
+  description: Cs username. Free-form text; may contain whitespace and punctuation.
+  example: jdoe
+- name: cs_username_decoded
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: event_description
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Symantec.
+- name: r_ip
+  type: ipv4
+  description: R ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: r_ip_v4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: r_ip_v6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: rs_content_type
+  type: string
+  description: Rs content type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: rs_content_type_decoded
+  type: string
+  description: Network HTTP content type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_decoded
+- name: s_action
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: s_ip
+  type: ipv4
+  description: S ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: s_ip_v4
+  type: ipv4
+  description: Intermediate host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: s_ip_v6
+  type: ipv6
+  description: Intermediate host IPv6 addresses. Colon-separated hexadecimal IPv6
+    literal (RFC 4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: s_supplier_name
+  type: string
+  description: Observer name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: sc_bytes
+  type: integer_byte_count
+  description: Destination sent bytes. Unsigned decimal byte count; bare digits, no
+    unit suffix.
+  example: '1024'
+- name: sc_filter_result
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: sc_status
+  type: string
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: time_taken
+  type: datetime
+  description: Event duration. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: x_virus_id
+  type: string_short
+  description: Alert original threat ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+use_cases:
+- AV
+- EDR
+- Email
+- DLP
+- CASB
+how_to_use: |
+  ## symantec bluecoatproxysg → Cortex XSIAM (dataset `symantec_bluecoatproxysg_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `symantec_bluecoatproxysg_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `symantec`
+    - **product**: `bluecoatproxysg`
+
+    These normalize → `symantec_bluecoatproxysg_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `parsed_fields -> time_taken`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `raw_log_cleaned !~= "^#.*"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~30 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.original_threat_id`, `xdm.event.description`, `xdm.event.duration`, `xdm.event.outcome`, `xdm.event.outcome_reason`, `xdm.intermediate.host.ipv4_addresses`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `symantec`, Product = `bluecoatproxysg`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = symantec_bluecoatproxysg_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

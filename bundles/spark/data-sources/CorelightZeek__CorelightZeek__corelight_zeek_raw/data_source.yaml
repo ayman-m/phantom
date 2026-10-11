@@ -1,0 +1,337 @@
+schema_version: 1
+id: CorelightZeek
+pack_name: CorelightZeek
+rule_name: CorelightZeek
+dataset_name: corelight_zeek_raw
+vendor: Corelight
+product: CorelightZeek
+description: An open-source software network analysis framework.
+categories:
+- Analytics & SIEM
+version: 1.0.13
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjIgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM4QzZEMTgiPkNvcmVsaWdodDwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _path
+  type: string
+  description: Zeek log file path (conn/dns/http/...). Free-form text; may contain
+    whitespace and punctuation.
+  example: /var/log/app.log
+- name: _system_name
+  type: string
+  description: Human-readable name as displayed by Corelight. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: answers
+  type: string
+  description: Network DNS resource record value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_answers
+- name: cipher
+  type: string
+  description: Vendor-emitted field 'Cipher'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cipher
+- name: client
+  type: string
+  description: Auth kerberos TGT cname values. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_client
+- name: conn_state
+  type: string
+  description: Vendor-emitted field 'Conn state'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CA
+- name: domainname
+  type: string
+  description: Vendor-emitted field 'Domainname'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_domainname
+- name: duration
+  type: float
+  description: Vendor-emitted field 'Duration'. Decimal number with optional fractional
+    part; bare digits with optional minus and decimal point.
+  example: '3.14'
+- name: endpoint
+  type: string
+  description: Vendor-emitted field 'Endpoint'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_endpoint
+- name: facility
+  type: string
+  description: Vendor-emitted field 'Facility'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_facility
+- name: host
+  type: host
+  description: Hostname or FQDN as reported by Corelight. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: hostname
+  type: string
+  description: Human-readable name as displayed by Corelight. Free-form text; may
+    contain whitespace and punctuation.
+  example: host01.example.com
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Corelight. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: cor-ea4a55de
+- name: id_orig_h
+  type: string
+  description: Vendor-emitted field 'Id orig h'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_h
+- name: id_orig_p
+  type: integer
+  description: Vendor-emitted field 'Id orig p'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: id_resp_h
+  type: string
+  description: Vendor-emitted field 'Id resp h'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_h
+- name: id_resp_p
+  type: integer
+  description: Vendor-emitted field 'Id resp p'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: message
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: Operation completed successfully.
+- name: method
+  type: string
+  description: Operation method as reported by the vendor (e.g., HTTP verb, RPC name).
+    Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: named_pipe
+  type: string
+  description: Vendor-emitted field 'Named pipe'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_pipe
+- name: operation
+  type: string
+  description: Vendor-emitted field 'Operation'. Free-form text; may contain whitespace
+    and punctuation.
+  example: create
+- name: orig_bytes
+  type: integer_byte_count
+  description: Byte count. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '42'
+- name: orig_pkts
+  type: integer
+  description: Vendor-emitted field 'Orig pkts'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: origin
+  type: host
+  description: Vendor-emitted field 'Origin'. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: proto
+  type: string
+  description: Network protocol name or numeric IANA assignment. Free-form text; may
+    contain whitespace and punctuation.
+  example: tcp
+- name: qtype_name
+  type: string
+  description: Human-readable name as displayed by Corelight. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: query
+  type: string
+  description: Vendor-emitted field 'Query'. Free-form text; may contain whitespace
+    and punctuation.
+  example: q=search&page=1
+- name: rcode
+  type: integer
+  description: Network DNS resource record name. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: rcode_name
+  type: string
+  description: Network DNS resource record type. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: referrer
+  type: url
+  description: HTTP Referer header value. Full URL with scheme (http/https/ftp); percent-encoded
+    if non-ASCII.
+  example: https://example.com/path?q=1
+- name: rejected
+  type: boolean
+  description: Vendor-emitted field 'Rejected'. Literal 'true' or 'false' (case-insensitive);
+    not '1'/'0'.
+  example: 'True'
+- name: request_body_len
+  type: integer
+  description: Vendor-emitted field 'Request body len'. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: request_type
+  type: string_short
+  description: Type/category classifier emitted by Corelight. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: resp_bytes
+  type: integer_byte_count
+  description: Byte count. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '42'
+- name: resp_pkts
+  type: integer
+  description: Vendor-emitted field 'Resp pkts'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: response_body_len
+  type: integer
+  description: Vendor-emitted field 'Response body len'. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: rtt
+  type: integer
+  description: Vendor-emitted field 'Rtt'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: server_dns_computer_name
+  type: string
+  description: Human-readable name as displayed by Corelight. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: server_tree_name
+  type: string
+  description: Human-readable name as displayed by Corelight. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: service
+  type: string
+  description: Vendor-emitted field 'Service'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sshd
+- name: severity
+  type: string
+  description: Event severity as classified by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: INFO
+- name: status_code
+  type: integer
+  description: Status code returned by the vendor. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: success
+  type: boolean
+  description: Vendor-emitted field 'Success'. Literal 'true' or 'false' (case-insensitive);
+    not '1'/'0'.
+  example: 'true'
+- name: tags
+  type: string
+  description: Vendor-emitted field 'Tags'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_tags
+- name: trans_id
+  type: string_short
+  description: Opaque identifier emitted by Corelight. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: cor-7d69d460
+- name: ts
+  type: datetime
+  description: Timestamp emitted by Corelight. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: uid
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jdoe
+- name: uri
+  type: url
+  description: URI path component (no scheme/host) — as Corelight captured it. Full
+    URL with scheme (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: user_agent
+  type: string_long
+  description: Client User-Agent header value as received by Corelight. Free-form
+    text; may span multiple lines or contain large payloads.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: username
+  type: string
+  description: User account associated with the event. Free-form text; may contain
+    whitespace and punctuation.
+  example: jdoe
+- name: version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+use_cases:
+- IDS
+- Network
+how_to_use: |
+  ## corelight zeek → Cortex XSIAM (dataset `corelight_zeek_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `corelight_zeek_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `corelight`
+    - **product**: `zeek`
+
+    These normalize → `corelight_zeek_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_path ~= "dns"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~49 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.auth.kerberos_tgt.cname_values`, `xdm.auth.kerberos_tgt.encryption_type`, `xdm.auth.kerberos_tgt.msg_type`, `xdm.auth.kerberos_tgt.spn_values`, `xdm.auth.ntlm.dns_domain`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = corelight_zeek_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

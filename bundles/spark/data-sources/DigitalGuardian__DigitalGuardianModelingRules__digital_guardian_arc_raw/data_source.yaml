@@ -1,0 +1,140 @@
+schema_version: 1
+id: DigitalGuardian
+pack_name: DigitalGuardian
+rule_name: DigitalGuardianModelingRules
+dataset_name: digital_guardian_arc_raw
+vendor: Digital Guardian
+product: DigitalGuardian
+description: Digital Guardian ARC Watchlist Integration
+categories:
+- Data Enrichment & Threat Intelligence
+version: 2.0.9
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODggNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM5RTFCMzIiPkRpZ2l0YWwgR3VhcmRpYW48L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: dg_comment
+  type: string
+  description: Vendor-emitted field 'Dg comment'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Auto-generated comment by the system.
+- name: dg_description
+  type: string_long
+  description: Free-form human-readable description from Digital Guardian. Free-form
+    text; may span multiple lines or contain large payloads.
+  example: Event recorded by Digital Guardian.
+- name: dg_guid
+  type: string_short
+  description: Unique identifier — assigned by Digital Guardian per event. Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: 7b7bf489-4128-5a79-92b1-207b2a389a35
+- name: dg_name
+  type: string
+  description: Human-readable name as displayed by Digital Guardian. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: dg_tenant
+  type: string
+  description: Vendor-emitted field 'Dg tenant'. Free-form text; may contain whitespace
+    and punctuation.
+  example: tenant-db75dbce
+- name: dg_utype
+  type: string
+  description: Vendor-emitted field 'Dg utype'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_utype
+- name: inc_assign
+  type: user
+  description: Vendor-emitted field 'Inc assign'. Account name as the vendor reports
+    it — login name, UPN, or sAMAccountName depending on the source; no domain prefix
+    unless the vendor emits one.
+  example: jsmith
+- name: inc_creator
+  type: user
+  description: Vendor-emitted field 'Inc creator'. Account name as the vendor reports
+    it — login name, UPN, or sAMAccountName depending on the source; no domain prefix
+    unless the vendor emits one.
+  example: jsmith
+- name: inc_id
+  type: string_short
+  description: Opaque identifier emitted by Digital Guardian. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: dig-c69401da
+- name: inc_mtime
+  type: datetime
+  description: Vendor-emitted field 'Inc mtime'. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: inc_sev
+  type: string
+  description: Vendor-emitted field 'Inc sev'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sev
+- name: inc_state
+  type: string
+  description: Vendor-emitted field 'Inc state'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CA
+use_cases:
+- DLP
+how_to_use: |
+  ## Digital Guardian DigitalGuardian → Cortex XSIAM (dataset `digital_guardian_arc_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `digital_guardian_arc_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `digital_guardian_arc`. The marketplace pack's display name `Digital Guardian` / `DigitalGuardian` normalizes to `digital_guardian_digitalguardian_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `digital_guardian_arc` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~9 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.event.id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = digital_guardian_arc_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,332 @@
+schema_version: 1
+id: FireEyeETP
+pack_name: FireEyeETP
+rule_name: FireEyeETPEventCollectorModelingRules
+dataset_name: fireeye_etp_raw
+vendor: McAfee
+product: FireEyeETP
+description: Trellix Email Security - Cloud (Formerly FireEye ETP) is a cloud-based
+  platform that protects against advanced email attacks.
+categories:
+- Network Security
+version: 2.1.5
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TWNBZmVlPC90aXRsZT48cGF0aCBkPSJNMTIgNC44MjMzTDEuNTc5MyAwdjE5LjE3NjdMMTIgMjRsMTAuNDIwNy00LjgyMzNWMHptNi4xNzIgMTEuNjI2bC02LjE0MyAyLjg0MjgtNi4xNDM4LTIuODQyOVY2LjY4OTRsNi4xNDM5IDIuODQxOCA2LjE0MjktMi44NDE4eiIvPjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _ENTRY_STATUS
+  type: string_short
+  description: Status code returned by McAfee. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: OK
+- name: _TIME
+  type: datetime
+  description: Time-of-day emitted by McAfee. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: attributes
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: alert,
+    ati, details, details_values, domain, email, hasAttachment, messageSize, meta,
+    recipientHeader, rejectionReason, remediateAction, riskwareRules, senderHeader,
+    senderIP, status, subject, tags, user_action, user_action_text, user_agent, user_email_id,
+    user_ip, yaraRulesAction (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: event_id
+  type: integer
+  description: Unique identifier for this event as assigned by the vendor. Signed
+    decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: event_type
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'alert'
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by McAfee. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: mca-36befeab
+- name: included
+  type: string
+  description: Vendor-emitted field 'Included'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_included
+- name: links
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: detail
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: attributes.alert.alert_type
+  type: string_short
+  is_array: true
+  description: Type/category classifier emitted by McAfee. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: attributes.alert.malware_md5
+  type: hash_md5
+  description: MD5 digest of the artifact. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: attributes.alert.product
+  type: string
+  description: Vendor-emitted field 'Attributes › alert › product'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_product
+- name: attributes.alert.sha256
+  type: hash_sha256
+  description: SHA-256 digest as reported by the vendor. Leaf of the 'attributes'
+    composite. 64-character lowercase hex SHA-256 digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: attributes.ati
+  type: string
+  description: Vendor-emitted field 'Attributes › ati'. Leaf of the 'attributes' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_ati
+- name: attributes.details
+  type: string_long
+  description: Additional details payload emitted by McAfee. Free-form text; may span
+    multiple lines or contain large payloads.
+  example: Detailed event payload emitted by McAfee for this record.
+- name: attributes.details_values.Verify_Envelope_From_Equal
+  type: string
+  description: Vendor-emitted field 'Attributes › details values › Verify Envelope
+    From Equal'. Leaf of the 'attributes' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_equal
+- name: attributes.domain
+  type: domain
+  description: DNS domain reported by McAfee — bare domain, no scheme/path/port. Bare
+    DNS domain name; no scheme, no path, no port.
+  example: https://example.com/path
+- name: attributes.email.attachment
+  type: email
+  description: Vendor-emitted field 'Attributes › email › attachment'. Leaf of the
+    'attributes' composite. Free-form text; may contain whitespace and punctuation.
+  example: user@example.com
+- name: attributes.email.etp_message_id
+  type: string_short
+  description: Opaque identifier emitted by McAfee. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: mca-13f07377
+- name: attributes.email.headers.cc
+  type: email
+  description: Vendor-emitted field 'Attributes › email › headers › cc'. Leaf of the
+    'attributes' composite. RFC 5322 'local@domain' address; one address only — use
+    an array field for multiple addresses.
+  example: user@example.com
+- name: attributes.email.headers.from
+  type: email
+  description: Vendor-emitted field 'Attributes › email › headers › from'. Leaf of
+    the 'attributes' composite. Free-form text; may contain whitespace and punctuation.
+  example: user@example.com
+- name: attributes.email.headers.subject
+  type: string
+  description: Subject line — typically email subject or event summary. Free-form
+    text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: attributes.email.headers.to
+  type: email
+  description: Vendor-emitted field 'Attributes › email › headers › to'. Leaf of the
+    'attributes' composite. Free-form text; may contain whitespace and punctuation.
+  example: user@example.com
+- name: attributes.email.smtp.mail_from
+  type: email
+  description: Vendor-emitted field 'Attributes › email › smtp › mail from'. Leaf
+    of the 'attributes' composite. Free-form text; may contain whitespace and punctuation.
+  example: user@example.com
+- name: attributes.email.smtp.rcpt_to
+  type: email
+  description: Vendor-emitted field 'Attributes › email › smtp › rcpt to'. Leaf of
+    the 'attributes' composite. Free-form text; may contain whitespace and punctuation.
+  example: user@example.com
+- name: attributes.email.source_ip
+  type: ipv4
+  description: Source IPv4/IPv6 address of the initiator. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: attributes.email.status
+  type: string_short
+  description: Status code returned by McAfee. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: attributes.email.timestamp.accepted
+  type: email
+  description: Vendor-emitted field 'Attributes › email › timestamp › accepted'. Leaf
+    of the 'attributes' composite. Free-form text; may contain whitespace and punctuation.
+  example: user@example.com
+- name: attributes.hasAttachment
+  type: string
+  description: Vendor-emitted field 'Attributes › hasAttachment'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_hasattachment
+- name: attributes.messageSize
+  type: string
+  description: Vendor-emitted field 'Attributes › messageSize'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_messagesize
+- name: attributes.meta.alert_type
+  type: string_short
+  description: Type/category classifier emitted by McAfee. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: attributes.meta.last_malware
+  type: string
+  description: Vendor-emitted field 'Attributes › meta › last malware'. Leaf of the
+    'attributes' composite. Free-form text; may contain whitespace and punctuation.
+  example: Generic.Malware.A
+- name: attributes.meta.legacy_id
+  type: string_short
+  description: Opaque identifier emitted by McAfee. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: mca-45f91c9c
+- name: attributes.recipientHeader
+  type: email
+  is_array: true
+  description: Vendor-emitted field 'Attributes › recipientHeader'. Leaf of the 'attributes'
+    composite. RFC 5322 'local@domain' address; one address only — use an array field
+    for multiple addresses.
+  example: user@example.com
+- name: attributes.rejectionReason
+  type: string
+  description: Vendor-emitted field 'Attributes › rejectionReason'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_rejectionreason
+- name: attributes.remediateAction
+  type: string
+  description: Vendor-emitted field 'Attributes › remediateAction'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_remediateaction
+- name: attributes.riskwareRules
+  type: string
+  description: Vendor-emitted field 'Attributes › riskwareRules'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_riskwarerules
+- name: attributes.senderHeader
+  type: email
+  description: Vendor-emitted field 'Attributes › senderHeader'. Leaf of the 'attributes'
+    composite. RFC 5322 'local@domain' address; one address only — use an array field
+    for multiple addresses.
+  example: user@example.com
+- name: attributes.senderIP
+  type: string
+  description: Vendor-emitted field 'Attributes › senderIP'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_senderip
+- name: attributes.status
+  type: string_short
+  description: Status code returned by McAfee. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: attributes.subject
+  type: string
+  description: Subject line — typically email subject or event summary. Free-form
+    text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: attributes.tags
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Attributes › tags'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_tags
+- name: attributes.user_action
+  type: string_short
+  description: Action taken by McAfee's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: attributes.user_action_text
+  type: string
+  description: Vendor-emitted field 'Attributes › user action text'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_text
+- name: attributes.user_agent
+  type: string
+  description: Vendor-emitted field 'Attributes › user agent'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: attributes.user_email_id
+  type: string_short
+  description: Opaque identifier emitted by McAfee. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: mca-ea4f5dae
+- name: attributes.user_ip
+  type: ipv4
+  description: Vendor-emitted field 'Attributes › user ip'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: attributes.yaraRulesAction
+  type: string
+  description: Vendor-emitted field 'Attributes › yaraRulesAction'. Leaf of the 'attributes'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_yararulesaction
+- name: links.detail
+  type: url
+  description: Vendor-emitted field 'Links › detail'. Leaf of the 'links' composite.
+    Full URL with scheme (http/https/ftp); percent-encoded if it contains non-ASCII
+    characters.
+  example: https://example.com/path
+use_cases:
+- AV
+- EDR
+- Email
+how_to_use: |
+  ## McAfee FireEyeETP → Cortex XSIAM (dataset `fireeye_etp_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `fireeye_etp_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `fireeye_etp`. The marketplace pack's display name `McAfee` / `FireEyeETP` normalizes to `mcafee_fireeyeetp_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `fireeye_etp` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.email.headers.from`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `event_type in ("alert")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~29 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.original_threat_name`, `xdm.email.attachment.filename`, `xdm.email.attachment.size`, `xdm.email.cc`, `xdm.email.delivery_timestamp`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = fireeye_etp_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

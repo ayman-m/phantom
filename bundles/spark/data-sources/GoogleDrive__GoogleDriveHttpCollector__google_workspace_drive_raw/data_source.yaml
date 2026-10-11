@@ -1,0 +1,304 @@
+schema_version: 1
+id: GoogleDrive
+pack_name: GoogleDrive
+rule_name: GoogleDriveHttpCollector
+dataset_name: google_workspace_drive_raw
+vendor: Google
+product: GoogleDrive HTTP
+delivery: http
+description: 'Google Workspace Drive and Login activity as Admin SDK Reports API Activity JSON, delivered over an
+  XSIAM HTTP Log Collector with the http-sender connector (never syslog/CEF). CAVEAT: the Cortex GoogleDrive pack''s
+  parsing and modeling rules bind to dataset google_workspace_drive_raw (collector vendor google_workspace, product
+  drive); on a generic Google/Workspace collector the events land raw in google_workspace_raw
+  and model to 0 rows, while a Google Workspace/Drive collector writes google_workspace_drive_raw and models
+  (15 distinct xdm.* fields from one login-type event).'
+categories:
+- Utilities
+version: 1.0.0
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-10-01T00:00:00Z'
+updated_at: '2026-10-01T00:00:00Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjE2OHB4IiB2aWV3Qm94PSIwIDAgNTEyIDE2OCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCI+Cgk8Zz4KCQk8cGF0aCBkPSJNNDk2LjA1MjQ1NSwxMDIuNjcyMDU1IEw1MTAuMjU1NzM3LDExMi4xNDA5MDkgQzUwNS42NDU5LDExOC45MzEwNzUgNDk0LjYxOTY2OCwxMzAuNTgwMjU4IDQ3NS41NTczNjgsMTMwLjU4MDI1OCBDNDUxLjg4NTIzMSwxMzAuNTgwMjU4IDQzNC4yNTU3MTksMTEyLjI2NTUgNDM0LjI1NTcxOSw4OC45NjcxMzMgQzQzNC4yNTU3MTksNjQuMTczNjg0MSA0NTIuMDcyMTE2LDQ3LjM1NDAwNzggNDczLjU2MzkyNSw0Ny4zNTQwMDc4IEM0OTUuMTgwMzIzLDQ3LjM1NDAwNzggNTA1Ljc3MDQ5LDY0LjU0NzQ1NDYgNTA5LjE5NjcyLDczLjgyOTQyNDIgTDUxMS4wNjU1NzQsNzguNTYzODUxNiBMNDU1LjM3Mzc1NiwxMDEuNjEzMDM4IEM0NTkuNjA5ODIzLDEwOS45NjA1ODEgNDY2LjIxMzEwMywxMTQuMTk2NjQ4IDQ3NS41NTczNjgsMTE0LjE5NjY0OCBDNDg0LjkwMTYzMywxMTQuMTk2NjQ4IDQ5MS4zODAzMjMsMTA5LjU4NjgxMSA0OTYuMDUyNDU1LDEwMi42NzIwNTUgTDQ5Ni4wNTI0NTUsMTAyLjY3MjA1NSBaIE00NTIuMzgzNTkyLDg3LjY1ODkzNTkgTDQ4OS41NzM3NjUsNzIuMjA5NzUxNyBDNDg3LjUxODAyNiw2Ny4wMzkyNTg2IDQ4MS40MTMxMDcsNjMuMzYzODQ3OCA0NzQuMTI0NTgxLDYzLjM2Mzg0NzggQzQ2NC44NDI2MTIsNjMuMzYzODQ3OCA0NTEuOTQ3NTI2LDcxLjU4NjgwMDcgNDUyLjM4MzU5Miw4Ny42NTg5MzU5IEw0NTIuMzgzNTkyLDg3LjY1ODkzNTkgWiIgZmlsbD0iI0ZGMzAyRiI+PC9wYXRoPgoJCTxwYXRoIGQ9Ik00MDcuNDA2NTMxLDQuOTMxMDQ2MzIgTDQyNS4zNDc1MTksNC45MzEwNDYzMiBMNDI1LjM0NzUxOSwxMjYuNzgwMjU3IEw0MDcuNDA2NTMxLDEyNi43ODAyNTcgTDQwNy40MDY1MzEsNC45MzEwNDYzMiBMNDA3LjQwNjUzMSw0LjkzMTA0NjMyIFoiIGZpbGw9IiMyMEIxNUEiPjwvcGF0aD4KCQk8cGF0aCBkPSJNMzc5LjEyNDU1Nyw1MC41OTMzNTI4IEwzOTYuNDQyNTk0LDUwLjU5MzM1MjggTDM5Ni40NDI1OTQsMTI0LjU5OTkyOSBDMzk2LjQ0MjU5NCwxNTUuMzExNDEyIDM3OC4zMTQ3MjEsMTY3Ljk1NzMxNiAzNTYuODg1MjA3LDE2Ny45NTczMTYgQzMzNi43MDE1OTYsMTY3Ljk1NzMxNiAzMjQuNTU0MDUxLDE1NC4zNzY5ODYgMzIwLjAwNjUxLDE0My4zNTA3NTMgTDMzNS44OTE3NTksMTM2Ljc0NzQ3MyBDMzM4Ljc1NzMzNCwxNDMuNTM3NjM5IDM0NS42NzIwOSwxNTEuNTczNzA2IDM1Ni44ODUyMDcsMTUxLjU3MzcwNiBDMzcwLjY1MjQyNCwxNTEuNTczNzA2IDM3OS4xMjQ1NTcsMTQzLjAzOTI3OCAzNzkuMTI0NTU3LDEyNy4wOTE3MzIgTDM3OS4xMjQ1NTcsMTIxLjExMTQwNCBMMzc4LjUwMTYwNiwxMjEuMTExNDA0IEMzNzQuMzkwMTMsMTI2LjA5NTAxMSAzNjYuNTQwOTQ3LDEzMC41ODAyNTggMzU2LjU3MzczMSwxMzAuNTgwMjU4IEMzMzUuNzY3MTY5LDEzMC41ODAyNTggMzE2LjcwNDg2OSwxMTIuNDUyMzg1IDMxNi43MDQ4NjksODkuMDkxNzIzMSBDMzE2LjcwNDg2OSw2NS42MDY0NzEzIDMzNS43NjcxNjksNDcuMjkxNzEyNiAzNTYuNTczNzMxLDQ3LjI5MTcxMjYgQzM2Ni40Nzg2NTIsNDcuMjkxNzEyNiAzNzQuMzkwMTMsNTEuNzE0NjY0NiAzNzguNTAxNjA2LDU2LjU3MzY4MjIgTDM3OS4xMjQ1NTcsNTYuNTczNjgyMiBMMzc5LjEyNDU1Nyw1MC41OTMzNTI4IEwzNzkuMTI0NTU3LDUwLjU5MzM1MjggWiBNMzgwLjM3MDQ1OSw4OS4wOTE3MjMxIEMzODAuMzcwNDU5LDc0LjM5MDA4MDEgMzcwLjU5MDEyOCw2My42NzUzMjMzIDM1OC4xMzExMDksNjMuNjc1MzIzMyBDMzQ1LjU0NzQ5OSw2My42NzUzMjMzIDMzNC45NTczMzMsNzQuMzkwMDgwMSAzMzQuOTU3MzMzLDg5LjA5MTcyMzEgQzMzNC45NTczMzMsMTAzLjYwNjQ4MSAzNDUuNTQ3NDk5LDExNC4xMzQzNTIgMzU4LjEzMTEwOSwxMTQuMTM0MzUyIEMzNzAuNTkwMTI4LDExNC4xOTY2NDggMzgwLjM3MDQ1OSwxMDMuNjA2NDgxIDM4MC4zNzA0NTksODkuMDkxNzIzMSBMMzgwLjM3MDQ1OSw4OS4wOTE3MjMxIFoiIGZpbGw9IiMzNjg2RjciPjwvcGF0aD4KCQk8cGF0aCBkPSJNMjE4LjIxNjMyLDg4Ljc4MDI0NzYgQzIxOC4yMTYzMiwxMTIuNzYzODYxIDE5OS41Mjc3OTEsMTMwLjM5MzM3MyAxNzYuNjAzMTk1LDEzMC4zOTMzNzMgQzE1My42Nzg1OTksMTMwLjM5MzM3MyAxMzQuOTkwMDY5LDExMi43MDE1NjUgMTM0Ljk5MDA2OSw4OC43ODAyNDc2IEMxMzQuOTkwMDY5LDY0LjY3MjA0NDggMTUzLjY3ODU5OSw0Ny4xMDQ4Mjc0IDE3Ni42MDMxOTUsNDcuMTA0ODI3NCBDMTk5LjUyNzc5MSw0Ny4xMDQ4Mjc0IDIxOC4yMTYzMiw2NC42NzIwNDQ4IDIxOC4yMTYzMiw4OC43ODAyNDc2IEwyMTguMjE2MzIsODguNzgwMjQ3NiBaIE0yMDAuMDI2MTUxLDg4Ljc4MDI0NzYgQzIwMC4wMjYxNTEsNzMuODI5NDI0MiAxODkuMTg2ODA0LDYzLjU1MDczMzEgMTc2LjYwMzE5NSw2My41NTA3MzMxIEMxNjQuMDE5NTg1LDYzLjU1MDczMzEgMTUzLjE4MDIzOCw3My44Mjk0MjQyIDE1My4xODAyMzgsODguNzgwMjQ3NiBDMTUzLjE4MDIzOCwxMDMuNjA2NDgxIDE2NC4wMTk1ODUsMTE0LjAwOTc2MyAxNzYuNjAzMTk1LDExNC4wMDk3NjMgQzE4OS4xODY4MDQsMTE0LjAwOTc2MyAyMDAuMDI2MTUxLDEwMy42MDY0ODEgMjAwLjAyNjE1MSw4OC43ODAyNDc2IEwyMDAuMDI2MTUxLDg4Ljc4MDI0NzYgWiIgZmlsbD0iI0ZGMzAyRiI+PC9wYXRoPgoJCTxwYXRoIGQ9Ik0zMDkuMTA0ODY3LDg4Ljk2NzEzMyBDMzA5LjEwNDg2NywxMTIuOTUwNzQ2IDI5MC40MTYzMzgsMTMwLjU4MDI1OCAyNjcuNDkxNzQyLDEzMC41ODAyNTggQzI0NC41NjcxNDYsMTMwLjU4MDI1OCAyMjUuODc4NjE3LDExMi45NTA3NDYgMjI1Ljg3ODYxNyw4OC45NjcxMzMgQzIyNS44Nzg2MTcsNjQuODU4OTMwMiAyNDQuNTY3MTQ2LDQ3LjM1NDAwNzggMjY3LjQ5MTc0Miw0Ny4zNTQwMDc4IEMyOTAuNDE2MzM4LDQ3LjM1NDAwNzggMzA5LjEwNDg2Nyw2NC43OTY2MzUgMzA5LjEwNDg2Nyw4OC45NjcxMzMgTDMwOS4xMDQ4NjcsODguOTY3MTMzIFogTTI5MC44NTI0MDQsODguOTY3MTMzIEMyOTAuODUyNDA0LDc0LjAxNjMwOTUgMjgwLjAxMzA1Nyw2My43Mzc2MTg0IDI2Ny40Mjk0NDcsNjMuNzM3NjE4NCBDMjU0Ljg0NTgzNyw2My43Mzc2MTg0IDI0NC4wMDY0OSw3NC4wMTYzMDk1IDI0NC4wMDY0OSw4OC45NjcxMzMgQzI0NC4wMDY0OSwxMDMuNzkzMzY2IDI1NC44NDU4MzcsMTE0LjE5NjY0OCAyNjcuNDI5NDQ3LDExNC4xOTY2NDggQzI4MC4wNzUzNTIsMTE0LjE5NjY0OCAyOTAuODUyNDA0LDEwMy43MzEwNzEgMjkwLjg1MjQwNCw4OC45NjcxMzMgTDI5MC44NTI0MDQsODguOTY3MTMzIFoiIGZpbGw9IiNGRkJBNDAiPjwvcGF0aD4KCQk8cGF0aCBkPSJNNjYuNTkwMDUyNSwxMTIuMzI3Nzk0IEM0MC40ODg0MDY2LDExMi4zMjc3OTQgMjAuMDU1NjE0Niw5MS4yNzIwNTE1IDIwLjA1NTYxNDYsNjUuMTcwNDA1NiBDMjAuMDU1NjE0NiwzOS4wNjg3NTk4IDQwLjQ4ODQwNjYsMTguMDEzMDE2OCA2Ni41OTAwNTI1LDE4LjAxMzAxNjggQzgwLjY2ODc0NDYsMTguMDEzMDE2OCA5MC45NDc0MzU3LDIzLjU1NzI4MDUgOTguNTQ3NDM3MywzMC42NTg5MjE2IEwxMTEuMDY4NzUyLDE4LjEzNzYwNyBDMTAwLjQ3ODU4NSw3Ljk4MzUwNjEzIDg2LjMzNzU5ODQsMC4yNTg5MTM5OTcgNjYuNTkwMDUyNSwwLjI1ODkxMzk5NyBDMzAuODMyNjY2NiwwLjI1ODkxMzk5NyAwLjc0NDEzNDQwOCwyOS40MTMwMTk2IDAuNzQ0MTM0NDA4LDY1LjE3MDQwNTYgQzAuNzQ0MTM0NDA4LDEwMC45Mjc3OTIgMzAuODMyNjY2NiwxMzAuMDgxODk3IDY2LjU5MDA1MjUsMTMwLjA4MTg5NyBDODUuOTAxNTMyOCwxMzAuMDgxODk3IDEwMC40Nzg1ODUsMTIzLjcyNzc5NyAxMTEuODc4NTg4LDExMS44OTE3MjkgQzEyMy41OTAwNjcsMTAwLjE4MDI1MSAxMjcuMjAzMTgzLDgzLjczNDM0NDcgMTI3LjIwMzE4Myw3MC40MDMxOTM5IEMxMjcuMjAzMTgzLDY2LjIyOTQyMjMgMTI2LjcwNDgyMiw2MS45MzEwNjA2IDEyNi4xNDQxNjYsNTguNzU0MDEwNiBMNjYuNTkwMDUyNSw1OC43NTQwMTA2IEw2Ni41OTAwNTI1LDc2LjA3MjA0NzcgTDEwOS4wMTMwMTQsNzYuMDcyMDQ3NyBDMTA3Ljc2NzExMiw4Ni45MTEzOTQ3IDEwNC4zNDA4ODIsOTQuMzI0NTExMyA5OS4yOTQ5Nzg1LDk5LjM3MDQxNDIgQzkzLjE5MDA1OTIsMTA1LjUzNzYyOSA4My41MzQzMTksMTEyLjMyNzc5NCA2Ni41OTAwNTI1LDExMi4zMjc3OTQgTDY2LjU5MDA1MjUsMTEyLjMyNzc5NCBMNjYuNTkwMDUyNSwxMTIuMzI3Nzk0IFoiIGZpbGw9IiMzNjg2RjciPjwvcGF0aD4KCTwvZz4KPC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- JSON
+is_rawlog_only: false
+fields:
+- name: _time
+  type: datetime
+  is_meta: true
+  description: Event time, set at ingestion. With the GoogleDrive parsing rule bound to google_workspace_drive_raw
+    it is taken from id.time; on the generic google_workspace_raw dataset (no rule) it is the ingestion time. Never
+    sent by the sender.
+  example: '2026-10-01T09:14:22.431Z'
+- name: _vendor
+  type: string_short
+  is_meta: true
+  description: Vendor stamped by the HTTP Log Collector from its configuration (google_workspace for the Drive collector,
+    Google for the operator's generic collector). Never sent by the sender. GoogleDrive_1_3 maps it to xdm.observer.vendor.
+  example: google_workspace
+- name: _product
+  type: string_short
+  is_meta: true
+  description: Product stamped by the HTTP Log Collector from its configuration (drive for the Drive collector,
+    Workspace for the generic one). Never sent by the sender. GoogleDrive_1_3 maps it to xdm.observer.product.
+  example: drive
+- name: kind
+  type: string
+  description: Admin SDK Reports API resource type; always the constant admin#reports#activity. Mapped to xdm.target.resource.type.
+  example: admin#reports#activity
+- name: etag
+  type: string_short
+  description: 'Opaque per-activity entity tag (about 20 characters). Not read by any rule; Phantom uses it as the
+    unique test id, so every event needs a distinct value (verify with: filter etag = "<value>").'
+  example: Qm9fK2xT7vLpR4aZd8Hs
+- name: ownerDomain
+  type: domain
+  description: Workspace primary domain that owns the audited account. Not read by any rule. Use a reserved, fictitious
+    domain.
+  example: phantom-lab.example
+- name: ipAddress
+  type: ipv4
+  description: IP address the actor connected from. The only geographic hint an activity carries. Mapped to xdm.source.ipv4.
+    Use a real, geo-resolvable public address, since Cortex derives country, city and ASN from it.
+  example: 37.121.160.24
+- name: id
+  type: json
+  description: 'JSON OBJECT (not a string) identifying the activity: time, uniqueQualifier, applicationName, customerId.
+    The parsing rule reads id.time into _time; see the leaf entries.'
+  example: '{"time": "2026-10-01T09:14:22.431Z", "uniqueQualifier": "-4821937156204419331", "applicationName": "drive",
+    "customerId": "C04k7m2xq"}'
+- name: id.time
+  type: datetime
+  description: 'UTC event time, YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DDTHH:MM:SS.mmmZ. The GoogleDrive parsing rule turns
+    it into _time (only on google_workspace_drive_raw). It is a format filter, not a value gate: the rule''s no_hit
+    is keep, so a different form is not dropped but gets the ingestion time. Deliberately NOT is_gate, because pinning
+    it to a fixed example would freeze every event''s time. Set it to now, or earlier to back-date; impossible travel
+    is expressed here.'
+  example: '2026-10-01T09:14:22.431Z'
+- name: id.uniqueQualifier
+  type: string
+  description: Signed 64-bit integer carried as a string; unique per activity. Not read by any rule.
+  example: '-4821937156204419331'
+- name: id.applicationName
+  type: enum
+  enum_values:
+  - drive
+  - login
+  description: Google Workspace application that produced the activity. Not read by the rule. The profile emits
+    drive for Drive events and login for logins; a real tenant sends login activity to a separate dataset.
+  example: drive
+- name: id.customerId
+  type: string_short
+  description: Google customer id of the Workspace tenant (C followed by 8 characters). Not read by any rule.
+  example: C04k7m2xq
+- name: actor
+  type: json
+  description: 'JSON OBJECT naming who performed the activity: email, profileId, callerType. The modeling rule reads
+    actor.email and actor.profileId; see the leaf entries.'
+  example: '{"email": "khalid.alotaibi@phantom-lab.example", "profileId": "104927361850274619038", "callerType":
+    "USER"}'
+- name: actor.email
+  type: email
+  description: Actor's primary email. Mapped to xdm.source.user.username (and xdm.source.identity.username in GoogleDrive_2_11).
+    Use a fictitious @phantom-lab.example address, never DOMAIN\user.
+  example: khalid.alotaibi@phantom-lab.example
+- name: actor.profileId
+  type: string
+  description: Actor's 21-digit numeric Google profile id, stable per user. Mapped to xdm.source.user.identifier
+    (and xdm.source.identity.identifier in GoogleDrive_2_11).
+  example: '104927361850274619038'
+- name: actor.callerType
+  type: enum
+  enum_values:
+  - USER
+  description: Kind of caller. Not read by any rule; the profile always emits USER.
+  example: USER
+- name: events
+  type: json
+  is_array: true
+  description: JSON ARRAY holding exactly one event object ({type, name, parameters[]}); the modeling rule reads
+    only element 0. Send one activity per JSON object. See the events.0.* leaf entries.
+  example: '[{"type": "access", "name": "download", "parameters": []}]'
+- name: events.0.type
+  type: enum
+  enum_values:
+  - access
+  - acl_change
+  - delete
+  - login
+  description: Event category. Mapped to xdm.event.type. access = a file was opened or downloaded, acl_change =
+    sharing/visibility changed, delete = file trashed, login = authentication.
+  example: access
+- name: events.0.name
+  type: enum
+  enum_values:
+  - view
+  - download
+  - trash
+  - change_document_visibility
+  - change_user_access
+  - login_success
+  - login_failure
+  description: 'Specific event. Mapped to xdm.event.operation. Pairs used: access/view, access/download, delete/trash,
+    acl_change/change_document_visibility (to public_on_the_web), acl_change/change_user_access (external share),
+    login/login_success, login/login_failure.'
+  example: download
+- name: events.0.parameters
+  type: json
+  is_array: true
+  description: 'JSON ARRAY of parameter objects, one per Drive/Login attribute. THE value-shape trap: the modeling
+    rule extracts doc_type (xdm.target.file.file_type), doc_title (xdm.target.file.filename) and owner (xdm.target.user.username)
+    with a regex over the serialised array, so each MUST be {"name": "<param>", "value": "<non-empty string>"} with
+    name before value; boolValue/multiValue forms, swapped keys, empty strings and values containing a double quote
+    are silently ignored. Other parameters (doc_id, visibility, old_visibility, new_visibility, target_user, owner_is_shared_drive,
+    primary_event, billable, is_encrypted, login_type, login_challenge_method, login_challenge_status, login_failure_type,
+    is_suspicious, affected_email_address) are carried raw and not mapped.'
+  example: '[{"name": "doc_title", "value": "Employee PII Master List"}, {"name": "doc_type", "value": "spreadsheet"},
+    {"name": "owner", "value": "noura.alharbi@phantom-lab.example"}, {"name": "visibility", "value": "private"},
+    {"name": "primary_event", "boolValue": true}]'
+use_cases:
+- Cloud
+- SaaS
+- 'Data exfiltration: sensitive_download burst of Drive downloads by one actor'
+- 'Public exposure: files switched to public_on_the_web (public_share)'
+- Impossible-travel logins with a multi-hour gap in id.time (impossible_travel_login)
+how_to_use: |
+  **Use this source when the goal is Cortex Analytics alerts.** Analytics reads data that arrives with the source's identity, so send it with the `http-sender` connector (the Cribl source list has no UUID for Drive audit events, so the generic HTTP collector destination is the only route). The syslog/CEF Google Workspace source is for checking parsing and modeling; do not wait for Analytics alerts from it. (The equivalent Okta comparison showed identical data alerting only over HTTP; this source has not been compared that way.)
+
+  ## Google Workspace (Drive / Login activity) over an XSIAM HTTP Log Collector
+
+  **Delivery: HTTP, not syslog.** This source is simulated by posting one JSON object per event (the Google Admin SDK Reports API `Activity` resource) to a Cortex XSIAM HTTP Log Collector with the **`http-sender`** connector. **Do NOT use `phantom_create_data_worker`, syslog or CEF for this source** - that is the path of the sibling source `GoogleDrive__GoogleDrive__google_workspace_drive_raw`. The collector (configured in XSIAM, not by the sender) fixes vendor/product and therefore the dataset; the sender never chooses it.
+
+  ### READ FIRST: the dataset caveat
+
+  The Cortex **GoogleDrive** pack binds its parsing rule and its modeling rules (`GoogleDrive_1_3` for XSIAM 6.10-8.14, `GoogleDrive_2_11` for 8.15+) to dataset **`google_workspace_drive_raw`**, whose INGEST pair is vendor `google_workspace` / product `drive`.
+
+  - A generic Google collector is vendor `Google` / product `Workspace`. It writes the generic dataset **`google_workspace_raw`**, and NO Cortex rule binds to that dataset. Events sent there land raw and `datamodel dataset = google_workspace_raw` returns **0 rows**. Nothing is parsed, `_time` is the ingestion time and no `xdm.*` field exists.
+  - These events model ONLY through a collector whose dataset is `google_workspace_drive_raw`: create an HTTP Log Collector with **vendor `google_workspace`** (shown as Google Workspace) and **product `drive`** (shown as Drive). That collector writes `google_workspace_drive_raw` and models; one login-type event produces 15 distinct `xdm.*` fields. Modeling of Drive-activity events (view/download/share) and `_time` from `id.time` are not established separately.
+  - http-sender destination names are the dataset without `_raw`:
+    - `google_workspace_drive` -> dataset `google_workspace_drive_raw` (the destination to use; Google Workspace / Drive collector, models: 15 distinct `xdm.*` fields from one login-type event).
+    - `google_workspace` -> dataset `google_workspace_raw` (the existing generic collector; lands raw only). Sending the `google_workspace` profile there returns a dataset-mismatch `warning`; the events are still sent.
+
+  If `list_destinations` shows only `google_workspace`, tell the operator the events will land raw and that a `google_workspace` / `drive` collector is needed for XDM. Never report XDM results from the generic destination.
+
+  ### Prerequisites
+
+  1. In XSIAM: Settings > Data Sources & Integrations > Custom Collectors > HTTP Log Collector. Log Format **JSON**, Vendor `google_workspace`, Product `drive`, **Save & Generate Token**, copy the URL and the key (shown once). The GoogleDrive content pack must be installed on the tenant.
+  2. In Phantom, http-sender allows one active instance, so add this collector as an additional destination: `additionalDestinations` = `[{"url": "https://api-<tenant>/logs/v1/event", "vendor": "google_workspace", "product": "drive"}]` and the secret `additionalKeys` = `{"google_workspace_drive": "<key>"}`. The agent never sees or supplies keys.
+  3. Call `list_destinations` and confirm `google_workspace_drive` is `ready` with dataset `google_workspace_drive_raw`.
+
+  (Tool names are as the connector lists them; the runtime may expose them with a `phantom_` prefix.)
+
+  ### Quick start
+
+  1. Prove the path with one identifiable event (a benign login for `phantom.test@<userDomain>`):
+     `send_test_event {"profile": "google_workspace", "destination": "google_workspace_drive"}`
+     It returns a test id and a `verify_with_xql` query on `etag`.
+  2. Preview, then send a scenario. Always `dry_run` first (builds and returns the first 3 events, sends nothing):
+     `generate_events {"profile": "google_workspace", "scenario": "benign_drive", "count": 40, "spread_seconds": 600, "destination": "google_workspace_drive", "dry_run": true}`
+     then repeat without `dry_run`.
+
+  Scenarios (profile `google_workspace`):
+
+  | Scenario | Emits | Use it for |
+  |---|---|---|
+  | `benign_drive` | Drive `view` (most), `download`, `trash` and the occasional external share (`change_user_access`) by a pool of 12 users, each against another user's files | Baseline noise before an attack; ignores `target_user` and `source_ip` |
+  | `public_share` | `change_document_visibility` to `public_on_the_web` of sensitive-looking files (Employee PII, Payroll, Source Code Archive, ...) by ONE actor who owns them | Data-staging / public exposure detection |
+  | `sensitive_download` | A burst of `download` events of sensitive-looking files owned by OTHER users, all by ONE actor from one IP | Bulk-download / exfiltration detection |
+  | `impossible_travel_login` | `login_success` events for ONE actor: the first half from the actor's real Saudi home address (login_type `saml`), the rest from a real out-of-country address, 2.5-6 hours later IN EVENT TIME | Impossible-travel / ITDR login detection. Needs `count >= 2` |
+
+  Arguments: `count` 1-5000 per call (default 20). `spread_seconds` is the width of the window the events are spread across, oldest first (default 120). `start_offset_minutes` ends that window this many minutes in the past (default 0): use it to back-date, nothing is ever dated after now. `target_user` is the ACTOR (bare name such as `khalid.alotaibi`, or an email; a bare name gets `@<userDomain>`, default domain `phantom-lab.example`; default actor `noura.alharbi@...`; NEVER `DOMAIN\user`). `source_ip` is the actor's source address (default: the actor's own stable real Saudi home address for public_share/sensitive_download, a random real out-of-country address for the far login of impossible travel). Examples:
+
+  - `{"profile": "google_workspace", "scenario": "public_share", "count": 3, "target_user": "khalid.alotaibi", "spread_seconds": 120, "destination": "google_workspace_drive"}`
+  - `{"profile": "google_workspace", "scenario": "sensitive_download", "count": 25, "spread_seconds": 300, "target_user": "khalid.alotaibi", "source_ip": "49.36.20.77", "destination": "google_workspace_drive"}`
+  - `{"profile": "google_workspace", "scenario": "impossible_travel_login", "count": 2, "spread_seconds": 60, "target_user": "noura.alharbi", "source_ip": "187.10.20.150", "destination": "google_workspace_drive"}` - the 2.5-6 h gap is in `id.time`, never in wall-clock send time; both events are sent now. With count 4, two logins come from the home address and two from the far one.
+  - Back-dated: add `"start_offset_minutes": 120`.
+
+  A Google activity carries no geolocation, only `ipAddress`, and Cortex derives country and ASN from that address (it ignores any label). The addresses are therefore real: each user has ONE stable Saudi home address (a real Acme / Mobily / Zain range, checked with Cortex's `iploc`, the same one the user has in the `okta` and `proofpoint_tap` profiles), and "far apart" is that home address followed by a real out-of-country one. A `source_ip` outside the built-in pools is sent as given.
+
+  3. `send_events` sends YOUR JSON exactly as given (nothing is added or rewritten) for a custom story. Put the time in `id.time`. A complete Drive download:
+
+  ```json
+  {"destination": "google_workspace_drive", "events": [{
+    "kind": "admin#reports#activity",
+    "etag": "Qm9fK2xT7vLpR4aZd8Hs",
+    "ownerDomain": "phantom-lab.example",
+    "ipAddress": "37.121.160.24",
+    "id": {"time": "2026-10-01T09:14:22.431Z", "uniqueQualifier": "-4821937156204419331",
+           "applicationName": "drive", "customerId": "C04k7m2xq"},
+    "actor": {"email": "khalid.alotaibi@phantom-lab.example", "profileId": "104927361850274619038", "callerType": "USER"},
+    "events": [{"type": "access", "name": "download", "parameters": [
+      {"name": "doc_id", "value": "1xT7vLpR4aZd8HsQm9fK2xT7vLpR4aZd8HsQm9fK2xT"},
+      {"name": "doc_title", "value": "Employee PII Master List"},
+      {"name": "doc_type", "value": "spreadsheet"},
+      {"name": "owner", "value": "noura.alharbi@phantom-lab.example"},
+      {"name": "owner_is_shared_drive", "boolValue": false},
+      {"name": "visibility", "value": "private"},
+      {"name": "primary_event", "boolValue": true}]}]
+  }]}
+  ```
+
+  And a login event (no Drive parameters):
+
+  ```json
+  {"destination": "google_workspace_drive", "events": [{
+    "kind": "admin#reports#activity",
+    "etag": "b7Yw3NcE5kJmP0qVu2Ra",
+    "ownerDomain": "phantom-lab.example",
+    "ipAddress": "187.10.20.150",
+    "id": {"time": "2026-10-01T09:20:05.112Z", "uniqueQualifier": "7203958146620015874",
+           "applicationName": "login", "customerId": "C04k7m2xq"},
+    "actor": {"email": "noura.alharbi@phantom-lab.example", "profileId": "108264913577402981536", "callerType": "USER"},
+    "events": [{"type": "login", "name": "login_success", "parameters": [
+      {"name": "login_type", "value": "google_password"},
+      {"name": "login_challenge_method", "value": "password"},
+      {"name": "login_challenge_status", "value": "Passed"},
+      {"name": "is_suspicious", "boolValue": false},
+      {"name": "affected_email_address", "value": "noura.alharbi@phantom-lab.example"}]}]
+  }]}
+  ```
+
+  Replace `id.time` with the real event time (now, or an earlier time to back-date), give every event a UNIQUE `etag` (it is the id the verify query filters on) and a fresh `uniqueQualifier`. Use only fictitious `phantom-lab.example` users, and real public IPs: Cortex derives geography from the address, so give a user one stable Saudi ISP address and an attacker (or the far leg of a login pair) an out-of-country one.
+
+  ### Field guide and the shapes the modeling rule enforces
+
+  The modeling rule reads: `events[0].type` -> `xdm.event.type`; `events[0].name` -> `xdm.event.operation`; `ipAddress` -> `xdm.source.ipv4`; `actor.email` -> `xdm.source.user.username`; `actor.profileId` -> `xdm.source.user.identifier`; `kind` -> `xdm.target.resource.type`; and, from `events[0].parameters[]`, `doc_type` -> `xdm.target.file.file_type`, `doc_title` -> `xdm.target.file.filename`, `owner` -> `xdm.target.user.username`. `GoogleDrive_2_11` also fills `xdm.source.identity.*` and `xdm.target.identity.*`; `GoogleDrive_1_3` fills `xdm.observer.vendor/product` from the collector's `_vendor`/`_product`. The rule has no filter: every event that lands is mapped.
+
+  - **Parameter shape is the trap.** `doc_title`, `doc_type` and `owner` are found with a regex over the re-serialised parameter array, matching exactly `"name":"doc_type","value":"..."`. They MUST be `{"name": ..., "value": "<non-empty string>"}` with `name` BEFORE `value`. A `boolValue` or `multiValue` form, a swapped key order, an empty string, or a value containing a double quote is silently ignored (the xdm field stays null, no error). Only the FIRST event in `events[]` is read; send one activity per object.
+  - `owner` is the document owner's email (the profile's `public_share` makes the actor the owner; `sensitive_download` makes other users the owners).
+  - Other parameters (`doc_id`, `visibility`, `old_visibility`/`new_visibility`, `target_user`, `login_type`, `login_failure_type`, ...) are carried raw and not mapped; keep them for realism and for hunting. `multiValue` parameters (`old_value`, `new_value`) are ignored by the rule.
+  - `events[0].type`/`name` pairs used: `access`/`view`, `access`/`download`, `delete`/`trash`, `acl_change`/`change_document_visibility` (to `public_on_the_web`), `acl_change`/`change_user_access` (external share to `reviewer.NNN@external-partner.example`), `login`/`login_success`, `login`/`login_failure` (add `login_failure_type` = `login_failure_wrong_password` and `login_challenge_status` = `Failed`). `id.applicationName` is `drive` or `login`.
+  - `id` is a JSON OBJECT (`time`, `uniqueQualifier`, `applicationName`, `customerId`), `actor` an object, `events` an ARRAY of one object, `parameters` an ARRAY of `{name, value|boolValue|multiValue}` objects: real nested JSON, never stringified.
+
+  ### Timing
+
+  `_time` comes from **`id.time`** through the pack's parsing rule, ONLY when events are delivered to `google_workspace_drive_raw` with the pack installed. The rule accepts `YYYY-MM-DDTHH:MM:SSZ` or `YYYY-MM-DDTHH:MM:SS.mmmZ` (UTC, trailing `Z`); the profile emits the millisecond form. Its `no_hit` is `keep`: an `id.time` in any other form is not dropped, it just gets the ingestion time. So a back-dated `id.time` (`start_offset_minutes`) back-dates `_time` only on that dataset; on `google_workspace_raw` `_time` is always the ingestion time. Query back-dated events with a wide window (`config timeframe = 7d`).
+
+  ### Verification (XQL)
+
+  - Raw landing, by the `etag` returned by `send_test_event` or listed in `sample_ids`:
+    `dataset = google_workspace_drive_raw | filter etag = "<etag>"` (use `google_workspace_raw` for the generic destination).
+  - `_time` follows `id.time` (drive dataset only):
+    `config timeframe = 7d | dataset = google_workspace_drive_raw | filter etag = "<etag>" | alter evt_time = json_extract_scalar(id, "$.time") | fields _time, evt_time, etag`
+  - Modeling:
+    `datamodel dataset = google_workspace_drive_raw | fields _time, xdm.event.type, xdm.event.operation, xdm.source.ipv4, xdm.source.user.username, xdm.target.file.filename | limit 20`
+  - Which scenarios landed: `datamodel dataset = google_workspace_drive_raw | comp count() as events by xdm.event.type, xdm.event.operation`
+
+  Ingestion lags 5-7 minutes after HTTP 200, so wait before concluding anything.
+
+  **Established vs not established.** Established: raw landing on `google_workspace_raw` with 0 rows from `datamodel dataset = google_workspace_raw`; and, through a Google Workspace / Drive collector, 15 distinct `xdm.*` fields from one login-type event on `google_workspace_drive_raw`. NOT established: modeling of Drive-activity events, `_time` from `id.time`, and whether the rule's `$.0.type` path reads the real `events` array as sent for every event type. Report results from the generic destination as raw-only.
+
+  ### Login events
+
+  On a real tenant, Login-application activity is a different Google log type with its own dataset, not this pack's Drive dataset. Sent to `google_workspace_drive_raw` the login events populate only what the Drive rule reads from fields common to both: `xdm.event.type` (`login`), `xdm.event.operation` (`login_success`/`login_failure`), `xdm.source.ipv4`, `xdm.source.user.*` and `xdm.target.resource.type`. `xdm.target.file.*` and `xdm.target.user.username` stay null, and no authentication-specific `xdm` field is produced. `impossible_travel_login` therefore exercises the pipeline and the time gap, not a login-specific model.
+
+  ### Status
+
+  This data source is NOT validated and is not marked `validated` or `raw_validated`. Do not claim it is mapping-validated until the events have been confirmed to model on a `google_workspace_drive_raw` collector.

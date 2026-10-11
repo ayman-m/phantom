@@ -1,0 +1,48 @@
+- id: 7e88a8b1-1c4f-4dcb-9c92-aef82a7c5d11
+  name: "Phantom: Setup Ransack decoy files (T1607 Stage Capabilities pre-condition)"
+  description: >
+    Pre-condition for Phantom-curated Ransack adversary. Creates lab-safe decoy files
+    under C:\Users\Public\Documents\Decoys matching the Ransack source's
+    file.sensitive.extension facts (png, yml, wav) PLUS common document extensions
+    (doc, docx, pdf, xls, xlsx, txt) so any "sensitive file discovery" T1005 ability
+    finds something to stage. Without this pre-condition the stock Ransack chain
+    fails silently — T1005 returns zero facts → "Stage sensitive files" never
+    dispatches → "Compress staged dir" fails on an empty source dir → "Exfil staged
+    directory" never dispatches. The decoy files contain only the literal string
+    "PHANTOM-LAB-DECOY ..." — no real data, no exfil risk. Cleanup runs on operation
+    teardown.
+  tactic: collection
+  technique:
+    attack_id: T1607
+    name: 'Stage Capabilities'
+  platforms:
+    windows:
+      psh:
+        command: |
+          $ErrorActionPreference = "Continue"
+          $decoyDir = "C:\Users\Public\Documents\Decoys"
+          if (Test-Path $decoyDir) {
+            Get-ChildItem $decoyDir -Force -ErrorAction SilentlyContinue | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+          }
+          New-Item -Path $decoyDir -ItemType Directory -Force | Out-Null
+          $extensions = @("png", "yml", "wav", "doc", "docx", "pdf", "xls", "xlsx", "txt")
+          $count = 0
+          foreach ($ext in $extensions) {
+            1..3 | ForEach-Object {
+              $filename = "phantom_lab_decoy_${_}.${ext}"
+              $file = Join-Path $decoyDir $filename
+              Set-Content -Path $file -Value "PHANTOM-LAB-DECOY content for testing detection chains. Lab-safe synthetic file." -Force
+              $count++
+            }
+          }
+          Write-Output "[+] Created $count decoy files in $decoyDir"
+          Write-Output "[+] Extensions covered: $($extensions -join ', ')"
+          $onDisk = (Get-ChildItem $decoyDir -ErrorAction SilentlyContinue | Measure-Object).Count
+          Write-Output "[+] File count on disk: $onDisk"
+        cleanup: |
+          $decoyDir = "C:\Users\Public\Documents\Decoys"
+          if (Test-Path $decoyDir) {
+            Remove-Item -Path $decoyDir -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Output "[+] Decoy dir removed"
+          }
+        timeout: 60

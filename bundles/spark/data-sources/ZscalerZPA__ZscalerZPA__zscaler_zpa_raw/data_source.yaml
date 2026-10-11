@@ -1,0 +1,487 @@
+schema_version: 1
+id: ZscalerZPA
+pack_name: ZscalerZPA
+rule_name: ZscalerZPA
+dataset_name: zscaler_zpa_raw
+vendor: Zscaler
+product: ZscalerZPA
+description: The Zscaler Private Access (ZPA) service enables organizations to provide
+  access to internal applications and services while ensuring the security of their
+  networks.
+categories:
+- Analytics & SIEM
+version: 1.0.13
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDdBQUMiPlpzY2FsZXI8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: AppGroup
+  type: string
+  description: Vendor-emitted field 'AppGroup'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_appgroup
+- name: ApplicationName
+  type: string
+  description: Vendor-emitted field 'ApplicationName'. Free-form text; may contain
+    whitespace and punctuation.
+  example: Salesforce
+- name: ApplicationSegment
+  type: string
+  description: Vendor-emitted field 'ApplicationSegment'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_applicationsegme
+- name: CertificateCN
+  type: string
+  description: Vendor-emitted field 'CertificateCN'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_certificatecn
+- name: ClientCountryCode
+  type: string
+  description: Vendor-emitted field 'ClientCountryCode'. Free-form text; may contain
+    whitespace and punctuation.
+  example: US
+- name: ClientLatitude
+  type: string
+  description: Vendor-emitted field 'ClientLatitude'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientlatitude
+- name: ClientLongitude
+  type: string
+  description: Vendor-emitted field 'ClientLongitude'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientlongitude
+- name: ClientZEN
+  type: string
+  description: Vendor-emitted field 'ClientZEN'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_clientzen
+- name: ConnectionID
+  type: string
+  description: Vendor-emitted field 'ConnectionID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_connectionid
+- name: ConnectionStatus
+  type: string
+  description: Vendor-emitted field 'ConnectionStatus'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_connectionstatus
+- name: Connector
+  type: string
+  description: Vendor-emitted field 'Connector'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_connector
+- name: CountryCode
+  type: country_code
+  description: Vendor-emitted field 'CountryCode'. ISO 3166-1 alpha-2 uppercase country
+    code (e.g., US, DE, JP).
+  example: US
+- name: Customer
+  type: string
+  description: Vendor-emitted field 'Customer'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_customer
+- name: DoubleEncryption
+  type: string
+  description: Vendor-emitted field 'DoubleEncryption'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_doubleencryption
+- name: InternalReason
+  type: string
+  description: Vendor-emitted field 'InternalReason'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_internalreason
+- name: Platform
+  type: string
+  description: Vendor-emitted field 'Platform'. Free-form text; may contain whitespace
+    and punctuation.
+  example: linux
+- name: PolicyProcessingTime
+  type: string
+  description: Vendor-emitted field 'PolicyProcessingTime'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_policyprocessing
+- name: SessionID
+  type: string_short
+  description: Unique identifier — assigned by Zscaler per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: sess-ed3311f4-423
+- name: SessionStatus
+  type: string
+  description: Vendor-emitted field 'SessionStatus'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sessionstatus
+- name: SessionType
+  type: string
+  description: Vendor-emitted field 'SessionType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sessiontype
+- name: Version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: ZEN
+  type: string
+  description: Vendor-emitted field 'ZEN'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_zen
+- name: _final_reporting_device_ip
+  type: ipv4
+  description: Vendor-emitted field ' final reporting device ip'. Dotted-quad IPv4
+    literal (e.g., 192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: _id
+  type: string_short
+  description: Opaque identifier emitted by Zscaler. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 52f8db5f-17bf-5afc-9776-54023d6f009b
+- name: _insert_time
+  type: datetime
+  description: Time-of-day emitted by Zscaler. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: _product
+  type: string
+  description: Vendor-emitted field ' product'. Free-form text; may contain whitespace
+    and punctuation.
+  example: ZscalerZPA
+- name: _time
+  type: datetime
+  description: Time-of-day emitted by Zscaler. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: _vendor
+  type: string
+  description: Vendor-emitted field ' vendor'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Zscaler
+- name: cat
+  is_gate: true
+  type: string
+  description: Vendor-emitted field 'Cat'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'ZPA User Status'
+- name: dst
+  type: ipv4
+  description: CEF destination IP — IPv4/IPv6 address of the target endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 198.51.100.7
+- name: dstBytes
+  type: integer
+  description: Vendor-emitted field 'DstBytes'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: dstPort
+  type: integer_port
+  description: Destination TCP/UDP port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: identHostName
+  type: string
+  description: Vendor-emitted field 'IdentHostName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: host01.example.com
+- name: policy
+  type: string
+  description: Vendor-emitted field 'Policy'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Default-Policy
+- name: proto
+  type: string
+  description: Network protocol name or numeric IANA assignment. Free-form text; may
+    contain whitespace and punctuation.
+  example: tcp
+- name: src
+  type: ipv4
+  description: CEF source IP — IPv4/IPv6 address of the source endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: srcBytes
+  type: integer
+  description: Vendor-emitted field 'SrcBytes'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: srcPreNAT
+  type: string
+  description: Vendor-emitted field 'SrcPreNAT'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_srcprenat
+- name: usrName
+  type: string
+  description: Vendor-emitted field 'UsrName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_usrname
+- name: action
+  type: enum
+  description: 'Action taken. One of: Allowed, Blocked, Caution, Quarantined, Redirected
+    (case-sensitive).'
+  enum_values:
+  - Allowed
+  - Blocked
+  - Caution
+  - Quarantined
+  - Redirected
+  example: Allowed
+- name: appclass
+  type: string_short
+  description: Cloud app class. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: appname
+  type: string
+  description: Cloud app name detected. Free-form text; may contain whitespace and
+    punctuation.
+  example: Salesforce
+- name: browser
+  type: string_short
+  description: Browser family. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: cip
+  type: ipv4
+  description: Client (internal) IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: csip
+  type: ipv4
+  description: Client source IP (proxy chain). Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: datetime
+  type: datetime
+  description: Event timestamp. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: department
+  type: string
+  description: User department. Free-form text; may contain whitespace and punctuation.
+  example: sample_department
+- name: devicename
+  type: host
+  description: Device hostname. Hostname or fully-qualified domain name (RFC 1035
+    dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: deviceowner
+  type: user
+  description: Device owner from inventory. Account name as the vendor reports it
+    — login name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jdoe
+- name: devicetype
+  type: string_short
+  description: Device type. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: dip
+  type: ipv4
+  description: Destination IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: fileclass
+  type: string_short
+  description: File class. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: filename
+  type: string
+  description: File name (download/upload). Free-form text; may contain whitespace
+    and punctuation.
+  example: document.pdf
+- name: filetype
+  type: string_short
+  description: File extension. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: host
+  type: host
+  description: Destination host. Hostname or fully-qualified domain name (RFC 1035
+    dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: location
+  type: string
+  description: Zscaler location name. Free-form text; may contain whitespace and punctuation.
+  example: us-east
+- name: malwarecategory
+  type: string_short
+  description: Malware category. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: malwareclass
+  type: string_short
+  description: Malware class. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: md5
+  type: hash_md5
+  description: Object MD5. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: mimetype
+  type: string_short
+  description: Content MIME type. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: os
+  type: string_short
+  description: Device OS. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: reason
+  type: string
+  description: Reason for the action. Free-form text; may contain whitespace and punctuation.
+  example: normal_operation
+- name: referer
+  type: url
+  description: Referer header. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: requestmethod
+  type: string_short
+  description: HTTP method. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: requestsize
+  type: integer_byte_count
+  description: Bytes sent client→server. Unsigned decimal byte count; bare digits,
+    no unit suffix.
+  example: '1024'
+- name: responsesize
+  type: integer_byte_count
+  description: Bytes received server→client. Unsigned decimal byte count; bare digits,
+    no unit suffix.
+  example: '1024'
+- name: sha256
+  type: hash_sha256
+  description: Object SHA-256. 64-character lowercase hex SHA-256 digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: sip
+  type: ipv4
+  description: Source (egress) IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: ssl_decrypted
+  type: string_short
+  description: Yes/No — was SSL decrypted. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: ssl_ja3
+  type: hash_md5
+  description: Client JA3 fingerprint. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: ssl_ja3s
+  type: hash_md5
+  description: Server JA3S fingerprint. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: statuscode
+  type: integer
+  description: HTTP status code. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: threatcategory
+  type: string_short
+  description: Threat category. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: threatclass
+  type: string_short
+  description: Threat class. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: threatname
+  type: string
+  description: Threat name detected. Free-form text; may contain whitespace and punctuation.
+  example: Generic.Malware.A
+- name: threatseverity
+  type: enum
+  description: 'Threat severity. One of: Suspicious, Moderate, High, Critical (case-sensitive).'
+  enum_values:
+  - Suspicious
+  - Moderate
+  - High
+  - Critical
+  example: Suspicious
+- name: transactionsize
+  type: integer_byte_count
+  description: Total transaction bytes. Unsigned decimal byte count; bare digits,
+    no unit suffix.
+  example: '1024'
+- name: url
+  type: url
+  description: Full URL. Full URL with scheme (http/https/ftp); percent-encoded if
+    it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: urlcategory
+  type: url
+  description: URL category. Free-form text; may contain whitespace and punctuation.
+  example: https://example.com/path?q=1
+- name: urlclass
+  type: string_short
+  description: URL class. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: urlsupercategory
+  type: url
+  description: URL super-category. Free-form text; may contain whitespace and punctuation.
+  example: https://example.com/path?q=1
+- name: user
+  type: user
+  description: Resolved user. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jdoe
+- name: useragent
+  type: string_long
+  description: User-Agent header. Free-form text; may span multiple lines or contain
+    large payloads.
+  example: Free-form vendor-emitted message describing the event.
+use_cases:
+- Proxy
+- CASB
+how_to_use: |
+  ## Zscaler ZscalerZPA → Cortex XSIAM (dataset `zscaler_zpa_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `zscaler_zpa_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `zscaler_zpa`. The marketplace pack's display name `Zscaler` / `ZscalerZPA` normalizes to `zscaler_zscalerzpa_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `zscaler_zpa` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `cat in ("ZPA User Status", "ZPA User Activity")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~39 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.mfa.client_details`, `xdm.event.description`, `xdm.event.duration`, `xdm.event.id`, `xdm.event.operation_sub_type`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|Zscaler|ZscalerZPA|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = zscaler_zpa_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

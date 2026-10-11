@@ -1,0 +1,210 @@
+schema_version: 1
+id: SafeNet_Trusted_Access
+pack_name: SafeNet_Trusted_Access
+rule_name: SafeNetTrustedAccessModelingRules
+dataset_name: safenet_trusted_access_raw
+vendor: Thales
+product: SafeNet_Trusted_Access
+description: SafeNet Trusted Access by Thales is an access management solution that
+  allows organizations to centrally manage and secure access to business applications.
+categories:
+- Identity and Access Management
+version: 2.0.50
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMxNjJENEYiPlRoYWxlczwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: context
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: applicationName,
+    applicationType, originatingAddress, principalId, sessionId (each key defined
+    as a dotted-path leaf below).'
+  example: '{}'
+- name: details
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: actionText,
+    agentId, credentialType, description, message, operationObjectName, operationObjectType,
+    operationType, reason, resultText, state, type, usedName (each key defined as
+    a dotted-path leaf below).'
+  example: '{}'
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Thales. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: tha-75a1c923
+- name: timeStamp
+  type: datetime
+  description: Timestamp emitted by Thales. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: context.applicationName
+  type: string
+  description: Vendor-emitted field 'Context › applicationName'. Leaf of the 'context'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Salesforce
+- name: context.applicationType
+  type: string
+  description: Vendor-emitted field 'Context › applicationType'. Leaf of the 'context'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_applicationtype
+- name: context.originatingAddress
+  type: ipv4
+  description: Vendor-emitted field 'Context › originatingAddress'. Leaf of the 'context'
+    composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding
+    brackets or quotes.
+  example: 203.0.113.42
+- name: context.principalId
+  type: user
+  description: Vendor-emitted field 'Context › principalId'. Leaf of the 'context'
+    composite. Account name as the vendor reports it — login name, UPN, or sAMAccountName
+    depending on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: context.sessionId
+  type: string
+  description: Vendor-emitted field 'Context › sessionId'. Leaf of the 'context' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sess-b6eef894-669
+- name: details.actionText
+  type: string
+  description: Vendor-emitted field 'Details › actionText'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_actiontext
+- name: details.agentId
+  type: string
+  description: Vendor-emitted field 'Details › agentId'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: dev-abffb210
+- name: details.credentialType
+  type: string
+  description: Vendor-emitted field 'Details › credentialType'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_credentialtype
+- name: details.description
+  type: string_long
+  description: Free-form human-readable description from Thales. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Event recorded by Thales.
+- name: details.message
+  type: string_long
+  description: Human-readable event message. Free-form text; may span multiple lines
+    or contain large payloads.
+  example: Operation completed successfully.
+- name: details.operationObjectName
+  type: string
+  description: Vendor-emitted field 'Details › operationObjectName'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_operationobjectn
+- name: details.operationObjectType
+  type: string
+  description: Vendor-emitted field 'Details › operationObjectType'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_operationobjectt
+- name: details.operationType
+  type: string
+  description: Vendor-emitted field 'Details › operationType'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_operationtype
+- name: details.reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: details.resultText
+  type: string
+  description: Vendor-emitted field 'Details › resultText'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_resulttext
+- name: details.state
+  type: string
+  description: Vendor-emitted field 'Details › state'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: CA
+- name: details.type
+  is_gate: true
+  type: string_short
+  description: Type/category classifier emitted by Thales. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 'AUTHENTICATION'
+- name: details.usedName
+  type: user
+  description: Vendor-emitted field 'Details › usedName'. Leaf of the 'details' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending
+    on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: Denied
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: outcome_result
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+use_cases:
+- MFA
+how_to_use: |
+  ## safenet trusted access → Cortex XSIAM (dataset `safenet_trusted_access_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `safenet_trusted_access_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `safenet`
+    - **product**: `trusted_access`
+
+    These normalize → `safenet_trusted_access_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.type`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `json_extract_scalar(details, "$.type") in ("AUDIT")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~36 fields mapped to the unified data model (`xdm.*`), including: `XDM.Audit.TriggeredBy.identity.name`, `XDM.Audit.TriggeredBy.ipv4`, `XDM.Audit.audited_resource.name`, `XDM.Audit.audited_resource.type`, `XDM.Audit.event_timestamp`, `XDM.Audit.operation_type`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = safenet_trusted_access_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

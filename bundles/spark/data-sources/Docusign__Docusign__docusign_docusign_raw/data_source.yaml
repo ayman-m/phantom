@@ -1,0 +1,237 @@
+schema_version: 1
+id: Docusign
+pack_name: Docusign
+rule_name: Docusign
+dataset_name: docusign_docusign_raw
+vendor: DocuSign
+product: Docusign
+description: The Docusign pack for Cortex XSIAM allows you to collect and analyze
+  security and audit events from your Docusign account. This provides visibility into
+  user logins, document actions, and administrative changes to help you detect threats
+  and ensure compliance.
+categories:
+- Analytics & SIEM
+version: 1.0.7
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+RG9jdVNpZ248L3RpdGxlPjxwYXRoIGQ9Ik05LjUxNyAzLjMxaDQuOTY2djYuNjIxaDMuMzFMMTIgMTYuNTUyIDYuMjA3IDkuOTMxaDMuMzFWMy4zMXpNMCAxOS4wMzRoMjR2MS42NTVIMHYtMS42NTV6Ii8+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: action
+  type: string
+  description: Action taken by the vendor's enforcement engine. Free-form text; may
+    contain whitespace and punctuation.
+  example: allow
+- name: browser
+  type: string
+  description: Vendor-emitted field 'Browser'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_browser
+- name: city
+  type: string
+  description: Vendor-emitted field 'City'. Free-form text; may contain whitespace
+    and punctuation.
+  example: San Francisco
+- name: country
+  type: country_code
+  description: Country (ISO 3166-1 alpha-2 code or descriptive label). ISO 3166-1
+    alpha-2 uppercase country code (e.g., US, DE, JP).
+  example: US
+- name: data
+  type: string
+  description: Vendor-emitted field 'Data'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_data
+- name: email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: eventId
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Free-form
+    text; may contain whitespace and punctuation.
+  example: evt-b921d8af
+- name: firstName
+  type: string
+  description: Vendor-emitted field 'FirstName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: John
+- name: groupList
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: ipAddress
+  type: ipv4
+  description: IPv4/IPv6 address — vendor-emitted, no version split. Free-form text;
+    may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: isAdmin
+  type: string
+  description: Vendor-emitted field 'IsAdmin'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_isadmin
+- name: isNAREnabled
+  type: string
+  description: Whether non-admin reporting is enabled. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_isnarenabled
+- name: lastName
+  type: string
+  description: Vendor-emitted field 'LastName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Doe
+- name: latitude
+  type: float
+  description: Vendor-emitted field 'Latitude'. Decimal number with optional fractional
+    part; bare digits with optional minus and decimal point.
+  example: '3.14'
+- name: longitude
+  type: float
+  description: Vendor-emitted field 'Longitude'. Decimal number with optional fractional
+    part; bare digits with optional minus and decimal point.
+  example: '3.14'
+- name: object
+  type: string
+  description: Vendor-emitted field 'Object'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_object
+- name: os
+  type: string
+  description: Vendor-emitted field 'Os'. Free-form text; may contain whitespace and
+    punctuation.
+  example: Linux
+- name: result
+  type: string_short
+  description: Result string emitted by DocuSign. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: site
+  type: string
+  description: Vendor-emitted field 'Site'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_site
+- name: source
+  type: ipv4
+  description: Vendor-emitted field 'Source'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: source_log_type
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: uri
+  type: string
+  description: URI path component (no scheme/host) — as DocuSign captured it. Free-form
+    text; may contain whitespace and punctuation.
+  example: /api/v1/path?q=1
+- name: userAgent
+  type: string_long
+  description: Client User-Agent header value as received by DocuSign. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: userId
+  type: string
+  description: User account associated with the event. Free-form text; may contain
+    whitespace and punctuation.
+  example: usr-dff8d846
+- name: userName
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName depending on the source; no domain
+    prefix unless the vendor emits one.
+  example: jsmith
+- name: userStatus
+  type: string
+  description: Vendor-emitted field 'UserStatus'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_userstatus
+- name: workAddress
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: city,
+    country (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: groupList[].groupName
+  type: string
+  description: Vendor-emitted field 'GroupList[] › groupName'. Free-form text; may
+    contain whitespace and punctuation.
+  example: admins
+- name: workAddress.city
+  type: ipv4
+  description: Vendor-emitted field 'WorkAddress › city'. Leaf of the 'workAddress'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: workAddress.country
+  type: country_code
+  description: Country (ISO 3166-1 alpha-2 code or descriptive label). ISO 3166-1
+    alpha-2 uppercase country code (e.g., US, DE, JP).
+  example: US
+use_cases:
+- SaaS
+how_to_use: |
+  ## DocuSign Docusign → Cortex XSIAM (dataset `docusign_docusign_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `docusign_docusign_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `DocuSign`
+    - **product**: `Docusign`
+
+    These normalize → `docusign_docusign_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `workAddress -> city`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `check_event_type = "Monitor Events"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~29 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.description`, `xdm.event.id`, `xdm.event.operation`, `xdm.event.outcome`, `xdm.event.type`, `xdm.network.http.browser`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = docusign_docusign_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

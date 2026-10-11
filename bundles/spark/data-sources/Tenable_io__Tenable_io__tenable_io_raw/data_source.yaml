@@ -1,0 +1,136 @@
+schema_version: 1
+id: Tenable_io
+pack_name: Tenable_io
+rule_name: Tenable_io
+dataset_name: tenable_io_raw
+vendor: Tenable
+product: Tenable_io
+description: A comprehensive asset centric solution to accurately track resources
+  while accommodating dynamic assets such as cloud, mobile devices, containers and
+  web applications.
+categories:
+- Vulnerability Management
+version: 2.3.25
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDdENUYiPlRlbmFibGU8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: action
+  type: string
+  description: Action taken by the vendor's enforcement engine. Free-form text; may
+    contain whitespace and punctuation.
+  example: allow
+- name: actor
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: id, name
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: description
+  type: string_long
+  description: Free-form human-readable description from Tenable. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Tenable.
+- name: fields
+  type: string
+  description: Vendor-emitted field 'Fields'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_fields
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Tenable. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: ten-fb698008
+- name: target
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: id, name,
+    type (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: actor.id
+  type: string_short
+  description: Opaque identifier emitted by Tenable. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: ten-aaaaeb5d
+- name: actor.name
+  type: user
+  description: Human-readable name as displayed by Tenable. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: target.id
+  type: string_short
+  description: Opaque identifier emitted by Tenable. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: ten-ae1f87ba
+- name: target.name
+  type: string
+  description: Destination/target user account name. Leaf of the 'target' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: target.type
+  type: string_short
+  description: Type/category classifier emitted by Tenable. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+use_cases:
+- Vuln
+how_to_use: |
+  ## Tenable Tenable io → Cortex XSIAM (dataset `tenable_io_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `tenable_io_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `tenable_io`. The marketplace pack's display name `Tenable` / `Tenable_io` normalizes to `tenable_tenable_io_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `tenable_io` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.id`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~25 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.category`, `xdm.alert.description`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.severity`, `xdm.event.description`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = tenable_io_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

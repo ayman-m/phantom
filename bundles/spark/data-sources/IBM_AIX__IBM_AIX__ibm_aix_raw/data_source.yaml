@@ -1,0 +1,108 @@
+schema_version: 1
+id: IBM_AIX
+pack_name: IBM_AIX
+rule_name: IBM_AIX
+dataset_name: ibm_aix_raw
+vendor: IBM
+product: IBM_AIX
+description: IBM Advanced Interactive eXecution (AIX) is a series of UNIX operating
+  systems that's usually used for corporate servers, NAS and workstations.
+categories:
+- Analytics & SIEM
+version: 1.0.3
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+SUJNPC90aXRsZT48cGF0aCBkPSJNMjMuNTQ0IDE1Ljk5M2MuMDM4IDAgLjA2LS4wMTcuMDYtLjA1M3YtLjAzNmMwLS4wMzUtLjAyMi0uMDUyLS4wNi0uMDUyaC0uMDl2LjE0em0tLjA5LjI2MmgtLjEyMXYtLjQ5OGguMjI1Yy4xMTIgMCAuMTY5LjA2Ni4xNjkuMTU3IDAgLjA3OS0uMDM2LjEyOS0uMDkuMTVsLjExMS4xOWgtLjEzM2wtLjA5Mi0uMTdoLS4wN3ptLjQzNC0uMjIydi0uMDYyYzAtLjItLjE1Ny0uMzU3LS4zNjMtLjM1N2EuMzU1LjM1NSAwIDAwLS4zNjMuMzU3di4wNjJjMCAuMi4xNTYuMzU4LjM2My4zNThhLjM1NS4zNTUgMCAwMC4zNjMtLjM1OHptLS44MzgtLjAzYzAtLjI4LjIxMi0uNDkyLjQ3NS0uNDkyLjI2NCAwIC40NzUuMjEzLjQ3NS40OTEgMCAuMjc5LS4yMTEuNDkxLS40NzUuNDkxYS40NzcuNDc3IDAgMDEtLjQ3NS0uNDl6TTE2LjIxIDguMTNsLS4yMTYtLjYyNGgtMy41NnYuNjI0em0uNDEzIDEuMTlsLS4yMTYtLjYyM2gtMy45NzN2LjYyNHptMi42NSA3LjE0N2gzLjEwN3YtLjYyNGgtMy4xMDh6bTAtMS4xOTJoMy4xMDd2LS42MjNoLTMuMTA4em0wLTEuMTloMS44NjR2LS42MjRoLTEuODY1em0wLTEuMTkxaDEuODY0di0uNjI0aC0xLjg2NXptMC0xLjE5MWgxLjg2NHYtLjYyNGgtMy41NTVsLS4xNzUuNTA0LS4xNzUtLjUwNGgtMy41NTV2LjYyNGgxLjg2NXYtLjU3NGwuMi41NzRoMy4zM2wuMi0uNTc0em0xLjg2NC0xLjgxNWgtMy4xNDJsLS4yMTcuNjI0aDMuMzU5em0tNy40NiAzLjAwNmgxLjg2NXYtLjYyNGgtMS44NjV6bTAgMS4xOWgxLjg2NXYtLjYyM2gtMS44NjV6bS0xLjI0MyAxLjE5MWgzLjEwOHYtLjYyM2gtMy4xMDh6bTAgMS4xOTJoMy4xMDh2LS42MjRoLTMuMTA4em02LjM4Ni04Ljk2MWwtLjIxNi42MjRoMy43NzZ2LS42MjR6bS0uNjI5IDEuODE1aDQuMTl2LS42MjRoLTMuOTc0em0tNC41MTQgMS4xOWgzLjM1OWwtLjIxNi0uNjIzaC0zLjE0M3ptMi40ODIgMi4zODNoMi40OTZsLjIxOC0uNjI0aC0yLjkzMnptLjQxNyAxLjE5aDEuNjYybC4yMTgtLjYyM2gtMi4wOTh6bS40MTYgMS4xOTFoLjgzbC4yMTgtLjYyM2gtMS4yNjZ6bS40MTQgMS4xOTJsLjIxNy0uNjI0aC0uNDMyem0tMTIuNDMzLS4wMDZsNC41NzguMDA2Yy42MjIgMCAxLjE4LS4yMzcgMS42MDItLjYyNGgtNi4xOHptNC44Ni0zdi42MjRoMi4wOTJjMC0uMjE2LS4wMy0uNDI1LS4wODMtLjYyNHptLTMuNjE2LjYyNGgxLjg2NXYtLjYyNEg2LjIxN3ptMy42MTctMy41NzNoMi4wMDhjLjA1My0uMTk5LjA4My0uNDA4LjA4My0uNjI0SDkuODM0em0tMy42MTcgMGgxLjg2NXYtLjYyNEg2LjIxN3pNOS41NSA3LjUwN0g0Ljk3M3YuNjI0aDYuMThhMi4zNiAyLjM2IDAgMDAtMS42MDItLjYyNHptMi4wNTYgMS4xOTFINC45NzN2LjYyNGg2Ljg4NGEyLjM4MiAyLjM4MiAwIDAwLS4yNS0uNjI0em0tNS4zOSAyLjM4MnYuNjI0aDQuODdjLjIwNy0uMTc2LjM4Mi0uMzg3LjUxOS0uNjI0em00Ljg3IDEuMTkxaC00Ljg3di42MjRoNS4zODlhMi4zOSAyLjM5IDAgMDAtLjUxOS0uNjI0em0tNi4xMTQgMy4wMDZoNi42MzRjLjExLS4xOTMuMTk2LS40MDIuMjUtLjYyNEg0Ljk3M3pNMCA4LjEzaDQuMzUydi0uNjI0SDB6bTAgMS4xOTFoNC4zNTJ2LS42MjRIMHptMS4yNDMgMS4xOTFoMS44NjV2LS42MjRIMS4yNDN6bTAgMS4xOTFoMS44NjV2LS42MjRIMS4yNDN6bTAgMS4xOWgxLjg2NXYtLjYyM0gxLjI0M3ptMCAxLjE5MmgxLjg2NXYtLjYyNEgxLjI0M3pNMCAxNS4yNzZoNC4zNTJ2LS42MjNIMHptMCAxLjE5Mmg0LjM1MnYtLjYyNEgwWiIvPjwvc3ZnPg==
+  source: simpleicons:ibm
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'ibm: ibm_aix=IBM_AIX action=allow user=jdoe'
+- name: error
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_error
+- name: src_ip_v4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ip_v6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+use_cases:
+- Database
+- OS
+how_to_use: |
+  ## IBM IBM AIX → Cortex XSIAM (dataset `ibm_aix_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire, and a Broker syslog collector row must
+  supply them. The local parsing-rule snapshot has no INGEST block for this
+  pack, so the literal is UNCONFIRMED -- do not assume the display
+  `vendor`/`product` fields are it (for the 75 sources where the literal IS
+  known, all 75 differ from the display values). Confirm empirically that
+  events land in `ibm_aix_raw` and that `unknown_unknown_raw` did not grow.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `ibm_aix_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `ibm_aix`. The marketplace pack's display name `IBM` / `IBM_AIX` normalizes to `ibm_ibm_aix_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `ibm_aix` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log ~= "\d{2}:\d{2}:\d{2}\s+Message\s+forwarded\s+from\s+\S+\:\s+syslog:"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~20 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.privilege_level`, `xdm.event.description`, `xdm.event.log_level`, `xdm.event.operation`, `xdm.session_context_id`, `xdm.source.agent.identifier`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `IBM`, Product = `IBM_AIX`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = ibm_aix_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

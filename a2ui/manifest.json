@@ -1,0 +1,80 @@
+{
+  "agent": {
+    "id": "phantom-soc-simulation-agent",
+    "name": "Phantom Agent",
+    "version": "0.1.0",
+    "description": "Continuous SOC simulation agent UI described as A2UI surfaces."
+  },
+  "ui": {
+    "protocol": "a2ui",
+    "version": "v0.9",
+    "mode": "portable-contract",
+    "catalogs": [
+      {
+        "id": "phantom-ui.v0.1",
+        "path": "./catalogs/phantom-ui.v0.1.json"
+      }
+    ],
+    "surfaces": [
+      {
+        "id": "setup",
+        "title": "First-run Setup",
+        "path": "./surfaces/setup.jsonl",
+        "root": "setup-shell"
+      },
+      {
+        "id": "chat",
+        "title": "Conversation",
+        "path": "./surfaces/chat.jsonl",
+        "root": "phantom-shell"
+      },
+      {
+        "id": "skills",
+        "title": "Skills",
+        "path": "./surfaces/skills.jsonl",
+        "root": "phantom-shell"
+      },
+      {
+        "id": "workflows",
+        "title": "Guided Workflows",
+        "path": "./surfaces/workflows.jsonl",
+        "root": "phantom-shell"
+      },
+      {
+        "id": "telemetry",
+        "title": "Live Telemetry",
+        "path": "./surfaces/telemetry.jsonl",
+        "root": "phantom-shell"
+      },
+      {
+        "id": "bundle",
+        "title": "Agent Bundle",
+        "path": "./surfaces/bundle.jsonl",
+        "root": "phantom-shell"
+      },
+      {
+        "id": "reports",
+        "title": "Reports",
+        "path": "./surfaces/reports.jsonl",
+        "root": "phantom-shell"
+      }
+    ],
+    "dataModel": "./schemas/phantom-data-model.schema.json",
+    "events": {
+      "schema": "./schemas/phantom-events.schema.json",
+      "endpoint": "/api/a2ui/events"
+    },
+    "runtimeEndpoints": {
+      "manifest": "/api/a2ui/manifest",
+      "catalog": "/api/a2ui/catalogs/phantom-ui.v0.1",
+      "surface": "/api/a2ui/surfaces/{surfaceId}",
+      "schema": "/api/a2ui/schemas/{schemaId}",
+      "events": "/api/a2ui/events"
+    }
+  },
+  "standalone": {
+    "service": "phantom-agent",
+    "url": "http://localhost:3000",
+    "renderer": "Next.js trusted Phantom renderer"
+  }
+}

@@ -1,0 +1,853 @@
+schema_version: 1
+id: Kiteworks
+pack_name: Kiteworks
+rule_name: Kiteworks
+dataset_name: kiteworks_kiteworks_raw
+vendor: Kiteworks
+product: Kiteworks
+description: The Kiteworks platform unifies, tracks, controls, and secures sensitive
+  content communications.
+categories:
+- Analytics & SIEM
+version: 1.0.6
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MjQuNDcgMTIwIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6IzQyNWNjNzt9PC9zdHlsZT48L2RlZnM+PGcgaWQ9IkxheWVyXzIiIGRhdGEtbmFtZT0iTGF5ZXIgMiI+PGcgaWQ9IkxheWVyXzEtMiIgZGF0YS1uYW1lPSJMYXllciAxIj48cG9seWdvbiBwb2ludHM9Ijk3IDIuMTkgNjcuMTIgMi4xOSAyNS4zNSA1Ny41NyAyNS4zNSAyLjE5IDAgMi4xOSAwIDExNy45NyAyNS4zNSAxMTcuOTcgMjUuMzUgOTUuNzUgNDIuNTYgNzMuMjIgNjguMDYgMTE3Ljk3IDk3LjMxIDExNy45NyA1OS4xNCA1MS42MyA5NyAyLjE5Ii8+PHJlY3QgeD0iMTA3IiB5PSIzOS43NCIgd2lkdGg9IjI0LjA5IiBoZWlnaHQ9Ijc4LjIzIi8+PHBhdGggZD0iTTEwNS4xMywxMy43N2ExMy42OSwxMy42OSwwLDEsMCwyNy4zOCwwLDEzLjY5LDEzLjY5LDAsMCwwLTI3LjM4LDBaIi8+PHBvbHlnb24gcG9pbnRzPSIxOTQuNzcgNTkuNzcgMTk0Ljc3IDM5Ljc0IDE3OS45MSAzOS43NCAxNzkuOTEgMTUuNDkgMTU1LjgxIDE1LjQ5IDE1NS44MSAzOS43NCAxNDAuOTUgMzkuNzQgMTQwLjk1IDU5Ljc3IDE1NS44MSA1OS43NyAxNTUuODEgMTE3Ljk3IDE3OS45MSAxMTcuOTcgMTc5LjkxIDU5Ljc3IDE5NC43NyA1OS43NyIvPjxwYXRoIGQ9Ik0yNzkuODcsOTEuNTNIMjU3LjgxYy0xLjcyLDUuNjMtOC4xMyw4LjkxLTE3LjIxLDguOTEtMTAuNjMsMC0xNi40Mi00Ljg1LTE3LjgzLTE1LjE3TDI3OS41Niw4NXYtNi4xYzAtMjUuNS0xNS4zMy00MS42Mi0zOS44OS00MS42Mi0yMy42MywwLTQwLjA2LDE3LjA2LTQwLjA2LDQxLjQ3LDAsMjQuMDksMTYuOSw0MS4zLDQwLjUzLDQxLjNDMjYxLjU3LDEyMCwyNzcuMDYsMTA4Ljg5LDI3OS44Nyw5MS41M1pNMjIzLjA4LDcwLjRjMS44OC05LjM4LDcuMi0xMy42MSwxNi43NC0xMy42MSw5LjcsMCwxNS44LDUuMzIsMTUuOCwxMy42MVoiLz48cGF0aCBkPSJNMzU4LjU2LDExOGgyMi4zOGwyNy4zOC03OC4yM0gzODIuODFsLTcuNTEsMjUuNWMtLjc4LDIuODItNC41MywxNi41OS01LjQ3LDIyLjIyLS43OC01LTQuNTQtMTkuNTYtNS4zMi0yMi4yMmwtNy4zNS0yNS41SDMzMi40NGwtOCwyNS41Yy0zLjQ0LDExLTQuMjMsMTMuOTMtNS42NCwyMi4yMkEyMDIuNzksMjAyLjc5LDAsMCwwLDMxNCw2NS4yNGwtNy4xOS0yNS41SDI4MS40M0wzMDYuNjIsMTE4aDIzLjQ3bDcuNTEtMjQuNDFjNS0xNi40Myw2LjQxLTIyLjUzLDctMjUuODEuNDcsMy4yOCwyLjUsMTIuNTEsNi40MSwyNS4zNFoiLz48cGF0aCBkPSJNNTYyLjg3LDM5Ljc0YTQwLjE4LDQwLjE4LDAsMCwwLTkuMjMtMS4xYy0xMC40OSwwLTE3LjM3LDUuMTctMjAuNjUsMTIuODNsLTEuMjYtMTEuNThINTA5LjA1VjExOGgyNC4wOVY4NGMwLTE1LjQ4LDguMjktMjEuNTgsMjIuMDYtMjEuNThoNy42N1oiLz48cG9seWdvbiBwb2ludHM9IjU5OC4yMiAxMTcuOTcgNTk4LjIyIDk4LjQxIDYwNy40NSA4OC43MSA2MjQuOTcgMTE3Ljk3IDY1Mi44MiAxMTcuOTcgNjI0LjM1IDcwLjcyIDY1My43NiAzOS43NCA2MjMuNTcgMzkuNzQgNTk4LjIyIDY3LjkgNTk4LjIyIDAgNTc0LjEyIDAgNTc0LjEyIDExNy45NyA1OTguMjIgMTE3Ljk3Ii8+PHBhdGggZD0iTTY1OC45MSw2Mi44OWMwLDEzLjc3LDcuMDUsMjAsMjEuNDQsMjMuMTZsMTQuMzksMy4xM2M1Ljc5LDEuMjUsNywzLjc1LDcsNi4xLDAsNC4wNy0zLjQ0LDYuNzMtMTAuOTUsNi43My03LjM1LDAtMTEuNDItMy4yOS0xMS43My04Ljc2SDY1Ni4yNmMwLDE1LjgsMTMsMjYuNzUsMzMuNjMsMjYuNzUsMjAuMzQsMCwzNC41OC0xMC4xNywzNC41OC0yNi45MSwwLTEyLjUyLTctMTguNDYtMTkuODctMjEuMjhsLTE0LjU1LTMuMTNjLTUuNDgtMS4yNS04LjQ1LTMuMjgtOC40NS02Ljg4LDAtNC4yMywzLjQ0LTcsOC45Mi03LDUuNzksMCw5LjA3LDMuNiw5LjA3LDguOTJoMjIuODVjMC0xNS44MS0xMi42OC0yNi40NS0zMC44My0yNi40NUM2NzIuODQsMzcuMjMsNjU4LjkxLDQ2LjYyLDY1OC45MSw2Mi44OVoiLz48cGF0aCBkPSJNNDcxLjgyLDc4LjU0YzAsMTEuODktNy42NiwxOS43MS0xOC43NywxOS43MS0xMS4yNywwLTE4LjkzLTcuODItMTguOTMtMTkuNzEsMC0xMS43Myw3LjY2LTE5LjU2LDE4LjkzLTE5LjU2YTIyLjksMjIuOSwwLDAsMSwyLjkxLjIxVjM3LjQ4Yy0xLDAtMS45My0uMDktMi45MS0uMDktMjUsMC00My4xOCwxNi41OS00My4xOCw0MS4zMXMxOC4xNSw0MS4xNCw0My4xOCw0MS4xNGMyNC44NywwLDQzLTE2LjQzLDQzLTQxLjE0YTQ3LDQ3LDAsMCwwLS43MS04LjE3SDQ3MC40NUEyMi44MSwyMi44MSwwLDAsMSw0NzEuODIsNzguNTRaIi8+PHJlY3QgY2xhc3M9ImNscy0xIiB4PSI0NjUuNjQiIHk9IjMwLjk5IiB3aWR0aD0iMjkuNTgiIGhlaWdodD0iMjkuNTgiLz48L2c+PC9nPjwvc3ZnPg==
+  source: wikipedia:File:Kiteworks_logo.svg
+  license: Wikimedia Commons CC BY-SA 3.0
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: json_payload.agent.id
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.agent.id.
+  example: sample value
+- name: json_payload.agent.name
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.agent.name.
+  example: sample value
+- name: json_payload.app_host
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.app_host.
+  example: sample value
+- name: json_payload.client_device
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.client_device.
+  example: sample value
+- name: json_payload.client_id
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.client_id.
+  example: sample value
+- name: json_payload.client_name
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.client_name.
+  example: sample value
+- name: json_payload.data
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.data.
+  example: sample value
+- name: json_payload.description
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.description.
+  example: sample value
+- name: json_payload.event
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.event.
+  example: sample value
+- name: json_payload.full_log
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.full_log.
+  example: sample value
+- name: json_payload.id
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.id.
+  example: sample value
+- name: json_payload.rule.id
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.rule.id.
+  example: sample value
+- name: json_payload.rule.mitre.id
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.rule.mitre.id.
+  example: sample value
+- name: json_payload.rule.mitre.tactic
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.rule.mitre.tactic.
+  example: sample value
+- name: json_payload.rule.name
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.rule.name.
+  example: sample value
+- name: json_payload.successful
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.successful.
+  example: sample value
+- name: json_payload.syscheck.gname_after
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.syscheck.gname_after.
+  example: sample value
+- name: json_payload.syscheck.path
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.syscheck.path.
+  example: sample value
+- name: json_payload.syscheck.symbolic_path
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.syscheck.symbolic_path.
+  example: sample value
+- name: json_payload.syscheck.uid_after
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.syscheck.uid_after.
+  example: sample value
+- name: json_payload.syscheck.uname_after
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.syscheck.uname_after.
+  example: sample value
+- name: json_payload.tenant_id
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.tenant_id.
+  example: sample value
+- name: json_payload.token
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.token.
+  example: sample value
+- name: json_payload.url_host
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.url_host.
+  example: sample value
+- name: json_payload.user_agent
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.user_agent.
+  example: sample value
+- name: json_payload.user_id
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.user_id.
+  example: sample value
+- name: json_payload.user_ip
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.user_ip.
+  example: sample value
+- name: json_payload.user_name
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.user_name.
+  example: sample value
+- name: json_payload.user_type
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.user_type.
+  example: sample value
+- name: _raw_log
+  type: string
+  description: 'Native kiteworks_kiteworks log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: BRANCH CHOSEN: branch 1 of 3, ''Embedded JSON Format'' (xif lines 5-165), gate `filter _raw_log ~= "^(?:\S+\s+){5}\{"`. It maps ~56 xdm fields vs ~40 for branch 2 (Linux auditd/postfix key=value) and ~11 for branch 3 (''Act'
+  example: 'kiteworks[24601]: {"timestamp":"{{now:%Y-%m-%dT%H:%M:%S.000+0000}}","id":8842301,"tenant_id":1,"event":"mail_send_blocked","description":"Secure mail send blocked: file attachment failed malware scan","full_log":"Secure mail send blocked for jdoe@contoso.com: attachment Q3-Financials.xlsx failed malware scan (EICAR-Test-Signature)","successful":0,"user_id":4021,"user_name":"jdoe@contoso.com","user_type":"internal","user_ip":"10.14.22.87","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36","client_id":3,"client_name":"Kiteworks Web App","client_device":"LAPTOP-JD01","app_host":"kiteworks.contoso.com","url_host":"kiteworks.contoso.com","token":"8f14e45fceea167a5a36dedd4bea2543","agent":{"id":"004","name":"kw-node-01"},"rule":{"id":18152,"name":"Financial Data Egress","mitre":{"id":["TA0010"],"tactic":["Exfiltration"]}},"data":{"type":"mail","name":"Q3 financials for review","srcip":"10.14.22.87","srcuser":"jdoe@contoso.com","dstuser":"asmith@contoso.com","session":"4f2b8c1e9d3a7b60","context":"req-9f2c41a7","sw_version":"8.3.0","host_id":"kw-node-01","node_ip":"172.20.4.11","scanning_type":"antivirus","malicious":1,"prohibited":0,"quarantined":0,"skipped":0,"error_msg":"Upload rejected: malware detected by scanning engine","status_reason":"DLP policy ''Financial Data Egress'' matched","client_id":3,"mime":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","email":"asmith@contoso.com","report_name":"Weekly Activity Report","role_name":"Content Manager","file":{"id":774411,"file_id":"F-774411","name":"Q3-Financials.xlsx","path":"/Users/jdoe/Uploads/Q3-Financials.xlsx","size":184320,"hash":"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08","hash_algo":"sha-256","mime":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","fingerprints":[{"algo":"md5","hash":"5d41402abc4b2a76b9719d911017c592"},{"algo":"sha-256","hash":"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"}]},"folder":{"name":"Q3 Reports","path":"/Users/jdoe/Uploads"},"file_owner":{"id":4021,"name":"jdoe@contoso.com"},"user":{"id":5533,"guid":"b2f4c7e1-90ad-4c33-8e21-0d5a9c7b6e14","name":"asmith@contoso.com"},"users":[{"name":"asmith@contoso.com"},{"name":"bnguyen@contoso.com"}],"mail":{"id":"<CA+9f2c41a7@kiteworks.contoso.com>","sender":"jdoe@contoso.com","subject":"Q3 financials for review"},"recipients":[{"name":"asmith@contoso.com"},{"name":"bnguyen@contoso.com"}],"attachments":[{"name":"Q3-Financials.xlsx","mime":"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet","hash_algo":"sha-256","hash":"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08","size":184320,"fingerprints":[{"algo":"md5","hash":"5d41402abc4b2a76b9719d911017c592"},{"algo":"sha-256","hash":"9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"}]}]}}'
+- name: Collection
+  type: string
+  description: Alert mitre tactics. Free-form text; may contain whitespace and punctuation.
+  example: sample_collection
+- name: None
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: activity
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: sample_activity
+- name: activity_group
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: grp-3aa90ddb
+- name: activity_type
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: agent_id
+  type: string_short
+  description: Source agent identifier. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: agent_name
+  type: string
+  description: Agent name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: app_host
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: attachments_md5_fingerprints
+  type: hash_md5
+  description: Attachments md5 fingerprints. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: attachments_md5_hashes
+  type: email
+  description: Email attachment MD5. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: attachments_sha256_fingerprints
+  type: hash_sha256
+  description: Attachments sha256 fingerprints. 64-character lowercase hex SHA-256
+    digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: attachments_sha256_hashes
+  type: email
+  description: Email attachment SHA256. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: audit_uid
+  type: string
+  description: Source user identifier. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_uid
+- name: auth_service
+  type: string
+  description: Auth service. Free-form text; may contain whitespace and punctuation.
+  example: sshd
+- name: client_device
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: client_id
+  type: string_short
+  description: Source application name. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: client_name
+  type: string
+  description: Client name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: command_name
+  type: string
+  description: Destination process name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: context
+  type: string
+  description: Session context id. Free-form text; may contain whitespace and punctuation.
+  example: sample_context
+- name: data_type
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: description
+  type: string
+  description: Description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Kiteworks.
+- name: effective_group_id
+  type: string_short
+  description: Effective group id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: effective_uid
+  type: string
+  description: Destination user identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uid
+- name: email
+  type: email
+  description: Email. RFC 5322 'local@domain' address; one address only — use an array
+    field for multiple addresses.
+  example: user@example.com
+- name: email_attachments
+  type: email
+  description: Email attachments. RFC 5322 'local@domain' address; one address only
+    — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_attachments_extension
+  type: email
+  description: Email attachment extension. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_attachments_filename
+  type: email
+  description: Email attachment filename. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_attachments_md5
+  type: hash_md5
+  description: Email attachments md5. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: email_attachments_mime_type
+  type: email
+  description: Email attachment file type. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_attachments_sha256
+  type: hash_sha256
+  description: Email attachments sha256. 64-character lowercase hex SHA-256 digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: email_attachments_size
+  type: email
+  description: Email attachment size. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_cipher
+  type: email
+  description: Network TLS cipher. RFC 5322 'local@domain' address; one address only
+    — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_id
+  type: email
+  description: Email message ID. RFC 5322 'local@domain' address; one address only
+    — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_msg_id
+  type: email
+  description: Email message ID. RFC 5322 'local@domain' address; one address only
+    — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_recipient
+  type: email
+  description: Email recipients. RFC 5322 'local@domain' address; one address only
+    — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_recipients
+  type: email
+  description: Email recipients. RFC 5322 'local@domain' address; one address only
+    — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_relay_hostname
+  type: email
+  description: Intermediate host hostname. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: email_relay_ip
+  type: ipv4
+  description: Email relay ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: email_relay_ipv4
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: email_relay_ipv6
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: email_sender
+  type: email
+  description: Email sender. RFC 5322 'local@domain' address; one address only — use
+    an array field for multiple addresses.
+  example: user@example.com
+- name: email_subject
+  type: email
+  description: Email subject. RFC 5322 'local@domain' address; one address only —
+    use an array field for multiple addresses.
+  example: user@example.com
+- name: email_tls_version
+  type: email
+  description: Network TLS protocol version. RFC 5322 'local@domain' address; one
+    address only — use an array field for multiple addresses.
+  example: user@example.com
+- name: error_msg
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: event
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: login
+- name: event_id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: exec_args
+  type: string
+  description: Exec args. Free-form text; may contain whitespace and punctuation.
+  example: --config /etc/app.conf
+- name: executable
+  type: string
+  description: Executable. Free-form text; may contain whitespace and punctuation.
+  example: sample_executable
+- name: file_file_id
+  type: string_short
+  description: File file id. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: file_fingerprints
+  type: string
+  description: File fingerprints. Free-form text; may contain whitespace and punctuation.
+  example: sample_fingerprints
+- name: file_fingerprints_md5
+  type: hash_md5
+  description: File fingerprints md5. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: file_fingerprints_sha256
+  type: hash_sha256
+  description: File fingerprints sha256. 64-character lowercase hex SHA-256 digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: file_hash
+  type: hash_md5
+  description: File hash. Free-form text; may contain whitespace and punctuation.
+  example: d41d8cd98f00b204e9800998ecf8427e
+- name: file_hash_algo
+  type: string
+  description: File hash algo. Free-form text; may contain whitespace and punctuation.
+  example: sample_algo
+- name: file_hash_md5
+  type: hash_md5
+  description: Destination file MD5. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: file_hash_sha256
+  type: hash_sha256
+  description: Destination file SHA256. 64-character lowercase hex SHA-256 digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: file_id
+  type: string_short
+  description: File id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: file_mime_type
+  type: string
+  description: Destination file type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: file_name
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: file_owner_id
+  type: string_short
+  description: Destination resource parent ID. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: file_owner_name
+  type: string
+  description: File owner name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: file_path
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: file_size
+  type: integer_byte_count
+  description: Destination file size. Free-form text; may contain whitespace and punctuation.
+  example: '1024'
+- name: folder_name
+  type: string
+  description: Destination file directory. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: folder_path
+  type: string
+  description: Folder path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: full_log
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: sample_log
+- name: group_id
+  type: string_short
+  description: Source user groups. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: host_id
+  type: host
+  description: Destination host device ID. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: hostname
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: ip_address
+  type: ipv4
+  description: Ip address. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: is_malicious
+  type: string
+  description: Is malicious. Free-form text; may contain whitespace and punctuation.
+  example: sample_malicious
+- name: is_prohibited
+  type: string
+  description: Is prohibited. Free-form text; may contain whitespace and punctuation.
+  example: sample_prohibited
+- name: is_quarantined
+  type: string
+  description: Is quarantined. Free-form text; may contain whitespace and punctuation.
+  example: sample_quarantined
+- name: is_skipped
+  type: string
+  description: Is skipped. Free-form text; may contain whitespace and punctuation.
+  example: sample_skipped
+- name: is_successful
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: json_payload
+  type: string
+  description: Json payload. Free-form text; may contain whitespace and punctuation.
+  example: sample_payload
+- name: mitre_id
+  type: string_short
+  description: Alert mitre techniques. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: mitre_tactic
+  type: string
+  description: Alert mitre tactics. Free-form text; may contain whitespace and punctuation.
+  example: sample_tactic
+- name: name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: node
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: node_ip
+  type: ipv4
+  description: Node ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: node_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: node_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: o_uid
+  type: string
+  description: O uid. Free-form text; may contain whitespace and punctuation.
+  example: sample_uid
+- name: objtype
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_objtype
+- name: operation
+  type: string
+  description: Event operation. Free-form text; may contain whitespace and punctuation.
+  example: create
+- name: pid
+  type: integer
+  description: Destination process PID. Free-form text; may contain whitespace and
+    punctuation.
+  example: '4242'
+- name: ppid
+  type: string
+  description: Destination process parent ID. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_ppid
+- name: process_cmd
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: report_name
+  type: integer_port
+  description: Report name. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: resource_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: result
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: role_name
+  type: string
+  description: Role name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: rule_id
+  type: string_short
+  description: Network rule. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: rule_name
+  type: string
+  description: Rule name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: scanning_type
+  type: string
+  description: Source agent type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: server_ip
+  type: ipv4
+  description: Server ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: session_id
+  type: string_short
+  description: Network session ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: src_ip
+  type: ipv4
+  description: Src ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: status_reason
+  type: string
+  description: Status reason. Free-form text; may contain whitespace and punctuation.
+  example: normal_operation
+- name: success
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: sw_version
+  type: string
+  description: Observer version. Free-form text; may contain whitespace and punctuation.
+  example: 1.0.0
+- name: syscall_number
+  type: integer
+  description: Syscall number. Free-form text; may contain whitespace and punctuation.
+  example: '7'
+- name: syscheck_gname_after
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: sample_after
+- name: syscheck_path
+  type: string
+  description: Syscheck path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: syscheck_symbolic_path
+  type: string
+  description: Syscheck symbolic path. Free-form text; may contain whitespace and
+    punctuation.
+  example: /var/log/app.log
+- name: syscheck_uid_after
+  type: string
+  description: Syscheck uid after. Free-form text; may contain whitespace and punctuation.
+  example: sample_after
+- name: syscheck_uname_after
+  type: string
+  description: Syscheck uname after. Free-form text; may contain whitespace and punctuation.
+  example: sample_after
+- name: syslog_hostname
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: syslog_payload
+  type: string
+  description: Syslog payload. Free-form text; may contain whitespace and punctuation.
+  example: sample_payload
+- name: syslog_priority
+  type: string
+  description: Syslog priority. Free-form text; may contain whitespace and punctuation.
+  example: INFO
+- name: syslog_process_id
+  type: string_short
+  description: Source process PID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: syslog_process_name
+  type: string
+  description: Source process name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: syslog_severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: target_client_id
+  type: string_short
+  description: Destination application name. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: target_client_name
+  type: string
+  description: Target client name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: target_user_guid
+  type: string
+  description: Target user guid. Free-form text; may contain whitespace and punctuation.
+  example: 31f04f36-27bd-5904-b52c-8f42bf1abee8
+- name: target_user_id
+  type: string_short
+  description: Destination user identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: target_user_name
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: target_users_names
+  type: string
+  description: Target users names. Free-form text; may contain whitespace and punctuation.
+  example: sample_names
+- name: tenant_id
+  type: string_short
+  description: Tenant id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: token
+  type: string
+  description: Destination resource value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_token
+- name: url_host
+  type: url
+  description: Url host. Full URL with scheme (http/https/ftp); percent-encoded if
+    it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: user_account
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: user_agent
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: user_id
+  type: string_short
+  description: Source user identifier. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: user_name
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: user_type
+  type: string
+  description: Source user type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: verdict
+  type: string
+  description: Observer action. Free-form text; may contain whitespace and punctuation.
+  example: allow
+- name: working_directory
+  type: string
+  description: Destination process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_directory
+- name: 'yes'
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+use_cases:
+- Storage
+- Collab
+how_to_use: |
+  ## kiteworks kiteworks → Cortex XSIAM (dataset `kiteworks_kiteworks_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `kiteworks` / product `kiteworks`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `kiteworks_kiteworks_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `kiteworks`
+    - **product**: `kiteworks`
+
+    These normalize → `kiteworks_kiteworks_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `json_payload -> data`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `_raw_log !~= "^(?:\S+\s+){5}\{" and _raw_log not contains "Activity Type:"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~73 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.mitre_tactics`, `xdm.alert.mitre_techniques`, `xdm.alert.severity`, `xdm.auth.service`, `xdm.email.attachment.extension`, `xdm.email.attachment.file_type`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `kiteworks`, Product = `kiteworks`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = kiteworks_kiteworks_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

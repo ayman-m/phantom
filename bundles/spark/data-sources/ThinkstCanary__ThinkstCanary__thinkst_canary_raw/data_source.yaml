@@ -1,0 +1,164 @@
+schema_version: 1
+id: ThinkstCanary
+pack_name: ThinkstCanary
+rule_name: ThinkstCanary
+dataset_name: thinkst_canary_raw
+vendor: Thinkst
+product: ThinkstCanary
+description: By presenting itself as an apparently benign and legitimate service(s),
+  the Canary draws the attention of unwanted activity. When someone trips one of the
+  Canary's triggers, an alert is sent to notify the responsible parties so that action
+  can be taken before valuable systems in your network are compromised.
+categories:
+- Deception & Breach Simulation
+version: 1.0.30
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA3MiAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF8yNjk1XzIzODYpIj4KICAgICAgICA8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTEuOTk5NTEgMTUuNzUyNFY3LjA5NjJDMS45OTkyNSA2Ljk1Mjg5IDIuMDI1NTIgNi44MTA5MiAyLjA3NjgzIDYuNjc4NEMyLjEyODE0IDYuNTQ1ODkgMi4yMDM0OCA2LjQyNTQzIDIuMjk4NTYgNi4zMjM4OUMyLjM5MzYzIDYuMjIyMzYgMi41MDY1NyA2LjE0MTc1IDIuNjMwOTMgNi4wODY2NUMyLjc1NTI5IDYuMDMxNTYgMi44ODg2MyA2LjAwMzA3IDMuMDIzMzQgNi4wMDI4MUgxMS4xMzY2QzEwLjg2NTYgNi4zMDEwNyAxMC43MTUxIDYuNzAwMzUgMTAuNzE3MyA3LjExNTE5QzEwLjcxOTYgNy41MzAwMiAxMC44NzQzIDcuOTI3NDQgMTEuMTQ4NSA4LjIyMjM5QzExLjQyMjcgOC41MTczMyAxMS43OTQ1IDguNjg2MzcgMTIuMTg0NCA4LjY5MzMyQzEyLjU3NDMgOC43MDAyNyAxMi45NTEyIDguNTQ0NTcgMTMuMjM0NSA4LjI1OTU2VjE2LjkwN0MxMy4yMzQ4IDE3LjA1MDMgMTMuMjA4NSAxNy4xOTIyIDEzLjE1NzIgMTcuMzI0N0MxMy4xMDU5IDE3LjQ1NzIgMTMuMDMwNSAxNy41Nzc3IDEyLjkzNTQgMTcuNjc5MkMxMi44NDA0IDE3Ljc4MDcgMTIuNzI3NCAxNy44NjEzIDEyLjYwMzEgMTcuOTE2NEMxMi40Nzg3IDE3Ljk3MTUgMTIuMzQ1NCAxOCAxMi4yMTA3IDE4LjAwMDJINy4xNjc3MkM3LjE3MTYyIDE3Ljk5ODEgNy4xNzUzOCAxNy45OTU3IDcuMTc5MTUgMTcuOTkzMUM5LjUwMTY4IDE2LjQ1MjMgOS45Njk1NSAxNC4yNTA4IDkuNjQ5NjEgMTMuMzJDOS4yMzI3MSAxMi4xMDYzIDEwLjA2NjUgMTAuMjM2NiAxMC4wNjY1IDEwLjIzNjZDMTAuMDY2NSAxMC4yMzY2IDExLjQyNDggOS43MjI5NSAxMS4zOTk2IDkuNTExNjNDMTEuMzg4MiA5LjQxNDA1IDEwLjA4OTggOS40NDE4IDEwLjA4OTggOS40NDE4QzYuOTQ4NjQgNy4wNTYgNS43MjAxNCAxMC42ODMgNS40MzAzMiAxMS45ODA2QzQuNjk5NjcgMTIuMDY0NSAyLjc0MDY1IDE1LjA0OTYgMi43NDA2NSAxNS4wNDk2QzIuNDU5NDQgMTUuMjI5MSAyLjIxMTkgMTUuNDYyNCAyLjAxMDU0IDE1LjczNzhMMS45OTk1MSAxNS43NTI0WiIgZmlsbD0iIzM4RDQ3RiIvPgogICAgICAgIDxwYXRoIGQ9Ik0xMi4xOTc4IDguMTg2NUMxMi43NjMzIDguMTg2NSAxMy4yMjE3IDcuNjk3MDQgMTMuMjIxNyA3LjA5MzI1QzEzLjIyMTcgNi40ODk0NiAxMi43NjMzIDYgMTIuMTk3OCA2QzExLjYzMjMgNiAxMS4xNzM4IDYuNDg5NDYgMTEuMTczOCA3LjA5MzI1QzExLjE3MzggNy42OTcwNCAxMS42MzIzIDguMTg2NSAxMi4xOTc4IDguMTg2NVoiIGZpbGw9IiNGRjJGMkYiLz4KICAgICAgICA8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTI1Ljk2MjQgMTAuOTMyMlYxMS45NDhIMjEuMTgxOUMxOS42Mjk4IDExLjk0OCAxOS4yOTI4IDEyLjcwOCAxOS4yOTI4IDE0LjE4QzE5LjI5MjggMTUuNjUyIDE5LjYzODcgMTYuNDAyOCAyMS4xODE5IDE2LjQwMjhIMjUuOTYyNFYxNy40Mjg4SDIxLjE4MTlDMTkuMDc5OSAxNy40Mjg4IDE4LjI5MDUgMTYuMzQ1OSAxOC4yOTA1IDE0LjE4QzE4LjI5MDUgMTIuMDIzNyAxOS4wNzA1IDEwLjkzMTMgMjEuMTgxOSAxMC45MzEzTDI1Ljk2MjQgMTAuOTMyMlpNMzIuNjc2NCAxMi4yMDU1TDM1LjExNTQgMTcuNDMwMUgzNC4wNjg4TDMzLjI0MzkgMTUuNjYzM0gyOC40OTg5TDI3LjY3NDEgMTcuNDMwMUgyNi42Mjc2TDI5LjA2NjYgMTIuMjA1NUMyOS40NTY2IDExLjM2MDEgMjkuOTI3MyAxMC44NDcyIDMwLjg2NyAxMC44NDcyQzMxLjgxNjEgMTAuODQ3MiAzMi4yNzcyIDExLjM2MDEgMzIuNjc2NCAxMi4yMDU1Wk0zMi43OTE2IDE0LjczMjNMMzEuNzE4NCAxMi40MjRDMzEuNTMyMiAxMi4wMjUgMzEuMzAxNSAxMS43NzggMzAuODY3IDExLjc3OEMzMC40NDE0IDExLjc3OCAzMC4yMTA3IDEyLjAyNSAzMC4wMjQ1IDEyLjQyNEwyOC45NDI0IDE0LjczMjNIMzIuNzkxNlpNMzcuMTQ2MyAxMS45OTY1VjE3LjQzMDFIMzYuMTYxOVYxMC45MzIySDM2LjkwNjlDMzguNDUwMSAxMC45MzIyIDM4Ljg3NTkgMTEuNDkyNiA0MC41MDc3IDEzLjg2NzVDNDIuMDUwOSAxNi4xMTg4IDQyLjIyODMgMTYuMzc1MiA0My4wMjY2IDE2LjM3NTJINDMuMDcwOVYxMC45MzIySDQ0LjA1NTRWMTcuNDI5N0g0My4zMTA0QzQxLjg2NDcgMTcuNDI5NyA0MS40MzAyIDE2LjkwNzIgMzkuNzI3MyAxNC41MDM5QzM4LjA4NjYgMTIuMjA1MSAzNy45NjI0IDExLjk5NjEgMzcuMTkwNyAxMS45OTYxTDM3LjE0NjMgMTEuOTk2NVpNNTEuMTUwNiAxMi4yMDU1TDUzLjU4OTggMTcuNDMwMUg1Mi41NDMyTDUxLjcxODMgMTUuNjYyN0g0Ni45NzMzTDQ2LjE0ODUgMTcuNDI5Nkg0NS4xMDE3TDQ3LjU0MSAxMi4yMDU1QzQ3LjkzMSAxMS4zNjAxIDQ4LjQwMTcgMTAuODQ3MiA0OS4zNDE0IDEwLjg0NzJDNTAuMjkwMyAxMC44NDcyIDUwLjc1MTYgMTEuMzYwMSA1MS4xNTA2IDEyLjIwNTVaTTUxLjI2NiAxNC43MzIzTDUwLjE5MjggMTIuNDI0QzUwLjAwNjYgMTIuMDI1IDQ5Ljc3NTkgMTEuNzc4IDQ5LjM0MTQgMTEuNzc4QzQ4LjkxNTcgMTEuNzc4IDQ4LjY4NTIgMTIuMDI1IDQ4LjQ5ODggMTIuNDI0TDQ3LjQxNjggMTQuNzMyM0g1MS4yNjZaTTU0LjYzNjYgMTcuNDI5NlYxMC45MzIySDU5Ljg2OTNDNjEuMzUwNCAxMC45MzIyIDYyLjE2NjUgMTEuNzExMSA2Mi4xNjY1IDEyLjkxNzVDNjIuMTY2NSAxMy44NDg1IDYxLjY3ODcgMTQuNDM3NCA2MC44NjI2IDE0LjY2NTNDNjEuNjUyMSAxNC45MTI0IDYyLjAxNTcgMTUuNDcyOCA2Mi4wMTU3IDE2LjE4NTJWMTcuNDNINjEuMDA0NFYxNi4xNjY1QzYxLjAwNDQgMTUuNjQ0MSA2MC42OTM5IDE1LjE0MDYgNTkuODMzNiAxNS4xNDA2SDU1LjYxMTlWMTcuNDI5OUw1NC42MzY2IDE3LjQyOTZaTTU1LjYxMjEgMTQuMjA5M0g1OS45NDAzQzYwLjg2MjYgMTQuMjA5MyA2MS4xNjQxIDEzLjU2MzMgNjEuMTY0MSAxMy4wMzE0QzYxLjE2NDEgMTIuNDk5NCA2MC44NzE0IDExLjg2MyA1OS45NDAzIDExLjg2M0g1NS42MTE5VjE0LjIwOTVMNTUuNjEyMSAxNC4yMDkzWk02Mi43NjkyIDEwLjkzMjJINjQuMTg4M0w2Ni4yMDIyIDEzLjM4MjhDNjYuNDY2NyAxMy42NzQ0IDY2LjY5NjEgMTMuOTk5OSA2Ni44ODUxIDE0LjM1MThDNjcuMDY4MSAxMy45OTU4IDY3LjI5ODEgMTMuNjY5NSA2Ny41NjggMTMuMzgyOEw2OS41ODA4IDEwLjkzMjJINzAuOTk5OUw2OC4xMTc0IDE0LjIyODRDNjcuODc4IDE0LjUwMzkgNjcuMzcyMyAxNS4wNDUzIDY3LjM3MjMgMTUuNTAxN1YxNy40MzAxSDY2LjM5NjhWMTUuNTAxMkM2Ni4zOTY4IDE1LjA1NDYgNjUuODkxMiAxNC40OTQyIDY1LjY1MTcgMTQuMjI3OEw2Mi43NjkyIDEwLjkzMjJaIiBmaWxsPSIjMUEyMjM4Ii8+CiAgICAgICAgPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0xOS41MDY0IDkuMjIxMTFIMTkuMTQ0OVY3LjAwMDdIMTcuOTg0OVY2LjYyMDRIMjAuNjY1OVY3LjAwMDdIMTkuNTA1OVY5LjIyMTExSDE5LjUwNjRaTTIzLjc5MTYgOS4yMjExMUgyMy40MzAxVjguMTA3MTFIMjEuMzkyMVY5LjIyMTExSDIxLjAyNzNWNi42MjA0SDIxLjM5MjFWNy43MzA2OEgyMy40Mjk2VjYuNjIwNEgyMy43OTExVjkuMjIxMTFIMjMuNzkxNlpNMjQuMzk2OCA2LjYyMDRIMjQuNzU4M1Y5LjIyMTExSDI0LjM5NjhWNi42MjA0Wk0yNS43MjgyIDcuMDQ2MzRWOS4yMjExMUgyNS4zNjM0VjYuNjIwNEgyNS42Mzk0QzI2LjIxMTIgNi42MjA0IDI2LjM2OSA2Ljg0NDc1IDI2Ljk3MzYgNy43OTUzNUMyNy41NDU0IDguNjk2NzQgMjcuNjExMiA4Ljc5OTA0IDI3LjkwNjkgOC43OTkwNEgyNy45MjMzVjYuNjIwNEgyOC4yODhWOS4yMjExMUgyOC4wMTIxQzI3LjQ3NjQgOS4yMjExMSAyNy4zMTUzIDkuMDEyMDggMjYuNjg0NSA4LjA1MDAzQzI2LjA3NjUgNy4xMjk5IDI2LjAzMDUgNy4wNDYzNCAyNS43NDQ2IDcuMDQ2MzRIMjUuNzI4MlpNMzEuNjM2NyA5LjIyMTExSDMxLjE1MzZMMzAuNjQzMSA4LjQ1Njk0QzMwLjU1NDQgOC4zMjgxNyAzMC4zNzQyIDguMDg4MjMgMzAuMTQwNCA4LjA4ODIzSDI5LjI1MjhWOS4yMjEyNUgyOC44OTEzVjYuNjIwNEgyOS4yNTI4VjcuNzExNjVIMzAuMDk3NEMzMC4zMjc1IDcuNzExNjUgMzAuNTI0NiA3LjQ4MzU5IDMwLjYxIDcuMzUzOTZMMzEuMDkzMSA2LjYyMDEySDMxLjU3NjJMMzAuOTE5IDcuNTMyNjZDMzAuODE1OCA3LjY4NzMgMzAuNjc2NCA3LjgxMDYgMzAuNTE0NyA3Ljg5MDM1QzMwLjY5NjMgNy45NjQ0NyAzMC44NTIyIDguMDk1ODEgMzAuOTYxNyA4LjI2Njc5TDMxLjYzNTMgOS4yMjExMUgzMS42MzY3Wk0zMS44NDM3IDguODQ0NjhIMzMuODI4NUMzNC4xNTA2IDguODQ0NjggMzQuMjgyIDguNzE5MiAzNC4yODIgOC41MTAxNkMzNC4yODIgOC4yODk2OCAzNC4xMjc2IDguMTcxNjQgMzMuNzU2MyA4LjEzNzQ1TDMyLjY1NTQgOC4wMzQ4NkMzMi4xNTI2IDcuOTg5MjIgMzEuODcgNy43ODAwNCAzMS44NyA3LjMyMzc3QzMxLjg3IDYuODE0MjcgMzIuMjI4MSA2LjYyMDQgMzIuNjc4NCA2LjYyMDRIMzQuNTAyM1Y2Ljk5NzU1SDMyLjY0NDRDMzIuMzg0OCA2Ljk5NzU1IDMyLjIzNjkgNy4wOTI1NiAzMi4yMzY5IDcuMzEzMThDMzIuMjM2OSA3LjUxNDYzIDMyLjM1NTIgNy42MjEwOCAzMi43NDYzIDcuNjU1MjhMMzMuODA3OCA3Ljc1NDE0QzM0LjMzNjggNy44MDM2NSAzNC42NTUgNy45OTczOCAzNC42NTUgOC40OTU1N0MzNC42NTUgOC45MjkwOSAzNC40MDUzIDkuMjIxODMgMzMuODAzOSA5LjIyMTgzSDMxLjg0MjZWOC44NDQ2OEgzMS44NDM3Wk0zNi4zODE4IDkuMjIxMTFIMzYuMDIwNVY3LjAwMDdIMzQuODU5M1Y2LjYyMDRIMzcuNTQwOFY3LjAwMDdIMzYuMzgwN0wzNi4zODE4IDkuMjIxMTFaIiBmaWxsPSIjMUEyMjM4Ii8+CiAgICA8L2c+CiAgICA8ZGVmcz4KICAgICAgICA8Y2xpcFBhdGggaWQ9ImNsaXAwXzI2OTVfMjM4NiI+CiAgICAgICAgICAgIDxyZWN0IHdpZHRoPSI2OSIgaGVpZ2h0PSIxMiIgZmlsbD0iIzFBMjIzOCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMiA2KSIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICA8L2RlZnM+Cjwvc3ZnPgo=
+  source: 'wikipedia:Thinkst_logo (white text recolored to #1A2238)'
+  license: Wikimedia Commons / vendor trademark; recoloration is a derivative for
+    in-product display
+  fidelity: branded-recolored
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'thinkst: thinkstcanary=ThinkstCanary action=allow user=jdoe'
+- name: CanaryID
+  type: string
+  description: Canaryid. Free-form text; may contain whitespace and punctuation.
+  example: sample_canaryid
+- name: CanaryIP
+  type: ipv4
+  description: Canaryip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: CanaryLocation
+  type: string
+  description: Canarylocation. Free-form text; may contain whitespace and punctuation.
+  example: sample_canarylocation
+- name: CanaryPort
+  type: integer_port
+  description: Canaryport. Unsigned integer 0-65535 representing a TCP/UDP port; bare
+    digits, no quotes.
+  example: '443'
+- name: Description
+  type: string
+  description: Description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Thinkst.
+- name: FakeCreds
+  type: string
+  description: Fakecreds. Free-form text; may contain whitespace and punctuation.
+  example: sample_fakecreds
+- name: Message
+  type: string
+  description: Message. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: ReverseDNS
+  type: string
+  description: Reversedns. Free-form text; may contain whitespace and punctuation.
+  example: sample_reversedns
+- name: SourceIP
+  type: ipv4
+  description: Sourceip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: customer
+  type: string
+  description: Customer. Free-form text; may contain whitespace and punctuation.
+  example: sample_customer
+- name: eventid
+  type: string
+  description: Eventid. Free-form text; may contain whitespace and punctuation.
+  example: evt-bcdb318d
+- name: id
+  type: string_short
+  description: Id. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: severity
+  type: string_short
+  description: Severity. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: summary
+  type: string
+  description: Summary. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Thinkst.
+- name: time
+  type: datetime
+  description: Time. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: timestamp
+  type: datetime
+  description: Timestamp. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+use_cases:
+- Honeypot
+how_to_use: |
+  ## Thinkst ThinkstCanary → Cortex XSIAM (dataset `thinkst_canary_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire, and a Broker syslog collector row must
+  supply them. The local parsing-rule snapshot has no INGEST block for this
+  pack, so the literal is UNCONFIRMED -- do not assume the display
+  `vendor`/`product` fields are it (for the 75 sources where the literal IS
+  known, all 75 differ from the display values). Confirm empirically that
+  events land in `thinkst_canary_raw` and that `unknown_unknown_raw` did not grow.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `thinkst_canary_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `thinkst_canary`. The marketplace pack's display name `Thinkst` / `ThinkstCanary` normalizes to `thinkst_thinkstcanary_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `thinkst_canary` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log contains "incident" or _raw_log contains "alert"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~11 fields mapped to the **Endpoint** data model (`XDM.Endpoint.*`), including: `XDM.Endpoint.Actor.host.device_id`, `XDM.Endpoint.Target.host.ipv4_addresses`, `XDM.Endpoint.event_timestamp`, `XDM.Endpoint.original_event_description`, `XDM.Endpoint.original_event_id`, `XDM.Endpoint.reason`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `Thinkst`, Product = `ThinkstCanary`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `XDM.Endpoint.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = thinkst_canary_raw | sort desc _time | fields XDM.Endpoint.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

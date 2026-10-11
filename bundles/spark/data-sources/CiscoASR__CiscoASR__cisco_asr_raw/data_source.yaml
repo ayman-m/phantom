@@ -1,0 +1,145 @@
+schema_version: 1
+id: CiscoASR
+pack_name: CiscoASR
+rule_name: CiscoASR
+dataset_name: cisco_asr_raw
+vendor: Cisco
+product: CiscoASR
+description: Cisco Aggregation Services Router (ASR) is a service used on cisco routers
+  for combine traffic link for better performance and scalability.
+categories:
+- Analytics & SIEM
+version: 1.0.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+Q2lzY288L3RpdGxlPjxwYXRoIGQ9Ik0xNi4zMzEgMTguMTcxVjE3LjA2bC0uMDIyLjAxYy0uMjUuMTIxLS41MjIuMTktLjgwMS4yMDNhMS4xODYgMS4xODYgMCAwMS0uODA2LS4yMzcgMS4wMzggMS4wMzggMCAwMS0uMzUyLS40OTggMS4yMSAxLjIxIDAgMDEtLjAyMy0uNjY3Yy4wNTItLjIyNS4xNzgtLjQyNi4zNTctLjU2OS4xNi0uMTM0LjM1NS0uMjE4LjU2Mi0uMjQyYTEuODUgMS44NSAwIDAxMS4wNjEuMTk4bC4wMjQuMDEzdi0xLjExN2wtLjA1MS0uMDE0YTIuODYyIDIuODYyIDAgMDAtMS4wMTEtLjEzMiAyLjM0IDIuMzQgMCAwMC0uOTAzLjIwNmMtLjI4Ny4xMzItLjU0LjMyNy0uNzM5LjU3MWEyLjIyMSAyLjIyMSAwIDAwLS4wNCAyLjcwNWMuMjk1LjM3OC43MDkuNjQ1IDEuMTc1Ljc1Ni40OTEuMTIgMS4wMDYuMTAyIDEuNDg3LS4wNTJsLjA4Mi0uMDIzTTUuMzM2IDE4LjE3MVYxNy4wNmwtLjAyMi4wMWMtLjI1LjEyMS0uNTIyLjE5LS44MDEuMjAzYTEuMTgzIDEuMTgzIDAgMDEtLjgwNi0uMjM3IDEuMDMgMS4wMyAwIDAxLS4zNTEtLjQ5OCAxLjIwMiAxLjIwMiAwIDAxLS4wMjQtLjY2N2MuMDUyLS4yMjUuMTc3LS40MjYuMzU3LS41NjkuMTYtLjEzNC4zNTUtLjIxOC41NjItLjI0MmExLjg1IDEuODUgMCAwMTEuMDYxLjE5OGwuMDI0LjAxM3YtMS4xMTdsLS4wNTEtLjAxNGEyLjg2MiAyLjg2MiAwIDAwLTEuMDExLS4xMzIgMi4zNDQgMi4zNDQgMCAwMC0uOTAzLjIwNiAyLjA4IDIuMDggMCAwMC0uNzQuNTcxIDIuMjI0IDIuMjI0IDAgMDAtLjA0MSAyLjcwNSAyLjExIDIuMTEgMCAwMDEuMTc2Ljc1NmMuNDkxLjEyIDEuMDA1LjEwMiAxLjQ4Ny0uMDUybC4wODMtLjAyM005LjI2IDE3LjI0OWwtLjAwNC45NTcuMDcuMDEyYy4yMi4wNDEuNDQxLjA2OS42NjQuMDg1LjE5NS4wMTkuMzkxLjAyMi41ODcuMDEyLjE4Ny0uMDE0LjM3Mi0uMDQ5LjU1MS0uMTA0LjIxLS4wNi40MDUtLjE2My41NzEtLjMwNWExLjE2IDEuMTYgMCAwMC4zMzMtLjQ3OCAxLjMxIDEuMzEgMCAwMC0uMDA3LS45NiAxLjA2OCAxLjA2OCAwIDAwLS4yOTgtLjQxNCAxLjI2MSAxLjI2MSAwIDAwLS40MzgtLjI1NWwtLjcyMi0uMjY4YS4zODguMzg4IDAgMDEtLjE5Ny0uMTg4LjI0NS4yNDUgMCAwMS4wMDgtLjIxOS4zODIuMzgyIDAgMDEuMTU0LS4xNDIuNzk4Ljc5OCAwIDAxLjI1Ny0uMDc0Yy4xNTMtLjAyMi4zMDgtLjAyMS40Ni4wMDUuMTguMDIuMzU4LjA1MS41MzMuMDk2bC4wMzguMDA4di0uODgzbC0uMDY5LS4wMTVhNC43NDkgNC43NDkgMCAwMC0uNTQzLS4wOTcgMi44NDQgMi44NDQgMCAwMC0uNzE0LS4wMDNjLS4zLjAyNy0uNTg1LjE0My0uODIxLjMzLS4xNi4xMjYtLjI4MS4yOTMtLjM1MS40ODQtLjEwNC4yOS0uMTA1LjYwOCAwIC44OTkuMDU0LjE0NS4xNC4yNzQuMjUyLjM4MS4wOTcuMDkzLjIwNy4xNzMuMzI3LjIzNi4xNTcuMDg0LjMyNC4xNDkuNDk3LjE5NS4wNTcuMDE3LjExNC4wMzUuMTcuMDU0bC4wODUuMDMxLjAyNC4wMWMuMDg0LjAzLjE2Mi4wNzguMjI2LjE0LjA0NS4wNDIuMDguMDk0LjEwMS4xNTFhLjMyNS4zMjUgMCAwMS4wMDEuMTYxLjMzOS4zMzkgMCAwMS0uMTY2LjE5OC44NTYuODU2IDAgMDEtLjI3NS4wODYgMi4wMzIgMi4wMzIgMCAwMS0uNDI3LjAyMSA1LjIwOCA1LjIwOCAwIDAxLS41NTctLjA3NCA5LjE5NSA5LjE5NSAwIDAxLS4yODctLjA2N2wtLjAzMy0uMDA2em0tMi40NzUuOTk1aDEuMDV2LTQuMTY3aC0xLjA1djQuMTY3em0xMi4xNjItMi45MzZhMS4wOTUgMS4wOTUgMCAwMTEuNTQxLjE1OCAxLjA5NCAxLjA5NCAwIDAxLS4xNTcgMS41NDFsLS4wMTcuMDE0YTEuMDk2IDEuMDk2IDAgMDEtMS4zNjctMS43MTNtLTEuNTI1Ljg1NGEyLjE5MyAyLjE5MyAwIDAwMi42NjYgMi4xMDcgMi4xMzkgMi4xMzkgMCAwMC43MDEtMy45MzcgMi4yMDcgMi4yMDcgMCAwMC0zLjM2NyAxLjgzTTIyLjk2MSAxMC43MjhhLjUyLjUyIDAgMDAxLjAzOSAwVjkuNTczYS41Mi41MiAwIDAwLTEuMDM5IDB2MS4xNTVNMjAuMTE3IDEwLjcyOGEuNTIyLjUyMiAwIDAwMS4wNDEgMFY4LjEzOWEuNTIxLjUyMSAwIDAwLTEuMDQgMHYyLjU4OU0xNy4yMzEgMTEuNzcxYS41MjEuNTIxIDAgMDAxLjAzOSAwVjYuMTdhLjUyLjUyIDAgMDAtMS4wMzkgMHY1LjYwMU0xNC4zOTMgMTAuNzI4YS41MjEuNTIxIDAgMDAxLjA0IDBWOC4xMzlhLjUyLjUyIDAgMDAtMS4wMzkgMHYyLjU4OU0xMS40OTQgMTAuNzI4YS41MjIuNTIyIDAgMDAxLjAzOSAwVjkuNTczYS41Mi41MiAwIDAwLTEuMDM5IDB2MS4xNTVNOC42MjQgMTAuNzI4YS41Mi41MiAwIDAwMS4wMzkgMFY4LjEzOWEuNTIuNTIgMCAwMC0xLjAzOSAwdjIuNTg5TTUuNzM3IDExLjc3MWEuNTIuNTIgMCAwMDEuMDM5IDBWNi4xN2EuNTIuNTIgMCAwMC0xLjAzOSAwdjUuNjAxTTIuODc2IDEwLjcyOGEuNTIyLjUyMiAwIDAwMS4wNCAwVjguMTM5YS41Mi41MiAwIDAwLTEuMDM5IDB2Mi41ODlNMCAxMC43MjhhLjUyMS41MjEgMCAwMDEuMDM5IDBWOS41NzNhLjUyLjUyIDAgMDAtMS4wMzkgMHYxLjE1NSIvPjwvc3ZnPg==
+  source: simpleicons:cisco
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'cisco: ciscoasr=CiscoASR action=allow user=jdoe'
+- name: c_get_msg
+  type: string
+  description: C get msg. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: c_get_msg_code
+  type: integer
+  description: C get msg code. Free-form text; may contain whitespace and punctuation.
+  example: '200'
+- name: c_get_msg_group
+  type: string
+  description: C get msg group. Free-form text; may contain whitespace and punctuation.
+  example: grp-c12c4c00
+- name: c_get_severity
+  type: string_short
+  description: C get severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: check_msg
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: check_msg_code
+  type: integer
+  description: Destination resource sub type. Free-form text; may contain whitespace
+    and punctuation.
+  example: '200'
+- name: check_msg_group
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: grp-a67914cf
+- name: check_node_id
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: check_severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+use_cases:
+- Network
+- Firewall
+- EDR
+how_to_use: |
+  ## cisco asr → Cortex XSIAM (dataset `cisco_asr_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `cisco` / product `asr`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `cisco_asr_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `cisco`
+    - **product**: `asr`
+
+    These normalize → `cisco_asr_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~7 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.event.description`, `xdm.source.host.hostname`, `xdm.source.process.name`, `xdm.source.process.pid`, `xdm.target.resource.sub_type`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `cisco`, Product = `asr`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = cisco_asr_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,145 @@
+schema_version: 1
+id: Tanium
+pack_name: Tanium
+rule_name: Tanium
+dataset_name: tanium_integrity_monitor_raw
+vendor: Tanium
+product: Tanium
+description: Tanium endpoint security and systems management
+categories:
+- Endpoint
+version: 1.0.42
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA3MiAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMF8yNjI2Xzg4KSI+CiAgICAgICAgPHBhdGggZD0iTTE1LjIxODMgOC42OTcyNEgyMy40MDE3VjEwLjQ4NjJIMjAuMzg2OFYxNS45MjQ4SDE4LjIzMzJWMTAuNDg2MkgxNS4yMTgzVjguNjk3MjRaIiBmaWxsPSIjMUEyMjM4Ii8+CiAgICAgICAgPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0yNi4zNDUxIDguNjk3MjRIMjkuMTQ0N0wzMi45OTcyIDE1LjkyNDhIMzAuNjA0M0wyOS45MzQzIDE0LjYzNjdIMjUuNTc5NEwyNC45NTczIDE1LjkyNDhIMjIuNTY0NUwyNi4zNDUxIDguNjk3MjRaTTI2LjM5MyAxMy4wODYySDI5LjE0NDdMMjcuNzU2OSAxMC4zNjdMMjYuMzkzIDEzLjA4NjJaIiBmaWxsPSIjMUEyMjM4Ii8+CiAgICAgICAgPHBhdGggZD0iTTM2Ljg5NzMgOC42OTcyNEgzMy41NzEzVjE1LjkyNDhIMzUuNzI0OFYxMC42NzcxSDM1Ljc0ODhMMzkuNzkyNiAxNS45MjQ4SDQzLjExODZWOC42OTcyNEg0MC45NjUxVjEzLjk0NDlINDAuOTQxMkwzNi44OTczIDguNjk3MjRaIiBmaWxsPSIjMUEyMjM4Ii8+CiAgICAgICAgPHBhdGggZD0iTTQ0LjUwNjMgOC42OTcyNEg0Ni42NTk5VjE1LjkyNDhINDQuNTA2M1Y4LjY5NzI0WiIgZmlsbD0iIzFBMjIzOCIvPgogICAgICAgIDxwYXRoIGQ9Ik01MC4xNzc1IDguNjk3MjRINDguMDIzOVYxMy4zNDg2QzQ4LjAyMzkgMTUuMTM3NiA0OC45MDkzIDE1Ljk5NjMgNTAuODk1MyAxNS45OTYzSDUzLjk4MjFDNTUuOTQ0MiAxNS45OTYzIDU2Ljg1MzQgMTUuMTM3NiA1Ni44NTM0IDEzLjM0ODZWOC42OTcyNEg1NC42OTk5VjEyLjg3MTVDNTQuNjk5OSAxMy44MDE4IDU0LjM4ODggMTQuMTU5NiA1My41MDM1IDE0LjE1OTZINTEuMzczOUM1MC40ODg1IDE0LjE1OTYgNTAuMTc3NSAxMy44MDE4IDUwLjE3NzUgMTIuODcxNVY4LjY5NzI0WiIgZmlsbD0iIzFBMjIzOCIvPgogICAgICAgIDxwYXRoIGQ9Ik01OC4xMjE2IDguNjk3MjRINjEuNDIzN0w2My44NjQ0IDEzLjM0ODZMNjYuMjgxMSA4LjY5NzI0SDY5LjU4MzJWMTUuOTI0OEg2Ny41MDE0VjEwLjcyNDhINjcuNDc3NUw2NC42NTQgMTUuOTI0OEg2My4wNTA4TDYwLjIyNzMgMTAuNzI0OEg2MC4yMDMzVjE1LjkyNDhINTguMTIxNlY4LjY5NzI0WiIgZmlsbD0iIzFBMjIzOCIvPgogICAgICAgIDxwYXRoIGQ9Ik03MC41ODg0IDE1LjMyODRINzAuNzU1OVYxNS44Mjk0SDcwLjg3NTVWMTUuMzI4NEg3MS4wNjY5VjE1LjIzM0g3MC41ODg0VjE1LjMyODRaIiBmaWxsPSIjMUEyMjM4Ii8+CiAgICAgICAgPHBhdGggZD0iTTcxLjU5MzQgMTUuODI5NEw3MS43NjA5IDE1LjM1MjNWMTUuODI5NEg3MS44ODA1VjE1LjIzM0g3MS42ODkxTDcxLjU0NTUgMTUuNjM4NUw3MS40MDE5IDE1LjIzM0g3MS4yMTA1VjE1LjgyOTRINzEuMzMwMlYxNS4zNTIzTDcxLjQ5NzYgMTUuODI5NEg3MS41OTM0WiIgZmlsbD0iIzFBMjIzOCIvPgogICAgICAgIDxwYXRoIGQ9Ik0xMi44MjU3IDEwLjUzMzlINC4wNDRWMTIuNTM3Nkg3LjM5Mzk1VjE3LjgwOTJDNy4xMDY4MiAxNy44NTY5IDYuODE5NjggMTcuODgwNyA2LjUwODYxIDE3Ljg4MDdDMi45NjcyNCAxNy44ODA3IDAuMDk1ODQ5MiAxNS4wMTgzIDAuMTE5Nzc3IDExLjQ4ODFDMC4xMTk3NzcgNy45ODE2NSAyLjk2NzI0IDUuMTE5MjYgNi41MDg2MSA1LjExOTI2QzkuNzE0OTkgNS4xMTkyNiAxMi4zNzEgNy40NTY4OCAxMi44MjU3IDEwLjUzMzlaIiBmaWxsPSIjRTIzNDMwIi8+CiAgICAgICAgPHBhdGggZD0iTTEyLjgyNTUgMTIuNTM3NkMxMi41MTQ0IDE0LjQyMiAxMS4zNjU5IDE2LjAyMDIgOS43ODY2MiAxNi45NzQzVjEyLjUzNzZIMTIuODI1NVoiIGZpbGw9IiNFMjM0MzAiLz4KICAgIDwvZz4KICAgIDxkZWZzPgogICAgICAgIDxjbGlwUGF0aCBpZD0iY2xpcDBfMjYyNl84OCI+CiAgICAgICAgICAgIDxyZWN0IHdpZHRoPSI3MiIgaGVpZ2h0PSIxMyIgZmlsbD0iIzFBMjIzOCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMCA1KSIvPgogICAgICAgIDwvY2xpcFBhdGg+CiAgICA8L2RlZnM+Cjwvc3ZnPgo=
+  source: wikipedia:Tanium_logo (white→#1A2238 recolored for visibility on near-white panel)
+  license: Wikimedia Commons / vendor trademark; recoloration is a derivative for in-product display
+  fidelity: branded-recolored
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log.Change Type
+  type: string
+  description: Vendor-emitted field ' raw log › Change Type'. Leaf of the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.Computer Name
+  type: host
+  description: Vendor-emitted field ' raw log › Computer Name'. Leaf of the '_raw_log' composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: _raw_log.Event Time
+  type: string
+  description: Vendor-emitted field ' raw log › Event Time'. Leaf of the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.File Path
+  type: file_path
+  description: Vendor-emitted field ' raw log › File Path'. Leaf of the '_raw_log' composite. Absolute filesystem path; vendor-native separator (forward slash on POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: _raw_log.Process Path
+  type: string
+  description: Vendor-emitted field ' raw log › Process Path'. Leaf of the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: Change Type, Computer Name, Detail, Event Time, File Path, Hash, Process Path, User (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: _raw_log.Detail
+  type: string
+  description: Vendor-emitted field ' raw log › Detail'. Leaf of the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.Hash
+  type: string
+  description: Vendor-emitted field ' raw log › Hash'. Leaf of the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.User
+  type: user
+  description: User account associated with the event. Account name as the vendor reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jsmith
+- name: description
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Tanium.
+- name: md5_hash
+  type: hash_md5
+  description: Source process executable MD5. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: sha256_hash
+  type: hash_sha256
+  description: Source process executable SHA256. 64-character lowercase hex SHA-256 digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+use_cases:
+- EDR
+- Endpoint
+how_to_use: |
+  ## tanium integrity monitor → Cortex XSIAM (dataset `tanium_integrity_monitor_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `tanium` / product `integrity_monitor`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `tanium_integrity_monitor_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `tanium`
+    - **product**: `integrity_monitor`
+
+    These normalize → `tanium_integrity_monitor_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.Hash`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~9 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.description`, `xdm.event.type`, `xdm.source.host.hostname`, `xdm.source.process.executable.md5`, `xdm.source.process.executable.path`, `xdm.source.process.executable.sha256`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `tanium`, Product = `integrity_monitor`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = tanium_integrity_monitor_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

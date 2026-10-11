@@ -1,0 +1,249 @@
+schema_version: 1
+id: jamf
+pack_name: jamf
+rule_name: Jamf
+dataset_name: jamf_pro_raw
+vendor: Jamf
+product: jamf
+description: Jamf device management
+categories:
+- IT Services
+version: 2.3.2
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMyMzc2QTUiPkphbWY8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: Event.authorizedUsername
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.authorizedUsername.
+  example: sample value
+- name: Event.computer.deviceName
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.computer.deviceName.
+  example: sample value
+- name: Event.computer.ipAddress
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.computer.ipAddress.
+  example: sample value
+- name: Event.computer.jssID
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.computer.jssID.
+  example: sample value
+- name: Event.computer.macAddress
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.computer.macAddress.
+  example: sample value
+- name: Event.computer.model
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.computer.model.
+  example: sample value
+- name: Event.computer.osVersion
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.computer.osVersion.
+  example: sample value
+- name: Event.computer.serialNumber
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.computer.serialNumber.
+  example: sample value
+- name: Event.computer.udid
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.computer.udid.
+  example: sample value
+- name: Event.deviceName
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.deviceName.
+  example: sample value
+- name: Event.ipAddress
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.ipAddress.
+  example: sample value
+- name: Event.jssID
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.jssID.
+  example: sample value
+- name: Event.macAddress
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.macAddress.
+  example: sample value
+- name: Event.model
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.model.
+  example: sample value
+- name: Event.name
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.name.
+  example: sample value
+- name: Event.operationSuccessful
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.operationSuccessful.
+  example: sample value
+- name: Event.osVersion
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.osVersion.
+  example: sample value
+- name: Event.patchPolicyId
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.patchPolicyId.
+  example: sample value
+- name: Event.patchPolicyName
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.patchPolicyName.
+  example: sample value
+- name: Event.restAPIOperationType
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.restAPIOperationType.
+  example: sample value
+- name: Event.serialNumber
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.serialNumber.
+  example: sample value
+- name: Event.successful
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.successful.
+  example: sample value
+- name: Event.targetDevice.deviceName
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.targetDevice.deviceName.
+  example: sample value
+- name: Event.targetDevice.model
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.targetDevice.model.
+  example: sample value
+- name: Event.targetDevice.osVersion
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.targetDevice.osVersion.
+  example: sample value
+- name: Event.targetDevice.serialNumber
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.targetDevice.serialNumber.
+  example: sample value
+- name: Event.targetDevice.udid
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.targetDevice.udid.
+  example: sample value
+- name: Event.targetDevice.wifiMacAddress
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.targetDevice.wifiMacAddress.
+  example: sample value
+- name: Event.targetUser.username
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.targetUser.username.
+  example: sample value
+- name: Event.trigger
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.trigger.
+  example: sample value
+- name: Event.udid
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.udid.
+  example: sample value
+- name: Event.username
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.username.
+  example: sample value
+- name: Event.wifiMacAddress
+  type: string_short
+  description: Nested leaf of `Event` — the modeling rule reads it at $.wifiMacAddress.
+  example: sample value
+- name: event
+  type: string
+  description: Vendor-emitted field 'Event'. Free-form text; may contain whitespace
+    and punctuation.
+  example: login
+- name: webhook
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: id, name,
+    webhookEvent (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: webhook.id
+  type: string_short
+  description: Opaque identifier emitted by Jamf. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: jam-59dce626
+- name: webhook.name
+  type: string
+  description: Human-readable name as displayed by Jamf. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: webhook.webhookEvent
+  type: string
+  description: Vendor-emitted field 'Webhook › webhookEvent'. Leaf of the 'webhook'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_webhookevent
+- name: Event
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: login
+- name: outcome_result
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+use_cases:
+- Endpoint
+how_to_use: |
+  ## jamf pro → Cortex XSIAM (dataset `jamf_pro_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `jamf_pro_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `jamf`
+    - **product**: `pro`
+
+    These normalize → `jamf_pro_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.deviceName`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~33 fields mapped to the unified data model (`xdm.*`), including: `XDM.Asset.host.device_id`, `XDM.Asset.host.hardware_uuid`, `XDM.Asset.host.mac_addresses`, `XDM.Audit.TriggeredBy.identity.name`, `XDM.Audit.TriggeredBy.identity.type`, `XDM.Audit.TriggeredBy.identity.uuid`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = jamf_pro_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

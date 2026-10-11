@@ -1,0 +1,299 @@
+schema_version: 1
+id: F5APM
+pack_name: F5APM
+rule_name: F5APM
+dataset_name: f5_apm_raw
+vendor: F5
+product: F5APM
+description: F5 BIG-IP Access Policy Manager (APM) is a secure, flexible, high-performance
+  access management proxy solution managing global access to your network, the cloud,
+  applications, and application programming interfaces (APIs).
+categories:
+- Analytics & SIEM
+version: 1.0.5
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+RjU8L3RpdGxlPjxwYXRoIGQ9Ik0xMiAwQzUuMzczIDAgMCA1LjM3MyAwIDEyYTExLjk0MyAxMS45NDMgMCAwMDIuMzM2IDcuMTExM2MuNTA5LjAwNC44NTk0LS4xMTEuODk4NC0uMzMuMDQ2LS4yMjkuMDA2OC0uNTgyNS0uMDMzMi0uOTM5NWE1NS4wNjcgNTUuMDY3IDAgMDEtLjIzNDQtNy40NDczYy0uNjA5LjAyNy0xLjE1NDcuMDU1LTEuNjc3Ny4wODYuMDItLjQ3MS4wNDYtLjkxODguMDg0LTEuMzgyOC41MTctLjA1IDEuMDY0LS4wOTM2IDEuNjY2LS4xNDQ2LjAyNi0uNDA2LjA1NjgtLjc5ODMuMDkxOC0xLjE5NTMuMjctMi40MyAyLjgyOC0zLjkxNjIgNC45NTktNC40OTAyLjk0Ni0uMjMgMS41MjQ1LS4zMDIyIDEuOTc4NS0uMzI2Mi4xNjQtLjAwNS4zNDA1LS4wMTE3LjUxNzUtLjAxMTcuNDQyIDAgLjg4OTkuMDQxNCAxLjE3MzkuMjM0NC40Ni4zNDUuOTEzNS42ODczIDEuMzk2NSAxLjA2ODMuMDQ4LjA2NS4xMDI0LjE2NzgtLjAxNzYuMzQzOC0uMjIyLjI2LS40MzcxLjUwODQtLjY2MjEuNzc1NC0uMTMuMTU3LS4zNDU0LjExNjQtLjUyNzQuMDY2NC0uMzgtLjE5NC0uNzQ2Mi0uMzcyOC0xLjExNzItLjU1MjgtLjY3Mi0uMjk5LTEuMzY2Ni0uNjA2MS0yLjE0MDYtLjU3NjEtLjQ4My4wMzktLjk1MS41MzItMSAxLjIwOWExMDEuNDEgMTAxLjQxIDAgMDAtLjE1MDQgMy4yMjg1YzEuMzQzLS4wMzggMi42ODM3LS4wNjI0IDQuMDk1Ny0uMDY4NGwtLjAwMi45NDUzYy0uNDYuMjA2LS44OTU0LjQxMy0xLjM1NzQuNjIzLS45NTMuMDExLTEuODU5NS4wMjAyLTIuNzcxNS4wMzUyYTEyNS4xMyAxMjUuMTMgMCAwMC4xMTkyIDcuOTMxN2MuMDI0LjM3OC4wNDI0Ljc2MDUuMTUwNCAxLjAxNzUuMTMuMzIyLjg3OTguNTcwMSAyLjUwOTguNjYyMS4wMDcuMjg0LjAxNTMuNTUzMi4wMjUzLjgyODItMi42NTUtLjA3Ny01LjIwNS0uMzMwMi03LjI0OC0uNjk5MkExMS45NjIgMTEuOTYyIDAgMDAxMiAyNGM2LjYyOCAwIDEyLTUuMzczIDEyLTEyYTExLjk0MiAxMS45NDIgMCAwMC0yLjA5NTctNi43NzU0Yy0uMTQ3LjYwNy0uMjI1MiAxLjIzNzgtLjM2NzIgMS44ODI4LTEuOC0uMjM0LTMuOTEzMS0uNDA1My02LjI4NzEtLjQ4ODMtLjE5MS42MDItLjM3MTEgMS4xOTItLjU3ODEgMS44MzYgMy45NzMuMjQ1IDUuOTA0OCAxLjI5MjQgNy4wNTA4IDIuNTI1NCAxLjExMyAxLjI0OCAxLjM1MDEgMi42MjYyIDEuMjg1MSAzLjkwNjItLjE0MyAyLjA4MS0xLjA2MTMgMy4zOTcxLTIuMzIwMyA0LjM3MTEtMS4yNzQuOTYtMi44MTM5IDEuNDM2LTQuMDQ2OSAxLjUzOS0xLjgxOS4xMzctNC4yNTE1LS4yOTYyLTQuNzY5NS0uNjEzMmExNzguMDMgMTc4LjAzIDAgMDEtLjk0OTItMi4yMDEyYy0uMDgtLjE2Ni0uMTI5NC0uMzM3MS4wOTc2LS41MzUxLjM1NC0uMzM5LjY5MjgtLjY2NjcgMS4wNTA4LTEuMDEzNy4xNTgtLjE1NS4zMzM4LS4yOTkxLjQ2NjgtLjA3ODEuNDg5Ljc1NS45NDczIDEuNDQ3NyAxLjQwNjMgMi4xMzY3LjUyMi43NyAxLjMxNjcgMS40Njk1IDMuMDUyNyAxLjM1MzUgMS40NTktLjEzIDIuNTY3NS0xLjIzMzMgMi42ODU1LTIuNDQ3My4xMjgtMi4yNDYtMi4xNDQ2LTMuODM5Ni04LjA1NDYtNC4zNDk2YTI1NzEuMjcgMjU3MS4yNyAwIDAxMy4xMjMtOS4zNzFjMS40MDQuMDY1IDIuNzA0My4xNzk4IDMuOTQ1My4zMzk4LjkxOS4xMTYgMS43NzIuMzI4NyAyLjYyNy40Mjc3QTExLjk3MyAxMS45NzMgMCAwMDEyIDB6bTEwLjAxOTUgMjEuMTExM2MtLjUwMDYgMC0uOTA4Mi40MDc2LS45MDgyLjkwODIgMCAuNTAwNy40MDc2LjkwODIuOTA4Mi45MDgyLjUwMDcgMCAuOTA4Mi0uNDA3NS45MDgyLS45MDgyIDAtLjUwMDYtLjQwNzUtLjkwODItLjkwODItLjkwODJ6bTAgLjEyN2MuNDMxOCAwIC43NzkzLjM0OTUuNzc5My43ODEyYS43Nzc2Ljc3NzYgMCAwMS0uNzc5My43NzkzYy0uNDMxNyAwLS43ODEyLS4zNDc1LS43ODEyLS43NzkzYS43ODA5Ljc4MDkgMCAwMS43ODEyLS43ODEyem0tLjM2NTIuMjc3M3YuOTk2MWguMTczOHYtLjM5MjZoLjEzODdjLjA5MiAwIC4xNTgzLjAxMTIuMTk1My4wMzMyLjA2Mi4wMzcuMDkzOC4xMTQ2LjA5MzguMjI4NnYuMDhsLjAwMi4wMjkzYS4wNy4wNyAwIDAxLjAwMzkuMDExOGMwIC4wMDUtLjAwMDEuMDA2OC4wMDM5LjAwOThoLjE2MmwtLjAwNTgtLjAxMzdhLjEwNi4xMDYgMCAwMS0uMDA3OC0uMDQ4OC42ODQ2LjY4NDYgMCAwMS0uMDA0LS4wNzQzdi0uMDc0MmEuMjc2LjI3NiAwIDAwLS4wNTI3LS4xNTQzYy0uMDM3LS4wNTMtLjA5NDgtLjA4NDYtLjE3MTgtLjA5NzZBLjQwOC40MDggMCAwMDIyLjMyOCAyMmMuMDY2LS4wNDIuMDk3Ny0uMTEwMy4wOTc3LS4xOTczIDAtLjEyNC0uMDUwMy0uMjEtLjE1NDMtLjI1MmEuNzUyLjc1MiAwIDAwLS4yNjk1LS4wMzV6bS4xNzM4LjEyM2guMTUwNGEuNDUuNDUgMCAwMS4yMTEuMDM3MmMuMDQyLjAyNC4wNjY0LjA3MzUuMDY2NC4xNDQ1YS4xNTMuMTUzIDAgMDEtLjEwMzYuMTU2My40NTEuNDUxIDAgMDEtLjE2Ni4wMjE0aC0uMTU4MnoiLz48L3N2Zz4=
+  source: simpleicons:f5
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'f5: f5apm=F5APM action=allow user=jdoe'
+- name: Audit
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_audit
+- name: WIN
+  type: string
+  description: Source host OS family. Free-form text; may contain whitespace and punctuation.
+  example: sample_win
+- name: action_F1
+  type: string
+  description: Observer action. Free-form text; may contain whitespace and punctuation.
+  example: sample_f1
+- name: application_F1
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_f1
+- name: cmd_line_F1
+  type: string
+  description: Source process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_f1
+- name: debug
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_debug
+- name: event_type_F1
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_f1
+- name: event_type_F2
+  type: string
+  description: Event type F2. Free-form text; may contain whitespace and punctuation.
+  example: sample_f2
+- name: event_type_F3
+  type: string
+  description: Event type F3. Free-form text; may contain whitespace and punctuation.
+  example: sample_f3
+- name: host_F1
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: hostname_F1
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: intermediate_ipv4_F3
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: intermediate_ipv6_F3
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: log_level
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: info
+- name: module_F1
+  type: string
+  description: Destination module filename. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_f1
+- name: platform_F1
+  type: string
+  description: Source host OS. Free-form text; may contain whitespace and punctuation.
+  example: sample_f1
+- name: platform_os
+  type: string
+  description: Source host OS family. Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: policy_F1
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_f1
+- name: policy_F2
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_f2
+- name: process_name
+  type: string
+  description: Process name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: protocol
+  type: string
+  description: Network IP protocol. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: protocol_F1
+  type: string
+  description: Protocol F1. Free-form text; may contain whitespace and punctuation.
+  example: sample_f1
+- name: referrer_F1
+  type: string
+  description: Network HTTP referrer. Free-form text; may contain whitespace and punctuation.
+  example: sample_f1
+- name: session_id_F1
+  type: string
+  description: Network session ID. Free-form text; may contain whitespace and punctuation.
+  example: sample_f1
+- name: session_id_F2
+  type: string
+  description: Network session ID. Free-form text; may contain whitespace and punctuation.
+  example: sample_f2
+- name: session_id_F3
+  type: string
+  description: Session id F3. Free-form text; may contain whitespace and punctuation.
+  example: sample_f3
+- name: source_ipv4_F1
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_ipv4_F2
+  type: ipv4
+  description: Source ipv4 F2. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_ipv4_F3
+  type: ipv4
+  description: Source ipv4 F3. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_ipv6_F1
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: source_ipv6_F2
+  type: ipv6
+  description: Source ipv6 F2. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: source_ipv6_F3
+  type: ipv6
+  description: Source ipv6 F3. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: source_port_F1
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: source_port_ipv4_F1
+  type: ipv4
+  description: Source port. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_port_ipv6_F1
+  type: ipv6
+  description: Source port ipv6 F1. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: source_user_F2
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: target_ipv4_F1
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_ipv6_F1
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: target_port_F1
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: user
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: userName_F1
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: user_F1
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+use_cases:
+- WAF
+- LoadBalancer
+how_to_use: |
+  ## f5 apm → Cortex XSIAM (dataset `f5_apm_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `f5` / product `apm`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `f5_apm_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `f5`
+    - **product**: `apm`
+
+    These normalize → `f5_apm_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `process_name contains "tmm"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~26 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.description`, `xdm.event.log_level`, `xdm.event.type`, `xdm.intermediate.ipv4`, `xdm.intermediate.ipv6`, `xdm.network.http.referrer`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `f5`, Product = `apm`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = f5_apm_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

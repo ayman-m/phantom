@@ -1,0 +1,1353 @@
+version: 1
+generated_at: '2026-05-22'
+generated_by: vendor analysis
+description: "Pack \u2192 canonical vendor mapping. Single source of truth for the SVG sourcing pipeline (one SVG per vendor)\
+  \ and R2's vendor-grouped UI. Per-pack logo override via pack_logo_override field per vendor entry."
+vendors:
+  1password:
+    display_name: 1Password
+    primary_color: '#0572EC'
+    packs:
+    - OnePassword
+    sources:
+      light: simpleicons
+      dark: wordmark-fallback
+    fidelity: branded
+  abnormalsecurity:
+    display_name: Abnormal Security
+    primary_color: '#62189F'
+    packs:
+    - AbnormalSecurity
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  absolute:
+    display_name: Absolute Software
+    primary_color: '#0091FF'
+    packs:
+    - Absolute
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  adminbyrequest:
+    display_name: Admin By Request
+    primary_color: '#0073AA'
+    packs:
+    - AdminByRequest
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  akamai:
+    display_name: Akamai
+    primary_color: '#009BD9'
+    packs:
+    - Akamai_SIEM
+    - GuardiCore
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  alibaba:
+    display_name: Alibaba
+    primary_color: '#FF6A00'
+    packs:
+    - AlibabaActionTrail
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  apache:
+    display_name: Apache
+    primary_color: '#D22128'
+    packs:
+    - ApacheTomcat
+    - ApacheWebServer
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  apple:
+    display_name: Apple
+    primary_color: '#555555'
+    packs:
+    - MacOS
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  arista:
+    display_name: Arista Networks
+    primary_color: '#293E6A'
+    packs:
+    - AristaSwitch
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  armis:
+    display_name: Armis
+    primary_color: '#FA4616'
+    packs:
+    - Armis
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  atlassian:
+    display_name: Atlassian
+    primary_color: '#0052CC'
+    packs:
+    - AtlassianConfluenceCloud
+    - Jira
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  avaya:
+    display_name: Avaya
+    primary_color: '#CC0000'
+    packs:
+    - AvayaAuraCommunicationManager
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  aws:
+    display_name: Amazon Web Services
+    primary_color: '#FF9900'
+    packs:
+    - AWS-CloudTrail
+    - AWS-GuardDuty
+    - AWS-SecurityHub
+    - AWS_WAF
+    - AWS_ELB
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  barracuda:
+    display_name: Barracuda
+    primary_color: '#1A4D8F'
+    packs:
+    - Barracuda_Cloudgen_Firewall
+    - BarracudaEmailProtection
+    - BarracudaWAF
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  beyondtrust:
+    display_name: BeyondTrust
+    primary_color: '#16315B'
+    packs:
+    - BeyondTrustPrivilegedRemoteAccess
+    - BeyondTrustRemoteSupport
+    - BeyondTrust_Password_Safe
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  bitbucket:
+    display_name: Bitbucket
+    primary_color: '#2684FF'
+    packs:
+    - Bitbucket
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  bitsight:
+    display_name: Bitsight
+    primary_color: '#01838E'
+    packs:
+    - BitSight
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  bitwarden:
+    display_name: Bitwarden
+    primary_color: '#175DDC'
+    packs:
+    - BitwardenPasswordManager
+    sources:
+      light: simpleicons
+      dark: wordmark-fallback
+    fidelity: branded
+  bloodhoundent:
+    display_name: SpecterOps BloodHound
+    primary_color: '#000000'
+    packs:
+    - BloodHoundEnterprise
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  bluecat:
+    display_name: BlueCat Networks
+    primary_color: '#0073B6'
+    packs:
+    - BluecatAddressManager
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  box:
+    display_name: Box
+    primary_color: '#0061D5'
+    packs:
+    - Box
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  brocade:
+    display_name: Brocade
+    primary_color: '#0A3D62'
+    packs:
+    - BrocadeSwitch
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  carbonblack:
+    display_name: Carbon Black
+    primary_color: '#A31F34'
+    packs:
+    - CarbonBlackDefense
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  celonis:
+    display_name: Celonis
+    primary_color: '#1B57FF'
+    packs:
+    - Celonis
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  checkpoint:
+    display_name: Check Point
+    primary_color: '#E5333F'
+    packs:
+    - CheckpointFirewall
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  cisco:
+    display_name: Cisco
+    primary_color: '#1BA0D7'
+    packs:
+    - AMP
+    - Cisco-umbrella-cloud-security
+    - CiscoASA
+    - CiscoAppDynamics
+    - CiscoCatalyst
+    - CiscoFirepower
+    - CiscoSpark
+    - CiscoStealthwatch
+    - CiscoThousandEyes
+    - CiscoASR
+    - CiscoISR
+    - CiscoNexus
+    - CiscoSMA
+    - Cisco_Wireless_LAN_Controller
+    - IronPort
+    - cisco-ise
+    - cisco-meraki
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  citrix:
+    display_name: Citrix
+    primary_color: '#452A86'
+    packs:
+    - CitrixADC
+    sources:
+      light: simpleicons
+      dark: wordmark-fallback
+    fidelity: branded
+  claroty:
+    display_name: Claroty
+    primary_color: '#FA4D04'
+    packs:
+    - Claroty
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  clearswift:
+    display_name: Clearswift
+    primary_color: '#005DAA'
+    packs:
+    - ClearswiftDLP
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  cloudflare:
+    display_name: Cloudflare
+    primary_color: '#F38020'
+    packs:
+    - CloudflareWAF
+    - CloudflareZeroTrust
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  code42:
+    display_name: Code42
+    primary_color: '#1A1A1A'
+    packs:
+    - Code42
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  cohesity:
+    display_name: Cohesity
+    primary_color: '#0C4A8C'
+    packs:
+    - CohesityHelios
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  corelight:
+    display_name: Corelight
+    primary_color: '#FFC72C'
+    packs:
+    - CorelightZeek
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  cybelangel:
+    display_name: CybelAngel
+    primary_color: '#FF7F00'
+    packs:
+    - CybelAngel
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  cyberark:
+    display_name: CyberArk
+    primary_color: '#1F1F1F'
+    packs:
+    - CyberArkEPM
+    - CyberArkEPV
+    - CyberArkIdentity
+    - CyberArkPAS
+    - CyberArk_Privileged_Threat_Analytics
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  darktrace:
+    display_name: Darktrace
+    primary_color: '#2F2F2F'
+    packs:
+    - Darktrace
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  decyfir:
+    display_name: CYFIRMA DeCYFIR
+    primary_color: '#FF5722'
+    packs:
+    - DeCYFIR
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  delinea:
+    display_name: Delinea
+    primary_color: '#FA1F3D'
+    packs:
+    - DelineaALM
+    - DelineaSS
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  dellemc:
+    display_name: Dell EMC
+    primary_color: '#007DB8'
+    packs:
+    - DellEMCUnity
+    sources:
+      light: simpleicons
+      dark: wordmark-fallback
+    fidelity: branded
+  digitalguardian:
+    display_name: Digital Guardian
+    primary_color: '#9E1B32'
+    packs:
+    - DigitalGuardian
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  docusign:
+    display_name: DocuSign
+    primary_color: '#FFCC22'
+    packs:
+    - Docusign
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  dragos:
+    display_name: Dragos
+    primary_color: '#152233'
+    packs:
+    - Dragos_Platform
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  dropbox:
+    display_name: Dropbox
+    primary_color: '#0061FF'
+    packs:
+    - Dropbox
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  druva:
+    display_name: Druva
+    primary_color: '#03ADBF'
+    packs:
+    - Druva
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  duo:
+    display_name: Duo Security
+    primary_color: '#52BD89'
+    packs:
+    - DuoAdminApi
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  exabeam:
+    display_name: Exabeam
+    primary_color: '#00BCEB'
+    packs:
+    - Exabeam
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  extrahop:
+    display_name: ExtraHop
+    primary_color: '#00C2FF'
+    packs:
+    - ExtraHop
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  f5:
+    display_name: F5
+    primary_color: '#E4002B'
+    packs:
+    - F5ASM
+    - F5APM
+    - F5BigIPAWAF
+    - F5LTM
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  fireeye:
+    display_name: FireEye
+    primary_color: '#E11A2B'
+    packs:
+    - FireEyeHX
+    - FireEyeNX
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  forcepoint:
+    display_name: Forcepoint
+    primary_color: '#0073B0'
+    packs:
+    - Forcepoint
+    - ForcepointDLP
+    - ForcepointEmailSecurity
+    - ForcepointSWG
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  forescout:
+    display_name: Forescout
+    primary_color: '#7B16D9'
+    packs:
+    - ForeScoutCounterACT
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  fortinet:
+    display_name: Fortinet
+    primary_color: '#EE3124'
+    packs:
+    - FortiGate
+    - Fortimail
+    - FortinetFortiwebVM
+    - FortiManager
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  genesys:
+    display_name: Genesys
+    primary_color: '#FF4F1F'
+    packs:
+    - GenesysCloud
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  genetec:
+    display_name: Genetec
+    primary_color: '#1A237E'
+    packs:
+    - GenetecSecurityCenter
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  gitguardian:
+    display_name: GitGuardian
+    primary_color: '#000000'
+    packs:
+    - GitGuardian
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  github:
+    display_name: GitHub
+    primary_color: '#181717'
+    packs:
+    - GitHub
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  gitlab:
+    display_name: GitLab
+    primary_color: '#FC6D26'
+    packs:
+    - GitLab
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  google:
+    display_name: Google
+    primary_color: '#4285F4'
+    packs:
+    - GoogleApigee
+    - GoogleChrome
+    - GoogleCloudLogging
+    - GoogleCloudSCC
+    - GoogleDrive
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  hashicorp:
+    display_name: HashiCorp
+    primary_color: '#000000'
+    packs:
+    - CommvaultBackupSolutions
+    - HashiCorp-Vault
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  helloworld:
+    display_name: Hello World (Demo)
+    primary_color: '#5F6368'
+    packs:
+    - HelloWorld
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  hpe:
+    display_name: HPE
+    primary_color: '#01A982'
+    packs:
+    - HPEArubaCentral
+    - HPEArubaClearPass
+    - HPESwitch
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  huawei:
+    display_name: Huawei
+    primary_color: '#CF0A2C'
+    packs:
+    - HuaweiFW
+    - HuaweiNetworkDevices
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  ibm:
+    display_name: IBM
+    primary_color: '#054ADA'
+    packs:
+    - IBMDirectoryServer
+    - IBMGuardium
+    - IBMMaaS360Security
+    - IBMSecurityVerify
+    - IBMStorageScale
+    - IBM_AIX
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  illusive:
+    display_name: Illusive Networks
+    primary_color: '#7D24E3'
+    packs:
+    - IllusiveNetworks
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  imperva:
+    display_name: Imperva
+    primary_color: '#F70000'
+    packs:
+    - Imperva_WAF
+    - Incapsula
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  infoblox:
+    display_name: Infoblox
+    primary_color: '#003C71'
+    packs:
+    - Infoblox
+    - InfobloxBloxOne
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  ironscales:
+    display_name: Ironscales
+    primary_color: '#E0263F'
+    packs:
+    - IronscalesEventCollector
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  ivanti:
+    display_name: Ivanti
+    primary_color: '#6F2C91'
+    packs:
+    - IvantiConnectSecure
+    - IvantiPulseSecureVTM
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  jamf:
+    display_name: Jamf
+    primary_color: '#37B6FF'
+    packs:
+    - JamfProtect
+    - jamf
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  juniper:
+    display_name: Juniper Networks
+    primary_color: '#84B135'
+    packs:
+    - JuniperSRX
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  keepersecurity:
+    display_name: Keeper Security
+    primary_color: '#FFD800'
+    packs:
+    - KeeperSecurity
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  kiteworks:
+    display_name: Kiteworks
+    primary_color: '#F36E21'
+    packs:
+    - Kiteworks
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  knowbe4:
+    display_name: KnowBe4
+    primary_color: '#F26432'
+    packs:
+    - KnowBe4_KMSAT
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  kubernetes:
+    display_name: Kubernetes
+    primary_color: '#326CE5'
+    packs:
+    - Kubernetes
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  lenel:
+    display_name: LenelS2
+    primary_color: '#0066CC'
+    packs:
+    - LenelS2NetBox
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  linuxeventscollection:
+    display_name: Linux
+    primary_color: '#FCC624'
+    packs:
+    - LinuxEventsCollection
+    - Auditd
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  lookout:
+    display_name: Lookout
+    primary_color: '#46BFF3'
+    packs:
+    - LookoutMobileEndpointSecurity
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  manageengine:
+    display_name: ManageEngine
+    primary_color: '#F26622'
+    packs:
+    - ManageEngine
+    - ManageEngine-ADAudit
+    - ManageEngine-ADSelfServicePlus
+    - ManageEngine-ADManager
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  mcafee:
+    display_name: McAfee
+    primary_color: '#C01818'
+    packs:
+    - FireEyeETP
+    - McAfeeDatabaseSecurity
+    - Trellix_ePO
+    - epo
+    - McAfeeNSM
+    - McAfeeWebGateway
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  microsoft:
+    display_name: Microsoft
+    primary_color: '#0078D4'
+    packs:
+    - AppSentinelsAi
+    - AzureAppService
+    - AzureDevOps
+    - AzureFirewall
+    - AzureFlowLogs
+    - AzureKubernetesServices
+    - AzureSecurityCenter
+    - AzureWAF
+    - MicrosoftADFS
+    - MicrosoftAdvancedThreatAnalytics
+    - MicrosoftCloudAppSecurity
+    - MicrosoftDHCP
+    - MicrosoftDNS
+    - MicrosoftDefenderAdvancedThreatProtection
+    - MicrosoftDefenderforIdentity
+    - MicrosoftECM
+    - MicrosoftEntraID
+    - MicrosoftExchangeServer
+    - MicrosoftGraphSecurity
+    - MicrosoftIISWebServer
+    - MicrosoftIntune
+    - MicrosoftWindowsAMSI
+    - MicrosoftWindowsEvents
+    - MicrosoftWindowsSysmon
+    - Office365
+    - SentinelOne
+    - MicrosoftNPS
+    - MicrosoftWSUS
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  mimecast:
+    display_name: Mimecast
+    primary_color: '#33CDFF'
+    packs:
+    - Mimecast
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  monday:
+    display_name: monday.com
+    primary_color: '#FF3D57'
+    packs:
+    - Monday
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  mongodb:
+    display_name: MongoDB
+    primary_color: '#47A248'
+    packs:
+    - MongoDBAtlas
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  mysql:
+    display_name: MySQL
+    primary_color: '#00758F'
+    packs:
+    - MySQLEnterprise
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  nasuni:
+    display_name: Nasuni
+    primary_color: '#5C2D91'
+    packs:
+    - NasuniFileServices
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  netbox:
+    display_name: NetBox
+    primary_color: '#2B6CB0'
+    packs:
+    - NetBox
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  netmotion:
+    display_name: Netmotion
+    primary_color: '#00567A'
+    packs:
+    - NetmotionVPN
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  netskope:
+    display_name: Netskope
+    primary_color: '#1751D0'
+    packs:
+    - Netskope
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  nginx:
+    display_name: NGINX
+    primary_color: '#009639'
+    packs:
+    - NGINXWebServer
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  nvidia:
+    display_name: NVIDIA
+    primary_color: '#76B900'
+    packs:
+    - NVIDIA_DOCA_Argus
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  okta:
+    display_name: Okta
+    primary_color: '#007DC1'
+    packs:
+    - Okta
+    - OktaASA
+    - OktaAuth0
+    - OktaOAG
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  onelogin:
+    display_name: OneLogin
+    primary_color: '#1C1F2A'
+    packs:
+    - OneLogin
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  oracle:
+    display_name: Oracle
+    primary_color: '#F80000'
+    packs:
+    - Oracle
+    - OracleCloudInfrastructure
+    - Oracle_IAM
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  orca:
+    display_name: Orca Security
+    primary_color: '#FF6B35'
+    packs:
+    - Orca
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  paloalto:
+    display_name: Palo Alto Networks
+    primary_color: '#FA582D'
+    packs:
+    - PrismaCloud
+    - PrismaCloudCompute
+    - PrismaSaasSecurity
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  portnox:
+    display_name: Portnox
+    primary_color: '#15A0D3'
+    packs:
+    - Portnox
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  proofpoint:
+    display_name: Proofpoint
+    primary_color: '#0098D5'
+    packs:
+    - ProofpointCasb
+    - ProofpointEmailSecurity
+    - ProofpointIsolation
+    - ProofpointObserveIT
+    - ProofpointServerProtection
+    - ProofpointTAP
+    - ProofpointThreatResponse
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  qualys:
+    display_name: Qualys
+    primary_color: '#ED1C24'
+    packs:
+    - qualys
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  radware:
+    display_name: Radware
+    primary_color: '#E03929'
+    packs:
+    - RadwareCloudDDoSProtectionServices
+    - RadwareCloudServices
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  reblaze:
+    display_name: Reblaze
+    primary_color: '#E63946'
+    packs:
+    - ReblazeWAF
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  recordedfuture:
+    display_name: Recorded Future
+    primary_color: '#CF202E'
+    packs:
+    - RecordedFuture
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  reliaquest:
+    display_name: ReliaQuest
+    primary_color: '#01366C'
+    packs:
+    - DigitalShadows
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  retarus:
+    display_name: Retarus
+    primary_color: '#5B92BE'
+    packs:
+    - RetarusSecureEmailGateway
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  rsa:
+    display_name: RSA
+    primary_color: '#CC0000'
+    packs:
+    - RSASecureID
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  runzero:
+    display_name: runZero
+    primary_color: '#1A1A1A'
+    packs:
+    - RunZero
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  sailpoint:
+    display_name: SailPoint
+    primary_color: '#16243A'
+    packs:
+    - SailPointIdentityNow
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  salesforce:
+    display_name: Salesforce
+    primary_color: '#00A1E0'
+    packs:
+    - Salesforce
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  saviynt:
+    display_name: Saviynt
+    primary_color: '#FF5500'
+    packs:
+    - SaviyntEIC
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  secureauth:
+    display_name: SecureAuth
+    primary_color: '#F47B20'
+    packs:
+    - SecureAuthIdentityPlatform
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  semperis:
+    display_name: Semperis
+    primary_color: '#00A4A6'
+    packs:
+    - SemperisDSP
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  servicenow:
+    display_name: ServiceNow
+    primary_color: '#62D84E'
+    packs:
+    - ServiceNow
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  shodan:
+    display_name: Shodan
+    primary_color: '#A30000'
+    packs:
+    - Shodan
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  siemens:
+    display_name: Siemens
+    primary_color: '#009999'
+    packs:
+    - Siemens_SiPass
+    sources:
+      light: simpleicons
+      dark: wordmark-fallback
+    fidelity: branded
+  silverfort:
+    display_name: Silverfort
+    primary_color: '#0A2540'
+    packs:
+    - Silverfort
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  slack:
+    display_name: Slack
+    primary_color: '#4A154B'
+    packs:
+    - Slack
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  sonicwall:
+    display_name: SonicWall
+    primary_color: '#FF671F'
+    packs:
+    - SonicWallNSv
+    sources:
+      light: simpleicons
+      dark: wordmark-fallback
+    fidelity: branded
+  squid:
+    display_name: Squid
+    primary_color: '#F7941E'
+    packs:
+    - Squid
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  symantec:
+    display_name: Symantec
+    primary_color: '#FDB511'
+    packs:
+    - SymantecBlueCoatProxySG
+    - SymantecCloudSOC
+    - SymantecEndpointSecurity
+    - SymantecCloudSecureWebGateway
+    - SymantecDLP
+    - SymantecEndpointProtection
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  synopsys:
+    display_name: Synopsys
+    primary_color: '#003F71'
+    packs:
+    - SynopsysCoverity
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  tableau:
+    display_name: Tableau
+    primary_color: '#E97627'
+    packs:
+    - Tableau
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  tanium:
+    display_name: Tanium
+    primary_color: '#FFB81C'
+    packs:
+    - Tanium
+    - TaniumThreatResponse
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  teamviewer:
+    display_name: TeamViewer
+    primary_color: '#0E8EE9'
+    packs:
+    - TeamViewer
+    sources:
+      light: simpleicons
+      dark: wordmark-fallback
+    fidelity: branded
+  tenable:
+    display_name: Tenable
+    primary_color: '#00B388'
+    packs:
+    - Tenable_io
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  thales:
+    display_name: Thales
+    primary_color: '#162D4F'
+    packs:
+    - SafeNet_Trusted_Access
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  thinkst:
+    display_name: Thinkst Canary
+    primary_color: '#D7382A'
+    packs:
+    - ThinkstCanary
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  tigera:
+    display_name: Tigera
+    primary_color: '#FF6900'
+    packs:
+    - TigeraCalico
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  trendmicro:
+    display_name: Trend Micro
+    primary_color: '#D71921'
+    packs:
+    - TrendMicroDeepSecurity
+    - TrendMicroEmailSecurity
+    - TrendMicroTippingPoint
+    - TrendMicroVisionOne
+    - TrendMicroInterScanWebSecurity
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  ubiquiti:
+    display_name: Ubiquiti
+    primary_color: '#0559C9'
+    packs:
+    - UbiquitiUnifi
+    sources:
+      light: simpleicons
+      dark: demisto/content
+    fidelity: branded
+  vectra:
+    display_name: Vectra AI
+    primary_color: '#23B8E3'
+    packs:
+    - Vectra_AI
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  vmware:
+    display_name: VMware
+    primary_color: '#607078'
+    packs:
+    - VMWareNSX
+    - VMwareESXi
+    - VMwareVCenter
+    sources:
+      light: gilbarbara/logos
+      dark: demisto/content
+    fidelity: branded
+  watchguard:
+    display_name: WatchGuard
+    primary_color: '#E1251B'
+    packs:
+    - WatchguardFirebox
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  withsecure:
+    display_name: WithSecure
+    primary_color: '#00BAFF'
+    packs:
+    - WithSecure
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  workday:
+    display_name: Workday
+    primary_color: '#0875E1'
+    packs:
+    - Workday
+    sources:
+      light: wordmark-fallback
+      dark: demisto/content
+    fidelity: wordmark
+  zeronetworks:
+    display_name: Zero Networks
+    primary_color: '#FF5C00'
+    packs:
+    - ZeroNetworksSegment
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark
+  zoom:
+    display_name: Zoom
+    primary_color: '#2D8CFF'
+    packs:
+    - Zoom
+    sources:
+      light: gilbarbara/logos
+      dark: wordmark-fallback
+    fidelity: branded
+  zscaler:
+    display_name: Zscaler
+    primary_color: '#0099D8'
+    packs:
+    - Zscaler
+    - ZscalerZPA
+    sources:
+      light: wordmark-fallback
+      dark: wordmark-fallback
+    fidelity: wordmark

@@ -1,0 +1,158 @@
+schema_version: 1
+id: ProofpointObserveIT
+pack_name: ProofpointObserveIT
+rule_name: ProofpointObserveIT
+dataset_name: observeit_observeit_raw
+vendor: Proofpoint
+product: ProofpointObserveIT
+description: Proofpoint ObserveIT protects against data loss, malicious acts, and
+  brand damage involving insiders acting maliciously, negligently, or unknowingly.
+categories:
+- Analytics & SIEM
+version: 1.0.7
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDc5QUEiPlByb29mcG9pbnQ8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: cat
+  type: string
+  description: Vendor-emitted field 'Cat'. Free-form text; may contain whitespace
+    and punctuation.
+  example: access_control
+- name: cefDeviceEventClassId
+  type: string_short
+  description: CEF device-event class ID — vendor-specific event-type identifier.
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefSeverity
+  type: integer
+  description: CEF severity score (0-10) as classified by Proofpoint. Signed decimal
+    integer; bare digits, optional leading minus.
+  example: '42'
+- name: cs1
+  type: string
+  description: Vendor-emitted field 'Cs1'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs2
+  type: string
+  description: Vendor-emitted field 'Cs2'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: destinationServiceName
+  type: string
+  description: Vendor-emitted field 'DestinationServiceName'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_destinationservi
+- name: dhost
+  type: host
+  description: CEF destination host — hostname or FQDN of the target endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: dntdom
+  type: string
+  description: Vendor-emitted field 'Dntdom'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dntdom
+- name: duid
+  type: string
+  description: Vendor-emitted field 'Duid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_duid
+- name: duser
+  type: user
+  description: CEF destination user — username of the target/recipient. Account name
+    as the vendor reports it — login name, UPN, or sAMAccountName; no domain prefix
+    unless vendor emits one.
+  example: jsmith
+- name: externalId
+  type: string
+  description: Vendor-emitted field 'ExternalId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: ext-0a9ed952-1a5
+- name: reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: shost
+  type: host
+  description: CEF source host — hostname or FQDN of the source endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: sourceServiceName
+  type: string
+  description: Vendor-emitted field 'SourceServiceName'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_sourceservicenam
+- name: sproc
+  type: string
+  description: Vendor-emitted field 'Sproc'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sproc
+- name: src
+  type: ipv4
+  description: CEF source IP — IPv4/IPv6 address of the source endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: suser
+  type: user
+  description: CEF source user — username of the actor initiating the event. Account
+    name as the vendor reports it — login name, UPN, or sAMAccountName; no domain
+    prefix unless vendor emits one.
+  example: jsmith
+use_cases:
+- Email
+- DLP
+how_to_use: |
+  ## Proofpoint ProofpointObserveIT → Cortex XSIAM (dataset `observeit_observeit_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `observeit_observeit_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `observeit_observeit`. The marketplace pack's display name `Proofpoint` / `ProofpointObserveIT` normalizes to `proofpoint_proofpointobserveit_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `observeit_observeit` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~18 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.severity`, `xdm.event.description`, `xdm.event.type`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|Proofpoint|ProofpointObserveIT|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = observeit_observeit_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

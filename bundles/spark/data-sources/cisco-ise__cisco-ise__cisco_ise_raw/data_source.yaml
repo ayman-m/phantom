@@ -1,0 +1,631 @@
+schema_version: 1
+id: cisco-ise
+pack_name: cisco-ise
+rule_name: cisco-ise
+dataset_name: cisco_ise_raw
+vendor: Cisco
+product: cisco-ise
+description: Next-generation secure network access.
+categories:
+- Network Security
+version: 1.0.31
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/png
+  data: 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
+  source: baked/Packs/cisco-ise/Integrations/cisco-ise/cisco-ise_image.png
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: 'Native cisco_ise log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: BRANCH CHOSEN: MODEL block 1 of 5 — filter logType in (CISE_Passed_Authentications, CISE_Failed_Attempts, CISE_RADIUS_Diagnostics, CISE_RADIUS_Accounting, CISE_TACACS_Accounting). It carries 32 xdm assignments, the most '
+  example: 'CISE_RADIUS_Accounting 0000004521 1 0 {{now:%Y-%m-%d %H:%M:%S}}.000 +00:00 0000063214 3002 NOTICE Radius-Accounting: RADIUS Accounting stop request, ConfigVersionId=98, Device IP Address=10.20.30.5, Device Port=32770, DestinationIPAddress=10.10.10.20, DestinationPort=1813, RadiusPacketType=AccountingRequest, UserName=jdoe, Protocol=Radius, RequestLatency=6, NetworkDeviceName=core-sw-01, User-Name=jdoe, NAS-IP-Address=10.20.30.5, NAS-Port=50113, Service-Type=Framed, Framed-IP-Address=10.20.44.87, Called-Station-ID=00-1B-0D-63-84-01, Calling-Station-ID=00-0C-29-4A-7B-11, NAS-Port-Type=Ethernet, NAS-Port-Id=GigabitEthernet1/0/13, Acct-Status-Type=Stop, Acct-Delay-Time=0, Acct-Input-Octets=184320, Acct-Output-Octets=942177, Acct-Session-Id=0000A1F4, Acct-Authentic=RADIUS, Acct-Session-Time=3612, Acct-Input-Packets=1483, Acct-Output-Packets=2077, Acct-Terminate-Cause=User Request, AcsSessionID=ise-psn01/482913746/8821, SelectedAccessService=Default Network Access, EapAuthentication=EAP-TLS, AuthenticationMethod=dot1x, IdentityPolicyMatchedRule=Corporate_802.1X, AuthorizationPolicyMatchedRule=Corp_Employee_Full, EndPointMACAddress=00-0C-29-4A-7B-11, EndPointMatchedProfile=Windows10-Workstation, ISEPolicySetName=Wired_802.1X, Device Type=Device Type#All Device Types#Switches, Location=Location#All Locations#HQ-Campus, NetworkDeviceGroups=Device Type#All Device Types#Switches, NetworkDeviceGroups=Location#All Locations#HQ-Campus, CPMSessionID=0A141E05000012B45F8A2C31,'
+- name: Acct_Input_Packets
+  type: integer
+  description: Destination sent packets. Free-form text; may contain whitespace and
+    punctuation.
+  example: '12'
+- name: Acct_Output_Packets
+  type: integer
+  description: Source sent packets. Free-form text; may contain whitespace and punctuation.
+  example: '12'
+- name: Acct_Session_Id
+  type: string_short
+  description: Acct Session Id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: Acct_Status_Type
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: AcsSessionID
+  type: string
+  description: Network session ID. Free-form text; may contain whitespace and punctuation.
+  example: sess-401314d4-931
+- name: Admin
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: AdminIPAddress
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: AdminName
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: Authen_Method
+  type: string
+  description: Authen Method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: AuthenticationMethod
+  type: string
+  description: Auth method. Free-form text; may contain whitespace and punctuation.
+  example: sample_authenticationme
+- name: Called_Station_ID_ipv4
+  type: ipv4
+  description: Called Station ID ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: Called_Station_ID_ipv6
+  type: ipv6
+  description: Called Station ID ipv6. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: Called_Station_ID_mac
+  type: mac
+  description: Destination host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: Calling_Station_ID
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: Calling_Station_ID_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: Calling_Station_ID_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: Calling_Station_ID_mac
+  type: mac
+  description: Calling Station ID mac. MAC address in colon-separated lowercase hex
+    (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: Calling_Station_Id_ipv4
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: Calling_Station_Id_ipv6
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: Calling_Station_Id_mac
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: Cause
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: Cc
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: CertificateHash
+  type: hash_md5
+  description: Network TLS client certificate MD5. 32-character lowercase hex MD5
+    digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: CmdSet
+  type: string
+  description: Source process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cmdset
+- name: ConfigChangeData
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: sample_configchangedata
+- name: Description
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Cisco.
+- name: Description1
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: sample_description1
+- name: Description2
+  type: string
+  description: Description2. Free-form text; may contain whitespace and punctuation.
+  example: sample_description2
+- name: DestinationIPAddress_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: DestinationIPAddress_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: DestinationPort
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: DeviceIPAddress
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: DeviceIPAddress_ipv4
+  type: ipv4
+  description: Deviceipaddress ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: DeviceIPAddress_ipv6
+  type: ipv6
+  description: Deviceipaddress ipv6. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: Device_Port
+  type: integer_port
+  description: Device Port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: Device_Type
+  type: string
+  description: Device Type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: EapAuthentication
+  type: string
+  description: Eapauthentication. Free-form text; may contain whitespace and punctuation.
+  example: sample_eapauthenticatio
+- name: Ee
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: EndPointMACAddress
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: EndpointIPAddress_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: EndpointIPAddress_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: EndpointNADAddress_ipv4
+  type: ipv4
+  description: Endpointnadaddress ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: EndpointNADAddress_ipv6
+  type: ipv6
+  description: Endpointnadaddress ipv6. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: Endpoint_ipv4
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: Endpoint_ipv6
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: FailureFlag
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: FailureReason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: FeedUrl
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: File_name
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: Hostname_From
+  type: host
+  description: Hostname From. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: Hostname_To
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: IdentityPolicyMatchedRule
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_identitypolicyma
+- name: IdentitySelectionMatchedRule
+  type: string
+  description: Identityselectionmatchedrule. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_identityselectio
+- name: MDMFailureReason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: MDMServerName
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: Mac_address
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: Message
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: NAD_IP_Address_ipv4
+  type: ipv4
+  description: Nad IP Address ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: NAD_IP_Address_ipv6
+  type: ipv6
+  description: Nad IP Address ipv6. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: NAS_IP_Address_ipv4
+  type: ipv4
+  description: Nas IP Address ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: NAS_IP_Address_ipv6
+  type: ipv6
+  description: Nas IP Address ipv6. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: NAS_Identifier
+  type: string
+  description: Nas Identifier. Free-form text; may contain whitespace and punctuation.
+  example: ext-10b73c22-81a
+- name: NAS_Port
+  type: integer_port
+  description: Nas Port. Unsigned integer 0-65535 representing a TCP/UDP port; bare
+    digits, no quotes.
+  example: '443'
+- name: NAS_Port_Id
+  type: integer_port
+  description: Source interface. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: NetworkDeviceGroups_DeviceType
+  type: string
+  description: Networkdevicegroups DeviceType. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_devicetype
+- name: NetworkDeviceName
+  type: string
+  description: Networkdevicename. Free-form text; may contain whitespace and punctuation.
+  example: sample_networkdevicenam
+- name: Network_Device_Name
+  type: string
+  description: Network Device Name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: Network_device_IP_ipv4
+  type: ipv4
+  description: Network device IP ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: Network_device_IP_ipv6
+  type: ipv6
+  description: Network device IP ipv6. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: ObjectName
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_objectname
+- name: ObjectType
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_objecttype
+- name: Object_Name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: Object_Type
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: Observer
+  type: string
+  description: Observer. Free-form text; may contain whitespace and punctuation.
+  example: sample_observer
+- name: OperationMessageText
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: sample_operationmessage
+- name: OriginalUserName
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: PeerAddress_ipv4
+  type: ipv4
+  description: Peeraddress ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: PeerAddress_ipv6
+  type: ipv6
+  description: Peeraddress ipv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: PosturePassCondition
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_posturepasscondi
+- name: Privilege_Level
+  type: string
+  description: Auth privilege level. Free-form text; may contain whitespace and punctuation.
+  example: info
+- name: ProfilerErrorMessage
+  type: string
+  description: Profilererrormessage. Free-form text; may contain whitespace and punctuation.
+  example: sample_profilererrormes
+- name: Protocol
+  type: string
+  description: Network application protocol. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: Remote_Address_Hostname
+  type: host
+  description: Remote Address Hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: Remote_Address_ipv4
+  type: ipv4
+  description: Remote Address ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: Remote_Address_ipv6
+  type: ipv6
+  description: Remote Address ipv6. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: Repository_Name
+  type: string
+  description: Repository Name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: Server
+  type: host
+  description: Cisco ISE policy server that processed the RADIUS request — extracted
+    from `Server=` token in the raw log. Hostname or short server name as configured
+    in the ISE deployment.
+  example: ise-psn-01.corp.example.com
+- name: ServerType
+  type: string
+  description: Destination host device category. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_servertype
+- name: Service
+  type: string
+  description: Event operation. Free-form text; may contain whitespace and punctuation.
+  example: sshd
+- name: Service_Argument
+  type: string
+  description: Service Argument. Free-form text; may contain whitespace and punctuation.
+  example: sample_argument
+- name: SessionId
+  type: string
+  description: Network session ID. Free-form text; may contain whitespace and punctuation.
+  example: sess-63438320-813
+- name: ShutdownReason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: SourceIPv4_type_identifier
+  type: ipv4
+  description: Source host hostname. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: SourceIPv6_type_identifier
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: Ss
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: Sys_mgmt
+  type: string
+  description: Sys mgmt. Free-form text; may contain whitespace and punctuation.
+  example: sample_mgmt
+- name: UniqueConnectionIdentifier
+  type: string
+  description: Logon GUID. Free-form text; may contain whitespace and punctuation.
+  example: sample_uniqueconnection
+- name: User
+  type: string
+  description: Source user type. Free-form text; may contain whitespace and punctuation.
+  example: jdoe
+- name: UserName
+  type: user
+  description: Username. Account name as the vendor reports it — login name, UPN,
+    or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jdoe
+- name: UserName1
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: UserName2
+  type: string
+  description: Username2. Free-form text; may contain whitespace and punctuation.
+  example: sample_username2
+- name: UserType
+  type: string
+  description: Source user type. Free-form text; may contain whitespace and punctuation.
+  example: IAMUser
+- name: User_Fetch_Organizational_Unit
+  type: string
+  description: Source user OU. Free-form text; may contain whitespace and punctuation.
+  example: sample_unit
+- name: Uu
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: debug
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_debug
+- name: fA
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: framedIP_ipv4
+  type: ipv4
+  description: Framedip ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: framedIP_ipv6
+  type: ipv6
+  description: Framedip ipv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: in
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: logSeverity
+  type: string_short
+  description: Event log level. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: logType
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_logtype
+use_cases:
+- Network
+- Firewall
+- EDR
+how_to_use: |
+  ## cisco ise → Cortex XSIAM (dataset `cisco_ise_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `cisco` / product `ise`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `cisco_ise_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `cisco`
+    - **product**: `ise`
+
+    These normalize → `cisco_ise_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `logType in ("CISE_Passed_Authentications", "CISE_Failed_Attempts", "CISE_RADIUS_Diagnostics", "CISE_RADIUS_Accounting", "CISE_TACACS_Accounting")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~48 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.auth_method`, `xdm.auth.privilege_level`, `xdm.event.description`, `xdm.event.id`, `xdm.event.log_level`, `xdm.event.operation`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `cisco`, Product = `ise`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = cisco_ise_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

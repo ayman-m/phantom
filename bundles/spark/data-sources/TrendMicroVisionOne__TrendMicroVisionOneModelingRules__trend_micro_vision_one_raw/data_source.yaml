@@ -1,0 +1,787 @@
+schema_version: 1
+id: TrendMicroVisionOne
+pack_name: TrendMicroVisionOne
+rule_name: TrendMicroVisionOneModelingRules
+dataset_name: trend_micro_vision_one_raw
+vendor: Trend Micro
+product: TrendMicroVisionOne
+description: Purpose-built threat defense platform with XDR capabilities that correlate
+  data across email, endpoints, servers, cloud, and networks.
+categories:
+- Analytics & SIEM
+- Endpoint
+- Vulnerability Management
+version: 4.5.6
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+VHJlbmQgTWljcm88L3RpdGxlPjxwYXRoIGQ9Ik0xMiAwQzUuMzggMCAwIDUuMzcgMCAxMkMwIDE0LjQ1IC43MzQgMTYuNzIgMiAxOC42MkMxLjUgMTcuNDUgMS41OCAxNS45NCAyLjE5IDE0LjI5TDIuMiAxNC4yNUwyLjI1IDE0LjEyTDIuMyAxNEwyLjMyIDEzLjk1QzIuNTQgMTMuNCAyLjgyIDEyLjgzIDMuMTYgMTIuMjZDMy4yMSAxMi4xNiAzLjI1IDEyLjA3IDMuMyAxMkwxLjg2IDEyTDIuMjEgMTEuMjFDMy40IDEwLjg4IDUuMzggMTAuMjIgNy4yNyA4LjM5TDcuMzIgOC4zOUg4LjMyTDcuMDMgMTEuMTRMOS4xIDExLjE0TDguNzIgMTEuOTZMNi42NiAxMS45NlM1LjY5IDEzLjkgNS4zNiAxNS4yOEM1LjExIDE2LjgyIDUuMzYgMTggNi43NCAxOC40MUM3LjU5IDE4LjY3IDguNjYgMTguNjEgOS44MSAxOC4yOUMxMi41IDE3LjQ1IDE1LjM0IDE1LjYyIDE3LjQzIDEzLjE4QzIwLjg3IDkuMTkgMjAuOTQgNS4xIDE3LjU4IDQuMDVDMTUuNDMgMy4zOCAxMi4zOSA0LjEzIDkuNTggNS44QzEzLjA4IDMuNTQgMTYuOTQgMi41IDE5LjU5IDMuMzFDMjAuMDkgMy40NiAyMC41MyAzLjY4IDIwLjg5IDMuOTRBMTEuOTcgMTEuOTcgMCAwIDAgMTIgME0yMi4xNyA1LjYzQzIzIDcuODEgMjEuOTcgMTEuMDcgMTkuMiAxNC4yOUMxNS4wNCAxOS4xMyA4LjQ3IDIyLjA1IDQuNSAyMC44M0E0LjQ2IDQuNDYgMCAwIDEgMy4yNCAyMC4yMUExMS45NiAxMS45NiAwIDAgMCAxMiAyNEMxOC42MyAyNCAyNCAxOC42MyAyNCAxMkMyNCA5LjY2IDIzLjMzIDcuNSAyMi4xNyA1LjYzWiIvPjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: accessType
+  type: string
+  description: Vendor-emitted field 'AccessType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_accesstype
+- name: act
+  type: string_short
+  description: CEF action — what Trend Micro did with the event (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: actResult
+  type: string
+  description: Vendor-emitted field 'ActResult'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_actresult
+- name: activity
+  type: string
+  description: Vendor-emitted field 'Activity'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_activity
+- name: alertProvider
+  type: string
+  description: Vendor-emitted field 'AlertProvider'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_alertprovider
+- name: app
+  type: string_short
+  description: Application name emitted by Trend Micro. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token_value
+- name: appGroup
+  type: string
+  description: Network application protocol category. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_appgroup
+- name: behaviorCat
+  type: string
+  description: Vendor-emitted field 'BehaviorCat'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_behaviorcat
+- name: blocking
+  type: string
+  description: Vendor-emitted field 'Blocking'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_blocking
+- name: cat
+  type: string
+  description: Vendor-emitted field 'Cat'. Free-form text; may contain whitespace
+    and punctuation.
+  example: access_control
+- name: category
+  type: string_short
+  description: Trend Micro's category classifier for the event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: access_control
+- name: component
+  type: string
+  description: Vendor-emitted field 'Component'. Free-form text; may contain whitespace
+    and punctuation.
+  example: auth-service
+- name: compressedFileSize
+  type: integer
+  description: Vendor-emitted field 'CompressedFileSize'. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: dOSName
+  type: string
+  description: Vendor-emitted field 'DOSName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dosname
+- name: description
+  type: string_long
+  description: Free-form human-readable description from Trend Micro. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Trend Micro.
+- name: detail
+  type: json
+  description: — see leaf entries for nested paths. JSON object with 42 keys; full
+    key list defined as dotted-path leaves below.
+  example: '{}'
+- name: details
+  type: string_long
+  description: Additional details payload emitted by Trend Micro. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by Trend Micro for this record.
+- name: deviceGUID
+  type: string
+  description: Vendor-emitted field 'DeviceGUID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_deviceguid
+- name: deviceMacAddress
+  type: ipv4
+  description: Vendor-emitted field 'DeviceMacAddress'. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: deviceProcessName
+  type: string
+  description: File or process name reported by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_deviceprocessnam
+- name: dhost
+  type: host
+  description: CEF destination host — hostname or FQDN of the target endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: dmac
+  type: string
+  description: Destination host MAC addresses. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dmac
+- name: domainName
+  type: string
+  description: Vendor-emitted field 'DomainName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_domainname
+- name: dpt
+  type: integer_port
+  description: CEF destination port — TCP/UDP port on the target side. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '42'
+- name: dst
+  type: ipv4
+  description: CEF destination IP — IPv4/IPv6 address of the target endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 198.51.100.7
+- name: endpoint
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: agentGuid,
+    endpointIp, ips (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: endpointGUID
+  type: string
+  description: Vendor-emitted field 'EndpointGUID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_endpointguid
+- name: endpointHostName
+  type: string
+  description: Vendor-emitted field 'EndpointHostName'. Free-form text; may contain
+    whitespace and punctuation.
+  example: host01.example.com
+- name: endpointIp
+  type: string
+  description: Vendor-emitted field 'EndpointIp'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_endpointip
+- name: endpointMacAddress
+  type: ipv4
+  description: Vendor-emitted field 'EndpointMacAddress'. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: entityName
+  type: string
+  description: Vendor-emitted field 'EntityName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_entityname
+- name: eventId
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Free-form
+    text; may contain whitespace and punctuation.
+  example: evt-3327c423
+- name: eventName
+  type: string
+  description: Vendor-emitted field 'EventName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: login
+- name: eventSubName
+  type: string
+  description: Vendor-emitted field 'EventSubName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_eventsubname
+- name: event_type
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'audit'
+- name: fileName
+  type: string
+  description: Source process executable filename. Free-form text; may contain whitespace
+    and punctuation.
+  example: document.pdf
+- name: filePath
+  type: string
+  description: Source process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: /var/log/app.log
+- name: filePathName
+  type: file_path
+  description: Filesystem path reported by the vendor. Absolute filesystem path; vendor-native
+    separator (forward slash on POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: fileSize
+  type: integer
+  description: Vendor-emitted field 'FileSize'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: filters
+  type: string
+  description: Vendor-emitted field 'Filters'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_filters
+- name: hostName
+  type: string
+  description: Human-readable name as displayed by Trend Micro. Free-form text; may
+    contain whitespace and punctuation.
+  example: host01.example.com
+- name: httpReferer
+  type: string
+  description: Vendor-emitted field 'HttpReferer'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_httpreferer
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Trend Micro. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: tre-3bb730a7
+- name: impactScope
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: entities
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: indicators
+  type: string
+  description: Vendor-emitted field 'Indicators'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_indicators
+- name: interestedMacAddress
+  type: ipv4
+  description: Subject MAC address (of interest). Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: investigationResult
+  type: string
+  description: Vendor-emitted field 'InvestigationResult'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_investigationres
+- name: investigationStatus
+  type: string
+  description: Vendor-emitted field 'InvestigationStatus'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_investigationsta
+- name: loggedRole
+  type: string
+  description: Vendor-emitted field 'LoggedRole'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_loggedrole
+- name: loggedUser
+  type: user
+  description: Vendor-emitted field 'LoggedUser'. Account name as the vendor reports
+    it — login name, UPN, or sAMAccountName depending on the source; no domain prefix
+    unless the vendor emits one.
+  example: jsmith
+- name: mDevice
+  type: string
+  description: Vendor-emitted field 'MDevice'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mdevice
+- name: malName
+  type: string
+  description: Vendor-emitted field 'MalName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_malname
+- name: malType
+  type: string
+  description: Vendor-emitted field 'MalType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_maltype
+- name: matchedRules
+  type: string
+  description: Vendor-emitted field 'MatchedRules'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_matchedrules
+- name: mitreMapping
+  type: string
+  description: Vendor-emitted field 'MitreMapping'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mitremapping
+- name: model
+  type: string
+  description: Vendor-emitted field 'Model'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_model
+- name: modelId
+  type: string
+  description: Vendor-emitted field 'ModelId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_modelid
+- name: modelType
+  type: string
+  description: Vendor-emitted field 'ModelType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_modeltype
+- name: mpname
+  type: string
+  description: Vendor-emitted field 'Mpname'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mpname
+- name: mpver
+  type: string
+  description: Vendor-emitted field 'Mpver'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mpver
+- name: objectCmd
+  type: string
+  description: Vendor-emitted field 'ObjectCmd'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_objectcmd
+- name: objectFileHashMd5
+  type: hash_md5
+  description: Vendor-emitted field 'ObjectFileHashMd5'. 32-character lowercase hex
+    MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: objectFileHashSha256
+  type: hash_sha256
+  description: Source process executable SHA256. 64-character lowercase hex SHA-256
+    digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: objectFileName
+  type: string
+  description: File or process name reported by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: document.pdf
+- name: objectFilePath
+  type: string
+  description: Filesystem path reported by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: /var/log/app.log
+- name: objectName
+  type: string
+  description: Object name (file/process/registry). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_objectname
+- name: objectSigner
+  type: string
+  description: Vendor-emitted field 'ObjectSigner'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_objectsigner
+- name: overSsl
+  type: string
+  description: Vendor-emitted field 'OverSsl'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_overssl
+- name: pname
+  type: string
+  description: Vendor-emitted field 'Pname'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_pname
+- name: processCmd
+  type: string
+  description: Vendor-emitted field 'ProcessCmd'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_processcmd
+- name: processFilePath
+  type: string
+  description: Intermediate process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: /var/log/app.log
+- name: processName
+  type: string
+  description: File or process name reported by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: explorer.exe
+- name: processPid
+  type: integer
+  description: Vendor-emitted field 'ProcessPid'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: processSigner
+  type: string
+  description: Source process executable signer. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_processsigner
+- name: pver
+  type: string
+  description: Vendor-emitted field 'Pver'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_pver
+- name: request
+  type: url
+  description: HTTP request line or full request payload as captured by Trend Micro.
+    Full URL with scheme (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: requestClientApplication
+  type: string
+  description: Vendor-emitted field 'RequestClientApplication'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_requestclientapp
+- name: result
+  type: string_short
+  description: Result string emitted by Trend Micro. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: success
+- name: rt_utc
+  type: datetime
+  description: Vendor-emitted field 'Rt utc'. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: ruleName
+  type: string
+  description: Vendor-emitted field 'RuleName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Allow-Internal
+- name: sOSName
+  type: string
+  description: Vendor-emitted field 'SOSName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sosname
+- name: score
+  type: integer
+  description: Vendor-emitted field 'Score'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: senderGUID
+  type: string
+  description: Vendor-emitted field 'SenderGUID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_senderguid
+- name: severity
+  type: string
+  description: Event severity as classified by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: INFO
+- name: shost
+  type: host
+  description: CEF source host — hostname or FQDN of the source endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: smac
+  type: mac
+  description: CEF source MAC address. MAC address in colon-separated lowercase hex
+    (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: source
+  type: ipv4
+  description: Vendor-emitted field 'Source'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: spt
+  type: integer_port
+  description: CEF source port — TCP/UDP port on the source side. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '42'
+- name: src
+  type: ipv4
+  description: CEF source IP — IPv4/IPv6 address of the source endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: status
+  type: string
+  description: Status code returned by the vendor. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: threatName
+  type: string
+  description: Vendor-emitted field 'ThreatName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Generic.Malware.A
+- name: uuid
+  type: string_short
+  description: Unique identifier — assigned by Trend Micro per event. Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: 480ee12b-5a72-59f8-b4f4-f05222ff0fb5
+- name: vLANId
+  type: integer
+  description: Vendor-emitted field 'VLANId'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: workbenchLink
+  type: url
+  description: Vendor-emitted field 'WorkbenchLink'. Full URL with scheme (http/https/ftp);
+    percent-encoded if it contains non-ASCII characters.
+  example: https://example.com/path
+- name: detail.act
+  type: string
+  description: Vendor-emitted field 'Detail › act'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_act
+- name: detail.app
+  type: string_short
+  description: Application name emitted by Trend Micro. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token_value
+- name: detail.appGroup
+  type: string
+  description: Vendor-emitted field 'Detail › appGroup'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_appgroup
+- name: detail.compressedFileSize
+  type: string
+  description: Vendor-emitted field 'Detail › compressedFileSize'. Leaf of the 'detail'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_compressedfilesi
+- name: detail.deviceMacAddress
+  type: mac
+  description: Vendor-emitted field 'Detail › deviceMacAddress'. Leaf of the 'detail'
+    composite. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: detail.dmac
+  type: mac
+  description: Vendor-emitted field 'Detail › dmac'. Leaf of the 'detail' composite.
+    MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: detail.endpointMacAddress
+  type: mac
+  is_array: true
+  description: Vendor-emitted field 'Detail › endpointMacAddress'. Leaf of the 'detail'
+    composite. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: detail.eventName
+  type: string
+  description: Vendor-emitted field 'Detail › eventName'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: detail.fileSize
+  type: string
+  description: Vendor-emitted field 'Detail › fileSize'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_filesize
+- name: detail.malType
+  type: string
+  description: Vendor-emitted field 'Detail › malType'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_maltype
+- name: detail.objectFileHashMd5
+  type: hash_md5
+  description: Vendor-emitted field 'Detail › objectFileHashMd5'. Leaf of the 'detail'
+    composite. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: detail.objectFileHashSha256
+  type: hash_sha256
+  description: Vendor-emitted field 'Detail › objectFileHashSha256'. Leaf of the 'detail'
+    composite. 64-character lowercase hex SHA-256 digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: detail.objectFilePath
+  type: file_path
+  description: Filesystem path reported by the vendor. Leaf of the 'detail' composite.
+    Absolute filesystem path; vendor-native separator (forward slash on POSIX, backslash
+    on Windows).
+  example: /var/log/example.log
+- name: detail.objectName
+  type: string
+  description: Vendor-emitted field 'Detail › objectName'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_objectname
+- name: detail.objectSigner
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Detail › objectSigner'. Leaf of the 'detail'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_objectsigner
+- name: detail.objectSignerValid
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Detail › objectSignerValid'. Leaf of the 'detail'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_objectsignervali
+- name: detail.objectUser
+  type: user
+  description: Vendor-emitted field 'Detail › objectUser'. Leaf of the 'detail' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending
+    on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: detail.objectUserDomain
+  type: string
+  description: Vendor-emitted field 'Detail › objectUserDomain'. Leaf of the 'detail'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_objectuserdomain
+- name: detail.osName
+  type: string
+  description: Vendor-emitted field 'Detail › osName'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: detail.overSsl
+  type: string
+  description: Vendor-emitted field 'Detail › overSsl'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_overssl
+- name: detail.processCmd
+  type: string
+  description: Vendor-emitted field 'Detail › processCmd'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_processcmd
+- name: detail.processFileHashMd5
+  type: hash_md5
+  description: Vendor-emitted field 'Detail › processFileHashMd5'. Leaf of the 'detail'
+    composite. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: detail.processFileHashSha256
+  type: hash_sha256
+  description: Vendor-emitted field 'Detail › processFileHashSha256'. Leaf of the
+    'detail' composite. 64-character lowercase hex SHA-256 digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: detail.processFilePath
+  type: string
+  description: Filesystem path reported by the vendor. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: detail.processFileSize
+  type: string
+  description: Vendor-emitted field 'Detail › processFileSize'. Leaf of the 'detail'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_processfilesize
+- name: detail.processName
+  type: string
+  description: File or process name reported by the vendor. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: detail.processPid
+  type: string
+  description: Vendor-emitted field 'Detail › processPid'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_processpid
+- name: detail.processSigner
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Detail › processSigner'. Leaf of the 'detail'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_processsigner
+- name: detail.processSignerValid
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Detail › processSignerValid'. Leaf of the 'detail'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_processsignerval
+- name: detail.processTrueType
+  type: string
+  description: Vendor-emitted field 'Detail › processTrueType'. Leaf of the 'detail'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_processtruetype
+- name: detail.processUser
+  type: user
+  description: Vendor-emitted field 'Detail › processUser'. Leaf of the 'detail' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending
+    on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: detail.processUserDomain
+  type: string
+  description: Vendor-emitted field 'Detail › processUserDomain'. Leaf of the 'detail'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_processuserdomai
+- name: detail.ruleName
+  type: string
+  description: Vendor-emitted field 'Detail › ruleName'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: Allow-Internal
+- name: detail.senderGUID
+  type: string
+  description: Vendor-emitted field 'Detail › senderGUID'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_senderguid
+- name: detail.senderIp
+  type: string
+  description: Vendor-emitted field 'Detail › senderIp'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_senderip
+- name: detail.sessionId
+  type: string
+  description: Vendor-emitted field 'Detail › sessionId'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sess-0865c9f1-788
+- name: detail.shost
+  type: host
+  description: Vendor-emitted field 'Detail › shost'. Leaf of the 'detail' composite.
+    Hostname or fully-qualified domain name (RFC 1035 dotted labels); no protocol
+    prefix.
+  example: host.example.com
+- name: detail.smac
+  type: mac
+  description: Vendor-emitted field 'Detail › smac'. Leaf of the 'detail' composite.
+    MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: detail.spt
+  type: integer_port
+  description: Vendor-emitted field 'Detail › spt'. Leaf of the 'detail' composite.
+    Unsigned integer 0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: detail.src
+  type: ipv4
+  description: Vendor-emitted field 'Detail › src'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: detail.srcFilePath
+  type: string
+  description: Filesystem path reported by the vendor. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: detail.vLANId
+  type: string
+  description: Vendor-emitted field 'Detail › vLANId'. Leaf of the 'detail' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_vlanid
+- name: endpoint.agentGuid
+  type: string
+  description: Vendor-emitted field 'Endpoint › agentGuid'. Leaf of the 'endpoint'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_agentguid
+- name: endpoint.endpointIp
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Endpoint › endpointIp'. Leaf of the 'endpoint'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_endpointip
+- name: endpoint.ips
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Endpoint › ips'. Leaf of the 'endpoint' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_ips
+- name: impactScope.entities
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'ImpactScope › entities'. Leaf of the 'impactScope'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_entities
+use_cases:
+- AV
+- EDR
+how_to_use: |
+  ## Trend Micro TrendMicroVisionOne → Cortex XSIAM (dataset `trend_micro_vision_one_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `trend_micro_vision_one_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `trend_micro_vision_one`. The marketplace pack's display name `Trend Micro` / `TrendMicroVisionOne` normalizes to `trend_micro_trendmicrovisionone_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `trend_micro_vision_one` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.id`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `event_type in ("workbench")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~81 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.mitre_tactics`, `xdm.alert.mitre_techniques`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.original_threat_name`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|Trend Micro|TrendMicroVisionOne|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = trend_micro_vision_one_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

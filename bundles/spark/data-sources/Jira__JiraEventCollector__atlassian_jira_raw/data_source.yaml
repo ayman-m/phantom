@@ -1,0 +1,152 @@
+schema_version: 1
+id: Jira
+pack_name: Jira
+rule_name: JiraEventCollector
+dataset_name: atlassian_jira_raw
+vendor: Atlassian
+product: Jira
+description: Atlassian Jira logs every issue mutation, workflow transition, comment, and administrative
+  action — useful both as a project-tracking audit trail and as an insider-threat signal. Each event carries
+  the actor, the affected issue id, the workflow state transition, and any text content (which may contain
+  sensitive data). Simulate Jira to validate detections for unauthorized issue creation, data exfiltration
+  via attachments, or anomalous admin activity.
+how_to_use: |
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `Atlassian`
+  - **product**: `Jira`
+
+  Broker derives → `atlassian_jira_raw`.
+
+  Jira's audit stream is a single dataset — set `category=audit` so the parsing rule routes the event here (other categories fall through). The high-signal events are configuration, permission, and workflow changes, which carry a `changedValues[]` array of `{fieldName,changedFrom,changedTo}`; include 3+ entries so the modeling rule can build the change-chain instead of a bare single-field edit.
+
+  **MR pattern**: Mixed. MR reads `objectItem.id`/`objectItem.parentId`, iterates `changedValues[]`.
+
+  **Composite (nested-JSON) fields**: Pack `objectItem` as JSON-string object; `changedValues` as JSON-string array of `{fieldName,changedFrom,changedTo}`.
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: `category` must be `audit` for the audit dataset route. `created` must be RFC-3339.
+
+  **Saturation strategy**: Single event covers ~8 XDM; field-change events benefit from including 3+ `changedValues` entries to populate `xdm.event.original_event_id` chain.
+
+  **Single-event XDM ceiling**: ~8 XDM single-event.
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = atlassian_jira_raw
+  | filter xdm.event.id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+categories:
+- Case Management
+version: 3.3.34
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMjU2cHgiIGhlaWdodD0iMjU2cHgiIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDxkZWZzPgogICAgICAgIDxsaW5lYXJHcmFkaWVudCB4MT0iOTkuNjg2NTUzMSUiIHkxPSIxNS44MDA3OTg4JSIgeDI9IjM5LjgzNTkwMTElIiB5Mj0iOTcuNDM3ODM1NSUiIGlkPSJsaW5lYXJHcmFkaWVudC0xIj4KICAgICAgICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iIzAwNTJDQyIgb2Zmc2V0PSIwJSI+PC9zdG9wPgogICAgICAgICAgICA8c3RvcCBzdG9wLWNvbG9yPSIjMjY4NEZGIiBvZmZzZXQ9IjkyLjMlIj48L3N0b3A+CiAgICAgICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDwvZGVmcz4KCQk8Zz4KCQkJCTxwYXRoIGQ9Ik03NS43OTI5MDIyLDExNy45NDkzNTIgQzcxLjk3MzQzNSwxMTMuODY5MTggNjYuMDIyMDc0MywxMTQuMTAwNDUxIDYzLjQyNjIzODIsMTE5LjI5MjEyMyBMMC43OTExODA4NjUsMjQ0LjU2NTA0MSBDLTAuMzcwMDAwMjE0LDI0Ni44ODYyMDcgLTAuMjQ2MzIyNDIsMjQ5LjY0MzE1MSAxLjExODAzMzIzLDI1MS44NTEwMiBDMi40ODIzODg4OCwyNTQuMDU4ODg5IDQuODkyODAzOTMsMjU1LjQwMjc0MSA3LjQ4ODIxMzY1LDI1NS40MDI1MTYgTDk0LjcxNjQzNSwyNTUuNDAyNTE2IEM5Ny41NzE2NDAxLDI1NS40Njg3MDYgMTAwLjE5NzUxLDI1My44NDU2MDEgMTAxLjQxNDg2OSwyNTEuMjYyMDc0IEMxMjAuMjIzNDY4LDIxMi4zNzM1OSAxMDguODI4MTQsMTUzLjI0NTQzNCA3NS43OTI5MDIyLDExNy45NDkzNTIgWiIgZmlsbD0idXJsKCNsaW5lYXJHcmFkaWVudC0xKSI+PC9wYXRoPgoJCQkJPHBhdGggZD0iTTEyMS43NTYwNzEsNC4wMTE0OTE4IEM4Ni43MjM0OTc1LDU5LjUxNjQwOTggODkuMDM0ODAwOCwxMjAuOTg5NTA4IDExMi4xMDk5ODksMTY3LjE0MTI4NyBMMTU0LjE3MDM4MywyNTEuMjYyMDc0IEMxNTUuNDM4NzAzLDI1My43OTg3MzMgMTU4LjAzMTM0OSwyNTUuNDAxMDk1IDE2MC44Njc0MTYsMjU1LjQwMTExNSBMMjQ4LjA5NDIzNSwyNTUuNDAxMTE1IEMyNTAuNjg5NjQ1LDI1NS40MDEzMzkgMjUzLjEwMDA2LDI1NC4wNTc0ODcgMjU0LjQ2NDQxNiwyNTEuODQ5NjE4IEMyNTUuODI4NzcxLDI0OS42NDE3NSAyNTUuOTUyNDQ5LDI0Ni44ODQ4MDUgMjU0Ljc5MTI2OCwyNDQuNTYzNjM5IEMyNTQuNzkxMjY4LDI0NC41NjM2MzkgMTM3LjQ0NDYyLDkuODM2NzA0OTIgMTM0LjQ5Mjc2OCwzLjk2MzgzNjA3IEMxMzEuODUzNDgxLC0xLjI5MzcxMzExIDEyNS4xNDk0NCwtMS4zNjUxOTY3MiAxMjEuNzU2MDcxLDQuMDExNDkxOCBaIiBmaWxsPSIjMjY4MUZGIj48L3BhdGg+CgkJPC9nPgo8L3N2Zz4K
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: authorAccountId
+  type: string
+  description: Vendor-emitted field 'AuthorAccountId'. Free-form text; may contain whitespace and punctuation.
+  example: tenant-acme-prod
+- name: authorKey
+  type: string
+  description: Vendor-emitted field 'AuthorKey'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: category
+  type: string_short
+  description: Atlassian's category classifier for the event. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: access_control
+- name: changedValues
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: changedTo (each key defined
+    as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: created
+  type: datetime
+  description: Vendor-emitted field 'Created'. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: objectItem
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: id, name, typeName (each key
+    defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: remoteAddress
+  type: ipv4
+  description: Vendor-emitted field 'RemoteAddress'. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: summary
+  type: string
+  description: Vendor-emitted field 'Summary'. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Atlassian.
+- name: changedValues.changedTo
+  type: string
+  description: Vendor-emitted field 'ChangedValues › changedTo'. Leaf of the 'changedValues' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: objectItem.id
+  type: string_short
+  description: Opaque identifier emitted by Atlassian. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: atl-ea36e6a4
+- name: objectItem.name
+  type: string
+  description: Human-readable name as displayed by Atlassian. Free-form text; may contain whitespace and
+    punctuation.
+  example: operator-visible value
+- name: objectItem.typeName
+  type: string
+  description: Vendor-emitted field 'ObjectItem › typeName'. Leaf of the 'objectItem' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: AuditEvent
+use_cases:
+- DevOps
+- Collab
+validated: true

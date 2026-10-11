@@ -1,0 +1,3 @@
+# Dry-run output of generate_data_source_yamls_from_rules.py.
+# Regenerable locally; don't pollute git history.
+*/data_source.yaml

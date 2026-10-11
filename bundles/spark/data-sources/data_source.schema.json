@@ -1,0 +1,331 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ayman-m/phantom/schema/data_source.schema.json",
+  "title": "Phantom Data Source",
+  "description": "Schema for a single data source declaration. Used for BOTH bundled (bundles/spark/data-sources/<id>/data_source.yaml) AND operator-uploaded (/app/data/user_data_sources/<id>/data_source.yaml) sources.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "pack_name",
+    "rule_name",
+    "dataset_name",
+    "vendor",
+    "product",
+    "fields"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "description": "YAML schema version. Pinned at 1 in R3.C; future evolutions bump.",
+      "type": "integer",
+      "enum": [
+        1
+      ]
+    },
+    "id": {
+      "description": "URL-safe slug, unique within origin. Matches the directory name on disk. Long enough to accommodate the bundled migration's <pack>__<rule>__<dataset> identifier.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "pack_name": {
+      "description": "Existing 3-tuple identity component (matches catalog row's pack_name).",
+      "type": "string",
+      "minLength": 1
+    },
+    "rule_name": {
+      "description": "Existing 3-tuple identity component (matches catalog row's rule_name).",
+      "type": "string",
+      "minLength": 1
+    },
+    "dataset_name": {
+      "description": "Existing 3-tuple identity component (matches catalog row's dataset_name).",
+      "type": "string",
+      "minLength": 1
+    },
+    "vendor": {
+      "description": "Canonical vendor display name (e.g. 'Fortinet', 'Microsoft').",
+      "type": "string",
+      "minLength": 1
+    },
+    "product": {
+      "description": "Product within the vendor (e.g. 'FortiGate', 'Defender for Endpoint').",
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "description": "One-paragraph operator-facing description.",
+      "type": "string"
+    },
+    "how_to_use": {
+      "description": "Operator-facing instructions on how to use this data source for simulation: multi-dataset handling, CEF vs JSON wire format selection, sentinel values, MR-fire requirements, lessons learned that affect synthetic event construction. Multi-line markdown allowed.",
+      "type": "string"
+    },
+    "categories": {
+      "description": "0-3 short labels. Each maps to a marketplace badge (SIEM, EDR, Network, Cloud, IAM, etc.). Source values come from cortex pack_metadata.categories[].",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 3
+    },
+    "version": {
+      "description": "The data source's own version (e.g. '1.0.0', '2.0.16').",
+      "type": "string"
+    },
+    "validated": {
+      "description": "MAPPING-validated: the source was smoke-tested end-to-end against the live XSIAM tenant and its modeling rule populates xdm.* (or, when there is no modeling rule, its parsing rule extracts the columns). Renders the green 'Mapping Validated' pill on the Browse card. Mutually exclusive with raw_validated.",
+      "type": "boolean"
+    },
+    "raw_validated": {
+      "description": "RAW-validated: the vendor's content pack is NOT installed on the tenant so parsing/modeling cannot be exercised, but a raw-dataset query (dataset = X | fields <rule columns>) confirmed the synthetic data lands the exact field names the rule WOULD read. Proven-correct shape, ready-to-map on install. Renders the amber 'Raw Validated' pill. Mutually exclusive with validated.",
+      "type": "boolean"
+    },
+    "origin": {
+      "description": "Provenance marker. 'bundle' = shipped in the agent image; 'user' = operator-uploaded into /app/data/user_data_sources/.",
+      "type": "string",
+      "enum": [
+        "bundle",
+        "user"
+      ]
+    },
+    "author": {
+      "description": "Who created the YAML (e.g. 'phantom-bundle', operator name).",
+      "type": "string"
+    },
+    "uploaded_by": {
+      "description": "For origin=user, the operator who uploaded. Null for origin=bundle.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "created_at": {
+      "description": "ISO-8601 timestamp when this YAML was first created.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "description": "ISO-8601 timestamp of last edit.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "logo": {
+      "description": "Inline base64-encoded logo (SVG preferred). For bundled sources the logo lives at vendor_svgs/ and this can be null; for user sources this is the primary path.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "mime_type",
+            "data"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "mime_type": {
+              "type": "string",
+              "enum": [
+                "image/svg+xml",
+                "image/png",
+                "image/jpeg"
+              ]
+            },
+            "data": {
+              "description": "Base64-encoded logo bytes. SVG-preferred. Raster fallback up to 512x512. Max 50KB pre-base64 (operator UI enforces).",
+              "type": "string",
+              "minLength": 1
+            },
+            "source": {
+              "description": "Provenance (e.g. 'gilbarbara/logos@v3.x', 'operator-upload', 'demisto/content').",
+              "type": "string"
+            },
+            "license": {
+              "description": "License string (MIT, CC0, etc.). Required for non-internal sources.",
+              "type": "string"
+            },
+            "fidelity": {
+              "description": "Visual quality marker. 'branded' = full-color vendor logo; 'branded-recolored' = vendor logo in alternate brand colors; 'monochrome-brand' = single-color brand mark; 'wordmark' = text-only vendor name; 'approximate' = best-effort fallback.",
+              "type": "string",
+              "enum": [
+                "branded",
+                "branded-recolored",
+                "monochrome-brand",
+                "wordmark",
+                "approximate"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "delivery": {
+      "description": "How Phantom delivers this source's synthetic logs. `syslog` (the default when omitted): a data worker ships CEF/syslog/LEEF to the Cortex Broker. `http`: the `http-sender` connector posts JSON to an XSIAM HTTP Log Collector, so the payload is a JSON object, the collector (not the sender) fixes vendor/product and therefore the dataset, and `phantom_create_data_worker` must NOT be used.",
+      "type": "string",
+      "enum": ["syslog", "http"],
+      "default": "syslog"
+    },
+    "formats": {
+      "description": "Log formats this data source's records can be emitted as. Used by the worker to choose syntax.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "SYSLOG",
+          "CEF",
+          "LEEF",
+          "JSON",
+          "WINEVENT"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "is_rawlog_only": {
+      "description": "True when this pack ships only a raw-log dataset (no structured fields). Mirrors data_sources_store.is_rawlog_only column.",
+      "type": "boolean",
+      "default": false
+    },
+    "fields": {
+      "description": "Vendor field schema. Drives both the catalog display (field_count) and the schema_override the agent passes to phantom_create_data_worker for vendor-faithful generation.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Field"
+      }
+    },
+    "use_cases": {
+      "description": "Operator-curated product-type labels. Source of truth: scripts/curate_vendor_use_cases.py's CURATION dict. UI surfaces these as filter chips + card badges. Empty array allowed.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "Field": {
+      "description": "One vendor field. Drives both display (field_count) and value generation (xlog's dynamic_schema picks values by type + field-name patterns).",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Field name as it appears in generated records (top-level JSON key OR equivalent in CEF/SYSLOG)."
+        },
+        "type": {
+          "type": "string",
+          "description": "Field type from the controlled vocabulary. Unknown types fall back to xlog's name-pattern matching.",
+          "enum": [
+            "string_short",
+            "string_long",
+            "string",
+            "integer",
+            "integer_byte_count",
+            "integer_port",
+            "float",
+            "boolean",
+            "ipv4",
+            "ipv6",
+            "mac",
+            "hash_md5",
+            "hash_sha1",
+            "hash_sha256",
+            "url",
+            "domain",
+            "email",
+            "file_path",
+            "country_code",
+            "datetime",
+            "timestamp_ms",
+            "user",
+            "host",
+            "enum",
+            "json",
+            "regex"
+          ]
+        },
+        "is_array": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, the value is a 1-3 element list of the type."
+        },
+        "is_meta": {
+          "type": "boolean",
+          "default": false,
+          "description": "True for fields injected by Cortex at ingestion (_id, _time, _vendor) rather than emitted by the source. Meta fields are omitted from generated records."
+        },
+        "description": {
+          "type": "string",
+          "description": "Operator-facing description of the field."
+        },
+        "example": {
+          "type": [
+            "string",
+            "number",
+            "boolean"
+          ],
+          "description": "Sample value, used for UI/docs only (not for generation)."
+        },
+        "enum_values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Required when type=enum. xlog picks one at random per record."
+        },
+        "regex_pattern": {
+          "type": "string",
+          "description": "Required when type=regex. xlog generates values matching this regex."
+        },
+        "observable_override": {
+          "type": "string",
+          "description": "Optional Rosetta observable name (e.g. 'srcHost', 'remotePort') for value generation. Lets the operator force a specific generator without picking from the type vocabulary."
+        },
+        "is_gate": {
+          "type": "boolean",
+          "description": "True when the parsing or modeling rule FILTERS on this field. Its `example` is then the only value the rule accepts, so the generator pins the field to it instead of synthesizing a token -- a synthesized value is discarded at ingest by no_hit=drop with no raw row and no error. An explicit observables_dict entry still overrides it."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "enum"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "enum_values"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "regex"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "regex_pattern"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

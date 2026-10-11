@@ -1,0 +1,138 @@
+schema_version: 1
+id: MicrosoftWSUS
+pack_name: MicrosoftWSUS
+rule_name: MicrosoftWSUSModelingRules
+dataset_name: msft_wsus_raw
+vendor: Microsoft
+product: MicrosoftWSUS
+description: Modeling Rules for the Microsoft WSUS logs collector
+categories:
+- Analytics & SIEM
+version: 1.0.11
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TWljcm9zb2Z0PC90aXRsZT48cGF0aCBkPSJNMCAwdjExLjQwOGgxMS40MDhWMHptMTIuNTk0IDB2MTEuNDA4SDI0VjB6TTAgMTIuNTk0VjI0aDExLjQwOFYxMi41OTR6bTEyLjU5NCAwVjI0SDI0VjEyLjU5NHoiLz48L3N2Zz4=
+  source: simpleicons:microsoft
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'microsoft: microsoftwsus=MicrosoftWSUS action=allow user=jdoe'
+- name: EventId
+  type: string
+  description: Event ID. Free-form text; may contain whitespace and punctuation.
+  example: evt-942104bf
+- name: Message
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: action
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: columns
+  type: string
+  description: Columns. Free-form text; may contain whitespace and punctuation.
+  example: sample_columns
+- name: event_category
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: access_control
+- name: event_time
+  type: datetime
+  description: Event time. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: service_name
+  type: string
+  description: Destination process name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+use_cases:
+- Cloud
+- SaaS
+- Identity
+how_to_use: |
+  ## MSFT WSUS → Cortex XSIAM (dataset `msft_wsus_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `MSFT` / product `WSUS`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `msft_wsus_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `MSFT`
+    - **product**: `WSUS`
+
+    These normalize → `msft_wsus_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~13 fields mapped to the **Endpoint** data model (`XDM.Endpoint.*`), including: `XDM.Endpoint.Target.process.name`, `XDM.Endpoint.event_timestamp`, `XDM.Endpoint.original_event_description`, `XDM.Endpoint.original_event_id`, `XDM.Endpoint.original_event_type`, `XDM.Endpoint.reason`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `MSFT`, Product = `WSUS`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `XDM.Endpoint.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = msft_wsus_raw | sort desc _time | fields XDM.Endpoint.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,131 @@
+schema_version: 1
+id: qualys
+pack_name: qualys
+rule_name: QualysModelingRules
+dataset_name: qualys_qualys_raw
+vendor: Qualys
+product: qualys
+description: Qualys Vulnerability Management scans hosts and reports detected vulnerabilities — each finding
+  includes the host id (asset ID, IP, FQDN), the QID (Qualys vulnerability id), CVSS score, CVE refs,
+  scan timestamp, and remediation guidance. Simulate Qualys events to validate detections that correlate
+  active exploits with known vulnerable assets, prioritize patching workflows, or feed risk-scoring pipelines.
+how_to_use: |
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `Qualys`
+  - **product**: `Qualys`
+
+  Broker derives → `qualys_qualys_raw`.
+
+  Qualys emits one record per scanned asset — flat fields (`ID`, `IP`, `OS`) identify the host while the vulnerability detail lives in the nested `VULN_INFO_LIST.VULN_INFO[]` array the modeling rule iterates. Note the non-standard time field: the parsing rule keys on `LAST_VULN_SCAN_DATETIME` (`YYYY-MM-DDTHH:MM:SSZ`), not a generic `timestamp`/`rt`.
+
+  **MR pattern**: Mixed. Reads flat asset fields (`ID`, `IP`, `OS`, `LAST_VULN_SCAN_DATETIME`) and nested `VULN_INFO_LIST.VULN_INFO[].QID`.
+
+  **Composite (nested-JSON) fields**: Pack `VULN_INFO_LIST` as JSON-string object with nested `VULN_INFO` array. The MR iterates this array via `json_extract_scalar`.
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: Qualys uses `LAST_VULN_SCAN_DATETIME` for the time field — must be `YYYY-MM-DDTHH:MM:SSZ`.
+
+  **Saturation strategy**: Mixed MR — ~9 XDM. Single event ~1200 bytes.
+
+  **Single-event XDM ceiling**: ~9 XDM single-event.
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = qualys_qualys_raw
+  | filter xdm.event.id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  ### Make it map to XDM
+
+  The `qualys_qualys_raw` modeling rule only runs when `event_type = "activity_log"`. When simulating, pass `observables_dict={"event_type": "activity_log"}` to `phantom_create_data_worker` so the gate matches. The rule then populates core XDM: `xdm.event.type` <- `event_type`, `xdm.observer.action` <- `Action`, `xdm.observer.type` <- `modules` (parsed out of `Details`), `xdm.event.description` <- `Details`, `xdm.auth.privilege_level` <- `User_Role`, `xdm.source.user.username` <- `User_Name`, and `xdm.source.ipv4` <- `User_IP` (when it matches an IPv4 pattern). Most of the deeper XDM (report size/duration, target IPs, titles) is regex-extracted from the free-text `Details` field. (Note: the `qualys_assets_raw` MODEL in the same rule gates on `event_type = "host_list_detection"` — a different dataset.)
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+categories:
+- Vulnerability Management
+version: 3.3.22
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+UXVhbHlzPC90aXRsZT48cGF0aCBkPSJNMTEuOTk4NiAwQzUuNDM1MyAwIDIuMTM4MiAzLjUxMTcgMi4xMzgyIDMuNTExN3MtLjM3NzUgMi41OTkzLS4xMzY2IDcuODMzMkMyLjM2NTQgMTkuMjUxMyAxMS45OTkgMjQuMDAwNSAxMS45OTk5IDI0Yy4wMDEtLjAwMDUgOS42MzQ3LTQuNzQ4OCA5Ljk5ODUtMTIuNjU1MS4yNDA4LTUuMjMzOS0uMTM2NC03LjgzMzItLjEzNjQtNy44MzMyUzE4LjU2MiAwIDExLjk5ODYgMHptLS42NzgyIDIuOTE5NGE3LjM2NTcgNy4zNjU3IDAgMCAxIDguMDQ1NCA3LjMzNDMgNy4xMTU4IDcuMTE1OCAwIDAgMS0yLjc3MTIgNS42MzQyYy0xLjE3ODgtLjEwOC0yLjQwOTgtLjQ0MjMtMi45Njc2LS43NjA1IDEuNDM3OS0uOTE3NyAzLjMwMzYtMi43MDMzIDMuMzAzNi00Ljg3MzdhNC45MzYxIDQuOTM2MSAwIDAgMC00LjkzMDUtNC45MzA1Yy0yLjcxNjUgMC00LjkyNjYgMi4yNzQzLTQuOTI2NiA1LjA2OTggMCAyLjMzMiAxLjIzNTUgNC4xNjI0IDMuNjcxOCA1LjQ0MDQgMS41OTQzLjgzNjMgMy45NzI0IDEuNDQ5IDYuNDg1MiAxLjc3MjMtLjQxOC42MjI1LTEuNTMzIDEuNjg2LTIuMTg0NyAyLjA0NjItMy4wMDg3LS40OTM0LTUuNjUxMy0xLjUzNTQtNy40NTc4LTMuMDk2NC0xLjkzMjMtMS42Njk5LTIuOTUzNi0zLjg0ODgtMi45NTM2LTYuMzAxOGE3LjM2NTcgNy4zNjU3IDAgMCAxIDYuNjg2LTcuMzM0M1oiLz48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: Action
+  type: string
+  description: Action taken by the vendor's enforcement engine. Free-form text; may contain whitespace
+    and punctuation.
+  example: allow
+- name: Details
+  type: string_long
+  description: Additional details payload emitted by Qualys. Free-form text; may span multiple lines or
+    contain large payloads.
+  example: Detailed event payload emitted by Qualys for this record.
+- name: Module
+  type: string
+  description: Vendor-emitted field 'Module'. Free-form text; may contain whitespace and punctuation.
+  example: audit
+- name: User_IP
+  type: ipv4
+  description: Vendor-emitted field 'User IP'. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: User_Name
+  type: user
+  description: Human-readable name as displayed by Qualys. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jsmith
+- name: User_Role
+  type: string
+  description: Vendor-emitted field 'User Role'. Free-form text; may contain whitespace and punctuation.
+  example: Admin
+- name: event_type
+  is_gate: true
+  type: string
+  description: Modeling-rule GATE — must equal "activity_log" for XDM to map. Event type or category as
+    the vendor classifies it. Free-form text; may contain whitespace and punctuation.
+  example: activity_log
+use_cases:
+- Vuln
+validated: true

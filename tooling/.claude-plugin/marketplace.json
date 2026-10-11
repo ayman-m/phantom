@@ -1,0 +1,16 @@
+{
+  "name": "phantom-tooling",
+  "owner": {
+    "name": "Phantom Platform Team"
+  },
+  "metadata": {
+    "description": "Internal marketplace for Phantom's Claude Code tooling. Distributes the portable parts of the AI Layer (the parts that aren't repo-specific) so any repo or any new contributor gets the team's baseline setup on day one."
+  },
+  "plugins": [
+    {
+      "name": "phantom-ai-layer",
+      "source": "./phantom-ai-layer",
+      "description": "The portable Phantom AI Layer — generic scoped-tests skill, the self-improving CLAUDE.md hook, the read-only explorer subagent, and the codebase-search MCP server. Repo-specific skills (connector-add, mcp-tool-add, release-tag-flow, etc.) intentionally stay in the Phantom repo's own .claude/ — they describe THIS codebase and don't travel."
+    }
+  ]
+}

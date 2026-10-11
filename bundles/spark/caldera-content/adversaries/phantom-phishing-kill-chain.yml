@@ -1,0 +1,49 @@
+id: f81c14fe-6730-4215-bc95-e8eaca1530ab
+name: "Phantom phishing -> ransomware kill chain (cross-host, expanded)"
+description: "20-step adversary emulation tuned for noisy XDR telemetry. Chain: phishing -> execution -> discovery burst (3x) -> credential access (cached + LSASS minidump) -> priv-esc (UAC bypass) -> defense-evasion (Defender disable + certutil decode) -> persistence (3 methods: local user + Run key + scheduled task) -> LATERAL to win-host-02 (T1021.002 via SMB+WMI+WinRM Negotiate) -> collection -> archive -> DNS C2 -> exfil over HTTP -> defacement -> cleanup (clear Security event log). Requires the two bootstrap abilities (00-bootstrap/) to be run once first (one on each agent group=victim and group=red) before this adversary executes."
+atomic_ordering:
+# === phase 1: initial access + execution ===
+- 85d04954-9c44-4fd9-8952-e5f971df6c88   # phishing emailclient spawn (T1566.001 custom)
+- 9003977ffd2779fd5877d65f970af885       # stockpile Windows Command Shell (T1059.003)
+# === phase 2: discovery burst (3 abilities for high LOLBin volume) ===
+- 9fe14e06-cc17-4b7f-9672-994c4fb380b5   # account + system discovery (T1087.001 custom)
+- 7d9ec45b-5ea8-5c8f-940a-961d64d6a88e   # NEW system-info + net burst (T1082 + T1018)
+- 038d7c43-5e08-58e4-89af-8c9676a11bcb   # NEW network share discovery (T1135)
+# === phase 3: credential access (2 methods) ===
+- bb0df721f4a4defa743efe9e61837c44       # stockpile cached credentials (T1003.005)
+- 5a2232b1-b44e-5fbc-aa28-8867cffdc9a6   # NEW LSASS minidump via comsvcs.dll (T1003.001) -- big XDR signal
+# === phase 4: privilege escalation ===
+- 20d68348c822d2947e5a795ac15a22b0       # stockpile Fodhelper UAC bypass (T1548.002)
+# === phase 5: defense evasion (Defender + LOLBin) ===
+- ed317669-71d7-533d-b899-96fa70b52826   # NEW disable Defender real-time (T1562.001) -- post-priv-esc
+- 4a1a71ef-928d-5e4e-8380-a5da501aefc8   # NEW certutil decode payload (T1140) -- now safe to drop tools
+# === phase 6: persistence (3 methods for redundancy + breadth) ===
+- f39aace719f4cdcf8569001f7a25aabf       # stockpile create local account (T1136.001)
+- 00cd0d4e-f996-51b3-b494-8d014e6c0647   # NEW registry Run key persistence (T1547.001)
+- 9f83d684-8072-5681-92c0-45ba474fdab6   # NEW scheduled task /sc onlogon (T1053.005)
+# === phase 7: lateral movement (cross-host win-host-01 -> win-host-02) ===
+- 55aee52f-e755-46b5-b7e7-37c4bf13a2c3   # lateral SMB + WMI + WinRM Negotiate (T1021.002 custom)
+# === phase 8: collection + archive ===
+- 086da3db-620f-40fe-9479-cb3c8d9bd0fa   # automated collection (T1119 custom)
+- 8cd2639cb742872b58a2356909628376       # stockpile archive (T1560)
+# === phase 9: command-and-control + exfil ===
+- 99f171c7-637b-4ba3-9ab7-d53f34b613e0   # DNS C2 (T1071.004 custom)
+- 1f5120ba-1fa5-472f-adb7-2d22decf0cad   # exfil staged loot (T1041 custom)
+# === phase 10: impact ===
+- 47d08617-5ce1-424a-8cc5-c9c978ce6bf9   # stockpile defacement (T1491)
+# === phase 11: cleanup tracks (final defense-evasion -- detection guaranteed) ===
+- 72ef20bd-73d0-5a11-9211-1c2d0a4d8a14   # NEW clear Security event log (T1070.001) -- Security 1102 fires
+objective: 495a9828-cab1-44dd-a0ca-66e58177d8cc
+tags:
+- phishing
+- kill-chain
+- lateral
+- ransomware-sim
+- xdr-detection
+- mimikatz-alt
+- defender-tamper
+- lolbin
+- persistence-multi
+- lab
+- phantom
+has_repeatable_abilities: false

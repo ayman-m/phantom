@@ -1,0 +1,17 @@
+{
+  "category": "raw_log_based",
+  "dataset": "manageengine_admanager_raw",
+  "modeling_rule_present": true,
+  "modeling_rule_source_filenames": [
+    "ManageEngine-ADManager__ManageEngine-ADManager_1_3.xif"
+  ],
+  "operator_setup_notes": "This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` \u2014 the parsing rule never fires. \n\nSetup: XSIAM \u2192 Settings \u2192 Configurations \u2192 Data Broker \u2192 Applets \u2192 Add Applet (Syslog) \u2192 Vendor = `manageengine`, Product = `admanager`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port \u2014 current default is 514, which is reserved for the ASA applet.",
+  "operator_setup_required": true,
+  "pack_name": "ManageEngine-ADManager",
+  "parsing_rule_present": true,
+  "parsing_rule_source_filename": "ManageEngine-ADManager__ManageEngine-ADManager.xif",
+  "product": "admanager",
+  "uses_raw_json": false,
+  "uses_raw_log": true,
+  "vendor": "manageengine"
+}

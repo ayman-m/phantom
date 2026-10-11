@@ -1,0 +1,182 @@
+schema_version: 1
+id: ClearswiftDLP
+pack_name: ClearswiftDLP
+rule_name: ClearswiftDLP
+dataset_name: clearswift_dlp_raw
+vendor: Clearswift
+product: ClearswiftDLP
+description: The Clearswift Endpoint Data Loss Prevention (DLP) solution offers visibility,
+  control, monitoring and policies that help a company protect its assets.
+categories:
+- Analytics & SIEM
+version: 1.0.9
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/png
+  data: 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
+  source: wikipedia:File:Clearswift_-_A_HelpSystems_Logo.png
+  license: Wikipedia / vendor trademark (Clearswift is a Fortra brand)
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'clearswift: clearswiftdlp=ClearswiftDLP action=allow user=jdoe'
+- name: NAVIGATE
+  type: url
+  description: Network HTTP URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: ROLE
+  type: string
+  description: Destination resource before value. Free-form text; may contain whitespace
+    and punctuation.
+  example: Admin
+- name: UPDATE
+  type: datetime
+  description: Destination resource before value. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: USER
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: alert
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_alert
+- name: analyst
+  type: string
+  description: Auth privilege level. Free-form text; may contain whitespace and punctuation.
+  example: sample_analyst
+- name: description
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Clearswift.
+- name: destination_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: domain
+  type: domain
+  description: Destination domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: event_subtype
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: login
+- name: event_type
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: find_type
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: log_level
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: info
+- name: log_type
+  is_gate: true
+  type: string
+  description: Event original event type. Free-form text; may contain whitespace and
+    punctuation.
+  example: 'msw'
+- name: outcome_reason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: url_category
+  type: url
+  description: Network HTTP URL category. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: user_role
+  type: string
+  description: Auth privilege level. Free-form text; may contain whitespace and punctuation.
+  example: Admin
+use_cases:
+- DLP
+- Email
+how_to_use: |
+  ## clearswift dlp → Cortex XSIAM (dataset `clearswift_dlp_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `clearswift` / product `dlp`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `clearswift_dlp_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `clearswift`
+    - **product**: `dlp`
+
+    These normalize → `clearswift_dlp_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `log_type = "msw"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~29 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.original_alert_id`, `xdm.alert.subcategory`, `xdm.auth.privilege_level`, `xdm.email.recipients`, `xdm.email.sender`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `clearswift`, Product = `dlp`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = clearswift_dlp_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

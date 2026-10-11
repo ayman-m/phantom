@@ -1,0 +1,195 @@
+schema_version: 1
+id: BarracudaWAF
+pack_name: BarracudaWAF
+rule_name: BarracudaWAFModelingRules
+dataset_name: barracuda_waf_raw
+vendor: Barracuda
+product: BarracudaWAF
+description: Barracuda WAF modeling rules and parsing rules for XSIAM
+categories:
+- Analytics & SIEM
+version: 1.0.5
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo: null
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'barracuda: barracudawaf=BarracudaWAF action=allow user=jdoe'
+- name: Access
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_access
+- name: Audit
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_audit
+- name: Firewall
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_firewall
+- name: Log
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_log
+- name: Network
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_network
+- name: System
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_system
+- name: Web
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_web
+- name: extract_intermediate_ip
+  type: ipv4
+  description: Extract intermediate ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: extract_source_ip
+  type: ipv4
+  description: Extract source ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: extract_target_host_ip
+  type: ipv4
+  description: Extract target host ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: extract_target_ip
+  type: ipv4
+  description: Extract target ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: inter_ip_v4
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: inter_ip_v6
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: method
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: src_ip_v4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ip_v6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: status_code
+  type: string
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: trg_host_ip_v4
+  type: ipv4
+  description: Destination host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: trg_host_ip_v6
+  type: ipv6
+  description: Destination host IPv6 addresses. Colon-separated hexadecimal IPv6 literal
+    (RFC 4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: trg_ip_v4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: trg_ip_v6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+use_cases:
+- Email
+- WAF
+- Firewall
+how_to_use: |
+  ## barracuda waf → Cortex XSIAM (dataset `barracuda_waf_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `barracuda` / product `waf`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `barracuda_waf_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `barracuda`
+    - **product**: `waf`
+
+    These normalize → `barracuda_waf_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log ~= "\s(WF)\s"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~34 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.original_alert_id`, `xdm.alert.original_threat_name`, `xdm.alert.severity`, `xdm.event.duration`, `xdm.event.operation`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `barracuda`, Product = `waf`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = barracuda_waf_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Phantom A2UI Events",
+  "type": "object",
+  "required": ["event", "payload"],
+  "properties": {
+    "event": {
+      "type": "string",
+      "enum": [
+        "phantom.setup.save",
+        "phantom.chat.send",
+        "phantom.navigation.select",
+        "phantom.workflow.run",
+        "phantom.skill.open",
+        "phantom.bundle.refresh",
+        "phantom.bundle.export",
+        "phantom.report.export",
+        "phantom.coverage.selectTechnique"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

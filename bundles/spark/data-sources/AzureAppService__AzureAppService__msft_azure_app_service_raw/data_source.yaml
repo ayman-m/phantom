@@ -1,0 +1,675 @@
+schema_version: 1
+id: AzureAppService
+pack_name: AzureAppService
+rule_name: AzureAppService
+dataset_name: msft_azure_app_service_raw
+vendor: Microsoft
+product: AzureAppService
+description: Azure App Service is an HTTP-based service for hosting web applications,
+  REST APIs, and mobile back ends. This pack contains normalization rules for ingesting
+  and modeling Azure App Service Resource logs.
+categories:
+- Analytics & SIEM
+version: 1.0.10
+origin: bundle
+raw_validated: true  # raw-shape validated: named-column rule, pack not installed on tenant; raw query confirmed rule columns land
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTEwcHgiIHZpZXdCb3g9IjAgMCA1MTIgMTEwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQiPgogICAgPHRpdGxlPk1pY3Jvc29mdDwvdGl0bGU+CiAgICA8Zz4KICAgICAgICA8cGF0aCBkPSJNNTEyLDQ5LjQ0ODY0MjggTDUxMiw0MC40NDQzMzc2IEw1MDAuODE4MjY3LDQwLjQ0NDMzNzYgTDUwMC44MTgyNjcsMjYuNDQ1Njg5IEw1MDAuNDQxODk5LDI2LjU2MTQ2MjIgTDQ4OS45MzkzMjgsMjkuNzc0NjMyMiBMNDg5LjczMjU0NiwyOS44Mzc3ODExIEw0ODkuNzMyNTQ2LDQwLjQ0NDMzNzYgTDQ3My4xNTU5MzIsNDAuNDQ0MzM3NiBMNDczLjE1NTkzMiwzNC41MzYxOTA5IEM0NzMuMTU1OTMyLDMxLjc4NDg3NTQgNDczLjc3MTMyNiwyOS42NzkyODk1IDQ3NC45ODM1MzksMjguMjc1MTUyOCBDNDc2LjE4NzcwMywyNi44ODc3MzIgNDc3LjkxMDA2MSwyNi4xODI1NjgxIDQ4MC4xMDYwMzcsMjYuMTgyNTY4MSBDNDgxLjY4NTM4MiwyNi4xODI1NjgxIDQ4My4zMjA0NDUsMjYuNTU0NjUyIDQ4NC45NjU0MTUsMjcuMjg4Mjk0OCBMNDg1LjM3Nzc0MSwyNy40NzIxNjk4IEw0ODUuMzc3NzQxLDE3Ljk4OTI5NDIgTDQ4NS4xODM5NjEsMTcuOTE4MDk2OSBDNDgzLjY0OTE5MiwxNy4zNjY0NzE3IDQ4MS41NjA5NDEsMTcuMDg4NDkyMyA0NzguOTczNjg5LDE3LjA4ODQ5MjMgQzQ3NS43MTIyMjgsMTcuMDg4NDkyMyA0NzIuNzQ4NTU5LDE3Ljc5Nzk4OTkgNDcwLjE2NDQwMywxOS4yMDQ2MDMgQzQ2Ny41NzgzODksMjAuNjEzMDczNSA0NjUuNTQ0MDAxLDIyLjYyMzkzNTkgNDY0LjExOTQzMywyNS4xODA4NTE2IEM0NjIuNjk5MiwyNy43MzQ2NzE3IDQ2MS45Nzg1NTgsMzAuNjg0MTAxNiA0NjEuOTc4NTU4LDMzLjk0ODAzODUgTDQ2MS45Nzg1NTgsNDAuNDQ0MzM3NiBMNDU0LjE5MjY1OCw0MC40NDQzMzc2IEw0NTQuMTkyNjU4LDQ5LjQ0ODY0MjggTDQ2MS45Nzg1NTgsNDkuNDQ4NjQyOCBMNDYxLjk3ODU1OCw4Ny4zODIwMDI2IEw0NzMuMTU1OTMyLDg3LjM4MjAwMjYgTDQ3My4xNTU5MzIsNDkuNDQ4NjQyOCBMNDg5LjczMjU0Niw0OS40NDg2NDI4IEw0ODkuNzMyNTQ2LDczLjU1NDg0NjggQzQ4OS43MzI1NDYsODMuNDgyODYxIDQ5NC40MTU0NzgsODguNTE0MzUwOSA1MDMuNjUwNzExLDg4LjUxNDM1MDkgQzUwNS4xNjg3NjQsODguNTE0MzUwOSA1MDYuNzY1NDY4LDg4LjMzNjA0NzggNTA4LjM5Njc5Miw4Ny45ODc0OTAxIEM1MTAuMDU2NjQ1LDg3LjYzMDI2NDggNTExLjE4NzEzNiw4Ny4yNzMwMzk2IDUxMS44NTI2NTIsODYuODkxNjY5MSBMNTEyLDg2LjgwNDk5NCBMNTEyLDc3LjcxNzEwOTMgTDUxMS41NDU1NzQsNzguMDE3OTk1NiBDNTEwLjkzODg0OSw3OC40MjI4OTIyIDUxMC4xODM1MzcsNzguNzUyODc2NyA1MDkuMjk3NjE5LDc4Ljk5ODA0MzUgQzUwOC40MDc5MzYsNzkuMjQ4MTYzIDUwNy42NjUwMDYsNzkuMzczODQyIDUwNy4wODk4NzksNzkuMzczODQyIEM1MDQuOTI2MDczLDc5LjM3Mzg0MiA1MDMuMzI1NzA0LDc4Ljc5MDY0MjMgNTAyLjMzMjAxLDc3LjY0MDMzOTkgQzUwMS4zMjc4MTgsNzYuNDc5NTEyNiA1MDAuODE4MzE3LDc0LjQ0ODgzODcgNTAwLjgxODMxNyw3MS42MDg5OTA4IEw1MDAuODE4MzE3LDQ5LjQ0ODY0MjggTDUxMiw0OS40NDg2NDI4IEw1MTIsNDkuNDQ4NjQyOCBaIE00MjkuMjMxODM3LDc5LjM3NDcwODcgQzQyNS4xNzQ4MjMsNzkuMzc0NzA4NyA0MjEuOTc2NTExLDc4LjAyOTM4NzIgNDE5LjcyMjM0LDc1LjM3OTYwNTQgQzQxNy40NTQ1NDcsNzIuNzE2MjAzMyA0MTYuMzA1NDgzLDY4LjkxOTIxNDYgNDE2LjMwNTQ4Myw2NC4wOTUxMjU5IEM0MTYuMzA1NDgzLDU5LjExODExNzUgNDE3LjQ1NDU0Nyw1NS4yMjI2OTA2IDQxOS43MjM1NzgsNTIuNTEyMjM2MyBDNDIxLjk3ODk4OCw0OS44MTk3MzYxIDQyNS4xNDY5NjMsNDguNDUzMzY1IDQyOS4xNDA4MjgsNDguNDUzMzY1IEM0MzMuMDE2NDQ0LDQ4LjQ1MzM2NSA0MzYuMTAxNDU4LDQ5Ljc1ODQ0NDQgNDM4LjMxMTA1NCw1Mi4zMzQ1NTIzIEM0NDAuNTMyNDE0LDU0LjkyMzY2MTUgNDQxLjY1OTE5LDU4Ljc4ODEzMyA0NDEuNjU5MTksNjMuODIzMzM3NSBDNDQxLjY1OTE5LDY4LjkyMDQ1MjkgNDQwLjU5OTI3Nyw3Mi44MzU2OTExIDQzOC41MDkxNjksNzUuNDU0NTE3NSBDNDM2LjQzMzkxOSw3OC4wNTQxNTE1IDQzMy4zMTI5OTYsNzkuMzc0NzA4NyA0MjkuMjMxODM3LDc5LjM3NDcwODcgTDQyOS4yMzE4MzcsNzkuMzc0NzA4NyBaIE00MjkuNzI5NiwzOS4zMTM0NzUxIEM0MjEuOTg5NTEzLDM5LjMxMzQ3NTEgNDE1Ljg0MTc3MSw0MS41ODEyNjczIDQxMS40NTkxMDcsNDYuMDU0MzIxOSBDNDA3LjA3ODkxOCw1MC41Mjc5OTU1IDQwNC44NTc1NTksNTYuNzE4NDU1NCA0MDQuODU3NTU5LDY0LjQ1NjA2NTggQzQwNC44NTc1NTksNzEuODA0ODc2NSA0MDcuMDI1Njc1LDc3LjcxNjExODYgNDExLjMwMTg1Myw4Mi4wMjI2MzMyIEM0MTUuNTc4MDMyLDg2LjMzMTAwNSA0MjEuMzk3NjQ1LDg4LjUxMzM2MDQgNDI4LjU5NzI1MSw4OC41MTMzNjA0IEM0MzYuMTAwMjIsODguNTEzMzYwNCA0NDIuMTI1Mzc4LDg2LjIxMzk5MzYgNDQ2LjUwNjgwNCw4MS42NzkwMjgzIEM0NTAuODg3NjExLDc3LjE0ODM5NjcgNDUzLjEwNzExNCw3MS4wMTY3NTIxIDQ1My4xMDcxMTQsNjMuNDU5OTIxMSBDNDUzLjEwNzExNCw1NS45OTU5NTY0IDQ1MS4wMjQ0MzUsNTAuMDQwNzU3NiA0NDYuOTE0Nzk3LDQ1Ljc2MjcyMiBDNDQyLjgwMzMwMSw0MS40ODI4MjkyIDQzNy4wMjAyMTQsMzkuMzEzNDc1MSA0MjkuNzI5NiwzOS4zMTM0NzUxIEw0MjkuNzI5NiwzOS4zMTM0NzUxIFogTTM4Ni44MzYyNTQsMzkuMzEzMjI3NSBDMzgxLjU3MTM2LDM5LjMxMzIyNzUgMzc3LjIxNjU1Niw0MC42NTk3ODcxIDM3My44ODk0Nyw0My4zMTUxNDA5IEMzNzAuNTQyNTczLDQ1Ljk4NTk3MjQgMzY4Ljg0NDk3OSw0OS40ODk1MDM5IDM2OC44NDQ5NzksNTMuNzI4NTM1NyBDMzY4Ljg0NDk3OSw1NS45MzE5NDA3IDM2OS4yMTE0OSw1Ny44ODk1NTk4IDM2OS45MzI3NTIsNTkuNTQ5Mzg4IEMzNzAuNjU4MzQ2LDYxLjIxNTQwNzQgMzcxLjc4MTQwOCw2Mi42ODE0NTQ5IDM3My4yNzI4MzksNjMuOTEyMjQxNCBDMzc0Ljc1Mzc0NCw2NS4xMzMxMjIyIDM3Ny4wMzgyNTMsNjYuNDEyMTk5MSAzODAuMDY2OTI4LDY3LjcxMjk0NDcgQzM4Mi42MTIwODIsNjguNzYwNDc1NCAzODQuNTEwODg1LDY5LjY0NzAzNzkgMzg1LjcxNjkwNyw3MC4zNDUzOTE2IEMzODYuODk1Njg5LDcxLjAyOTUwNTggMzg3LjczMjcyMyw3MS43MTc5NTM3IDM4OC4yMDUxMDIsNzIuMzg3ODI4NSBDMzg4LjY2Mzg2MSw3My4wNDM0NjM4IDM4OC44OTcyNjUsNzMuOTQwNTUxMSAzODguODk3MjY1LDc1LjA0ODc1NDIgQzM4OC44OTcyNjUsNzguMjAxODcwNyAzODYuNTM1OTg3LDc5LjczNjAyMDEgMzgxLjY3NjYwOSw3OS43MzYwMjAxIEMzNzkuODc0Mzg2LDc5LjczNjAyMDEgMzc3LjgxODMyOSw3OS4zNjAyMjE2IDM3NS41NjYwMTQsNzguNjE3OTExMiBDMzczLjMxMjQ2Miw3Ny44NzY4MzkxIDM3MS4yMDY4NzUsNzYuODExMzU0MyAzNjkuMzA4NjksNzUuNDQ0OTgzMiBMMzY4Ljg0NDk3OSw3NS4xMTI1MjIzIEwzNjguODQ0OTc5LDg1Ljg3MzIzNjcgTDM2OS4wMTUyMzQsODUuOTUyNDgyNSBDMzcwLjU5NzA1NCw4Ni42ODI0MTA2IDM3Mi41OTA1ODIsODcuMjk3ODAzOSAzNzQuOTQwNzE1LDg3Ljc4MjU2NTQgQzM3Ny4yODY1MTUsODguMjY3MzI2OCAzNzkuNDE3NDg0LDg4LjUxNDM1MDkgMzgxLjI2OTIzNiw4OC41MTQzNTA5IEMzODYuOTgyMzY0LDg4LjUxNDM1MDkgMzkxLjU4Mjk1NSw4Ny4xNjA5ODEgMzk0LjkzOTc1OCw4NC40OTAxNDk2IEMzOTguMzE4MjI5LDgxLjgwMDc0NDkgNDAwLjAzMDY4Miw3OC4yMTQ4NzIgNDAwLjAzMDY4Miw3My44Mjg0OTI2IEM0MDAuMDMwNjgyLDcwLjY2NDg1MTIgMzk5LjEwODgzLDY3Ljk1MTMwMTMgMzk3LjI5MTc0OSw2NS43NjMzNzQgQzM5NS40ODc2NjgsNjMuNTkyNzgxNyAzOTIuMzU2MjIsNjEuNjAwNDkyNiAzODcuOTg3Nzk1LDU5LjgzOTEzMDYgQzM4NC41MDc3ODksNTguNDQyNDIzMiAzODIuMjc4MzgzLDU3LjI4MjgzNDEgMzgxLjM1OTAwNyw1Ni4zOTMxNzYgQzM4MC40NzI0NDQsNTUuNTMzMjM1MSAzODAuMDIyMzUzLDU0LjMxNzMwNzMgMzgwLjAyMjM1Myw1Mi43Nzc1ODU5IEMzODAuMDIyMzUzLDUxLjQxMjQ1MyAzODAuNTc3NjkzLDUwLjMxOTEwODUgMzgxLjcxODcwOSw0OS40MzMxNjUxIEMzODIuODY4MzkyLDQ4LjU0Mjg4NzkgMzg0LjQ2ODE2Niw0OC4wOTAzMjAxIDM4Ni40NzUzMTUsNDguMDkwMzIwMSBDMzg4LjMzNzU5MSw0OC4wOTAzMjAxIDM5MC4yNDMyMDUsNDguMzg0Mzk2MyAzOTIuMTM3Njc1LDQ4Ljk2MDc4NTggQzM5NC4wMzE1MjYsNDkuNTM3MTc1MiAzOTUuNjk0NDUsNTAuMzA5MjAyNyAzOTcuMDgzMTA5LDUxLjI1Mzk2MTQgTDM5Ny41MzkzOTIsNTEuNTY1OTkxOCBMMzk3LjUzOTM5Miw0MS4zNTgxNDA4IEwzOTcuMzY0MTg1LDQxLjI4MjYwOTYgQzM5Ni4wODMyNSw0MC43MzM0NjEgMzk0LjM5NDMyNCw0MC4yNjM1NTgxIDM5Mi4zNDMyMTksMzkuODgyMTg3NiBDMzkwLjMwMDE2MywzOS41MDQ1MzE4IDM4OC40NDcxNzMsMzkuMzEzMjI3NSAzODYuODM2MjU0LDM5LjMxMzIyNzUgTDM4Ni44MzYyNTQsMzkuMzEzMjI3NSBaIE0zMzkuNzA2MDQ3LDc5LjM3NDcwODcgQzMzNS42NTAyNzEsNzkuMzc0NzA4NyAzMzIuNDUwNzIxLDc4LjAyOTM4NzIgMzMwLjE5NzE2OSw3NS4zNzk2MDU0IEMzMjcuOTI4NzU3LDcyLjcxNjIwMzMgMzI2Ljc4MTU1LDY4LjkyMDQ1MjkgMzI2Ljc4MTU1LDY0LjA5NTEyNTkgQzMyNi43ODE1NSw1OS4xMTgxMTc1IDMyNy45Mjk5OTYsNTUuMjIyNjkwNiAzMzAuMTk5NjQ1LDUyLjUxMjIzNjMgQzMzMi40NTMxOTgsNDkuODE5NzM2MSAzMzUuNjIwNTU0LDQ4LjQ1MzM2NSAzMzkuNjE2Mjc2LDQ4LjQ1MzM2NSBDMzQzLjQ5MDY1NCw0OC40NTMzNjUgMzQ2LjU3NTY2OCw0OS43NTg0NDQ0IDM0OC43ODU4ODMsNTIuMzM0NTUyMyBDMzUxLjAwNzI0Myw1NC45MjM2NjE1IDM1Mi4xMzQwMTksNTguNzg4MTMzIDM1Mi4xMzQwMTksNjMuODIzMzM3NSBDMzUyLjEzNDAxOSw2OC45MjA0NTI5IDM1MS4wNzM0ODcsNzIuODM1NjkxMSAzNDguOTgzMzc5LDc1LjQ1NDUxNzUgQzM0Ni45MDgxMjksNzguMDU0MTUxNSAzNDMuNzg4NDQ0LDc5LjM3NDcwODcgMzM5LjcwNjA0Nyw3OS4zNzQ3MDg3IEwzMzkuNzA2MDQ3LDc5LjM3NDcwODcgWiBNMzQwLjIwNTA0OCwzOS4zMTM0NzUxIEMzMzIuNDYzMTAzLDM5LjMxMzQ3NTEgMzI2LjMxNTM2Miw0MS41ODEyNjczIDMyMS45MzQ1NTUsNDYuMDU0MzIxOSBDMzE3LjU1NDM2Niw1MC41Mjc5OTU1IDMxNS4zMzE3NjksNTYuNzE4NDU1NCAzMTUuMzMxNzY5LDY0LjQ1NjA2NTggQzMxNS4zMzE3NjksNzEuODA3OTcyMSAzMTcuNTAxMTIzLDc3LjcxNjExODYgMzIxLjc3NzMwMSw4Mi4wMjI2MzMyIEMzMjYuMDUzNDgsODYuMzMxMDA1IDMzMS44NzI0NzUsODguNTEzMzYwNCAzMzkuMDcyNjk5LDg4LjUxMzM2MDQgQzM0Ni41NzM4MTEsODguNTEzMzYwNCAzNTIuNjAwODI2LDg2LjIxMzk5MzYgMzU2Ljk4MjI1Miw4MS42NzkwMjgzIEMzNjEuMzYxODIyLDc3LjE0ODM5NjcgMzYzLjU4MjU2Miw3MS4wMTY3NTIxIDM2My41ODI1NjIsNjMuNDU5OTIxMSBDMzYzLjU4MjU2Miw1NS45OTU5NTY0IDM2MS40OTkyNjQsNTAuMDQwNzU3NiAzNTcuMzg5MDA2LDQ1Ljc2MjcyMiBDMzUzLjI3NjI3Myw0MS40ODI4MjkyIDM0Ny40OTQ0MjQsMzkuMzEzNDc1MSAzNDAuMjA1MDQ4LDM5LjMxMzQ3NTEgTDM0MC4yMDUwNDgsMzkuMzEzNDc1MSBaIE0yOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQwLjQ0NDMzNzYgTDI4Ny4zMjM2OTksNDAuNDQ0MzM3NiBMMjg3LjMyMzY5OSw4Ny4zODA3NjQ0IEwyOTguMzY0ODcsODcuMzgwNzY0NCBMMjk4LjM2NDg3LDYzLjM3MTE0MTEgQzI5OC4zNjQ4Nyw1OS4yODgxMjQ1IDI5OS4yOTA0MzYsNTUuOTM0NDE3MSAzMDEuMTE2ODA0LDUzLjQwMTAyNzUgQzMwMi45MjAyNjUsNTAuODk3OTc0NCAzMDUuMzIzNjQzLDQ5LjYyOTQyMjMgMzA4LjI1NzU5NSw0OS42Mjk0MjIzIEMzMDkuMjUxODgxLDQ5LjYyOTQyMjMgMzEwLjM2ODEzMyw0OS43OTM0ODU5IDMxMS41NzcyNTEsNTAuMTE3ODk4NSBDMzEyLjc3Mzk4Niw1MC40NDA0NTM3IDMxMy42NDA3MzgsNTAuNzkwMjQ5NSAzMTQuMTUyMTIxLDUxLjE1ODYxODggTDMxNC42MTU4MzMsNTEuNDk0Nzk0NCBMMzE0LjYxNTgzMyw0MC4zNjM4NTM2IEwzMTQuNDM2OTExLDQwLjI4NzA4NDIgQzMxMy40MDg1NzMsMzkuODQ5OTk0IDMxMS45NTQyODgsMzkuNjI5NTkxNiAzMTAuMTEzNjgsMzkuNjI5NTkxNiBDMzA3LjMzOTQ1OCwzOS42Mjk1OTE2IDMwNC44NTYyMTYsNDAuNTIxMTA3IDMwMi43Mjk1OCw0Mi4yNzYyNzc4IEMzMDAuODYyOTcsNDMuODE5MDk0NyAyOTkuNTEzMzE0LDQ1LjkzNDU4NjQgMjk4LjQ4MTg4MSw0OC41NzI2MDUxIEwyOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQ4LjU3MjYwNTEgWiBNMjY3LjU1MTU2MywzOS4zMTMyMjc1IEMyNjIuNDg2NjQxLDM5LjMxMzIyNzUgMjU3Ljk2ODM5MSw0MC4zOTk3NjE4IDI1NC4xMjQ5Nyw0Mi41NDA2MzY5IEMyNTAuMjc0MTE4LDQ0LjY4NjQ2NDkgMjQ3LjI5NjIwOSw0Ny43NTA0Mjk5IDI0NS4yNjk4NjksNTEuNjQ2NDc1OCBDMjQzLjI1MjgxNiw1NS41MzMyMzUxIDI0Mi4yMjg4MTEsNjAuMDczMTUzNCAyNDIuMjI4ODExLDY1LjEzNTU5ODYgQzI0Mi4yMjg4MTEsNjkuNTcwMjY4NSAyNDMuMjIxODYsNzMuNjQwMjgzNyAyNDUuMTg0NDMyLDc3LjIyNjc3NTggQzI0Ny4xNDgyNDMsODAuODE5NDU4OSAyNDkuOTI4MDM3LDgzLjYzMDIwODggMjUzLjQ0NjQyNyw4NS41Nzk3Nzk1IEMyNTYuOTU5ODY1LDg3LjUyNjg3MzkgMjYxLjAyMDU5Myw4OC41MTQzNTA5IDI2NS41MTY1NTUsODguNTE0MzUwOSBDMjcwLjc2MzQ5NCw4OC41MTQzNTA5IDI3NS4yNDMzNTksODcuNDY0OTYzIDI3OC44MzU0MjMsODUuMzk2NTIzNSBMMjc4Ljk4MDI5NSw4NS4zMTI5NDM5IEwyNzguOTgwMjk1LDc1LjE5Nzk1OTIgTDI3OC41MTY1ODMsNzUuNTM2NjExMiBDMjc2Ljg4OTU2Nyw3Ni43MjE1ODM3IDI3NS4wNzEyNDgsNzcuNjY3NTgwNiAyNzMuMTE0ODY2LDc4LjM0OTIxODQgQzI3MS4xNjM0MzgsNzkuMDMwMjM3MSAyNjkuMzg0MTIyLDc5LjM3NDQ2MTEgMjY3LjgyNDU4OSw3OS4zNzQ0NjExIEMyNjMuNDkyMDczLDc5LjM3NDQ2MTEgMjYwLjAxNDU0Myw3OC4wMTg2MTQ4IDI1Ny40ODk4MjEsNzUuMzQ2NTQ1MSBDMjU0Ljk1OTUyNyw3Mi42NzAxNDE3IDI1My42NzY3MzYsNjguOTEyNzc1OSAyNTMuNjc2NzM2LDY0LjE4NDAyOTggQzI1My42NzY3MzYsNTkuNDI1NTY2NSAyNTUuMDE0NjI4LDU1LjU3MTYxOTkgMjU3LjY1MTQwOCw1Mi43Mjc0MzgxIEMyNjAuMjc5NTIxLDQ5Ljg5MTkyNCAyNjMuNzYzODYsNDguNDUzNzM2NCAyNjguMDA2NjA3LDQ4LjQ1MzczNjQgQzI3MS42MzU4MTcsNDguNDUzNzM2NCAyNzUuMTcyMTYxLDQ5LjY4MjY2NTUgMjc4LjUxNzgyMSw1Mi4xMDk1Njg1IEwyNzguOTgwMjk1LDUyLjQ0NTc0NDEgTDI3OC45ODAyOTUsNDEuNzg3ODAxNyBMMjc4LjgzMTA4OSw0MS43MDM2MDMgQzI3Ny41NzE4MjQsNDAuOTk5MDU4MiAyNzUuODU1MDM3LDQwLjQxNzA5NjggMjczLjcyMjgzLDM5Ljk3NTY3MjkgQzI3MS42MDA1MjgsMzkuNTM1NDg3MiAyNjkuNTI0NjU5LDM5LjMxMzIyNzUgMjY3LjU1MTU2MywzOS4zMTMyMjc1IEwyNjcuNTUxNTYzLDM5LjMxMzIyNzUgWiBNMjM0LjYyNDU1Nyw0MC40NDQ0NjE0IEwyMjMuNTgzMzg3LDQwLjQ0NDQ2MTQgTDIyMy41ODMzODcsODcuMzgwODg4MSBMMjM0LjYyNDU1Nyw4Ny4zODA4ODgxIEwyMzQuNjI0NTU3LDQwLjQ0NDQ2MTQgTDIzNC42MjQ1NTcsNDAuNDQ0NDYxNCBaIE0yMjkuMjE2NjQ5LDIwLjQ0OTEzMzggQzIyNy4zOTk1NjgsMjAuNDQ5MTMzOCAyMjUuODE0NjUyLDIxLjA2NzYyMjUgMjI0LjUxMjY2NywyMi4yOTM0NTYyIEMyMjMuMjA1MTEyLDIzLjUyMzAwNDQgMjIyLjU0MTQyOCwyNS4wNzA3NzQyIDIyMi41NDE0MjgsMjYuODk3MTQyNCBDMjIyLjU0MTQyOCwyOC42OTUwMzE4IDIyMy4xOTcwNjQsMzAuMjE0MzIyNiAyMjQuNDkxNjE4LDMxLjQxMTA1ODEgQzIyNS43NzgxMjQsMzIuNjA0MDc5MSAyMjcuMzY3OTkzLDMzLjIwODk0NzQgMjI5LjIxNjY0OSwzMy4yMDg5NDc0IEMyMzEuMDY0Njg2LDMzLjIwODk0NzQgMjMyLjY2MDc0NywzMi42MDQwNzkxIDIzMy45NjI3MywzMS40MTI5MTU1IEMyMzUuMjczMzgyLDMwLjIxNDMyMjYgMjM1LjkzNzY4NSwyOC42OTUwMzE4IDIzNS45Mzc2ODUsMjYuODk3MTQyNCBDMjM1LjkzNzY4NSwyNS4xMzQ1NDIzIDIzNS4yOTEzMzYsMjMuNjAyMjUwMiAyMzQuMDE2NTkzLDIyLjM0Mjk4NDggQzIzMi43NDM3MDcsMjEuMDg2MTk1OCAyMzEuMTI4NDU1LDIwLjQ0OTEzMzggMjI5LjIxNjY0OSwyMC40NDkxMzM4IEwyMjkuMjE2NjQ5LDIwLjQ0OTEzMzggWiBNMjAxLjY2ODg4NCwzNi45ODE1NDMzIEwyMDEuNjY4ODg0LDg3LjM4MDY0MDYgTDIxMi45MzY2NDcsODcuMzgwNjQwNiBMMjEyLjkzNjY0NywyMS44ODY0NTQ2IEwxOTcuMzQxOTM5LDIxLjg4NjQ1NDYgTDE3Ny41MTkzNDIsNzAuNTMzNDc2NiBMMTU4LjI4MzA0MSwyMS44ODY0NTQ2IEwxNDIuMDUzMTI4LDIxLjg4NjQ1NDYgTDE0Mi4wNTMxMjgsODcuMzgwNjQwNiBMMTUyLjY0MTczLDg3LjM4MDY0MDYgTDE1Mi42NDE3MywzNi45NzY1OTA1IEwxNTMuMDA1NzY1LDM2Ljk3NjU5MDUgTDE3My4zMTg2OTUsODcuMzgwNjQwNiBMMTgxLjMwOTUyMSw4Ny4zODA2NDA2IEwyMDEuMzA1NDY3LDM2Ljk4MTU0MzMgTDIwMS42Njg4ODQsMzYuOTgxNTQzMyBMMjAxLjY2ODg4NCwzNi45ODE1NDMzIFoiIGZpbGw9IiM3MDZENkUiPjwvcGF0aD4KICAgICAgICA8Zz4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0YxNTExQiIgcG9pbnRzPSI1MS45Mzk0Mzc3IDUxLjkzOTQzNzcgMCA1MS45Mzk0Mzc3IDAgMCA1MS45Mzk0Mzc3IDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzgwQ0MyOCIgcG9pbnRzPSIxMDkuMjg2NzgzIDUxLjkzOTQzNzcgNTcuMzQ3OTY0MiA1MS45Mzk0Mzc3IDU3LjM0Nzk2NDIgMCAxMDkuMjg2NzgzIDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzAwQURFRiIgcG9pbnRzPSI1MS45MzgxOTk1IDEwOS4zMDcyMTMgMCAxMDkuMzA3MjEzIDAgNTcuMzY3Nzc1NyA1MS45MzgxOTk1IDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0ZCQkMwOSIgcG9pbnRzPSIxMDkuMjg2NzgzIDEwOS4zMDcyMTMgNTcuMzQ3OTY0MiAxMDkuMzA3MjEzIDU3LjM0Nzk2NDIgNTcuMzY3Nzc1NyAxMDkuMjg2NzgzIDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: ActionName
+  type: string
+  description: Vendor-emitted field 'ActionName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_actionname
+- name: AppName
+  type: string
+  description: Vendor-emitted field 'AppName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Salesforce
+- name: CIp
+  type: ipv4
+  description: Vendor-emitted field 'CIp'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '82.101.44.7'
+- name: Code
+  type: integer
+  description: Vendor-emitted field 'Code'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '200'
+- name: ComputerName
+  type: string
+  description: Vendor-emitted field 'ComputerName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'acme-portal-vm01'
+- name: CsBytes
+  type: integer
+  description: Vendor-emitted field 'CsBytes'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '1024'
+- name: CsHost
+  type: host
+  description: Vendor-emitted field 'CsHost'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'acme-portal.azurewebsites.net'
+- name: CsMethod
+  type: string_short
+  description: Vendor-emitted field 'CsMethod'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'GET'
+- name: CsUsername
+  type: user
+  description: Vendor-emitted field 'CsUsername'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'ahmed.saleh'
+- name: Details
+  type: string_long
+  description: Additional details payload emitted by Microsoft. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by Microsoft for this record.
+- name: EndTime
+  type: string
+  description: Vendor-emitted field 'EndTime'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_endtime
+- name: EventName
+  type: string
+  description: Vendor-emitted field 'EventName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: login
+- name: Host
+  type: host
+  description: Hostname or FQDN as reported by Microsoft. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: HostInstanceId
+  type: string
+  description: Vendor-emitted field 'HostInstanceId'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_hostinstanceid
+- name: Level
+  type: string
+  description: Log severity level (Critical/Error/Warning/Info). Free-form text; may
+    contain whitespace and punctuation.
+  example: info
+- name: ListOfInfectedFiles
+  type: json
+  is_array: true
+  description: List of infected files (AV scan). JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: Message
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: Operation completed successfully.
+- name: OriginRunId
+  type: string
+  description: Original workflow run id (parent). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_originrunid
+- name: Path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/app.log
+- name: Process
+  type: string
+  description: Vendor-emitted field 'Process'. Free-form text; may contain whitespace
+    and punctuation.
+  example: explorer.exe
+- name: ProcessId
+  type: integer
+  description: Vendor-emitted field 'ProcessId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '4242'
+- name: Protocol
+  type: string
+  description: Network protocol name or numeric IANA assignment. Free-form text; may
+    contain whitespace and punctuation.
+  example: tcp
+- name: Referer
+  type: url
+  description: HTTP Referer header value. Full URL with scheme (http/https/ftp); percent-encoded
+    if non-ASCII.
+  example: https://example.com/path?q=1
+- name: Result
+  type: string_short
+  description: Result string emitted by Microsoft. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: 'Success'
+- name: RunId
+  type: string
+  description: Vendor-emitted field 'RunId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_runid
+- name: SPort
+  type: integer_port
+  description: Vendor-emitted field 'SPort'. Unsigned integer 0-65535 representing
+    a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: ScBytes
+  type: integer
+  description: Vendor-emitted field 'ScBytes'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '4096'
+- name: ScStatus
+  type: integer
+  description: Vendor-emitted field 'ScStatus'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '200'
+- name: ScanStatus
+  type: string
+  description: Vendor-emitted field 'ScanStatus'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_scanstatus
+- name: StartTime
+  type: string
+  description: Vendor-emitted field 'StartTime'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_starttime
+- name: Status
+  type: string
+  description: Current status (e.g. New, InProgress, Resolved). Free-form text; may
+    contain whitespace and punctuation.
+  example: success
+- name: TimeTaken
+  type: integer
+  description: Vendor-emitted field 'TimeTaken'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '142'
+- name: User
+  type: string
+  description: User account associated with the event. Free-form text; may contain
+    whitespace and punctuation.
+  example: jdoe
+- name: UserAddress
+  type: ipv4
+  description: Vendor-emitted field 'UserAddress'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: UserDisplayName
+  type: string
+  description: Vendor-emitted field 'UserDisplayName'. Free-form text; may contain
+    whitespace and punctuation.
+  example: John Doe
+- name: WorkflowId
+  type: string
+  description: Vendor-emitted field 'WorkflowId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_workflowid
+- name: WorkflowName
+  type: string
+  description: Vendor-emitted field 'WorkflowName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_workflowname
+- name: _ResourceId
+  type: string
+  description: Vendor-emitted field ' ResourceId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '/SUBSCRIPTIONS/8F2E4C11-93A7-4B6D-9C21-5E7A0D3F1B88/RESOURCEGROUPS/RG-Acme-PROD/PROVIDERS/MICROSOFT.WEB/SITES/Acme-PORTAL'
+- name: TimeGenerated
+  type: datetime
+  description: Log Analytics ingestion timestamp. The parsing rule derives _time from
+    'time' or 'TimeGenerated'; without one of them _time is null.
+  example: '2026-09-02T03:45:12.6980000Z'
+- name: category
+  is_gate: true
+  type: string_short
+  description: Microsoft's category classifier for the event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: 'AppServiceHTTPLogs'
+- name: containerId
+  type: string
+  description: Vendor-emitted field 'ContainerId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: container-abc123
+- name: location
+  type: string
+  description: Location label (region/site/zone) emitted by Microsoft. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'westeurope'
+- name: operationName
+  type: string
+  description: Vendor-emitted field 'OperationName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'Microsoft.Web/sites/log'
+- name: properties
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: CIp, ComputerName,
+    CsBytes, CsHost, CsMethod, CsUsername, Details, ListOfInfectedFiles, Path, Process,
+    Protocol, Referer, Result, SPort, ScBytes, ScStatus, ScanStatus, TimeTaken, User,
+    UserAddress, UserAgent, UserDisplayName, code, error, hostInstanceId, message,
+    processId, resource, startTime, status (each key defined as a dotted-path leaf
+    below).'
+  example: '{}'
+- name: resourceId
+  type: string
+  description: Vendor-emitted field 'ResourceId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '/SUBSCRIPTIONS/8F2E4C11-93A7-4B6D-9C21-5E7A0D3F1B88/RESOURCEGROUPS/RG-Acme-PROD/PROVIDERS/MICROSOFT.WEB/SITES/Acme-PORTAL'
+- name: resultDescription
+  type: string
+  description: Vendor-emitted field 'ResultDescription'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_resultdescriptio
+- name: resultType
+  type: string
+  description: Vendor-emitted field 'ResultType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_resulttype
+- name: userAgent
+  type: string
+  description: User agent (kubectl version + client info). Free-form text; may contain
+    whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: properties.CIp
+  type: ipv4
+  description: Vendor-emitted field 'Properties › CIp'. Leaf of the 'properties' composite.
+    Unsigned integer 0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '82.101.44.7'
+- name: properties.ComputerName
+  type: string
+  description: Vendor-emitted field 'Properties › ComputerName'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: 'acme-portal-vm01'
+- name: properties.CsBytes
+  type: integer
+  description: Vendor-emitted field 'Properties › CsBytes'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '1024'
+- name: properties.CsHost
+  type: host
+  description: Vendor-emitted field 'Properties › CsHost'. Leaf of the 'properties'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: 'acme-portal.azurewebsites.net'
+- name: properties.CsMethod
+  type: string_short
+  description: Vendor-emitted field 'Properties › CsMethod'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: 'GET'
+- name: properties.CsUsername
+  type: user
+  description: Vendor-emitted field 'Properties › CsUsername'. Leaf of the 'properties'
+    composite. Account name as the vendor reports it — login name, UPN, or sAMAccountName
+    depending on the source; no domain prefix unless the vendor emits one.
+  example: 'ahmed.saleh'
+- name: properties.Details
+  type: string
+  description: Additional details payload emitted by Microsoft. Unsigned integer 0-65535
+    representing a TCP/UDP port; bare digits, no quotes.
+  example: 'Request completed'
+- name: properties.ListOfInfectedFiles
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Properties › ListOfInfectedFiles'. Leaf of the
+    'properties' composite. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: 'none'
+- name: properties.Path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/app.log
+- name: properties.Process
+  type: string
+  description: Vendor-emitted field 'Properties › Process'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: 'w3wp.exe'
+- name: properties.Protocol
+  type: string_short
+  description: Vendor-emitted field 'Properties › Protocol'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: 'HTTPS'
+- name: properties.Referer
+  type: url
+  description: HTTP Referer header value. Full URL with scheme (http/https/ftp); percent-encoded
+    if non-ASCII.
+  example: 'https://acme-portal.azurewebsites.net/home'
+- name: properties.Result
+  type: string_short
+  description: Result string emitted by Microsoft. Unsigned integer 0-65535 representing
+    a TCP/UDP port; bare digits, no quotes.
+  example: 'Success'
+- name: properties.SPort
+  type: integer_port
+  description: Vendor-emitted field 'Properties › SPort'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '443'
+- name: properties.ScBytes
+  type: integer
+  description: Vendor-emitted field 'Properties › ScBytes'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '4096'
+- name: properties.ScStatus
+  type: integer
+  description: Vendor-emitted field 'Properties › ScStatus'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '200'
+- name: properties.ScanStatus
+  type: string_short
+  description: Vendor-emitted field 'Properties › ScanStatus'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: 'Succeeded'
+- name: properties.TimeTaken
+  type: integer
+  description: Vendor-emitted field 'Properties › TimeTaken'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '142'
+- name: properties.User
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: 'ahmed.saleh'
+- name: properties.UserAddress
+  type: string
+  description: Vendor-emitted field 'Properties › UserAddress'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '82.101.44.7:51423'
+- name: properties.UserAgent
+  type: string
+  description: Vendor-emitted field 'Properties › UserAgent'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+- name: properties.UserDisplayName
+  type: email
+  description: Vendor-emitted field 'Properties › UserDisplayName'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: 'ahmed.saleh@example-isp.example'
+- name: properties.code
+  type: string_short
+  description: Vendor-emitted field 'Properties › code'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: 'OK'
+- name: properties.error.message
+  type: string
+  description: Human-readable event message. Unsigned integer 0-65535 representing
+    a TCP/UDP port; bare digits, no quotes.
+  example: 'none'
+- name: properties.hostInstanceId
+  type: host
+  description: Vendor-emitted field 'Properties › hostInstanceId'. Leaf of the 'properties'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: 'acme-portal-vm01'
+- name: properties.message
+  type: string
+  description: Human-readable event message. Unsigned integer 0-65535 representing
+    a TCP/UDP port; bare digits, no quotes.
+  example: 'Request completed'
+- name: properties.processId
+  type: integer
+  description: Operating-system process identifier. Unsigned integer 0-65535 representing
+    a TCP/UDP port; bare digits, no quotes.
+  example: '4128'
+- name: properties.resource.actionName
+  type: string
+  description: Vendor-emitted field 'Properties › resource › actionName'. Leaf of
+    the 'properties' composite. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: 'HttpRequest'
+- name: properties.resource.originRunId
+  type: string
+  description: Vendor-emitted field 'Properties › resource › originRunId'. Leaf of
+    the 'properties' composite. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: 'run-0001'
+- name: properties.resource.runId
+  type: string
+  description: Vendor-emitted field 'Properties › resource › runId'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: 'run-0002'
+- name: properties.resource.workflowId
+  type: string
+  description: Vendor-emitted field 'Properties › resource › workflowId'. Leaf of
+    the 'properties' composite. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: 'wf-0003'
+- name: properties.resource.workflowName
+  type: string
+  description: Vendor-emitted field 'Properties › resource › workflowName'. Leaf of
+    the 'properties' composite. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: 'acme-portal-wf'
+- name: properties.startTime
+  type: datetime
+  description: Vendor-emitted field 'Properties › startTime'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '2026-09-02T08:45:12.6980000Z'
+- name: properties.status
+  type: string_short
+  description: Status code returned by Microsoft. Unsigned integer 0-65535 representing
+    a TCP/UDP port; bare digits, no quotes.
+  example: 'Succeeded'
+use_cases:
+- Cloud
+- SaaS
+- Identity
+how_to_use: |
+  ## Azure App Service -> Cortex XSIAM (dataset `msft_azure_app_service_raw`)
+
+  Required CEF header for XSIAM:
+  - vendor: `msft`
+  - product: `azure`
+
+  **Routing.** Several Azure packs share `msft`/`azure` and are separated by the `category`
+  field inside their INGEST filter. App Service claims
+  `AppServiceHTTPLogs`, `AppServiceConsoleLogs`, `AppServiceAppLogs`,
+  `AppServiceIPSecAuditLogs`, `AppServicePlatformLogs`, `AppServiceAntivirusScanAuditLogs`,
+  `AppServiceFileAuditLogs`, `FunctionAppLogs`, `AppServiceAuditLogs`, `WorkflowRuntime`,
+  `AppServiceEnvironmentPlatformLogs`.
+
+  **`category` is the hard gate and the rule is `no_hit=drop`.** Any other value and the
+  event is DISCARDED at ingest -- no raw row, no error, nothing to diagnose. This schema
+  shipped `category: access_control`, so every generated event was silently thrown away.
+
+  **`_time` comes from `time` or `TimeGenerated`**, in that order. At least one must be
+  present and parseable or the event has no usable timestamp.
+
+  **`properties` is coalesced BEFORE the flat columns.** The rule reads
+  `coalesce(properties -> ScStatus, to_string(ScStatus))`, so a wrong value inside
+  `properties` OVERRIDES a correct flat column. This schema shipped 27 `properties.*`
+  leaves typed `integer_port` with the example `443` -- `properties.CsMethod = 443`,
+  `properties.ScStatus = 443` -- which would have actively broken the mapping rather than
+  merely failing to help it. Keep `properties.*` correct or omit it.
+
+  **Fields the HTTP-logs branch reads**: `category`, `TimeGenerated`, `resourceId` (or
+  `_ResourceId`; the rule splits it on `/` for subscription id, resource name and type, so
+  send a real ARM path), `location`, `CIp`, `CsHost`, `CsMethod`, `ScStatus`, `Result`
+  (`Success`/`Failure`), `TimeTaken`, `ComputerName`, `Referer`, `userAgent`, `CsUsername`,
+  `CsBytes`, `ScBytes`, `SPort`.
+
+  **KNOWN GAP -- modeling rule not bound when the content pack is missing.** With the fixes above events
+  land in the dataset, but `datamodel dataset = msft_azure_app_service_raw` returns 0 rows
+  while the sibling Azure DevOps dataset returns rows. That is the signature of the Azure
+  App Service content pack not being installed. Until an operator installs it, this source
+  produces raw rows and no `xdm.*`.
+
+  **Simulation recipe — reverse-engineered from this pack's parsing + modeling rules.**
+
+  Routing: vendor `MSFT` / product `Azure`.
+  Discriminator: category = "AppServiceHTTPLogs" (any of the 11 App Service categories selects this dataset)
+  (Taken VERBATIM from the pack's parsing rule, line 1: [INGEST:vendor="MSFT", product="Azure", target_dataset="msft_azure_app_service_raw", no_hit = drop]. Not derived — the derived name for MSFT/Azure would be msft_azure_raw (which is MicrosoftEntraID's dataset), so the explicit target_dataset is load-bearing. Case is irrelevant on the wire: the broker lowercases before matching, and the sibling Azure packs spell the same pair lowercase (vendor="msft", product="azure"). The schema's how_to_use documents the lowercase form `msft`/`azure`, which is the form already proven to land (raw_validated: true).)
+
+  Gate: `category` must be one of `AppServiceHTTPLogs`, `AppServiceConsoleLogs`, `AppServiceAppLogs`, `AppServiceIPSecAuditLogs`, `AppServicePlatformLogs`, `AppServiceAntivirusScanAuditLogs`, `AppServiceFileAuditLogs`, `FunctionAppLogs`, `AppServiceAuditLogs`, `WorkflowRuntime`, `AppServiceEnvironmentPlatformLogs`.
+  no_hit: drop
+
+  Composite: `properties` must be a JSON OBJECT on the wire. Leaves read: `properties.CIp`, `properties.CsHost`, `properties.CsMethod`, `properties.ScStatus`, `properties.Result`, `properties.TimeTaken`, `properties.ComputerName`, `properties.Referer`, `properties.UserAgent`, `properties.CsUsername`, `properties.CsBytes`, `properties.ScBytes`
+
+  Pass this verbatim as `observables_dict` (keys are schema field names; values are LISTS):
+
+  ```json
+  {
+    "category": [
+      "AppServiceHTTPLogs"
+    ],
+    "resourceId": [
+      "/SUBSCRIPTIONS/8F2E4C11-93A7-4B6D-9C21-5E7A0D3F1B88/RESOURCEGROUPS/RG-Acme-PROD/PROVIDERS/MICROSOFT.WEB/SITES/Acme-PORTAL"
+    ],
+    "location": [
+      "westeurope"
+    ],
+    "CIp": [
+      "82.101.44.7"
+    ],
+    "CsHost": [
+      "acme-portal.azurewebsites.net"
+    ],
+    "CsMethod": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "HEAD",
+      "OPTIONS",
+      "PATCH"
+    ],
+    "ScStatus": [
+      "200",
+      "302",
+      "401",
+      "403",
+      "404",
+      "500"
+    ],
+    "Result": [
+      "Success",
+      "Failure"
+    ],
+    "TimeTaken": [
+      "142"
+    ],
+    "ComputerName": [
+      "acme-portal-vm01"
+    ],
+    "Referer": [
+      "https://acme-portal.azurewebsites.net/home"
+    ],
+    "userAgent": [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+    ],
+    "CsUsername": [
+      "ahmed.saleh"
+    ],
+    "CsBytes": [
+      "1024"
+    ],
+    "ScBytes": [
+      "4096"
+    ],
+    "SPort": [
+      "443"
+    ],
+    "properties.CIp": [
+      "82.101.44.7"
+    ],
+    "properties.CsHost": [
+      "acme-portal.azurewebsites.net"
+    ],
+    "properties.CsMethod": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "HEAD",
+      "OPTIONS",
+      "PATCH"
+    ],
+    "properties.ScStatus": [
+      "200",
+      "302",
+      "401",
+      "403",
+      "404",
+      "500"
+    ],
+    "properties.Result": [
+      "Success",
+      "Failure"
+    ],
+    "properties.TimeTaken": [
+      "142"
+    ],
+    "properties.ComputerName": [
+      "acme-portal-vm01"
+    ],
+    "properties.Referer": [
+      "https://acme-portal.azurewebsites.net/home"
+    ],
+    "properties.UserAgent": [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+    ],
+    "properties.CsUsername": [
+      "ahmed.saleh"
+    ],
+    "properties.CsBytes": [
+      "1024"
+    ],
+    "properties.ScBytes": [
+      "4096"
+    ],
+    "properties.SPort": [
+      "443"
+    ]
+  }
+  ```
+
+  Populates: `_time`, `xdm.event.original_event_type`, `xdm.event.type`, `xdm.event.duration`, `xdm.event.outcome`, `xdm.source.cloud.provider`, `xdm.source.cloud.project_id`, `xdm.source.cloud.region`, `xdm.source.ipv4`, `xdm.source.user.username`, `xdm.source.user_agent`, `xdm.source.sent_bytes`, `xdm.target.resource.id`, `xdm.target.resource.name`, `xdm.target.resource.type`, `xdm.target.host.hostname`, `xdm.target.sent_bytes`, `xdm.target.port`, `xdm.observer.name`, `xdm.network.http.method`, `xdm.network.http.response_code`, `xdm.network.http.referrer`, `xdm.source.port (ONLY if CIp / properties.CIp is given as <ip>:<port> — see notes)`
+
+  - PRECEDENCE IS THE WHOLE GAME HERE: every HTTP-branch read is `coalesce(properties -> X, X)` — the JSON leaf WINS over the flat column. The generator emits the full `properties` object on every event (all 30 declared leaves, folded by dynamic_schema.py's _build_nested), so any leaf left out of observables_dict gets a RANDOM value that overrides a correct flat column. This is why the recipe pins all 13 read leaves AND their flat twins. The schema's own how_to_use records that this already bit once: 27 properties.* leaves shipped typed `integer_port` with example 443, which actively broke the mapping rather than merely failing to help it.
+  - properties.ScStatus must be a JSON STRING ("200"), not the number 200. The flat branch is wrapped — `to_string(ScStatus)` — but the properties branch is NOT: `coalesce(properties -> ScStatus, to_string(ScStatus))`. The status lookup then compares tmp_http_status against string literals ("200", "404", …). A JSON number falls through the whole table to the final `to_string(tmp_http_status)` escape, so xdm.network.http.response_code is still populated but as a bare string instead of the XDM_CONST.HTTP_RSP_CODE_* enum. Passing it through observables_dict as the string "200" is what forces the string form — an explicit override is returned verbatim, ignoring the declared `integer` type.
+  - CASE SENSITIVITY: CsMethod is compared against an uppercase verb table ("GET", "POST", …) with no normalization — "get" does not match and falls through to the raw to_string() escape. Result IS normalized (lowercase()) so "Success"/"success"/"SUCCESS" all work, but only the two literals "success" and "failure" map; "Failed", "Error", "OK" leave xdm.event.outcome NULL.
+  - xdm.source.port needs an `<ip>:<port>` CIp. The shared http rule extracts the port with `(?:\d{1,3}\.){3}\d{1,3}:(\d+)`. Real AppServiceHTTPLogs CIp is a bare client IP, so the recipe keeps `82.101.44.7` for vendor fidelity and xdm.source.port stays null. If you want that one extra field, set CIp and properties.CIp to "82.101.44.7:51423" — xdm.source.ipv4 still extracts correctly, and the ipv6 branch cannot false-positive because its regex needs 2+ colons.
+  - TimeGenerated is DELIBERATELY not pinned. Its declared type `datetime` makes xlog's _rand_datetime() emit `<iso>Z` (e.g. 2026-09-02T03:45:12.698000Z), which contains "Z" and therefore parses under the rule's `%FT%H:%M:%E*SZ` branch. Pinning it would give every generated event an identical _time. Only add it to observables_dict if a probe shows _time is null.
+  - ROUTING OVERLAP WORTH KNOWING: six packs share the msft/azure pair — AzureAppService, AzureKubernetesServices, AzureFirewall, AzureWAF, AzureDevOps and MicrosoftEntraID. Five of them discriminate on `category` and are mutually exclusive (EntraID even explicitly excludes the eleven App Service categories by name), so AppServiceHTTPLogs is unambiguous. The exception is AzureDevOps, whose Log Analytics INGEST filter gates ONLY on `to_string(TimeGenerated) ~= "\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z"` with no category constraint — and the generator's default fractional-Z timestamp matches that pattern too. The schema is marked raw_validated:true (rows confirmed landing in msft_azure_app_service_raw), so in practice it resolves our way; if a probe ever shows events in msft_azure_devops_raw, pin TimeGenerated to second precision ("2026-09-02T03:45:12Z") — that still satisfies App Service's `contains "Z"` branch but no longer matches the DevOps regex.
+  - The AppServiceHTTPLogs branch does NOT call msft_azure_app_service_map_common_app_fields. So xdm.event.log_level, xdm.event.description, xdm.source.host.hostname and xdm.source.process.container_id are NOT populated for this category, no matter what you send in Level / Message / Host / containerId. Those four only appear under AppServiceConsoleLogs / AppServiceAppLogs / AppServicePlatformLogs (and partially under FunctionAppLogs).
+  - KNOWN BLOCKER carried in the schema's how_to_use: the Azure App Service content pack must be installed on the tenant. Without it, events land raw but `datamodel dataset = msft_azure_app_service_raw` returns 0 rows, i.e. no modeling rule is bound. Everything above is derived from the pack's rule source; it cannot map end-to-end until an operator installs the pack.
+  - Trust a properties.* leaf's `type:`, not generic port-style wording in its description text: roughly 27 of the leaves (for example properties.CsMethod and properties.Referer) carry boilerplate descriptions about TCP/UDP ports, while their `type:` values (string_short, url, host, …) are the authoritative ones.
+  - RULE-SIDE BUG in the WorkflowRuntime branch (not our recipe, but it will confuse a future validation of that category): `tmp_endTime = to_string(coalesce(properties -> startTime, EndTime))` reads startTime, not endTime. Whenever properties.startTime is present, tmp_startTime and tmp_endTime are identical and xdm.event.duration is 0. Nothing on our side can fix it; only `EndTime` with `properties.startTime` absent produces a real duration.
+  - For wider category coverage, regenerate with the same routing and a different `category` plus that branch's leaves: AppServiceIPSecAuditLogs (adds xdm.observer.action, xdm.event.description from properties.Details), AppServiceFileAuditLogs (properties.Path + operationName containing rename/delete/create => xdm.event.operation, xdm.target.file.path/filename, xdm.source.process.name), AppServiceAuditLogs (properties.User, properties.UserDisplayName WITH an "@" for xdm.source.user.upn, properties.UserAddress, properties.Protocol), FunctionAppLogs (Level in CRITICAL/ERROR/WARNING/INFO*/DEBUG, properties.hostInstanceId, properties.processId, properties.message), AppServiceEnvironmentPlatformLogs (resultType containing "succ"/"fail"), WorkflowRuntime (properties.code as an HTTP reason phrase like "OK", properties.status, properties.resource.*).
+  - `_ResourceId` is intentionally left OUT of the recipe. It is a declared ordinary field (not is_meta) and would be emitted, but `resourceId` wins the `if()` that builds tmp_resource_id anyway, and underscore-prefixed extension keys are the family that gets shadowed by broker-stamped metadata. Pinning `resourceId` alone is sufficient and carries no risk.
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,1901 @@
+schema_version: 1
+id: MicrosoftWindowsEvents
+pack_name: MicrosoftWindowsEvents
+rule_name: MicrosoftWindowsEvents
+dataset_name: microsoft_windows_raw
+vendor: Microsoft
+product: windows
+description: 'Microsoft Windows Security-channel event logs (4624 logon, 4625 failed logon, 4672 special
+  privileges, 4768/4769/4770 Kerberos TGT/TGS, 4771 pre-auth failure, 4728/4729 group membership, plus
+  the PowerShell, TaskScheduler, Defender, Firewall and Active Directory provider paths). Delivered to
+  Cortex XSIAM as CEF over syslog with header vendor=microsoft product=windows. Validated end to end:
+  58 xdm fields populate and the user-to-machine binding lands (xdm.source.user.username +
+  xdm.source.host.hostname + xdm.logon.type + xdm.event.operation=AUTH_LOGIN). The modeling rule reads
+  33 of its fields by REGEX OVER THE `message` STRING, several with no other source, so the message body
+  is load-bearing rather than decorative — see how_to_use for the per-event templates and the full gate
+  set.'
+categories:
+- IT Services
+- Network Security
+version: 1.1.27
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTEwcHgiIHZpZXdCb3g9IjAgMCA1MTIgMTEwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQiPgogICAgPHRpdGxlPk1pY3Jvc29mdDwvdGl0bGU+CiAgICA8Zz4KICAgICAgICA8cGF0aCBkPSJNNTEyLDQ5LjQ0ODY0MjggTDUxMiw0MC40NDQzMzc2IEw1MDAuODE4MjY3LDQwLjQ0NDMzNzYgTDUwMC44MTgyNjcsMjYuNDQ1Njg5IEw1MDAuNDQxODk5LDI2LjU2MTQ2MjIgTDQ4OS45MzkzMjgsMjkuNzc0NjMyMiBMNDg5LjczMjU0NiwyOS44Mzc3ODExIEw0ODkuNzMyNTQ2LDQwLjQ0NDMzNzYgTDQ3My4xNTU5MzIsNDAuNDQ0MzM3NiBMNDczLjE1NTkzMiwzNC41MzYxOTA5IEM0NzMuMTU1OTMyLDMxLjc4NDg3NTQgNDczLjc3MTMyNiwyOS42NzkyODk1IDQ3NC45ODM1MzksMjguMjc1MTUyOCBDNDc2LjE4NzcwMywyNi44ODc3MzIgNDc3LjkxMDA2MSwyNi4xODI1NjgxIDQ4MC4xMDYwMzcsMjYuMTgyNTY4MSBDNDgxLjY4NTM4MiwyNi4xODI1NjgxIDQ4My4zMjA0NDUsMjYuNTU0NjUyIDQ4NC45NjU0MTUsMjcuMjg4Mjk0OCBMNDg1LjM3Nzc0MSwyNy40NzIxNjk4IEw0ODUuMzc3NzQxLDE3Ljk4OTI5NDIgTDQ4NS4xODM5NjEsMTcuOTE4MDk2OSBDNDgzLjY0OTE5MiwxNy4zNjY0NzE3IDQ4MS41NjA5NDEsMTcuMDg4NDkyMyA0NzguOTczNjg5LDE3LjA4ODQ5MjMgQzQ3NS43MTIyMjgsMTcuMDg4NDkyMyA0NzIuNzQ4NTU5LDE3Ljc5Nzk4OTkgNDcwLjE2NDQwMywxOS4yMDQ2MDMgQzQ2Ny41NzgzODksMjAuNjEzMDczNSA0NjUuNTQ0MDAxLDIyLjYyMzkzNTkgNDY0LjExOTQzMywyNS4xODA4NTE2IEM0NjIuNjk5MiwyNy43MzQ2NzE3IDQ2MS45Nzg1NTgsMzAuNjg0MTAxNiA0NjEuOTc4NTU4LDMzLjk0ODAzODUgTDQ2MS45Nzg1NTgsNDAuNDQ0MzM3NiBMNDU0LjE5MjY1OCw0MC40NDQzMzc2IEw0NTQuMTkyNjU4LDQ5LjQ0ODY0MjggTDQ2MS45Nzg1NTgsNDkuNDQ4NjQyOCBMNDYxLjk3ODU1OCw4Ny4zODIwMDI2IEw0NzMuMTU1OTMyLDg3LjM4MjAwMjYgTDQ3My4xNTU5MzIsNDkuNDQ4NjQyOCBMNDg5LjczMjU0Niw0OS40NDg2NDI4IEw0ODkuNzMyNTQ2LDczLjU1NDg0NjggQzQ4OS43MzI1NDYsODMuNDgyODYxIDQ5NC40MTU0NzgsODguNTE0MzUwOSA1MDMuNjUwNzExLDg4LjUxNDM1MDkgQzUwNS4xNjg3NjQsODguNTE0MzUwOSA1MDYuNzY1NDY4LDg4LjMzNjA0NzggNTA4LjM5Njc5Miw4Ny45ODc0OTAxIEM1MTAuMDU2NjQ1LDg3LjYzMDI2NDggNTExLjE4NzEzNiw4Ny4yNzMwMzk2IDUxMS44NTI2NTIsODYuODkxNjY5MSBMNTEyLDg2LjgwNDk5NCBMNTEyLDc3LjcxNzEwOTMgTDUxMS41NDU1NzQsNzguMDE3OTk1NiBDNTEwLjkzODg0OSw3OC40MjI4OTIyIDUxMC4xODM1MzcsNzguNzUyODc2NyA1MDkuMjk3NjE5LDc4Ljk5ODA0MzUgQzUwOC40MDc5MzYsNzkuMjQ4MTYzIDUwNy42NjUwMDYsNzkuMzczODQyIDUwNy4wODk4NzksNzkuMzczODQyIEM1MDQuOTI2MDczLDc5LjM3Mzg0MiA1MDMuMzI1NzA0LDc4Ljc5MDY0MjMgNTAyLjMzMjAxLDc3LjY0MDMzOTkgQzUwMS4zMjc4MTgsNzYuNDc5NTEyNiA1MDAuODE4MzE3LDc0LjQ0ODgzODcgNTAwLjgxODMxNyw3MS42MDg5OTA4IEw1MDAuODE4MzE3LDQ5LjQ0ODY0MjggTDUxMiw0OS40NDg2NDI4IEw1MTIsNDkuNDQ4NjQyOCBaIE00MjkuMjMxODM3LDc5LjM3NDcwODcgQzQyNS4xNzQ4MjMsNzkuMzc0NzA4NyA0MjEuOTc2NTExLDc4LjAyOTM4NzIgNDE5LjcyMjM0LDc1LjM3OTYwNTQgQzQxNy40NTQ1NDcsNzIuNzE2MjAzMyA0MTYuMzA1NDgzLDY4LjkxOTIxNDYgNDE2LjMwNTQ4Myw2NC4wOTUxMjU5IEM0MTYuMzA1NDgzLDU5LjExODExNzUgNDE3LjQ1NDU0Nyw1NS4yMjI2OTA2IDQxOS43MjM1NzgsNTIuNTEyMjM2MyBDNDIxLjk3ODk4OCw0OS44MTk3MzYxIDQyNS4xNDY5NjMsNDguNDUzMzY1IDQyOS4xNDA4MjgsNDguNDUzMzY1IEM0MzMuMDE2NDQ0LDQ4LjQ1MzM2NSA0MzYuMTAxNDU4LDQ5Ljc1ODQ0NDQgNDM4LjMxMTA1NCw1Mi4zMzQ1NTIzIEM0NDAuNTMyNDE0LDU0LjkyMzY2MTUgNDQxLjY1OTE5LDU4Ljc4ODEzMyA0NDEuNjU5MTksNjMuODIzMzM3NSBDNDQxLjY1OTE5LDY4LjkyMDQ1MjkgNDQwLjU5OTI3Nyw3Mi44MzU2OTExIDQzOC41MDkxNjksNzUuNDU0NTE3NSBDNDM2LjQzMzkxOSw3OC4wNTQxNTE1IDQzMy4zMTI5OTYsNzkuMzc0NzA4NyA0MjkuMjMxODM3LDc5LjM3NDcwODcgTDQyOS4yMzE4MzcsNzkuMzc0NzA4NyBaIE00MjkuNzI5NiwzOS4zMTM0NzUxIEM0MjEuOTg5NTEzLDM5LjMxMzQ3NTEgNDE1Ljg0MTc3MSw0MS41ODEyNjczIDQxMS40NTkxMDcsNDYuMDU0MzIxOSBDNDA3LjA3ODkxOCw1MC41Mjc5OTU1IDQwNC44NTc1NTksNTYuNzE4NDU1NCA0MDQuODU3NTU5LDY0LjQ1NjA2NTggQzQwNC44NTc1NTksNzEuODA0ODc2NSA0MDcuMDI1Njc1LDc3LjcxNjExODYgNDExLjMwMTg1Myw4Mi4wMjI2MzMyIEM0MTUuNTc4MDMyLDg2LjMzMTAwNSA0MjEuMzk3NjQ1LDg4LjUxMzM2MDQgNDI4LjU5NzI1MSw4OC41MTMzNjA0IEM0MzYuMTAwMjIsODguNTEzMzYwNCA0NDIuMTI1Mzc4LDg2LjIxMzk5MzYgNDQ2LjUwNjgwNCw4MS42NzkwMjgzIEM0NTAuODg3NjExLDc3LjE0ODM5NjcgNDUzLjEwNzExNCw3MS4wMTY3NTIxIDQ1My4xMDcxMTQsNjMuNDU5OTIxMSBDNDUzLjEwNzExNCw1NS45OTU5NTY0IDQ1MS4wMjQ0MzUsNTAuMDQwNzU3NiA0NDYuOTE0Nzk3LDQ1Ljc2MjcyMiBDNDQyLjgwMzMwMSw0MS40ODI4MjkyIDQzNy4wMjAyMTQsMzkuMzEzNDc1MSA0MjkuNzI5NiwzOS4zMTM0NzUxIEw0MjkuNzI5NiwzOS4zMTM0NzUxIFogTTM4Ni44MzYyNTQsMzkuMzEzMjI3NSBDMzgxLjU3MTM2LDM5LjMxMzIyNzUgMzc3LjIxNjU1Niw0MC42NTk3ODcxIDM3My44ODk0Nyw0My4zMTUxNDA5IEMzNzAuNTQyNTczLDQ1Ljk4NTk3MjQgMzY4Ljg0NDk3OSw0OS40ODk1MDM5IDM2OC44NDQ5NzksNTMuNzI4NTM1NyBDMzY4Ljg0NDk3OSw1NS45MzE5NDA3IDM2OS4yMTE0OSw1Ny44ODk1NTk4IDM2OS45MzI3NTIsNTkuNTQ5Mzg4IEMzNzAuNjU4MzQ2LDYxLjIxNTQwNzQgMzcxLjc4MTQwOCw2Mi42ODE0NTQ5IDM3My4yNzI4MzksNjMuOTEyMjQxNCBDMzc0Ljc1Mzc0NCw2NS4xMzMxMjIyIDM3Ny4wMzgyNTMsNjYuNDEyMTk5MSAzODAuMDY2OTI4LDY3LjcxMjk0NDcgQzM4Mi42MTIwODIsNjguNzYwNDc1NCAzODQuNTEwODg1LDY5LjY0NzAzNzkgMzg1LjcxNjkwNyw3MC4zNDUzOTE2IEMzODYuODk1Njg5LDcxLjAyOTUwNTggMzg3LjczMjcyMyw3MS43MTc5NTM3IDM4OC4yMDUxMDIsNzIuMzg3ODI4NSBDMzg4LjY2Mzg2MSw3My4wNDM0NjM4IDM4OC44OTcyNjUsNzMuOTQwNTUxMSAzODguODk3MjY1LDc1LjA0ODc1NDIgQzM4OC44OTcyNjUsNzguMjAxODcwNyAzODYuNTM1OTg3LDc5LjczNjAyMDEgMzgxLjY3NjYwOSw3OS43MzYwMjAxIEMzNzkuODc0Mzg2LDc5LjczNjAyMDEgMzc3LjgxODMyOSw3OS4zNjAyMjE2IDM3NS41NjYwMTQsNzguNjE3OTExMiBDMzczLjMxMjQ2Miw3Ny44NzY4MzkxIDM3MS4yMDY4NzUsNzYuODExMzU0MyAzNjkuMzA4NjksNzUuNDQ0OTgzMiBMMzY4Ljg0NDk3OSw3NS4xMTI1MjIzIEwzNjguODQ0OTc5LDg1Ljg3MzIzNjcgTDM2OS4wMTUyMzQsODUuOTUyNDgyNSBDMzcwLjU5NzA1NCw4Ni42ODI0MTA2IDM3Mi41OTA1ODIsODcuMjk3ODAzOSAzNzQuOTQwNzE1LDg3Ljc4MjU2NTQgQzM3Ny4yODY1MTUsODguMjY3MzI2OCAzNzkuNDE3NDg0LDg4LjUxNDM1MDkgMzgxLjI2OTIzNiw4OC41MTQzNTA5IEMzODYuOTgyMzY0LDg4LjUxNDM1MDkgMzkxLjU4Mjk1NSw4Ny4xNjA5ODEgMzk0LjkzOTc1OCw4NC40OTAxNDk2IEMzOTguMzE4MjI5LDgxLjgwMDc0NDkgNDAwLjAzMDY4Miw3OC4yMTQ4NzIgNDAwLjAzMDY4Miw3My44Mjg0OTI2IEM0MDAuMDMwNjgyLDcwLjY2NDg1MTIgMzk5LjEwODgzLDY3Ljk1MTMwMTMgMzk3LjI5MTc0OSw2NS43NjMzNzQgQzM5NS40ODc2NjgsNjMuNTkyNzgxNyAzOTIuMzU2MjIsNjEuNjAwNDkyNiAzODcuOTg3Nzk1LDU5LjgzOTEzMDYgQzM4NC41MDc3ODksNTguNDQyNDIzMiAzODIuMjc4MzgzLDU3LjI4MjgzNDEgMzgxLjM1OTAwNyw1Ni4zOTMxNzYgQzM4MC40NzI0NDQsNTUuNTMzMjM1MSAzODAuMDIyMzUzLDU0LjMxNzMwNzMgMzgwLjAyMjM1Myw1Mi43Nzc1ODU5IEMzODAuMDIyMzUzLDUxLjQxMjQ1MyAzODAuNTc3NjkzLDUwLjMxOTEwODUgMzgxLjcxODcwOSw0OS40MzMxNjUxIEMzODIuODY4MzkyLDQ4LjU0Mjg4NzkgMzg0LjQ2ODE2Niw0OC4wOTAzMjAxIDM4Ni40NzUzMTUsNDguMDkwMzIwMSBDMzg4LjMzNzU5MSw0OC4wOTAzMjAxIDM5MC4yNDMyMDUsNDguMzg0Mzk2MyAzOTIuMTM3Njc1LDQ4Ljk2MDc4NTggQzM5NC4wMzE1MjYsNDkuNTM3MTc1MiAzOTUuNjk0NDUsNTAuMzA5MjAyNyAzOTcuMDgzMTA5LDUxLjI1Mzk2MTQgTDM5Ny41MzkzOTIsNTEuNTY1OTkxOCBMMzk3LjUzOTM5Miw0MS4zNTgxNDA4IEwzOTcuMzY0MTg1LDQxLjI4MjYwOTYgQzM5Ni4wODMyNSw0MC43MzM0NjEgMzk0LjM5NDMyNCw0MC4yNjM1NTgxIDM5Mi4zNDMyMTksMzkuODgyMTg3NiBDMzkwLjMwMDE2MywzOS41MDQ1MzE4IDM4OC40NDcxNzMsMzkuMzEzMjI3NSAzODYuODM2MjU0LDM5LjMxMzIyNzUgTDM4Ni44MzYyNTQsMzkuMzEzMjI3NSBaIE0zMzkuNzA2MDQ3LDc5LjM3NDcwODcgQzMzNS42NTAyNzEsNzkuMzc0NzA4NyAzMzIuNDUwNzIxLDc4LjAyOTM4NzIgMzMwLjE5NzE2OSw3NS4zNzk2MDU0IEMzMjcuOTI4NzU3LDcyLjcxNjIwMzMgMzI2Ljc4MTU1LDY4LjkyMDQ1MjkgMzI2Ljc4MTU1LDY0LjA5NTEyNTkgQzMyNi43ODE1NSw1OS4xMTgxMTc1IDMyNy45Mjk5OTYsNTUuMjIyNjkwNiAzMzAuMTk5NjQ1LDUyLjUxMjIzNjMgQzMzMi40NTMxOTgsNDkuODE5NzM2MSAzMzUuNjIwNTU0LDQ4LjQ1MzM2NSAzMzkuNjE2Mjc2LDQ4LjQ1MzM2NSBDMzQzLjQ5MDY1NCw0OC40NTMzNjUgMzQ2LjU3NTY2OCw0OS43NTg0NDQ0IDM0OC43ODU4ODMsNTIuMzM0NTUyMyBDMzUxLjAwNzI0Myw1NC45MjM2NjE1IDM1Mi4xMzQwMTksNTguNzg4MTMzIDM1Mi4xMzQwMTksNjMuODIzMzM3NSBDMzUyLjEzNDAxOSw2OC45MjA0NTI5IDM1MS4wNzM0ODcsNzIuODM1NjkxMSAzNDguOTgzMzc5LDc1LjQ1NDUxNzUgQzM0Ni45MDgxMjksNzguMDU0MTUxNSAzNDMuNzg4NDQ0LDc5LjM3NDcwODcgMzM5LjcwNjA0Nyw3OS4zNzQ3MDg3IEwzMzkuNzA2MDQ3LDc5LjM3NDcwODcgWiBNMzQwLjIwNTA0OCwzOS4zMTM0NzUxIEMzMzIuNDYzMTAzLDM5LjMxMzQ3NTEgMzI2LjMxNTM2Miw0MS41ODEyNjczIDMyMS45MzQ1NTUsNDYuMDU0MzIxOSBDMzE3LjU1NDM2Niw1MC41Mjc5OTU1IDMxNS4zMzE3NjksNTYuNzE4NDU1NCAzMTUuMzMxNzY5LDY0LjQ1NjA2NTggQzMxNS4zMzE3NjksNzEuODA3OTcyMSAzMTcuNTAxMTIzLDc3LjcxNjExODYgMzIxLjc3NzMwMSw4Mi4wMjI2MzMyIEMzMjYuMDUzNDgsODYuMzMxMDA1IDMzMS44NzI0NzUsODguNTEzMzYwNCAzMzkuMDcyNjk5LDg4LjUxMzM2MDQgQzM0Ni41NzM4MTEsODguNTEzMzYwNCAzNTIuNjAwODI2LDg2LjIxMzk5MzYgMzU2Ljk4MjI1Miw4MS42NzkwMjgzIEMzNjEuMzYxODIyLDc3LjE0ODM5NjcgMzYzLjU4MjU2Miw3MS4wMTY3NTIxIDM2My41ODI1NjIsNjMuNDU5OTIxMSBDMzYzLjU4MjU2Miw1NS45OTU5NTY0IDM2MS40OTkyNjQsNTAuMDQwNzU3NiAzNTcuMzg5MDA2LDQ1Ljc2MjcyMiBDMzUzLjI3NjI3Myw0MS40ODI4MjkyIDM0Ny40OTQ0MjQsMzkuMzEzNDc1MSAzNDAuMjA1MDQ4LDM5LjMxMzQ3NTEgTDM0MC4yMDUwNDgsMzkuMzEzNDc1MSBaIE0yOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQwLjQ0NDMzNzYgTDI4Ny4zMjM2OTksNDAuNDQ0MzM3NiBMMjg3LjMyMzY5OSw4Ny4zODA3NjQ0IEwyOTguMzY0ODcsODcuMzgwNzY0NCBMMjk4LjM2NDg3LDYzLjM3MTE0MTEgQzI5OC4zNjQ4Nyw1OS4yODgxMjQ1IDI5OS4yOTA0MzYsNTUuOTM0NDE3MSAzMDEuMTE2ODA0LDUzLjQwMTAyNzUgQzMwMi45MjAyNjUsNTAuODk3OTc0NCAzMDUuMzIzNjQzLDQ5LjYyOTQyMjMgMzA4LjI1NzU5NSw0OS42Mjk0MjIzIEMzMDkuMjUxODgxLDQ5LjYyOTQyMjMgMzEwLjM2ODEzMyw0OS43OTM0ODU5IDMxMS41NzcyNTEsNTAuMTE3ODk4NSBDMzEyLjc3Mzk4Niw1MC40NDA0NTM3IDMxMy42NDA3MzgsNTAuNzkwMjQ5NSAzMTQuMTUyMTIxLDUxLjE1ODYxODggTDMxNC42MTU4MzMsNTEuNDk0Nzk0NCBMMzE0LjYxNTgzMyw0MC4zNjM4NTM2IEwzMTQuNDM2OTExLDQwLjI4NzA4NDIgQzMxMy40MDg1NzMsMzkuODQ5OTk0IDMxMS45NTQyODgsMzkuNjI5NTkxNiAzMTAuMTEzNjgsMzkuNjI5NTkxNiBDMzA3LjMzOTQ1OCwzOS42Mjk1OTE2IDMwNC44NTYyMTYsNDAuNTIxMTA3IDMwMi43Mjk1OCw0Mi4yNzYyNzc4IEMzMDAuODYyOTcsNDMuODE5MDk0NyAyOTkuNTEzMzE0LDQ1LjkzNDU4NjQgMjk4LjQ4MTg4MSw0OC41NzI2MDUxIEwyOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQ4LjU3MjYwNTEgWiBNMjY3LjU1MTU2MywzOS4zMTMyMjc1IEMyNjIuNDg2NjQxLDM5LjMxMzIyNzUgMjU3Ljk2ODM5MSw0MC4zOTk3NjE4IDI1NC4xMjQ5Nyw0Mi41NDA2MzY5IEMyNTAuMjc0MTE4LDQ0LjY4NjQ2NDkgMjQ3LjI5NjIwOSw0Ny43NTA0Mjk5IDI0NS4yNjk4NjksNTEuNjQ2NDc1OCBDMjQzLjI1MjgxNiw1NS41MzMyMzUxIDI0Mi4yMjg4MTEsNjAuMDczMTUzNCAyNDIuMjI4ODExLDY1LjEzNTU5ODYgQzI0Mi4yMjg4MTEsNjkuNTcwMjY4NSAyNDMuMjIxODYsNzMuNjQwMjgzNyAyNDUuMTg0NDMyLDc3LjIyNjc3NTggQzI0Ny4xNDgyNDMsODAuODE5NDU4OSAyNDkuOTI4MDM3LDgzLjYzMDIwODggMjUzLjQ0NjQyNyw4NS41Nzk3Nzk1IEMyNTYuOTU5ODY1LDg3LjUyNjg3MzkgMjYxLjAyMDU5Myw4OC41MTQzNTA5IDI2NS41MTY1NTUsODguNTE0MzUwOSBDMjcwLjc2MzQ5NCw4OC41MTQzNTA5IDI3NS4yNDMzNTksODcuNDY0OTYzIDI3OC44MzU0MjMsODUuMzk2NTIzNSBMMjc4Ljk4MDI5NSw4NS4zMTI5NDM5IEwyNzguOTgwMjk1LDc1LjE5Nzk1OTIgTDI3OC41MTY1ODMsNzUuNTM2NjExMiBDMjc2Ljg4OTU2Nyw3Ni43MjE1ODM3IDI3NS4wNzEyNDgsNzcuNjY3NTgwNiAyNzMuMTE0ODY2LDc4LjM0OTIxODQgQzI3MS4xNjM0MzgsNzkuMDMwMjM3MSAyNjkuMzg0MTIyLDc5LjM3NDQ2MTEgMjY3LjgyNDU4OSw3OS4zNzQ0NjExIEMyNjMuNDkyMDczLDc5LjM3NDQ2MTEgMjYwLjAxNDU0Myw3OC4wMTg2MTQ4IDI1Ny40ODk4MjEsNzUuMzQ2NTQ1MSBDMjU0Ljk1OTUyNyw3Mi42NzAxNDE3IDI1My42NzY3MzYsNjguOTEyNzc1OSAyNTMuNjc2NzM2LDY0LjE4NDAyOTggQzI1My42NzY3MzYsNTkuNDI1NTY2NSAyNTUuMDE0NjI4LDU1LjU3MTYxOTkgMjU3LjY1MTQwOCw1Mi43Mjc0MzgxIEMyNjAuMjc5NTIxLDQ5Ljg5MTkyNCAyNjMuNzYzODYsNDguNDUzNzM2NCAyNjguMDA2NjA3LDQ4LjQ1MzczNjQgQzI3MS42MzU4MTcsNDguNDUzNzM2NCAyNzUuMTcyMTYxLDQ5LjY4MjY2NTUgMjc4LjUxNzgyMSw1Mi4xMDk1Njg1IEwyNzguOTgwMjk1LDUyLjQ0NTc0NDEgTDI3OC45ODAyOTUsNDEuNzg3ODAxNyBMMjc4LjgzMTA4OSw0MS43MDM2MDMgQzI3Ny41NzE4MjQsNDAuOTk5MDU4MiAyNzUuODU1MDM3LDQwLjQxNzA5NjggMjczLjcyMjgzLDM5Ljk3NTY3MjkgQzI3MS42MDA1MjgsMzkuNTM1NDg3MiAyNjkuNTI0NjU5LDM5LjMxMzIyNzUgMjY3LjU1MTU2MywzOS4zMTMyMjc1IEwyNjcuNTUxNTYzLDM5LjMxMzIyNzUgWiBNMjM0LjYyNDU1Nyw0MC40NDQ0NjE0IEwyMjMuNTgzMzg3LDQwLjQ0NDQ2MTQgTDIyMy41ODMzODcsODcuMzgwODg4MSBMMjM0LjYyNDU1Nyw4Ny4zODA4ODgxIEwyMzQuNjI0NTU3LDQwLjQ0NDQ2MTQgTDIzNC42MjQ1NTcsNDAuNDQ0NDYxNCBaIE0yMjkuMjE2NjQ5LDIwLjQ0OTEzMzggQzIyNy4zOTk1NjgsMjAuNDQ5MTMzOCAyMjUuODE0NjUyLDIxLjA2NzYyMjUgMjI0LjUxMjY2NywyMi4yOTM0NTYyIEMyMjMuMjA1MTEyLDIzLjUyMzAwNDQgMjIyLjU0MTQyOCwyNS4wNzA3NzQyIDIyMi41NDE0MjgsMjYuODk3MTQyNCBDMjIyLjU0MTQyOCwyOC42OTUwMzE4IDIyMy4xOTcwNjQsMzAuMjE0MzIyNiAyMjQuNDkxNjE4LDMxLjQxMTA1ODEgQzIyNS43NzgxMjQsMzIuNjA0MDc5MSAyMjcuMzY3OTkzLDMzLjIwODk0NzQgMjI5LjIxNjY0OSwzMy4yMDg5NDc0IEMyMzEuMDY0Njg2LDMzLjIwODk0NzQgMjMyLjY2MDc0NywzMi42MDQwNzkxIDIzMy45NjI3MywzMS40MTI5MTU1IEMyMzUuMjczMzgyLDMwLjIxNDMyMjYgMjM1LjkzNzY4NSwyOC42OTUwMzE4IDIzNS45Mzc2ODUsMjYuODk3MTQyNCBDMjM1LjkzNzY4NSwyNS4xMzQ1NDIzIDIzNS4yOTEzMzYsMjMuNjAyMjUwMiAyMzQuMDE2NTkzLDIyLjM0Mjk4NDggQzIzMi43NDM3MDcsMjEuMDg2MTk1OCAyMzEuMTI4NDU1LDIwLjQ0OTEzMzggMjI5LjIxNjY0OSwyMC40NDkxMzM4IEwyMjkuMjE2NjQ5LDIwLjQ0OTEzMzggWiBNMjAxLjY2ODg4NCwzNi45ODE1NDMzIEwyMDEuNjY4ODg0LDg3LjM4MDY0MDYgTDIxMi45MzY2NDcsODcuMzgwNjQwNiBMMjEyLjkzNjY0NywyMS44ODY0NTQ2IEwxOTcuMzQxOTM5LDIxLjg4NjQ1NDYgTDE3Ny41MTkzNDIsNzAuNTMzNDc2NiBMMTU4LjI4MzA0MSwyMS44ODY0NTQ2IEwxNDIuMDUzMTI4LDIxLjg4NjQ1NDYgTDE0Mi4wNTMxMjgsODcuMzgwNjQwNiBMMTUyLjY0MTczLDg3LjM4MDY0MDYgTDE1Mi42NDE3MywzNi45NzY1OTA1IEwxNTMuMDA1NzY1LDM2Ljk3NjU5MDUgTDE3My4zMTg2OTUsODcuMzgwNjQwNiBMMTgxLjMwOTUyMSw4Ny4zODA2NDA2IEwyMDEuMzA1NDY3LDM2Ljk4MTU0MzMgTDIwMS42Njg4ODQsMzYuOTgxNTQzMyBMMjAxLjY2ODg4NCwzNi45ODE1NDMzIFoiIGZpbGw9IiM3MDZENkUiPjwvcGF0aD4KICAgICAgICA8Zz4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0YxNTExQiIgcG9pbnRzPSI1MS45Mzk0Mzc3IDUxLjkzOTQzNzcgMCA1MS45Mzk0Mzc3IDAgMCA1MS45Mzk0Mzc3IDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzgwQ0MyOCIgcG9pbnRzPSIxMDkuMjg2NzgzIDUxLjkzOTQzNzcgNTcuMzQ3OTY0MiA1MS45Mzk0Mzc3IDU3LjM0Nzk2NDIgMCAxMDkuMjg2NzgzIDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzAwQURFRiIgcG9pbnRzPSI1MS45MzgxOTk1IDEwOS4zMDcyMTMgMCAxMDkuMzA3MjEzIDAgNTcuMzY3Nzc1NyA1MS45MzgxOTk1IDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0ZCQkMwOSIgcG9pbnRzPSIxMDkuMjg2NzgzIDEwOS4zMDcyMTMgNTcuMzQ3OTY0MiAxMDkuMzA3MjEzIDU3LjM0Nzk2NDIgNTcuMzY3Nzc1NyAxMDkuMjg2NzgzIDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: AccessList
+  type: string
+  description: Access list. Free-form text; may contain whitespace and punctuation. NOT READ BY ANY RULE
+    — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept for wire fidelity
+    with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend time seeding
+    it.
+  example: "%%1537\n\t\t\t\t%%1538"
+- name: AccessMask
+  type: string_short
+  description: Access mask. Short opaque token, typically without whitespace; max ~64 chars. NOT READ
+    BY ANY RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept for
+    wire fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend
+    time seeding it.
+  example: token
+- name: ActivityID
+  type: string_short
+  description: Activity correlation id. Short opaque token, typically without whitespace; max ~64 chars.
+    NOT READ BY ANY RULE. This is the raw Windows Event XML / WEC spelling; neither parsing rule emits
+    a column of this name, so nothing maps from it. The rules read `activity_id` instead — populate that.
+    Declaring this field only adds a synthesised noise column to the raw event.
+  example: token
+- name: AuthenticationPackageName
+  type: enum
+  enum_values:
+  - Kerberos
+  - NTLM
+  - Negotiate
+  description: 'Auth package (NTLM/Kerberos). Short opaque token, typically without whitespace; max ~64.
+    NOT READ AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> AuthenticationPackageName`,
+    so a bare CEF extension of this name maps nothing — declare and pin `event_data.AuthenticationPackageName`
+    instead. Verified by grep against MicrosoftWindowsEvents_2_11: the name appears exclusively behind
+    `event_data ->`.'
+  example: Kerberos
+- name: Channel
+  type: string_short
+  description: Event log channel (Security/System/Application). Short opaque token, typically without
+    whitespace; max ~64 chars. NOT READ BY ANY RULE. This is the raw Windows Event XML / WEC spelling;
+    neither parsing rule emits a column of this name, so nothing maps from it. The rules read `channel`
+    instead — populate that. Declaring this field only adds a synthesised noise column to the raw event.
+  example: token
+- name: ComputerName
+  type: host
+  description: Computer reporting the event. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix. NOT READ BY ANY RULE. This is the raw Windows Event XML / WEC spelling;
+    neither parsing rule emits a column of this name, so nothing maps from it. The rules read `computer_name`
+    instead — populate that. Declaring this field only adds a synthesised noise column to the raw event.
+  example: WS-1014.acme.local
+- name: EventID
+  type: integer
+  description: Windows event id. Signed decimal integer; bare digits, optional leading minus. NOT READ
+    BY ANY RULE. This is the raw Windows Event XML / WEC spelling; neither parsing rule emits a column
+    of this name, so nothing maps from it. The rules read `event_id` instead — populate that. Declaring
+    this field only adds a synthesised noise column to the raw event.
+  example: '42'
+- name: EventTime
+  type: datetime
+  description: When the event occurred. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+    NOT READ BY ANY RULE. This is the raw Windows Event XML / WEC spelling; neither parsing rule emits
+    a column of this name, so nothing maps from it. The rules read `time_created` instead — populate that.
+    Declaring this field only adds a synthesised noise column to the raw event.
+  example: '2026-05-26T14:23:01Z'
+- name: FailureReason
+  type: string
+  description: Logon failure reason (4625). Free-form text; may contain whitespace and punctuation. NOT
+    READ BY ANY RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept
+    for wire fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend
+    time seeding it.
+  example: Unknown user name or bad password
+- name: IpAddress
+  type: ipv4
+  description: 'Source IP of the logon. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no
+    surrounding brackets or quotes. NOT READ AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data
+    -> IpAddress`, so a bare CEF extension of this name maps nothing — declare and pin `event_data.IpAddress`
+    instead. Verified by grep against MicrosoftWindowsEvents_2_11: the name appears exclusively behind
+    `event_data ->`.'
+  example: 10.20.14.37
+- name: IpPort
+  type: integer_port
+  description: 'Source port. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits, no quotes.
+    NOT READ AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> IpPort`, so a bare CEF
+    extension of this name maps nothing — declare and pin `event_data.IpPort` instead. Verified by grep
+    against MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data ->`.'
+  example: '443'
+- name: Keywords
+  type: string
+  description: Event keywords. Free-form text; may contain whitespace and punctuation. NOT READ BY ANY
+    RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept for wire
+    fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend time
+    seeding it.
+  example: '0x8020000000000000'
+- name: Level
+  type: enum
+  description: 'Event level. One of: Critical, Error, Warning, Information, Verbose (case-sensitive).
+    NOT READ BY ANY RULE. This is the raw Windows Event XML / WEC spelling; neither parsing rule emits
+    a column of this name, so nothing maps from it. The rules read `log_level` instead — populate that.
+    Declaring this field only adds a synthesised noise column to the raw event.'
+  enum_values:
+  - Critical
+  - Error
+  - Warning
+  - Information
+  - Verbose
+  example: Critical
+- name: LogonProcessName
+  type: string_short
+  description: 'Logon process. Short opaque token, typically without whitespace; max ~64 chars. NOT READ
+    AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> LogonProcessName`, so a bare CEF
+    extension of this name maps nothing — declare and pin `event_data.LogonProcessName` instead. Verified
+    by grep against MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data ->`.'
+  example: Kerberos
+- name: LogonType
+  type: enum
+  enum_values:
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '7'
+  - '8'
+  - '9'
+  - '10'
+  - '11'
+  description: 'Windows logon type. 2 interactive, 3 network, 4 batch, 5 service, 7 unlock, 8 network-cleartext,
+    9 new-credentials, 10 remote-interactive (RDP), 11 cached. NOT READ AS A TOP-LEVEL COLUMN. The rule
+    reads this ONLY as `event_data -> LogonType`, so a bare CEF extension of this name maps nothing —
+    declare and pin `event_data.LogonType` instead. Verified by grep against MicrosoftWindowsEvents_2_11:
+    the name appears exclusively behind `event_data ->`.'
+  example: '3'
+- name: Message
+  type: string_long
+  description: Human-readable event message. Free-form text; may span multiple lines or contain large
+    payloads. NOT READ BY ANY RULE. This is the raw Windows Event XML / WEC spelling; neither parsing
+    rule emits a column of this name, so nothing maps from it. The rules read `message` instead — populate
+    that. Declaring this field only adds a synthesised noise column to the raw event.
+  example: Free-form vendor-emitted message describing the event.
+- name: ObjectName
+  type: string
+  description: Object name (file access events). Free-form text; may contain whitespace and punctuation.
+    NOT READ BY ANY RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column.
+    Kept for wire fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do
+    not spend time seeding it.
+  example: \\?\C:\Users\ahmed.alharbi\Documents\payroll.xlsx
+- name: ObjectType
+  type: string_short
+  description: Object type. Short opaque token, typically without whitespace; max ~64 chars. NOT READ
+    BY ANY RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept for
+    wire fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend
+    time seeding it.
+  example: token
+- name: Opcode
+  type: string_short
+  description: Operation code. Short opaque token, typically without whitespace; max ~64 chars. NOT READ
+    BY ANY RULE. This is the raw Windows Event XML / WEC spelling; neither parsing rule emits a column
+    of this name, so nothing maps from it. The rules read `opcode` instead — populate that. Declaring
+    this field only adds a synthesised noise column to the raw event.
+  example: token
+- name: ProcessID
+  type: integer
+  description: 'PID of the reporting process. Signed decimal integer; bare digits, optional leading minus.
+    NOT READ AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> ProcessID`, so a bare CEF
+    extension of this name maps nothing — declare and pin `event_data.ProcessID` instead. Verified by
+    grep against MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data ->`.'
+  example: '4660'
+- name: ProcessName
+  type: file_path
+  description: 'Process name for the event. Absolute filesystem path; vendor-native separator. NOT READ
+    AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> ProcessName`, so a bare CEF extension
+    of this name maps nothing — declare and pin `event_data.ProcessName` instead. Verified by grep against
+    MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data ->`.'
+  example: C:\Windows\System32\lsass.exe
+- name: Provider
+  type: string
+  description: Event provider name. Free-form text; may contain whitespace and punctuation. NOT READ BY
+    ANY RULE. This is the raw Windows Event XML / WEC spelling; neither parsing rule emits a column of
+    this name, so nothing maps from it. The rules read `provider_name` instead — populate that. Declaring
+    this field only adds a synthesised noise column to the raw event.
+  example: aws
+- name: ShareLocalPath
+  type: file_path
+  description: Local path of the share. Absolute filesystem path; vendor-native separator. NOT READ BY
+    ANY RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept for wire
+    fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend time
+    seeding it.
+  example: /var/log/app.log
+- name: ShareName
+  type: string
+  description: Network share name. Free-form text; may contain whitespace and punctuation. NOT READ BY
+    ANY RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept for wire
+    fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend time
+    seeding it.
+  example: \\*\Finance
+- name: Status
+  type: string_short
+  description: 'Status code. Short opaque token, typically without whitespace; max ~64 chars. NOT READ
+    AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> Status`, so a bare CEF extension
+    of this name maps nothing — declare and pin `event_data.Status` instead. Verified by grep against
+    MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data ->`.'
+  example: '0xC000006D'
+- name: SubStatus
+  type: string_short
+  description: 'Sub-status code. Short opaque token, typically without whitespace; max ~64 chars. NOT
+    READ AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> SubStatus`, so a bare CEF extension
+    of this name maps nothing — declare and pin `event_data.SubStatus` instead. Verified by grep against
+    MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data ->`.'
+  example: '0xC000006A'
+- name: SubjectDomainName
+  type: string_short
+  description: 'Subject domain. Short opaque token, typically without whitespace; max ~64 chars. NOT READ
+    AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> SubjectDomainName`, so a bare CEF
+    extension of this name maps nothing — declare and pin `event_data.SubjectDomainName` instead. Verified
+    by grep against MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data ->`.'
+  example: X-LAB
+- name: SubjectLogonId
+  type: string_short
+  description: Subject logon id. Short opaque token, typically without whitespace; max ~64 chars. NOT
+    READ BY ANY RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept
+    for wire fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend
+    time seeding it.
+  example: token
+- name: SubjectUserName
+  type: user
+  description: 'Subject user name. Account name as the vendor reports it — login name, UPN, or sAMAccountName;
+    no domain prefix unless vendor emits one. NOT READ AS A TOP-LEVEL COLUMN. The rule reads this ONLY
+    as `event_data -> SubjectUserName`, so a bare CEF extension of this name maps nothing — declare and
+    pin `event_data.SubjectUserName` instead. Verified by grep against MicrosoftWindowsEvents_2_11: the
+    name appears exclusively behind `event_data ->`.'
+  example: jdoe
+- name: SubjectUserSid
+  type: string_short
+  description: 'Subject user SID. Short opaque token, typically without whitespace; max ~64 chars. NOT
+    READ AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> SubjectUserSid`, so a bare
+    CEF extension of this name maps nothing — declare and pin `event_data.SubjectUserSid` instead. Verified
+    by grep against MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data ->`.'
+  example: S-1-5-21-1004336348-1177238915-682003330-1013
+- name: TargetDomainName
+  type: string_short
+  description: 'Target domain. Short opaque token, typically without whitespace; max ~64 chars. NOT READ
+    AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> TargetDomainName`, so a bare CEF
+    extension of this name maps nothing — declare and pin `event_data.TargetDomainName` instead. Verified
+    by grep against MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data ->`.'
+  example: X-LAB
+- name: TargetLogonId
+  type: string_short
+  description: Target logon id. Short opaque token, typically without whitespace; max ~64 chars. NOT READ
+    BY ANY RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept for
+    wire fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend
+    time seeding it.
+  example: token
+- name: TargetUserName
+  type: user
+  description: 'Target user name (account being logged in). Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName; no domain prefix unless vendor emits one. NOT READ AS A TOP-LEVEL COLUMN.
+    The rule reads this ONLY as `event_data -> TargetUserName`, so a bare CEF extension of this name maps
+    nothing — declare and pin `event_data.TargetUserName` instead. Verified by grep against MicrosoftWindowsEvents_2_11:
+    the name appears exclusively behind `event_data ->`.'
+  example: jdoe
+- name: TargetUserSid
+  type: string_short
+  description: 'Target user SID. Short opaque token, typically without whitespace; max ~64 chars. NOT
+    READ AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> TargetUserSid`, so a bare CEF
+    extension of this name maps nothing — declare and pin `event_data.TargetUserSid` instead. Verified
+    by grep against MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data ->`.'
+  example: S-1-5-21-1004336348-1177238915-682003330-1013
+- name: Task
+  type: string_short
+  description: Task category. Short opaque token, typically without whitespace; max ~64 chars. NOT READ
+    BY ANY RULE. This is the raw Windows Event XML / WEC spelling; neither parsing rule emits a column
+    of this name, so nothing maps from it. The rules read `task` instead — populate that. Declaring this
+    field only adds a synthesised noise column to the raw event.
+  example: token
+- name: ThreadID
+  type: integer
+  description: Thread id. Signed decimal integer; bare digits, optional leading minus. NOT READ BY ANY
+    RULE. This is the raw Windows Event XML / WEC spelling; neither parsing rule emits a column of this
+    name, so nothing maps from it. The rules read `process_thread_id` instead — populate that. Declaring
+    this field only adds a synthesised noise column to the raw event.
+  example: '42'
+- name: UserID
+  type: string_short
+  description: User SID associated with the event. Short opaque token, typically without whitespace; max
+    ~64 chars. NOT READ BY ANY RULE. This is the raw Windows Event XML / WEC spelling; neither parsing
+    rule emits a column of this name, so nothing maps from it. The rules read `user_sid (derived — see
+    event_data.SubjectUserSid)` instead — populate that. Declaring this field only adds a synthesised
+    noise column to the raw event.
+  example: token
+- name: WorkstationName
+  type: host
+  description: 'Source workstation name. Hostname or fully-qualified domain name (RFC 1035 dotted labels);
+    no protocol prefix. NOT READ AS A TOP-LEVEL COLUMN. The rule reads this ONLY as `event_data -> WorkstationName`,
+    so a bare CEF extension of this name maps nothing — declare and pin `event_data.WorkstationName` instead.
+    Verified by grep against MicrosoftWindowsEvents_2_11: the name appears exclusively behind `event_data
+    ->`.'
+  example: WS-1014
+- name: activity_id
+  type: string_short
+  description: 'Opaque identifier emitted by Microsoft. Short opaque token, typically without whitespace;
+    max ~64 chars. Feeds xdm.alert.original_alert_id. Rule reads: `xdm.alert.original_alert_id = activity_id`.
+    Line 109. Declared schema column (string), read raw with no transform and no gate — the ONLY unconditional
+    xdm.alert.* field in the rule. A plain CEF extension `activity_id=…` always populates it, whatever
+    the channel, provider or event id.'
+  example: mic-b2ad2479
+- name: channel
+  is_gate: true
+  type: string
+  description: 'Windows event channel. Mapped VERBATIM to xdm.event.type, so it must be the real channel
+    for the event. Note the modeling gate accepts System / Application / Directory Service by channel,
+    but NOT Security — Security-channel events reach the rule only through provider_name, so both fields
+    must be set coherently. Feeds (MODEL gate). MODEL GATE, MicrosoftWindowsEvents_2_11.xif line 3. THE
+    decisive finding of this slice: channel="Security" is NOT in the accepted list. Only "System", "Application",
+    "Directory Service" pass on channel alone. A Security-channel event (4624/4625/4768/4688/…) reaches
+    the dataset via the parsing rule but is NEVER modelled unless provider_name carries it in — see the
+    provider_name entry below. Schema type: string.'
+  example: Security
+  enum_values:
+  - Security
+  - System
+  - Application
+  - Directory Service
+- name: computer_name
+  type: string
+  description: 'Human-readable name as displayed by Microsoft. Free-form text; may contain whitespace
+    and. Feeds xdm.source.host.hostname (136). Rule reads: `xdm.source.host.hostname = coalesce(host_name,
+    computer_name, if(user_name contains "*$", user_name), ...)`. COALESCE RANK 2 of 5. Flat column, declared
+    "type":"string" in schema.json. Only wins when host_name is absent.'
+  example: DC01.x-lab.local
+- name: detection_source
+  type: ipv4
+  description: 'Microsoft Defender detection source. Regex-extracted from `message` via "Detection Source:\\s*(.+?)\\s+User"
+    on the Defender path, NOT read as a column — the message must carry the literal ''Detection Source:
+    <value> User'' for it to populate.'
+  example: Real-Time Protection
+- name: event_action
+  type: string_short
+  description: 'Action taken by Microsoft''s enforcement engine (allow/block/quarantine/etc.). Short opaque
+    token, typically without whitespace; max ~64 chars. Feeds xdm.event.original_event_type. Rule reads:
+    `| alter event_type = coalesce(event_action, canonical_task, to_string(task), check_message_task,
+    event_name)`. Line 103, FIRST and highest-priority coalesce arm; line 116 assigns event_type to xdm.event.original_event_type.
+    event_action is a declared schema column (string) that NO alter ever overwrites, so a single CEF extension
+    `event_action=Logon` deterministically sets xdm.event.original_event_type regardless of channel, provider,
+    or message shape. This is the cheapest, most reliable way to control event_type. CAUTION: event_type
+    is also a gate for xdm.target.user.groups / xdm.target.identity.groups (line 170-171, requires event_type
+    = "Security Group Management") and inverts the gate on xdm.target.user.username / xdm.target.identity.username
+    (line 184, requires event_type != "Security Group Management").'
+  example: allow
+- name: event_data
+  type: json
+  description: — see leaf entries for nested paths. (and 8 more). JSON object with 47 keys; full key list
+    defined as dotted-path leaves below.
+  example: (composite — declare dotted leaves such as event_data.LogonType; never send {})
+- name: event_data.AttributeList
+  type: string
+  description: LDAP search attribute list (provider Microsoft-Windows-LDAP-Client, event_id 30). This
+    is the key REAL events carry -- event_data.Attributes below is a near-miss that no Windows event actually
+    emits. Privileged-group enumeration asks for member / sAMAccountName / objectSid. NOT READ BY ANY
+    RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept for wire
+    fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend time
+    seeding it.
+  example: distinguishedName;cn;member;sAMAccountName;objectSid
+- name: event_data.Attributes
+  type: string
+  description: 'Attributes requested by an LDAP search. Privileged-group enumeration typically asks for
+    member / sAMAccountName / objectSid. Feeds xdm.alert.description (object_create keys "cdc", "rmd",
+    "ccm"). Lines 24 and 106. Hybrid: the FIELD is an event_data leaf (declare `event_data.Attributes`),
+    but its VALUE must itself contain three newline-delimited label:value pairs for the three regexes
+    to capture. [^\n]+ means each value runs to the end of its line, so real newlines are required as
+    separators — CEF escapes them as \n on the wire and the broker unescapes.'
+  example: member;sAMAccountName;objectSid
+- name: event_data.AuthenticationPackageName
+  type: enum
+  enum_values:
+  - Kerberos
+  - NTLM
+  - Negotiate
+  description: 'Vendor-emitted field ''Event data › AuthenticationPackageName''. Leaf of the ''event_data''.
+    Feeds xdm.logon.package_name. Rule reads: `xdm.logon.package_name = event_data -> AuthenticationPackageName,`.
+    L173. Ungated - no event-id condition, no coalesce, no transform. Straight passthrough of the JSON
+    leaf. Real Windows values: "Negotiate", "Kerberos", "NTLM", "MICROSOFT_AUTHENTICATION_PACKAGE_V1_0".'
+  example: Kerberos
+- name: event_data.CommandLine
+  type: string_long
+  description: 'Process command-line as launched (executable + arguments). Free-form text; may span multiple
+    lines or contain large payloads. Feeds xdm.source.process.command_line. Rule reads: `xdm.source.process.command_line
+    = coalesce(…, process_cmd, event_data -> CommandLine)`. L142, 3rd coalesce arm — the real Windows
+    4688 EventData key. Requires `event_data` to be a JSON OBJECT on the wire: event_data={"CommandLine":"..."}.
+    Declare as a dotted leaf so the generator nests it; a flat CEF extension literally named `event_data.CommandLine`
+    produces a flat column the `->` operator cannot read.'
+  example: Detailed event payload emitted by Microsoft for this record.
+- name: event_data.DCName
+  type: string
+  description: "Vendor-emitted field 'Event data › DCName'. Leaf of the 'event_data' composite. Free-form.\
+    \ Feeds xdm.target.user.domain (167) / xdm.target.identity.domain (168). Rule reads: `dc_name = event_data\
+    \ -> DCName,\n        xdm.target.user.domain = coalesce(target_domain_name, if(channel=\"System\"\
+    , dc_name)),`. COALESCE RANK 2 of 2 — CHANNEL-GATED on channel literally = \"System\". Unreachable\
+    \ when channel=\"Security\". Only consulted when event_data.TargetDomainName is absent."
+  example: \\DC01.x-lab.local
+- name: event_data.DestAddress
+  type: ipv4
+  description: 'Destination IPv4/IPv6 address of the target. Free-form text; may contain whitespace and
+    punctuation. Feeds xdm.target.ipv4. Rule reads: `DestAddress = coalesce(event_data -> DestAddress,
+    ""),`. L32 -> L160 `xdm.target.ipv4 = if(DestAddress ~= "(?:\d{1,3}\.){3}\d{1,3}", arrayindex(regextract(DestAddress,
+    "((?:\d{1,3}\.){3}\d{1,3})"), 0))`. Note the coalesce-to-"" at L32 means DestAddress is never null,
+    but the L160 regex guard absorbs that so xdm.target.ipv4 stays null when unset. NEGATIVE: there is
+    NO xdm.target.ipv6 anywhere in the rule — a destination IPv6 cannot be modelled.'
+  example: 192.168.10.55
+- name: event_data.DestPort
+  type: integer_port
+  description: 'TCP/UDP destination port. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes. Feeds xdm.target.port (162). Rule reads: `xdm.target.port = coalesce(to_integer(event_data
+    -> DestPort) ,to_integer(0)),`. SOLE source. FALSE-POSITIVE WARNING: this field defaults to literal
+    0 rather than null, so xdm.target.port is ALWAYS non-null on every modeled row. Do not use it as evidence
+    the modeling rule mapped your event — use xdm.source.host.os_family or xdm.event.id instead. Must
+    be an integer-parseable string.'
+  example: '443'
+- name: event_data.Disposition
+  type: string
+  description: 'Vendor-emitted field ''Event data › Disposition''. Leaf of the ''event_data'' composite.
+    Free-form text; may contain whitespace and punctuation. Feeds xdm.alert.description (object_create
+    key "Disposition"). Rule reads: `object_create(… "Disposition", event_data -> Disposition, …)`. Line
+    106. Dotted leaf, CamelCase key.'
+  example: clean
+- name: event_data.DistinguishedName
+  type: string
+  description: Base DN of an LDAP search (provider Microsoft-Windows-LDAP-Client, event_id 30). Benign
+    DC traffic searches its own DFSR/DNS objects; admin-group enumeration searches the domain root or
+    the Users container. NOT READ BY ANY RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references
+    this column. Kept for wire fidelity with real WEC output; it lands in the raw row but maps to no xdm
+    field. Do not spend time seeding it.
+  example: CN=DC01,OU=Domain Controllers,DC=x-lab,DC=local
+- name: event_data.Domain
+  type: domain
+  description: 'DNS domain reported by Microsoft — bare domain, no scheme/path/port. Bare DNS domain name;
+    no scheme, no path, no port. Feeds xdm.source.user.domain (152) / xdm.source.identity.domain (153).
+    Rule reads: `user_domain = coalesce(user -> domain, event_data -> Domain, if(event_data -> SubjectDomainName
+    in ("-", " - "), null, event_data -> SubjectDomainName), ...)`. COALESCE RANK 2 of 4. Unconditional
+    — no sentinel filtering applied to this one.'
+  example: example.com
+- name: event_data.ElevatedToken
+  type: string
+  description: 'Vendor-emitted field ''Event data › ElevatedToken''. Leaf of the ''event_data'' composite.
+    Feeds xdm.logon.is_elevated. Rule reads: `xdm.logon.is_elevated = if(event_id_num = 4624, if(event_data
+    -> ElevatedToken in ("%%1843", "No"), to_boolean("FALSE"), event_data -> ElevatedToken in ("%%1842","Yes"),
+    to_boolean("TRUE"))),`. L175. GATED STRICTLY ON event_id_num = 4624 - on any other event id the leaf
+    is read but the outer if() yields null. Accepts exactly four literals: "%%1843" or "No" -> FALSE;
+    "%%1842" or "Yes" -> TRUE. Any other value (e.g. "true", "1", "%%1842 ") yields null, not false. Note
+    the leaf is dereferenced TWICE in the same expression - harmless but confirms it is read from the
+    event_data composite, not a flat column.'
+  example: '%%1842'
+- name: event_data.ErrorMessage
+  type: string
+  description: 'Vendor-emitted field ''Event data › ErrorMessage''. Leaf of the ''event_data'' composite.
+    Free-form. Feeds xdm.event.outcome_reason / xdm.alert.description. Rule reads: `error_message = coalesce(event_data
+    -> ["Error Description"], event_data -> ErrorMessage, …)`. Line 20, 2nd arm. CamelCase, no space.
+    Reached only when event_data."Error Description" is null.'
+  example: The user name or password is incorrect.
+- name: event_data.FQDN
+  type: host
+  description: 'Fully-qualified domain name (dotted labels per RFC 1035). Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix. Feeds xdm.source.host.fqdn (135). Rule reads:
+    `xdm.source.host.fqdn = coalesce(event_data -> FQDN, event_data -> WorkstationName),`. COALESCE RANK
+    1 of 2. No format validation — whatever you send lands verbatim.'
+  example: host.example.com
+- name: event_data.HostName
+  type: host
+  description: 'Hostname or FQDN as reported by Microsoft. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix. Feeds xdm.source.host.hostname (136). Rule reads: `if(channel="System",
+    event_data -> HostName)`. COALESCE RANK 4 of 5. CHANNEL-GATED: requires channel literally = "System".
+    Incompatible with channel="Security", so unreachable on a Security-Auditing event.'
+  example: host.example.com
+- name: event_data.IpAddress
+  type: ipv4
+  description: 'Vendor-emitted field ''Event data › IpAddress''. Leaf of the ''event_data'' composite.
+    Free-form text; may contain whitespace and punctuation. Feeds xdm.source.ipv6 (140). Rule reads: `xdm.source.ipv6
+    = if(IpAddress ~= "(?:[a-fA-F\d]{0,4}\:){7}[\wa-fA-F]{0,4}", arrayindex(regextract(IpAddress, "((?:[a-fA-F\d]{0,4}\:){7}[\wa-fA-F]{0,4})"),
+    0),if(Ipv6Address != null,Ipv6Address)),`. IPv6 BRANCH 1 of 2. The regex demands SEVEN literal colon-groups,
+    i.e. the FULLY EXPANDED form. A compressed address ("fe80::1", "2001:db8::8329") does NOT match and
+    falls through to the message-regex branch. Conversely an IPv4-mapped form like "::ffff:192.168.1.5"
+    WILL satisfy the ipv4 regex on line 139 and populate xdm.source.ipv4.'
+  example: fe80:0000:0000:0000:0202:b3ff:fe1e:8329
+- name: event_data.IpPort
+  type: integer_port
+  description: 'Vendor-emitted field ''Event data › IpPort''. Leaf of the ''event_data'' composite. Unsigned
+    integer 0-65535 representing a TCP/UDP port; bare digits, no quotes. Feeds xdm.source.port (141).
+    Rule reads: `IpPort = coalesce(event_data -> IpPort, event_data -> SourcePort),`. COALESCE RANK 1
+    of 2. Gate: `xdm.source.port = if(IpPort~="\d+", to_integer(IpPort), null)`. SENTINEL TRAP: the realistic
+    Windows "-" fails \d+ and yields null. Send a numeric string.'
+  example: '443'
+- name: event_data.LogonProcessName
+  type: string
+  description: 'File or process name reported by the vendor. Leaf of the ''event_data'' composite. Free-form.
+    Feeds xdm.auth.service. Rule reads: `xdm.auth.service = event_data -> LogonProcessName,`. L177. The
+    ONLY non-Kerberos xdm.auth.* field in the whole rule. Ungated, no transform, no coalesce. Real Windows
+    values are space-padded: "Kerberos", "NtLmSsp ", "Advapi  ", "User32 ", "Negotiat". Padding is preserved
+    verbatim into XDM - emit unpadded unless you are reproducing a specific sample.'
+  example: 'Advapi  '
+- name: event_data.LogonType
+  type: enum
+  enum_values:
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '7'
+  - '8'
+  - '9'
+  - '10'
+  - '11'
+  description: Vendor-emitted field 'Event data › LogonType'. Leaf of the 'event_data' composite. Free-form.
+    Feeds xdm.logon.type. L121, verbatim. Ungated by event id. "10" is the highest-signal value for RDP-lateral-movement
+    analytics.
+  example: '3'
+- name: event_data.Module
+  type: string
+  description: 'Vendor-emitted field ''Event data › Module''. Leaf of the ''event_data'' composite. Free-form
+    text; may contain whitespace and punctuation. Feeds xdm.source.process.executable.path. Rule reads:
+    `xdm.source.process.executable.path = coalesce(…, if(channel="Application", event_data -> Module),
+    …)`. L146, 3rd arm. GATED `channel="Application"` — dead on 4688 (channel="Security") and dead on
+    System-channel events.'
+  example: audit
+- name: event_data.NewProcessID
+  type: string
+  description: 'Vendor-emitted field ''Event data › NewProcessID''. Leaf of the ''event_data'' composite.
+    Free-form. Feeds xdm.target.process.pid. Rule reads: `xdm.target.process.pid = to_integer(event_data
+    -> NewProcessID),`. L150. ONE OF ONLY TWO xdm.target.process.* fields in the entire rule. Ungated
+    — no provider or channel condition — so it works on any event that clears the L3 filter. CAUTION:
+    real Windows 4688 sends this as HEX (''0x1400''); `to_integer()` parses decimal, so send DECIMAL (''5120'')
+    or the field nulls. Nested object required: event_data={"NewProcessID":"5120"}.'
+  example: '0x1a4c'
+- name: event_data.NewProcessName
+  type: string
+  description: 'File or process name reported by the vendor. Leaf of the ''event_data'' composite. Free-form.
+    Feeds xdm.target.process.name. Rule reads: `xdm.target.process.name = event_data -> NewProcessName,`.
+    L178. The OTHER of only two xdm.target.process.* fields. Ungated, assigned verbatim with NO leaf extraction
+    and NO coalesce — whatever you send is exactly what lands. This is the cleanest process-creation mapping
+    in the rule. NEGATIVE: there is no xdm.target.process.executable.path, .command_line, .md5 or .sha256
+    anywhere in the rule — a 4688''s child command line can only reach xdm.SOURCE.process.command_line
+    (L142).'
+  example: C:\Windows\System32\cmd.exe
+- name: event_data.ParentProcessName
+  type: string
+  description: 'File or process name reported by the vendor. Leaf of the ''event_data'' composite. Free-form.
+    Feeds xdm.source.process.name. L148, 3rd arm. SEMANTIC NOTE: the rule deliberately treats the 4688
+    PARENT as the SOURCE process — event_data.ParentProcessName -> xdm.source.process.name, while event_data.NewProcessName
+    -> xdm.target.process.name. Note it is assigned VERBATIM (no leaf extraction), so whatever you send
+    lands in xdm.source.process.name as-is; send the bare basename (''explorer.exe'') if you want a clean
+    process name, or the full path if you want the path. Nested object required.'
+  example: C:\Windows\explorer.exe
+- name: event_data.Path
+  type: file_path
+  description: 'Filesystem path. Absolute filesystem path; vendor-native separator. Feeds xdm.source.process.executable.path  +  xdm.target.file.path.
+    Rule reads: `Script_Path = coalesce(event_data -> Path, arrayindex(regextract(message, "Script Name
+    = (.*?)\s{2, }"), 0)),`. DOUBLE DUTY — the single highest-leverage event_data leaf in the file slice.
+    L55 (1st arm of Script_Path -> L146 xdm.source.process.executable.path) AND L43 (3rd arm of file_path
+    -> L161 xdm.target.file.path). Setting event_data.Path alone is the ONLY message-free way to populate
+    xdm.target.file.path. Nested object: event_data={"Path":"C:\\Users\\jdoe\\Downloads\\invoice.exe"}.'
+  example: C:\Windows\System32\lsass.exe
+- name: event_data.ProcessID
+  type: integer
+  description: 'Operating-system process identifier. Signed decimal integer; bare digits, optional leading.
+    Feeds xdm.source.process.pid. Rule reads: `xdm.source.process.pid = to_integer(coalesce(…, if(channel="System",
+    event_data -> ProcessID))),`. L149, 3rd arm. GATED `channel="System"` — dead for the Security channel,
+    so unusable on 4688. Only reachable on a System-channel event (e.g. Service Control Manager 7045).
+    Send decimal.'
+  example: '4660'
+- name: event_data.ProcessId
+  type: string
+  description: Hex PID on LDAP-Client (event_id 30) events. Distinct from event_data.ProcessID (capital
+    D), which Security-Auditing 4688 uses -- both spellings occur in the wild, on different providers.
+    NOT READ BY ANY RULE. This is the raw Windows Event XML / WEC spelling; neither parsing rule emits
+    a column of this name, so nothing maps from it. The rules read `event_data.ProcessID (capital D —
+    the rule reads that spelling)` instead — populate that. Declaring this field only adds a synthesised
+    noise column to the raw event.
+  example: '0xED4'
+- name: event_data.ProcessName
+  type: string
+  description: 'File or process name reported by the vendor. Leaf of the ''event_data'' composite. Free-form
+    text; may contain whitespace and punctuation. Feeds xdm.source.process.executable.path  +  xdm.source.process.name.
+    Rule reads: `process_name_format = coalesce(event_data -> ProcessName, event_data -> ["Process Name"],
+    arrayindex(regextract(message, "Process Name:\s*([^,]*?)(?:\s{2}|,)"), 0), arrayindex(regextract(message,
+    "Process Name:\s*([^\n\r]+)"), 0)),`. L44, 1st arm — the highest-value single field in the process
+    slice: it feeds BOTH xdm.source.process.executable.path (L146, 2nd arm) AND xdm.source.process.name
+    (L148, 4th arm, via `arrayindex(regextract(process_name_format, "\\([^\\]+)$"), 0)` which strips to
+    the leaf). Give it a full backslash path so the leaf-extraction yields a filename (verified: ''C:\\Windows\\explorer.exe''
+    -> ''explorer.exe''). Nested JSON object required: event_data={"ProcessName":"C:\\Windows\\System32\\cmd.exe"}.'
+  example: explorer.exe
+- name: event_data.RestrictedAdminMode
+  type: string
+  description: 'Vendor-emitted field ''Event data › RestrictedAdminMode''. Leaf of the ''event_data''
+    composite. Feeds xdm.logon.is_restricted_admin_mode. Rule reads: `xdm.logon.is_restricted_admin_mode
+    = if(event_id_num = 4624, if(event_data -> RestrictedAdminMode in ("-", "No"), to_boolean("FALSE"),
+    event_data -> RestrictedAdminMode = "Yes", to_boolean("TRUE"))),`. L179. Gated on event_id_num = 4624.
+    ACCEPTS A DIFFERENT LITERAL SET from its two siblings above - this is a real trap: FALSE comes from
+    "-" or "No" (NOT "%%1843"), and TRUE comes ONLY from an exact equality against "Yes" (NOT an in()
+    list, NOT "%%1842"). Sending "%%1843" here yields null where the same value yields FALSE on ElevatedToken.'
+  example: '-'
+- name: event_data.SID
+  type: string
+  description: 'Vendor-emitted field ''Event data › SID''. Leaf of the ''event_data'' composite. Free-form.
+    Feeds xdm.source.user.identifier (154) / xdm.source.identity.identifier (155). Rule reads: `user_sid
+    = coalesce(event_data -> SID, event_data -> SubjectUserSid, user -> identifier, user -> SubjectUserSid,
+    event_data -> UserSid, ...)`. COALESCE RANK 1 of 6 — note the inversion vs user_name/user_domain:
+    here the event_data leaves OUTRANK the `user` composite.'
+  example: S-1-5-21-1004336348-1177238915-682003330-1013
+- name: event_data.ScopeOfSearch
+  type: string
+  description: LDAP search scope (0=base, 1=one-level, 2=subtree). Subtree searches from the domain root
+    are the shape that privileged-group enumeration produces. NOT READ BY ANY RULE — neither parsing rule
+    nor MicrosoftWindowsEvents_2_11 references this column. Kept for wire fidelity with real WEC output;
+    it lands in the raw row but maps to no xdm field. Do not spend time seeding it.
+  example: '2'
+- name: event_data.SearchFilter
+  type: string
+  description: LDAP search filter (provider Microsoft-Windows-LDAP-Client, event_id 30). The Cortex detector
+    "Administrator groups enumerated via LDAP" (T1087, Windows Event Collector) keys on filters that target
+    privileged groups. Benign DC baseline traffic looks like (objectCategory=msDFSR-LocalSettings). NOT
+    READ BY ANY RULE — neither parsing rule nor MicrosoftWindowsEvents_2_11 references this column. Kept
+    for wire fidelity with real WEC output; it lands in the raw row but maps to no xdm field. Do not spend
+    time seeding it.
+  example: (&(objectCategory=group)(cn=Domain Admins))
+- name: event_data.SourceAddress
+  type: ipv4
+  description: 'Source IPv4/IPv6 address of the initiator. Free-form text; may contain whitespace and
+    punctuation. Feeds xdm.source.ipv4  +  xdm.source.ipv6. Rule reads: `IpAddress = coalesce(event_data
+    -> IpAddress, event_data -> SourceAddress),`. L31, 2nd arm — the Windows Filtering Platform (5156/5157)
+    spelling. Same L139/L140 regex guards apply.'
+  example: 10.20.30.40
+- name: event_data.SourcePort
+  type: integer_port
+  description: 'TCP/UDP source port. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes. Feeds xdm.source.port (141). Rule reads: `IpPort = coalesce(event_data -> IpPort, event_data
+    -> SourcePort),`. COALESCE RANK 2 of 2. Only wins when event_data.IpPort is absent. Same \d+ gate.'
+  example: '443'
+- name: event_data.Status
+  type: string_short
+  description: 'Status code returned by Microsoft. Short opaque token, typically without whitespace; max
+    ~64 chars. Feeds xdm.alert.description (object_create key "error_code"). Rule reads: `object_create(…
+    "error_code", event_data -> Status, "sub_error_code", event_data -> SubStatus)`. Line 106. Dotted
+    leaf. Distinct from the top-level error_code alias — this one is only read inside the AD CS object_create.'
+  example: success
+- name: event_data.SubStatus
+  type: string
+  description: 'Vendor-emitted field ''Event data › SubStatus''. Leaf of the ''event_data'' composite.
+    Free-form. Feeds xdm.alert.description (object_create key "sub_error_code"). Rule reads: `object_create(…
+    "sub_error_code", event_data -> SubStatus)`. Line 106, final member of the object_create. Dotted leaf,
+    CamelCase.'
+  example: '0xC000006A'
+- name: event_data.Subject
+  type: user
+  description: 'Subject line — typically email subject or event summary. Account name as the vendor reports
+    it — login name, UPN, or sAMAccountName; no domain prefix unless vendor emits one. Feeds xdm.target.user.username
+    (184) / xdm.target.identity.username (184). Rule reads: `if(event_id_string in ("4886", "4887", "4888","4897","4898"),
+    event_data -> Subject)`. COALESCE RANK 2 of 2 for target username — Certificate Services event IDs
+    only. Only consulted when the target_username branch produced null (i.e. TargetUserName absent, or
+    it ends in "$", or event_type = "Security Group Management"). Same leaf also feeds xdm.alert.description
+    (line 109) on these IDs.'
+  example: CN=jsmith, OU=Users, DC=corp, DC=local
+- name: event_data.SubjectDomainName
+  type: string
+  description: 'Vendor-emitted field ''Event data › SubjectDomainName''. Leaf of the ''event_data'' composite.
+    Feeds xdm.source.user.domain (152) / xdm.source.identity.domain (153). Rule reads: `if(event_data
+    -> SubjectDomainName in ("-", " - "), null, event_data -> SubjectDomainName)`. COALESCE RANK 3 of
+    4. SENTINEL TRAP: the literal values "-" and " - " are explicitly mapped to null, so a realistic Windows
+    placeholder dash yields NO domain. Send a real NetBIOS domain. This is the natural partner of event_data.SubjectUserName
+    on a 4624.'
+  example: X-LAB
+- name: event_data.SubjectKeyIdentifier
+  type: string
+  description: Vendor-emitted field 'Event data › SubjectKeyIdentifier'. Leaf of the 'event_data' composite.
+    Free-form text; may contain whitespace and punctuation. Certificate subject key identifier, read on
+    the AD-CS event path. Feeds xdm.target.resource.id on certificate-services events.
+  example: d1e8b0f4a97c3b52e6f1a8d0c4b7e2f9a3d6c8b1
+- name: event_data.SubjectUserName
+  type: string
+  description: 'Vendor-emitted field ''Event data › SubjectUserName''. Leaf of the ''event_data'' composite.
+    Feeds xdm.source.user.username (158) / xdm.source.identity.username (159). Rule reads: `user_name
+    = coalesce(user -> name, event_data -> User, event_data -> SubjectUserName, user_data -> SubjectUserName,
+    ...)`. COALESCE RANK 3 of 9. This is the realistic Windows 4624 field and the recommended one to send
+    — the rule deliberately maps the SUBJECT to xdm.source.user.* and TargetUserName to xdm.target.user.*.
+    On a real 4624 the subject is often SYSTEM or a machine account; for synthetic events set a human
+    name so the identity slice is useful.'
+  example: sameh
+- name: event_data.SubjectUserSid
+  type: string
+  description: 'Vendor-emitted field ''Event data › SubjectUserSid''. Leaf of the ''event_data'' composite.
+    Feeds xdm.source.user.identifier (154) / xdm.source.identity.identifier (155). Rule reads: `user_sid
+    = coalesce(event_data -> SID, event_data -> SubjectUserSid, user -> identifier, ...)`. COALESCE RANK
+    2 of 6. The realistic 4624 field and the recommended one — pairs with event_data.SubjectUserName /
+    event_data.SubjectDomainName.'
+  example: S-1-5-21-1004336348-1177238915-682003330-1013
+- name: event_data.TargetDomainName
+  type: string
+  description: "Vendor-emitted field 'Event data › TargetDomainName'. Leaf of the 'event_data' composite.\
+    \ Feeds xdm.target.user.domain (167) / xdm.target.identity.domain (168). Rule reads: `target_domain_name\
+    \ = event_data -> TargetDomainName,\n        xdm.target.user.domain = coalesce(target_domain_name,\
+    \ if(channel=\"System\", dc_name)),`. COALESCE RANK 1 of 2. No sentinel filtering here (unlike the\
+    \ SOURCE domain chain), so a literal \"-\" WOULD land verbatim in xdm.target.user.domain. Send a real\
+    \ domain."
+  example: X-LAB
+- name: event_data.TargetUserName
+  type: user
+  description: 'Vendor-emitted field ''Event data › TargetUserName''. Leaf of the ''event_data'' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending on the source;
+    no domain prefix unless the vendor emits one. Feeds xdm.target.user.groups (169) / xdm.target.identity.groups
+    (170). Rule reads: `xdm.target.user.groups = if(target_username not contains "*$" AND event_type =
+    "Security Group Management", arraycreate(target_username)),`. MUTUALLY EXCLUSIVE with xdm.target.user.username
+    — the same leaf feeds both, and the event_type equality flips which one populates. To reach groups
+    you need: provider_name contains "Microsoft-Windows-Security-" (so canonical_task is evaluated) AND
+    event_id in the 15-ID Security Group Management list AND event_action UNSET (it would override canonical_task)
+    AND target_username not ending in "$". Note the semantic oddity: the rule puts the TargetUserName
+    value into the groups array, so send the GROUP name here for a 4728.'
+  example: Domain Admins
+- name: event_data.TargetUserSid
+  type: string
+  description: 'Vendor-emitted field ''Event data › TargetUserSid''. Leaf of the ''event_data'' composite.
+    Feeds xdm.target.user.identifier (171) / xdm.target.identity.identifier (172). Rule reads: `target_user_sid
+    = event_data -> TargetUserSid,`. SOLE source, no coalesce, no gate, no sentinel filtering — the single
+    most reliable target-identity field in the rule. Unlike xdm.target.user.username it has NO machine-account
+    exclusion, so "S-1-5-18" (SYSTEM) and machine-account SIDs map fine.'
+  example: S-1-5-21-1004336348-1177238915-682003330-1013
+- name: event_data.TicketEncryptionType
+  type: enum
+  enum_values:
+  - '0x12'
+  - '0x17'
+  - '0x18'
+  - '0x1'
+  - '0x3'
+  description: 'Kerberos ticket encryption. 0x12 AES256-SHA1, 0x17 RC4-HMAC (weak - what downgrade/kerberoast
+    detections look for), 0x1/0x3 DES. Feeds xdm.auth.kerberos_tgt.encryption_type. L180. TGT gate is
+    ONLY 4768 and 4770. Full accepted literal set, all two-digit zero-padded with UPPERCASE hex letters:
+    0x01 DES_CBC_CRC, 0x02 DES_CBC_MD4, 0x03 DES_CBC_MD5, 0x04 DES_CBC_RAW, 0x05 DES3_CBC_MD5, 0x06 DES3_CBC_RAW,
+    0x07 DES3_CBC_SHA1, 0x08 DES_HMAC_SHA1, 0x09 DSAWITHSHA1_CMSOID, 0x0A MD5WITHRSAENCRYPTION_CMSOID,
+    0x0B SHA1WITHRSAENCRYPTION_CMSOID, 0x0C RC2CBC_ENVOID, 0x0D RSAENCRYPTION_ENVOID, 0x0E RSAES_OAEP_ENV_OID,
+    0x0F DES_EDE3_CBC_ENV_OID, 0x10 DES3_CBC_SHA1_KD, 0x11 AES128_CTS_HMAC_SHA1_96, 0x12 AES256_CTS_HMAC_SHA1_96,
+    0x13 AES128_CTS_HMAC_SHA256_128, 0x14 AES256_CTS_HMAC_SHA384_192, 0x17 RC4_HMAC, 0x18 RC4_HMAC_EXP,
+    0x19 CAMELLIA128_CTS_CMAC, 0x1A CAMELLIA256_CTS_CMAC, 0x41 SUBKEY_KEYMATERIAL. NOTE THE GAPS: 0x15,
+    0x16, 0x1B-0x40, 0x42+ are unmapped and fall through the bare trailing `TicketEncryptionType` arm,
+    emitting the raw string. Lowercase "0x1a" does the same. "0x17" (RC4_HMAC) is the downgrade value
+    that drives Kerberoasting analytics.'
+  example: '0x12'
+- name: event_data.User
+  type: user
+  description: 'User account associated with the event. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName; no domain prefix unless vendor emits one. Feeds xdm.source.user.username
+    (158) / xdm.source.identity.username (159). Rule reads: `user_name = coalesce(user -> name, event_data
+    -> User, event_data -> SubjectUserName, ...)`. COALESCE RANK 2 of 9. Only wins if user.name is absent.'
+  example: jdoe
+- name: event_data.UserSid
+  type: string
+  description: 'Vendor-emitted field ''Event data › UserSid''. Leaf of the ''event_data'' composite. Free-form.
+    Feeds xdm.source.user.identifier (154) / xdm.source.identity.identifier (155). Rule reads: `event_data
+    -> UserSid`. COALESCE RANK 5 of 6.'
+  example: S-1-5-21-1004336348-1177238915-682003330-1013
+- name: event_data.VirtualAccount
+  type: string
+  description: 'Vendor-emitted field ''Event data › VirtualAccount''. Leaf of the ''event_data'' composite.
+    Feeds xdm.logon.is_virtual_account. Rule reads: `xdm.logon.is_virtual_account = if(event_id_num =
+    4624, if(event_data -> VirtualAccount in ("%%1843", "No"), to_boolean("FALSE"), event_data -> VirtualAccount
+    in ("%%1842","Yes"), to_boolean("TRUE"))),`. L176. Identical shape and literal set to is_elevated:
+    gated on event_id_num = 4624; "%%1843"/"No" -> FALSE, "%%1842"/"Yes" -> TRUE, everything else null.'
+  example: '%%1843'
+- name: event_data.WorkstationName
+  type: host
+  description: 'Vendor-emitted field ''Event data › WorkstationName''. Leaf of the ''event_data'' composite.
+    Hostname or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix. Feeds xdm.source.host.fqdn
+    (135). Rule reads: `xdm.source.host.fqdn = coalesce(event_data -> FQDN, event_data -> WorkstationName),`.
+    COALESCE RANK 2 of 2. This is the realistic 4624/4625 field. Note the semantic squeeze: Windows WorkstationName
+    is a NetBIOS short name but the rule files it under xdm.source.host.fqdn. Send a real FQDN via event_data.FQDN
+    if you want a clean fqdn value.'
+  example: host.example.com
+- name: event_data.error
+  type: string
+  description: 'Vendor-emitted field ''Event data › error''. Leaf of the ''event_data'' composite. Free-form.
+    Feeds xdm.event.outcome / xdm.alert.description. Rule reads: `error_code = coalesce(event_data ->
+    error, arrayindex(regextract(message,"Error Code:\s*\S+"), 0)),`. L19. Two-arm coalesce: an event_data
+    leaf literally named `error` (lowercase) first, then a message regex. NOTE the regex has NO capture
+    group — regextract returns the WHOLE match `Error Code: 0xC000006D` including the label, not just
+    the code. Relevant to auth only as the third arm of xdm.event.outcome (L118) and the first arm of
+    xdm.alert.description (L106, channel="System" only). Leave both unset on auth events so xdm.event.outcome
+    comes from event_result.'
+  example: '0x0'
+- name: event_data.param1
+  type: host
+  description: MEANING IS PER-EVENT-ID. On 1644 (LDAP search) this is the SEARCH BASE DN. On the Application
+    channel the rule reads it as `event_data_param1` into xdm.source.host.hostname when check_task_string
+    = "Devices". On System it participates in event_name. Feeds xdm.source.host.hostname (conditionally).
+  example: DC=acme,DC=local
+- name: event_data.param17
+  type: string
+  example: Acme\ahmed.alharbi
+  description: '1644 LDAP search: the CALLING IDENTITY as DOMAIN\account. Machine accounts appear as DOMAIN\HOST$.
+    This is the actor for an LDAP enumeration alert. No direct xdm target — but this is the ACTOR on a
+    1644 and the only place the calling identity appears.'
+- name: event_data.param2
+  type: string
+  description: MEANING IS PER-EVENT-ID. On 1644 (LDAP search) this is THE LDAP FILTER — the field an admin-enumeration
+    detector keys on — and real events carry a LEADING SPACE before the opening paren, so reproduce it.
+    On the System channel the rule reads `event_data_param2` into xdm.event.operation_sub_type.
+  example: ' (&(objectClass=group)(cn=Domain Admins))'
+- name: event_data.param3
+  type: string
+  description: '1644 LDAP search: reserved counter, observed as 0. No xdm target; reserved counter, observed
+    as 0.'
+  example: '0'
+- name: event_data.param4
+  type: string
+  example: '0'
+  description: '1644 LDAP search: reserved counter, observed as 0. No xdm target; reserved counter, observed
+    as 0.'
+- name: event_data.param5
+  type: string
+  example: 10.20.14.17:59385
+  description: '1644 LDAP search: the CLIENT as <ip>:<port>. This is the only place the searching host''s
+    address appears — there is no separate IpAddress leaf on this event. No direct xdm target — the client
+    address on a 1644 is not mapped by the rule, but it is what an LDAP-behaviour detector reads from
+    the raw row.'
+- name: event_data.param6
+  type: string
+  example: subtree
+  description: '1644 LDAP search: search SCOPE. Observed values base / onelevel / subtree. An admin-group
+    enumeration sweep is subtree. No direct xdm target; the search scope is raw-row context.'
+- name: event_data.param7
+  type: string
+  example: member,sAMAccountName,objectSid,adminCount,memberOf
+  description: '1644 LDAP search: the ATTRIBUTE SELECTION, comma-joined. Asking for member + adminCount
+    across admin groups is the enumeration signature. No direct xdm target; the attribute selection is
+    raw-row context.'
+- name: event_data.param9
+  type: string
+  example: idx_objectClass:0:N;
+  description: '1644 LDAP search: the index used to serve the query. No direct xdm target; index info
+    is raw-row context.'
+- name: event_data.updateTitle
+  type: string
+  description: 'Vendor-emitted field ''Event data › updateTitle''. Leaf of the ''event_data'' composite.
+    Free-form. Feeds xdm.event.description (2nd coalesce arm). Rule reads: `if(channel="System", event_data
+    -> updateTitle)`. Line 111. Gated on channel="System" AND only reached when `message` is null. Requires
+    event_data to be a JSON object on the wire.'
+  example: Security Intelligence Update for Microsoft Defender Antivirus
+- name: event_fwlink
+  type: string
+  description: Defender FWLink. Read as `event_data -> ["FWLink"]` on the Defender path — declare `event_data.FWLink`
+    to populate it; this bare column is not read.
+  example: https://go.microsoft.com/fwlink/?linkid=37020
+- name: event_id
+  type: enum
+  enum_values:
+  - '4624'
+  - '4625'
+  - '4672'
+  - '4768'
+  - '4769'
+  - '4770'
+  - '4776'
+  - '1644'
+  - '4728'
+  - '4732'
+  description: 'Windows Event ID. 4624 logon, 4625 failed logon, 4672 special privileges, 4768/4769 Kerberos
+    TGT/service ticket, 1644 LDAP search, 4728/4732 group membership add. Feeds xdm.event.original_event_type
+    (2nd coalesce arm of event_type). Lines 68-87. Doubly gated: provider_name MUST contain "Microsoft-Windows-Security-"
+    AND event_id must be one of the 61 listed. Any other event_id under that provider yields null and
+    falls through to to_string(task). Only reached when event_action is null. Full task mapping: 4624/4625/4648=Logon;
+    4634/4647=Logoff; 4778/4779/4800/4801/4802/4803/4825=Other Logon/Logoff Events; 4672=Special Logon;
+    4688=Process Creation; 4689=Process Termination; 4673/4674=Sensitive Privilege Use; 4662=Directory
+    Service Access; 4768/4771=Kerberos Authentication Service; 4769/4770=Kerberos Service Ticket Operations;
+    4776=Credential Validation; 4663=Removable Storage; 4670/4703/4704/4705/4911=Authorization Policy
+    Change; 4719=Audit Policy Change; 4720/4722/4723/4724/4725/4726/4738/4740/4767/4780/4781/4798=User
+    Account Management; 4741/4742/4743=Computer Account Management; 4727/4728/4729/4730/4731/4732/4733/4734/4737/4754/4755/4756/4757/4758/4799=Security
+    Group Management; 4697=Security System Extension.'
+  example: '4624'
+- name: event_result
+  type: string_short
+  description: 'Result string emitted by Microsoft. Short opaque token, typically without whitespace;
+    max ~64 chars. Feeds xdm.event.outcome. Rule reads: `xdm.event.outcome = if(event_result = "success",
+    XDM_CONST.OUTCOME_SUCCESS, event_result="failure", XDM_CONST.OUTCOME_FAILED, coalesce(event_result,
+    action, error_code, failure_code)),`. L118. event_result is a flat raw column (schema: string), NOT
+    an event_data leaf. Only the exact lowercase literals "success" and "failure" produce the XDM constants;
+    anything else is echoed raw through the coalesce. The coalesce fallback chain is event_result -> action
+    (message regex, L8) -> error_code (L19) -> failure_code (L21), so a Kerberos event with no event_result
+    but with `Failure Code: 0x18` in the message will put the raw string "0x18" into xdm.event.outcome.
+    Always set event_result explicitly on auth events to avoid that.'
+  example: success
+- name: host_name
+  type: string
+  description: 'Human-readable name as displayed by Microsoft. Free-form text; may contain whitespace
+    and. Feeds xdm.source.host.hostname (136). Rule reads: `xdm.source.host.hostname = coalesce(host_name,
+    computer_name, ...)`. COALESCE RANK 1 of 5 — plain flat column, just a CEF extension named host_name.
+    Declared "type":"string" in schema.json.'
+  example: DC01
+- name: log_level
+  type: string_short
+  description: 'Severity level (string label, e.g., info/warn/error). Short opaque token, typically without
+    whitespace; max ~64 chars. Feeds xdm.event.log_level. Lines 34 and 114. The rule lowercases for you,
+    so ''Information'' / ''information'' / ''INFORMATION'' all resolve to XDM_CONST.LOG_LEVEL_INFORMATIONAL.
+    Only four values resolve to enums: information, error, warning, critical. ''Verbose'' or ''Audit Success''
+    fall through to the raw-string else-branch, which — note the ordering — returns `to_string(opcode)`
+    FIRST, not log_level. So an event carrying both a non-enum log_level and an opcode publishes the OPCODE
+    as xdm.event.log_level.'
+  example: info
+- name: message
+  type: string
+  description: 'Human-readable event body. THE MOST IMPORTANT FIELD ON THIS SOURCE and not decoration:
+    the modeling rule runs 42 regextract() calls over it, feeding 33 distinct fields, several of which
+    have NO other source. `failure_code` comes ONLY from "Failure Code:\s*(\S+)" here — there is no event_data
+    leaf for it — so the entire Kerberos error taxonomy, password spray included, is unreachable without
+    the right prose. Also feeds xdm.event.description unconditionally, plus xdm.event.outcome_reason ("Failure
+    Reason: ..."), xdm.source.process.executable.path and .name ("Process Name: ..."), xdm.target.user.ou
+    on 4728/4729 ("Member: ... Account Name: ..."), and the IPv6 source address. The example is a REAL,
+    Validated 4624 body — tabs are significant, since several regexes terminate a capture on the tab run.
+    See how_to_use section 5 for a template per event ID.'
+  example: "An account was successfully logged on.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-1004336348-1177238915-682003330-1100\n\
+    \tAccount Name:\t\tahmed.alharbi\n\tAccount Domain:\t\tSTC\n\tLogon ID:\t\t0x3E7\n\nLogon Information:\n\
+    \tLogon Type:\t\t10\n\tRestricted Admin Mode:\t-\n\tVirtual Account:\tNo\n\tElevated Token:\t\tYes\n\
+    \nImpersonation Level:\t\tImpersonation\n\nNew Logon:\n\tSecurity ID:\t\tS-1-5-21-1004336348-1177238915-682003330-1100\n\
+    \tAccount Name:\t\tahmed.alharbi\n\tAccount Domain:\t\tSTC\n\tLogon ID:\t\t0x1A2B3C\n\nProcess Information:\n\
+    \tProcess ID:\t\t0x2b8\n\tProcess Name:\t\tC:\\Windows\\System32\\svchost.exe\n\nNetwork Information:\n\
+    \tWorkstation Name:\tWS-1001\n\tSource Network Address:\t10.20.14.11\n\tSource Port:\t\t52431\n\n\
+    Detailed Authentication Information:\n\tLogon Process:\t\tAdvapi  \n\tAuthentication Package:\tNegotiate\n\
+    \tKey Length:\t\t0"
+- name: opcode
+  type: string
+  description: 'Vendor-emitted field ''Opcode''. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.event.log_level (else-branch, 1st coalesce arm). Rule reads: `to_string(coalesce(to_string(opcode),
+    log_level))`. Line 114 else-branch. Declared schema column (string). Only surfaces when log_level
+    is not one of the four enum words. Leave opcode unset if you want a non-enum log_level to pass through
+    verbatim.'
+  example: Info
+- name: os_subtype
+  type: string
+  description: 'Vendor-emitted field ''Os subtype''. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.host.os (137). Rule reads: `xdm.source.host.os = os_subtype,`. SOLE source — no coalesce,
+    no gate. Flat CEF extension named os_subtype, declared "type":"string" in schema.json.'
+  example: login
+- name: process_cmd
+  type: string
+  description: 'Vendor-emitted field ''Process cmd''. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.process.command_line. Rule reads: `xdm.source.process.command_line = coalesce(if(check_Command_Name
+    != null and check_Command_Name != "", check_Command_Name), process_cmd, event_data -> CommandLine)`.
+    L142, 2nd coalesce arm. Declared in schema.json as string. This is the CLEAN path for 4688 command
+    lines — no message shaping needed. Beaten only by check_Command_Name (PowerShell), which cannot fire
+    unless the message carries the literal `{2, }` (see that row).'
+  example: /usr/bin/curl https://example.com/
+- name: process_md5
+  type: hash_md5
+  description: 'MD5 digest of the artifact. 32-character lowercase hex MD5 digest. Feeds xdm.source.process.executable.md5.
+    Rule reads: `xdm.source.process.executable.md5 = process_md5,`. L145. Direct assignment, no gate,
+    no coalesce, no transform. Declared in schema.json. The single cleanest field in the whole process
+    slice.'
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: process_name
+  type: string
+  description: 'File or process name reported by the vendor. Free-form text; may contain whitespace and.
+    Feeds xdm.source.process.name. Rule reads: `xdm.source.process.name = coalesce(…, process_name),`.
+    L148, 6th and last arm. Declared in schema.json. Reached only when check_fw_process_name, get_message_instance_exe_process,
+    event_data.ParentProcessName, the process_name_format leaf-extract and the channel=System branch all
+    miss.'
+  example: lsass.exe
+- name: process_path
+  type: string
+  description: Filesystem path reported by the vendor. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.process.executable.path. L146, 6th of 7 coalesce arms. Declared in schema.json. Reached
+    only when message_instance, process_name_format, event_data->Module, Script_Path and Command_Path
+    all miss — so on a bare 4688 with no event_data.ProcessName this is the fallback that works.
+  example: C:\Windows\System32\lsass.exe
+- name: process_pid
+  type: integer
+  description: 'Vendor-emitted field ''Process pid''. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.process.pid. Rule reads: `xdm.source.process.pid = to_integer(coalesce(check_message_processID,
+    to_string(process_pid), if(channel="System", event_data -> ProcessID))),`. L149, 2nd coalesce arm
+    — and the ONLY viable arm for a 4688. Arm 1 (check_message_processID) is the TaskScheduler message
+    form; arm 3 (event_data->ProcessID) is gated `channel="System"`, which a 4688 (channel="Security")
+    can never satisfy. So for process-creation events the source PID MUST come from the raw column `process_pid`.
+    Send decimal — the real Windows hex form (0x12cc) will not survive to_integer().'
+  example: '4242'
+- name: process_sha256
+  type: hash_sha256
+  description: 'SHA-256 digest of the artifact. 64-character lowercase hex SHA-256 digest. Feeds xdm.source.process.executable.sha256.
+    Rule reads: `xdm.source.process.executable.sha256 = process_sha256,`. L147. Direct assignment, ungated,
+    untransformed. Declared in schema.json.'
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: process_thread_id
+  type: string_short
+  description: 'Opaque identifier emitted by Microsoft. Short opaque token, typically without whitespace;
+    max ~64 chars. Feeds xdm.source.process.thread_id. Rule reads: `xdm.source.process.thread_id = to_integer(process_thread_id),`.
+    L151. Direct, ungated. to_integer() applied — send a DECIMAL string; a hex form like 0x1cf4 will not
+    convert.'
+  example: mic-aa30542e
+- name: provider_guid
+  type: string_short
+  description: 'Provider GUID. Feeds xdm.observer.unique_identifier — ungated, sole source. The example
+    is the genuine Microsoft-Windows-Security-Auditing GUID. NOTE when verifying: filtering a query on
+    this value also matches the tenant''s REAL XDR agent events, not just synthetic ones.'
+  example: '{54849625-5478-4994-A5BA-3E3B0328C30D}'
+- name: provider_name
+  type: string
+  description: 'Event provider. This is the MODEL gate for authentication: the rule admits an event whose
+    provider_name contains "Microsoft-Windows-Security-", which is the only route by which 4624/4625/4768/4769
+    are mapped at all. It is ALSO a parsing gate — the MicrosoftWindowsEvents parsing rule drops Sysmon,
+    AD FS Auditing, AMSI and the two DNS providers so their packs can claim them instead. Feeds xdm.observer.type.
+    MODELING GATE (L3) and the discriminator every provider-gated branch in this slice reads. CRITICAL
+    for the process slice: real 4688/4689 carry channel="Security", which is NOT in the channel list —
+    they pass the gate ONLY via `provider_name contains "Microsoft-Windows-Security-"`. Consequence: with
+    channel="Security", every `if(channel="System", …)` and `if(channel="Application", …)` branch in this
+    rule is DEAD for process-creation events (kills event_data->ProcessID at L149, event_data->Module
+    at L146, the channel=System branch of L148). Also note the parsing rule excludes FIVE provider values,
+    not four (both DNS providers).'
+  example: Microsoft-Windows-Security-Auditing
+  is_gate: true
+- name: record_id
+  type: string_short
+  description: Windows EventRecordID, unique per event. Feeds xdm.session_context_id via to_string().
+    Ungated, sole source. Send a NUMERIC value — it is a record counter, not an opaque id.
+  example: '284419377'
+- name: task
+  type: integer
+  description: 'Vendor-emitted field ''Task''. Signed decimal integer; bare digits, optional leading minus.
+    Feeds xdm.event.original_event_type. Rule reads: `| alter event_type = coalesce(event_action, canonical_task,
+    to_string(task), check_message_task, event_name)`. Line 103, 3rd coalesce arm. **Schema declares task
+    as type "int"** (MicrosoftWindowsEvents_2_11_schema.json) — this is the decisive type fact for this
+    field. Consequence: a non-numeric task (e.g. "TM", "Devices") will not survive column typing, so `check_task_string
+    = if(task_str ~= "\d+", null, task_str)` (line 67) is effectively DEAD over our wire format. That
+    makes three branches unreachable in practice: xdm.event.outcome_reason''s `if(channel="Application"
+    and check_task_string = "TM", event_data_param2)` (line 117) and xdm.source.host.hostname''s `if(channel="Application"
+    and check_task_string = "Devices", event_data_param1)` (line 136). Do not try to seed them; use event_action
+    instead.'
+  example: '12544'
+- name: threat_category
+  type: string_short
+  description: Phantom-side taxonomy label for scenario grouping. Not read by any Cortex rule; it does
+    not reach xdm.
+  example: access_control
+- name: time_created
+  type: datetime
+  example: '2026-08-20T14:23:01Z'
+  description: Event timestamp, ISO-8601 with a literal T and Z. PARSING GATE for BOTH rules and the back-dating
+    handle. MicrosoftWindowsEvents requires it to match `.*\d{2}:\d{2}:\d{2}.*` and is no_hit=drop; MicrosoftCore
+    requires only `time_created != null`. An event with no parseable value matches NEITHER rule and is
+    discarded with no trace — no dataset row, no error, not even unknown_unknown_raw. The rule parses
+    `%FT%H:%M:%E*SZ` and sets _time to the EARLIEST of (time_created, _insert_time, _time), so a past
+    value wins. A space-separated or +00:00-offset form passes the regex but NULLS the parse. Not xdm-mapped
+    itself; it sets _time.
+  is_gate: true
+- name: user
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: SubjectUserSid, domain, identifier,
+    name, type (each key defined as a dotted-path leaf below). JSON composite. NEVER send `{}`. The rule
+    reads `user -> name`, `user -> domain`, `user -> identifier` and `user -> type`, and these sit FIRST
+    in the coalesce chains for user_name / user_domain / user_sid / user_type — so pinning the dotted
+    leaves here is the most direct way to control xdm.source.user.*. Declare user.name / user.domain /
+    user.identifier / user.type and the generator builds the nested object.'
+  example: '(composite — declare dotted leaves: user.name, user.domain, user.identifier, user.type)'
+- name: user.SubjectUserSid
+  type: string
+  description: 'Vendor-emitted field ''User › SubjectUserSid''. Leaf of the ''user'' composite. Free-form
+    text;. Feeds xdm.source.user.identifier (154) / xdm.source.identity.identifier (155). Rule reads:
+    `user -> SubjectUserSid`. COALESCE RANK 4 of 6. Unusual leaf — SubjectUserSid nested under the `user`
+    composite rather than under event_data.'
+  example: S-1-5-21-1004336348-1177238915-682003330-1013
+- name: user.domain
+  type: domain
+  description: 'DNS domain reported by Microsoft — bare domain, no scheme/path/port. Bare DNS domain name;
+    no scheme, no path, no port. Feeds xdm.source.user.domain (152) / xdm.source.identity.domain (153).
+    Rule reads: `user_domain = coalesce(user -> domain, event_data -> Domain, ...)`. COALESCE RANK 1 of
+    4 — beats every event_data/user_data alternative.'
+  example: example.com
+- name: user.identifier
+  type: string
+  description: 'Vendor-emitted field ''User › identifier''. Leaf of the ''user'' composite. Free-form
+    text; may contain whitespace and punctuation. Feeds xdm.source.user.identifier (154) / xdm.source.identity.identifier
+    (155). Rule reads: `user -> identifier`. COALESCE RANK 3 of 6.'
+  example: ext-7256d777-e87
+- name: user.name
+  type: string
+  description: 'Human-readable name as displayed by Microsoft. Free-form text; may contain whitespace
+    and. Feeds xdm.source.user.username (158) / xdm.source.identity.username (159). Rule reads: `user_name
+    = coalesce(user -> name, event_data -> User, ...)`. COALESCE RANK 1 of 9 — highest priority, beats
+    every event_data alternative. `user` is declared "type":"string" in schema.json but is READ as a JSON
+    composite via `->`, so it must be a JSON OBJECT on the wire: declare the dotted leaf user.name so
+    the generator nests it. Also feeds xdm.source.host.hostname alt-3 when it contains "$".'
+  example: sameh
+- name: user.type
+  type: string_short
+  description: 'Type/category classifier emitted by Microsoft. Short opaque token, typically without whitespace;
+    max ~64 chars. Feeds xdm.source.user.user_type (156) / xdm.source.identity.user_type (157). Rule reads:
+    `user_type = user -> type,`. SOLE source — no coalesce, no fallback. Consumed by `if(user_type contains
+    "User", XDM_CONST.USER_TYPE_REGULAR, user_type contains "Service", XDM_CONST.USER_TYPE_SERVICE_ACCOUNT,
+    user_type contains "Computer", XDM_CONST.USER_TYPE_MACHINE_ACCOUNT, user_type)`. Accepted enum-driving
+    substrings: "User" → REGULAR, "Service" → SERVICE_ACCOUNT, "Computer" → MACHINE_ACCOUNT; anything
+    else passes through verbatim. Nothing in event_data can populate this — the `user` composite is mandatory
+    for the user_type pair.'
+  example: authentication
+- name: user_data
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: SubjectDomainName, SubjectUserName
+    (each key defined as a dotted-path leaf below). JSON composite, the UserData section of a Windows
+    event. NEVER send `{}`. The rule reads `user_data -> SubjectUserName` and `user_data -> SubjectDomainName`
+    as LATE arms of the user_name / user_domain coalesce chains — reached only when `user ->` and `event_data
+    ->` are all null, so it is a fallback, not a primary.'
+  example: '(composite — declare dotted leaves: user_data.SubjectUserName, user_data.SubjectDomainName)'
+- name: user_data.SubjectDomainName
+  type: string
+  description: 'Vendor-emitted field ''User data › SubjectDomainName''. Leaf of the ''user_data'' composite.
+    Feeds xdm.source.user.domain (152) / xdm.source.identity.domain (153). Rule reads: `if(user_data ->
+    SubjectDomainName in ("-", " - "), null, user_data -> SubjectDomainName)`. COALESCE RANK 4 of 4 —
+    last resort. Same "-"/" - " sentinel-to-null trap.'
+  example: X-LAB
+- name: user_data.SubjectUserName
+  type: string
+  description: 'Vendor-emitted field ''User data › SubjectUserName''. Leaf of the ''user_data'' composite.
+    Feeds xdm.source.user.username (158) / xdm.source.identity.username (159). Rule reads: `user_name
+    = coalesce(..., event_data -> SubjectUserName, user_data -> SubjectUserName, arrayindex(regextract(message,
+    "User:\s*(?:[^\\]+\\)*(\S+)"), 0), ...)`. COALESCE RANK 4 of 9. `user_data` is the second composite
+    (schema "type":"string", read via `->`). Declare dotted leaf user_data.SubjectUserName. This is the
+    Windows <UserData> section, distinct from <EventData>.'
+  example: sameh
+use_cases:
+- Cloud
+- SaaS
+- Identity
+how_to_use: |
+  ## Microsoft Windows Security events -> `microsoft_windows_raw` (validated end to end)
+
+  Everything below was observed by streaming
+  2,400 synthetic CEF events and reading back the data model. Numbers are observed, not derived.
+  **Result: 58 xdm fields populate, and the user-to-machine binding lands.** Do not re-derive
+  this — read the recipes and send what they say.
+
+  ### 1. Delivery and routing
+
+  Phantom ships these as **CEF over syslog to the Cortex Broker**. No HTTP collector, no agent.
+  The CEF header pair is the routing literal:
+
+  ```
+  vendor  = microsoft
+  product = windows      ->  microsoft_windows_raw
+  ```
+
+  **This pair is claimed by SIX packs.** Five target other datasets and are separated by
+  `provider_name`; only two target `microsoft_windows_raw`:
+
+  | pack | target dataset | no_hit | discriminator |
+  |---|---|---|---|
+  | MicrosoftWindowsSysmon | `microsoft_sysmon_raw` | drop | `provider_name = Microsoft-Windows-Sysmon` |
+  | MicrosoftWindowsAMSI | `microsoft_amsi_raw` | drop | `provider_name = Microsoft-Antimalware-Scan-Interface` |
+  | MicrosoftADFS | `microsoft_adfs_raw` | drop | `provider_name IN (AD FS Auditing, AD FS)` |
+  | MicrosoftDNS | `microsoft_dns_raw` | drop | DNS providers |
+  | **MicrosoftWindowsEvents** | **`microsoft_windows_raw`** | **drop** | everything not excluded above |
+  | **MicrosoftCore** | **`microsoft_windows_raw`** | **keep** | `time_created != null` — the only catch-all |
+
+  ### 2. The three gates — clear all of them or the event vanishes
+
+  **(a) PARSE, `MicrosoftWindowsEvents.xif`, `no_hit=drop`:**
+
+  ```
+  filter to_string(time_created) ~= ".*\d{2}:\d{2}:\d{2}.*"
+    AND provider_name not in ("Microsoft-Windows-Sysmon", "AD FS Auditing",
+                              "Microsoft-Antimalware-Scan-Interface",
+                              "Microsoft-Windows-DNSServer", "Microsoft-Windows-DNS-Server-Service")
+  ```
+
+  FIVE excluded providers, not four. `provider_name` must be **non-null** — `null not in (...)`
+  evaluates to null in XQL, fails the AND, and drops the event.
+
+  **(b) PARSE fallback, `MicrosoftCommonParsingRules.xif`, `no_hit=keep`:** `filter time_created != null`.
+
+  > An event with no parseable `time_created` matches **neither** rule and is **discarded with no
+  > trace** — no dataset row, no error row, not even `unknown_unknown_raw`. This is the single
+  > most common silent failure on this family.
+
+  **(c) MODEL, `MicrosoftWindowsEvents_2_11.xif` line 3:**
+
+  ```
+  filter channel in ("System", "Application", "Directory Service")
+      or provider_name in ("Microsoft-Windows-PowerShell", "Microsoft-Windows-TaskScheduler",
+                           "Microsoft-Windows-Windows Firewall With Advanced Security",
+                           "Microsoft-Windows-Windows Defender",
+                           "Microsoft-Windows-ActiveDirectory_DomainService")
+      or provider_name contains "Microsoft-Windows-Security-"
+  ```
+
+  **`Security` is deliberately NOT in the channel list.** Every 4624/4625/4768/4769 enters
+  through the THIRD disjunct only. That is why `provider_name` matters more than `channel` here,
+  and why setting `channel: Security` is safe.
+
+  Choosing `channel: Security` does kill every `if(channel="System", ...)` and
+  `if(channel="Application", ...)` arm — ruling out `event_data.HostName`, `event_data.DCName`,
+  `event_data.ProcessID`, `event_data.Module` and the `param1/2/3` family. Correct trade; do not
+  then try to seed those leaves.
+
+  ### 3. Rule versioning
+
+  ```
+  MicrosoftWindowsEvents_2_11   fromversion 8.15.0, no toversion   <- authoritative
+  MicrosoftWindowsEvents_1_3    fromversion 8.2.0, toversion 8.14.0
+  ```
+
+  Only `_2_11` emits the `xdm.source.identity.*` / `xdm.target.identity.*` subtree. That subtree
+  populating confirms the tenant runs >= 8.15. On an older tenant those 8
+  mappings do not exist.
+
+  ### 4. How the rule reads a value — four categories, and only three are schema rows
+
+  | category | count | how to satisfy it |
+  |---|---|---|
+  | RAW_COLUMN | 51 | a plain CEF extension `key=value` |
+  | EVENT_DATA_LEAF | 92 | declare a dotted leaf `event_data.X`; the generator builds the nested JSON |
+  | OTHER_COMPOSITE_LEAF | 8 | same, under `user.` / `user_data.` |
+  | **MESSAGE_REGEX** | **101** | **NOT a schema row — the `message` string must literally contain matching text** |
+
+  **`message` is load-bearing.** The rule runs 42 `regextract()` calls over it feeding 33
+  distinct fields, several with no other source at all. Verified populating from prose alone:
+
+  ```
+  "Failure Code: 0x18"    -> xdm.auth.kerberos_tgs.error_code = ERR_KDC_PREAUTH_FAILED
+  "Failure Reason: ..."   -> xdm.event.outcome_reason
+  "Process Name: ..."     -> xdm.source.process.executable.path and .name
+  ```
+
+  There is no `event_data.FailureCode` leaf anywhere, so the whole Kerberos error taxonomy — the
+  password-spray signal included — is unreachable unless the prose is right. A generic message
+  defeats all 33; the placeholder this source once shipped ("Operation completed successfully.")
+  satisfied 1 of the 42.
+
+  The CEF key must be literally `message` — **not** `msg`.
+
+  ### 5. Worked scenarios — send exactly this
+
+  Each block is the verified field set for one event ID. `<...>` marks the per-identity values
+  that must stay bound together across a run (see the identity note in §7).
+
+  #### Event 4624 — Successful interactive/RDP logon — the user-to-machine record
+
+  LogonType 10 = RDP, 2 = console, 3 = network. This is the event ITDR-style user-to-machine attribution is built from.
+
+  Declares **42 fields** for this event ID; pins 34.
+
+  ```
+  # CEF header
+  vendor                             = microsoft
+  product                            = windows
+  time_created                       = 2026-08-20T14:23:01Z
+  provider_name                      = Microsoft-Windows-Security-Auditing
+  channel                            = Security
+  event_id                           = 4624
+
+  # pinned fields
+  activity_id                        = {8f2b41c7-9d0a-4e63-b512-6ac7d3e9f014}
+  computer_name                      = WS-1001.acme.local
+  event_data.AuthenticationPackageName = Negotiate
+  event_data.Domain                  = Acme
+  event_data.ElevatedToken           = %%1842
+  event_data.FQDN                    = WS-1001.acme.local
+  event_data.IpAddress               = 10.20.14.11
+  event_data.LogonProcessName        = Advapi
+  event_data.LogonType               = 10
+  event_data.RestrictedAdminMode     = -
+  event_data.SID                     = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.SubjectDomainName       = Acme
+  event_data.SubjectUserName         = ahmed.alharbi
+  event_data.SubjectUserSid          = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.TargetDomainName        = Acme
+  event_data.TargetUserName          = ahmed.alharbi
+  event_data.TargetUserSid           = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.User                    = ahmed.alharbi
+  event_data.UserSid                 = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.VirtualAccount          = %%1843
+  event_data.WorkstationName         = WS-1001
+  event_result                       = success
+  host_name                          = WS-1001
+  log_level                          = Information
+  opcode                             = Info
+  os_subtype                         = Windows 10 Enterprise
+  process_pid                        = 488
+  process_thread_id                  = 6104
+  provider_guid                      = {54849625-5478-4994-A5BA-3E3B0328C30D}
+  record_id                          = 2801100
+  user.domain                        = Acme
+  user.identifier                    = S-1-5-21-1004336348-1177238915-682003330-1100
+  user.name                          = ahmed.alharbi
+  user.type                          = User
+  ```
+
+  `message` (tabs are significant — several regexes terminate a capture on the tab run):
+
+  ```
+  An account was successfully logged on.
+
+  Subject:
+  	Security ID:		S-1-5-21-1004336348-1177238915-682003330-1100
+  	Account Name:		ahmed.alharbi
+  	Account Domain:		Acme
+  	Logon ID:		0x3E7
+
+  Logon Information:
+  	Logon Type:		10
+  	Restricted Admin Mode:	-
+  	Virtual Account:	No
+  	Elevated Token:		Yes
+
+  Impersonation Level:		Impersonation
+
+  New Logon:
+  	Security ID:		S-1-5-21-1004336348-1177238915-682003330-1100
+  	Account Name:		ahmed.alharbi
+  	Account Domain:		Acme
+  	Logon ID:		0x1A2B3C
+
+  Process Information:
+  	Process ID:		0x2b8
+  	Process Name:		C:\Windows\System32\svchost.exe
+
+  Network Information:
+  	Workstation Name:	WS-1001
+  	Source Network Address:	10.20.14.11
+  	Source Port:		52431
+
+  Detailed Authentication Information:
+  	Logon Process:		Advapi  
+  	Authentication Package:	Negotiate
+  	Key Length:		0
+  ```
+
+  #### Event 4625 — Failed logon — brute force / password spray
+
+  Failure Reason in the message drives xdm.event.outcome_reason. Repeat across many users from one source for a spray, or many attempts on one user for a brute force.
+
+  Declares **42 fields** for this event ID; pins 33.
+
+  ```
+  # CEF header
+  vendor                             = microsoft
+  product                            = windows
+  time_created                       = 2026-08-20T14:23:01Z
+  provider_name                      = Microsoft-Windows-Security-Auditing
+  channel                            = Security
+  event_id                           = 4625
+
+  # pinned fields
+  activity_id                        = {8f2b41c7-9d0a-4e63-b512-6ac7d3e9f014}
+  computer_name                      = WS-1001.acme.local
+  event_data.AuthenticationPackageName = NTLM
+  event_data.Domain                  = Acme
+  event_data.FQDN                    = WS-1001.acme.local
+  event_data.IpAddress               = 10.20.14.11
+  event_data.LogonProcessName        = NtLmSsp
+  event_data.LogonType               = 3
+  event_data.SID                     = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.Status                  = 0xC000006D
+  event_data.SubStatus               = 0xC000006A
+  event_data.SubjectDomainName       = Acme
+  event_data.SubjectUserName         = ahmed.alharbi
+  event_data.SubjectUserSid          = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.TargetDomainName        = Acme
+  event_data.TargetUserName          = ahmed.alharbi
+  event_data.TargetUserSid           = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.User                    = ahmed.alharbi
+  event_data.UserSid                 = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.WorkstationName         = WS-1001
+  event_result                       = failure
+  host_name                          = WS-1001
+  log_level                          = Information
+  opcode                             = Info
+  os_subtype                         = Windows 10 Enterprise
+  process_pid                        = 488
+  process_thread_id                  = 6104
+  provider_guid                      = {54849625-5478-4994-A5BA-3E3B0328C30D}
+  record_id                          = 2801100
+  user.domain                        = Acme
+  user.identifier                    = S-1-5-21-1004336348-1177238915-682003330-1100
+  user.name                          = ahmed.alharbi
+  user.type                          = User
+  ```
+
+  `message` (tabs are significant — several regexes terminate a capture on the tab run):
+
+  ```
+  An account failed to log on.
+
+  Subject:
+  	Security ID:		S-1-5-18
+  	Account Name:		WS-1001$
+  	Account Domain:		Acme
+
+  Logon Type:			3
+
+  Account For Which Logon Failed:
+  	Security ID:		S-1-0-0
+  	Account Name:		ahmed.alharbi
+  	Account Domain:		Acme
+
+  Failure Information:
+  	Failure Reason:		Unknown user name or bad password.
+  	Status:			0xC000006D
+  	Sub Status:		0xC000006A
+
+  Network Information:
+  	Workstation Name:	WS-1001
+  	Source Network Address:	10.20.14.11
+  	Source Port:		52431
+
+  Detailed Authentication Information:
+  	Logon Process:		NtLmSsp
+  	Authentication Package:	NTLM
+  ```
+
+  #### Event 4768 — Kerberos TGT requested — initial domain authentication
+
+  TicketEncryptionType 0x12 = AES256 (normal). Feeds xdm.auth.kerberos_tgt.*.
+
+  Declares **35 fields** for this event ID; pins 29.
+
+  ```
+  # CEF header
+  vendor                             = microsoft
+  product                            = windows
+  time_created                       = 2026-08-20T14:23:01Z
+  provider_name                      = Microsoft-Windows-Security-Auditing
+  channel                            = Security
+  event_id                           = 4768
+
+  # pinned fields
+  activity_id                        = {8f2b41c7-9d0a-4e63-b512-6ac7d3e9f014}
+  computer_name                      = WS-1001.acme.local
+  event_data.Domain                  = Acme
+  event_data.FQDN                    = WS-1001.acme.local
+  event_data.IpAddress               = 10.20.14.11
+  event_data.SID                     = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.SubjectDomainName       = Acme
+  event_data.SubjectUserName         = ahmed.alharbi
+  event_data.SubjectUserSid          = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.TargetDomainName        = Acme
+  event_data.TargetUserName          = ahmed.alharbi
+  event_data.TargetUserSid           = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.TicketEncryptionType    = 0x12
+  event_data.User                    = ahmed.alharbi
+  event_data.UserSid                 = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.WorkstationName         = WS-1001
+  event_result                       = success
+  host_name                          = WS-1001
+  log_level                          = Information
+  opcode                             = Info
+  os_subtype                         = Windows 10 Enterprise
+  process_pid                        = 488
+  process_thread_id                  = 6104
+  provider_guid                      = {54849625-5478-4994-A5BA-3E3B0328C30D}
+  record_id                          = 2801100
+  user.domain                        = Acme
+  user.identifier                    = S-1-5-21-1004336348-1177238915-682003330-1100
+  user.name                          = ahmed.alharbi
+  user.type                          = User
+  ```
+
+  `message` (tabs are significant — several regexes terminate a capture on the tab run):
+
+  ```
+  A Kerberos authentication ticket (TGT) was requested.
+
+  Account Information:
+  	Account Name:		ahmed.alharbi
+  	Supplied Realm Name:	Acme
+  	User ID:			S-1-5-21-1004336348-1177238915-682003330-1100
+
+  Service Information:
+  	Service Name:		krbtgt
+  	Service ID:		S-1-5-21-1004336348-1177238915-682003330-502
+
+  Network Information:
+  	Client Address:		::ffff:10.20.14.11
+  	Client Port:		52431
+
+  Additional Information:
+  	Ticket Options:		0x40810010
+  	Result Code:		0x0
+  	Failure Code:		0x0
+  	Ticket Encryption Type:	0x12
+  	Pre-Authentication Type:	2
+  ```
+
+  #### Event 4769 — Kerberos service ticket requested — Kerberoasting when RC4
+
+  0x17 = RC4_HMAC against an AES256 baseline is the Kerberoasting tell. Point the SPN at a service account (MSSQLSvc/...) to make it realistic.
+
+  Declares **35 fields** for this event ID; pins 29.
+
+  ```
+  # CEF header
+  vendor                             = microsoft
+  product                            = windows
+  time_created                       = 2026-08-20T14:23:01Z
+  provider_name                      = Microsoft-Windows-Security-Auditing
+  channel                            = Security
+  event_id                           = 4769
+
+  # pinned fields
+  activity_id                        = {8f2b41c7-9d0a-4e63-b512-6ac7d3e9f014}
+  computer_name                      = WS-1001.acme.local
+  event_data.Domain                  = Acme
+  event_data.FQDN                    = WS-1001.acme.local
+  event_data.IpAddress               = 10.20.14.11
+  event_data.SID                     = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.SubjectDomainName       = Acme
+  event_data.SubjectUserName         = ahmed.alharbi
+  event_data.SubjectUserSid          = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.TargetDomainName        = Acme
+  event_data.TargetUserName          = ahmed.alharbi
+  event_data.TargetUserSid           = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.TicketEncryptionType    = 0x17
+  event_data.User                    = ahmed.alharbi
+  event_data.UserSid                 = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.WorkstationName         = WS-1001
+  event_result                       = success
+  host_name                          = WS-1001
+  log_level                          = Information
+  opcode                             = Info
+  os_subtype                         = Windows 10 Enterprise
+  process_pid                        = 488
+  process_thread_id                  = 6104
+  provider_guid                      = {54849625-5478-4994-A5BA-3E3B0328C30D}
+  record_id                          = 2801100
+  user.domain                        = Acme
+  user.identifier                    = S-1-5-21-1004336348-1177238915-682003330-1100
+  user.name                          = ahmed.alharbi
+  user.type                          = User
+  ```
+
+  `message` (tabs are significant — several regexes terminate a capture on the tab run):
+
+  ```
+  A Kerberos service ticket was requested.
+
+  Account Information:
+  	Account Name:		ahmed.alharbi@Acme.LOCAL
+  	Account Domain:		Acme.LOCAL
+  	Logon GUID:		{00000000-0000-0000-0000-000000000000}
+
+  Service Information:
+  	Service Name:		MSSQLSvc/FS-01.acme.local:1433
+  	Service ID:		S-1-5-21-1004336348-1177238915-682003330-1601
+
+  Network Information:
+  	Client Address:		::ffff:10.20.14.11
+  	Client Port:		52431
+
+  Additional Information:
+  	Ticket Options:		0x40810000
+  	Ticket Encryption Type:	0x17
+  	Failure Code:		0x0
+  	Transited Services:	-
+  ```
+
+  #### Event 4771 — Kerberos pre-auth failed — password spray signal
+
+  Failure Code 0x18 = bad password. Reachable ONLY through the message prose; there is no event_data leaf for it anywhere in the rule.
+
+  Declares **35 fields** for this event ID; pins 29.
+
+  ```
+  # CEF header
+  vendor                             = microsoft
+  product                            = windows
+  time_created                       = 2026-08-20T14:23:01Z
+  provider_name                      = Microsoft-Windows-Security-Auditing
+  channel                            = Security
+  event_id                           = 4771
+
+  # pinned fields
+  activity_id                        = {8f2b41c7-9d0a-4e63-b512-6ac7d3e9f014}
+  computer_name                      = WS-1001.acme.local
+  event_data.Domain                  = Acme
+  event_data.FQDN                    = WS-1001.acme.local
+  event_data.IpAddress               = 10.20.14.11
+  event_data.SID                     = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.SubjectDomainName       = Acme
+  event_data.SubjectUserName         = ahmed.alharbi
+  event_data.SubjectUserSid          = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.TargetDomainName        = Acme
+  event_data.TargetUserName          = ahmed.alharbi
+  event_data.TargetUserSid           = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.TicketEncryptionType    = 0x17
+  event_data.User                    = ahmed.alharbi
+  event_data.UserSid                 = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.WorkstationName         = WS-1001
+  event_result                       = failure
+  host_name                          = WS-1001
+  log_level                          = Information
+  opcode                             = Info
+  os_subtype                         = Windows 10 Enterprise
+  process_pid                        = 488
+  process_thread_id                  = 6104
+  provider_guid                      = {54849625-5478-4994-A5BA-3E3B0328C30D}
+  record_id                          = 2801100
+  user.domain                        = Acme
+  user.identifier                    = S-1-5-21-1004336348-1177238915-682003330-1100
+  user.name                          = ahmed.alharbi
+  user.type                          = User
+  ```
+
+  `message` (tabs are significant — several regexes terminate a capture on the tab run):
+
+  ```
+  Kerberos pre-authentication failed.
+
+  Account Information:
+  	Security ID:		S-1-5-21-1004336348-1177238915-682003330-1100
+  	Account Name:		ahmed.alharbi
+
+  Service Information:
+  	Service Name:		krbtgt/Acme.LOCAL
+
+  Network Information:
+  	Client Address:		::ffff:10.20.14.11
+  	Client Port:		52431
+
+  Additional Information:
+  	Ticket Options:		0x40810010
+  	Failure Code:		0x18
+  	Pre-Authentication Type:	2
+  ```
+
+  #### Event 4672 — Special privileges assigned — privileged logon
+
+  Pairs with a 4624 for the same logon. Use to mark admin sessions.
+
+  Declares **34 fields** for this event ID; pins 28.
+
+  ```
+  # CEF header
+  vendor                             = microsoft
+  product                            = windows
+  time_created                       = 2026-08-20T14:23:01Z
+  provider_name                      = Microsoft-Windows-Security-Auditing
+  channel                            = Security
+  event_id                           = 4672
+
+  # pinned fields
+  activity_id                        = {8f2b41c7-9d0a-4e63-b512-6ac7d3e9f014}
+  computer_name                      = WS-1001.acme.local
+  event_data.Domain                  = Acme
+  event_data.FQDN                    = WS-1001.acme.local
+  event_data.IpAddress               = 10.20.14.11
+  event_data.SID                     = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.SubjectDomainName       = Acme
+  event_data.SubjectUserName         = ahmed.alharbi
+  event_data.SubjectUserSid          = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.TargetDomainName        = Acme
+  event_data.TargetUserName          = ahmed.alharbi
+  event_data.TargetUserSid           = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.User                    = ahmed.alharbi
+  event_data.UserSid                 = S-1-5-21-1004336348-1177238915-682003330-1100
+  event_data.WorkstationName         = WS-1001
+  event_result                       = success
+  host_name                          = WS-1001
+  log_level                          = Information
+  opcode                             = Info
+  os_subtype                         = Windows 10 Enterprise
+  process_pid                        = 488
+  process_thread_id                  = 6104
+  provider_guid                      = {54849625-5478-4994-A5BA-3E3B0328C30D}
+  record_id                          = 2801100
+  user.domain                        = Acme
+  user.identifier                    = S-1-5-21-1004336348-1177238915-682003330-1100
+  user.name                          = ahmed.alharbi
+  user.type                          = User
+  ```
+
+  `message` (tabs are significant — several regexes terminate a capture on the tab run):
+
+  ```
+  Special privileges assigned to new logon.
+
+  Subject:
+  	Security ID:		S-1-5-21-1004336348-1177238915-682003330-1100
+  	Account Name:		ahmed.alharbi
+  	Account Domain:		Acme
+  	Logon ID:		0x1A2B3C
+
+  Privileges:		SeSecurityPrivilege
+  			SeBackupPrivilege
+  			SeRestorePrivilege
+  			SeTakeOwnershipPrivilege
+  			SeDebugPrivilege
+  ```
+
+  #### Event 1644 — LDAP search (Active Directory enumeration)
+
+  Targets `administrator-groups-enumerated-via-ldap`, one of only five UNGATED Windows detectors
+  (T1087 Account Discovery, **Test Period: N/A — single event**).
+
+  **This event does NOT use the named leaves.** The schema historically declared
+  `event_data.SearchFilter` / `.ScopeOfSearch` / `.AttributeList`; the tenant's REAL 1644 rows use
+  none of them. Verified against live rows — they carry numbered params:
+
+  ```
+  provider_name                    = Microsoft-Windows-ActiveDirectory_DomainService
+  channel                          = (OMIT — real 1644 rows carry channel=None and clear the
+                                      MODEL gate through provider_name alone)
+  event_id                         = 1644
+  event_data.param1                = DC=acme,DC=local                       <- search base DN
+  event_data.param2                =  (&(objectClass=group)(cn=Domain Admins))   <- THE FILTER (leading space is real)
+  event_data.param3                = 0
+  event_data.param4                = 0
+  event_data.param5                = 10.20.14.17:59300                     <- client as <ip>:<port>
+  event_data.param6                = subtree
+  event_data.param7                = member,sAMAccountName,objectSid,adminCount,memberOf,distinguishedName
+  event_data.param9                = idx_objectClass:0:N;
+  event_data.param17               = Acme\abdullah.alzahrani                <- the ACTOR
+  ```
+
+  Sweep `param2` across the admin groups — Domain Admins, Enterprise Admins, Schema Admins,
+  Administrators, `(&(objectClass=user)(adminCount=1))` — from ONE client to make it read as
+  enumeration rather than routine lookup.
+
+  `message`:
+
+  ```
+  Internal event: A client issued a search operation with the following options. 
+   
+   Client:
+  10.20.14.17:59300 
+  Starting node:
+  DC=acme,DC=local 
+  Filter:
+   (&(objectClass=group)(cn=Domain Admins)) 
+  Search scope:
+   subtree 
+  Attribute selection:
+  member,sAMAccountName,objectSid,adminCount,memberOf,distinguishedName 
+  Server controls:
+   
+  Visibility of deleted objects:
+  0 
+  Search flags:
+  0 
+  Attributes read:
+  14 
+  Search time (ms):
+  7 
+  User:
+  Acme\abdullah.alzahrani 
+  ```
+
+  #### Event 4616 — the system time was changed
+
+  Targets `a-user-changed-the-windows-system-time`: **Identity Threat Module** (reachable when the
+  ITDR licence is active), **Test Period: N/A — single event**, T1124 System Time Discovery.
+
+  ```
+  provider_name                    = Microsoft-Windows-Security-Auditing
+  channel                          = Security
+  event_id                         = 4616
+  event_result                     = success
+  event_data.param1                = <previous time, ISO with nanoseconds>
+  event_data.param2                = <new time, ISO with nanoseconds>
+  ```
+
+  Plus the shared identity block (user.*, event_data.Subject*, host_name, computer_name). Verified
+  mapping with user-to-machine attribution intact across six users on their bound workstations.
+
+  ### 6. Free raw columns — one CEF extension each, one xdm field each
+
+  Eight ungated raw columns are the SOLE source of an xdm field: no gate, no coalesce, no
+  transform. Declaring them WITHOUT pinning is worse than omitting them, because the generator
+  then invents the value. Pinning these took a verified run from 52 to 58 xdm fields.
+
+  | column | -> | note |
+  |---|---|---|
+  | `event_result` | `xdm.event.outcome` | **exact lowercase `success` / `failure`**. "Success" or "Audit Success" falls through the coalesce and lands as an uncoerced raw string, breaking every datamodel filter on the enum |
+  | `log_level` | `xdm.event.log_level` | only `information`/`error`/`warning`/`critical` resolve; the rule lowercases for you. On a non-enum value the else-branch returns `opcode` FIRST, so a stray opcode publishes as the log level |
+  | `record_id` | `xdm.session_context_id` | Windows EventRecordID, numeric, unique per event |
+  | `activity_id` | `xdm.alert.original_alert_id` | the only unconditional `xdm.alert.*` in the rule |
+  | `provider_guid` | `xdm.observer.unique_identifier` | |
+  | `process_pid` | `xdm.source.process.pid` | **decimal only** — `to_integer()` cannot parse the `0x1e8` form real Windows emits. Hex in the message, decimal in the column |
+  | `process_thread_id` | `xdm.source.process.thread_id` | |
+  | `os_subtype` | `xdm.source.host.os` | |
+
+  **`event_action` is a poison pill — never send it.** It is arm 1 of
+  `event_type = coalesce(event_action, canonical_task, to_string(task), check_message_task,
+  event_name)` and nothing overwrites it, so sending it destroys the canonical_task taxonomy and
+  `xdm.event.original_event_type` stops resolving to "Logon" / "Special Logon".
+
+  ### 7. Traps that produce a plausible WRONG result
+
+  **Pin every member of a coalesce, not just the one you want to win.** The generator synthesises
+  any DECLARED field left unpinned, and a synthesised value EARLIER in the chain beats the real one
+  behind it:
+
+  ```
+  user_sid = coalesce(event_data -> SID, event_data -> SubjectUserSid, user -> identifier, ...)
+       pinning only SubjectUserSid  ->  xdm.source.user.identifier = "hL42dIss"
+  xdm.source.host.fqdn = coalesce(event_data -> FQDN, event_data -> WorkstationName)
+       pinning only WorkstationName ->  xdm.source.host.fqdn = "host-a"
+  ```
+
+  **Declare the SMALLEST field set that works.** Declaring all 126 fields dragged synthesised noise
+  into what should read as a Windows logon — target geography in Bulgaria,
+  `xdm.target.file.path = /usr/bin/curl`, an OVH ASN. The per-event sets in §5 (27-42 fields) fix
+  it. Logon-only fields (`LogonType`, `AuthenticationPackageName`, `LogonProcessName`,
+  `ElevatedToken`, `Status`) must be DROPPED for Kerberos event IDs, or `xdm.logon.type` falls
+  through the rule's if-chain to the raw synthesised string.
+
+  **A higher field count can mean a worse result.** The full-schema run scored 77 xdm fields; the
+  correct minimal run scores 58. The extra 19 were noise. Never use field count alone as the
+  quality signal — scan 25 rows for values that look generated (8-char mixed-case tokens,
+  geography that does not belong, file paths from the wrong OS).
+
+  **Bind identity per record.** The message embeds the user and host, so it CANNOT vary
+  independently of them. Render the message INSIDE the per-identity entity group alongside that
+  identity's `event_data` leaves. Passing them as parallel lists produces a cartesian smear where
+  the prose contradicts the structured fields.
+
+  **Verifying a re-run: do NOT `sort desc _time`.** Back-dated events from every run share the same
+  30-day window, so recency by `_time` says nothing about which run a row came from, and a fixed
+  run reads as still-broken because the query keeps returning old rows. Discriminate on a value
+  unique to the run (a pinned `process_pid`, a `record_id` range). The mirror-image trap: filtering
+  on `provider_guid` set to the GENUINE Microsoft GUID also matches the tenant's REAL XDR agent
+  events, so a query can return rows that your synthetic run did not send.
+
+  ### 8. Back-dating
+
+  `time_created`, ISO-8601 with literal `T` and `Z`. The parsing rule parses `%FT%H:%M:%E*SZ` and
+  sets `_time` to the **EARLIEST** of (`time_created`, `_insert_time`, `_time`), so a past value
+  wins. A space-separated or `+00:00`-offset form passes the L2 regex but NULLS the parse.
+
+  An epoch integer does NOT work on this field — that is the CEF `rt` lever, which is a different
+  mechanism (the broker consumes `rt` during generic extraction on sources with no parsing rule).
+  Verified span here: 30.0 days from one run, which clears both the 14-day activation and 30-day
+  training windows in a single pass.
+
+  ### 9. What this dataset CANNOT do
+
+  The rule emits **no `EVENT_TAG_AUTHENTICATION`** and **no `xdm.source.user.upn`**. Cortex
+  documents both as mandatory for building an authentication story, so this dataset does not
+  produce one and cannot populate `auth_identity` — regardless of licensing or tenant settings.
+  `xdm.event.tags` is filled with `arraycreate(execution_name)`, never the auth tag.
+
+  That does NOT prevent: full XDM normalization, XQL hunting, dashboards, and **correlation rules**,
+  which fire deterministically with no story, no detection module and no training period. For a POV
+  under time pressure the correlation-rule surface is the reliable one.
+
+  For an authentication story over CEF, use a source whose rule emits the tag and the UPN — of the
+  ten in this bundle that do, Duo is the validated one.
+
+  ## Delivery over a real Windows Event Collector
+
+  Over syslog/CEF the broker stamps `_collector_type = Syslog`. A real delivery to the Broker VM's Windows
+  Event Collector applet (the `wec-sender` connector, mutual TLS on 5986) stamps `WEC`, lands in
+  `microsoft_windows_raw` about 7 s later, and also creates `xdr_data` rows keyed by `agent_hostname` = the
+  event's Computer (`EVENT_LOG` / `EVENT_LOG_DOMAIN_CONTROLLER`; a 4624 also yields a PANW Fusion
+  `LOGIN_EVENT`). Detectors catalogued as "Windows Event Collector" read this path.
+
+  What the applet maps from the event XML: `_time` = `System/TimeCreated` (back-dating works, a 5-day-old
+  event kept its time); `event_id`, `provider_name`, `provider_guid`, `computer_name`, `channel`, `record_id`
+  come from `System`; `event_action` = the rendered `Task` text; `message` and `log_level` come from
+  `RenderingInfo`; `event_result` is `failure` when the rendered Keywords say "Audit Failure", else `success`;
+  `event_data` is a JSON object of the `Data` nodes (named by `Name`, unnamed ones become `param1..paramN`).
+  So the sender must render real strings, not placeholders. A 4624 models 48 `xdm.*` fields and a 4625
+  gave `xdm.event.outcome = FAILED`.
+
+  The applet does not filter by its subscription's event-id list (4688 and an LDAP-Client event landed).
+  Provider routing still applies: a Sysmon-provider event did not reach `microsoft_windows_raw` and
+  `microsoft_sysmon_raw` does not exist on the tenant until that pack is installed.
+
+  This is the sanctioned WEC exception to syslog/CEF delivery. Syslog/CEF stays the way to validate this
+  source's mapping.
+validated: true

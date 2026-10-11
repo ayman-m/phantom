@@ -1,0 +1,211 @@
+schema_version: 1
+id: F5BigIPAWAF
+pack_name: F5BigIPAWAF
+rule_name: F5BigIPAWAF
+dataset_name: f5_waf_raw
+vendor: F5
+product: F5BigIPAWAF
+description: Used for protecting applications with behavioral analytics, layer 7 DoS
+  mitigation, application-layer encryption of sensetive data, threat intelligence
+  services and API security.
+categories:
+- Analytics & SIEM
+version: 1.0.4
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+RjU8L3RpdGxlPjxwYXRoIGQ9Ik0xMiAwQzUuMzczIDAgMCA1LjM3MyAwIDEyYTExLjk0MyAxMS45NDMgMCAwMDIuMzM2IDcuMTExM2MuNTA5LjAwNC44NTk0LS4xMTEuODk4NC0uMzMuMDQ2LS4yMjkuMDA2OC0uNTgyNS0uMDMzMi0uOTM5NWE1NS4wNjcgNTUuMDY3IDAgMDEtLjIzNDQtNy40NDczYy0uNjA5LjAyNy0xLjE1NDcuMDU1LTEuNjc3Ny4wODYuMDItLjQ3MS4wNDYtLjkxODguMDg0LTEuMzgyOC41MTctLjA1IDEuMDY0LS4wOTM2IDEuNjY2LS4xNDQ2LjAyNi0uNDA2LjA1NjgtLjc5ODMuMDkxOC0xLjE5NTMuMjctMi40MyAyLjgyOC0zLjkxNjIgNC45NTktNC40OTAyLjk0Ni0uMjMgMS41MjQ1LS4zMDIyIDEuOTc4NS0uMzI2Mi4xNjQtLjAwNS4zNDA1LS4wMTE3LjUxNzUtLjAxMTcuNDQyIDAgLjg4OTkuMDQxNCAxLjE3MzkuMjM0NC40Ni4zNDUuOTEzNS42ODczIDEuMzk2NSAxLjA2ODMuMDQ4LjA2NS4xMDI0LjE2NzgtLjAxNzYuMzQzOC0uMjIyLjI2LS40MzcxLjUwODQtLjY2MjEuNzc1NC0uMTMuMTU3LS4zNDU0LjExNjQtLjUyNzQuMDY2NC0uMzgtLjE5NC0uNzQ2Mi0uMzcyOC0xLjExNzItLjU1MjgtLjY3Mi0uMjk5LTEuMzY2Ni0uNjA2MS0yLjE0MDYtLjU3NjEtLjQ4My4wMzktLjk1MS41MzItMSAxLjIwOWExMDEuNDEgMTAxLjQxIDAgMDAtLjE1MDQgMy4yMjg1YzEuMzQzLS4wMzggMi42ODM3LS4wNjI0IDQuMDk1Ny0uMDY4NGwtLjAwMi45NDUzYy0uNDYuMjA2LS44OTU0LjQxMy0xLjM1NzQuNjIzLS45NTMuMDExLTEuODU5NS4wMjAyLTIuNzcxNS4wMzUyYTEyNS4xMyAxMjUuMTMgMCAwMC4xMTkyIDcuOTMxN2MuMDI0LjM3OC4wNDI0Ljc2MDUuMTUwNCAxLjAxNzUuMTMuMzIyLjg3OTguNTcwMSAyLjUwOTguNjYyMS4wMDcuMjg0LjAxNTMuNTUzMi4wMjUzLjgyODItMi42NTUtLjA3Ny01LjIwNS0uMzMwMi03LjI0OC0uNjk5MkExMS45NjIgMTEuOTYyIDAgMDAxMiAyNGM2LjYyOCAwIDEyLTUuMzczIDEyLTEyYTExLjk0MiAxMS45NDIgMCAwMC0yLjA5NTctNi43NzU0Yy0uMTQ3LjYwNy0uMjI1MiAxLjIzNzgtLjM2NzIgMS44ODI4LTEuOC0uMjM0LTMuOTEzMS0uNDA1My02LjI4NzEtLjQ4ODMtLjE5MS42MDItLjM3MTEgMS4xOTItLjU3ODEgMS44MzYgMy45NzMuMjQ1IDUuOTA0OCAxLjI5MjQgNy4wNTA4IDIuNTI1NCAxLjExMyAxLjI0OCAxLjM1MDEgMi42MjYyIDEuMjg1MSAzLjkwNjItLjE0MyAyLjA4MS0xLjA2MTMgMy4zOTcxLTIuMzIwMyA0LjM3MTEtMS4yNzQuOTYtMi44MTM5IDEuNDM2LTQuMDQ2OSAxLjUzOS0xLjgxOS4xMzctNC4yNTE1LS4yOTYyLTQuNzY5NS0uNjEzMmExNzguMDMgMTc4LjAzIDAgMDEtLjk0OTItMi4yMDEyYy0uMDgtLjE2Ni0uMTI5NC0uMzM3MS4wOTc2LS41MzUxLjM1NC0uMzM5LjY5MjgtLjY2NjcgMS4wNTA4LTEuMDEzNy4xNTgtLjE1NS4zMzM4LS4yOTkxLjQ2NjgtLjA3ODEuNDg5Ljc1NS45NDczIDEuNDQ3NyAxLjQwNjMgMi4xMzY3LjUyMi43NyAxLjMxNjcgMS40Njk1IDMuMDUyNyAxLjM1MzUgMS40NTktLjEzIDIuNTY3NS0xLjIzMzMgMi42ODU1LTIuNDQ3My4xMjgtMi4yNDYtMi4xNDQ2LTMuODM5Ni04LjA1NDYtNC4zNDk2YTI1NzEuMjcgMjU3MS4yNyAwIDAxMy4xMjMtOS4zNzFjMS40MDQuMDY1IDIuNzA0My4xNzk4IDMuOTQ1My4zMzk4LjkxOS4xMTYgMS43NzIuMzI4NyAyLjYyNy40Mjc3QTExLjk3MyAxMS45NzMgMCAwMDEyIDB6bTEwLjAxOTUgMjEuMTExM2MtLjUwMDYgMC0uOTA4Mi40MDc2LS45MDgyLjkwODIgMCAuNTAwNy40MDc2LjkwODIuOTA4Mi45MDgyLjUwMDcgMCAuOTA4Mi0uNDA3NS45MDgyLS45MDgyIDAtLjUwMDYtLjQwNzUtLjkwODItLjkwODItLjkwODJ6bTAgLjEyN2MuNDMxOCAwIC43NzkzLjM0OTUuNzc5My43ODEyYS43Nzc2Ljc3NzYgMCAwMS0uNzc5My43NzkzYy0uNDMxNyAwLS43ODEyLS4zNDc1LS43ODEyLS43NzkzYS43ODA5Ljc4MDkgMCAwMS43ODEyLS43ODEyem0tLjM2NTIuMjc3M3YuOTk2MWguMTczOHYtLjM5MjZoLjEzODdjLjA5MiAwIC4xNTgzLjAxMTIuMTk1My4wMzMyLjA2Mi4wMzcuMDkzOC4xMTQ2LjA5MzguMjI4NnYuMDhsLjAwMi4wMjkzYS4wNy4wNyAwIDAxLjAwMzkuMDExOGMwIC4wMDUtLjAwMDEuMDA2OC4wMDM5LjAwOThoLjE2MmwtLjAwNTgtLjAxMzdhLjEwNi4xMDYgMCAwMS0uMDA3OC0uMDQ4OC42ODQ2LjY4NDYgMCAwMS0uMDA0LS4wNzQzdi0uMDc0MmEuMjc2LjI3NiAwIDAwLS4wNTI3LS4xNTQzYy0uMDM3LS4wNTMtLjA5NDgtLjA4NDYtLjE3MTgtLjA5NzZBLjQwOC40MDggMCAwMDIyLjMyOCAyMmMuMDY2LS4wNDIuMDk3Ny0uMTEwMy4wOTc3LS4xOTczIDAtLjEyNC0uMDUwMy0uMjEtLjE1NDMtLjI1MmEuNzUyLjc1MiAwIDAwLS4yNjk1LS4wMzV6bS4xNzM4LjEyM2guMTUwNGEuNDUuNDUgMCAwMS4yMTEuMDM3MmMuMDQyLjAyNC4wNjY0LjA3MzUuMDY2NC4xNDQ1YS4xNTMuMTUzIDAgMDEtLjEwMzYuMTU2My40NTEuNDUxIDAgMDEtLjE2Ni4wMjE0aC0uMTU4MnoiLz48L3N2Zz4=
+  source: simpleicons:f5
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'f5: f5bigipawaf=F5BigIPAWAF action=allow user=jdoe'
+- name: Command
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: notice
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_notice
+- name: rule_clientSSLhandshake_source_ip
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: rule_clientSSLhandshake_tls_alg
+  type: string
+  description: Network TLS client certificate algorithm. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_alg
+- name: rule_clientSSLhandshake_tls_version
+  type: string
+  description: Network TLS client certificate version. Free-form text; may contain
+    whitespace and punctuation.
+  example: 1.0.0
+- name: rule_httpRequest_target_host
+  type: host
+  description: Rule httpRequest target host. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: rule_httpRequest_target_host_ip
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: rule_httpRequest_target_host_name
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: rule_httpRequest_target_host_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: rule_httpRequest_uri
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: rule_name
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: rule_operation
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: create
+- name: ssl_acc_path
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: ssl_acc_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: ssl_acc_response_code
+  type: integer
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: '200'
+- name: ssl_acc_target_ip
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: ssl_acc_user
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: ssl_req_path
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: ssl_req_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: ssl_req_target_ip
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: ssl_req_tls_alg
+  type: string
+  description: Network TLS client certificate algorithm. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_alg
+- name: ssl_req_tls_version
+  type: string
+  description: Network TLS client certificate version. Free-form text; may contain
+    whitespace and punctuation.
+  example: 1.0.0
+use_cases:
+- WAF
+- LoadBalancer
+how_to_use: |
+  ## f5 waf → Cortex XSIAM (dataset `f5_waf_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `f5` / product `waf`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `f5_waf_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `f5`
+    - **product**: `waf`
+
+    These normalize → `f5_waf_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log ~= "01420002"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~30 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.event.description`, `xdm.event.id`, `xdm.event.log_level`, `xdm.event.operation_sub_type`, `xdm.event.outcome`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `f5`, Product = `waf`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = f5_waf_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

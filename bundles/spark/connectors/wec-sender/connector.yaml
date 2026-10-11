@@ -1,0 +1,106 @@
+# wec-sender: a Phantom bundle connector (pinned by digest in the release manifest, installed from the marketplace).
+#
+# Delivers synthetic Windows events to a Cortex XSIAM Broker VM's Windows Event Collector (WEC) applet over
+# WS-Management (source-initiated forwarding, mutual TLS to TCP 5986), so they ingest with _collector_type = "WEC":
+# the endpoint and identity feed (event_data, xdr_data EVENT_LOG and LOGIN_EVENT rows, AD FS through its own parsing
+# rule) that a syslog/CEF source cannot produce. The applet turns each Windows Event XML into the columns the
+# existing Windows schema uses, so the events land in microsoft_windows_raw (or microsoft_adfs_raw).
+#
+# This is a deliberate, scoped exception to Phantom's syslog/CEF-only delivery (root CLAUDE.md), like http-sender:
+# the operator chooses to send Windows telemetry over WEC. It never replaces syslog/CEF for validating or promoting a
+# data source's mapping.
+#
+# The client certificate is the PFX the Cortex console issues for the collector (it also bundles the CA). Both it and
+# its password are secret slots: they are read by the connector at call time, no tool returns or accepts one, and the
+# instance is created by the operator over REST so they never pass through the agent. The server is verified against
+# the PFX's CA only; verification cannot be turned off.
+
+id: "wec-sender"
+version: "1.0.0"
+description: "Send synthetic Windows events to a Cortex XSIAM Broker's Windows Event Collector over WS-Management so they ingest with _collector_type WEC. Built-in profile: windows (baseline logons)."
+displayName: "WEC Sender (XSIAM Windows Event Collector)"
+tags: ["wec", "windows", "log-generation", "xsiam", "ws-management"]
+logo: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMxMjMwM2IiLz48cmVjdCB4PSIxMiIgeT0iMTQiIHdpZHRoPSIzMCIgaGVpZ2h0PSIyMiIgcng9IjMiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzdmZDFjNyIgc3Ryb2tlLXdpZHRoPSI0Ii8+PHBhdGggZD0iTTIwIDQ0aDE0TTI3IDM2djgiIHN0cm9rZT0iIzdmZDFjNyIgc3Ryb2tlLXdpZHRoPSI0IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48cGF0aCBkPSJNNDAgNDBoMTRNNDggMzNsNyA3LTcgNyIgc3Ryb2tlPSIjZjJiODRiIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsbD0ibm9uZSIvPjwvc3ZnPg=="
+
+source:
+  language: "python"
+  entrypoint: "src.connector"
+
+runtimeMapping:
+  style: "container"
+  functionPrefix: "phantom_"
+
+executionMode: "persistent"
+
+configSchema:
+  type: "object"
+  required: ["subscriptionManagerUrl"]
+  properties:
+    subscriptionManagerUrl:
+      type: "string"
+      description: "The Subscription Manager value from the Cortex console (the Windows Event Collector configuration), pasted as issued: Server=HTTPS://<broker fqdn>:5986/wsman/SubscriptionManager/WEC,Refresh=600,IssuerCA=<sha1 thumbprint>. A bare https URL also works. When IssuerCA is present it is checked against the CA inside the PFX."
+      default: ""
+    senderComputerName:
+      type: "string"
+      description: "Computer name this sender announces when it enumerates subscriptions (the WS-Management MachineID)."
+      default: "phantom-wec-sender.phantom.lab"
+    timeoutSeconds:
+      type: "number"
+      description: "Per-request timeout in seconds."
+      default: 30
+    domainNetbios:
+      type: "string"
+      description: "NetBIOS name of the synthetic domain used in generated events."
+      default: "PHANTOM"
+    domainDns:
+      type: "string"
+      description: "DNS suffix of the synthetic domain; Computer in generated events is <host>.<suffix>."
+      default: "phantom.lab"
+    hostCount:
+      type: "number"
+      description: "Hosts in the synthetic domain: 2 domain controllers and 4 servers are always present, the rest are workstations (8-100). Changing it can change which workstation a user's home host is."
+      default: 32
+
+secretSlots:
+  - name: "clientPfx"
+    description: "The client certificate bundle (PKCS#12 / PFX) issued by the Cortex console for the Windows Event Collector, as base64 text (about 4.7 KB). Whitespace and newlines are ignored. It also carries the CA that the broker's certificate is verified against."
+    required: true
+  - name: "clientPfxPassword"
+    description: "The password of the client certificate bundle."
+    required: true
+
+spec:
+  tools:
+    - name: "list_subscriptions"
+      method: "POST /wsman/SubscriptionManager/WEC"
+      description: "Enumerate the Windows Event Collector's subscriptions (name, version, delivery path, largest envelope, heartbeat, channels and a preview of each query). Use it first after creating or changing an instance: success proves the client certificate, its CA, the URL and the port. No secrets are shown."
+      args: []
+      returns:
+        description: "{ok, manager, sender, subscriptions: [{name, version, delivery_path, max_envelope_size, heartbeat, channels, queries: [{path, xpath}]}]} or {ok: false, error}"
+    - name: "send_test_event"
+      method: "POST /wsman/subscriptions"
+      description: "Send ONE identifiable Windows event (a 4624 logon for a clearly synthetic host and user by default) and return an XQL query that proves it landed in microsoft_windows_raw with _collector_type WEC. Use it after list_subscriptions succeeds. A 4634 is always preceded by its 4624 with the same logon id (both are sent and reported). The result's sent counts events the applet accepted with HTTP 200; landing is proven only by running the returned XQL query."
+      args:
+        - {name: "computer", type: "string", description: "Host name (short or FQDN) the event claims to come from. Default PHANTOM-WECTEST01.<domainDns>."}
+        - {name: "event_id", type: "integer", description: "A catalogue id: 4624 (default), 4625, 4634 (sent after its own 4624) or 4672."}
+      returns:
+        description: "{ok, sent (accepted by the applet with HTTP 200, not proof of landing), test_id, test_id_field, sent_at, computer, event_id, record_id, events: [{event_id, record_id, time}], logon_id, subscriptions, verify_with_xql} or {ok: false, error}"
+    - name: "generate_events"
+      method: "POST /wsman/subscriptions"
+      description: "Generate synthetic Windows events from a built-in profile and forward them over WEC. Profile windows, scenario baseline_logons: benign logons (4624 interactive, unlock, cached, network, RDP; 4672 for administrators; a 4634 logoff for each) for a stable synthetic domain of 2 DCs, 4 servers, 26 workstations and about 30 accounts, shaped by the time of day. The same login always has the same SID and home host, so repeated runs build a baseline. Supports back-dating and a dry_run preview. sent counts events the applet accepted with HTTP 200; landing is proven only by an XQL query on the dataset."
+      args:
+        - {name: "profile", type: "string", description: "The built-in profile: windows (default)."}
+        - {name: "scenario", type: "string", description: "One of the profile's scenarios: baseline_logons (default)."}
+        - {name: "count", type: "integer", description: "Total events, 1-5000 (default 20)."}
+        - {name: "spread_seconds", type: "integer", description: "Width of the time window the events are spread across, 1-604800 (default 120)."}
+        - {name: "start_offset_minutes", type: "integer", description: "End the window this many minutes in the past, to back-date the event time, 0-1051200 (default 0). The event's TimeCreated becomes _time."}
+        - {name: "dry_run", type: "boolean", description: "Build and return the first 3 events (with their XML) without sending."}
+      returns:
+        description: "{ok, events, sent (accepted by the applet with HTTP 200, not proof of landing), envelopes, reenumerations, computers: {computer: count}, first_time, last_time, sample_record_ids, subscriptions, profile, scenario} (dry_run adds preview and sends nothing) or {ok: false, error}"
+    - name: "send_events"
+      method: "POST /wsman/subscriptions"
+      description: "Forward caller-supplied structured Windows events. The connector renders each to Windows Event XML with real RenderingInfo (message, task, level, keywords). Catalogued ids (4624, 4625, 4634, 4672) need only event_id and computer; any other id also needs provider, rendering.message and rendering.task. event_data is an object for named Data or a list for positional (unnamed) Data. sent counts events the applet accepted with HTTP 200; landing is proven only by an XQL query."
+      args:
+        - {name: "events", type: "array", required: true, description: "List of 1-5000 objects: event_id, computer, channel, provider, time (ISO-8601 UTC or epoch seconds), event_data (object or list), outcome (success | failure), rendering ({message, level, task, opcode, channel, provider, keywords}), optional version, level, task, opcode, record_id, process_id, thread_id, activity_id, message."}
+      returns:
+        description: "{ok, events, sent (accepted by the applet with HTTP 200, not proof of landing), envelopes, reenumerations, computers, first_time, last_time, sample_record_ids, subscriptions} or {ok: false, error}"

@@ -1,0 +1,290 @@
+schema_version: 1
+id: BrocadeSwitch
+pack_name: BrocadeSwitch
+rule_name: BrocadeSwitch
+dataset_name: brocade_switch_raw
+vendor: Brocade
+product: BrocadeSwitch
+description: Modeling Rules for the Brocade Switch logs collector
+categories:
+- Analytics & SIEM
+version: 1.0.16
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjwhLS0gQ3JlYXRlZCB3aXRoIElua3NjYXBlIChodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy8pIC0tPgoKPHN2ZwogICB4bWxuczpkYz0iaHR0cDovL3B1cmwub3JnL2RjL2VsZW1lbnRzLzEuMS8iCiAgIHhtbG5zOmNjPSJodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9ucyMiCiAgIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyIKICAgeG1sbnM6c3ZnPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIgogICB4bWxuczpzb2RpcG9kaT0iaHR0cDovL3NvZGlwb2RpLnNvdXJjZWZvcmdlLm5ldC9EVEQvc29kaXBvZGktMC5kdGQiCiAgIHhtbG5zOmlua3NjYXBlPSJodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy9uYW1lc3BhY2VzL2lua3NjYXBlIgogICB3aWR0aD0iMjAwLjgyMDM5IgogICBoZWlnaHQ9IjM5LjM3MjEzMSIKICAgdmlld0JveD0iMCAwIDUzLjEzMzcyNyAxMC40MTcyMDkiCiAgIHZlcnNpb249IjEuMSIKICAgaWQ9InN2ZzQ2NDMiCiAgIGlua3NjYXBlOnZlcnNpb249IjAuOTIuMCByMTUyOTkiCiAgIHNvZGlwb2RpOmRvY25hbWU9ImJyb2NhZGUuc3ZnIj4KICA8ZGVmcwogICAgIGlkPSJkZWZzNDYzNyI+CiAgICA8Y2xpcFBhdGgKICAgICAgIGlkPSJjbGlwUGF0aDM4MjYiCiAgICAgICBjbGlwUGF0aFVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+CiAgICAgIDxwYXRoCiAgICAgICAgIGlua3NjYXBlOmNvbm5lY3Rvci1jdXJ2YXR1cmU9IjAiCiAgICAgICAgIGlkPSJwYXRoMzgyNCIKICAgICAgICAgZD0iTSAzOS43MiwyMDkuNzM5IEggMjE2LjgxOSBWIDI2Ny44NCBIIDM5LjcyIFoiIC8+CiAgICA8L2NsaXBQYXRoPgogIDwvZGVmcz4KICA8c29kaXBvZGk6bmFtZWR2aWV3CiAgICAgaWQ9ImJhc2UiCiAgICAgcGFnZWNvbG9yPSIjZmZmZmZmIgogICAgIGJvcmRlcmNvbG9yPSIjNjY2NjY2IgogICAgIGJvcmRlcm9wYWNpdHk9IjEuMCIKICAgICBpbmtzY2FwZTpwYWdlb3BhY2l0eT0iMC4wIgogICAgIGlua3NjYXBlOnBhZ2VzaGFkb3c9IjIiCiAgICAgaW5rc2NhcGU6em9vbT0iNC4wMTM2MDQzIgogICAgIGlua3NjYXBlOmN4PSI5OS45MTAxOTgiCiAgICAgaW5rc2NhcGU6Y3k9IjE5LjE4NjA2NiIKICAgICBpbmtzY2FwZTpkb2N1bWVudC11bml0cz0ibW0iCiAgICAgaW5rc2NhcGU6Y3VycmVudC1sYXllcj0ibGF5ZXIxIgogICAgIHNob3dncmlkPSJmYWxzZSIKICAgICBmaXQtbWFyZ2luLXRvcD0iMCIKICAgICBmaXQtbWFyZ2luLWxlZnQ9IjAiCiAgICAgZml0LW1hcmdpbi1yaWdodD0iMCIKICAgICBmaXQtbWFyZ2luLWJvdHRvbT0iMCIKICAgICB1bml0cz0icHgiCiAgICAgaW5rc2NhcGU6d2luZG93LXdpZHRoPSIxMjgwIgogICAgIGlua3NjYXBlOndpbmRvdy1oZWlnaHQ9Ijc0NCIKICAgICBpbmtzY2FwZTp3aW5kb3cteD0iLTQiCiAgICAgaW5rc2NhcGU6d2luZG93LXk9Ii00IgogICAgIGlua3NjYXBlOndpbmRvdy1tYXhpbWl6ZWQ9IjEiIC8+CiAgPG1ldGFkYXRhCiAgICAgaWQ9Im1ldGFkYXRhNDY0MCI+CiAgICA8cmRmOlJERj4KICAgICAgPGNjOldvcmsKICAgICAgICAgcmRmOmFib3V0PSIiPgogICAgICAgIDxkYzpmb3JtYXQ+aW1hZ2Uvc3ZnK3htbDwvZGM6Zm9ybWF0PgogICAgICAgIDxkYzp0eXBlCiAgICAgICAgICAgcmRmOnJlc291cmNlPSJodHRwOi8vcHVybC5vcmcvZGMvZGNtaXR5cGUvU3RpbGxJbWFnZSIgLz4KICAgICAgICA8ZGM6dGl0bGU+PC9kYzp0aXRsZT4KICAgICAgPC9jYzpXb3JrPgogICAgPC9yZGY6UkRGPgogIDwvbWV0YWRhdGE+CiAgPGcKICAgICBpbmtzY2FwZTpsYWJlbD0iTGF5ZXIgMSIKICAgICBpbmtzY2FwZTpncm91cG1vZGU9ImxheWVyIgogICAgIGlkPSJsYXllcjEiCiAgICAgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTg2Ljk1ODI4NCwtMTgxLjI5MDA2KSI+CiAgICA8ZwogICAgICAgaWQ9ImczODIwIgogICAgICAgdHJhbnNmb3JtPSJtYXRyaXgoMC4zNTI3Nzc3NywwLDAsLTAuMzUyNzc3NzcsNjcuNzQ1NTgyLDI3MC43ODM4MikiPgogICAgICA8ZwogICAgICAgICBjbGlwLXBhdGg9InVybCgjY2xpcFBhdGgzODI2KSIKICAgICAgICAgaWQ9ImczODIyIj4KICAgICAgICA8ZwogICAgICAgICAgIHRyYW5zZm9ybT0idHJhbnNsYXRlKDU4LjU3NTIsMjI4LjEzNzMpIgogICAgICAgICAgIGlkPSJnMzgyOCI+CiAgICAgICAgICA8cGF0aAogICAgICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgICAgIGlkPSJwYXRoMzgzMCIKICAgICAgICAgICAgIHN0eWxlPSJmaWxsOiMwMDAwMDA7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOm5vbmUiCiAgICAgICAgICAgICBkPSJtIDAsMCBoIDUuMTE2IGMgMi4wMzQsMCAzLjQ3OCwxLjExNSAzLjQ3OCwzLjE0OSAwLDEuNzcyIC0xLjMxMiwzLjExNiAtMy40NzgsMy4xMTYgTCAwLDYuMjY1IFogbSAwLDkuMzgxIGggNC44MjIgYyAxLjkwMiwwIDMuMTgyLDEuMjQ3IDMuMTgyLDMuMTgyIDAsMi41NTggLTIuMzk1LDIuOTE5IC0zLjI4MSwyLjkxOSBIIDAgWiBtIC0zLjczOSw5LjIxNyBoIDguNTI4IGMgMS43MDUsMCA0LjIzMSwwIDUuOTA0LC0yLjA5OSAwLjk4NCwtMS4yMTQgMS4yMTQsLTIuNTU5IDEuMjE0LC0zLjU3NSAwLC0wLjY1NiAtMC4wMzMsLTMuOTY5IC0zLjk2OSwtNC44ODggMC44ODUsLTAuMTk3IDIuMjYzLC0wLjQ1OSAzLjQxMSwtMS43NzEgMS4wMTcsLTEuMjE0IDEuMjQ3LC0yLjU5MSAxLjI0NywtMy41NzUgMCwtMS41NzUgLTAuNjI0LC0zLjM3OCAtMS43NzIsLTQuMzYyIEMgOS4xNSwtMy4wODMgNy41MTEsLTMuMjc5IDUuODM5LC0zLjI3OSBoIC05LjU3OCB6IiAvPgogICAgICAgIDwvZz4KICAgICAgICA8ZwogICAgICAgICAgIHRyYW5zZm9ybT0idHJhbnNsYXRlKDc2Ljg1MDUsMjM2Ljk5MzYpIgogICAgICAgICAgIGlkPSJnMzgzMiI+CiAgICAgICAgICA8cGF0aAogICAgICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgICAgIGlkPSJwYXRoMzgzNCIKICAgICAgICAgICAgIHN0eWxlPSJmaWxsOiMwMDAwMDA7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOm5vbmUiCiAgICAgICAgICAgICBkPSJtIDAsMCBoIDQuOTIxIGMgMS45MzUsMCA0LjE5OCwwLjY1NiA0LjE5OCwzLjM3OCAwLDEuNjQxIC0xLjA4MywzLjIxNSAtMy44NzEsMy4yMTUgSCAwIFogTSA4Ljk1NSwtMTIuMTM2IDUuNTQ0LC0zLjE0OCBIIDAgdiAtOC45ODggSCAtMy45MzYgViA5Ljc0MiBoIDkuNDggYyAyLjcyMiwwIDQuMzYyLC0wLjUyNSA1LjcwNywtMS43MDYgMS4xMTUsLTEuMDE3IDEuOTY3LC0yLjQ5MyAxLjk2NywtNC43MjMgMCwtNC4xIC0yLjgyLC01LjMxNCAtMy45MzUsLTUuODA2IGwgMy44MzcsLTkuNjQzIHoiIC8+CiAgICAgICAgPC9nPgogICAgICAgIDxnCiAgICAgICAgICAgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTA0LjEzOSwyNDEuNDg3KSIKICAgICAgICAgICBpZD0iZzM4MzYiPgogICAgICAgICAgPHBhdGgKICAgICAgICAgICAgIGlua3NjYXBlOmNvbm5lY3Rvci1jdXJ2YXR1cmU9IjAiCiAgICAgICAgICAgICBpZD0icGF0aDM4MzgiCiAgICAgICAgICAgICBzdHlsZT0iZmlsbDojMDAwMDAwO2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpub25lIgogICAgICAgICAgICAgZD0ibSAwLDAgYyAtMS4xMTUsMi4yNjQgLTMuMDUsMi4zOTUgLTMuOTM2LDIuMzk1IC00LjEzMywwIC01LjA1MSwtNC4yMzIgLTUuMDUxLC04LjEzNSAwLC0yLjU5MSAwLjQyNiwtOC4wMzYgNC45ODUsLTguMDM2IDEuOTY5LDAgMy40NDQsMS4yMTQgNC4xMDEsMi41MjUgMC41MjQsMS4wNTEgMC45ODQsMi40OTQgMC45ODQsNS42MSBDIDEuMDgzLC00Ljc1NiAxLjAxNywtMi4wNjYgMCwwIG0gLTQuMDM0LC0xNi45NTggYyAtNi44ODgsMCAtOS4yMTcsNi4zOTYgLTkuMjE3LDExLjM0OSAwLDUuOTA1IDMuMzQ2LDExLjE4NSA5LjM4MSwxMS4xODUgNi4xNjYsMCA5LjIxNywtNS4zNzkgOS4yMTcsLTExLjI1IDAsLTYuNjkxIC0zLjY0MSwtMTEuMjg0IC05LjM4MSwtMTEuMjg0IiAvPgogICAgICAgIDwvZz4KICAgICAgICA8ZwogICAgICAgICAgIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEyNy41NTY2LDIzMi4wNDA1KSIKICAgICAgICAgICBpZD0iZzM4NDAiPgogICAgICAgICAgPHBhdGgKICAgICAgICAgICAgIGlua3NjYXBlOmNvbm5lY3Rvci1jdXJ2YXR1cmU9IjAiCiAgICAgICAgICAgICBpZD0icGF0aDM4NDIiCiAgICAgICAgICAgICBzdHlsZT0iZmlsbDojMDAwMDAwO2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpub25lIgogICAgICAgICAgICAgZD0ibSAwLDAgYyAtMC44NTEsLTUuNzcyIC00LjgyMSwtNy41MTEgLTguMjk4LC03LjUxMSAtNy4zNDcsMCAtOC43NTgsNy41MTEgLTguNzU4LDExLjI4MyAwLDUuNjc1IDIuNjI0LDExLjI1IDguODksMTEuMjUgNC42NTcsMCA3LjM4LC0yLjk1MiA4LjE2NiwtNy43NCBMIC0zLjY3Myw2Ljg4OSBjIC0wLjM5MywxLjczOCAtMS4xNDgsNC45NTMgLTQuNDYxLDQuOTUzIC00LjM5NCwwIC00LjY1NywtNi4wMDMgLTQuNjU3LC03Ljk3MiAwLC02LjI2NCAyLjQ5MiwtOC4wNjggNC43ODgsLTguMDY4IDIuMDY2LDAgNC4wMDIsMS42NCA0LjMzLDQuNjI1IHoiIC8+CiAgICAgICAgPC9nPgogICAgICAgIDxnCiAgICAgICAgICAgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTM5LjEzNDUsMjMzLjIyMjQpIgogICAgICAgICAgIGlkPSJnMzg0NCI+CiAgICAgICAgICA8cGF0aAogICAgICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgICAgIGlkPSJwYXRoMzg0NiIKICAgICAgICAgICAgIHN0eWxlPSJmaWxsOiMwMDAwMDA7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOm5vbmUiCiAgICAgICAgICAgICBkPSJNIDAsMCAtMy4xODEsOS43NzQgLTYuMzYzLDAgWiBNIDcuMDE5LC04LjM2NCBIIDIuODIgTCAxLjA0OSwtMy4xNSBoIC04LjM5NiBsIC0xLjcwNiwtNS4yMTQgaCAtMy4zNzggbCA3LjI4MSwyMS44NzcgaCA0LjgyMiB6IiAvPgogICAgICAgIDwvZz4KICAgICAgICA8ZwogICAgICAgICAgIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE1MS4yMzc3LDIyOC4wNzE5KSIKICAgICAgICAgICBpZD0iZzM4NDgiPgogICAgICAgICAgPHBhdGgKICAgICAgICAgICAgIGlua3NjYXBlOmNvbm5lY3Rvci1jdXJ2YXR1cmU9IjAiCiAgICAgICAgICAgICBpZD0icGF0aDM4NTAiCiAgICAgICAgICAgICBzdHlsZT0iZmlsbDojMDAwMDAwO2ZpbGwtb3BhY2l0eToxO2ZpbGwtcnVsZTpub256ZXJvO3N0cm9rZTpub25lIgogICAgICAgICAgICAgZD0ibSAwLDAgaCAzLjMxMiBjIDMuNDEyLDAgNi4zMywyLjYyNCA2LjMzLDcuOTA1IDAsNC4wMDIgLTIuMTMyLDcuNjQyIC01Ljg3Miw3LjY0MiBIIDAgWiBtIC00LjAzNiwxOC42NjQgaCA4LjA2OSBjIDEuMjQ2LDAgNC4xLC0wLjAzNCA2Ljc1NywtMi43MjMgMi4xMzIsLTIuMTY1IDMuMTE2LC01LjE1IDMuMTE2LC04LjIgMCwtNC42MjUgLTIuMTMzLC03LjM4IC0zLjY0MSwtOC43MjQgQyA5LjM0NywtMS44MDQgNi44ODcsLTMuMjE0IDMuMTQ4LC0zLjIxNCBoIC03LjE4NCB6IiAvPgogICAgICAgIDwvZz4KICAgICAgICA8ZwogICAgICAgICAgIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE2Ni40ODgxLDIyNC44NTgpIgogICAgICAgICAgIGlkPSJnMzg1MiI+CiAgICAgICAgICA8cGF0aAogICAgICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgICAgIGlkPSJwYXRoMzg1NCIKICAgICAgICAgICAgIHN0eWxlPSJmaWxsOiMwMDAwMDA7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOm5vbmUiCiAgICAgICAgICAgICBkPSJNIDAsMCBWIDIxLjg3NyBIIDE0LjA3MiBWIDE4LjYzMSBIIDMuOTM2IFYgMTIuNjkzIEggMTIuMDcgViA5LjUxMiBIIDMuOTM2IFYgMy4zNzggSCAxNC4yMDMgViAwIFoiIC8+CiAgICAgICAgPC9nPgogICAgICAgIDxnCiAgICAgICAgICAgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjAyLjkwMzUsMjUxLjk1NTEpIgogICAgICAgICAgIGlkPSJnMzg1NiI+CiAgICAgICAgICA8cGF0aAogICAgICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgICAgIGlkPSJwYXRoMzg1OCIKICAgICAgICAgICAgIHN0eWxlPSJmaWxsOiNlZDFmMjQ7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOm5vbmUiCiAgICAgICAgICAgICBkPSJNIDAsMCBIIDAuNDMgQyAwLjU0MiwwIDAuNjI2LDAuMDI3IDAuNjgsMC4wODQgMC43MzUsMC4xMzkgMC43NjIsMC4yMDggMC43NjIsMC4yOTEgMC43NjIsMC4zNzYgMC43MzQsMC40NCAwLjY3NCwwLjQ4NSAwLjYxNywwLjUyOSAwLjU0NSwwLjU1MSAwLjQ1NiwwLjU1MSBIIDAgWiBNIDEuMDQ1LC0wLjkgSCAwLjc3NCBMIDAuNDU1LC0wLjE5MyBIIDAgViAtMC45IEggLTAuMjQyIFYgMC43NTcgSCAwLjQ1NSBDIDAuNjQ2LDAuNzU3IDAuNzg2LDAuNzA4IDAuODgxLDAuNjExIDAuOTc0LDAuNTE0IDEuMDIsMC40MDUgMS4wMiwwLjI4OSAxLjAyLDAuMTk5IDAuOTk2LDAuMTE1IDAuOTQ1LDAuMDM0IDAuODkyLC0wLjA0NiAwLjgxMSwtMC4xMDQgMC43MDEsLTAuMTM3IFogbSAwLjU1LDAuODI4IEMgMS41OTUsMC4yNjUgMS40NzgsMC41NTQgMS4yMzcsMC43OTIgMC45OTcsMS4wMzEgMC43MSwxLjE1IDAuMzczLDEuMTUgMC4wNCwxLjE1IC0wLjI1MSwxLjAzMSAtMC40ODksMC43OTIgLTAuNzMsMC41NTMgLTAuODUsMC4yNjQgLTAuODUsLTAuMDcyIGMgMCwtMC4zMzUgMC4xMiwtMC42MjQgMC4zNTgsLTAuODYzIDAuMjM5LC0wLjIzOCAwLjUyNywtMC4zNTggMC44NjUsLTAuMzU4IDAuMzM2LDAgMC42MjQsMC4xMiAwLjg2NCwwLjM1OSAwLjIzOSwwLjI0IDAuMzU4LDAuNTI4IDAuMzU4LDAuODYyIG0gMC4yMDMsMCBjIDAsLTAuMzkgLTAuMTM5LC0wLjcyNSAtMC40MTgsLTEuMDA1IC0wLjI3OSwtMC4yNzkgLTAuNjE2LC0wLjQxOSAtMS4wMDcsLTAuNDE5IC0wLjM5MSwwIC0wLjcyNiwwLjE0IC0xLjAwNiwwLjQxOSAtMC4yNzksMC4yOCAtMC40MTksMC42MTUgLTAuNDE5LDEuMDA1IDAsMC4zOSAwLjE0LDAuNzI3IDAuNDE5LDEuMDA2IDAuMjgsMC4yNzkgMC42MTUsMC40MTkgMS4wMDYsMC40MTkgMC4zOTEsMCAwLjcyOCwtMC4xNCAxLjAwNywtMC40MTkgMC4yNzksLTAuMjc5IDAuNDE4LC0wLjYxNiAwLjQxOCwtMS4wMDYiIC8+CiAgICAgICAgPC9nPgogICAgICAgIDxnCiAgICAgICAgICAgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTk3LjMyODYsMjQ2LjQ1NzcpIgogICAgICAgICAgIGlkPSJnMzg2MCI+CiAgICAgICAgICA8cGF0aAogICAgICAgICAgICAgaW5rc2NhcGU6Y29ubmVjdG9yLWN1cnZhdHVyZT0iMCIKICAgICAgICAgICAgIGlkPSJwYXRoMzg2MiIKICAgICAgICAgICAgIHN0eWxlPSJmaWxsOiNlZDFmMjQ7ZmlsbC1vcGFjaXR5OjE7ZmlsbC1ydWxlOm5vbnplcm87c3Ryb2tlOm5vbmUiCiAgICAgICAgICAgICBkPSJNIDAsMCBDIC0yLjg3MiwwIC02LjEwMSwxLjI3NiAtOS44NTksMy44OTggSCAwIGMgMS4wNzQsMCAxLjk0NiwtMC44NzUgMS45NDYsLTEuOTUgQyAxLjk0NiwwLjg3NCAxLjA3NCwwIDAsMCBtIDAsLTYuNTYzIGggLTkuODYgYyAzLjc1OSwyLjYyNCA2Ljk4OCwzLjkwMiA5Ljg2LDMuOTAyIDEuMDc0LDAgMS45NDYsLTAuODc2IDEuOTQ2LC0xLjk1MiAwLC0xLjA3NSAtMC44NzIsLTEuOTUgLTEuOTQ2LC0xLjk1IG0gMi45MTgsNS4yMzIgYyAwLjk0NSwwLjc3OCAxLjU0OCwxLjk2IDEuNTQ4LDMuMjc5IDAsMi4zNTEgLTEuOTA1LDQuMjUyIC00LjI1NSw0LjI1MiBoIC0xNi40NzUgYyA0LjIxNiwtNC4yNjIgOC4yMzEsLTYuNDQ4IDExLjM3MywtNy41MzEgLTMuMTQyLC0xLjA3OSAtNy4xNTcsLTMuMjcyIC0xMS4zNzMsLTcuNTMyIEggMC4yMTEgYyAyLjM1LDAgNC4yNTUsMS45MDEgNC4yNTUsNC4yNSAwLDEuMzIxIC0wLjYwMywyLjUwMyAtMS41NDgsMy4yODIiIC8+CiAgICAgICAgPC9nPgogICAgICA8L2c+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4K
+  source: wikipedia:File:Brocade_Communications_Systems_logo.svg
+  license: Wikimedia Commons / vendor trademark
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'brocade: brocadeswitch=BrocadeSwitch action=allow user=jdoe'
+- name: REJECT
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: access_attempts
+  type: string
+  description: Source sent packets. Free-form text; may contain whitespace and punctuation.
+  example: sample_attempts
+- name: access_outcome
+  type: string_short
+  description: Access outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: auth_service_protocol
+  type: string
+  description: Network application protocol. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: auth_status
+  type: string
+  description: Auth status. Free-form text; may contain whitespace and punctuation.
+  example: success
+- name: client_id
+  type: string_short
+  description: Source host device ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: command_configuration_mode
+  type: string
+  description: Auth privilege level. Free-form text; may contain whitespace and punctuation.
+  example: sample_mode
+- name: command_line
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_line
+- name: connection_protocol
+  type: string
+  description: Connection protocol. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: dhcps_outcome
+  type: string_short
+  description: Dhcps outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: dhcps_outcome_reason
+  type: string_short
+  description: Dhcps outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: event_outcome
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: event_outcome_reason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: event_payload
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: sample_payload
+- name: event_sub_type
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: event_type
+  type: string
+  description: Event original event type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: fail
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: interface_port
+  type: integer_port
+  description: Destination interface. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: interface_port_state
+  type: integer_port
+  description: Interface port state. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: mdup_outcome
+  type: string_short
+  description: Mdup outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: mdup_outcome_reason
+  type: string_short
+  description: Mdup outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: server_host_key
+  type: host
+  description: Auth method. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: server_ip
+  type: ipv4
+  description: Server ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: server_response
+  type: string
+  description: Server response. Free-form text; may contain whitespace and punctuation.
+  example: sample_response
+- name: source_ip
+  type: ipv4
+  description: Source ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: source_mac
+  type: mac
+  description: Source mac. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: source_mac_formatted
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: source_username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: switch_name
+  type: string
+  description: Observer name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: syslog_facility
+  type: string
+  description: Syslog facility. Free-form text; may contain whitespace and punctuation.
+  example: sample_facility
+- name: syslog_priority
+  type: string
+  description: Syslog priority. Free-form text; may contain whitespace and punctuation.
+  example: INFO
+- name: syslog_severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: system_poe_outcome
+  type: string_short
+  description: System poe outcome. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: system_poe_outcome_reason
+  type: string_short
+  description: System poe outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: target_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: terminal_client
+  type: string
+  description: Terminal client. Free-form text; may contain whitespace and punctuation.
+  example: sample_client
+- name: vlan
+  type: integer
+  description: Destination vlan. Free-form text; may contain whitespace and punctuation.
+  example: '100'
+use_cases:
+- Network
+how_to_use: |
+  ## brocade switch → Cortex XSIAM (dataset `brocade_switch_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `brocade` / product `switch`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `brocade_switch_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `brocade`
+    - **product**: `switch`
+
+    These normalize → `brocade_switch_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~35 fields mapped to the unified data model (`xdm.*`), including: `XDM.Network.Destination.process.command_line`, `XDM.Network.Observer.name`, `XDM.Network.Source.host.mac_addresses`, `XDM.Network.Source.ipv4`, `XDM.Network.Source.user.username`, `XDM.Network.event_timestamp`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `brocade`, Product = `switch`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = brocade_switch_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

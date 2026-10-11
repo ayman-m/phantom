@@ -1,0 +1,85 @@
+apiVersion: phantom.agentic/v1alpha1
+kind: ObservabilityContract
+metadata:
+  agentId: phantom-soc-simulation-agent
+  description: Health, log, metric, and event surfaces exported by the Phantom agent bundle.
+health:
+  probes:
+    - id: phantom-api
+      service: phantom
+      url: https://xlog:8000/health
+      expectedStatus: 200
+    - id: phantom-mcp
+      service: phantom-mcp
+      url: http://phantom-mcp:8080/ping/
+      expectedStatus: 200
+    - id: phantom-agent-ui
+      service: phantom-agent
+      url: http://phantom-agent:3000/api/auth/status
+      expectedStatus: 200
+    - id: phantom-agent-runtime-contract
+      service: phantom-agent
+      url: http://phantom-agent:3000/api/agent/manifest
+      expectedStatus: 200
+    - id: phantom-agent-platform-health
+      service: phantom-agent
+      url: http://phantom-agent:3000/api/agent/health
+      expectedStatus: 200
+    - id: caldera
+      service: caldera
+      url: http://caldera:8888/
+      expectedStatus: 200
+events:
+  run:
+    correlationFields:
+      - simulation_id
+      - worker_ids
+      - caldera_operation_id
+      - attack.technique
+      - created_at
+    lifecycle:
+      - created
+      - running
+      - validation_review
+      - validated
+      - failed
+      - stopped
+  toolCall:
+    correlationFields:
+      - session_id
+      - tool_name
+      - simulation_id
+      - caldera_operation_id
+  coverage:
+    endpoint: /api/v1/coverage-report
+    fields:
+      - simulation_runs
+      - techniques
+      - detections
+      - misses
+      - missed_detections
+      - noisy_fields
+      - log_source_gaps
+      - recommended_rules
+logs:
+  services:
+    - phantom
+    - phantom-mcp
+    - phantom-agent
+    - caldera
+metrics:
+  planned:
+    - active_workers
+    - simulation_runs_total
+    - validation_pass_total
+    - validation_miss_total
+    - mcp_tool_calls_total
+    - caldera_operations_total
+tracing:
+  status: planned
+  standard: opentelemetry
+  requiredSpanAttributes:
+    - agent.id
+    - simulation.id
+    - tool.name
+    - service.name

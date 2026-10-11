@@ -1,0 +1,286 @@
+schema_version: 1
+id: CyberArkEPM
+pack_name: CyberArkEPM
+rule_name: CyberArkEPM
+dataset_name: cyberark_epm_raw
+vendor: CyberArk
+product: CyberArkEPM
+description: Endpoint Privilege Manager helps remove local admin rights while improving
+  user experience and optimizing IT operations.
+categories:
+- Analytics & SIEM
+version: 1.2.1
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMxRjFGMUYiPkN5YmVyQXJrPC90ZXh0Pjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: Administrator
+  type: string
+  description: Vendor-emitted field 'Administrator'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_administrator
+- name: Description
+  type: string_long
+  description: Free-form human-readable description from CyberArk. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by CyberArk.
+- name: Feature
+  type: string
+  description: Vendor-emitted field 'Feature'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_feature
+- name: InternalSessionId
+  type: integer
+  description: Vendor-emitted field 'InternalSessionId'. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: LoggedFrom
+  type: string
+  description: Vendor-emitted field 'LoggedFrom'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_loggedfrom
+- name: PermissionDescription
+  type: string
+  description: Vendor-emitted field 'PermissionDescription'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_permissiondescri
+- name: Role
+  type: string
+  description: Vendor-emitted field 'Role'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Admin
+- name: SetName
+  type: string
+  description: Vendor-emitted field 'SetName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_setname
+- name: accessAction
+  type: string
+  description: Access action (grant/deny/elevate). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_accessaction
+- name: accessTargetName
+  type: string
+  description: Vendor-emitted field 'AccessTargetName'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_accesstargetname
+- name: accessTargetType
+  type: string
+  description: Vendor-emitted field 'AccessTargetType'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_accesstargettype
+- name: agentId
+  type: string
+  description: Vendor-emitted field 'AgentId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: dev-ecbd2240
+- name: bundleName
+  type: string
+  description: Vendor-emitted field 'BundleName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_bundlename
+- name: bundleVersion
+  type: string
+  description: Vendor-emitted field 'BundleVersion'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_bundleversion
+- name: commandInfo
+  type: string
+  description: Vendor-emitted field 'CommandInfo'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_commandinfo
+- name: computerName
+  type: string
+  description: Vendor-emitted field 'ComputerName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_computername
+- name: eventType
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: fileName
+  type: string
+  description: Source process executable extension. Free-form text; may contain whitespace
+    and punctuation.
+  example: document.pdf
+- name: filePath
+  type: string
+  description: Source process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: /var/log/app.log
+- name: fileSize
+  type: integer
+  description: Source process executable size. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: logonAttemptTypeId
+  type: integer
+  description: Vendor-emitted field 'LogonAttemptTypeId'. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: logonStatusId
+  type: integer
+  description: Vendor-emitted field 'LogonStatusId'. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: operatingSystemType
+  type: string
+  description: Vendor-emitted field 'OperatingSystemType'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_operatingsystemt
+- name: originUserUID
+  type: string
+  description: Vendor-emitted field 'OriginUserUID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_originuseruid
+- name: packageName
+  type: string
+  description: Vendor-emitted field 'PackageName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_packagename
+- name: policyAction
+  type: string
+  description: Vendor-emitted field 'PolicyAction'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_policyaction
+- name: policyName
+  type: string
+  description: Vendor-emitted field 'PolicyName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Default-Policy
+- name: processCommandLine
+  type: string
+  description: Vendor-emitted field 'ProcessCommandLine'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_processcommandli
+- name: productName
+  type: string
+  description: Vendor-emitted field 'ProductName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_productname
+- name: productVersion
+  type: string
+  description: Vendor-emitted field 'ProductVersion'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_productversion
+- name: publisher
+  type: string
+  description: Vendor-emitted field 'Publisher'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_publisher
+- name: runAsUsername
+  type: string
+  description: Vendor-emitted field 'RunAsUsername'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_runasusername
+- name: sourceProcessCommandLine
+  type: string
+  description: Vendor-emitted field 'SourceProcessCommandLine'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_sourceprocesscom
+- name: sourceProcessHash
+  type: string
+  description: Source process executable SHA256. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sourceprocesshas
+- name: sourceProcessSigner
+  type: string
+  description: Source process executable signer. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sourceprocesssig
+- name: sourceProcessUsername
+  type: string
+  description: Vendor-emitted field 'SourceProcessUsername'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_sourceprocessuse
+- name: sourceWSIp
+  type: string
+  description: Vendor-emitted field 'SourceWSIp'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sourcewsip
+- name: sourceWSName
+  type: string
+  description: Vendor-emitted field 'SourceWSName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sourcewsname
+- name: source_log_type
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'detailed raw'
+- name: threatProtectionAction
+  type: string
+  description: Vendor-emitted field 'ThreatProtectionAction'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_threatprotection
+- name: userName
+  type: string
+  description: User account associated with the event. Free-form text; may contain
+    whitespace and punctuation.
+  example: jdoe
+- name: winEventRecordId
+  type: integer
+  description: Vendor-emitted field 'WinEventRecordId'. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: winEventType
+  type: integer
+  description: Event type or category as the vendor classifies it. Signed decimal
+    integer; bare digits, optional leading minus.
+  example: '42'
+use_cases:
+- PAM
+how_to_use: |
+  ## CyberArk CyberArkEPM → Cortex XSIAM (dataset `cyberark_epm_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `cyberark_epm_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `cyberark_epm`. The marketplace pack's display name `CyberArk` / `CyberArkEPM` normalizes to `cyberark_cyberarkepm_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `cyberark_epm` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `source_log_type = "set admin audit data"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~35 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.original_threat_name`, `xdm.auth.privilege_level`, `xdm.event.description`, `xdm.event.id`, `xdm.event.operation_sub_type`, `xdm.event.original_event_type`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|CyberArk|CyberArkEPM|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = cyberark_epm_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

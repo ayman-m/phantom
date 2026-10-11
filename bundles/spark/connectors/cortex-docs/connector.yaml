@@ -1,0 +1,126 @@
+# Cortex Docs tool connector for the Phantom SOC simulation agent.
+#
+# Per Spark agent bundle spec v1.2 §7.4. Tool names auto-namespace as
+# `cortex-docs/<bare_name>` in the agent's tool catalog. The bundle
+# manifest's tools.allow includes `cortex-docs/*`.
+#
+# The Cortex documentation lives on GitBook (cortex-docs.paloaltonetworks.com). The connector
+# asks it questions (`?ask=`), reads pages as Markdown (`.md`) and lists a book's pages from its
+# sitemap; see `src/gitbook.py`.
+#
+# Why this connector exists: query authoring against Cortex (XDR / XSIAM / XSOAR / Cortex Cloud /
+# AgentiX / XQL) needs authoritative doc lookups at multiple steps, such as the canonical syntax
+# for an XQL stage or how a data source is onboarded. Without it the agent has to parse free-form
+# HTML through the web connector or ask the operator to paste docs text into the chat.
+
+id: "cortex-docs"
+version: "1.0.0"
+description: "Palo Alto Networks Cortex public documentation (GitBook): ask a question, look up an XQL stage or function, read a page, list a book. Tools: cortex_search, cortex_suggest, cortex_xql_lookup, cortex_fetch_topic, cortex_fetch_toc, cortex_deep_research."
+displayName: "Cortex docs (knowledge)"
+tags: ["cortex", "docs", "xql", "knowledge-base", "lookup", "search"]
+logo: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMwZjBhMmUiLz48cGF0aCBkPSJNMTAgMThjMC0yIDItNCA0LTRoMTZ2MzZIMTRjLTIgMC00LTItNC00WiIgc3Ryb2tlPSIjYTc4YmZhIiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9IiMxYzEyNDgiLz48cGF0aCBkPSJNNTQgMThjMC0yLTItNC00LTRIMzR2MzZoMTZjMiAwIDQtMiA0LTRaIiBzdHJva2U9IiNhNzhiZmEiIHN0cm9rZS13aWR0aD0iMiIgZmlsbD0iIzFjMTI0OCIvPjxwYXRoIGQ9Ik0xNCAyMmgxNE0xNCAyOGgxNE0xNCAzNGgxME0zNiAyMmgxNE0zNiAyOGgxNE0zNiAzNGgxMCIgc3Ryb2tlPSIjYzRiNWZkIiBzdHJva2Utd2lkdGg9IjEuNSIvPjwvc3ZnPg=="
+
+source:
+  language: "python"
+  entrypoint: "src.connector"
+
+# Tool dispatch — `cortex_` prefix matching the
+# function names in src/connector.py. The agent sees
+# `cortex-docs/search`, `cortex-docs/xql_lookup`, etc.; the loader
+# maps each to `cortex_search`, `cortex_xql_lookup` callable.
+#
+# style: "container" (see docs/spec-per-instance-connector-containers.md).
+# cortex-docs uses only stdlib (urllib + httpx already in the base
+# runtime), so the container image stays small and dependency-clean.
+# See architecture page #marketplace-logic.
+runtimeMapping:
+  style: "container"
+  functionPrefix: "cortex_"
+
+executionMode: "persistent"
+
+# No required configuration — the connector talks to the public
+# Cortex docs API (docs-cortex.paloaltonetworks.com) which is
+# unauthenticated. Optional `model` config flows through to the
+# heavyweight cortex_deep_research planner; if unset, the planner
+# falls back to its built-in heuristic plan.
+configSchema:
+  type: "object"
+  properties: {}
+
+# No secrets: the docs site is public. Every request goes to cortex-docs.paloaltonetworks.com only.
+secretSlots: []
+
+spec:
+  tools:
+    # ─── Ask ────────────────────────────────────────────────────
+    - name: "search"
+      method: "GET <page>.md?ask=<question>"
+      description: |
+        Ask the Palo Alto Networks Cortex documentation (XDR, XSIAM, XSOAR, Cortex Cloud, AgentiX, Xpanse) a
+        question in plain words. Returns the docs' own answer, the pages it came from (`hits`, each with a
+        `reader_url`) and follow-up questions. Auto-detects the product from the question when `product` is
+        omitted (XSIAM when none is named). Use cortex_fetch_topic with a `reader_url` for a page's full text.
+      args:
+        - { name: "query",    type: "string",  description: "A question or topic in plain words, e.g. 'How do I send logs to XSIAM from Cribl?'.", required: true  }
+        - { name: "product",  type: "string",  description: "Optional scope: agentix, xdr, xsiam, xsoar, xql, cloud, dspm, cspm, ciem, xpanse. When omitted, read from the question.", required: false }
+        - { name: "per_page", type: "integer", description: "At most this many source pages in `hits` (1-100, default 20).", required: false }
+        - { name: "page",     type: "integer", description: "Accepted for compatibility; the docs site answers a question and does not paginate.", required: false }
+      returns: { type: "object", description: "{ ok, query, product, book, answer, hits: [{title, reader_url}], follow_ups: [string], total_hits }." }
+
+    - name: "suggest"
+      method: "GET <book>/sitemap-pages.xml"
+      description: |
+        Pages whose address contains every word typed so far (what a search box offers while you type).
+      args:
+        - { name: "input_text", type: "string", description: "Partial search text, e.g. 'ingest cribl'.", required: true  }
+        - { name: "product",    type: "string", description: "Optional product scope (same vocabulary as cortex_search).", required: false }
+      returns: { type: "object", description: "{ ok, suggestions: [string], pages: [{title, reader_url}] }." }
+
+    - name: "xql_lookup"
+      method: "GET <page>.md?ask=<question>"
+      description: |
+        What one XQL stage or function does, with its syntax, arguments and examples, as answered by the docs.
+        Pass the bare name (dedup, comp, arrayindexof, json_extract_scalar); a leading "stage", "function" or
+        "XQL" is ignored. Use it before writing an XQL query that uses a stage or function you are not sure of.
+      args:
+        - { name: "term",     type: "string",  description: "Stage or function name, e.g. dedup or arrayindexof.", required: true }
+        - { name: "kind",     type: "string",  description: "'auto' (default), 'stage' or 'function'.", required: false }
+        - { name: "product",  type: "string",  description: "Product scope; default xql (the XSIAM/XDR language reference).", required: false }
+        - { name: "per_page", type: "integer", description: "At most this many source pages are listed (default 8).", required: false }
+        - { name: "suggest",  type: "boolean", description: "Also return pages whose address matches the term (default false).", required: false }
+      returns: { type: "object", description: "{ ok, found, term, title, publication, reader_url, summary_content, hits, scope_note, suggestions? }." }
+
+    - name: "fetch_topic"
+      method: "GET <page>.md"
+      description: |
+        The Markdown of one documentation page, cleaned. Pass a `reader_url` from cortex_search, cortex_suggest or
+        cortex_fetch_toc. Only pages on cortex-docs.paloaltonetworks.com can be fetched.
+      args:
+        - { name: "url",       type: "string",  description: "The page address (a hits[].reader_url, or a path such as /cortex-xsiam/...).", required: true }
+        - { name: "max_chars", type: "integer", description: "Cut the content at this many characters (default 12000); `truncated` says when it was cut.", required: false }
+      returns: { type: "object", description: "{ ok, title, reader_url, content, truncated, total_chars }." }
+
+    - name: "fetch_toc"
+      method: "GET <book>/sitemap-pages.xml"
+      description: |
+        The pages of one documentation book in site order, with their depth. XSIAM has over 2,000 pages, so the
+        list is cut at `max_items`; prefer cortex_search or cortex_suggest to find a page.
+      args:
+        - { name: "book",      type: "string",  description: "A product (xsiam, xdr, xsoar, agentix, cloud, xpanse), a book slug (cortex-xsiam) or a page URL of the book.", required: true }
+        - { name: "max_items", type: "integer", description: "Cut the list after this many pages (default 300).", required: false }
+      returns: { type: "object", description: "{ ok, book, total_pages, items: [{title, reader_url, depth}], truncated }." }
+
+    - name: "deep_research"
+      method: "GET <page>.md?ask=<question> (several)"
+      description: |
+        Research a topic across several linked questions and return one brief with citations: it asks the docs the
+        request, then the follow-up questions the docs suggest, up to `max_sections` questions. Slower than
+        cortex_search (a few seconds per question); use it for a deliverable, not a single fact.
+      args:
+        - { name: "request",          type: "string",  description: "What to research, e.g. 'How XSIAM ingests data from Cribl, and what each source needs'.", required: true }
+        - { name: "max_sections",     type: "integer", description: "At most this many questions (1-12, default 3; a new question takes about 30 seconds, and it stops starting new ones after 75 seconds).", required: false }
+        - { name: "hits_per_section", type: "integer", description: "At most this many sources kept per section (default 4).", required: false }
+        - { name: "enable_gap_check", type: "boolean", description: "Accepted for compatibility; ignored (the docs site searches the whole book per question).", required: false }
+        - { name: "model",            type: "string",  description: "Accepted for compatibility; ignored (no model is used).", required: false }
+      returns: { type: "object", description: "{ ok, brief: { request, sections: [{question, answer, sources}], citations, coverage, stats } }." }

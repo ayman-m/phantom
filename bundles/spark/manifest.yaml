@@ -1,0 +1,831 @@
+schemaVersion: "1.2"
+
+# Phantom SOC Simulation Agent — Spark v1.2 bundle.
+#
+# Shape of the bundle:
+#   - No messaging-connector blocks: the agent is driven via its own
+#     UI, not inbound chat.
+#   - `embeddedMcp` points at `./mcp/` — the in-bundle MCP server that
+#     aggregates tool catalogs from the connectors below.
+#   - `toolConnectors[]` lists the connectors. Each ships in
+#     `./connectors/<id>/` with its own connector.yaml (mirroring Spark
+#     platform's installed_connectors.yaml_spec) and implementation
+#     source.
+#   - `setup.bindsInstances[]` lets first-run setup form input
+#     materialize one connector_instances row per connector.
+#
+# Per the user's "no Phantom-native tools" rule: the embedded MCP
+# carries ZERO native tools — every tool the agent calls comes through
+# one of the three tool connectors below or from runtime built-ins
+# (memory_*, sessions_*, knowledge_search, skills_*).
+
+name: "phantom-soc-simulation"
+displayName: "Phantom SOC Simulation Agent"
+version: "1.0.0"
+description: "Continuous SOC simulation agent: synthetic telemetry via Xlog, Caldera adversary emulation, XSIAM detection validation, ATT&CK coverage reporting."
+author: "ayman-m"
+authorEmail: "agents@ayman-m.example"
+homepage: "https://github.com/ayman-m/phantom"
+license: "Apache-2.0"
+
+signature:
+  publisher: "ayman-m"
+  publisherTier: "customer-private"
+  cosignKeyId: "placeholder://phantom-spark-bundle-not-signed"
+  bundleSha256: "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  signedAt: "2026-04-28T00:00:00Z"
+
+capabilities:
+  network:
+    - "aiplatform.googleapis.com"
+    - "generativelanguage.googleapis.com"
+    - "cortex-gateway"
+    - "caldera"
+    - "xlog"
+  secrets:
+    - "/providers/google/application-credentials"
+    - "/agents/phantom/ui/password"
+    # Tool-connector secrets are bound at setup-submit time via
+    # setup.bindsInstances[].secretRefs and stored under data_root —
+    # the paths below are illustrative of where they LAND post-setup.
+    - "/agents/phantom/instances/primary-caldera/red-password"
+    - "/agents/phantom/instances/primary-xsiam/papi-auth-header"
+    - "/agents/phantom/instances/primary-xlog/api-token"
+  kbReads:
+    - "phantom-soc"
+    # XQL example library — curated Cortex XSIAM XQL queries indexed
+    # for natural-language retrieval. A spec-compliant SQLite KB served via
+    # the runtime's knowledge_search built-in. The xsiam connector exposes
+    # find_xql_examples_rag as a thin wrapper that proxies to
+    # env.kb.search("xql-examples", ...).
+    - "xql-examples"
+  kbWrites: []
+  scheduling: true
+  delegation: false
+
+runtime:
+  image: "ghcr.io/spark/agent-runtime:>=0.1.0,<1.0.0"
+  resources:
+    cpu_min: "1"
+    memory_min: "1Gi"
+
+# ─────────────────────────────────────────────────────────────────
+# COGNITIVE LAYER
+# ─────────────────────────────────────────────────────────────────
+
+modelRequirements:
+  primary:
+    kind: "chat"
+    mustSupport: ["streaming", "tool_use"]
+    contextWindowMin: 100000
+    preferFamily: ["gemini-3", "gemini-2.5", "gpt-4o"]
+  fallback:
+    kind: "chat"
+    mustSupport: ["streaming", "tool_use"]
+    contextWindowMin: 32000
+    preferFamily: ["gemini-2.5", "gpt-4o-mini"]
+  embedding:
+    kind: "embedding"
+    contextWindowMin: 8000
+
+sessions:
+  policy: "persistent"
+  retention: "30d"
+
+memory:
+  policy: "empty"
+  embeddingProvider: "google"
+  embeddingModel: "text-embedding-004"
+  embeddingDims: 768
+
+knowledge:
+  bundled:
+    # Minimal-default-state policy: only the XQL query knowledge ships
+    # in the image. Operator-needed KBs come in via the operator's own
+    # workflow (manifest fork / KB upload surface), not bundled by
+    # default.
+    #
+    # xql-examples lives in the spec-compliant SqliteKnowledgeBase
+    # (one row per ### entry, embedded via VertexEmbedder /
+    # text-embedding-004). The xsiam connector's find_xql_examples_rag
+    # is a thin wrapper that calls knowledge_search(kb_name=
+    # "xql-examples", query=...).
+    - name: "xql-examples"
+      path: "./kbs/xql-examples/"
+      schema: "./kbs/xql-examples/schema.json"
+  required: []
+  optional: []
+
+context:
+  strategy: "hybrid"
+  budgetTokens: 24000
+
+# Minimal-default-state policy: NO jobs are auto-seeded into the
+# bundle. A seeded job would need an xlog or xsiam instance with
+# operator-specific configuration and would surface as "no instance
+# configured" errors on fresh installs. Operators create their own via
+# /jobs/new or via the agent's jobs_create tool.
+jobs: []
+
+heartbeat:
+  intervalSeconds: 30
+
+# ─────────────────────────────────────────────────────────────────
+# INTEGRATION LAYER (v1.2)
+# ─────────────────────────────────────────────────────────────────
+
+# Phantom doesn't receive inbound chat from Slack/Discord/Gmail —
+# the agent is driven through its own UI. Empty block.
+messagingConnectors:
+  required: []
+  optional: []
+  bundled: []
+  instances: []
+
+# Embedded MCP server: aggregates tools from every toolConnectors[]
+# entry below. Spawned by the runtime in standalone mode; superseded
+# by Spark platform's connector-manager MCP in platform mode.
+embeddedMcp:
+  path: "./mcp/"
+  required: true
+
+# Tool-providing connectors. Each entry's directory contains
+# connector.yaml (mirroring Spark's installed_connectors yaml_spec)
+# plus implementation source. Tool names are auto-namespaced as
+# `<id>/<tool_name>` in the agent's tool catalog.
+toolConnectors:
+  - id: "caldera"
+    path: "./connectors/caldera/"
+    version: "1.0.0"
+    required: false              # agent functions without Caldera (no
+                                 # adversary emulation, but XSIAM +
+                                 # Xlog still work)
+  - id: "xsiam"
+    path: "./connectors/xsiam/"
+    version: "1.0.0"
+    required: false              # agent functions without XSIAM (no
+                                 # detection validation, but log-gen
+                                 # still works for raw simulation)
+  - id: "xlog"
+    path: "./connectors/xlog/"
+    version: "1.0.0"
+    required: true               # log generation is the agent's core
+                                 # capability — at least one xlog
+                                 # instance must be configured
+  # Optional headless-browser connector. Lets the agent fetch
+  # threat-intel pages, vendor advisories, CTI portals — anything the
+  # operator wants to point it at. The actual Chromium runs in a
+  # profile-gated `phantom-browser` sidecar (chromedp/headless-shell);
+  # connector code uses Playwright Python over CDP. See
+  # ./connectors/web/connector.yaml + docker-compose.yml.
+  #
+  # required: false — agent functions without it. Tools are NOT
+  # advertised until at least one instance is created (see
+  # connector_loader's instance-gating). The user creates the instance
+  # via /connectors UI; no env-var auto-migration entry is wired
+  # (intentionally — the operator chooses when to enable web access).
+  - id: "web"
+    path: "./connectors/web/"
+    version: "1.0.0"
+    required: false
+
+  # cortex-docs connector — search/lookup against the public
+  # Palo Alto Networks Cortex documentation (XDR / XSIAM / XSOAR /
+  # Cortex Cloud / AgentiX / Xpanse / XQL). Wraps four upstream scripts
+  # from the operator's cortex-deep-search skill kit (preserved
+  # verbatim under src/{search,fetch_topic,xql_lookup,research_planner}.py).
+  # Stdlib-only (urllib); no network credentials required because the
+  # docs API is public.
+  #
+  # Primary use case: XQL query authoring — see the
+  # `cortex_xql_query_authoring` foundation skill, which orchestrates
+  # operator-KB embedding-search + per-stage/function lookup against
+  # Cortex docs. Heavyweight `cortex-docs/deep_research` also exists
+  # for multi-section deliverables (whitepapers, partner briefings).
+  #
+  # required: false — agent functions without Cortex docs lookup; XQL
+  # query authoring just falls back to operator-KB-only mode with a
+  # confidence note.
+  - id: "cortex-docs"
+    path: "./connectors/cortex-docs/"
+    version: "1.0.0"
+    required: false
+
+  # cortex-content connector — fetches XSIAM/XSOAR content
+  # packs from the public demisto/content GitHub repository. Surfaces
+  # ModelingRules (XDM data-model parsers), ParsingRules (raw-log
+  # normalization), and CorrelationRules (XQL alert queries) per
+  # pack. Stdlib-only (urllib + json); no credentials required
+  # because the demisto/content repo is public. Operators can
+  # optionally set the `githubToken` connector secret to lift the
+  # anonymous 60/hr api.github.com rate limit to 5000/hr — most
+  # flows are well under 60/hr because file contents go via
+  # raw.githubusercontent.com (CDN, no rate limit).
+  #
+  # Primary use case: when the agent authors / updates XDM data
+  # models for the operator's tenant, it can fetch the canonical
+  # reference implementation per data source instead of guessing
+  # XDM paths. cortex_index_kb walks a pack's
+  # rules and upserts them into the agent's knowledge_search KB
+  # (kb_name='cortex-content') so the agent can semantic-search
+  # canonical models inline instead of round-tripping through
+  # the list_*/get_* tools.
+  #
+  # required: false — agent functions without it; only operators
+  # asking about Cortex content marketplace content need it.
+  - id: "cortex-content"
+    path: "./connectors/cortex-content/"
+    version: "1.0.0"
+    required: false
+
+  # cortex-xdr connector — wraps Cortex XDR's
+  # Public API (/public_api/v1/...) for incident listing + XQL
+  # execution. Same Cortex auth pattern as XSIAM (Authorization +
+  # x-xdr-auth-id headers); uniform api_url / api_id / api_key field
+  # names.
+  #
+  # Pairs with the caldera connector to close the agent-as-operator
+  # detection-validation loop: agent fires Caldera adversary, then
+  # queries this connector to verify Cortex caught the attack.
+  #
+  # required: false — agent functions without an XDR tenant; this
+  # connector enables the verify-side of detection validation only.
+  - id: "cortex-xdr"
+    path: "./connectors/cortex-xdr/"
+    version: "1.0.0"
+    required: false
+
+  # The two senders that the Cortex Analytics trigger skills call.
+  # Both are optional: the agent runs without them, but 40 of the 50 trigger
+  # skills deliver their events through one of them. Tools are NOT advertised
+  # until an instance exists (connector_loader's instance gating), and a
+  # customer creates the instance from /connectors with their own collector
+  # URL (http-sender) or broker + client certificate (wec-sender).
+  - id: "http-sender"
+    path: "./connectors/http-sender/"
+    version: "1.0.0"
+    required: false
+  - id: "wec-sender"
+    path: "./connectors/wec-sender/"
+    version: "1.0.0"
+    required: false
+
+# Model providers (per spec v1.2 §7.6). Parallel to toolConnectors[]
+# but contributes models the modelRequirements: resolver picks from,
+# rather than tools the agent calls. At least one provider instance
+# must be configured for the agent to have an LLM to talk to.
+providers:
+  - id: "vertex"
+    path: "./providers/vertex/"
+    version: "1.0.0"
+    required: true               # agent needs a configured LLM provider
+
+# Tool allow/deny. Connector tools are namespaced as `<id>/<tool>`;
+# built-in tools (memory_*, knowledge_*, sessions_*, skills_*) are
+# served by the runtime, not the embedded MCP.
+tools:
+  allow:
+    # Built-in cognitive tools (env.memory, env.sessions, env.kb)
+    - "memory_search"
+    - "memory_store"
+    - "sessions_list"
+    - "sessions_history"
+    - "knowledge_search"
+    - "knowledge_list"
+    # Built-in skill tools (env.skills)
+    - "skills_*"
+    # Agent self-modification — read-only tools.
+    # The agent reads the same operator-facing state the admin UI shows:
+    # jobs, settings, connector instances, providers, approvals, audit,
+    # api keys, manifest, metrics. The matching write tools below gate via
+    # approvals.humanRequired[].
+    # See docs/agent-self-modification.md.
+    - "jobs_list"
+    - "jobs_get"
+    - "jobs_runs"
+    - "settings_get"
+    - "personality_get"
+    - "instances_list"
+    - "instances_get"
+    - "providers_list"
+    - "providers_get"
+    - "approvals_list_pending"
+    - "approvals_list_history"
+    - "notifications_list"
+    - "notifications_unread_count"
+    - "audit_search"
+    - "audit_recent"
+    - "api_keys_list"
+    - "manifest_get"
+    - "metrics_snapshot"
+    - "health_status"
+    # Agent self-modification SOFT-WRITE tools.
+    # Each is gated via approvals.humanRequired[] below. The agent
+    # invokes them during chat ("schedule a daily report at 8am",
+    # "always reply concisely"); the operator approves inline at
+    # /approvals (or in the chat stream). gate_and_execute() in
+    # _approval_gate.py wraps each call.
+    - "jobs_create"
+    - "jobs_update"
+    - "jobs_run_now"
+    - "personality_update"
+    - "settings_update"
+    - "notifications_dismiss"
+    - "notifications_dismiss_all"
+    - "approvals_resolve"
+    # DESTRUCTIVE self-modification tools.
+    # Each one removes data permanently (job, skill file, instance,
+    # provider) or wipes operator customization (personality, settings).
+    # The approval card UI renders a red banner for these via the
+    # risk_tier='destructive' field on the approval row.
+    - "jobs_delete"
+    - "personality_reset"
+    - "settings_reset"
+    # skills_delete already in allow above (built-in skills tools);
+    # the registration replacement is what gates it now.
+    # Closed-loop coverage engine. Read + ingest surface
+    # for the detection inventory. None are approval-gated: the
+    # writes only mutate the local inventory DB (idempotent upserts),
+    # and reads are pure aggregations.
+    - "detections_sync"
+    - "detections_list"
+    - "detections_get"
+    - "detections_recent_fires"
+    - "technique_coverage"
+    # Coverage snapshots + drift detection.
+    - "coverage_snapshot_take"
+    - "coverage_snapshot_list"
+    - "coverage_snapshot_get"
+    - "coverage_diff"
+    # Gap detection.
+    - "coverage_gaps"
+    # Closed-loop orchestrator (chat-callable for ad-hoc runs, or
+    # schedulable as a job).
+    - "coverage_cycle_run"
+    # Xlog connector — log generation, scenarios, coverage
+    - "xlog.*"
+    # XSIAM connector — query, validation, dataset, asset, issue
+    - "xsiam.*"
+    # Caldera connector — adversary emulation, operations, abilities
+    - "caldera.*"
+    # Web connector — headless-browser fetch / interact.
+    # Tools only advertise once the operator creates an instance via
+    # /connectors UI; until then the wildcard matches nothing. No
+    # tool here is approval-gated by default — navigations are read
+    # operations against external content, not mutations of agent
+    # state — but operators can add `web.navigate` to humanRequired
+    # below if they want explicit consent on every fetch.
+    - "web.*"
+    # Cortex docs connector — search/lookup against the
+    # public Palo Alto Networks Cortex documentation. Tools read
+    # cortex-docs.paloaltonetworks.com (GitBook); no creds. Read-
+    # only (no mutations); none are approval-gated. The heavyweight
+    # cortex-docs/deep_research is allow-listed but the
+    # cortex_xql_query_authoring skill won't reach for it on the
+    # standard query-authoring path — it's for explicit multi-
+    # section research deliverables.
+    - "cortex-docs.*"
+    # Cortex content connector — fetches XSIAM/XSOAR content
+    # packs from the public demisto/content repo. Read-only (no
+    # mutations); none are approval-gated. Used by the agent to
+    # reference canonical XDM data-model parsers when authoring or
+    # adapting models for the operator's tenant.
+    - "cortex-content.*"
+  deny:
+    - "shell_exec"
+    - "file_write"
+    # Destructive operations even within a connector namespace
+    - "caldera.delete_facts"
+    - "caldera.delete_relationships"
+    - "xsiam.remove_lookup_data"
+    # Security boundary for self-modification.
+    # These tools MUST NOT exist as MCP-callable. The agent can configure
+    # its own runtime data (jobs, personality, settings) but CANNOT alter
+    # its own bundle code, system prompt template, or escape the approvals
+    # gate. Listed here so a malicious bundle author also can't add them
+    # to allow[] without spec violation.
+    - "manifest_set"           # bundle is immutable at runtime
+    - "manifest_update"
+    - "system_prompt_update"   # prompts/system.md is bundle-shipped
+    - "tools_allow_update"     # agent cannot mutate its own allow list
+    - "tools_deny_update"
+    - "approvals_humanrequired_update"  # cannot remove gates from itself
+
+# Routing only matters when messagingConnectors.instances is non-empty.
+routing:
+  rules: []
+
+approvals:
+  policy: "hybrid"
+  # Tool names listed here gate on human approval before executing.
+  # Match is against any of: bare name, namespaced (`<connector>.<name>`),
+  # or legacy alias (`<functionPrefix><name>`) — bundle authors can use
+  # whichever form is most readable.
+  #
+  # Entries are wired to the InProcessApprovalsBus. Adding/removing
+  # entries here updates the gate at MCP boot — no code change needed.
+
+  # ─────────────────────────────────────────────────────────────
+  # APPROVAL GATING IS OFF BY DEFAULT.
+  #
+  # An empty humanRequired[] means NO tool gates on human approval.
+  # The approvals bus, the /approvals UI, the REST routes and the audit
+  # events all stay wired and functional — this list is the only switch,
+  # and it takes effect at MCP boot with no code change.
+  #
+  # With gating off, the destructive writes the agent does hold
+  # (jobs_delete, skills_delete, settings_reset, personality_reset)
+  # execute on request with no confirmation step. Every call is still
+  # audit-logged, and the separate credential guardrail is untouched: the
+  # agent holds no MCP handle to provider/instance/API-key WRITE tools at
+  # all (REST-only), so this does not widen the agent's reach over secrets.
+  #
+  # TO ENABLE GATING: delete the `humanRequired: []` line below and rename
+  # `humanRequired__DISABLED` to `humanRequired`. The reference list is
+  # kept verbatim underneath.
+  #
+  # FINER-GRAINED ALTERNATIVE: keep the list populated and use the
+  # per-caller bypass the design already provides — a job may set
+  # `bypass_approvals: true` and a chat session may set
+  # `approval_mode: bypass`. Both execute immediately while still
+  # recording an `auto_approved` audit row, so the trail survives without
+  # the interactive friction. That path does NOT cover `jobs_create`
+  # itself (creating the job is the gated act).
+  # ─────────────────────────────────────────────────────────────
+  humanRequired: []
+
+  humanRequired__DISABLED:
+    # Policy: approval is ONLY for tools where the agent is modifying its
+    # own runtime state. Simulation tools (caldera operations) and
+    # SIEM-write tools (xsiam log push) are explicit operator intent at
+    # the chat level; gating them again at tool-call time is friction
+    # without safety value, since the agent already has explicit guard
+    # rails (per-instance `trusted` flag, deny-by-default for unknown
+    # connectors, audit log of every call).
+    #
+    # To gate any of these for a specific deployment (for example
+    # "create_operation" or "send_webhook_log"), add the bare name here.
+    # Manifest-driven; takes effect at MCP boot, no code change.
+    #
+    # Chat-driven agent self-modification (soft writes).
+    # Every tool below mutates runtime state the operator owns; the
+    # agent can REQUEST changes during chat, but the operator must
+    # confirm via /approvals (or the inline approval card) before the
+    # change actually applies. Defense-in-depth at the bus level: an
+    # agent that issued a request cannot also resolve it
+    # (ApprovalSelfResolveError; see approvals_bus.py).
+    - "jobs_create"
+    - "jobs_update"
+    - "jobs_run_now"
+    - "personality_update"
+    # personality_patch needs its own entry: the chat-side
+    # `isToolGated()` lookup checks the AGENT-FACING tool name, which is
+    # `personality_patch`, so listing only `personality_update` would
+    # leave the chat handler believing patches are not gated. The tool
+    # also calls gate_and_execute with tool_name="personality_patch"
+    # (see self_mod_tools.py:personality_patch).
+    - "personality_patch"
+    - "settings_update"
+    - "notifications_dismiss"
+    - "notifications_dismiss_all"
+    - "approvals_resolve"
+    # DESTRUCTIVE writes. Same gate, risk_tier=destructive. Operators see
+    # a red banner in /approvals.
+    - "jobs_delete"
+    - "skills_delete"
+    - "personality_reset"
+    - "settings_reset"
+    # Multi-action batch. ONE approval card per call
+    # covering N actions; nested per-action gates bypass under the
+    # batch's bypass contextvar (audit-only). See self_mod_tools.
+    # agent_batch_propose for the dispatch table of which tools can
+    # appear inside a batch.
+    - "agent_batch_propose"
+    # Web connector. Only `navigate` is gated by default;
+    # the other web.* tools (get_text, click, fill, etc.) operate on
+    # already-loaded pages, so the gate at navigation time is what
+    # the operator confirms. There IS a residual hole: a click on a
+    # link can re-navigate to a new URL not in allowed_domains.
+    # Mitigation: configure `allowed_domains` on the connector
+    # instance — any `navigate()` to a host outside the list is
+    # refused without ever firing the gate. A future enhancement may
+    # add a page-level `framenavigated` handler that aborts
+    # disallowed navigations regardless of trigger.
+    #
+    # Bypass: chat sessions can flip approval mode to "bypass" via
+    # the chat-header dropdown (session metadata `approval_mode`),
+    # and jobs can set `bypass_approvals=true` in the job definition.
+    # When bypass is active, the gate records an `auto_approved`
+    # audit row and executes immediately — see
+    # _approval_gate.gate_and_execute and api/trigger_context.py.
+    - "web.navigate"
+
+# ─────────────────────────────────────────────────────────────────
+# RUNTIME LAYER
+# ─────────────────────────────────────────────────────────────────
+
+skills:
+  - { name: "generate-logs", path: "./skills/generate-logs.md" }
+  - { name: "run-scenario", path: "./skills/run-scenario.md" }
+  - { name: "validate-detection", path: "./skills/validate-detection.md" }
+  - { name: "create-caldera-operation", path: "./skills/create-caldera-operation.md" }
+  - { name: "review-soc-coverage", path: "./skills/review-soc-coverage.md" }
+
+runqueue:
+  max_concurrent: 3
+  max_queued: 25
+
+devices:
+  required: []
+  optional: []
+
+media:
+  uploadMaxMb: 25
+  processors:
+    - "pdf_text"
+
+# ─────────────────────────────────────────────────────────────────
+# OPERATIONAL LAYER
+# ─────────────────────────────────────────────────────────────────
+
+# Tool-connector secrets are NOT listed here — they're bound per-
+# instance via setup.bindsInstances[].secretRefs below.
+requiredSecrets:
+  - "/providers/google/application-credentials"
+  - "/agents/phantom/ui/password"
+
+settings:
+  defaults:
+    geminiModel: "gemini-3.1-pro-preview"
+    defaultLogDestination: "XSIAM_WEBHOOK"
+    setupUiUser: "phantom"
+    defaultLogFormat: "JSON"
+    defaultScenario: "dark_secrets"
+    requireHumanApprovalForOperations: true
+    coverageReportFormat: "json"
+  overridable:
+    - "geminiModel"
+    - "defaultLogDestination"
+    - "setupUiUser"
+    - "defaultLogFormat"
+    - "defaultScenario"
+    - "requireHumanApprovalForOperations"
+    - "coverageReportFormat"
+
+audit:
+  events:
+    - "tool_call"
+    - "simulation_created"
+    - "scenario_started"
+    - "caldera_operation_created"
+    - "detection_validation_recorded"
+    - "coverage_report_generated"
+    - "setup_completed"
+    - "settings_changed"
+    - "instance_created"
+    - "approval_requested"
+    - "approval_resolved"
+    # Agent self-modification.
+    - "personality_changed"
+    - "agent_self_mod_requested"
+    - "agent_self_mod_executed"
+    # Closed-loop coverage engine.
+    - "detections_synced"
+    - "coverage_snapshot_taken"
+    - "coverage_drift_detected"
+    - "coverage_gap_observed"
+    # Scheduling capability state changes
+    - "job_registered"
+    - "job_fired"
+    - "job_completed"
+    - "job_failed"
+    # API key lifecycle — recorded by SqliteApiKeyStore on mint/revoke.
+    # Plaintext is never logged; only id, label, scopes, and timestamps.
+    - "api_key_created"
+    - "api_key_revoked"
+    # Notification dispatch — every publish() emits one row regardless
+    # of dispatch outcome (stored / dispatched / failed). Filterable
+    # via target_prefix=notification: in /api/v1/audit.
+    - "notification_published"
+    # Telemetry opt-in toggle — privacy posture audit trail. The
+    # individual event records themselves are not in the audit log
+    # (they live in telemetry.db); only the on/off state changes.
+    - "telemetry_toggled"
+    # Media uploads + deletes. Sha256 + filename + content_type are
+    # logged; bytes are not.
+    - "media_uploaded"
+    - "media_deleted"
+    # Operator-registered lifecycle hook lifecycle. The hook payload (transport spec, matcher, etc.)
+    # is logged via metadata; secret-paths in env/headers are
+    # stored as-is (the path, not the resolved value).
+    - "hook_upsert"
+    - "hook_enabled"
+    - "hook_disabled"
+    - "hook_deleted"
+    # Chat-route hook dispatches. One row
+    # per event firing summarizing the per-hook decisions.
+    - "hook_dispatched"
+    # Task registry lifecycle. One create
+    # row + transitions (started, completed, failed, aborted).
+    # Long-running scenario workers, CALDERA operations, and
+    # compaction summarizers all flow through here.
+    - "task_created"
+    - "task_started"
+    - "task_completed"
+    - "task_failed"
+    - "task_aborted"
+    - "task_pending"
+    - "task_transitioned"
+    # Plan-mode lifecycle. The /plan slash
+    # command emits these per turn.
+    - "chat_plan_proposed"
+    - "chat_plan_failed"
+    # MCP connector state-machine
+    # transitions. Every connected→failed / connected→needs-auth
+    # transition lands here.
+    - "connector_failed"
+    - "connector_auth_required"
+    - "connector_disabled"
+    - "connector_enabled"
+    - "connector_probed"
+    # Per-Gemini-call cost row. One row per
+    # callGemini (initial + each follow-up). Metadata carries
+    # input/cached/output tokens + USD breakdown by component.
+    # /observability/cost aggregates these.
+    - "chat_turn_cost"
+    # Plugin lifecycle. Plugins are
+    # filesystem-discovered under bundles/spark/plugins/; this
+    # event lands when an operator clicks Reload (or the loader
+    # runs at boot via apply_all).
+    - "plugins_reloaded"
+    # Subagent lifecycle. The model invokes
+    # subagent_create as a tool; the chat-route's runSubagent
+    # spawns a scoped sub-loop and emits these around it.
+    - "chat_subagent_started"
+    - "chat_subagent_completed"
+    - "chat_subagent_failed"
+    # Agent-definition lifecycle. Agent definitions live
+    # in the SqliteAgentDefinitionStore; operator + plugin writes
+    # both flow here.
+    - "agent_definition_upsert"
+    - "agent_definition_enabled"
+    - "agent_definition_disabled"
+    - "agent_definition_deleted"
+
+notifications:
+  topics:
+    - { name: "setup-required",       severity: "warning",  target: "user:operator" }
+    - { name: "simulation-complete",  severity: "info",     target: "user:operator" }
+    - { name: "detection-miss",       severity: "warning",  target: "channel:soc" }
+    # Closed-loop coverage cycle posts here when drift /
+    # silent / going-dark signals fire above the threshold.
+    - { name: "coverage-cycle",       severity: "info",     target: "user:operator" }
+    - { name: "caldera-operation",    severity: "critical", target: "channel:purple-team" }
+    # Every scheduled job run posts here on
+    # completion so the operator can see what fired without having
+    # to tail the jobs page. Severity flips to "warning" on failure
+    # (handled in usecase/job_scheduler.py post-run hook).
+    - { name: "job-run-completed",    severity: "info",     target: "user:operator" }
+    - { name: "job-run-failed",       severity: "warning",  target: "user:operator" }
+    # Workflow / approval / install signals, surfaced as notifications
+    # so the operator gets a "did that thing actually happen?" feedback
+    # loop without polling /api/agent/*.
+    - { name: "approval-requested",   severity: "warning",  target: "user:operator" }
+    - { name: "marketplace-install",  severity: "info",     target: "user:operator" }
+
+api:
+  exposes: true
+  scopes:
+    - "simulations:read"
+    - "simulations:write"
+    - "validations:write"
+    - "reports:read"
+    - "settings:write"
+
+observability:
+  metrics:
+    - "phantom.simulations_total"
+    - "phantom.validation_runs_total"
+    - "phantom.coverage_reports_total"
+    - "phantom.mcp_tool_calls_total"
+    - "phantom.caldera_operations_total"
+    # Batch-approval metrics. The histogram counterpart
+    # (phantom_batch_size) is registered lazily on first call by the
+    # tool itself — manifest pre-registration is counters-only.
+    - "phantom.batch_proposals_total"
+    - "phantom.batch_actions_total"
+    # cortex-content KB indexing metrics (symmetric with the batch
+    # metrics above but for the index_kb feature).
+    - "phantom.cortex_content_index_runs_total"
+    - "phantom.cortex_content_indexed_docs_total"
+  events:
+    - "rt.simulation.started"
+    - "rt.simulation.completed"
+    - "rt.validation.completed"
+    - "rt.coverage.generated"
+    - "rt.caldera.operation_created"
+    # rt.tool.failed — every MCP tool call that raises an exception
+    # is recorded here, including FastMCP's own dispatch errors. Lets
+    # operators and dashboards see the same tool-call failures the
+    # audit log already captures, but in the high-signal events feed
+    # used by alert wiring. Payload: {tool, error, duration_ms,
+    # approval_id?}. Emitted by usecase/connector_loader.py wrappers.
+    - "rt.tool.failed"
+  logs:
+    defaultLevel: "info"
+  traces:
+    samplingRatio: 1.0
+
+telemetry:
+  default: "off"
+  events:
+    - "install"
+    - "uninstall"
+    - "version_pin"
+    - "simulation_run_count_per_day"
+    - "validation_count_per_day"
+
+update:
+  channel: "stable"
+  registryUrl: "ghcr.io/ayman-m/agents/phantom-soc-simulation"
+  autoUpdate: false
+
+agent:
+  systemPromptTemplate: "./prompts/system.md"
+  standingOrders:
+    - "Always identify the SOC simulation objective before taking action."
+    - "Prefer scenario packages and bundled skills before inventing a workflow."
+    - "Use the xlog/* tools for simulation state — never duplicate log generation logic in the agent."
+    - "Require human approval before launching Caldera operations or sending XSIAM webhook logs."
+    - "Record simulation IDs, worker IDs, Caldera operation IDs, and validation results in every final answer."
+  thinkLevel: "medium"
+
+# Standalone setup. v1.2: `bindsInstances[]` materializes one
+# connector_instances row per binding when the operator submits the
+# setup form. ${setup.<field>} interpolates the form payload at
+# submit time. The setup form renders one section per binding from
+# the connector's configSchema + secretSlots.
+setup:
+  required: true
+  secrets:
+    source: "requiredSecrets"
+  settings:
+    source: "settings"
+  generated: []
+  bindsInstances:
+    - connectorId: "caldera"
+      template:
+        name: "primary-caldera"
+        config:
+          baseUrl: "${setup.calderaBaseUrl}"
+          redUser: "${setup.calderaRedUser}"
+        secretRefs:
+          apiKey: "${setup.calderaApiKey}"
+          redPassword: "${setup.calderaRedPassword}"
+    - connectorId: "xsiam"
+      template:
+        name: "primary-xsiam"
+        config:
+          # Config keys are api_url / api_id / api_key, uniform with the
+          # Cortex XDR connector. Setup-template variables
+          # (${setup.xsiam*}) on the right-hand side are setup.json
+          # variable names, not connector config keys; only the
+          # left-hand field names are the instance config.
+          api_url: "${setup.xsiamPapiUrl}"
+          api_id: "${setup.xsiamPapiAuthId}"
+          playgroundId: "${setup.xsiamPlaygroundId}"
+          # Bind the optional webhookEndpoint slot so the
+          # form can resolve its formKey to "xsiamWebhookEndpoint"
+          # (per extractSetupKey in setup-screen.tsx). Without this
+          # bind, the xsiam connector's webhookEndpoint configSchema
+          # field falls back to the bare schemaKey "webhookEndpoint"
+          # — which collides with xlog's same-named field in the
+          # global form-values namespace and never prefills.
+          webhookEndpoint: "${setup.xsiamWebhookEndpoint}"
+        secretRefs:
+          api_key: "${setup.xsiamPapiAuthHeader}"
+          # Same fix for the optional webhook-auth secret slot.
+          webhookKey: "${setup.xsiamWebhookKey}"
+    - connectorId: "xlog"
+      template:
+        name: "primary-xlog"
+        config:
+          baseUrl: "${setup.xlogBaseUrl}"
+          webhookEndpoint: "${setup.xlogWebhookEndpoint}"
+        secretRefs:
+          apiToken: "${setup.xlogApiToken}"
+          webhookKey: "${setup.xlogWebhookKey}"
+
+  # v1.2 §7.6 — model provider instance materialization. The setup
+  # form prompts for vertex project + region + service account JSON;
+  # on submit the runtime materializes a provider instance the
+  # modelRequirements: resolver can pick from.
+  bindsProviders:
+    - providerId: "vertex"
+      template:
+        name: "primary-vertex"
+        config:
+          project_id: "${setup.vertexProjectId}"
+          region: "${setup.vertexRegion}"
+        secretRefs:
+          serviceAccountJson: "${setup.vertexServiceAccountJson}"

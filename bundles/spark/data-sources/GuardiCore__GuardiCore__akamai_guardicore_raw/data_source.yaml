@@ -1,0 +1,264 @@
+schema_version: 1
+id: GuardiCore
+pack_name: GuardiCore
+rule_name: GuardiCore
+dataset_name: akamai_guardicore_raw
+vendor: Akamai
+product: GuardiCore
+description: Data center breach detection
+categories:
+- Cloud Security
+- Deception & Breach Simulation
+- Network Security
+version: 2.0.21
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjIwOXB4IiB2aWV3Qm94PSIwIDAgNTEyIDIwOSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCI+Cgk8Zz4KCQk8cGF0aCBkPSJNMTU2LjE2NTU3NywxNTIuOTMwNzE5IEwxMzUuMzA2MzE4LDE1Mi45MzA3MTkgTDE1My4zNzY5MDYsMTE2LjM0MzM1NSBMMTUzLjYsMTE2LjM0MzM1NSBMMTU2LjE2NTU3NywxNTIuOTMwNzE5IEwxNTYuMTY1NTc3LDE1Mi45MzA3MTkgWiBNMTU3LjA1Nzk1MiwxNjkuNTUxMTk4IEwxNTguMjg0OTY3LDE4NC4wNTIyODggTDE4MS4yNjM2MTcsMTg0LjA1MjI4OCBMMTczLjU2Njg4NSw5OS42MTEzMjkgTDEzOS4zMjIwMDQsOTkuNjExMzI5IEw5Ni4xNTMzNzY5LDE4NC4wNTIyODggTDExOS41NzgyMTQsMTg0LjA1MjI4OCBMMTI2LjgyODc1OCwxNjkuNTUxMTk4IEwxNTcuMDU3OTUyLDE2OS41NTExOTggTDE1Ny4wNTc5NTIsMTY5LjU1MTE5OCBaIE0yMTMuMzg5MTA3LDE0Ny4wMTg3MzYgTDIxNi44NDcwNTksMTQ3LjAxODczNiBMMjMzLjM1NTk5MSwxMjQuODIwOTE1IEwyNTQuNDM4MzQ0LDEyNC44MjA5MTUgTDIzMS42ODI3ODksMTUzLjE1MzgxMyBMMjQ1LjczNzY5MSwxODMuODI5MTk0IEwyMjMuMjA1MjI5LDE4My44MjkxOTQgTDIxNC4wNTgzODgsMTU5Ljk1ODE3IEwyMTAuODIzNTI5LDE1OS45NTgxNyBMMjA1LjY5MjM3NSwxODMuODI5MTk0IEwxODYuMTcxNjc4LDE4My44MjkxOTQgTDIwNC4wMTkxNzIsOTkuNzIyODc1OCBMMjIzLjQyODMyMiw5OS43MjI4NzU4IEwyMTMuMzg5MTA3LDE0Ny4wMTg3MzYgWiBNMjc5LjMxMzI5LDE1OS41MTE5ODMgQzI4NS42NzE0NiwxNTkuNTExOTgzIDI4OS45MTAyNCwxNTkuOTU4MTcgMjg4LjY4MzIyNCwxNjQuODY2MjMxIEMyODcuMjMzMTE1LDE3MS4yMjQ0MDEgMjg0LjY2NzUzOCwxNzIuMTE2Nzc2IDI3Ni41MjQ2MTksMTcyLjExNjc3NiBDMjczLjUxMjg1NCwxNzIuMTE2Nzc2IDI2OC4wNDcwNTksMTcyLjExNjc3NiAyNjkuNDk3MTY4LDE2NS43NTg2MDYgQzI3MC42MTI2MzYsMTYwLjQwNDM1NyAyNzQuNjI4MzIyLDE1OS41MTE5ODMgMjc5LjMxMzI5LDE1OS41MTE5ODMgTDI3OS4zMTMyOSwxNTkuNTExOTgzIFogTTI4NC42Njc1MzgsMTgzLjgyOTE5NCBMMzAzLjg1MzU5NSwxODMuODI5MTk0IEwzMTEuNTUwMzI3LDE0Ny4wMTg3MzYgQzMxNi4wMTIyLDEyNi42MDU2NjQgMzA3Ljk4MDgyOCwxMjQuMjYzMTgxIDI4OC4zNDg1ODQsMTI0LjI2MzE4MSBDMjc0LjUxNjc3NiwxMjQuMjYzMTgxIDI2MS4xMzExNTUsMTI0LjA0MDA4NyAyNTcuMTE1NDY4LDE0Mi41NTY4NjMgTDI3Ni4zMDE1MjUsMTQyLjU1Njg2MyBDMjc3LjUyODU0LDEzNy4yMDI2MTQgMjgwLjc2MzM5OSwxMzYuMTk4NjkzIDI4NS40NDgzNjYsMTM2LjE5ODY5MyBDMjkzLjkyNTkyNiwxMzYuMTk4NjkzIDI5My43MDI4MzIsMTM5Ljc2ODE5MiAyOTIuMjUyNzIzLDE0NS4xMjI0NCBMMjkwLjM1NjQyNywxNTQuNDkyMzc1IEwyODkuNDY0MDUyLDE1NC40OTIzNzUgQzI4OC43OTQ3NzEsMTQ3LjY4ODAxNyAyODAuMzE3MjExLDE0Ny45MTExMTEgMjc0LjczOTg2OSwxNDcuOTExMTExIEMyNjAuNjg0OTY3LDE0Ny45MTExMTEgMjUyLjQzMDUwMSwxNTIuMzcyOTg1IDI0OS40MTg3MzYsMTY2LjQyNzg4NyBDMjQ2LjE4Mzg3OCwxODEuNDg2NzEgMjUzLjQzNDQyMywxODQuNzIxNTY5IDI2Ni44MjAwNDQsMTg0LjcyMTU2OSBDMjczLjYyNDQwMSwxODQuNzIxNTY5IDI4Mi41NDgxNDgsMTgzLjI3MTQ2IDI4NS43ODMwMDcsMTc1LjM1MTYzNCBMMjg2LjQ1MjI4OCwxNzUuMzUxNjM0IEwyODQuNjY3NTM4LDE4My44MjkxOTQgTDI4NC42Njc1MzgsMTgzLjgyOTE5NCBaIE0zNDMuMTE4MDgzLDEyNC44MjA5MTUgTDM0MS40NDQ4OCwxMzMuMjk4NDc1IEwzNDIuMTE0MTYxLDEzMy4yOTg0NzUgQzM0NS45MDY3NTQsMTI2LjI3MTAyNCAzNTMuNjAzNDg2LDEyNC4zNzQ3MjggMzYwLjE4NDc0OSwxMjQuMzc0NzI4IEMzNjguNjYyMzA5LDEyNC4zNzQ3MjggMzc2LjgwNTIyOSwxMjUuODI0ODM3IDM3NS42ODk3NiwxMzUuODY0MDUyIEwzNzYuNTgyMTM1LDEzNS44NjQwNTIgQzM3OS4zNzA4MDYsMTI3LjM4NjQ5MiAzODguMDcxNDYsMTI0LjM3NDcyOCAzOTUuNTQ1MDk4LDEyNC4zNzQ3MjggQzQwOS4xNTM4MTMsMTI0LjM3NDcyOCA0MTQuOTU0MjQ4LDEyOS45NTIwNyA0MTEuOTQyNDg0LDE0My41NjA3ODQgTDQwMy4yNDE4MywxODMuOTQwNzQxIEwzODQuMDU1NzczLDE4My45NDA3NDEgTDM5MS4zMDYzMTgsMTQ5LjY5NTg2MSBDMzkyLjE5ODY5MywxNDMuMzM3NjkxIDM5My4yMDI2MTQsMTM4Ljg3NTgxNyAzODUuOTUyMDcsMTM4Ljg3NTgxNyBDMzc4LjcwMTUyNSwxMzguODc1ODE3IDM3NS45MTI4NTQsMTQzLjc4Mzg3OCAzNzQuNjg1ODM5LDE1MC4xNDIwNDggTDM2Ny42NTgzODgsMTgzLjcxNzY0NyBMMzQ4LjQ3MjMzMSwxODMuNzE3NjQ3IEwzNTUuOTQ1OTY5LDE0OC4wMjI2NTggQzM1Ni44MzgzNDQsMTQyLjY2ODQxIDM1Ny4zOTYwNzgsMTM4Ljg3NTgxNyAzNTAuNTkxNzIxLDEzOC44NzU4MTcgQzM0Mi42NzE4OTUsMTM4Ljg3NTgxNyAzNDAuMjE3ODY1LDE0My4xMTQ1OTcgMzM4Ljg3OTMwMywxNTAuMTQyMDQ4IEwzMzEuODUxODUyLDE4My43MTc2NDcgTDMxMi42NjU3OTUsMTgzLjcxNzY0NyBMMzI1LjM4MjEzNSwxMjQuNTk3ODIxIEwzNDMuMjI5NjMsMTI0LjU5NzgyMSBMMzQzLjIyOTYzLDEyNC44MjA5MTUgTDM0My4xMTgwODMsMTI0LjgyMDkxNSBaIE00NDIuMjgzMjI0LDE1OS41MTE5ODMgQzQ0OC42NDEzOTQsMTU5LjUxMTk4MyA0NTIuODgwMTc0LDE1OS45NTgxNyA0NTEuNjUzMTU5LDE2NC44NjYyMzEgQzQ1MC40MjYxNDQsMTcxLjIyNDQwMSA0NDcuNjM3NDczLDE3Mi4xMTY3NzYgNDM5LjQ5NDU1MywxNzIuMTE2Nzc2IEM0MzYuNzA1ODgyLDE3Mi4xMTY3NzYgNDMxLjAxNjk5MywxNzIuMTE2Nzc2IDQzMi40NjcxMDIsMTY1Ljc1ODYwNiBDNDMzLjU4MjU3MSwxNjAuNDA0MzU3IDQzNy4zNzUxNjMsMTU5LjUxMTk4MyA0NDIuMjgzMjI0LDE1OS41MTE5ODMgTDQ0Mi4yODMyMjQsMTU5LjUxMTk4MyBaIE00NDcuNDE0Mzc5LDE4My44MjkxOTQgTDQ2Ni42MDA0MzYsMTgzLjgyOTE5NCBMNDc0LjI5NzE2OCwxNDcuMDE4NzM2IEM0NzguNzU5MDQxLDEyNi42MDU2NjQgNDcwLjcyNzY2OSwxMjQuMjYzMTgxIDQ1MS4wOTU0MjUsMTI0LjI2MzE4MSBDNDM3LjI2MzYxNywxMjQuMjYzMTgxIDQyMy44Nzc5OTYsMTI0LjA0MDA4NyA0MTkuODYyMzA5LDE0Mi41NTY4NjMgTDQzOS4wNDgzNjYsMTQyLjU1Njg2MyBDNDQwLjI3NTM4MSwxMzcuMjAyNjE0IDQ0My41MTAyNCwxMzYuMTk4NjkzIDQ0OC4xOTUyMDcsMTM2LjE5ODY5MyBDNDU2LjY3Mjc2NywxMzYuMTk4NjkzIDQ1Ni40NDk2NzMsMTM5Ljc2ODE5MiA0NTQuOTk5NTY0LDE0NS4xMjI0NCBMNDUzLjEwMzI2OCwxNTQuNDkyMzc1IEw0NTIuMjEwODkzLDE1NC40OTIzNzUgQzQ1MS41NDE2MTIsMTQ3LjY4ODAxNyA0NDMuMDY0MDUyLDE0Ny45MTExMTEgNDM3LjQ4NjcxLDE0Ny45MTExMTEgQzQyMy40MzE4MDgsMTQ3LjkxMTExMSA0MTUuMTc3MzQyLDE1Mi4zNzI5ODUgNDEyLjE2NTU3NywxNjYuNDI3ODg3IEM0MDguOTMwNzE5LDE4MS40ODY3MSA0MTYuMTgxMjY0LDE4NC43MjE1NjkgNDI5LjU2Njg4NSwxODQuNzIxNTY5IEM0MzYuMzcxMjQyLDE4NC43MjE1NjkgNDQ1LjI5NDk4OSwxODMuMjcxNDYgNDQ4LjUyOTg0NywxNzUuMzUxNjM0IEw0NDkuMTk5MTI5LDE3NS4zNTE2MzQgTDQ0Ny40MTQzNzksMTgzLjgyOTE5NCBMNDQ3LjQxNDM3OSwxODMuODI5MTk0IFogTTQ5NC44MjE3ODYsMTgzLjgyOTE5NCBMNDc1LjYzNTczLDE4My44MjkxOTQgTDQ4OC4wMTc0MjksMTI0LjcwOTM2OCBMNTA3LjIwMzQ4NiwxMjQuNzA5MzY4IEw0OTQuODIxNzg2LDE4My44MjkxOTQgTDQ5NC44MjE3ODYsMTgzLjgyOTE5NCBaIE01MTEuNjY1MzU5LDEwOC42NDY2MjMgQzUxMS42NjUzNTksMTE0LjU1ODYwNiA1MDYuNzU3Mjk4LDExOS40NjY2NjcgNTAwLjg0NTMxNiwxMTkuNDY2NjY3IEM0OTQuOTMzMzMzLDExOS40NjY2NjcgNDkwLjAyNTI3MiwxMTQuNTU4NjA2IDQ5MC4wMjUyNzIsMTA4LjY0NjYyMyBDNDkwLjAyNTI3MiwxMDIuNTExNTQ3IDQ5NC45MzMzMzMsOTcuODI2NTc5NSA1MDAuODQ1MzE2LDk3LjgyNjU3OTUgQzUwNi43NTcyOTgsOTcuODI2NTc5NSA1MTEuNjY1MzU5LDEwMi41MTE1NDcgNTExLjY2NTM1OSwxMDguNjQ2NjIzIEw1MTEuNjY1MzU5LDEwOC42NDY2MjMgWiIgZmlsbD0iI0Y3OTgzOCI+PC9wYXRoPgoJCTxwYXRoIGQ9Ik0xMDYuMTkyNTkzLDIwNC4yNDIyNjYgQzYzLjI0NzA1ODgsMTkxLjA3OTczOSAzMi4xMjU0OTAyLDE1MS40ODA2MSAzMi4xMjU0OTAyLDEwNC44NTQwMzEgQzMyLjEyNTQ5MDIsNTcuNDQ2NjIzMSA2NC4wMjc4ODY3LDE3LjYyNDQwMDkgMTA3LjY0MjcwMiw0LjY4NDk2NzMyIEMxMTIuMTA0NTc1LDMuNDU3OTUyMDcgMTEwLjg3NzU2LDAuNDQ2MTg3MzY0IDEwNS41MjMzMTIsMC40NDYxODczNjQgQzQ3LjYzMDUwMTEsMC40NDYxODczNjQgMC40NDYxODczNjQsNDcuMDcyNzY2OSAwLjQ0NjE4NzM2NCwxMDQuNTE5MzkgQzAuNDQ2MTg3MzY0LDE2MS45NjYwMTMgNDcuMjk1ODYwNiwyMDguNTkyNTkzIDEwNS41MjMzMTIsMjA4LjU5MjU5MyBDMTEwLjg3NzU2LDIwOC45MjcyMzMgMTExLjEwMDY1NCwyMDUuOTE1NDY4IDEwNi4xOTI1OTMsMjA0LjI0MjI2NiBMMTA2LjE5MjU5MywyMDQuMjQyMjY2IFogTTUyLjA5MjM3NDcsMTI4Ljk0ODE0OCBDNTEuODY5MjgxLDEyNi4xNTk0NzcgNTEuNjQ2MTg3NCwxMjMuMzcwODA2IDUxLjY0NjE4NzQsMTIwLjQ3MDU4OCBDNTEuNjQ2MTg3NCw3NC43MzYzODM0IDg4LjY3OTczODYsMzcuNzAyODMyMiAxMzQuNDEzOTQzLDM3LjcwMjgzMjIgQzE3Ny41ODI1NzEsMzcuNzAyODMyMiAxOTAuNzQ1MDk4LDU2Ljg4ODg4ODkgMTkyLjA4MzY2LDU1Ljc3MzQyMDUgQzE5My43NTY4NjMsNTQuMzIzMzExNSAxNzYuMzU1NTU2LDE2LjE3NDI5MTkgMTI1LjcxMzI5LDE2LjE3NDI5MTkgQzc5Ljk3OTA4NSwxNi4xNzQyOTE5IDQyLjk0NTUzMzgsNTMuMjA3ODQzMSA0Mi45NDU1MzM4LDk4Ljk0MjA0NzkgQzQyLjk0NTUzMzgsMTA5LjUzODk5OCA0NS4wNjQ5MjM3LDExOS41NzgyMTQgNDguNTIyODc1OCwxMjguOTQ4MTQ4IEM0OS45NzI5ODQ3LDEzMi45NjM4MzQgNTIuMzE1NDY4NCwxMzIuOTYzODM0IDUyLjA5MjM3NDcsMTI4Ljk0ODE0OCBaIE04Ni41NjAzNDg2LDY5LjM4MjEzNTEgQzEwNy44NjU3OTUsNjAuMDEyMjAwNCAxMzUuMDgzMjI0LDU5Ljc4OTEwNjggMTYxLjYzMTM3Myw2OC45MzU5NDc3IEMxNzkuNDc4ODY3LDc1LjI5NDExNzYgMTg5Ljc0MTE3Niw4My45OTQ3NzEyIDE5MC43NDUwOTgsODMuNjYwMTMwNyBDMTkyLjE5NTIwNyw4Mi45OTA4NDk3IDE4MC4zNzEyNDIsNjQuNDc0MDc0MSAxNTkuMDY1Nzk1LDU2LjQ0MjcwMTUgQzEzMy4yOTg0NzUsNDYuODQ5NjczMiAxMDUuNjM0ODU4LDUxLjc1NzczNDIgODUuNDQ0ODgwMiw2Ny43MDg5MzI1IEM4My4yMTM5NDM0LDY5LjM4MjEzNTEgODMuODgzMjI0NCw3MC42MDkxNTAzIDg2LjU2MDM0ODYsNjkuMzgyMTM1MSBMODYuNTYwMzQ4Niw2OS4zODIxMzUxIFoiIGZpbGw9IiMwMDk4Q0MiPjwvcGF0aD4KCTwvZz4KPC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: act
+  type: string_short
+  description: CEF action — what Akamai did with the event (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceEventClassId
+  type: string_short
+  description: CEF device-event class ID — vendor-specific event-type identifier.
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceVersion
+  type: string_short
+  description: CEF device-version field — version of the Akamai product emitting this
+    event. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefName
+  is_gate: true
+  type: string_short
+  description: CEF event name — short human-readable label for the event class. Short
+    opaque token, typically without whitespace; max ~64 chars.
+  example: 'Agent'
+- name: cefSeverity
+  type: integer
+  description: CEF severity score (0-10) as classified by Akamai. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: cs1
+  type: string
+  description: Vendor-emitted field 'Cs1'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs11
+  type: string
+  description: Vendor-emitted field 'Cs11'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs11
+- name: cs12
+  type: string
+  description: Vendor-emitted field 'Cs12'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs12
+- name: cs13
+  type: string
+  description: Source process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs13
+- name: cs14
+  type: string
+  description: Device custom string 14 (see cs14Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs14
+- name: cs15
+  type: string
+  description: Destination process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs15
+- name: cs16
+  type: string
+  description: Vendor-emitted field 'Cs16'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs16
+- name: cs2
+  type: string
+  description: Vendor-emitted field 'Cs2'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs3
+  type: string
+  description: Vendor-emitted field 'Cs3'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs4
+  type: string
+  description: Vendor-emitted field 'Cs4'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs5
+  type: string
+  description: Device custom string 5 (see cs5Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs6
+  type: string
+  description: Vendor-emitted field 'Cs6'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs7
+  type: string
+  description: Vendor-emitted field 'Cs7'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs7
+- name: dhost
+  type: host
+  description: CEF destination host — hostname or FQDN of the target endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: dpt
+  type: integer_port
+  description: CEF destination port — TCP/UDP port on the target side. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '42'
+- name: drpoc
+  type: string
+  description: Vendor-emitted field 'Drpoc'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_drpoc
+- name: dst
+  type: ipv4
+  description: CEF destination IP — IPv4/IPv6 address of the target endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 198.51.100.7
+- name: duser
+  type: user
+  description: CEF destination user — username of the target/recipient. Account name
+    as the vendor reports it — login name, UPN, or sAMAccountName; no domain prefix
+    unless vendor emits one.
+  example: jsmith
+- name: dvc
+  type: string
+  description: Vendor-emitted field 'Dvc'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dvc
+- name: dvchost
+  type: host
+  description: Vendor-emitted field 'Dvchost'. Hostname or fully-qualified domain
+    name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Akamai. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: aka-090f00ce
+- name: msg
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: Operation completed successfully.
+- name: parsed_cs1
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: App, Environment,
+    Role, ip, os_name (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: proto
+  type: string
+  description: Network protocol (e.g. tcp/udp/icmp). Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: shost
+  type: host
+  description: CEF source host — hostname or FQDN of the source endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: src
+  type: ipv4
+  description: CEF source IP — IPv4/IPv6 address of the source endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: suser
+  type: user
+  description: CEF source user — username of the actor initiating the event. Account
+    name as the vendor reports it — login name, UPN, or sAMAccountName; no domain
+    prefix unless vendor emits one.
+  example: jsmith
+- name: parsed_cs1.App
+  type: string_short
+  description: Application name emitted by Akamai. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token_value
+- name: parsed_cs1.Environment
+  type: string
+  description: Vendor-emitted field 'Parsed cs1 › Environment'. Leaf of the 'parsed_cs1'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_environment
+- name: parsed_cs1.Role
+  type: string
+  description: Vendor-emitted field 'Parsed cs1 › Role'. Leaf of the 'parsed_cs1'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Admin
+- name: parsed_cs1.ip
+  type: ipv4
+  description: Vendor-emitted field 'Parsed cs1 › ip'. Leaf of the 'parsed_cs1' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: parsed_cs1.os_name
+  type: string
+  description: Human-readable name as displayed by Akamai. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+use_cases:
+- WAF
+- DDoS
+how_to_use: |
+  ## Akamai GuardiCore → Cortex XSIAM (dataset `akamai_guardicore_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `akamai_guardicore_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `Akamai`
+    - **product**: `GuardiCore`
+
+    These normalize → `akamai_guardicore_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `parsed_cs1 -> os_name`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `cefName ~= "Audit"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~42 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.alert.source_url`, `xdm.event.description`, `xdm.event.id`, `xdm.event.is_completed`, `xdm.event.log_level`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|Akamai|GuardiCore|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = akamai_guardicore_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

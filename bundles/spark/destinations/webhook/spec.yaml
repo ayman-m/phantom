@@ -1,0 +1,85 @@
+schema_version: 1
+id: webhook
+name: HTTP Webhook
+description: >
+  POST records to any HTTP endpoint. Supports four authentication modes:
+  none, bearer token, HTTP basic, or a custom API-key header.
+category: Webhook
+icon: webhook
+iconColor: '#7bdc7b'
+iconBg: rgba(123, 220, 123, 0.15)
+handler: bundles.spark.destinations.webhook.handler
+probe:
+  send_test_message: true
+fields:
+  - name: url
+    display: URL
+    type: url
+    required: true
+  - name: method
+    display: HTTP method
+    type: select
+    options:
+      - POST
+      - PUT
+    defaultValue: POST
+  - name: content_type
+    display: Content-Type
+    type: select
+    options:
+      - application/json
+      - application/x-ndjson
+      - text/plain
+    defaultValue: application/json
+  - name: auth_type
+    display: Authentication
+    type: select
+    required: true
+    options:
+      - none
+      - bearer
+      - basic
+      - api_key_header
+    defaultValue: none
+  - name: bearer_token
+    display: Bearer token
+    type: secret
+    required: true
+    visible_when:
+      field: auth_type
+      value: bearer
+  - name: basic_username
+    display: Username
+    type: text
+    required: true
+    visible_when:
+      field: auth_type
+      value: basic
+  - name: basic_password
+    display: Password
+    type: secret
+    required: true
+    visible_when:
+      field: auth_type
+      value: basic
+  - name: header_name
+    display: Header name
+    type: text
+    required: true
+    description: 'e.g. X-API-Key, X-Auth-Token'
+    visible_when:
+      field: auth_type
+      value: api_key_header
+  - name: header_value
+    display: Header value
+    type: secret
+    required: true
+    visible_when:
+      field: auth_type
+      value: api_key_header
+  - name: custom_headers
+    display: Additional headers (JSON)
+    type: textarea
+    description: >
+      Optional. JSON object of additional headers, e.g.
+      {"X-Source": "phantom"}.

@@ -1,0 +1,179 @@
+schema_version: 1
+id: BarracudaEmailProtection
+pack_name: BarracudaEmailProtection
+rule_name: BarracudaEmailProtection
+dataset_name: barracuda_email_protection_raw
+vendor: Barracuda
+product: BarracudaEmailProtection
+description: Email protection from Barracuda
+categories:
+- Email
+version: 1.0.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo: null
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: payload.dst_domain
+  type: string_short
+  description: Nested leaf of `payload` — the modeling rule reads it at $.dst_domain.
+  example: sample value
+- name: payload.hdr_from
+  type: string_short
+  description: Nested leaf of `payload` — the modeling rule reads it at $.hdr_from.
+  example: sample value
+- name: payload.hdr_to
+  type: string_short
+  description: Nested leaf of `payload` — the modeling rule reads it at $.hdr_to.
+  example: sample value
+- name: payload.message_id
+  type: string_short
+  description: Nested leaf of `payload` — the modeling rule reads it at $.message_id.
+  example: sample value
+- name: payload.recipients
+  type: string_short
+  description: Nested leaf of `payload` — the modeling rule reads it at $.recipients.
+  example: sample value
+- name: payload.size
+  type: string_short
+  description: Nested leaf of `payload` — the modeling rule reads it at $.size.
+  example: sample value
+- name: payload.src_ip
+  type: string_short
+  description: Nested leaf of `payload` — the modeling rule reads it at $.src_ip.
+  example: sample value
+- name: payload.subject
+  type: string_short
+  description: Nested leaf of `payload` — the modeling rule reads it at $.subject.
+  example: sample value
+- name: payload.timestamp
+  type: string_short
+  description: Nested leaf of `payload` — the modeling rule reads it at $.timestamp.
+  example: sample value
+- name: _raw_log
+  type: string_long
+  description: Raw Barracuda Email Protection log line as the vendor emits it over
+    syslog \u2014 bracket-tagged key/value blocks. Free-form text; downstream parsers
+    regex-extract the structured fields below from it.
+  example: 'barracuda-esg: action=DELIVERED hdr_from=alice@corp.example.com hdr_to=bob@target.example.com size=4096'
+- name: dst_domain
+  type: domain
+  description: Recipient (destination) domain \u2014 vendor-emitted right-hand side
+    of the recipient email address. Bare DNS domain name; no scheme, no path, no port.
+  example: target.example.com
+- name: hdr_from
+  type: email
+  description: From-header email address of the message \u2014 the apparent sender
+    as it appears in the `From:` header (NOT necessarily the SMTP envelope `MAIL FROM`).
+    RFC 5322 `local@domain`; one address per emission.
+  example: alice@corp.example.com
+- name: hdr_to
+  type: email
+  description: To-header email address of the message \u2014 primary recipient as
+    it appears in the `To:` header. RFC 5322 `local@domain`; one address per emission
+    (multi-recipient mail emits separate records).
+  example: bob@target.example.com
+- name: message_id
+  type: string
+  description: RFC 5322 `Message-ID` header value \u2014 globally-unique identifier
+    for this email assigned by the originating MTA. Looks email-like (`<local@domain>`)
+    but is opaque syntax, NOT an addressable email. Angle brackets preserved.
+  example: <20240115T142301.abc123@mail.corp.example.com>
+- name: payload
+  type: json
+  description: Full structured payload of the email-protection event as Barracuda
+    serializes it \u2014 carries headers, action, classification, attachments. JSON
+    object emitted as a single line. Downstream modeling rules extract leaves via
+    `payload -> <key>`.
+  example: '{"timestamp":"2024-01-15T14:23:01+0000","action":"DELIVERED","subject":"Q1
+    report"}'
+- name: recipients
+  type: email
+  description: Comma-separated list of all envelope recipients (RCPT TO) for this
+    message. Each item is RFC 5322 `local@domain`; multiple addresses joined by `,
+    ` (literal comma + space).
+  example: bob@target.example.com, carol@target.example.com
+- name: size
+  type: integer_byte_count
+  description: Total size of the email message in bytes (headers + body + attachments),
+    as Barracuda measured it at intake. Unsigned decimal byte count; bare digits,
+    no unit suffix.
+  example: '4096'
+- name: src_ip
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: subject
+  type: email
+  description: Email subject. RFC 5322 'local@domain' address; one address only —
+    use an array field for multiple addresses.
+  example: user@example.com
+use_cases:
+- Email
+- WAF
+- Firewall
+how_to_use: |
+  ## Barracuda BarracudaEmailProtection → Cortex XSIAM (dataset `barracuda_email_protection_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire, and a Broker syslog collector row must
+  supply them. The local parsing-rule snapshot has no INGEST block for this
+  pack, so the literal is UNCONFIRMED -- do not assume the display
+  `vendor`/`product` fields are it (for the 75 sources where the literal IS
+  known, all 75 differ from the display values). Confirm empirically that
+  events land in `barracuda_email_protection_raw` and that `unknown_unknown_raw` did not grow.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `barracuda_email_protection_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `barracuda_email_protection`. The marketplace pack's display name `Barracuda` / `BarracudaEmailProtection` normalizes to `barracuda_barracudaemailprotection_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `barracuda_email_protection` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `payload -> dst_domain`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~11 fields mapped to the unified data model (`xdm.*`), including: `xdm.email.delivery_timestamp`, `xdm.email.message_id`, `xdm.email.recipients`, `xdm.email.sender`, `xdm.email.subject`, `xdm.event.description`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `Barracuda`, Product = `BarracudaEmailProtection`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = barracuda_email_protection_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,206 @@
+schema_version: 1
+id: DigitalShadows
+pack_name: DigitalShadows
+rule_name: DigitalShadows
+dataset_name: reliaquest_greymatter_drp_raw
+vendor: ReliaQuest
+product: DigitalShadows
+description: GreyMatter Digital Risk Protection minimize digital risk by identifying
+  unwanted exposure and protecting against external threats. The award-winning solution
+  provides ongoing monitoring of a customer's unique assets and exposure across the
+  open, deep, and dark web. This enables clients to detect data loss, brand impersonation,
+  infrastructure risks, cyber threats, and much more.
+categories:
+- Data Enrichment & Threat Intelligence
+version: 3.0.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMTM2NkMiPlJlbGlhUXVlc3Q8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _ENTRY_STATUS
+  type: string_short
+  description: Status code returned by ReliaQuest. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: OK
+- name: alert
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: assets,
+    description, id, title (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: assets
+  type: string
+  description: Vendor-emitted field 'Assets'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_assets
+- name: classification
+  type: string
+  description: Vendor-emitted field 'Classification'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_classification
+- name: event_action
+  type: string_short
+  description: Action taken by ReliaQuest's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: event_num
+  type: integer
+  description: Unsigned count of items as recorded by ReliaQuest. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: incident
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: assets,
+    description, id, title (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: mitre_ids
+  type: string
+  description: Vendor-emitted field 'Mitre ids'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_ids
+- name: mitre_tactics
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: mitre_techniques
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: risk_level
+  type: string_short
+  description: Severity level (string label, e.g., info/warn/error). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: info
+- name: risk_type
+  type: string_short
+  description: Type/category classifier emitted by ReliaQuest. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: state
+  type: string
+  description: Vendor-emitted field 'State'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CA
+- name: triage_item
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: title
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: triage_item_id
+  type: string_short
+  description: Opaque identifier emitted by ReliaQuest. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: rel-6fd7775c
+- name: alert.assets
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Alert › assets'. Leaf of the 'alert' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_assets
+- name: alert.description
+  type: string_long
+  description: Free-form human-readable description from ReliaQuest. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by ReliaQuest.
+- name: alert.id
+  type: string_short
+  description: Opaque identifier emitted by ReliaQuest. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: rel-2f9d0ebb
+- name: alert.title
+  type: string
+  description: Title/headline of the event or item. Free-form text; may contain whitespace
+    and punctuation.
+  example: Sample subject line
+- name: incident.assets
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Incident › assets'. Leaf of the 'incident' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_assets
+- name: incident.description
+  type: string_long
+  description: Free-form human-readable description from ReliaQuest. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by ReliaQuest.
+- name: incident.id
+  type: string_short
+  description: Opaque identifier emitted by ReliaQuest. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: rel-3333f404
+- name: incident.title
+  type: string
+  description: Title/headline of the event or item. Free-form text; may contain whitespace
+    and punctuation.
+  example: Sample subject line
+- name: triage_item.title
+  type: string
+  description: Title/headline of the event or item. Free-form text; may contain whitespace
+    and punctuation.
+  example: Sample subject line
+use_cases:
+- SIEM
+how_to_use: |
+  ## ReliaQuest DigitalShadows → Cortex XSIAM (dataset `reliaquest_greymatter_drp_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `reliaquest_greymatter_drp_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `reliaquest_greymatter_drp`. The marketplace pack's display name `ReliaQuest` / `DigitalShadows` normalizes to `reliaquest_digitalshadows_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `reliaquest_greymatter_drp` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `alert -> id`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~20 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.mitre_tactics`, `xdm.alert.mitre_techniques`, `xdm.alert.original_threat_id`, `xdm.alert.risks`, `xdm.alert.severity`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = reliaquest_greymatter_drp_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

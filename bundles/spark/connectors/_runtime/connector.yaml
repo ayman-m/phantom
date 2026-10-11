@@ -1,0 +1,66 @@
+# Reference connector — minimal example for a container-style connector.
+#
+# This file is NOT registered in bundles/spark/manifest.yaml's
+# toolConnectors[]. It's a reference for connector authors writing
+# new style: container connectors.
+#
+# To create a real connector from this skeleton:
+#   1. Copy bundles/spark/connectors/_runtime/ to
+#      bundles/spark/connectors/<your-id>/
+#   2. Replace "_runtime" with your id in this file, the Dockerfile,
+#      and the source.
+#   3. Add a toolConnectors[] entry in bundles/spark/manifest.yaml.
+#   4. Add an image build for phantom-connector-<id> to your build
+#      pipeline.
+
+id: "_runtime"
+version: "1.0.0"
+description: "Reference skeleton for container-style connectors. Defines a single demo_echo tool that returns its kwargs unchanged. Not registered."
+
+source:
+  language: "python"
+  entrypoint: "src.connector"
+
+# Container architecture: connector runs in its own container, addressed
+# via MCP-over-HTTP. See docs/spec-per-instance-connector-containers.md.
+# When style: container, functionPrefix is ignored (the runtime
+# entrypoint exposes tools by their bare names).
+runtimeMapping:
+  style: "container"
+  # functionPrefix is unused for style: container, but stays here as
+  # documentation — connector source MAY use the `phantom_<id>_*`
+  # convention if the author prefers grep-friendly function names.
+  functionPrefix: "phantom__runtime_"
+
+executionMode: "persistent"
+
+# JSONSchema for the per-instance config. Every key the connector
+# code reads via `get_config().<key>` should be declared here. The
+# UI's instance-create form renders inputs from this schema.
+configSchema:
+  type: "object"
+  properties:
+    greeting:
+      type: "string"
+      description: "Prefix for the demo_echo tool's response."
+      default: "Hello"
+
+# Slot definitions for secret material (API keys, tokens, etc.).
+# When the operator submits the form, values for these slots are
+# encrypted via the SecretStore (using PHANTOM_SECRET_KEK) and only
+# resolved at tool-call time inside the connector container.
+secretSlots: []
+
+# Public tool surface. Each entry's `name` is the bare tool name
+# the agent's MCP proxy forwards to. The connector container's
+# FastMCP server registers tools under these exact names (the runtime
+# entrypoint's prefix-stripping logic turns `phantom__runtime_demo_echo`
+# in the source into `demo_echo` on the wire).
+spec:
+  tools:
+    - name: "demo_echo"
+      method: "echo"
+      description: "Return the kwargs back, prefixed with the configured greeting. Used to verify the runtime contract end-to-end."
+      args:
+        - { name: "message", type: "string", required: true }
+      returns: { type: "object", description: "{greeting, message}" }

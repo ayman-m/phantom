@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://phantom.ayman-m.dev/connector.schema.json",
+  "title": "Phantom connector.yaml schema (v0.5.0)",
+  "description": "Canonical schema for every connector.yaml file Phantom loads. Applies uniformly to bundle-shipped connectors (bundles/spark/connectors/<id>/connector.yaml) and operator-uploaded connectors (/app/data/user_connectors/<id>/connector.yaml). The MCP validates every connector.yaml against this schema at boot via usecase.connector_schema.validate_connector_spec; load fails fast on drift. Schema-by-example was the pre-v0.5.0 state and produced silent drift between connectors; this file codifies the shape so a typo or missing field surfaces at boot, not at first tool call. Tracks Spark v1.2 agent-bundle spec §7.4 — kept in sync as that spec evolves.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "id",
+    "version",
+    "description",
+    "source",
+    "runtimeMapping",
+    "configSchema",
+    "secretSlots",
+    "spec"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Stable kebab-case identifier — lives in the URL (/api/v1/connectors/<id>) and in tool names (<id>/<tool>). Must match the directory name the YAML lives in. Lowercase ASCII + digits + hyphens only."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[A-Za-z0-9.-]+)?(\\+[A-Za-z0-9.-]+)?$",
+      "description": "SemVer. Bundle connectors track the agent image version (bumped together at release). User connectors version themselves."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line operator-facing description — shows on the marketplace card."
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Optional human-readable name. Falls back to id.title() when absent."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Marketplace filter tags (e.g. \"siem\", \"red-team\", \"web\")."
+    },
+    "image": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional. OCI image reference for the per-instance container. Required for user-uploaded connectors (must point to a published image the host's docker can pull, e.g. 'ghcr.io/your-org/your-connector:v1.2'). Bundle connectors leave this empty — phantom-updater derives 'ghcr.io/<repo-owner>/phantom-connector-<id>-oss:<version>' from the connector id and the running stack version. v0.5.0+ field; pre-v0.5.0 connectors had no per-YAML image declaration."
+    },
+    "logo": {
+      "type": "string",
+      "pattern": "^data:image/(svg\\+xml|png|jpeg|gif|webp);base64,[A-Za-z0-9+/=]+$",
+      "maxLength": 350000,
+      "description": "Optional. Connector logo as a base64-encoded data URI (v0.5.52+). Supported MIME types: image/svg+xml, image/png, image/jpeg, image/gif, image/webp. Max length 350000 chars (≈260 KB encoded). Embedded in the YAML so the manifest round-trips on download/upload without a separate asset file. SVG is preferred for crispness at any size; PNG works fine for raster logos. The marketplace card renders this via <img src={connector.logo}> when present, falling back to a generated placeholder when absent. Validate the encoded length client-side before upload so the operator sees the error immediately instead of after a multipart round-trip."
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["language", "entrypoint"],
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "Implementation language. Currently only 'python' is supported; future runtimes (node, go) would extend this enum."
+        },
+        "entrypoint": {
+          "type": "string",
+          "description": "Module import path relative to the connector dir (e.g. 'src.connector'). Container-style: this is what the container's MCP server loads. Module-style (deprecated post-v0.5.0): what connector_loader imports in-process."
+        }
+      }
+    },
+    "runtimeMapping": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["style"],
+      "properties": {
+        "style": {
+          "type": "string",
+          "enum": ["container"],
+          "description": "Dispatch model. v0.5.0+ supports ONLY 'container' — every connector runs as a per-instance phantom-connector-<id>-<name> container, dispatched over MCP-over-HTTP. The pre-v0.5.0 'module' (in-process import) and 'class' (in-process instantiate) styles were deleted as part of the universal container-mode migration; the schema rejects them so a user-uploaded YAML can't reintroduce them."
+        },
+        "functionPrefix": {
+          "type": "string",
+          "description": "Module-style legacy field — strips this prefix from underlying function names to produce tool names (e.g. 'phantom_' so phantom_create_data_worker becomes create_data_worker). Ignored when style: container."
+        }
+      }
+    },
+    "executionMode": {
+      "type": "string",
+      "enum": ["persistent", "ephemeral"],
+      "description": "Optional. 'persistent' (default) keeps the connector process alive between tool calls. 'ephemeral' was reserved for one-shot connectors; no current bundle connector uses it. Omitted = persistent."
+    },
+    "configSchema": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["type"],
+      "description": "JSON-Schema fragment describing the per-instance config the operator fills in on /connectors → Create Instance. The setup form is rendered directly from this — every property becomes a form field. Required[] gates submission. Default values pre-fill the form. v0.5.70+ optional `widget` keyword on each property selects the input widget (text | url | password | textarea | select | radio | multi_select | switch | array); when omitted, the widget is derived from the JSON-Schema `type`: string→text, integer/number→numeric text, boolean→switch, array→multi_select if `enum` present else array (chip list). Synthetic-card config blocks in mcp/agent/app/api/marketplace/connectors/route.ts already use widget hints via the `type` field of each ConfigParam — the values match this taxonomy (text/url/password/secret/textarea/select/radio/multi_select/boolean/array) so the UI renderer (mcp/agent/app/connectors/page.tsx → renderConfigField) can dispatch on `type` directly. See [help/architecture#connectors-design] for the widget table + a worked example."
+    },
+    "secretSlots": {
+      "type": "array",
+      "description": "Declared secret slots — per-instance encrypted values stored in the SecretStore. Empty array = connector has no secrets (e.g. cortex-docs reads public APIs).",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["name", "description"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+            "description": "Slot name. The setup form renders one secret field per slot; the value is encrypted at rest under PHANTOM_SECRET_KEK; the connector reads it at call time via get_config().<name>."
+          },
+          "description": {
+            "type": "string",
+            "description": "Operator-facing description of what this secret is and where to find it."
+          },
+          "required": {
+            "type": "boolean",
+            "default": false,
+            "description": "When true, instance creation refuses if this slot is empty. When false, the connector handles the missing-secret case (e.g. xlog's optional webhookKey)."
+          }
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["tools"],
+      "properties": {
+        "tools": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Declared tools the connector exposes. Each entry becomes a registered MCP tool when an instance of the connector is configured + the connector is installed via the marketplace.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["name", "description"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "description": "Tool name. The MCP exposes it as <connector_id>/<tool_name> (e.g. 'caldera/list_abilities')."
+              },
+              "method": {
+                "type": "string",
+                "description": "Optional human-facing summary of the underlying call (e.g. 'GET /api/operations'). Documentation-only."
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Operator-facing tool description — used by the agent's tool catalogue."
+              },
+              "args": {
+                "type": "array",
+                "description": "Tool parameters. Each becomes a typed argument in the generated MCP tool signature.",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "required": ["name", "type", "description"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "string",
+                        "integer",
+                        "number",
+                        "boolean",
+                        "object",
+                        "array",
+                        "any"
+                      ]
+                    },
+                    "description": { "type": "string", "minLength": 1 },
+                    "required": { "type": "boolean" }
+                  }
+                }
+              },
+              "returns": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Optional. Documents the shape of the tool's return value. Documentation-only — not enforced at dispatch."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

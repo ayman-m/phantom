@@ -1,0 +1,120 @@
+schema_version: 1
+id: BluecatAddressManager
+pack_name: BluecatAddressManager
+rule_name: BluecatAddressManager
+dataset_name: bluecat_address_manager_raw
+vendor: Bluecat
+product: BluecatAddressManager
+description: Use the BlueCat Address Manager integration to enrich IP addresses and
+  manage response policies.
+categories:
+- IT Services
+version: 1.1.21
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/png
+  data: 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
+  source: baked/Packs/BluecatAddressManager/Integrations/BluecatAddressManager/BluecatAddressManager_image.png
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'bluecat: bluecataddressmanager=BluecatAddressManager action=allow user=jdoe'
+- name: dnsClass
+  type: string
+  description: Network DNS question class. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dnsclass
+- name: outcome
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: query
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: q=search&page=1
+- name: success
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+use_cases:
+- DNS
+how_to_use: |
+  ## bluecat address manager → Cortex XSIAM (dataset `bluecat_address_manager_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `bluecat` / product `address_manager`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `bluecat_address_manager_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `bluecat`
+    - **product**: `address_manager`
+
+    These normalize → `bluecat_address_manager_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~11 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.description`, `xdm.event.outcome`, `xdm.intermediate.host.hostname`, `xdm.intermediate.ipv4`, `xdm.network.dns.dns_question.class`, `xdm.network.dns.dns_question.name`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `bluecat`, Product = `address_manager`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = bluecat_address_manager_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

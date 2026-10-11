@@ -1,0 +1,134 @@
+schema_version: 1
+id: F5LTM
+pack_name: F5LTM
+rule_name: F5LTMModelingRules
+dataset_name: f5_ltm_raw
+vendor: F5
+product: F5LTM
+description: You can use this pack to automate traffic management use cases in integration
+  with F5 Local Traffic Manager (LTM), the integration with F5 LTM included with the
+  pack comes with several commands to get LTM information about nodes, pools and pool
+  members, along with that some of those commands can be used to automate remediation
+  actions such as disabling an active node.
+categories:
+- Network Security
+version: 1.0.16
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/png
+  data: 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
+  source: baked/Packs/F5LTM/Integrations/F5LTM/F5LTM_image.png
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'f5: f5ltm=F5LTM action=allow user=jdoe'
+- name: httpMethod1
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: sample_httpmethod1
+- name: httpMethod2
+  type: string
+  description: Httpmethod2. Free-form text; may contain whitespace and punctuation.
+  example: sample_httpmethod2
+- name: in
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_in
+- name: info
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: see message
+- name: logLevel
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_loglevel
+- name: responseCode
+  type: string
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_responsecode
+- name: windows
+  type: string
+  description: Source host OS family. Free-form text; may contain whitespace and punctuation.
+  example: sample_windows
+use_cases:
+- WAF
+- LoadBalancer
+how_to_use: |
+  ## f5 ltm → Cortex XSIAM (dataset `f5_ltm_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `f5` / product `ltm`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `f5_ltm_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `f5`
+    - **product**: `ltm`
+
+    These normalize → `f5_ltm_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~27 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.name`, `xdm.alert.original_threat_name`, `xdm.event.description`, `xdm.event.log_level`, `xdm.event.original_event_type`, `xdm.event.outcome_reason`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `f5`, Product = `ltm`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = f5_ltm_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

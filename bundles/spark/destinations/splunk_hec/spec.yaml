@@ -1,0 +1,35 @@
+schema_version: 1
+id: splunk_hec
+name: Splunk HEC
+description: Forward records to a Splunk HTTP Event Collector endpoint.
+category: Cloud SIEM
+icon: search
+iconColor: '#65a30d'
+iconBg: rgba(101, 163, 13, 0.15)
+handler: bundles.spark.destinations.splunk_hec.handler
+probe:
+  send_test_message: true
+fields:
+  - name: url
+    display: HEC URL
+    type: url
+    required: true
+  - name: token
+    display: HEC token
+    type: secret
+    required: true
+  - name: index
+    display: Index (optional)
+    type: text
+  - name: source
+    display: Source
+    type: text
+    defaultValue: phantom
+  - name: sourcetype
+    display: Sourcetype
+    type: text
+    defaultValue: 'phantom:synthetic'
+  - name: verify_ssl
+    display: Verify SSL
+    type: boolean
+    defaultValue: 'true'

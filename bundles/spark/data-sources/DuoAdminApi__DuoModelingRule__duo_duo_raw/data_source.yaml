@@ -1,0 +1,504 @@
+schema_version: 1
+id: DuoAdminApi
+pack_name: DuoAdminApi
+rule_name: DuoModelingRule
+dataset_name: duo_duo_raw
+vendor: Duo Security
+product: DuoAdminApi
+description: 'Cisco Duo multi-factor authentication events from the Duo Admin API — authentication, administrator
+  and telephony. Delivered to Cortex XSIAM as CEF over syslog with header vendor=duo product=duo; Duo
+  ships NO parsing rule, so routing is derived and the CEF `rt` epoch is the only back-dating handle.
+  Validated end to end against DuoModelingRule_2_11 (the >= 8.15 version): 67 xdm fields populate,
+  including the full xdm.source.identity.* mirror, two-device attribution (access_device -> xdm.source.*,
+  auth_device -> xdm.intermediate.*), geo for impossible-traveller, and the complete outcome-reason taxonomy.
+  This is the ONLY source that emits EVENT_TAG_AUTHENTICATION and xdm.source.user.upn,
+  so it is the one that can build a Cortex authentication story.'
+categories:
+- Identity and Access Management
+version: 4.0.33
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMTYgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMzNTdBNTkiPkR1byBTZWN1cml0eTwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: HOST
+  type: string
+  example: api-3a1b2c4d.duosecurity.com
+  description: UPPERCASE variant read by the administrator and telephony blocks (`xdm.observer.name =
+    HOST`). The authentication block reads lowercase `host` instead. Both spellings exist in the same
+    rule; send whichever matches the eventtype you are generating.
+- name: _id
+  type: string_short
+  description: 'The rule assigns xdm.event.id = _id, but `_id` is INGESTION META: the broker stamps it
+    (form `/YhDF6WRU2jswETWc6QARA==:0:95:197`) and overwrites anything sent.
+    A pinned value does not survive while txid on the same event does. Underscore-prefixed columns are
+    broker-owned; do not try to seed them.'
+  example: (broker-stamped — cannot be seeded)
+- name: access_device
+  type: json
+  description: JSON composite describing the machine the person authenticated FROM. NEVER send `{}`. The
+    rule reaches into it with json_extract_scalar(access_device, "$.<path>") for ip, hostname, epkey,
+    os, os_version, browser, browser_version and the doubly-nested location.city / .country / .state.
+    Declare those dotted leaves and the generator builds the nested object; an empty composite maps nothing.
+  example: '(composite — declare dotted leaves: access_device.ip, .hostname, .os, .location.city …)'
+- name: access_device.browser
+  type: string
+  description: Browser name -> xdm.source.application.name (falls back to ood_software when null) and,
+    concatenated with browser_version, xdm.network.http.browser.
+  example: Chrome
+- name: access_device.browser_version
+  type: string_short
+  description: Browser version -> xdm.source.application.version and the xdm.network.http.browser concat.
+  example: 128.0.6613.120
+- name: access_device.epkey
+  type: string
+  description: Duo endpoint key -> xdm.source.host.device_id.
+  example: EPKEY000001
+- name: access_device.hostname
+  type: host
+  description: Hostname of the access device -> xdm.source.host.hostname. In Duo's Windows Logon / RDP
+    integration this IS the endpoint being logged into, which makes this source's records user-to-MACHINE
+    rather than only user-to-application.
+  example: WS-2001.acme.local
+- name: access_device.ip
+  type: ipv4
+  description: 'IP of the machine the person authenticated FROM. Split by the rule into source_ipv4 /
+    source_ipv6 on whether it contains '':'', feeding xdm.source.ipv4 / xdm.source.ipv6. TRAP: the literal
+    "0.0.0.0" NULLS xdm.event.type, xdm.source.port and xdm.target.port — the rule treats it as ''no real
+    client''.'
+  example: 10.20.14.11
+- name: access_device.location.city
+  type: string
+  description: 'Access-device city -> xdm.source.location.city. Note the DOUBLE nesting: the rule reads
+    json_extract_scalar(access_device, "$.location.city"), so the dotted leaf is three levels deep. Geo
+    is what makes impossible-traveller expressible on this source — verified with one identity across
+    four countries.'
+  example: Riyadh
+- name: access_device.location.country
+  type: country_code
+  description: Access-device country -> xdm.source.location.country.
+  example: Saudi Arabia
+- name: access_device.location.state
+  type: string
+  description: 'Access-device state/region -> xdm.source.location.region (note: state -> region).'
+  example: Riyadh Province
+- name: access_device.os
+  type: string
+  description: 'Access-device OS, lowercased by the rule. Feeds xdm.source.host.os (concatenated with
+    os_version), xdm.source.host.os_family (a contains-ladder to OS_FAMILY_*), and xdm.source.host.device_category
+    via establish_os_category: fedora|ubuntu|chrome|mac|windows|linux|debian -> Computer, ios|blackberry|android|phone
+    -> Mobile, tizen -> IOT.'
+  example: Windows
+- name: access_device.os_version
+  type: string_short
+  description: Access-device OS version. Concatenated with os into xdm.source.host.os.
+  example: 10.0.19045
+- name: action
+  type: string
+  description: 'ADMINISTRATOR block. -> xdm.event.operation. Typical values: admin_login, admin_2fa_error,
+    user_update, integration_create, policy_update.'
+  example: admin_login
+- name: adaptive_trust_assessments
+  type: string
+  description: Duo Trust Monitor assessment blob -> xdm.auth.mfa.client_details, passed through verbatim.
+    An empty object is realistic when Trust Monitor is not licensed.
+  example: '{}'
+- name: alias
+  type: string
+  description: Duo username alias. Feeds xdm.source.user.sam_account_name and xdm.source.identity.sam_account_name.
+  example: ahmed
+- name: application
+  type: json
+  description: JSON composite for the application authenticated TO. NEVER send `{}`. Feeds xdm.target.resource.name
+    and xdm.target.resource.id.
+  example: '(composite — declare dotted leaves: application.name, application.key)'
+- name: application.key
+  type: string
+  description: Duo application key -> xdm.target.resource.id.
+  example: DIAPP0001
+- name: application.name
+  type: string
+  description: The application authenticated TO -> xdm.target.resource.name. NOTE the rule explicitly
+    blanks xdm.target.ipv4 and xdm.target.ipv6, so the target side always carries the APPLICATION and
+    never a host — the machine is always on the SOURCE side.
+  example: Microsoft 365
+- name: auth_device
+  type: json
+  description: JSON composite describing the device that ANSWERED the MFA prompt, usually the phone. NEVER
+    send `{}`. Feeds the whole xdm.intermediate.* subtree — ipv4/ipv6, host.hostname and location.city/.country/.region.
+  example: '(composite — declare dotted leaves: auth_device.ip, .name, .location.city …)'
+- name: auth_device.ip
+  type: ipv4
+  description: IP of the device that ANSWERED the MFA prompt (typically the phone). Split into xdm.intermediate.ipv4
+    / .ipv6. Distinct from access_device — the intermediate.* subtree is the second half of Duo's two-device
+    story.
+  example: 37.224.71.58
+- name: auth_device.location.city
+  type: string
+  description: -> xdm.intermediate.location.city.
+  example: Riyadh
+- name: auth_device.location.country
+  type: country_code
+  description: -> xdm.intermediate.location.country.
+  example: Saudi Arabia
+- name: auth_device.location.state
+  type: string
+  description: -> xdm.intermediate.location.region.
+  example: Riyadh Province
+- name: auth_device.name
+  type: host
+  description: Name of the authenticating device, usually the phone number -> xdm.intermediate.host.hostname.
+  example: '+966549754381'
+- name: context
+  type: string
+  description: TELEPHONY block. -> xdm.event.description.
+  example: authentication
+- name: description
+  type: json
+  description: JSON composite carried by the ADMINISTRATOR block only. Feeds xdm.event.description verbatim,
+    and its leaves feed xdm.target.user.upn ($.email), xdm.auth.auth_method ($.factor), xdm.source.ipv4/ipv6
+    (regex over $.ip_address) and xdm.target.user.groups ($.role). Not read at all when eventtype=authentication.
+  example: '(composite — ADMINISTRATOR block only; leaves: description.email, .factor, .ip_address, .role)'
+- name: description.email
+  type: email
+  description: ADMINISTRATOR block. -> xdm.target.user.upn and xdm.target.identity.upn.
+  example: admin.operator@example-isp.example
+- name: description.factor
+  type: string
+  description: ADMINISTRATOR block. -> xdm.auth.auth_method.
+  example: duo_push
+- name: description.ip_address
+  type: ipv4
+  description: ADMINISTRATOR block. The rule regex-extracts an IPv4 or IPv6 out of this into xdm.source.ipv4
+    / xdm.source.ipv6 — it is a free-text field, not a typed address.
+  example: 10.20.9.44
+- name: description.role
+  type: string
+  description: ADMINISTRATOR block. -> xdm.target.user.groups and xdm.target.identity.groups, wrapped
+    with arraycreate().
+  example: Owner
+- name: email
+  type: email
+  description: 'User email. Feeds xdm.source.user.upn and xdm.source.identity.upn directly, and is ALSO
+    split to derive first/last name: split(regextract(email, "(.*)@"), ".") -> xdm.source.user.first_name
+    / .last_name. So the local part MUST be first.last or the name fields come out wrong. Duo emitting
+    a UPN is exactly what microsoft_windows_raw cannot do, and it is why this source can build a Cortex
+    authentication story.'
+  example: ahmed.alharbi@example-isp.example
+- name: event_type
+  type: string
+  description: -> xdm.event.original_event_type.
+  example: authentication
+- name: eventtype
+  is_gate: true
+  type: string
+  description: 'THE GATE. The rule has three [MODEL] blocks and this selects which one runs: `authentication`
+    (58 xdm assignments — the identity story), `administrator` (14, admin console actions), `telephony`
+    (6). Any other value maps NOTHING. Also assigned to xdm.event.type, but ONLY when access_device.ip
+    is not "0.0.0.0" — see that field.'
+  example: authentication
+  enum_values:
+  - authentication
+  - administrator
+  - telephony
+- name: factor
+  type: enum
+  enum_values:
+  - duo_push
+  - sms_passcode
+  - phone_call
+  - hardware_token
+  - yubikey_code
+  - bypass_code
+  - remembered_device
+  - duo_mobile_passcode
+  - u2f_token
+  - not_available
+  description: 'MFA factor used. Feeds xdm.auth.mfa.method verbatim AND drives establish_factor -> xdm.event.operation_sub_type,
+    which buckets it: phone_call/sms_* -> voice|sms, duo_push/duo_mobile_passcode -> application, yubikey/hardware/utf/digipass
+    -> hardware_token, remembered_device -> trusted_login, not_available/passcode -> Generic SSO. A value
+    outside the ladder yields null, so the sub-type silently disappears.'
+  example: duo_push
+- name: host
+  type: host
+  description: Duo API hostname -> xdm.observer.name on the authentication block.
+  example: api-3a1b2c4d.duosecurity.com
+- name: integration
+  type: string
+  description: Duo integration name. NOT READ by any [MODEL] block in DuoModelingRule_2_11; the application
+    composite carries the app identity instead. Maps to nothing.
+  example: Microsoft 365 - SAML
+- name: object
+  type: string
+  description: ADMINISTRATOR block. The object the admin action targeted -> xdm.target.resource.name.
+  example: ahmed.alharbi
+- name: ood_software
+  type: string
+  description: Out-of-date software string. Fallback for xdm.source.application.name when access_device.browser
+    is null.
+  example: ''
+- name: phone
+  type: host
+  description: Phone number. NOT READ by any of the three [MODEL] blocks in DuoModelingRule_2_11 — the
+    phone reaches xdm.intermediate.host.hostname through auth_device.name instead. Kept for wire fidelity;
+    maps to nothing.
+  example: '+966549754381'
+- name: reason
+  type: enum
+  description: 'Why Duo reached that verdict. Drives establish_reason -> xdm.event.outcome_reason through
+    a long named ladder: invalid_passcode/verification_code_missing -> mfa_failure; no_response/no_keys_pressed/call_timed_out
+    -> mfa_expired; user_deny -> user_reject; locked_out -> account_locked; user_disabled -> account_expired_or_disabled;
+    the endpoint_* family -> device_security_issues. An unmapped value falls through to to_string(reason)
+    and passes as-is. ALSO gates xdm.event.operation: remembered_device / trusted_network / authentication_trusted_by_risk_based_remembered_devices
+    -> "Login", everything else -> "MFA". And location_restricted / anomalous_push / anonymous_ip set
+    xdm.alert.risks=[''risky_signin''].'
+  example: user_approved
+  enum_values:
+  - user_approved
+  - invalid_passcode
+  - no_response
+  - user_deny
+  - locked_out
+  - user_disabled
+  - factor_restricted
+  - invalid_device
+  - anomalous_push
+  - anonymous_ip
+  - location_restricted
+  - trusted_network
+  - allowed_by_policy
+- name: result
+  type: enum
+  enum_values:
+  - success
+  - failure
+  - denied
+  - fraud
+  description: Authentication verdict, lowercased by the rule into result_enum. Feeds xdm.event.outcome
+    (success->SUCCESS; failure/denied/fraud->FAILED) and xdm.observer.action verbatim. `fraud` additionally
+    sets xdm.alert.risks=['risky_signin'] — the user explicitly reported the push as fraudulent.
+  example: success
+- name: rt
+  type: string
+  example: '1788700000000'
+  description: 'Event time as a CEF epoch integer (10/13/16/19 digits). Duo ships NO parsing rule, so
+    nothing derives _time from the event body — the broker consumes the CEF `rt` extension during generic
+    extraction, and it is the ONLY back-dating handle on this source. An ISO-8601 string is ignored and
+    _time falls back to ingestion time. Verified: rt=1787022542985 landed as _time=1787022542000.'
+- name: telephony_id
+  type: string_short
+  description: TELEPHONY block. -> xdm.event.id. Unlike `_id` this is an ordinary column and IS honoured
+    on the wire.
+  example: duo-59b189aa
+- name: txid
+  type: string
+  description: Duo transaction id -> xdm.session_context_id. Honoured on the wire (unlike _id).
+  example: 83174359-tx
+- name: type
+  type: string_short
+  description: 'TELEPHONY block. -> xdm.auth.mfa.method. Values: phone, sms.'
+  example: phone
+- name: user
+  type: json
+  description: JSON composite for the identity. NEVER send `{}`. Read via json_extract_scalar(user, "$.name")
+    and "$.key", plus the array accessor `user -> groups[]`. Feeds xdm.source.user.username / .identifier
+    / .groups and their xdm.source.identity.* mirrors.
+  example: '(composite — declare dotted leaves: user.name, user.key, user.groups)'
+- name: user.groups
+  type: string
+  is_array: true
+  description: 'Group membership. The rule reads it with the ARRAY accessor `user -> groups[]` into xdm.source.user.groups
+    / .identity.groups. KNOWN LIMIT: the generator serialises every dotted leaf as a JSON STRING, so `[]`
+    wraps that quoted string and the result is [''"Acme Employees"''] rather than a clean array. Both a
+    comma-joined string and a JSON array literal both come back quoted. Send
+    a single group name for the least-wrong result; a true multi-value array is not reachable over this
+    path.'
+  example: Acme Employees
+- name: user.key
+  type: string
+  description: Duo's stable user id. Read as json_extract_scalar(user, "$.key"); feeds xdm.source.user.identifier
+    and xdm.source.identity.identifier.
+  example: DUKEY000001
+- name: user.name
+  type: user
+  description: Duo username inside the `user` composite. Read as json_extract_scalar(user, "$.name");
+    feeds xdm.source.user.username and xdm.source.identity.username.
+  example: ahmed.alharbi
+- name: username
+  type: user
+  description: Read by the ADMINISTRATOR block only (-> xdm.source.user.username). The authentication
+    block uses user.name instead.
+  example: ahmed.alharbi
+use_cases:
+- MFA
+how_to_use: "## Duo Admin API authentication -> `duo_duo_raw` (validated end to end)\n\nStreaming synthetic CEF and reading back the data model, **67 xdm fields populate** — more than any other source in this\nbundle — and unlike `microsoft_windows_raw`\
+  \ this one DOES emit both\n`xdm.event.tags = EVENT_TAG_AUTHENTICATION` and `xdm.source.user.upn`, which\
+  \ is what lets it\nbuild a Cortex authentication story.\n\
+  \n### 1. Rule version — check this FIRST\n\n```\nDuoModelingRule        6.8.0  - 6.9.9      24 lines\n\
+  DuoModelingRule_1_3    6.10.0 - 8.3.0      59 lines\nDuoModelingRule_2_0    8.4.0  - 8.14.0     97 lines\n\
+  DuoModelingRule_2_11   8.15.0 - (none)    108 lines   <- AUTHORITATIVE\n```\n\n`_2_11` adds an entire\
+  \ `xdm.source.identity.*` mirror (username, upn, identifier, groups,\nsam_account_name, first/last name,\
+  \ user_type) that the earlier versions lack. On a tenant at >= 8.15, `_2_11` is the live rule (the identity subtree populating confirms it). Reading an\nolder version and generating against it is the\
+  \ single easiest way to waste a cycle here.\n\n### 2. Routing and time\n\n**Duo ships NO parsing rule\
+  \ at all.** Two consequences, both load-bearing:\n\n- Routing is purely DERIVED. CEF header `vendor=duo`\
+  \ `product=duo` -> `duo_duo_raw`. There is\n  no INGEST block, no discriminator, and no `no_hit` behaviour\
+  \ to satisfy.\n- Nothing derives `_time` from the event body, so **the CEF `rt` extension is the only\n\
+  \  back-dating handle**. Send it as an epoch INTEGER (10/13/16/19 digits); an ISO-8601 string\n  is\
+  \ silently ignored and `_time` falls back to ingestion time. Verified:\n  `rt=1787022542985` landed\
+  \ as `_time=1787022542000`.\n\nThe display `vendor`/`product` in this YAML are 'Duo Security' / 'DuoAdminApi'\
+  \ — those are the\nmarketplace pack's labels, NOT the wire literal. Send lowercase `duo`/`duo`.\n\n\
+  ### 3. The gate — one field, three blocks\n\n```\nfilter eventtype = \"authentication\"     58 xdm assignments\
+  \   <- the identity story\nfilter eventtype = \"administrator\"      14                   <- admin console\
+  \ actions\nfilter eventtype = \"telephony\"           6                   <- SMS / voice delivery\n\
+  ```\n\n`eventtype` selects which block runs. Any other value maps NOTHING. The three blocks read\nDIFFERENT\
+  \ columns, so a field that matters for one is dead weight in another — `username`,\n`action`, `object`\
+  \ and the `description.*` leaves belong to the administrator block only,\nwhile the authentication block\
+  \ uses `user.name` and the `application` composite instead.\n\nNote the case split: the authentication\
+  \ block reads lowercase `host` for\n`xdm.observer.name`, while administrator and telephony read UPPERCASE\
+  \ `HOST`.\n\n### 4. Two devices, two subtrees — the thing that makes Duo useful\n\nDuo describes an\
+  \ authentication with TWO devices, and the rule keeps them apart:\n\n| composite | meaning | xdm subtree\
+  \ |\n|---|---|---|\n| `access_device` | the machine the person authenticated FROM | `xdm.source.*` —\
+  \ host.hostname, host.os, ipv4, location.* |\n| `auth_device` | the device that ANSWERED the prompt\
+  \ (the phone) | `xdm.intermediate.*` — host.hostname, ipv4, location.* |\n| `application` | what they\
+  \ authenticated TO | `xdm.target.resource.*` |\n\nThe rule explicitly blanks `xdm.target.ipv4` and `xdm.target.ipv6`,\
+  \ so the target side always\ncarries the APPLICATION and never a host. **The machine is always on the\
+  \ SOURCE side.** In\nDuo's Windows Logon / RDP integration the access device IS the endpoint being logged\
+  \ into,\nwhich is what makes these records user-to-MACHINE and not merely user-to-application.\n\n###\
+  \ 5. Worked scenarios — send exactly this\n\nEvery block below is a verified field set. Add `rt` (epoch\
+  \ ms) and vary it across the window\nyou want. Keep identity, device, and geo bound together PER RECORD\
+  \ — the fields describe one\nperson on one machine, so varying them independently produces a cartesian\
+  \ smear.\n\n#### Normal working-day authentication\n\nThe baseline shape everything else is compared against.\
+  \ duo_push + success + user_approved from Riyadh. Generate ~4 per identity per day so the profiler has\
+  \ a baseline.\n\n```\nvendor = duo\nproduct = duo\n_id                              = AUTH340118749696\n\
+  access_device.browser            = Chrome\naccess_device.browser_version    = 128.0.6613.120\naccess_device.epkey\
+  \              = EPKEY000000\naccess_device.hostname           = WS-2001.acme.local\naccess_device.ip\
+  \                 = 10.20.14.11\naccess_device.location.city      = Riyadh\naccess_device.location.country\
+  \   = Saudi Arabia\naccess_device.location.state     = Riyadh Province\naccess_device.os           \
+  \      = Windows\naccess_device.os_version         = 10.0.19045\nadaptive_trust_assessments       =\
+  \ {}\nalias                            = ahmed\napplication.key                  = DIAPP0001\napplication.name\
+  \                 = Microsoft 365\nauth_device.ip                   = 37.224.177.10\nauth_device.location.city\
+  \        = Riyadh\nauth_device.location.country     = Saudi Arabia\nauth_device.location.state     \
+  \  = Riyadh Province\nauth_device.name                 = +966579574505\nemail                      \
+  \      = ahmed.alharbi@example-isp.example\nevent_type                       = authentication\neventtype    \
+  \                    = authentication\nfactor                           = duo_push\nhost           \
+  \                  = api-3a1b2c4d.duosecurity.com\nood_software                     = \nreason     \
+  \                      = user_approved\nresult                           = success\ntxid           \
+  \                  = 39811786-tx\nuser.groups                      = Acme Employees\nuser.key       \
+  \                  = DUKEY000000\nuser.name                        = ahmed.alharbi\nusername       \
+  \                  = ahmed.alharbi\n```\n\n#### MFA denial — the reason taxonomy\n\nVary `reason` across\
+  \ the establish_reason ladder. It lands 10 distinct named outcome_reasons: mfa_failure, mfa_expired,\
+  \ user_reject, account_locked, account_expired_or_disabled, auth_policy_access_violation, device_security_issues,\
+  \ location_restricted, anomalous_push, anonymous_ip.\n\n```\nvendor = duo\nproduct = duo\n_id      \
+  \                        = AUTH155441759505\naccess_device.browser            = Chrome\naccess_device.browser_version\
+  \    = 128.0.6613.120\naccess_device.epkey              = EPKEY000000\naccess_device.hostname      \
+  \     = WS-2001.acme.local\naccess_device.ip                 = 10.20.14.11\naccess_device.location.city\
+  \      = Riyadh\naccess_device.location.country   = Saudi Arabia\naccess_device.location.state     =\
+  \ Riyadh Province\naccess_device.os                 = Windows\naccess_device.os_version         = 10.0.19045\n\
+  adaptive_trust_assessments       = {}\nalias                            = ahmed\napplication.key   \
+  \               = DIAPP0003\napplication.name                 = Workday\nauth_device.ip            \
+  \       = 37.224.83.104\nauth_device.location.city        = Riyadh\nauth_device.location.country   \
+  \  = Saudi Arabia\nauth_device.location.state       = Riyadh Province\nauth_device.name            \
+  \     = +966579574505\nemail                            = ahmed.alharbi@example-isp.example\nevent_type     \
+  \                  = authentication\neventtype                        = authentication\nfactor     \
+  \                      = duo_push\nhost                             = api-3a1b2c4d.duosecurity.com\n\
+  ood_software                     = \nreason                           = invalid_passcode\nresult   \
+  \                        = denied\ntxid                             = 33252920-tx\nuser.groups     \
+  \                 = Acme Employees\nuser.key                         = DUKEY000000\nuser.name       \
+  \                 = ahmed.alharbi\nusername                         = ahmed.alharbi\n```\n\n#### MFA\
+  \ fatigue / push bombing\n\nOne identity, one application, a burst of denied pushes with reason=no_response\
+  \ (-> mfa_expired) followed by a single success. Keep it inside one day.\n\n```\nvendor = duo\nproduct\
+  \ = duo\n_id                              = AUTH662392592729\naccess_device.browser            = Chrome\n\
+  access_device.browser_version    = 128.0.6613.120\naccess_device.epkey              = EPKEY000000\n\
+  access_device.hostname           = WS-2001.acme.local\naccess_device.ip                 = 10.20.14.11\n\
+  access_device.location.city      = Riyadh\naccess_device.location.country   = Saudi Arabia\naccess_device.location.state\
+  \     = Riyadh Province\naccess_device.os                 = Windows\naccess_device.os_version      \
+  \   = 10.0.19045\nadaptive_trust_assessments       = {}\nalias                            = ahmed\n\
+  application.key                  = DIAPP0001\napplication.name                 = Microsoft 365\nauth_device.ip\
+  \                   = 37.224.155.5\nauth_device.location.city        = Riyadh\nauth_device.location.country\
+  \     = Saudi Arabia\nauth_device.location.state       = Riyadh Province\nauth_device.name         \
+  \        = +966579574505\nemail                            = ahmed.alharbi@example-isp.example\nevent_type  \
+  \                     = authentication\neventtype                        = authentication\nfactor  \
+  \                         = duo_push\nhost                             = api-3a1b2c4d.duosecurity.com\n\
+  ood_software                     = \nreason                           = no_response\nresult        \
+  \                   = denied\ntxid                             = 71775850-tx\nuser.groups          \
+  \            = Acme Employees\nuser.key                         = DUKEY000000\nuser.name            \
+  \            = ahmed.alharbi\nusername                         = ahmed.alharbi\n```\n\n#### Impossible\
+  \ traveller\n\nSame identity, geographically impossible sequence. Duo carries access_device.location.*,\
+  \ so this is expressible here in a way microsoft_windows_raw cannot manage. One identity can span 4 distinct countries. Pair a far-country IP with reason=anonymous_ip to also raise xdm.alert.risks=['risky_signin'].\n\
+  \n```\nvendor = duo\nproduct = duo\n_id                              = AUTH826328167492\naccess_device.browser\
+  \            = Chrome\naccess_device.browser_version    = 128.0.6613.120\naccess_device.epkey      \
+  \        = EPKEY000000\naccess_device.hostname           = WS-2001.acme.local\naccess_device.ip     \
+  \            = 185.220.26.187\naccess_device.location.city      = Ho Chi Minh City\naccess_device.location.country\
+  \   = Vietnam\naccess_device.location.state     = Ho Chi Minh\naccess_device.os                 = Windows\n\
+  access_device.os_version         = 10.0.19045\nadaptive_trust_assessments       = {}\nalias        \
+  \                    = ahmed\napplication.key                  = DIAPP0005\napplication.name       \
+  \          = AWS Console\nauth_device.ip                   = 37.224.238.162\nauth_device.location.city\
+  \        = Ho Chi Minh City\nauth_device.location.country     = Vietnam\nauth_device.location.state\
+  \       = Ho Chi Minh\nauth_device.name                 = +966579574505\nemail                     \
+  \       = ahmed.alharbi@example-isp.example\nevent_type                       = authentication\neventtype   \
+  \                     = authentication\nfactor                           = duo_push\nhost          \
+  \                   = api-3a1b2c4d.duosecurity.com\nood_software                     = \nreason    \
+  \                       = anonymous_ip\nresult                           = success\ntxid           \
+  \                  = 48976145-tx\nuser.groups                      = Acme Employees\nuser.key       \
+  \                  = DUKEY000000\nuser.name                        = ahmed.alharbi\nusername       \
+  \                  = ahmed.alharbi\n```\n\n#### Fraud — user reported the push\n\nresult=fraud is the\
+  \ strongest single-event signal Duo emits: outcome FAILED plus xdm.alert.risks=['risky_signin'].\n\n\
+  ```\nvendor = duo\nproduct = duo\n_id                              = AUTH767356526380\naccess_device.browser\
+  \            = Chrome\naccess_device.browser_version    = 128.0.6613.120\naccess_device.epkey      \
+  \        = EPKEY000000\naccess_device.hostname           = WS-2001.acme.local\naccess_device.ip     \
+  \            = 10.20.14.11\naccess_device.location.city      = Riyadh\naccess_device.location.country\
+  \   = Saudi Arabia\naccess_device.location.state     = Riyadh Province\naccess_device.os           \
+  \      = Windows\naccess_device.os_version         = 10.0.19045\nadaptive_trust_assessments       =\
+  \ {}\nalias                            = ahmed\napplication.key                  = DIAPP0002\napplication.name\
+  \                 = Acme VPN\nauth_device.ip                   = 37.224.100.213\nauth_device.location.city\
+  \        = Riyadh\nauth_device.location.country     = Saudi Arabia\nauth_device.location.state     \
+  \  = Riyadh Province\nauth_device.name                 = +966579574505\nemail                      \
+  \      = ahmed.alharbi@example-isp.example\nevent_type                       = authentication\neventtype    \
+  \                    = authentication\nfactor                           = duo_push\nhost           \
+  \                  = api-3a1b2c4d.duosecurity.com\nood_software                     = \nreason     \
+  \                      = user_deny\nresult                           = fraud\ntxid                 \
+  \            = 32292004-tx\nuser.groups                      = Acme Employees\nuser.key             \
+  \            = DUKEY000000\nuser.name                        = ahmed.alharbi\nusername             \
+  \            = ahmed.alharbi\n```\n\n### 6. Value ladders that must match exactly\n\nThree fields drive\
+  \ long literal ladders. A value outside a ladder does not error — it falls\nthrough and the mapped field\
+  \ silently disappears or passes through raw.\n\n- **`factor`** -> `xdm.auth.mfa.method` verbatim, AND\
+  \ `establish_factor` ->\n  `xdm.event.operation_sub_type`, bucketing into voice / sms / application\
+  \ / hardware_token /\n  trusted_login / Generic SSO. Unmapped -> null.\n- **`reason`** -> `establish_reason`\
+  \ -> `xdm.event.outcome_reason`. Unmapped values fall\n  through to `to_string(reason)` and pass as-is.\
+  \ It ALSO decides\n  `xdm.event.operation`: `remembered_device` / `trusted_network` /\n  `authentication_trusted_by_risk_based_remembered_devices`\
+  \ -> `\"Login\"`, everything else\n  -> `\"MFA\"`.\n- **`result`** -> `xdm.event.outcome`. `success`\
+  \ -> SUCCESS; `failure` / `denied` / `fraud`\n  -> FAILED. `fraud` additionally sets `xdm.alert.risks=['risky_signin']`,\
+  \ as do the reasons\n  `location_restricted`, `anomalous_push` and `anonymous_ip`.\n\n### 7. Traps\n\n**`access_device.ip = \"0.0.0.0\"` nulls three fields.** The rule reads it as 'no\
+  \ real client'\nand blanks `xdm.event.type`, `xdm.source.port` and `xdm.target.port`. Never send it.\n\
+  \n**`_id` cannot be seeded.** The rule assigns `xdm.event.id = _id`, but `_id` is ingestion\nmeta —\
+  \ the broker stamps it (`/YhDF6WRU2jswETWc6QARA==:0:95:197`) and overwrites anything\nsent. A pinned `_id` does not survive while `txid` on the same event does.\nUnderscore-prefixed\
+  \ columns are broker-owned across every source.\n\n**`user.groups` cannot produce a clean array.** The\
+  \ rule reads it with the array accessor\n`user -> groups[]`, but the generator serialises every dotted\
+  \ leaf as a JSON STRING, so `[]`\nwraps that quoted string. Both a comma-joined value and a JSON array\
+  \ literal both come back as `['\"...\"']`. Send a single group name for the least-wrong\
+  \ result; a\ntrue multi-value array is not reachable over this path.\n\n**`email` must be `first.last@domain`.**\
+  \ The rule splits it to derive\n`xdm.source.user.first_name` / `.last_name`. Any other local-part shape\
+  \ produces wrong names.\nThe derived names come out LOWERCASE — that is the rule, not a defect.\n\n\
+  **Declare the smallest field set that works.** 33 fields cover the whole authentication\nblock. Declaring\
+  \ all 51 drags the administrator- and telephony-only columns into an\nauthentication event, where the\
+  \ generator synthesises them as noise.\n\n### 8. What this source unlocks that Windows cannot\n\n`microsoft_windows_raw`\
+  \ maps 11 of the 12 fields Cortex documents as mandatory for an\nauthentication story but emits neither\
+  \ `EVENT_TAG_AUTHENTICATION` nor `xdm.source.user.upn`,\nso it can never populate `auth_identity`. Duo\
+  \ emits both. Of the ten modeling rules in this\nbundle that carry the authentication tag, **Duo is the validated one** —\nthe other nine have no dataset unless their packs are installed.\n\nCaveat worth stating plainly: emitting a correct authentication story is NOT sufficient\
+  \ for\nIdentity Analytics detectors to fire. Those are gated on a Cloud Identity Engine directory\n\
+  pairing that populates `pan_dss_raw` (empty unless a real directory is paired, and not seedable).\nConsequence: Duo maps all 12 mandatory fields and still fires none of its 21 detectors.\nWhat this data\
+  \ reliably supports is XDM normalization, XQL hunting, dashboards, the\nauthentication story itself,\
+  \ and correlation rules — which need no module and no training."
+validated: true

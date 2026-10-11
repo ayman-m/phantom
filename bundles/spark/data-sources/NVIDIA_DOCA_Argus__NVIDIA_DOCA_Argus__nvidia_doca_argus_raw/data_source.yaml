@@ -1,0 +1,283 @@
+schema_version: 1
+id: NVIDIA_DOCA_Argus
+pack_name: NVIDIA_DOCA_Argus
+rule_name: NVIDIA_DOCA_Argus
+dataset_name: nvidia_doca_argus_raw
+vendor: NVIDIA
+product: NVIDIA_DOCA_Argus
+description: This pack provides Modeling Rules to parse and map NVIDIA DOCA Argus
+  logs to the Cortex Data Model (XDM)
+categories:
+- Analytics & SIEM
+- Network Security
+version: 1.0.3
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iOThweCIgdmlld0JveD0iMCAwIDUxMiA5OCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDx0aXRsZT5OdmlkaWE8L3RpdGxlPgogICAgPGc+CiAgICAgICAgPHBhdGggZD0iTTMxMi44MDQ3MzQsMTguMzkzOTEzOCBMMzEyLjgwNDczNCw4Mi4yMzE2MTQ1IEwzMzAuODE5OTQ5LDgyLjIzMTYxNDUgTDMzMC44MTk5NDksMTguMzkzOTEzOCBMMzEyLjgwNDczNCwxOC4zOTM5MTM4IFogTTE3MS4wNjMzOTgsMTguMjg1NzE0MyBMMTcxLjA2MzM5OCw4Mi4xNzc1MTQ4IEwxODkuMjQwOTEzLDgyLjE3NzUxNDggTDE4OS4yNDA5MTMsMzIuNTY4MDQ3MyBMMjAzLjQxNTA0NiwzMi42MjIxNDcxIEMyMDguMDY3NjI1LDMyLjYyMjE0NzEgMjExLjMxMzYwOSwzMy43NTgyNDE4IDIxMy41MzE2OTksMzYuMTM4NjMwNiBDMjE2LjM5ODk4NiwzOS4xNjgyMTY0IDIxNy41MzUwOCw0NC4wOTEyOTMzIDIxNy41MzUwOCw1My4wMTc3NTE1IEwyMTcuNTM1MDgsODIuMTc3NTE0OCBMMjM1LjE3MTU5OCw4Mi4xNzc1MTQ4IEwyMzUuMTcxNTk4LDQ2LjkwNDQ4MDEgQzIzNS4xNzE1OTgsMjEuNjkzOTk4MyAyMTkuMTAzOTczLDE4LjI4NTcxNDMgMjAzLjQxNTA0NiwxOC4yODU3MTQzIEwxNzEuMDYzMzk4LDE4LjI4NTcxNDMgTDE3MS4wNjMzOTgsMTguMjg1NzE0MyBaIE0zNDEuODU2Mjk4LDE4LjM5MzkxMzggTDM0MS44NTYyOTgsODIuMjMxNjE0NSBMMzcxLjA3MDE2MSw4Mi4yMzE2MTQ1IEMzODYuNjUwODg4LDgyLjIzMTYxNDUgMzkxLjczNjI2NCw3OS42MzQ4MjY3IDM5Ny4yMDAzMzgsNzMuODQ2MTUzOCBDNDAxLjA5NTUyLDY5Ljc4ODY3MjkgNDAzLjU4NDEwOCw2MC44MDgxMTUgNDAzLjU4NDEwOCw1MS4wMTYwNjA5IEM0MDMuNTg0MTA4LDQyLjAzNTUwMyA0MDEuNDc0MjE4LDM0LjAyODc0MDUgMzk3Ljc0MTMzNiwyOS4wNTE1NjM4IEMzOTEuMTQxMTY3LDIwLjEyNTEwNTcgMzgxLjUxMTQxMiwxOC4zOTM5MTM4IDM2Ny4xMjA4NzksMTguMzkzOTEzOCBMMzQxLjg1NjI5OCwxOC4zOTM5MTM4IEwzNDEuODU2Mjk4LDE4LjM5MzkxMzggWiBNMzU5LjcwOTIxNCwzMi4yNDM0NDg5IEwzNjcuNDQ1NDc4LDMyLjI0MzQ0ODkgQzM3OC42OTgyMjUsMzIuMjQzNDQ4OSAzODUuOTQ3NTkxLDM3LjI3NDcyNTMgMzg1Ljk0NzU5MSw1MC4zNjY4NjM5IEMzODUuOTQ3NTkxLDYzLjQ1OTAwMjUgMzc4LjY5ODIyNSw2OC41NDQzNzg3IDM2Ny40NDU0NzgsNjguNTQ0Mzc4NyBMMzU5LjcwOTIxNCw2OC41NDQzNzg3IEwzNTkuNzA5MjE0LDMyLjI0MzQ0ODkgWiBNMjg2LjgzNjg1NSwxOC4zOTM5MTM4IEwyNzEuNzk3MTI2LDY4Ljk3NzE3NjcgTDI1Ny40MDY1OTMsMTguMzkzOTEzOCBMMjM3LjkzMDY4NSwxOC4zOTM5MTM4IEwyNTguNDg4NTg4LDgyLjIzMTYxNDUgTDI4NC40NTY0NjcsODIuMjMxNjE0NSBMMzA1LjIzMDc2OSwxOC4zOTM5MTM4IEwyODYuODM2ODU1LDE4LjM5MzkxMzggTDI4Ni44MzY4NTUsMTguMzkzOTEzOCBaIE00MTIuMDIzNjY5LDgyLjIzMTYxNDUgTDQzMC4wMzg4ODQsODIuMjMxNjE0NSBMNDMwLjAzODg4NCwxOC4zOTM5MTM4IEw0MTIuMDIzNjY5LDE4LjM5MzkxMzggTDQxMi4wMjM2NjksODIuMjMxNjE0NSBaIE00NjIuNTUyODMyLDE4LjM5MzkxMzggTDQzNy4zOTY0NSw4Mi4xNzc1MTQ4IEw0NTUuMTQxMTY3LDgyLjE3NzUxNDggTDQ1OS4xNDQ1NDgsNzAuODcwNjY3OCBMNDg4Ljg5OTQwOCw3MC44NzA2Njc4IEw0OTIuNjg2MzkxLDgyLjEyMzQxNSBMNTEyLDgyLjEyMzQxNSBMNDg2LjYyNzIxOSwxOC4zOTM5MTM4IEw0NjIuNTUyODMyLDE4LjM5MzkxMzggTDQ2Mi41NTI4MzIsMTguMzkzOTEzOCBaIE00NzQuMjM4Mzc3LDMwLjAyNTM1OTMgTDQ4NS4xNjY1MjYsNTkuODg4NDE5MyBMNDYyLjk4NTYzLDU5Ljg4ODQxOTMgTDQ3NC4yMzgzNzcsMzAuMDI1MzU5MyBaIiBmaWxsPSIjMDAwMDAwIj48L3BhdGg+CiAgICAgICAgPHBhdGggZD0iTTU0LjgwMzA0MzEsMjguOTk3NDY0MSBMNTQuODAzMDQzMSwyMC4yMzMzMDUyIEM1NS42Njg2MzkxLDIwLjE3OTIwNTQgNTYuNTM0MjM1LDIwLjEyNTEwNTcgNTcuMzk5ODMwOSwyMC4xMjUxMDU3IEM4MS40MjAxMTgzLDE5LjM2NzcwOTIgOTcuMTYzMTQ0NSw0MC43OTEyMDg4IDk3LjE2MzE0NDUsNDAuNzkxMjA4OCBDOTcuMTYzMTQ0NSw0MC43OTEyMDg4IDgwLjE3NTgyNDIsNjQuMzc4Njk4MiA2MS45NDQyMDk2LDY0LjM3ODY5ODIgQzU5LjUwOTcyMSw2NC4zNzg2OTgyIDU3LjEyOTMzMjIsNjQgNTQuODU3MTQyOSw2My4yNDI2MDM2IEw1NC44NTcxNDI5LDM2LjYyNTUyODMgQzY0LjIxNjM5OSwzNy43NjE2MjMgNjYuMTA5ODkwMSw0MS44NzMyMDM3IDcxLjY4MjE2NCw1MS4yMzI0NTk4IEw4NC4xNzkyMDU0LDQwLjczNzEwOSBDODQuMTc5MjA1NCw0MC43MzcxMDkgNzUuMDM2MzQ4MywyOC43ODEwNjUxIDU5LjY3MjAyMDMsMjguNzgxMDY1MSBDNTguMDQ5MDI3OSwyOC43MjY5NjUzIDU2LjQyNjAzNTUsMjguODM1MTY0OCA1NC44MDMwNDMxLDI4Ljk5NzQ2NDEgTTU0LjgwMzA0MzEsMCBMNTQuODAzMDQzMSwxMy4wOTIxMzg2IEw1Ny4zOTk4MzA5LDEyLjkyOTgzOTQgQzkwLjc3OTM3NDUsMTEuNzkzNzQ0NyAxMTIuNTgxNTcyLDQwLjMwNDMxMTEgMTEyLjU4MTU3Miw0MC4zMDQzMTExIEMxMTIuNTgxNTcyLDQwLjMwNDMxMTEgODcuNTg3NDg5NCw3MC43MDgzNjg2IDYxLjU2NTUxMTQsNzAuNzA4MzY4NiBDNTkuMjkzMzIyMSw3MC43MDgzNjg2IDU3LjA3NTIzMjUsNzAuNDkxOTY5NiA1NC44NTcxNDI5LDcwLjExMzI3MTMgTDU0Ljg1NzE0MjksNzguMjI4MjMzMyBDNTYuNjk2NTM0Miw3OC40NDQ2MzIzIDU4LjU5MDAyNTQsNzguNjA2OTMxNSA2MC40Mjk0MTY3LDc4LjYwNjkzMTUgQzg0LjY2NjEwMzEsNzguNjA2OTMxNSAxMDIuMTk0NDIxLDY2LjIxODA4OTYgMTE5LjE4MTc0MSw1MS42MTExNTgxIEMxMjEuOTk0OTI4LDUzLjg4MzM0NzQgMTMzLjUxODE3NCw1OS4zNDc0MjE4IDEzNS44OTg1NjMsNjEuNzI3ODEwNyBDMTE5Ljc3NjgzOSw3NS4yNTI3NDczIDgyLjE3NzUxNDgsODYuMTI2Nzk2MyA2MC44NjIyMTQ3LDg2LjEyNjc5NjMgQzU4LjgwNjQyNDMsODYuMTI2Nzk2MyA1Ni44NTg4MzM1LDg2LjAxODU5NjggNTQuOTExMjQyNiw4NS44MDIxOTc4IEw1NC45MTEyNDI2LDk3LjIxNzI0NDMgTDE0Ni45ODkwMTEsOTcuMjE3MjQ0MyBMMTQ2Ljk4OTAxMSwwIEw1NC44MDMwNDMxLDAgTDU0LjgwMzA0MzEsMCBaIE01NC44MDMwNDMxLDYzLjI0MjYwMzYgTDU0LjgwMzA0MzEsNzAuMTY3MzcxMSBDMzIuNDA1NzQ4MSw2Ni4xNjM5ODk5IDI2LjE4NDI3NzMsNDIuODQ2OTk5MiAyNi4xODQyNzczLDQyLjg0Njk5OTIgQzI2LjE4NDI3NzMsNDIuODQ2OTk5MiAzNi45NTAxMjY4LDMwLjk0NTA1NDkgNTQuODAzMDQzMSwyOC45OTc0NjQxIEw1NC44MDMwNDMxLDM2LjU3MTQyODYgTDU0Ljc0ODk0MzQsMzYuNTcxNDI4NiBDNDUuMzg5Njg3MiwzNS40MzUzMzM5IDM4LjAzMjEyMTcsNDQuMTk5NDkyOCAzOC4wMzIxMjE3LDQ0LjE5OTQ5MjggQzM4LjAzMjEyMTcsNDQuMTk5NDkyOCA0Mi4xOTc4MDIyLDU4Ljk2ODcyMzYgNTQuODAzMDQzMSw2My4yNDI2MDM2IE0xNS4wMzk3Mjk1LDQxLjg3MzIwMzcgQzE1LjAzOTcyOTUsNDEuODczMjAzNyAyOC4yOTQxNjc0LDIyLjI4OTA5NTUgNTQuODU3MTQyOSwyMC4yMzMzMDUyIEw1NC44NTcxNDI5LDEzLjA5MjEzODYgQzI1LjQyNjg4MDgsMTUuNDcyNTI3NSAwLDQwLjM1ODQxMDggMCw0MC4zNTg0MTA4IEMwLDQwLjM1ODQxMDggMTQuMzkwNTMyNSw4Mi4wMTUyMTU2IDU0LjgwMzA0MzEsODUuODAyMTk3OCBMNTQuODAzMDQzMSw3OC4yMjgyMzMzIEMyNS4xNTYzODIxLDc0LjU0OTQ1MDUgMTUuMDM5NzI5NSw0MS44NzMyMDM3IDE1LjAzOTcyOTUsNDEuODczMjAzNyBaIiBmaWxsPSIjNzZCOTAwIj48L3BhdGg+CiAgICA8L2c+Cjwvc3ZnPgo=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: activity_data
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: name (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: bluefield_network_interface_ipv4_address
+  type: ipv4
+  description: BlueField network interface IPv4. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: bluefield_network_interface_ipv6_address
+  type: ipv4
+  description: BlueField network interface IPv6. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: bluefield_network_interface_mac_address
+  type: ipv4
+  description: BlueField network interface MAC. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: bluefield_network_interface_name
+  type: string
+  description: BlueField network interface name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: bluefield_system_information
+  type: string
+  description: BlueField system information (JSON). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_information
+- name: destination_ip_address
+  type: ipv4
+  description: Destination address of the connection target. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: destination_port
+  type: integer
+  description: Destination TCP/UDP port. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: message_id
+  type: string_short
+  description: Opaque identifier emitted by NVIDIA. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: nvi-1f0003ac
+- name: message_type
+  type: string_short
+  description: Type/category classifier emitted by NVIDIA. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: name
+  type: string
+  description: Human-readable name as displayed by NVIDIA. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: network_connection_details
+  type: string
+  description: Network connection details (JSON). Free-form text; may contain whitespace
+    and punctuation.
+  example: see message
+- name: occurred_message_time_iso_8601_ns
+  type: string
+  description: Event time (ISO-8601 with nanoseconds). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_ns
+- name: os_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: process_command_line_arguments
+  type: string_long
+  description: Process command-line as launched (executable + arguments). Free-form
+    text; may span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by NVIDIA for this record.
+- name: process_details
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: process_command_line_arguments,
+    process_execution_path, process_hash_md5, process_hash_sha256, process_name (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: process_execution_path
+  type: string
+  description: Source process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: /var/log/app.log
+- name: process_hash_md5
+  type: hash_md5
+  description: MD5 digest of the artifact. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: process_hash_sha256
+  type: hash_sha256
+  description: Source process executable SHA256. 64-character lowercase hex SHA-256
+    digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: process_name
+  type: file_path
+  description: Source process executable filename. Absolute filesystem path; vendor-native
+    separator (forward slash on POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: product_name
+  type: string
+  description: Human-readable name as displayed by NVIDIA. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: product_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: protocol
+  type: string
+  description: Network protocol name or numeric IANA assignment. Free-form text; may
+    contain whitespace and punctuation.
+  example: tcp
+- name: severity
+  type: string
+  description: Event severity as classified by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: INFO
+- name: source_ip_address
+  type: ipv4
+  description: Source address of the connection initiator. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: source_port
+  type: integer
+  description: Source TCP/UDP port. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: unique_identifier
+  type: string
+  description: Vendor-emitted field 'Unique identifier'. Free-form text; may contain
+    whitespace and punctuation.
+  example: ext-a739ef2b-d4f
+- name: vendor_name
+  type: string
+  description: Human-readable name as displayed by NVIDIA. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: workload_information
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: unique_identifier
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: workload_network_interface_ipv4_address
+  type: ipv4
+  description: Workload network interface IPv4. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: workload_network_interface_ipv6_address
+  type: ipv4
+  description: Vendor-emitted field 'Workload network interface ipv6 address'. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: workload_network_interface_mac_address
+  type: ipv4
+  description: Workload network interface MAC. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: workload_network_interface_name
+  type: string
+  description: Workload network interface name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: activity_data.name
+  type: string
+  description: Human-readable name as displayed by NVIDIA. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: process_details.process_command_line_arguments
+  type: string_long
+  description: Process command-line as launched (executable + arguments). Free-form
+    text; may span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by NVIDIA for this record.
+- name: process_details.process_execution_path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/app.log
+- name: process_details.process_hash_md5
+  type: hash_md5
+  description: MD5 digest of the artifact. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: process_details.process_hash_sha256
+  type: hash_sha256
+  description: SHA-256 digest of the artifact. 64-character lowercase hex SHA-256
+    digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: process_details.process_name
+  type: string
+  description: File or process name reported by the vendor. Leaf of the 'process_details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: workload_information.unique_identifier
+  type: string
+  description: Vendor-emitted field 'Workload information › unique identifier'. Leaf
+    of the 'workload_information' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: ext-c71cdb7d-01e
+use_cases:
+- Endpoint
+how_to_use: |
+  ## nvidia doca argus → Cortex XSIAM (dataset `nvidia_doca_argus_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `nvidia_doca_argus_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `nvidia`
+    - **product**: `doca_argus`
+
+    These normalize → `nvidia_doca_argus_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `activity_data -> name`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~23 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.event.description`, `xdm.event.id`, `xdm.event.log_level`, `xdm.event.operation`, `xdm.event.operation_sub_type`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = nvidia_doca_argus_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

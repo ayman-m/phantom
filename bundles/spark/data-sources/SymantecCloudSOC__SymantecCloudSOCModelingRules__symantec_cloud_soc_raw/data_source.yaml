@@ -1,0 +1,163 @@
+schema_version: 1
+id: SymantecCloudSOC
+pack_name: SymantecCloudSOC
+rule_name: SymantecCloudSOCModelingRules
+dataset_name: symantec_cloud_soc_raw
+vendor: Symantec
+product: SymantecCloudSOC
+description: This is the Symantec CloudSOC event collector integration for XSIAM
+categories:
+- Analytics & SIEM
+version: 1.0.15
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+U3ltYW50ZWM8L3RpdGxlPjxwYXRoIGQ9Ik0yMi44NzcgMHYuNzM4aC43MzhWMGgtLjczOHptMCAuNzM4aC0uNzM4di43MzloLjczOFYuNzM4em0wIC43Mzl2LjczOGguNzM4di0uNzM4aC0uNzM4em0tLjczOCAwaC0xLjQ3N3YuNzM4aC0uNzM4VjMuNjloLS43Mzh2Ljc0aC0xLjQ3OXYuNzI1QTEwLjU3MiAxMC41NzIgMCAwMDExIDIuNzdDNS4xMzYgMi43Ny4zODUgNy41Mi4zODUgMTMuMzg1LjM4NSAxOS4yNDggNS4xMzYgMjQgMTEgMjRzMTAuNjE1LTQuNzUyIDEwLjYxNS0xMC42MTVjMC0yLjU2LS45MDQtNC45MDYtMi40MTItNi43MzloLjcydi0uNzM4aC43NFY0LjQzaC43MzdWMy42OWguNzM5di0uNzM4SDIxLjR2LS43MzhoLjczOXYtLjczOHpNMTkuMTg2IDMuNjl2LS43MzhoLS43NHYuNzM4aC43NHpNMTEgNi4xNTRhNy4xOTMgNy4xOTMgMCAwMTQuMDMzIDEuMjNoLS4yOHYuNzM5aC0uNzM3Yy0xLjkyNyAyLjQwOS0yLjQxNCAzLjQ2Ni0zLjE4MiA1LjQxNC0uODcxLTEuNzYzLTEuOTExLTIuOTc4LTMuNzExLTMuNzgzbC0uMDItLjAwNmMtLjMyNy0uMDgzLS40OTMtLjEyNS0uNzE4LjE5LS4yMy4zMjItLjA5Mi42MTMuMTgzLjk1NWEzNS4yMTIgMzUuMjEyIDAgMDAuNTg2LjcwM2MuNTQ3LjY0NiAxLjA5NSAxLjI4OSAxLjUwOCAyLjAzNS40MDguNzM4Ljg3NyAxLjc3MiAxLjI0MiAyLjU3NC4yMjMuNDkuNDA2Ljg5NC41MSAxLjA4OC4yMi40MDYuNzUyLjU4NC45NTUuNTg0Ljk4NS0uMTE3IDEuMDgtLjU4MiAxLjI0Mi0xLjM3OWwuMDU3LS4yNjRjLjMzNi0xLjU3NC43NzEtMy4yMDMgMi44MjQtNS4xNTh2LS43MzZoLjczOFY5LjZoLjc0di0uMjk1YTcuMTkzIDcuMTkzIDAgMDExLjI2IDQuMDhjMCAzLjk5LTMuMjQgNy4yMy03LjIzIDcuMjNzLTcuMi0zLjI0LTcuMi03LjIzIDMuMjEtNy4yMyA3LjItNy4yM3oiLz48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: activity_type
+  type: string_short
+  description: Type/category classifier emitted by Symantec. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: browsers
+  type: string
+  description: Vendor-emitted field 'Browsers'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_browsers
+- name: city
+  type: string
+  description: Vendor-emitted field 'City'. Free-form text; may contain whitespace
+    and punctuation.
+  example: San Francisco
+- name: country
+  type: string_short
+  description: Country (ISO 3166-1 alpha-2 code or descriptive label). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: US
+- name: devices
+  type: string
+  description: Vendor-emitted field 'Devices'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_devices
+- name: host
+  type: host
+  description: Hostname or FQDN as reported by Symantec. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: hosts
+  type: string
+  description: Vendor-emitted field 'Hosts'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_hosts
+- name: latitude
+  type: float
+  description: Vendor-emitted field 'Latitude'. Decimal number with optional fractional
+    part; bare digits with optional minus and decimal point.
+  example: '3.14'
+- name: locations
+  type: string
+  description: Vendor-emitted field 'Locations'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_locations
+- name: longitude
+  type: float
+  description: Vendor-emitted field 'Longitude'. Decimal number with optional fractional
+    part; bare digits with optional minus and decimal point.
+  example: '3.14'
+- name: object_type
+  type: string_short
+  description: Type/category classifier emitted by Symantec. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: service
+  type: string
+  description: Vendor-emitted field 'Service'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sshd
+- name: severity
+  type: string
+  description: Event severity as classified by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: INFO
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by Symantec. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: user
+  type: string
+  description: User account associated with the event. Free-form text; may contain
+    whitespace and punctuation.
+  example: jdoe
+- name: user_name
+  type: user
+  description: Human-readable name as displayed by Symantec. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+use_cases:
+- AV
+- EDR
+- Email
+- DLP
+- CASB
+how_to_use: |
+  ## Symantec SymantecCloudSOC → Cortex XSIAM (dataset `symantec_cloud_soc_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `symantec_cloud_soc_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `symantec_cloud_soc`. The marketplace pack's display name `Symantec` / `SymantecCloudSOC` normalizes to `symantec_symanteccloudsoc_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `symantec_cloud_soc` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~14 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.event.operation_sub_type`, `xdm.event.type`, `xdm.network.http.browser`, `xdm.source.host.hostname`, `xdm.source.host.ipv4_addresses`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = symantec_cloud_soc_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

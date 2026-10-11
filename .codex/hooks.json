@@ -1,0 +1,24 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 '/home/user/Documents/Projects/Phantom/.codex/hooks/session_start_context.py'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 '/home/user/Documents/Projects/Phantom/.codex/hooks/propose_claude_md.py'"
+          }
+        ]
+      }
+    ]
+  }
+}

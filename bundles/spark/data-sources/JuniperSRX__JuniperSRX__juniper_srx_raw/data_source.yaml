@@ -1,0 +1,410 @@
+schema_version: 1
+id: JuniperSRX
+pack_name: JuniperSRX
+rule_name: JuniperSRX
+dataset_name: juniper_srx_raw
+vendor: Juniper
+product: JuniperSRX
+description: Modeling Rules for the JuniperSRX logs collector
+categories:
+- Analytics & SIEM
+version: 1.0.18
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+SnVuaXBlciBOZXR3b3JrczwvdGl0bGU+PHBhdGggZD0iTTIzLjA4NjQgMTMuMTY0M2MuMDQ1NiAwIC4wNzE3LS4wMTMyLjA3MTctLjA2MiAwLS4wNDgyLS4wMjU0LS4wNTkzLS4wNzMxLS4wNTkzaC0uMTAyM3YuMTIxM3ptLS4xMDM3LjA0MTd2LjEyODVoLS4wNDQ1di0uMzM0aC4xNDg3Yy4wODQ2IDAgLjExNzIuMDM0Ny4xMTcyLjEwMDYgMCAuMDU0LS4wMjI5LjA5MTItLjA4MDYuMTAybC4wNzU1LjEzMTRoLS4wNDg0bC0uMDc0Ni0uMTI4NXptLjA3NDYtLjI5MThhLjI1MzUuMjUzNSAwIDAgMC0uMjUzMy4yNTMxYzAgLjEzOTUuMTEzNi4yNTMyLjI1MzMuMjUzMmEuMjUzNS4yNTM1IDAgMCAwIC4yNTMtLjI1MzIuMjUzNC4yNTM0IDAgMCAwLS4yNTMtLjI1MzF6bS0uMjkxLjI1MzFhLjI5MTIuMjkxMiAwIDAgMSAuMjkxLS4yOTA4LjI5MS4yOTEgMCAwIDEgLjI5MDUuMjkwOC4yOTEuMjkxIDAgMCAxLS4yOTA1LjI5MDcuMjkxMi4yOTEyIDAgMCAxLS4yOTEtLjI5MDd6bS0yMC43NDQ1LS42NjAyVjguODMwNGgtLjQyMTJ2My42NzY3YzAgLjg1MDYuMDMzNyAxLjUzMzItMS40NDA0IDEuNTMzMkE0LjAyOSA0LjAyOSAwIDAgMSAwIDE0LjAzNjl2LjM5N2E2LjIxNSA2LjIxNSAwIDAgMCAuMTYwMi4wMDIyYzEuNzg1OCAwIDEuODYxNi0uODAwMiAxLjg2MTYtMS45Mjl6bTE1LjU0MDQtMS42OTcyaDMuMTMzNGMtLjA0Mi0uOTE4LS4xMDExLTEuNzAxNC0xLjQ0MDQtMS43MDE0LTEuMjg4NyAwLTEuNjQyNS42OTkyLTEuNjkzIDEuNzAxNHptMS43MDE2LTIuMDg4OWMxLjc5NCAwIDEuODUzIDEuMjA0NSAxLjg0NDcgMi40NzY0aC0zLjU1NDhjLjAwODUgMS4xMjA0LjI4NjMgMS45NTQ0IDEuNzQzNiAxLjk1NDQuNzc1IDAgMS4xMjg4LS4yMTA3IDEuNTA3OS0uNDg4NmwuMjM1Ny4zMTE2Yy0uNDIxLjMxMTctLjkxOC41NTYtMS43NDM2LjU1Ni0xLjgxOTQgMC0yLjE1NjUtMS4wNTMtMi4xNTY1LTIuNDA5MSAwLTEuMzU2LjM4NzctMi40MDA3IDIuMTIzLTIuNDAwN3ptLTQuMTQ4NCAyLjcwNTVjLjc0MzkgMCAxLjExMzUtLjM2MjUgMS4xMTM1LTEuMDk0OSAwLS43MzIyLS4zOTg4LTEuMDc5OC0xLjEzMi0xLjA3OThoLTEuNzI4NXYyLjE3NDd6TTE1LjEwOSA4LjgzOWMxLjA2NzggMCAxLjU1MTkuNTMwNyAxLjU1MTkgMS40NzQgMCAuOTQ5Ny0uNDc4IDEuNTI3LTEuNTU3OCAxLjUyN2gtMS43MzQ4djEuNTk4MWgtLjQxMjRWOC44Mzl6bS0yLjkyNTMgMHY0LjU5OTFoLS40MTIyVjguODM5em0tMS4xOTM5IDQuNTk5MWgtLjQyOTZ2LTIuODEzNGMwLS44MDg2LjAwODQtMS40OTEtMS40NzQtMS40OTEtMS40NzQzIDAtMS40NDA1LjY4MjQtMS40NDA1IDEuNTMzMXYyLjc3MTNoLS40MjEydi0yLjc3MTNjMC0xLjEyODguMDc2LTEuOTI4OSAxLjg2MTYtMS45Mjg5IDEuNzk0MyAwIDEuOTAzNy44MDAxIDEuOTAzNyAxLjg5NTJ6TTIuNzQ2NiA4LjgzMDRoLjQyOTd2Mi44MTM0YzAgLjgwODgtLjAwODQgMS40OTEgMS40NzQgMS40OTEgMS40NzQyIDAgMS40NDA1LS42ODIyIDEuNDQwNS0xLjUzM1Y4LjgzMDNoLjQyMTJ2Mi43NzEzYzAgMS4xMjg5LS4wNzU5IDEuOTI5LTEuODYxNiAxLjkyOS0xLjc5NDMgMC0xLjkwMzgtLjgwMDEtMS45MDM4LTEuODk1MnptMTguOTY3NSAxLjgzNjR2Mi43NzEzaC40MjF2LTIuNzcxM2MwLS44NTA3LS4wMzM2LTEuNTMzIDEuNDQwNy0xLjUzMy4xNTc5IDAgLjI5OC4wMDgzLjQyNDIuMDIzdi0uNDAxMmE0Ljg1MzUgNC44NTM1IDAgMCAwLS40MjQyLS4wMTc3Yy0xLjc4NTkgMC0xLjg2MTcuODAwMS0xLjg2MTcgMS45Mjl6bS0uNDMxNSA0LjM2MDJjLjE1MjUuMDk2LjMwMTcuMTI4Ni40NTQyLjEyODYuMjYyNCAwIC4zNzg5LS4wNzM3LjM3ODktLjI0ODYgMC0uMTgtLjE1MDgtLjIwNTctLjM3ODktLjI0NjgtLjI3NDMtLjA0OC0uNDU5NC0uMDk0NC0uNDU5NC0uMzUxNCAwLS4yNDUzLjE1NzctLjM0MTMuNDU5NC0uMzQxMy4xOTkgMCAuMzQxMi4wNDQ3LjQ0MjMuMTEzMmwtLjA3Mi4xMDk3Yy0uMDkwOC0uMDYtLjIyNjMtLjA5OTUtLjM3MDMtLjA5OTUtLjIyOCAwLS4zMjU3LjA2MzYtLjMyNTcuMjE0NCAwIC4xNjEyLjEzMi4xOTIuMzU4NC4yMzMuMjc3Ni4wNDk5LjQ3ODIuMDkxLjQ3ODIuMzYzNSAwIC4yNTIxLS4xNjEyLjM3MzctLjUwNzQuMzczNy0uMTkyIDAtLjM2NTItLjAzOTMtLjUyNjMtLjE0NTZ6bS0uNzg4Ni0uNDQyM2wtLjI1MzguMjc3N3YuMzk2aC0uMTMydi0xLjI3MDNoLjEzMnYuNzAxMmwuNjQzLS43MDEyaC4xNTZsLS40NTYuNDk4OS41MTc2Ljc3MTVoLS4xNTI1bC0uNDU0My0uNjczOG0tMS4xMDA2LjAzMjZjLjE4IDAgLjI5MTQtLjA1NDkuMjkxNC0uMjU1NSAwLS4xOTcxLS4xMDgtLjI0ODUtLjI5NjUtLjI0ODVoLS40MTMydi41MDR6bS0uMDM3Ny4xMjM0aC0uMzgwNnYuNTE3OGgtLjEzMlYxMy45ODhoLjU0ODZjLjI5NDggMCAuNDI4Ni4xMTgzLjQyODYuMzcwMyAwIC4yMTk0LS4xMDQ2LjM0OC0uMzI1OC4zNzdsLjMwNjguNTIzaC0uMTQzOWwtLjMwMTctLjUxNzdtLS45MjQtLjExNjZjMC0uMzQyOS0uMTU5NC0uNTI4LS41MDU4LS41MjgtLjM0NDYgMC0uNTAyMy4xODUxLS41MDIzLjUyOCAwIC4zNDQ2LjE1NzcuNTI5OC41MDIzLjUyOTguMzQ2NCAwIC41MDU4LS4xODUyLjUwNTgtLjUyOTh6bS0uNTA1OC0uNjU2NmMuNDA4IDAgLjY0MTIuMjAyNC42NDEyLjY1NSAwIC40NTQyLS4yMzMyLjY1NjUtLjY0MTIuNjU2NS0uNDA2MyAwLS42Mzc3LS4yMDIzLS42Mzc3LS42NTY2IDAtLjQ1MjUuMjMxNC0uNjU0OS42Mzc3LS42NTQ5em0tMi4zNTcxLjAyMDZsLjMzNDIgMS4wNTA4LjM0MTItMS4wNTA4aC4xMTY2bC4zMzk0IDEuMDUwOC4zMzYtMS4wNTA4aC4xMzAzbC0uNDA4IDEuMjc4OWgtLjExNjVsLS4zNDMtMS4wNTc3LS4zNDEgMS4wNTc3aC0uMTE4M2wtLjQwOTgtMS4yNzg5em0tMS4zOTIuMTI4NnYtLjEyODZoMS4wODg2di4xMjg2aC0uNDc2NnYxLjE0MThoLS4xMzU1di0xLjE0MTh6bS0uMjA0LS4xMjg2di4xMjg2aC0uNzA0NnYuNDJoLjY4NzR2LjEyN2gtLjY4NzR2LjQ3MTNoLjcxMTR2LjEyMzVoLS44NDY4VjEzLjk4OHptLTIuMDUzOSAwbC43NTk2IDEuMDQ3NVYxMy45ODhoLjEzMDN2MS4yNzA0aC0uMTIzNWwtLjc4MzUtMS4wNzg0djEuMDc4NGgtLjEzMDNWMTMuOTg4WiIvPjwvc3ZnPg==
+  source: simpleicons:junipernetworks
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'juniper: junipersrx=JuniperSRX action=allow user=jdoe'
+- name: action_temp1
+  type: string
+  description: Observer action. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp1
+- name: action_temp2
+  type: string
+  description: Action temp2. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp2
+- name: alert_severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: application
+  type: string
+  description: Destination application name. Free-form text; may contain whitespace
+    and punctuation.
+  example: Salesforce
+- name: application_name
+  type: string
+  description: Application name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: attack_name
+  type: string
+  description: Alert original threat name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: current_directory
+  type: string
+  description: Source process executable directory. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_directory
+- name: destination_adderss_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: destination_address
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: destination_interface_name
+  type: string
+  description: Destination interface name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: destination_ip_temp
+  type: string
+  description: Destination ip temp. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp
+- name: destination_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: destination_port_temp
+  type: integer_port
+  description: Destination port temp. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: destination_zone_name
+  type: string
+  description: Destination zone. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: event_type
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: event_type_temp2
+  type: string
+  description: Event type temp2. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp2
+- name: event_type_temp3
+  type: string
+  description: Event type temp3. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp3
+- name: event_type_temp4
+  type: string
+  description: Event type temp4. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp4
+- name: event_type_temp5
+  type: string
+  description: Event type temp5. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp5
+- name: hostname_temp1
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: hostname_temp2
+  type: host
+  description: Hostname temp2. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: hostname_temp3
+  type: host
+  description: Hostname temp3. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: inbound_bytes
+  type: integer_byte_count
+  description: Source sent bytes. Unsigned decimal byte count; bare digits, no unit
+    suffix.
+  example: '1024'
+- name: inbound_bytes_temp
+  type: string
+  description: Inbound bytes temp. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp
+- name: inbound_packets
+  type: integer
+  description: Source sent packets. Free-form text; may contain whitespace and punctuation.
+  example: '12'
+- name: int_destination_port_temp1
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: int_destination_port_temp2
+  type: integer_port
+  description: Int destination port temp2. Unsigned integer 0-65535 representing a
+    TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: int_pid_temp
+  type: string
+  description: Source process PID. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp
+- name: int_pid_temp2
+  type: string
+  description: Int pid temp2. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp2
+- name: int_source_port_temp1
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: int_source_port_temp2
+  type: integer_port
+  description: Int source port temp2. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: message_temp1
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp1
+- name: message_temp2
+  type: string
+  description: Message temp2. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp2
+- name: original_event_type
+  type: string
+  description: Event original event type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: outbound_bytes
+  type: integer_byte_count
+  description: Destination sent bytes. Unsigned decimal byte count; bare digits, no
+    unit suffix.
+  example: '1024'
+- name: outbound_bytes_temp
+  type: string
+  description: Outbound bytes temp. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp
+- name: outbound_packets
+  type: integer
+  description: Destination sent packets. Free-form text; may contain whitespace and
+    punctuation.
+  example: '12'
+- name: packet_incoming_interface
+  type: string
+  description: Destination interface. Free-form text; may contain whitespace and punctuation.
+  example: eth0
+- name: pid_temp
+  type: string
+  description: Pid temp. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp
+- name: ppid_temp
+  type: string
+  description: Source process parent ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_temp
+- name: process
+  type: string
+  description: Source process name. Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: process_id_temp
+  type: string
+  description: Process id temp. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp
+- name: protocol_id
+  type: string_short
+  description: Network IP protocol. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: roles
+  type: string
+  description: Source user employee ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_roles
+- name: rulebase_name
+  type: string
+  description: Observer type. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: source_adderss_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: source_address_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_interface_name
+  type: string
+  description: Source interface. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: source_ip_temp
+  type: string
+  description: Source ip temp. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp
+- name: source_nat_rule_name
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: source_port
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: source_port_temp
+  type: integer_port
+  description: Source port temp. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: source_username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: source_username2
+  type: string
+  description: Source username2. Free-form text; may contain whitespace and punctuation.
+  example: sample_username2
+- name: source_username3
+  type: string
+  description: Source username3. Free-form text; may contain whitespace and punctuation.
+  example: sample_username3
+- name: source_username4
+  type: string
+  description: Source username4. Free-form text; may contain whitespace and punctuation.
+  example: sample_username4
+- name: source_username_temp
+  type: string
+  description: Source username temp. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp
+- name: source_username_temp2
+  type: string
+  description: Source username temp2. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp2
+- name: source_username_temp3
+  type: string
+  description: Source username temp3. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp3
+- name: source_username_temp4
+  type: string
+  description: Source username temp4. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp4
+- name: source_zone
+  type: string
+  description: Source zone. Free-form text; may contain whitespace and punctuation.
+  example: us-east-1a
+- name: super
+  type: string
+  description: Auth privilege level. Free-form text; may contain whitespace and punctuation.
+  example: sample_super
+- name: target_username
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: ui_commandline_temp
+  type: string
+  description: Source process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_temp
+- name: ui_commandline_temp2
+  type: string
+  description: Ui commandline temp2. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp2
+- name: ui_commandline_temp3
+  type: string
+  description: Ui commandline temp3. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp3
+- name: ui_user_class
+  type: string
+  description: Auth privilege level. Free-form text; may contain whitespace and punctuation.
+  example: access_control
+- name: user
+  type: string
+  description: Auth privilege level. Free-form text; may contain whitespace and punctuation.
+  example: jdoe
+use_cases:
+- Firewall
+- Network
+how_to_use: |
+  ## juniper srx → Cortex XSIAM (dataset `juniper_srx_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `juniper` / product `srx`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+  NOTE: no modeling rule for this dataset is available locally, so the RAW
+  requirement above is inferred from the schema's `_raw_log` field rather than
+  verified against the rule. Confirm before relying on it.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `juniper_srx_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `juniper`
+    - **product**: `srx`
+
+    These normalize → `juniper_srx_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~34 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.original_threat_name`, `xdm.alert.severity`, `xdm.auth.privilege_level`, `xdm.event.description`, `xdm.event.original_event_type`, `xdm.event.type`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `juniper`, Product = `srx`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = juniper_srx_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,619 @@
+schema_version: 1
+id: ProofpointTAP
+pack_name: ProofpointTAP
+rule_name: ProofpointTAPHttpCollector
+dataset_name: proofpoint_tap_raw
+vendor: Proofpoint
+product: ProofpointTAP HTTP
+description: 'Proofpoint Targeted Attack Protection (TAP) over an XSIAM HTTP Log Collector: JSON TAP SIEM API events (message-delivered, message-blocked, click-blocked, click-permitted) delivered by the http-sender connector instead of syslog/CEF. Use it to simulate phishing, malware-attachment, BEC and click-through chains that the ProofpointTAP pack parses and models into xdm.* email and alert fields.'
+how_to_use: |
+  **Use this source when the goal is Cortex Analytics alerts.** Analytics reads data that arrives with the source's identity, so send it with the `http-sender` connector: prefer the Cribl destination `cribl_proofpoint_tap` (the Proofpoint TAP source UUID) over the generic HTTP collector destination. The syslog/CEF Proofpoint TAP source is for checking parsing and modeling; do not wait for Analytics alerts from it. (The equivalent Okta comparison showed identical data alerting only over HTTP; this source has not been compared that way.)
+
+  ## Proofpoint TAP over an XSIAM HTTP Log Collector (JSON)
+
+  This is the **HTTP-delivery variant** of Proofpoint TAP. It documents how to simulate TAP SIEM API
+  events as **JSON objects** posted to an XSIAM HTTP Log Collector by the `http-sender` connector.
+  It is built for HTTP, not derived from the syslog/CEF source of the same product, so every field below
+  is a real JSON key, and arrays (`messageParts`, `threatsInfoMap`, `fromAddress`, `recipient`,
+  `ccAddresses`, ...) are native JSON arrays and objects, not CEF composites.
+
+  **Do NOT use `phantom_create_data_worker`, syslog, CEF or a `schema_override` for this source.** That path
+  sends CEF to the Cortex Broker's syslog port; it is the other data source (`ProofpointTAP`, rule
+  `ProofpointTAPModelingRules`). Over HTTP the sender builds the JSON itself, the **collector** (configured in
+  XSIAM, not by the sender) fixes vendor and product and therefore the dataset (`_vendor=Proofpoint`,
+  `_product=Tap`, dataset `proofpoint_tap_raw`), and there is no
+  broker, no `observables_dict` and no `is_gate` pinning. Both variants write the same dataset
+  (`proofpoint_tap_raw`), so when verifying, filter on the GUIDs you sent.
+
+  `is_gate` in `fields[]` means "the parsing or modeling rule keys on this field" (here the two time
+  fields); its `example` is illustrative, so always send a current or deliberately back-dated timestamp.
+
+  ### Prerequisites
+
+  1. An `http-sender` connector instance with a destination named **`proofpoint_tap`** (dataset
+     `proofpoint_tap_raw`). Check with `http-sender.list_destinations` and look for
+     `{"destination": "proofpoint_tap", "dataset": "proofpoint_tap_raw", "ready": true}`. If it is missing,
+     the operator must create an XSIAM HTTP Log Collector (Log Format JSON, Vendor `Proofpoint`, Product `Tap`) and
+     add it to the instance as the primary or an additional destination; see the http-sender README. You cannot
+     create it, and the collector key is never visible to you.
+  2. The **ProofpointTAP content pack** installed on the tenant. Its
+     parsing rule (`[INGEST:vendor="Proofpoint", product="Tap", target_dataset="proofpoint_tap_raw", no_hit=keep]`)
+     sets `_time` from `messageTime`, falling back to `clickTime`; its modeling rule `ProofpointTAPModelingRules_1_3`
+     maps the columns to `xdm.*`. Without the pack the dataset is raw-only and `_time` is the ingestion time.
+
+  ### Quick start
+
+  1. Prove the path with one sample event (a benign `message-delivered` mail):
+
+  ```
+  http-sender.send_test_event {"destination": "proofpoint_tap", "profile": "proofpoint_tap"}
+  ```
+
+     The result carries `test_id` (the event's `GUID`) and `verify_with_xql`. HTTP 200 only means the
+     collector accepted the request; the row appears minutes later (see Timing).
+
+  2. Preview a scenario without sending (`dry_run` returns the first 3 events), then send it:
+
+  ```
+  http-sender.generate_events {"profile": "proofpoint_tap", "scenario": "phishing_url", "count": 12,
+    "target_user": "noura.alharbi", "source_ip": "217.138.128.45", "destination": "proofpoint_tap", "dry_run": true}
+  http-sender.generate_events {"profile": "proofpoint_tap", "scenario": "phishing_url", "count": 12,
+    "target_user": "noura.alharbi", "source_ip": "217.138.128.45", "destination": "proofpoint_tap"}
+  ```
+
+  ### Scenarios (`generate_events`, profile `proofpoint_tap`)
+
+  | scenario | `_log_type` produced | When to use it |
+  |---|---|---|
+  | `benign_mail` | `message-delivered` | Baseline traffic. Business mail, about half with a clean attachment, about 30% with a Cc. Ignores `target_user` and `source_ip`. |
+  | `phishing_url` | `message-blocked` | Phishing mail with a malicious URL, URL rewritten, quarantined in `Phish` (`phishScore` 80-100). `classification=PHISHING`, `threatType=URL`. |
+  | `malware_attachment` | `message-blocked` | Malicious attachment (`.doc`, `.xlsm`, `.exe`, `.zip`, `.docm`) with `sandboxStatus=MALICIOUS`, quarantined in `Malware`. `classification=MALWARE`, `threatType=ATTACHMENT`, `threatID` = the attachment SHA-256. |
+  | `credential_phishing` | `message-blocked` | Credential-harvesting mail, no reply-to, `phishScore` 90-100. Same shape as `phishing_url`. |
+  | `bec_impostor` | `message-delivered` | CEO/CFO impersonation from a lookalike domain with a private reply-to, `impostorScore` 75-100. Delivered because it has no payload; `threatsInfoMap` is `[]`, no `url` or `threatID`; `classification=IMPOSTOR`. |
+  | `click_chain` | `message-delivered`, then `click-blocked` / `click-permitted` | The user-clicked-a-bad-link shape. The first third of the events (at least one) are delivered phishing messages; the rest are clicks, alternating `click-blocked` then `click-permitted`. Click `j` belongs to message `j % messages` and repeats its GUID, `messageID`, recipient, sender, `url` and threat, so it correlates. Use `count >= 3` (12 gives 4 messages and 8 clicks); a single event is only the message. |
+
+  Arguments:
+
+  - `count` 1-5000 (default 20), `spread_seconds` (window width, default 120): events are spread oldest-first across the window.
+  - `start_offset_minutes`: end the window that many minutes in the past (default 0). Use it to back-date; `_time` follows it only because the pack's parsing rule is installed.
+  - `target_user`: the **recipient** of the attack scenarios, a bare name or email (default: a rotating pool of 12 synthetic users at the instance's `userDomain`, e.g. `noura.alharbi@phantom-lab.example`; never `DOMAIN\user`). Clicks use the same recipient as their message.
+  - `source_ip`: the **sending mail server** (`senderIP`) for the attack scenarios (default a random real out-of-country address). Ignored by `benign_mail`.
+  - **Addresses are real, so Cortex can geo-resolve them** (it derives country and ASN from the IP, not from labels). Each benign sender has one stable address, drawn from a pool of real Saudi ISP ranges plus six out-of-country ones; every attack scenario defaults to one of twelve other out-of-country ranges, so an attacker is never a benign sender's address. A `click-*` event's `clickIP` is the recipient's own stable real Saudi home address, the same one that user has in the `okta` and `google_workspace` profiles. A `source_ip` outside the built-in pools is sent as given.
+  - `destination`: use `proofpoint_tap`. A warning is returned for any other destination.
+
+  For coverage, send one scenario per call: `phishing_url`, `malware_attachment`, `click_chain` and
+  `benign_mail` cover every record kind.
+
+  ### Sending custom TAP JSON (`send_events`)
+
+  `send_events` posts the objects exactly as given: nothing is added, so include `_log_type` and a time field. Send
+  real JSON types: arrays as arrays, `completelyRewritten` as a boolean, scores as numbers.
+
+  A **message-blocked** URL-phishing event (timestamps are examples; use current ones):
+
+  ```json
+  {
+    "_log_type": "message-blocked",
+    "GUID": "Kq3vT8xZpL1mWc9RbNd2YfHs6AeUjG4o",
+    "QID": "r3f9a1c07be",
+    "messageID": "<482915063.JavaMail.security@mail.account-verify-portal.example>",
+    "messageTime": "2026-10-01T10:15:20.123Z",
+    "recipient": [
+      "noura.alharbi@phantom-lab.example"
+    ],
+    "toAddresses": [
+      "noura.alharbi@phantom-lab.example"
+    ],
+    "headerTo": "\"noura.alharbi\" <noura.alharbi@phantom-lab.example>",
+    "ccAddresses": [],
+    "fromAddress": [
+      "security@account-verify-portal.example"
+    ],
+    "sender": "security@account-verify-portal.example",
+    "senderIP": "217.138.128.45",
+    "headerFrom": "\"Account Security\" <security@account-verify-portal.example>",
+    "replyToAddress": [
+      "reply-4821@mail-relay.example"
+    ],
+    "headerReplyTo": "\"Account Security\" <reply-4821@mail-relay.example>",
+    "subject": "Your account requires verification",
+    "messageSize": 48213,
+    "policyRoutes": [
+      "default_inbound",
+      "finance"
+    ],
+    "phishScore": 96,
+    "malwareScore": 4,
+    "spamScore": 61,
+    "impostorScore": 0,
+    "quarantineFolder": "Phish",
+    "quarantineRule": "module.urldefense.phish",
+    "completelyRewritten": true,
+    "clusterId": "phantom_lab_hosted",
+    "cluster": "phantom_lab_hosted",
+    "modulesRun": [
+      "spam",
+      "urldefense",
+      "pdr"
+    ],
+    "messageParts": [
+      {
+        "contentType": "text/plain",
+        "disposition": "inline",
+        "filename": "text.txt",
+        "md5": "10adf3482c4b7d8993447cbaed90dafc",
+        "oContentType": "text/plain",
+        "sandboxStatus": null,
+        "sha256": "abbc0048e5d3b4324f541e8b76f9fdbbe477caec3cf4b25ed0954701f87b2317"
+      },
+      {
+        "contentType": "application/vnd.ms-excel.sheet.macroEnabled.12",
+        "disposition": "attachment",
+        "filename": "Shipment_48213.xlsm",
+        "md5": "2fe442e9820fa5f22bcca04d5b13fc63",
+        "oContentType": "application/vnd.ms-excel.sheet.macroEnabled.12",
+        "sandboxStatus": "MALICIOUS",
+        "sha256": "dd6e58252bf3f8eaa314bc0ffc3b7c1642b7dac0f60e1e2501fd672b2959c104"
+      }
+    ],
+    "threatsInfoMap": [
+      {
+        "campaignID": "CMP-4821",
+        "classification": "PHISHING",
+        "threat": "https://credential-harvest.example/login?redirect=91b7584a",
+        "threatID": "de557f4ec679f8a604d7802584cb47e0789947be78f92a4a07be30da1f6d0beb",
+        "threatStatus": "active",
+        "threatTime": "2026-10-01T10:15:20.123Z",
+        "threatType": "URL",
+        "threatUrl": "https://tap-threatinsight.example/#/threat/email/Kq3vT8xZpL1mWc9RbNd2YfHs6AeUjG4o"
+      }
+    ],
+    "xmailer": "Microsoft Outlook 16.0",
+    "classification": "PHISHING",
+    "threatID": "de557f4ec679f8a604d7802584cb47e0789947be78f92a4a07be30da1f6d0beb",
+    "threatURL": "https://tap-threatinsight.example/#/threat/email/Kq3vT8xZpL1mWc9RbNd2YfHs6AeUjG4o",
+    "threatStatus": "active",
+    "url": "https://credential-harvest.example/login?redirect=91b7584a"
+  }
+  ```
+
+  A **click-permitted** event. Its `GUID`, `messageID`, `recipient`, `sender`, `senderIP`, `subject` and threat fields must be
+  copied from a previously sent `message-delivered` event for the same message, so the click matches it. Note `recipient` is a string
+  here:
+
+  ```json
+  {
+    "_log_type": "click-permitted",
+    "GUID": "aM_Dx3A5idNoDCDBwb2Dc4-dsdc6lC1M",
+    "id": "57be3fd7-f3a0-9710-290b6fdfa56257b0",
+    "messageID": "<877001467.JavaMail.helpdesk@mail.it-helpdesk-support.example>",
+    "messageTime": "2026-10-01T10:31:07.482Z",
+    "clickTime": "2026-10-01T10:31:07.482Z",
+    "clickIP": "37.121.160.24",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+    "url": "https://doc-view-portal.invalid/view/invoice/48213",
+    "recipient": "khalid.alotaibi@phantom-lab.example",
+    "sender": "helpdesk@it-helpdesk-support.example",
+    "senderIP": "171.98.20.130",
+    "fromAddress": [
+      "helpdesk@it-helpdesk-support.example"
+    ],
+    "subject": "Your shared document is waiting",
+    "classification": "PHISHING",
+    "campaignId": "CMP-9181",
+    "threatID": "90124cdc72a83f788bb9a1b7538aa842142aee70b7f99c31366df5e3b10a93b8",
+    "threatTime": "2026-10-01T10:31:07.482Z",
+    "threatURL": "https://tap-threatinsight.example/#/threat/email/aM_Dx3A5idNoDCDBwb2Dc4-dsdc6lC1M",
+    "threatStatus": "active",
+    "phishScore": 91,
+    "malwareScore": 3,
+    "spamScore": 18,
+    "impostorScore": 0,
+    "policyRoutes": [
+      "default_inbound"
+    ],
+    "modulesRun": [
+      "urldefense"
+    ],
+    "clusterId": "phantom_lab_hosted",
+    "cluster": "phantom_lab_hosted"
+  }
+  ```
+
+  Send them with `http-sender.send_events {"destination": "proofpoint_tap", "events": [<the objects>]}`.
+
+  ### Field guide and value-shape rules
+
+  - `_log_type` (`message-delivered`, `message-blocked`, `click-blocked`, `click-permitted`) must be present on every event; the modeling rule builds `xdm.event.type` as `<_vendor> - <_log_type>` and `_vendor` is stamped by the collector.
+  - Message events: `GUID`, `messageID`, `messageTime`, `recipient` (array), `fromAddress` (array), `sender`, `senderIP`, `subject`, `ccAddresses` (array, `[]` if none), `messageParts` (array of objects, each with `filename`, `md5`, `sha256`, `contentType`, `oContentType`, `disposition`, `sandboxStatus`), `threatsInfoMap` (array, `[]` when there is no threat).
+  - Threat messages also carry the top-level hunt fields `classification`, `threatID`, `threatURL`, `threatStatus` and `url`; the rule reads those top-level fields directly, so send them in addition to `threatsInfoMap`.
+  - Click events: `GUID`, `messageID`, `clickTime`, `clickIP`, `userAgent`, `url`, `recipient` (a STRING), `sender`, `senderIP`, `fromAddress` (array), `subject`, `classification`, `campaignId`, `threatID`, `threatTime`, `threatURL`, `threatStatus`; no `messageParts` or `threatsInfoMap`.
+  - The click must match its message: same `GUID` and `messageID` (and recipient, sender, `url`, threat) as the message-delivered event it follows, with `clickTime` later than `messageTime`.
+  - Times are ISO-8601 UTC strings with a trailing `Z` and milliseconds (`2026-10-01T10:15:20.123Z`). The parsing rule also accepts `Mon DD YYYY HH:MM:SS`.
+  - Hosts and identities must be fictitious (`.example` / `.invalid` domains, random hex hashes). Mail-server and click addresses should be real public IPs, because Cortex derives geography and ASN from the address itself: use an out-of-country address for an attacker and a Saudi ISP address for a user's own click.
+  - Use the profile's spellings: `threatID`, `campaignID` and `threatUrl` inside `threatsInfoMap`; `threatID`, `threatURL` and `campaignId` at the top level.
+
+  ### Timing
+
+  `_time` comes from `messageTime` (messages) or `clickTime` (clicks, which repeat it as `messageTime` in `generate_events`), via the parsing rule, so a back-dated event is
+  placed at its own time, not the ingestion time. Ingestion can lag **5-7 minutes**: wait that long before concluding an event did not land, and use a time frame that covers the back-dated window.
+
+  ### Verification
+
+  Raw rows (does the event exist, with the JSON columns intact?):
+
+  ```xql
+  dataset = proofpoint_tap_raw
+  | filter GUID = "<the GUID you sent>"
+  | fields _time, _vendor, _log_type, GUID, messageID, recipient, threatsInfoMap
+  ```
+
+  Data model (does it map?). Look at **at least 20 rows** and count the distinct non-null `xdm.*` fields across them, never one row:
+
+  ```xql
+  datamodel dataset = proofpoint_tap_raw
+  | fields _log_type, xdm.event.type, xdm.event.id, xdm.email.sender, xdm.email.recipients, xdm.email.subject,
+           xdm.email.message_id, xdm.email.return_path, xdm.email.cc, xdm.email.delivery_timestamp,
+           xdm.alert.description, xdm.alert.original_threat_id, xdm.alert.subcategory,
+           xdm.alert.original_threat_name, xdm.alert.original_alert_id,
+           xdm.email.attachment.filename, xdm.email.attachment.md5, xdm.email.attachment.sha256,
+           xdm.intermediate.host.ipv4_addresses, xdm.source.host.ipv4_addresses, xdm.source.user_agent,
+           xdm.target.url
+  | limit 50
+  ```
+
+  **Expected result:** a send of 48 events (4 scenarios x 12) lands with the right `_log_type`
+  (16 `message-delivered`, 24 `message-blocked`, 4 `click-blocked`, 4 `click-permitted`). Over 50 rows the data model
+  populates **23 distinct non-null `xdm.*` fields**: `message-delivered` 21, `message-blocked` 20, click events 18. They include
+  `xdm.event.type` = `Proofpoint - <_log_type>`, `xdm.email.sender`, `xdm.email.recipients`, `xdm.email.subject`,
+  `xdm.email.message_id`, `xdm.alert.description`, `xdm.alert.original_threat_id`, `xdm.alert.subcategory`,
+  `xdm.email.attachment.filename`, `.md5` and `.sha256`, `xdm.intermediate.host.ipv4_addresses`, and for clicks
+  `xdm.source.host.ipv4_addresses`, `xdm.source.user_agent` and `xdm.target.url`.
+
+  ### Caveats
+
+  - Click events repeat `messageTime` as `clickTime` (so `_time` lands at the click), which means `xdm.email.delivery_timestamp` on a click shows the click time, not the message's delivery time.
+  - Enum casing is Phantom's choice, not real TAP's: `classification` is sent upper case (`PHISHING`, `MALWARE`, `SPAM`, `IMPOSTOR`), while real TAP uses lower case (`phish`, `malware`, `spam`, `impostor`). The modeling rule does not filter on it, so either lands; match the casing you sent when you write detections.
+  - The 23-field figure is a union over many rows and all record kinds. Per record kind the counts are 21 (`message-delivered`), 20 (`message-blocked`) and 18 (click events), so no single kind reaches all 23: judge mapping from >= 20 rows, never one row.
+  - Fields the rule does not read (`QID`, `phishScore`, `malwareScore`, `spamScore`, `impostorScore`, `quarantine*`, `policyRoutes`, `modulesRun`, `replyToAddress`, `headerFrom`, `threatStatus`, `campaignId`, ...) stay in the raw dataset only; use them from `dataset = proofpoint_tap_raw`, not `datamodel`.
+
+  ### Validation status
+
+  This source is **not** marked `validated` or `raw_validated`. Those tiers belong to the syslog/CEF path; mapping
+  validation of Proofpoint TAP stays on the syslog/CEF source `ProofpointTAP`. Never claim this HTTP source is validated; report only what you measured
+  (rows landed, distinct `xdm.*` fields over at least 20 rows).
+categories:
+- Email
+version: 1.0.0
+delivery: http
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-10-01T12:00:00Z'
+updated_at: '2026-10-01T12:00:00Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDc5QUEiPlByb29mcG9pbnQ8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- JSON
+is_rawlog_only: false
+fields:
+- name: _vendor
+  type: string
+  is_meta: true
+  description: 'Collector-stamped vendor (`Proofpoint` on the operator''s collector). Not sent by Phantom: the XSIAM HTTP Log Collector adds it from its Vendor setting. The modeling rule reads it to build `xdm.event.type` (`<_vendor> - <_log_type>`).'
+  example: Proofpoint
+- name: _log_type
+  type: enum
+  description: TAP SIEM record kind, set by the sender. Drives `xdm.event.type` = `Proofpoint - <_log_type>`. `message-*` records describe an email (arrays `messageParts` and `threatsInfoMap`); `click-*` records describe a click on a URL Defense rewritten link and carry no `messageParts` or `threatsInfoMap`. The rule does not filter on it, so an unlisted value still lands, with a nonstandard `xdm.event.type`.
+  enum_values:
+  - message-delivered
+  - message-blocked
+  - click-blocked
+  - click-permitted
+  example: message-blocked
+- name: GUID
+  type: string_short
+  description: TAP record id. A message and every click on that message share the same GUID. Maps to `xdm.event.id` and `xdm.alert.original_alert_id`. Use it as the marker in raw-dataset verification queries.
+  example: Kq3vT8xZpL1mWc9RbNd2YfHs6AeUjG4o
+- name: QID
+  type: string_short
+  description: Proofpoint queue id of the message. Not mapped to xdm; kept in the raw dataset. Absent on click events.
+  example: r3f9a1c07be
+- name: id
+  type: string_short
+  description: Click record id, `<32hex>-<16hex>-<16hex>-<64hex>`. Click events only. Not mapped to xdm.
+  example: 57be3fd7-f3a0-9710-290b6fdfa56257b0
+- name: messageID
+  type: string
+  description: RFC 5322 Message-ID, angle brackets included. Maps to `xdm.email.message_id`. A click repeats the Message-ID of the message it clicked.
+  example: <482915063.JavaMail.security@mail.account-verify-portal.example>
+- name: messageTime
+  type: datetime
+  description: 'When TAP processed the message, ISO-8601 UTC with milliseconds and a trailing Z (`2026-10-01T10:15:20.123Z`). The parsing rule uses it first for `_time` (via `%FT%R:%E*SZ`), and the modeling rule maps it to `xdm.email.delivery_timestamp`. Parsing-rule filter `clickTime != null or messageTime != null` is a presence check with `no_hit=keep`: an event with neither is kept but its `_time` is the ingestion time. Always send the CURRENT time (or a deliberate back-dated one), never this example. Click events from `generate_events` repeat `clickTime` here so `_time` lands at the click.'
+  example: '2026-10-01T10:15:20.123Z'
+  is_gate: true
+- name: clickTime
+  type: datetime
+  description: When the user clicked, ISO-8601 UTC with milliseconds and a trailing Z. Click events only. The parsing rule uses it for `_time` only when `messageTime` is absent or unparseable (`coalesce(messageTime, clickTime)`); the `_1_3` modeling rule does not map it to xdm. Always send a current or deliberately back-dated time, never this example.
+  example: '2026-10-01T10:31:07.482Z'
+  is_gate: true
+- name: recipient
+  type: email
+  is_array: true
+  description: Envelope recipient(s). An array of addresses on `message-*` events, but a plain STRING on `click-*` events; the modeling rule accepts both (`recipient contains "["` branch). Maps to `xdm.email.recipients`.
+  example: noura.alharbi@phantom-lab.example
+- name: toAddresses
+  type: email
+  is_array: true
+  description: 'Header To: addresses as an array. Not mapped to xdm; kept in the raw dataset.'
+  example: noura.alharbi@phantom-lab.example
+- name: headerTo
+  type: string
+  description: 'Header To: display form `"name" <address>`, joined with `; ` for several recipients. Not mapped to xdm.'
+  example: '"noura.alharbi" <noura.alharbi@phantom-lab.example>'
+- name: ccAddresses
+  type: email
+  is_array: true
+  description: 'Cc: addresses as an array, `[]` when there are none. Maps to `xdm.email.cc`.'
+  example: khalid.alotaibi@phantom-lab.example
+- name: fromAddress
+  type: email
+  is_array: true
+  description: Header From address as a one-element array (also an array on click events). Maps to `xdm.email.sender` (the rule strips the brackets and quotes).
+  example: security@account-verify-portal.example
+- name: sender
+  type: email
+  description: Envelope sender (SMTP MAIL FROM) as a plain string. Maps to `xdm.email.return_path`, and to `xdm.email.sender` when `fromAddress` is absent.
+  example: security@account-verify-portal.example
+- name: senderIP
+  type: ipv4
+  description: IP of the sending mail server (a real public address; Cortex resolves its country and ASN, so use an out-of-country one for an attacker). Maps to `xdm.intermediate.host.ipv4_addresses`. In `generate_events` it is the `source_ip` argument.
+  example: 217.138.128.45
+- name: headerFrom
+  type: string
+  description: Header From in display form `"Display Name" <address>`; in spoofed mail it can differ from `sender`. Not mapped to xdm. Message events only.
+  example: '"Account Security" <security@account-verify-portal.example>'
+- name: replyToAddress
+  type: email
+  is_array: true
+  description: Reply-To addresses as an array, `[]` when none. A reply-to that differs from the sender is a phishing and BEC signal. Not mapped to xdm. Message events only.
+  example: reply-4821@mail-relay.example
+- name: headerReplyTo
+  type: string
+  description: Header Reply-To display form, `null` when there is no Reply-To. Not mapped to xdm. Message events only.
+  example: '"Account Security" <reply-4821@mail-relay.example>'
+- name: subject
+  type: string_long
+  description: Message subject. Maps to `xdm.email.subject`.
+  example: Your account requires verification
+- name: messageSize
+  type: integer_byte_count
+  description: Message size in bytes. Not mapped to xdm. Message events only.
+  example: 48213
+- name: policyRoutes
+  type: string
+  is_array: true
+  description: Mail-flow policy routes the message matched; always starts with `default_inbound`, and threat mail to sensitive recipients adds a second route (`executives`, `finance`, `hr`, `it_staff`, `privileged_users`). Not mapped to xdm.
+  example: default_inbound
+- name: phishScore
+  type: integer
+  description: TAP phishing confidence 0-100. Not mapped to xdm; the hunt field for phishing detections.
+  example: 96
+- name: malwareScore
+  type: integer
+  description: TAP malware confidence 0-100 (90-100 for malware attachments). Not mapped to xdm.
+  example: 4
+- name: spamScore
+  type: integer
+  description: TAP spam confidence 0-100. Not mapped to xdm.
+  example: 61
+- name: impostorScore
+  type: integer
+  description: TAP impostor (BEC) confidence 0-100; above 75 is the BEC indicator. Not mapped to xdm.
+  example: 0
+- name: quarantineFolder
+  type: string_short
+  description: Quarantine folder (`Phish`, `Malware`) for blocked mail; `null` for delivered mail. Not mapped to xdm. Message events only.
+  example: Phish
+- name: quarantineRule
+  type: string
+  description: Rule that quarantined the message (`module.urldefense.phish`, `module.sandbox.threat`); `null` for delivered mail. Not mapped to xdm. Message events only.
+  example: module.urldefense.phish
+- name: completelyRewritten
+  type: boolean
+  description: 'JSON boolean: true when URL Defense rewrote every URL in the message. Send a real boolean, not the string `"true"`. Not mapped to xdm. Message events only.'
+  example: true
+- name: clusterId
+  type: string_short
+  description: Proofpoint cluster id. Not mapped to xdm.
+  example: phantom_lab_hosted
+- name: cluster
+  type: string_short
+  description: Proofpoint cluster name (same value as `clusterId` in the profile). Not mapped to xdm.
+  example: phantom_lab_hosted
+- name: modulesRun
+  type: string
+  is_array: true
+  description: 'TAP modules that processed the message, a JSON array of strings: `spam`, `urldefense`, `pdr`, `sandbox`, `impostor`, `qr-scanner`. Click events carry `["urldefense"]`. Not mapped to xdm.'
+  example: urldefense
+- name: xmailer
+  type: string
+  description: X-Mailer header of the message. Not mapped to xdm. Message events only.
+  example: Microsoft Outlook 16.0
+- name: messageParts
+  type: json
+  is_array: true
+  description: Native JSON array of objects, one per MIME part (the profile puts the inline `text.txt` body at index 0 and attachments after it). The rule reads `filename`, `md5` and `sha256` from every element and comma-joins them into `xdm.email.attachment.filename`, `.md5` and `.sha256`. Message events only; see the `messageParts.N.*` leaves.
+  example: '[{"contentType": "text/plain", "disposition": "inline", "filename": "text.txt", "md5": "10adf3482c4b7d8993447cbaed90dafc", "oContentType": "text/plain", "sandboxStatus": null, "sha256": "abbc0048e5d3b4324f541e8b76f9fdbbe477caec3cf4b25ed0954701f87b2317"}]'
+- name: messageParts.0.filename
+  type: file_path
+  description: 'Leaf of `messageParts` for the inline text body (index 0): file name. Mapped (joined across all parts) to `xdm.email.attachment.filename`.'
+  example: text.txt
+- name: messageParts.0.contentType
+  type: string
+  description: 'Leaf of `messageParts` for the inline text body (index 0): MIME type as TAP detected it. Not mapped to xdm.'
+  example: text/plain
+- name: messageParts.0.oContentType
+  type: string
+  description: 'Leaf of `messageParts` for the inline text body (index 0): MIME type as declared in the message. Not mapped to xdm.'
+  example: text/plain
+- name: messageParts.0.disposition
+  type: enum
+  description: 'Leaf of `messageParts` for the inline text body (index 0): `inline` for the body, `attachment` for files. Not mapped to xdm.'
+  enum_values:
+  - inline
+  - attachment
+  example: inline
+- name: messageParts.0.md5
+  type: hash_md5
+  description: 'Leaf of `messageParts` for the inline text body (index 0): MD5 of the part (random hex in synthetic data). Mapped (joined) to `xdm.email.attachment.md5`.'
+  example: 10adf3482c4b7d8993447cbaed90dafc
+- name: messageParts.0.sha256
+  type: hash_sha256
+  description: 'Leaf of `messageParts` for the inline text body (index 0): SHA-256 of the part (random hex in synthetic data). Mapped (joined) to `xdm.email.attachment.sha256`. For a malware message this is also the threat id.'
+  example: abbc0048e5d3b4324f541e8b76f9fdbbe477caec3cf4b25ed0954701f87b2317
+- name: messageParts.0.sandboxStatus
+  type: enum
+  description: 'Leaf of `messageParts` for the inline text body (index 0): sandbox detonation verdict, or JSON `null` when the part was not submitted (the body and images). Not mapped to xdm.'
+  enum_values:
+  - CLEAN
+  - MALICIOUS
+  - UNKNOWN
+  example: CLEAN
+- name: messageParts.1.filename
+  type: file_path
+  description: 'Leaf of `messageParts` for the first attachment (index 1): file name. Mapped (joined across all parts) to `xdm.email.attachment.filename`.'
+  example: Shipment_48213.xlsm
+- name: messageParts.1.contentType
+  type: string
+  description: 'Leaf of `messageParts` for the first attachment (index 1): MIME type as TAP detected it. Not mapped to xdm.'
+  example: application/vnd.ms-excel.sheet.macroEnabled.12
+- name: messageParts.1.oContentType
+  type: string
+  description: 'Leaf of `messageParts` for the first attachment (index 1): MIME type as declared in the message. Not mapped to xdm.'
+  example: application/vnd.ms-excel.sheet.macroEnabled.12
+- name: messageParts.1.disposition
+  type: enum
+  description: 'Leaf of `messageParts` for the first attachment (index 1): `inline` for the body, `attachment` for files. Not mapped to xdm.'
+  enum_values:
+  - inline
+  - attachment
+  example: attachment
+- name: messageParts.1.md5
+  type: hash_md5
+  description: 'Leaf of `messageParts` for the first attachment (index 1): MD5 of the part (random hex in synthetic data). Mapped (joined) to `xdm.email.attachment.md5`.'
+  example: 2fe442e9820fa5f22bcca04d5b13fc63
+- name: messageParts.1.sha256
+  type: hash_sha256
+  description: 'Leaf of `messageParts` for the first attachment (index 1): SHA-256 of the part (random hex in synthetic data). Mapped (joined) to `xdm.email.attachment.sha256`. For a malware message this is also the threat id.'
+  example: dd6e58252bf3f8eaa314bc0ffc3b7c1642b7dac0f60e1e2501fd672b2959c104
+- name: messageParts.1.sandboxStatus
+  type: enum
+  description: 'Leaf of `messageParts` for the first attachment (index 1): sandbox detonation verdict, or JSON `null` when the part was not submitted (the body and images). Not mapped to xdm.'
+  enum_values:
+  - CLEAN
+  - MALICIOUS
+  - UNKNOWN
+  example: MALICIOUS
+- name: threatsInfoMap
+  type: json
+  is_array: true
+  description: Native JSON array of per-threat objects; `[]` on benign mail and on bec_impostor mail, one element on URL and attachment threats. Message events only. The whole value maps to `xdm.alert.description` (coalesced with `threatURL`), each element's `threatType` to `xdm.alert.subcategory`, and each element's `threatID` to `xdm.alert.original_threat_id` when the top-level `threatID` is absent. See the `threatsInfoMap.0.*` leaves.
+  example: '[{"campaignID": "CMP-4821", "classification": "PHISHING", "threat": "https://credential-harvest.example/login?redirect=91b7584a", "threatID": "de557f4ec679f8a604d7802584cb47e0789947be78f92a4a07be30da1f6d0beb", "threatStatus": "active", "threatTime": "2026-10-01T10:15:20.123Z", "threatType": "URL", "threatUrl": "https://tap-threatinsight.example/#/threat/email/Kq3vT8xZpL1mWc9RbNd2YfHs6AeUjG4o"}]'
+- name: threatsInfoMap.0.threatType
+  type: enum
+  description: 'Leaf of `threatsInfoMap[0]`: what the threat is. Mapped to `xdm.alert.subcategory` (first choice, comma-joined across elements).'
+  enum_values:
+  - URL
+  - ATTACHMENT
+  example: URL
+- name: threatsInfoMap.0.threatID
+  type: hash_sha256
+  description: 'Leaf of `threatsInfoMap[0]`: threat id, a random 64-hex token for a URL threat, the attachment''s SHA-256 for an attachment threat. Mapped to `xdm.alert.original_threat_id` only when the top-level `threatID` is absent.'
+  example: de557f4ec679f8a604d7802584cb47e0789947be78f92a4a07be30da1f6d0beb
+- name: threatsInfoMap.0.classification
+  type: enum
+  description: 'Leaf of `threatsInfoMap[0]`: threat class. Phantom uses upper case (PHISHING, MALWARE, SPAM, IMPOSTOR); real TAP emits lower case (`phish`, `malware`, `spam`, `impostor`). The `_1_3` rule reads the top-level `classification`, and only reads this leaf (`$[''0''].classification`) when the map arrives as an object keyed by index.'
+  enum_values:
+  - PHISHING
+  - MALWARE
+  - SPAM
+  - IMPOSTOR
+  example: PHISHING
+- name: threatsInfoMap.0.threat
+  type: string_long
+  description: 'Leaf of `threatsInfoMap[0]`: the threat artifact, the malicious URL for a URL threat or the attachment''s SHA-256 for an attachment threat. Not mapped separately (it is inside the `xdm.alert.description` value).'
+  example: https://credential-harvest.example/login?redirect=91b7584a
+- name: threatsInfoMap.0.threatStatus
+  type: enum
+  description: 'Leaf of `threatsInfoMap[0]`: verdict state. Phantom emits only `active`; real TAP also reports `cleared` and `falsePositive`. Not mapped to xdm.'
+  enum_values:
+  - active
+  - cleared
+  - falsePositive
+  example: active
+- name: threatsInfoMap.0.threatTime
+  type: datetime
+  description: 'Leaf of `threatsInfoMap[0]`: when TAP identified the threat, ISO-8601 UTC. Equal to `messageTime` in generated events. Not mapped to xdm.'
+  example: '2026-10-01T10:15:20.123Z'
+- name: threatsInfoMap.0.campaignID
+  type: string_short
+  description: 'Leaf of `threatsInfoMap[0]`: Proofpoint campaign id (note the spelling `campaignID` inside the map, `campaignId` on click events). Not mapped to xdm.'
+  example: CMP-4821
+- name: threatsInfoMap.0.threatUrl
+  type: url
+  description: 'Leaf of `threatsInfoMap[0]`: link to the Threat Insight page for the message (note the spelling `threatUrl` inside the map, `threatURL` at top level). Not mapped to xdm.'
+  example: https://tap-threatinsight.example/#/threat/email/Kq3vT8xZpL1mWc9RbNd2YfHs6AeUjG4o
+- name: classification
+  type: enum
+  description: Top-level threat class on threat messages, bec_impostor mail (`IMPOSTOR`) and on every click. Maps to `xdm.alert.original_threat_name` and is the fallback for `xdm.alert.subcategory` (used on click events, which have no `threatsInfoMap`). Phantom emits upper case; real TAP emits lower case (`phish`, `malware`, `spam`, `impostor`). Absent on benign mail.
+  enum_values:
+  - PHISHING
+  - MALWARE
+  - SPAM
+  - IMPOSTOR
+  example: PHISHING
+- name: threatID
+  type: hash_sha256
+  description: 'Top-level threat id: the malicious artifact''s SHA-256 (attachments) or a random 64-hex token (URLs). Maps to `xdm.alert.original_threat_id`. Absent on benign and bec_impostor mail.'
+  example: de557f4ec679f8a604d7802584cb47e0789947be78f92a4a07be30da1f6d0beb
+- name: threatURL
+  type: url
+  description: Top-level link to the Threat Insight page for the message. Maps to `xdm.alert.description` only when `threatsInfoMap` is absent (clicks). Absent on benign and bec_impostor mail.
+  example: https://tap-threatinsight.example/#/threat/email/Kq3vT8xZpL1mWc9RbNd2YfHs6AeUjG4o
+- name: threatStatus
+  type: enum
+  description: Top-level threat state. Phantom emits only `active`; real TAP also reports `cleared` and `falsePositive`. Not mapped to xdm. Absent on benign mail.
+  enum_values:
+  - active
+  - cleared
+  - falsePositive
+  example: active
+- name: threatTime
+  type: datetime
+  description: When TAP identified the threat, ISO-8601 UTC. Click events only (equal to `clickTime`). Not mapped to xdm.
+  example: '2026-10-01T10:31:07.482Z'
+- name: campaignId
+  type: string_short
+  description: Proofpoint campaign id on click events (spelled `campaignId`, unlike `campaignID` inside `threatsInfoMap`). Not mapped to xdm.
+  example: CMP-9181
+- name: url
+  type: url
+  description: 'The malicious URL: on a threat message the URL found in the body, on a click the URL that was clicked. Maps to `xdm.target.url`. Absent on benign and bec_impostor mail.'
+  example: https://credential-harvest.example/login?redirect=91b7584a
+- name: userAgent
+  type: string_long
+  description: Browser or mail-client user agent of the click. Click events only. Maps to `xdm.source.user_agent`.
+  example: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36
+- name: clickIP
+  type: ipv4
+  description: 'IP address the click came from: the user''s own address (in the profile, their stable real Saudi home address), usable to pivot to proxy and endpoint telemetry. Click events only. Maps to `xdm.source.host.ipv4_addresses`.'
+  example: 37.121.160.24
+use_cases:
+- Email
+- SaaS
+- Threat hunting

@@ -1,0 +1,175 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ayman-m/phantom/schema/destination.schema.json",
+  "title": "Phantom Log Destination Type",
+  "description": "Schema for a single log-destination type manifest. v0.17.0+. Each type ships as bundles/spark/destinations/<id>/spec.yaml.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "id",
+    "name",
+    "description",
+    "category",
+    "icon",
+    "iconColor",
+    "iconBg",
+    "fields",
+    "handler"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "description": "Manifest schema version. Pinned at 1 in v0.17.0.",
+      "type": "integer",
+      "enum": [1]
+    },
+    "id": {
+      "description": "URL-safe slug, unique. Matches the directory name on disk.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+    },
+    "name": {
+      "description": "Display name shown in the UI (e.g. 'Syslog', 'HTTP Webhook').",
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "description": "One-paragraph operator-facing description of this destination type.",
+      "type": "string",
+      "minLength": 1
+    },
+    "category": {
+      "description": "Grouping label for the UI dropdown (e.g. 'On-prem SIEM', 'Cloud SIEM', 'Webhook', 'Notification').",
+      "type": "string",
+      "minLength": 1
+    },
+    "icon": {
+      "description": "Material Symbols icon name (e.g. 'settings_ethernet', 'webhook', 'shield', 'search').",
+      "type": "string",
+      "minLength": 1
+    },
+    "iconColor": {
+      "description": "CSS color for the icon glyph (e.g. '#a7c8ff').",
+      "type": "string",
+      "minLength": 1
+    },
+    "iconBg": {
+      "description": "CSS color for the icon background (e.g. 'rgba(167, 200, 255, 0.15)').",
+      "type": "string",
+      "minLength": 1
+    },
+    "fields": {
+      "description": "Ordered list of configuration fields. Extends ConfigParam (mcp/agent/app/connectors/page.tsx) with the optional visible_when clause.",
+      "type": "array",
+      "items": {"$ref": "#/$defs/Field"}
+    },
+    "handler": {
+      "description": "Python module path for the type's probe() + send() implementation, e.g. 'bundles.spark.destinations.syslog.handler'.",
+      "type": "string",
+      "pattern": "^[a-zA-Z_][a-zA-Z0-9_.]*$"
+    },
+    "probe": {
+      "description": "Optional probe-behavior hints. Reserved for future per-type tuning.",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "send_test_message": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether probe() sends a real test message (true) or connectivity-only (false)."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Field": {
+      "description": "One configuration field. Mirrors the ConfigParam union in the UI's connector page, plus an optional visible_when clause for conditional rendering (e.g. webhook auth-type discriminator).",
+      "type": "object",
+      "required": ["name", "type", "display"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "description": "Field name (snake_case). Used as the JSON key in the destination's config_json or secret slot name.",
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{0,63}$"
+        },
+        "display": {
+          "description": "Display label shown above the input.",
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "description": "Widget type. Matches the ConfigParam.type union in the UI.",
+          "type": "string",
+          "enum": [
+            "text",
+            "url",
+            "string",
+            "number",
+            "password",
+            "secret",
+            "textarea",
+            "select",
+            "radio",
+            "multi_select",
+            "boolean",
+            "array",
+            "json"
+          ]
+        },
+        "required": {
+          "description": "True when the operator must supply a value.",
+          "type": "boolean",
+          "default": false
+        },
+        "defaultValue": {
+          "description": "Default rendered into the input (as a string; widget interprets per type).",
+          "type": ["string", "null"]
+        },
+        "description": {
+          "description": "Inline hint shown under the input.",
+          "type": "string"
+        },
+        "options": {
+          "description": "Required when type is select/radio/multi_select. The set of allowed values.",
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "visible_when": {
+          "description": "Optional conditional visibility. The field renders only when the referenced sibling field's current value matches.",
+          "type": "object",
+          "required": ["field", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "field": {
+              "description": "Name of a sibling field (must be a select/radio in this manifest).",
+              "type": "string"
+            },
+            "value": {
+              "description": "Value (string) or values (array of strings) that make this field visible.",
+              "oneOf": [
+                {"type": "string"},
+                {"type": "array", "items": {"type": "string"}, "minItems": 1}
+              ]
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "enum": ["select", "radio", "multi_select"]
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["options"]
+          }
+        }
+      ]
+    }
+  }
+}

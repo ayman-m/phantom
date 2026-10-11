@@ -1,0 +1,412 @@
+schema_version: 1
+id: CarbonBlackDefense
+pack_name: CarbonBlackDefense
+rule_name: CarbonBlackDefense
+dataset_name: vmware_carbon_black_cloud_raw
+vendor: Carbon Black
+product: CarbonBlackDefense
+description: Next-generation antivirus + EDR in one cloud-delivered platform that
+  stops commodity malware, advanced malware, non-malware attacks and ransomware.
+categories:
+- Endpoint
+version: 4.0.14
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMTYgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNBMzFGMzQiPkNhcmJvbiBCbGFjazwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: event_type
+  type: string_short
+  is_gate: true
+  description: Parsing/modeling-rule gate. The rule filters on this field; only the listed values are accepted.
+  example: 'alert log'
+- name: alert_url
+  type: url
+  description: Full URL with scheme — as Carbon Black captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: clientIp
+  type: string
+  description: Vendor-emitted field 'ClientIp'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_clientip
+- name: description
+  type: string_long
+  description: Free-form human-readable description from Carbon Black. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Carbon Black.
+- name: device_external_ip
+  type: ipv4
+  description: Device external IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: device_id
+  type: string_short
+  description: Sensor device id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: device_internal_ip
+  type: ipv4
+  description: Device internal IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: device_name
+  type: host
+  description: Sensor hostname. Hostname or fully-qualified domain name (RFC 1035
+    dotted labels); no protocol prefix.
+  example: host.example.com
+- name: device_os
+  type: string_short
+  description: Sensor OS. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: device_os_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: device_policy
+  type: string
+  description: Vendor-emitted field 'Device policy'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Default-Policy
+- name: device_policy_id
+  type: string_short
+  description: Opaque identifier emitted by Carbon Black. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: car-d824e364
+- name: device_target_value
+  type: string
+  description: Vendor-emitted field 'Device target value'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_value
+- name: device_username
+  type: user
+  description: Logged-in user on the device. Account name as the vendor reports it
+    — login name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jsmith
+- name: eventId
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Free-form
+    text; may contain whitespace and punctuation.
+  example: evt-34d5a189
+- name: flagged
+  type: string
+  description: Vendor-emitted field 'Flagged'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_flagged
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Carbon Black. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: car-1a87491d
+- name: loginName
+  type: user
+  description: Vendor-emitted field 'LoginName'. Account name as the vendor reports
+    it — login name, UPN, or sAMAccountName depending on the source; no domain prefix
+    unless the vendor emits one.
+  example: jsmith
+- name: ml_classification_final_verdict
+  type: string
+  description: Vendor-emitted field 'Ml classification final verdict'. Free-form text;
+    may contain whitespace and punctuation.
+  example: allow
+- name: orgName
+  type: string
+  description: Vendor-emitted field 'OrgName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_orgname
+- name: org_key
+  type: string
+  description: Vendor-emitted field 'Org key'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_key
+- name: parent_pid
+  type: integer
+  description: Parent process pid. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: policy_applied
+  type: string
+  description: Vendor-emitted field 'Policy applied'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_applied
+- name: primary_event_id
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Free-form
+    text; may contain whitespace and punctuation.
+  example: car-aeb0efc7
+- name: process_cmdline
+  type: string_long
+  description: Process command line. Free-form text; may span multiple lines or contain
+    large payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: process_issuer
+  type: string
+  description: Vendor-emitted field 'Process issuer'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_issuer
+- name: process_md5
+  type: hash_md5
+  description: MD5 of the process binary. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: process_name
+  type: string
+  description: Process executable name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: process_pid
+  type: integer
+  description: Process pid. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: process_sha256
+  type: hash_sha256
+  description: SHA-256 digest of the artifact. 64-character lowercase hex SHA-256
+    digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: process_username
+  type: user
+  description: User the process runs as. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jsmith
+- name: reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: report_description
+  type: integer
+  description: Free-form human-readable description from Carbon Black. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: '443'
+- name: report_id
+  type: string_short
+  description: Opaque identifier emitted by Carbon Black. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: car-a7f829b2
+- name: report_link
+  type: integer
+  description: Vendor-emitted field 'Report link'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '443'
+- name: report_name
+  type: string
+  description: Human-readable name as displayed by Carbon Black. Free-form text; may
+    contain whitespace and punctuation.
+  example: '443'
+- name: requestUrl
+  type: url
+  description: Vendor-emitted field 'RequestUrl'. Full URL with scheme (http/https/ftp);
+    percent-encoded if it contains non-ASCII characters.
+  example: https://example.com/path
+- name: run_state
+  type: string
+  description: Vendor-emitted field 'Run state'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CA
+- name: sensor_action
+  type: enum
+  description: 'Sensor enforcement action. One of: ALLOW, DENY, TERMINATE, BLOCK_BREAK,
+    BLOCK_ONLY, POLICY_NOT_APPLIED (case-sensitive).'
+  example: ALLOW
+  enum_values:
+  - ALLOW
+  - DENY
+  - TERMINATE
+  - BLOCK_BREAK
+  - BLOCK_ONLY
+  - POLICY_NOT_APPLIED
+- name: severity
+  type: integer
+  description: Event severity as classified by the vendor. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: threat_id
+  type: string_short
+  description: Opaque identifier emitted by Carbon Black. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: car-d290db83
+- name: type
+  type: enum
+  description: 'Event type. One of: endpoint.event.procstart, endpoint.event.procend,
+    endpoint.event.netconn, endpoint.event.filemod, endpoint.event.regmod, endpoint.event.moduleload,
+    endpoint.event.crossproc, endpoint.event.scriptload, endpoint.event.apicall (case-sensitive).'
+  example: endpoint.event.procstart
+  enum_values:
+  - endpoint.event.procstart
+  - endpoint.event.procend
+  - endpoint.event.netconn
+  - endpoint.event.filemod
+  - endpoint.event.regmod
+  - endpoint.event.moduleload
+  - endpoint.event.crossproc
+  - endpoint.event.scriptload
+  - endpoint.event.apicall
+- name: alert_id
+  type: string
+  is_array: true
+  description: Linked alert ids. Free-form text; may contain whitespace and punctuation.
+  example: car-9f1cad2f
+- name: alert_severity
+  type: integer
+  description: Severity 1-10. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: create_time
+  type: datetime
+  description: Event creation time. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: event_id
+  type: string_short
+  description: Carbon Black event id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: filemod_action
+  type: string_short
+  description: File modification action. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: filemod_name
+  type: file_path
+  description: File modified. Absolute filesystem path; vendor-native separator.
+  example: /var/log/app.log
+- name: netconn_action
+  type: enum
+  description: 'Connection action. One of: ACTION_CONNECTION_ESTABLISHED, ACTION_CONNECTION_ATTEMPTED,
+    ACTION_CONNECTION_REFUSED, ACTION_CONNECTION_LISTEN (case-sensitive).'
+  enum_values:
+  - ACTION_CONNECTION_ESTABLISHED
+  - ACTION_CONNECTION_ATTEMPTED
+  - ACTION_CONNECTION_REFUSED
+  - ACTION_CONNECTION_LISTEN
+  example: ACTION_CONNECTION_ESTABLISHED
+- name: netconn_protocol
+  type: string_short
+  description: Network protocol. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: parent_guid
+  type: string_short
+  description: Parent process GUID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: parent_hash
+  type: hash_sha256
+  description: Parent process SHA-256. 64-character lowercase hex SHA-256 digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: parent_name
+  type: string
+  description: Parent process name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: process_guid
+  type: string_short
+  description: Carbon Black process GUID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: process_hash
+  type: hash_sha256
+  description: SHA-256 of the process binary. 64-character lowercase hex SHA-256 digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: process_reputation
+  type: enum
+  description: 'Carbon Black reputation. One of: TRUSTED_WHITE_LIST, COMPANY_WHITE_LIST,
+    ADAPTIVE_WHITE_LIST, COMMON_WHITE_LIST, LOCAL_WHITE, KNOWN_BY_AVIRA, PUP, SUSPECT_MALWARE,
+    ADWARE, HEURISTIC, COMPANY_BLACK_LIST, RESOLVING, UNKNOWN (case-sensitive).'
+  enum_values:
+  - TRUSTED_WHITE_LIST
+  - COMPANY_WHITE_LIST
+  - ADAPTIVE_WHITE_LIST
+  - COMMON_WHITE_LIST
+  - LOCAL_WHITE
+  - KNOWN_BY_AVIRA
+  - PUP
+  - SUSPECT_MALWARE
+  - ADWARE
+  - HEURISTIC
+  - COMPANY_BLACK_LIST
+  - RESOLVING
+  - UNKNOWN
+  example: TRUSTED_WHITE_LIST
+- name: regmod_name
+  type: string
+  description: Registry key modified. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: remote_ip
+  type: ipv4
+  description: Remote IP (netconn events). Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: remote_port
+  type: integer_port
+  description: Remote port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: tags
+  type: string
+  is_array: true
+  description: Tags (TTPs) assigned by Carbon Black. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_tags
+use_cases:
+- EDR
+how_to_use: |
+  ## Carbon Black CarbonBlackDefense → Cortex XSIAM (dataset `vmware_carbon_black_cloud_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `vmware_carbon_black_cloud_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `vmware_carbon_black_cloud`. The marketplace pack's display name `Carbon Black` / `CarbonBlackDefense` normalizes to `carbon_black_carbonblackdefense_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `vmware_carbon_black_cloud` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `event_type in("alert log")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~39 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.mitre_tactics`, `xdm.alert.original_alert_id`, `xdm.alert.original_threat_id`, `xdm.alert.risks`, `xdm.alert.severity`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = vmware_carbon_black_cloud_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

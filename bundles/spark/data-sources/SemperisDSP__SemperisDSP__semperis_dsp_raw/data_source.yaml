@@ -1,0 +1,111 @@
+schema_version: 1
+id: SemperisDSP
+pack_name: SemperisDSP
+rule_name: SemperisDSP
+dataset_name: semperis_dsp_raw
+vendor: Semperis
+product: SemperisDSP
+description: Semperis Directory Services Protector (DSP) provides security for Active
+  Directory (AD) and Azure AD monitoring services.
+categories:
+- Analytics & SIEM
+version: 1.0.5
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNDAgNTAiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iU2VtcGVyaXMiPgogIDx0aXRsZT5TZW1wZXJpczwvdGl0bGU+CiAgPCEtLSBTdHlsaXplZCAiUyIgbWFyayBvbiB0aGUgbGVmdCDigJQgZmxhbWUvd2F2ZSBtb3RpZiB0aGF0IGVjaG9lcwogICAgICAgU2VtcGVyaXMnIGlkZW50aXR5LXJlY292ZXJ5IGJyYW5kIGxhbmd1YWdlIC0tPgogIDxnIGZpbGw9IiMwRjE5MzQiPgogICAgPHBhdGggZD0iTSA4IDEwCiAgICAgICAgICAgICBDIDggNiwgMTIgNCwgMTggNAogICAgICAgICAgICAgTCAzMCA0CiAgICAgICAgICAgICBDIDM2IDQsIDQwIDcsIDQwIDEyCiAgICAgICAgICAgICBDIDQwIDE1LCAzOCAxNywgMzQgMTgKICAgICAgICAgICAgIEwgMTggMjIKICAgICAgICAgICAgIEMgMTQgMjMsIDEyIDI1LCAxMiAyOAogICAgICAgICAgICAgQyAxMiAzMiwgMTYgMzQsIDIyIDM0CiAgICAgICAgICAgICBMIDM4IDM0CiAgICAgICAgICAgICBMIDM4IDQwCiAgICAgICAgICAgICBMIDE4IDQwCiAgICAgICAgICAgICBDIDEwIDQwLCA2IDM2LCA2IDMwCiAgICAgICAgICAgICBDIDYgMjYsIDkgMjQsIDE0IDIyCiAgICAgICAgICAgICBMIDI4IDE4CiAgICAgICAgICAgICBDIDMyIDE3LCAzNCAxNiwgMzQgMTQKICAgICAgICAgICAgIEMgMzQgMTIsIDMyIDEwLCAyOCAxMAogICAgICAgICAgICAgTCAxMCAxMAogICAgICAgICAgICAgWiIvPgogICAgPCEtLSBXb3JkbWFyazogU0VNUEVSSVMg4oCUIGNsZWFuIHNhbnMtc2VyaWYgZ2VvbWV0cmljIGxldHRlcnMgLS0+CiAgICA8dGV4dCB4PSI1NiIgeT0iMzMiCiAgICAgICAgICBmb250LWZhbWlseT0iLWFwcGxlLXN5c3RlbSwgJ1NlZ29lIFVJJywgJ0hlbHZldGljYSBOZXVlJywgQXJpYWwsIHNhbnMtc2VyaWYiCiAgICAgICAgICBmb250LXNpemU9IjI2IgogICAgICAgICAgZm9udC13ZWlnaHQ9IjcwMCIKICAgICAgICAgIGxldHRlci1zcGFjaW5nPSIwLjgiCiAgICAgICAgICBmaWxsPSIjMEYxOTM0Ij5TRU1QRVJJUzwvdGV4dD4KICA8L2c+Cjwvc3ZnPgo=
+  source: 'hand-crafted by phantom-maintainer — wordmark in Semperis brand
+    navy #0F1934'
+  license: Phantom maintainer-authored; Semperis name is the vendor's trademark
+  fidelity: approximate
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: true
+fields:
+- name: _raw_log
+  type: string_long
+  description: Semperis DSP audit message as emitted over syslog — bracket-tagged
+    key/value blocks `[Tag] value` separated by spaces. Two top-level event flavors
+    are filtered downstream by the leading `[OperationLog@…]` or `[AdChanges@…]` tag;
+    the body carries blocks like `[OperationSource]`, `[OperationType]`, `[OperationResult]`,
+    `[TrusteeName]`, `[DistinguishedName]`, `[ClassName]`, `[AttributeName]`, `[ChangeId]`,
+    `[ObjectModificationType]`, etc. ALL data lives inside `_raw_log`; downstream
+    parsers regex-extract from it.
+  example: '[OperationLog@1.3.6.1.4.1.50633] [OperationSource] dsp-srv-01:DSPConsole
+    [OperationType] User-Login [OperationResult] Success [TrusteeName] jdoe [OperationTarget]
+    AD'
+use_cases:
+- AD
+- Identity
+how_to_use: |
+  ## semperis dsp → Cortex XSIAM (dataset `semperis_dsp_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `semperis` / product `dsp`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `semperis_dsp_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `semperis`
+    - **product**: `dsp`
+
+    These normalize → `semperis_dsp_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log ~= "\[OperationLog\@"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~27 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.id`, `xdm.event.operation`, `xdm.event.operation_sub_type`, `xdm.event.original_event_type`, `xdm.event.outcome`, `xdm.event.outcome_reason`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `semperis`, Product = `dsp`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = semperis_dsp_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

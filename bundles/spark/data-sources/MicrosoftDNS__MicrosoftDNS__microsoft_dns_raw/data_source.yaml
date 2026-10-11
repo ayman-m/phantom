@@ -1,0 +1,283 @@
+schema_version: 1
+id: MicrosoftDNS
+pack_name: MicrosoftDNS
+rule_name: MicrosoftDNS
+dataset_name: microsoft_dns_raw
+vendor: Microsoft
+product: MicrosoftDNS
+description: The Microsoft Domain Name Server (DNS) produces audit logs that identify
+  resources from your company that are connected to the internet or your private network,
+  and translate domain names to IP addresses.
+categories:
+- Network Security
+version: 1.0.15
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTEwcHgiIHZpZXdCb3g9IjAgMCA1MTIgMTEwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQiPgogICAgPHRpdGxlPk1pY3Jvc29mdDwvdGl0bGU+CiAgICA8Zz4KICAgICAgICA8cGF0aCBkPSJNNTEyLDQ5LjQ0ODY0MjggTDUxMiw0MC40NDQzMzc2IEw1MDAuODE4MjY3LDQwLjQ0NDMzNzYgTDUwMC44MTgyNjcsMjYuNDQ1Njg5IEw1MDAuNDQxODk5LDI2LjU2MTQ2MjIgTDQ4OS45MzkzMjgsMjkuNzc0NjMyMiBMNDg5LjczMjU0NiwyOS44Mzc3ODExIEw0ODkuNzMyNTQ2LDQwLjQ0NDMzNzYgTDQ3My4xNTU5MzIsNDAuNDQ0MzM3NiBMNDczLjE1NTkzMiwzNC41MzYxOTA5IEM0NzMuMTU1OTMyLDMxLjc4NDg3NTQgNDczLjc3MTMyNiwyOS42NzkyODk1IDQ3NC45ODM1MzksMjguMjc1MTUyOCBDNDc2LjE4NzcwMywyNi44ODc3MzIgNDc3LjkxMDA2MSwyNi4xODI1NjgxIDQ4MC4xMDYwMzcsMjYuMTgyNTY4MSBDNDgxLjY4NTM4MiwyNi4xODI1NjgxIDQ4My4zMjA0NDUsMjYuNTU0NjUyIDQ4NC45NjU0MTUsMjcuMjg4Mjk0OCBMNDg1LjM3Nzc0MSwyNy40NzIxNjk4IEw0ODUuMzc3NzQxLDE3Ljk4OTI5NDIgTDQ4NS4xODM5NjEsMTcuOTE4MDk2OSBDNDgzLjY0OTE5MiwxNy4zNjY0NzE3IDQ4MS41NjA5NDEsMTcuMDg4NDkyMyA0NzguOTczNjg5LDE3LjA4ODQ5MjMgQzQ3NS43MTIyMjgsMTcuMDg4NDkyMyA0NzIuNzQ4NTU5LDE3Ljc5Nzk4OTkgNDcwLjE2NDQwMywxOS4yMDQ2MDMgQzQ2Ny41NzgzODksMjAuNjEzMDczNSA0NjUuNTQ0MDAxLDIyLjYyMzkzNTkgNDY0LjExOTQzMywyNS4xODA4NTE2IEM0NjIuNjk5MiwyNy43MzQ2NzE3IDQ2MS45Nzg1NTgsMzAuNjg0MTAxNiA0NjEuOTc4NTU4LDMzLjk0ODAzODUgTDQ2MS45Nzg1NTgsNDAuNDQ0MzM3NiBMNDU0LjE5MjY1OCw0MC40NDQzMzc2IEw0NTQuMTkyNjU4LDQ5LjQ0ODY0MjggTDQ2MS45Nzg1NTgsNDkuNDQ4NjQyOCBMNDYxLjk3ODU1OCw4Ny4zODIwMDI2IEw0NzMuMTU1OTMyLDg3LjM4MjAwMjYgTDQ3My4xNTU5MzIsNDkuNDQ4NjQyOCBMNDg5LjczMjU0Niw0OS40NDg2NDI4IEw0ODkuNzMyNTQ2LDczLjU1NDg0NjggQzQ4OS43MzI1NDYsODMuNDgyODYxIDQ5NC40MTU0NzgsODguNTE0MzUwOSA1MDMuNjUwNzExLDg4LjUxNDM1MDkgQzUwNS4xNjg3NjQsODguNTE0MzUwOSA1MDYuNzY1NDY4LDg4LjMzNjA0NzggNTA4LjM5Njc5Miw4Ny45ODc0OTAxIEM1MTAuMDU2NjQ1LDg3LjYzMDI2NDggNTExLjE4NzEzNiw4Ny4yNzMwMzk2IDUxMS44NTI2NTIsODYuODkxNjY5MSBMNTEyLDg2LjgwNDk5NCBMNTEyLDc3LjcxNzEwOTMgTDUxMS41NDU1NzQsNzguMDE3OTk1NiBDNTEwLjkzODg0OSw3OC40MjI4OTIyIDUxMC4xODM1MzcsNzguNzUyODc2NyA1MDkuMjk3NjE5LDc4Ljk5ODA0MzUgQzUwOC40MDc5MzYsNzkuMjQ4MTYzIDUwNy42NjUwMDYsNzkuMzczODQyIDUwNy4wODk4NzksNzkuMzczODQyIEM1MDQuOTI2MDczLDc5LjM3Mzg0MiA1MDMuMzI1NzA0LDc4Ljc5MDY0MjMgNTAyLjMzMjAxLDc3LjY0MDMzOTkgQzUwMS4zMjc4MTgsNzYuNDc5NTEyNiA1MDAuODE4MzE3LDc0LjQ0ODgzODcgNTAwLjgxODMxNyw3MS42MDg5OTA4IEw1MDAuODE4MzE3LDQ5LjQ0ODY0MjggTDUxMiw0OS40NDg2NDI4IEw1MTIsNDkuNDQ4NjQyOCBaIE00MjkuMjMxODM3LDc5LjM3NDcwODcgQzQyNS4xNzQ4MjMsNzkuMzc0NzA4NyA0MjEuOTc2NTExLDc4LjAyOTM4NzIgNDE5LjcyMjM0LDc1LjM3OTYwNTQgQzQxNy40NTQ1NDcsNzIuNzE2MjAzMyA0MTYuMzA1NDgzLDY4LjkxOTIxNDYgNDE2LjMwNTQ4Myw2NC4wOTUxMjU5IEM0MTYuMzA1NDgzLDU5LjExODExNzUgNDE3LjQ1NDU0Nyw1NS4yMjI2OTA2IDQxOS43MjM1NzgsNTIuNTEyMjM2MyBDNDIxLjk3ODk4OCw0OS44MTk3MzYxIDQyNS4xNDY5NjMsNDguNDUzMzY1IDQyOS4xNDA4MjgsNDguNDUzMzY1IEM0MzMuMDE2NDQ0LDQ4LjQ1MzM2NSA0MzYuMTAxNDU4LDQ5Ljc1ODQ0NDQgNDM4LjMxMTA1NCw1Mi4zMzQ1NTIzIEM0NDAuNTMyNDE0LDU0LjkyMzY2MTUgNDQxLjY1OTE5LDU4Ljc4ODEzMyA0NDEuNjU5MTksNjMuODIzMzM3NSBDNDQxLjY1OTE5LDY4LjkyMDQ1MjkgNDQwLjU5OTI3Nyw3Mi44MzU2OTExIDQzOC41MDkxNjksNzUuNDU0NTE3NSBDNDM2LjQzMzkxOSw3OC4wNTQxNTE1IDQzMy4zMTI5OTYsNzkuMzc0NzA4NyA0MjkuMjMxODM3LDc5LjM3NDcwODcgTDQyOS4yMzE4MzcsNzkuMzc0NzA4NyBaIE00MjkuNzI5NiwzOS4zMTM0NzUxIEM0MjEuOTg5NTEzLDM5LjMxMzQ3NTEgNDE1Ljg0MTc3MSw0MS41ODEyNjczIDQxMS40NTkxMDcsNDYuMDU0MzIxOSBDNDA3LjA3ODkxOCw1MC41Mjc5OTU1IDQwNC44NTc1NTksNTYuNzE4NDU1NCA0MDQuODU3NTU5LDY0LjQ1NjA2NTggQzQwNC44NTc1NTksNzEuODA0ODc2NSA0MDcuMDI1Njc1LDc3LjcxNjExODYgNDExLjMwMTg1Myw4Mi4wMjI2MzMyIEM0MTUuNTc4MDMyLDg2LjMzMTAwNSA0MjEuMzk3NjQ1LDg4LjUxMzM2MDQgNDI4LjU5NzI1MSw4OC41MTMzNjA0IEM0MzYuMTAwMjIsODguNTEzMzYwNCA0NDIuMTI1Mzc4LDg2LjIxMzk5MzYgNDQ2LjUwNjgwNCw4MS42NzkwMjgzIEM0NTAuODg3NjExLDc3LjE0ODM5NjcgNDUzLjEwNzExNCw3MS4wMTY3NTIxIDQ1My4xMDcxMTQsNjMuNDU5OTIxMSBDNDUzLjEwNzExNCw1NS45OTU5NTY0IDQ1MS4wMjQ0MzUsNTAuMDQwNzU3NiA0NDYuOTE0Nzk3LDQ1Ljc2MjcyMiBDNDQyLjgwMzMwMSw0MS40ODI4MjkyIDQzNy4wMjAyMTQsMzkuMzEzNDc1MSA0MjkuNzI5NiwzOS4zMTM0NzUxIEw0MjkuNzI5NiwzOS4zMTM0NzUxIFogTTM4Ni44MzYyNTQsMzkuMzEzMjI3NSBDMzgxLjU3MTM2LDM5LjMxMzIyNzUgMzc3LjIxNjU1Niw0MC42NTk3ODcxIDM3My44ODk0Nyw0My4zMTUxNDA5IEMzNzAuNTQyNTczLDQ1Ljk4NTk3MjQgMzY4Ljg0NDk3OSw0OS40ODk1MDM5IDM2OC44NDQ5NzksNTMuNzI4NTM1NyBDMzY4Ljg0NDk3OSw1NS45MzE5NDA3IDM2OS4yMTE0OSw1Ny44ODk1NTk4IDM2OS45MzI3NTIsNTkuNTQ5Mzg4IEMzNzAuNjU4MzQ2LDYxLjIxNTQwNzQgMzcxLjc4MTQwOCw2Mi42ODE0NTQ5IDM3My4yNzI4MzksNjMuOTEyMjQxNCBDMzc0Ljc1Mzc0NCw2NS4xMzMxMjIyIDM3Ny4wMzgyNTMsNjYuNDEyMTk5MSAzODAuMDY2OTI4LDY3LjcxMjk0NDcgQzM4Mi42MTIwODIsNjguNzYwNDc1NCAzODQuNTEwODg1LDY5LjY0NzAzNzkgMzg1LjcxNjkwNyw3MC4zNDUzOTE2IEMzODYuODk1Njg5LDcxLjAyOTUwNTggMzg3LjczMjcyMyw3MS43MTc5NTM3IDM4OC4yMDUxMDIsNzIuMzg3ODI4NSBDMzg4LjY2Mzg2MSw3My4wNDM0NjM4IDM4OC44OTcyNjUsNzMuOTQwNTUxMSAzODguODk3MjY1LDc1LjA0ODc1NDIgQzM4OC44OTcyNjUsNzguMjAxODcwNyAzODYuNTM1OTg3LDc5LjczNjAyMDEgMzgxLjY3NjYwOSw3OS43MzYwMjAxIEMzNzkuODc0Mzg2LDc5LjczNjAyMDEgMzc3LjgxODMyOSw3OS4zNjAyMjE2IDM3NS41NjYwMTQsNzguNjE3OTExMiBDMzczLjMxMjQ2Miw3Ny44NzY4MzkxIDM3MS4yMDY4NzUsNzYuODExMzU0MyAzNjkuMzA4NjksNzUuNDQ0OTgzMiBMMzY4Ljg0NDk3OSw3NS4xMTI1MjIzIEwzNjguODQ0OTc5LDg1Ljg3MzIzNjcgTDM2OS4wMTUyMzQsODUuOTUyNDgyNSBDMzcwLjU5NzA1NCw4Ni42ODI0MTA2IDM3Mi41OTA1ODIsODcuMjk3ODAzOSAzNzQuOTQwNzE1LDg3Ljc4MjU2NTQgQzM3Ny4yODY1MTUsODguMjY3MzI2OCAzNzkuNDE3NDg0LDg4LjUxNDM1MDkgMzgxLjI2OTIzNiw4OC41MTQzNTA5IEMzODYuOTgyMzY0LDg4LjUxNDM1MDkgMzkxLjU4Mjk1NSw4Ny4xNjA5ODEgMzk0LjkzOTc1OCw4NC40OTAxNDk2IEMzOTguMzE4MjI5LDgxLjgwMDc0NDkgNDAwLjAzMDY4Miw3OC4yMTQ4NzIgNDAwLjAzMDY4Miw3My44Mjg0OTI2IEM0MDAuMDMwNjgyLDcwLjY2NDg1MTIgMzk5LjEwODgzLDY3Ljk1MTMwMTMgMzk3LjI5MTc0OSw2NS43NjMzNzQgQzM5NS40ODc2NjgsNjMuNTkyNzgxNyAzOTIuMzU2MjIsNjEuNjAwNDkyNiAzODcuOTg3Nzk1LDU5LjgzOTEzMDYgQzM4NC41MDc3ODksNTguNDQyNDIzMiAzODIuMjc4MzgzLDU3LjI4MjgzNDEgMzgxLjM1OTAwNyw1Ni4zOTMxNzYgQzM4MC40NzI0NDQsNTUuNTMzMjM1MSAzODAuMDIyMzUzLDU0LjMxNzMwNzMgMzgwLjAyMjM1Myw1Mi43Nzc1ODU5IEMzODAuMDIyMzUzLDUxLjQxMjQ1MyAzODAuNTc3NjkzLDUwLjMxOTEwODUgMzgxLjcxODcwOSw0OS40MzMxNjUxIEMzODIuODY4MzkyLDQ4LjU0Mjg4NzkgMzg0LjQ2ODE2Niw0OC4wOTAzMjAxIDM4Ni40NzUzMTUsNDguMDkwMzIwMSBDMzg4LjMzNzU5MSw0OC4wOTAzMjAxIDM5MC4yNDMyMDUsNDguMzg0Mzk2MyAzOTIuMTM3Njc1LDQ4Ljk2MDc4NTggQzM5NC4wMzE1MjYsNDkuNTM3MTc1MiAzOTUuNjk0NDUsNTAuMzA5MjAyNyAzOTcuMDgzMTA5LDUxLjI1Mzk2MTQgTDM5Ny41MzkzOTIsNTEuNTY1OTkxOCBMMzk3LjUzOTM5Miw0MS4zNTgxNDA4IEwzOTcuMzY0MTg1LDQxLjI4MjYwOTYgQzM5Ni4wODMyNSw0MC43MzM0NjEgMzk0LjM5NDMyNCw0MC4yNjM1NTgxIDM5Mi4zNDMyMTksMzkuODgyMTg3NiBDMzkwLjMwMDE2MywzOS41MDQ1MzE4IDM4OC40NDcxNzMsMzkuMzEzMjI3NSAzODYuODM2MjU0LDM5LjMxMzIyNzUgTDM4Ni44MzYyNTQsMzkuMzEzMjI3NSBaIE0zMzkuNzA2MDQ3LDc5LjM3NDcwODcgQzMzNS42NTAyNzEsNzkuMzc0NzA4NyAzMzIuNDUwNzIxLDc4LjAyOTM4NzIgMzMwLjE5NzE2OSw3NS4zNzk2MDU0IEMzMjcuOTI4NzU3LDcyLjcxNjIwMzMgMzI2Ljc4MTU1LDY4LjkyMDQ1MjkgMzI2Ljc4MTU1LDY0LjA5NTEyNTkgQzMyNi43ODE1NSw1OS4xMTgxMTc1IDMyNy45Mjk5OTYsNTUuMjIyNjkwNiAzMzAuMTk5NjQ1LDUyLjUxMjIzNjMgQzMzMi40NTMxOTgsNDkuODE5NzM2MSAzMzUuNjIwNTU0LDQ4LjQ1MzM2NSAzMzkuNjE2Mjc2LDQ4LjQ1MzM2NSBDMzQzLjQ5MDY1NCw0OC40NTMzNjUgMzQ2LjU3NTY2OCw0OS43NTg0NDQ0IDM0OC43ODU4ODMsNTIuMzM0NTUyMyBDMzUxLjAwNzI0Myw1NC45MjM2NjE1IDM1Mi4xMzQwMTksNTguNzg4MTMzIDM1Mi4xMzQwMTksNjMuODIzMzM3NSBDMzUyLjEzNDAxOSw2OC45MjA0NTI5IDM1MS4wNzM0ODcsNzIuODM1NjkxMSAzNDguOTgzMzc5LDc1LjQ1NDUxNzUgQzM0Ni45MDgxMjksNzguMDU0MTUxNSAzNDMuNzg4NDQ0LDc5LjM3NDcwODcgMzM5LjcwNjA0Nyw3OS4zNzQ3MDg3IEwzMzkuNzA2MDQ3LDc5LjM3NDcwODcgWiBNMzQwLjIwNTA0OCwzOS4zMTM0NzUxIEMzMzIuNDYzMTAzLDM5LjMxMzQ3NTEgMzI2LjMxNTM2Miw0MS41ODEyNjczIDMyMS45MzQ1NTUsNDYuMDU0MzIxOSBDMzE3LjU1NDM2Niw1MC41Mjc5OTU1IDMxNS4zMzE3NjksNTYuNzE4NDU1NCAzMTUuMzMxNzY5LDY0LjQ1NjA2NTggQzMxNS4zMzE3NjksNzEuODA3OTcyMSAzMTcuNTAxMTIzLDc3LjcxNjExODYgMzIxLjc3NzMwMSw4Mi4wMjI2MzMyIEMzMjYuMDUzNDgsODYuMzMxMDA1IDMzMS44NzI0NzUsODguNTEzMzYwNCAzMzkuMDcyNjk5LDg4LjUxMzM2MDQgQzM0Ni41NzM4MTEsODguNTEzMzYwNCAzNTIuNjAwODI2LDg2LjIxMzk5MzYgMzU2Ljk4MjI1Miw4MS42NzkwMjgzIEMzNjEuMzYxODIyLDc3LjE0ODM5NjcgMzYzLjU4MjU2Miw3MS4wMTY3NTIxIDM2My41ODI1NjIsNjMuNDU5OTIxMSBDMzYzLjU4MjU2Miw1NS45OTU5NTY0IDM2MS40OTkyNjQsNTAuMDQwNzU3NiAzNTcuMzg5MDA2LDQ1Ljc2MjcyMiBDMzUzLjI3NjI3Myw0MS40ODI4MjkyIDM0Ny40OTQ0MjQsMzkuMzEzNDc1MSAzNDAuMjA1MDQ4LDM5LjMxMzQ3NTEgTDM0MC4yMDUwNDgsMzkuMzEzNDc1MSBaIE0yOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQwLjQ0NDMzNzYgTDI4Ny4zMjM2OTksNDAuNDQ0MzM3NiBMMjg3LjMyMzY5OSw4Ny4zODA3NjQ0IEwyOTguMzY0ODcsODcuMzgwNzY0NCBMMjk4LjM2NDg3LDYzLjM3MTE0MTEgQzI5OC4zNjQ4Nyw1OS4yODgxMjQ1IDI5OS4yOTA0MzYsNTUuOTM0NDE3MSAzMDEuMTE2ODA0LDUzLjQwMTAyNzUgQzMwMi45MjAyNjUsNTAuODk3OTc0NCAzMDUuMzIzNjQzLDQ5LjYyOTQyMjMgMzA4LjI1NzU5NSw0OS42Mjk0MjIzIEMzMDkuMjUxODgxLDQ5LjYyOTQyMjMgMzEwLjM2ODEzMyw0OS43OTM0ODU5IDMxMS41NzcyNTEsNTAuMTE3ODk4NSBDMzEyLjc3Mzk4Niw1MC40NDA0NTM3IDMxMy42NDA3MzgsNTAuNzkwMjQ5NSAzMTQuMTUyMTIxLDUxLjE1ODYxODggTDMxNC42MTU4MzMsNTEuNDk0Nzk0NCBMMzE0LjYxNTgzMyw0MC4zNjM4NTM2IEwzMTQuNDM2OTExLDQwLjI4NzA4NDIgQzMxMy40MDg1NzMsMzkuODQ5OTk0IDMxMS45NTQyODgsMzkuNjI5NTkxNiAzMTAuMTEzNjgsMzkuNjI5NTkxNiBDMzA3LjMzOTQ1OCwzOS42Mjk1OTE2IDMwNC44NTYyMTYsNDAuNTIxMTA3IDMwMi43Mjk1OCw0Mi4yNzYyNzc4IEMzMDAuODYyOTcsNDMuODE5MDk0NyAyOTkuNTEzMzE0LDQ1LjkzNDU4NjQgMjk4LjQ4MTg4MSw0OC41NzI2MDUxIEwyOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQ4LjU3MjYwNTEgWiBNMjY3LjU1MTU2MywzOS4zMTMyMjc1IEMyNjIuNDg2NjQxLDM5LjMxMzIyNzUgMjU3Ljk2ODM5MSw0MC4zOTk3NjE4IDI1NC4xMjQ5Nyw0Mi41NDA2MzY5IEMyNTAuMjc0MTE4LDQ0LjY4NjQ2NDkgMjQ3LjI5NjIwOSw0Ny43NTA0Mjk5IDI0NS4yNjk4NjksNTEuNjQ2NDc1OCBDMjQzLjI1MjgxNiw1NS41MzMyMzUxIDI0Mi4yMjg4MTEsNjAuMDczMTUzNCAyNDIuMjI4ODExLDY1LjEzNTU5ODYgQzI0Mi4yMjg4MTEsNjkuNTcwMjY4NSAyNDMuMjIxODYsNzMuNjQwMjgzNyAyNDUuMTg0NDMyLDc3LjIyNjc3NTggQzI0Ny4xNDgyNDMsODAuODE5NDU4OSAyNDkuOTI4MDM3LDgzLjYzMDIwODggMjUzLjQ0NjQyNyw4NS41Nzk3Nzk1IEMyNTYuOTU5ODY1LDg3LjUyNjg3MzkgMjYxLjAyMDU5Myw4OC41MTQzNTA5IDI2NS41MTY1NTUsODguNTE0MzUwOSBDMjcwLjc2MzQ5NCw4OC41MTQzNTA5IDI3NS4yNDMzNTksODcuNDY0OTYzIDI3OC44MzU0MjMsODUuMzk2NTIzNSBMMjc4Ljk4MDI5NSw4NS4zMTI5NDM5IEwyNzguOTgwMjk1LDc1LjE5Nzk1OTIgTDI3OC41MTY1ODMsNzUuNTM2NjExMiBDMjc2Ljg4OTU2Nyw3Ni43MjE1ODM3IDI3NS4wNzEyNDgsNzcuNjY3NTgwNiAyNzMuMTE0ODY2LDc4LjM0OTIxODQgQzI3MS4xNjM0MzgsNzkuMDMwMjM3MSAyNjkuMzg0MTIyLDc5LjM3NDQ2MTEgMjY3LjgyNDU4OSw3OS4zNzQ0NjExIEMyNjMuNDkyMDczLDc5LjM3NDQ2MTEgMjYwLjAxNDU0Myw3OC4wMTg2MTQ4IDI1Ny40ODk4MjEsNzUuMzQ2NTQ1MSBDMjU0Ljk1OTUyNyw3Mi42NzAxNDE3IDI1My42NzY3MzYsNjguOTEyNzc1OSAyNTMuNjc2NzM2LDY0LjE4NDAyOTggQzI1My42NzY3MzYsNTkuNDI1NTY2NSAyNTUuMDE0NjI4LDU1LjU3MTYxOTkgMjU3LjY1MTQwOCw1Mi43Mjc0MzgxIEMyNjAuMjc5NTIxLDQ5Ljg5MTkyNCAyNjMuNzYzODYsNDguNDUzNzM2NCAyNjguMDA2NjA3LDQ4LjQ1MzczNjQgQzI3MS42MzU4MTcsNDguNDUzNzM2NCAyNzUuMTcyMTYxLDQ5LjY4MjY2NTUgMjc4LjUxNzgyMSw1Mi4xMDk1Njg1IEwyNzguOTgwMjk1LDUyLjQ0NTc0NDEgTDI3OC45ODAyOTUsNDEuNzg3ODAxNyBMMjc4LjgzMTA4OSw0MS43MDM2MDMgQzI3Ny41NzE4MjQsNDAuOTk5MDU4MiAyNzUuODU1MDM3LDQwLjQxNzA5NjggMjczLjcyMjgzLDM5Ljk3NTY3MjkgQzI3MS42MDA1MjgsMzkuNTM1NDg3MiAyNjkuNTI0NjU5LDM5LjMxMzIyNzUgMjY3LjU1MTU2MywzOS4zMTMyMjc1IEwyNjcuNTUxNTYzLDM5LjMxMzIyNzUgWiBNMjM0LjYyNDU1Nyw0MC40NDQ0NjE0IEwyMjMuNTgzMzg3LDQwLjQ0NDQ2MTQgTDIyMy41ODMzODcsODcuMzgwODg4MSBMMjM0LjYyNDU1Nyw4Ny4zODA4ODgxIEwyMzQuNjI0NTU3LDQwLjQ0NDQ2MTQgTDIzNC42MjQ1NTcsNDAuNDQ0NDYxNCBaIE0yMjkuMjE2NjQ5LDIwLjQ0OTEzMzggQzIyNy4zOTk1NjgsMjAuNDQ5MTMzOCAyMjUuODE0NjUyLDIxLjA2NzYyMjUgMjI0LjUxMjY2NywyMi4yOTM0NTYyIEMyMjMuMjA1MTEyLDIzLjUyMzAwNDQgMjIyLjU0MTQyOCwyNS4wNzA3NzQyIDIyMi41NDE0MjgsMjYuODk3MTQyNCBDMjIyLjU0MTQyOCwyOC42OTUwMzE4IDIyMy4xOTcwNjQsMzAuMjE0MzIyNiAyMjQuNDkxNjE4LDMxLjQxMTA1ODEgQzIyNS43NzgxMjQsMzIuNjA0MDc5MSAyMjcuMzY3OTkzLDMzLjIwODk0NzQgMjI5LjIxNjY0OSwzMy4yMDg5NDc0IEMyMzEuMDY0Njg2LDMzLjIwODk0NzQgMjMyLjY2MDc0NywzMi42MDQwNzkxIDIzMy45NjI3MywzMS40MTI5MTU1IEMyMzUuMjczMzgyLDMwLjIxNDMyMjYgMjM1LjkzNzY4NSwyOC42OTUwMzE4IDIzNS45Mzc2ODUsMjYuODk3MTQyNCBDMjM1LjkzNzY4NSwyNS4xMzQ1NDIzIDIzNS4yOTEzMzYsMjMuNjAyMjUwMiAyMzQuMDE2NTkzLDIyLjM0Mjk4NDggQzIzMi43NDM3MDcsMjEuMDg2MTk1OCAyMzEuMTI4NDU1LDIwLjQ0OTEzMzggMjI5LjIxNjY0OSwyMC40NDkxMzM4IEwyMjkuMjE2NjQ5LDIwLjQ0OTEzMzggWiBNMjAxLjY2ODg4NCwzNi45ODE1NDMzIEwyMDEuNjY4ODg0LDg3LjM4MDY0MDYgTDIxMi45MzY2NDcsODcuMzgwNjQwNiBMMjEyLjkzNjY0NywyMS44ODY0NTQ2IEwxOTcuMzQxOTM5LDIxLjg4NjQ1NDYgTDE3Ny41MTkzNDIsNzAuNTMzNDc2NiBMMTU4LjI4MzA0MSwyMS44ODY0NTQ2IEwxNDIuMDUzMTI4LDIxLjg4NjQ1NDYgTDE0Mi4wNTMxMjgsODcuMzgwNjQwNiBMMTUyLjY0MTczLDg3LjM4MDY0MDYgTDE1Mi42NDE3MywzNi45NzY1OTA1IEwxNTMuMDA1NzY1LDM2Ljk3NjU5MDUgTDE3My4zMTg2OTUsODcuMzgwNjQwNiBMMTgxLjMwOTUyMSw4Ny4zODA2NDA2IEwyMDEuMzA1NDY3LDM2Ljk4MTU0MzMgTDIwMS42Njg4ODQsMzYuOTgxNTQzMyBMMjAxLjY2ODg4NCwzNi45ODE1NDMzIFoiIGZpbGw9IiM3MDZENkUiPjwvcGF0aD4KICAgICAgICA8Zz4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0YxNTExQiIgcG9pbnRzPSI1MS45Mzk0Mzc3IDUxLjkzOTQzNzcgMCA1MS45Mzk0Mzc3IDAgMCA1MS45Mzk0Mzc3IDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzgwQ0MyOCIgcG9pbnRzPSIxMDkuMjg2NzgzIDUxLjkzOTQzNzcgNTcuMzQ3OTY0MiA1MS45Mzk0Mzc3IDU3LjM0Nzk2NDIgMCAxMDkuMjg2NzgzIDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzAwQURFRiIgcG9pbnRzPSI1MS45MzgxOTk1IDEwOS4zMDcyMTMgMCAxMDkuMzA3MjEzIDAgNTcuMzY3Nzc1NyA1MS45MzgxOTk1IDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0ZCQkMwOSIgcG9pbnRzPSIxMDkuMjg2NzgzIDEwOS4zMDcyMTMgNTcuMzQ3OTY0MiAxMDkuMzA3MjEzIDU3LjM0Nzk2NDIgNTcuMzY3Nzc1NyAxMDkuMjg2NzgzIDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: 'Native microsoft_dns log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: DNS debug-log response packet. Column padding is load-bearing: the rule indexes the 8th capture of (\s|R)\s, which only exists with the vendor''s real space runs.'
+  example: '{{now:%-m/%-d/%Y %-I:%M:%S %p}} 0AE4 PACKET  000001F0A4F0AC50 UDP Rcv 10.20.30.40    00a2   R Q [8081   DR  NOERROR] A      (3)www(7)example(3)com(0) ANSWER SECTION: TYPE A CLASS IN TTL 3600 DATA 93.184.216.34 AUTHORITY SECTION: TYPE NS'
+- name: channel
+  type: string
+  description: Vendor-emitted field 'Channel'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'DNS Server'
+- name: computer_name
+  type: string
+  description: Human-readable name as displayed by Microsoft. Free-form text; may
+    contain whitespace and punctuation.
+  example: 'dc01.acme.local'
+- name: dstPort
+  type: integer_port
+  description: Destination TCP/UDP port. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '53'
+- name: event_action
+  type: string_short
+  description: Action taken by Microsoft's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: 'Query'
+- name: event_data
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: BufferSize,
+    NAME, NewValue, PropertyKey, Source, Zone, type (each key defined as a dotted-path
+    leaf below).'
+  example: '{}'
+- name: event_id
+  type: integer
+  description: Unique identifier for this event as assigned by the vendor. Signed
+    decimal integer; bare digits, optional leading minus.
+  example: '257'
+- name: host_name
+  type: string
+  description: Human-readable name as displayed by Microsoft. Free-form text; may
+    contain whitespace and punctuation.
+  example: 'dc01.acme.local'
+- name: log_level
+  type: string_short
+  description: Severity level (string label, e.g., info/warn/error). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: 'Information'
+- name: message
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'DNS query resolved'
+- name: opcode
+  type: string
+  description: Vendor-emitted field 'Opcode'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'Info'
+- name: process_pid
+  type: integer
+  description: Vendor-emitted field 'Process pid'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '1820'
+- name: process_thread_id
+  type: integer
+  description: Opaque identifier emitted by Microsoft. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: '4128'
+- name: protocol
+  type: string
+  description: Network protocol name or numeric IANA assignment. Free-form text; may
+    contain whitespace and punctuation.
+  example: 'UDP'
+- name: provider_name
+  type: string
+  description: Human-readable name as displayed by Microsoft. Free-form text; may
+    contain whitespace and punctuation.
+  example: 'Microsoft-Windows-DNSServer'
+- name: questionName
+  type: string
+  description: Vendor-emitted field 'QuestionName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'www.example.com'
+- name: questionType
+  type: string
+  description: Vendor-emitted field 'QuestionType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'A'
+- name: record_id
+  type: integer
+  description: Opaque identifier emitted by Microsoft. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: '91001'
+- name: responseCode
+  type: string
+  description: Vendor-emitted field 'ResponseCode'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'NOERROR'
+- name: sourceIp
+  type: ipv4
+  description: Source address of the connection initiator. Free-form text; may contain
+    whitespace and punctuation.
+  example: '10.20.30.40'
+- name: sourcePort
+  type: integer_port
+  description: Source TCP/UDP port. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '53535'
+- name: task
+  type: string
+  description: Vendor-emitted field 'Task'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'Query'
+- name: user
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: domain,
+    identifier, name, type (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: event_data.BufferSize
+  type: integer_byte_count
+  description: Vendor-emitted field 'Event data › BufferSize'. Leaf of the 'event_data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: '512'
+- name: event_data.NAME
+  type: string
+  description: Human-readable name as displayed by Microsoft. Free-form text; may
+    contain whitespace and punctuation.
+  example: 'www.example.com'
+- name: event_data.NewValue
+  type: string
+  description: Vendor-emitted field 'Event data › NewValue'. Leaf of the 'event_data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 'Primary'
+- name: event_data.PropertyKey
+  type: string
+  description: Vendor-emitted field 'Event data › PropertyKey'. Leaf of the 'event_data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 'ZoneType'
+- name: event_data.Source
+  type: ipv4
+  description: Vendor-emitted field 'Event data › Source'. Leaf of the 'event_data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: '10.20.30.40'
+- name: event_data.Zone
+  type: string
+  description: Vendor-emitted field 'Event data › Zone'. Leaf of the 'event_data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 'example.com'
+- name: event_data.type
+  type: integer
+  description: Type/category classifier emitted by Microsoft. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: '1'
+- name: user.domain
+  type: domain
+  description: DNS domain reported by Microsoft — bare domain, no scheme/path/port.
+    Bare DNS domain name; no scheme, no path, no port.
+  example: 'Acme'
+- name: user.identifier
+  type: string
+  description: Vendor-emitted field 'User › identifier'. Leaf of the 'user' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'S-1-5-21-77'
+- name: user.name
+  type: user
+  description: Human-readable name as displayed by Microsoft. Account name as the
+    vendor reports it — login name, UPN, or sAMAccountName; no domain prefix unless
+    vendor emits one.
+  example: 'dnsadmin'
+- name: user.type
+  type: string_short
+  description: Type/category classifier emitted by Microsoft. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: 'User'
+use_cases:
+- Cloud
+- SaaS
+- Identity
+how_to_use: |
+  ## Microsoft DNS -> Cortex XSIAM (dataset `microsoft_dns_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `microsoft` / product `windows`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+  Required CEF header for XSIAM:
+  - vendor: `microsoft`
+  - product: `windows`
+
+  **Routing.** Four packs share the pair `microsoft`/`windows`. DNS is selected by its
+  parsing rule branch A, whose only test is that `_raw_log` contains a DNS-debug timestamp
+  in `M/D/YYYY h:mm:ss AM` form. Branch B requires `_raw_log = null`, which is unreachable
+  over syslog because the broker always populates it, so branch A is the only way in.
+  Setting `provider_name = Microsoft-Windows-DNSServer` additionally excludes the event
+  from the Windows Events rule (which filters that provider out) and selects the richer
+  second branch of the modeling rule. Verified: an event shaped this way lands in
+  `microsoft_dns_raw` with every column intact.
+
+  **`_raw_log` MUST carry a CURRENT date.** The parsing rule sets `_time` from that
+  timestamp. A fixed example date stamps every event in the past, where normal query
+  windows will not find it -- the failure looks like "nothing landed" and is not.
+
+  **Fields the modeling rule reads.** Flat columns: `questionName`, `questionType` (`A`,
+  `AAAA`, `TXT` ... uppercase), `responseCode` (`NOERROR`, `NXDOMAIN` ...), `protocol`
+  (`UDP`/`TCP`/`ICMP` -- UPPERCASE, the rule matches on case), `sourceIp`, `sourcePort`,
+  `dstPort`. Metadata: `provider_name`, `channel`, `record_id`, `event_id`, `log_level`,
+  `event_action`, `task`, `computer_name`, `host_name`, `message`, `process_pid`,
+  `process_thread_id`. Composites (JSON objects on the wire): `event_data` with leaves
+  `type` (NUMERIC record type as a string, `1` = A), `NAME`, `Source`, `Zone`,
+  `BufferSize`, `PropertyKey`, `NewValue`; and `user` with `name`, `domain`, `identifier`,
+  `type`.
+
+  `_raw_log` also feeds the answer section: the rule extracts between literal
+  `ANSWER SECTION:` and `AUTHORITY SECTION:` markers with `[^:]+`, so NO colons may appear
+  between them.
+
+  **KNOWN GAP -- modeling rule may not be bound on a tenant.** Events land correctly and
+  every column is present, but `datamodel dataset = microsoft_dns_raw` returns 0 rows,
+  while the sibling AMSI, ADFS and Windows Events datasets all return rows. That is the
+  signature of the Microsoft DNS content pack not being installed. Until an operator
+  installs it, this source produces raw rows and no `xdm.*`. Nothing in this schema can
+  change that.
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

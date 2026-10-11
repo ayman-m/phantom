@@ -1,0 +1,597 @@
+# Cortex XSIAM tool connector for the Phantom SOC simulation agent.
+#
+# Per Spark agent bundle spec v1.2 §7.4. Tool names are auto-namespaced
+# as `xsiam/<tool_name>` by the embedded MCP. Manifest tools.allow
+# lists `xsiam/*` (with explicit deny for xsiam/remove_lookup_data).
+
+id: "xsiam"
+version: "1.0.0"
+description: "Cortex XSIAM connector — XQL queries, cases, datasets, lookups, assets, issues, and webhook log ingestion via PAPI."
+displayName: "Cortex XSIAM"
+tags: ["xsiam", "cortex", "siem", "xql", "soar", "papi"]
+# base64-embedded data URI. Round-trips on
+# download/upload via /api/v1/marketplace/{id}/download +
+# /api/v1/marketplace/upload. Marketplace card renders this
+# directly via <img src={connector.logo}>.
+logo: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMxYTBmMDAiLz48cGF0aCBkPSJNMzIgNkw1MiAxMlYzMkM1MiA0NCA0MiA1NCAzMiA1OEMyMiA1NCAxMiA0NCAxMiAzMlYxMkwzMiA2WiIgZmlsbD0iI2ZmN2EwMCIgZmlsbC1vcGFjaXR5PSIwLjE4IiBzdHJva2U9IiNmZjlhM2EiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0yNCAyNGwxNiAxNk00MCAyNEwyNCA0MCIgc3Ryb2tlPSIjZmY5YTNhIiBzdHJva2Utd2lkdGg9IjMiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg=="
+
+source:
+  language: "python"
+  entrypoint: "src.connector"
+
+# Tool dispatch — wraps Cortex XSIAM PAPI (external SaaS). The
+# connector container is stateless; PAPI auth header lives in the
+# SecretStore, resolved into the contextvar by the runtime
+# entrypoint at boot; per-call tool dispatch reads via
+# get_config(). See architecture page #marketplace-logic.
+#
+# The `functionPrefix: "xsiam_"` line below is a no-op (ignored when
+# style is container) but preserved for round-trip stability of
+# operator-downloaded YAMLs.
+runtimeMapping:
+  # Universal connector container model.
+  # xsiam connector wraps Cortex XSIAM PAPI (external SaaS); the
+  # wrapper is stateless. PAPI auth header lives in the SecretStore,
+  # resolved into the contextvar by the runtime entrypoint at boot;
+  # per-call tool dispatch reads via get_config(). See architecture
+  # page #marketplace-logic.
+  style: "container"
+  functionPrefix: "xsiam_"
+
+executionMode: "persistent"
+
+configSchema:
+  type: "object"
+  # api_url/api_id/api_key are the same field names as the Cortex XDR
+  # connector: both products auth identically (same Cortex platform).
+  # The connector code and the probe also read the papiUrl/papiAuthId/
+  # papiAuthHeader names at dispatch time (papi* names first, then a
+  # fallback to env vars).
+  required: ["api_url", "api_id"]
+  properties:
+    api_url:
+      type: "string"
+      description: "Cortex XSIAM PAPI base URL (e.g. https://api-yourtenant.xdr.us.paloaltonetworks.com/papi/v1)."
+    api_id:
+      type: "string"
+      description: "Cortex XSIAM PAPI auth id (the X-Auth-ID header value)."
+    playgroundId:
+      type: "string"
+      description: "Issue/war-room id used as the remote execution context for PAPI calls. XSIAM-specific (no Cortex XDR equivalent)."
+    webhookEndpoint:
+      type: "string"
+      description: "Optional XSIAM webhook URL for raw log ingestion (used by xsiam/send_webhook_log). XSIAM-specific."
+      default: ""
+
+secretSlots:
+  - name: "api_key"
+    description: "Cortex XSIAM PAPI Authorization header value (full header content, including any 'Bearer' prefix)."
+    required: true
+  - name: "webhookKey"
+    description: "Optional XSIAM webhook Authorization header value (raw, NOT 'Bearer' — see app/schema.py _get_webhook_headers). XSIAM-specific."
+    required: false
+
+spec:
+  tools:
+    # ─── XQL queries ────────────────────────────────────────────
+    - name: "run_xql_query"
+      method: "POST /xql/run_query"
+      description: "Execute an XQL query against XSIAM's data lake. Returns the result rows or an execution id depending on query duration."
+      args:
+        - { name: "query",      type: "string",  description: "XQL query text. Runs over the last 30 minutes unless it starts with `config timeframe = 1d` (or 15m, 6h, ...). Do not write `_time > current_time() - 5m`: XQL has no arithmetic on current_time() in a filter.",        required: true  }
+      returns: { type: "object", description: "Query result rows or execution_id for async queries." }
+
+    - name: "get_xql_examples"
+      method: "(static)"
+      description: "Return the bundled curated XQL example library (one-shot examples by domain — auth, network, process, etc.)."
+      args: []
+      returns: { type: "array", description: "Example records { title, query, tags }." }
+
+    # There is no `get_xql_doc` tool: the XQL syntax reference lives in
+    # cortex-docs/xql_lookup (public API, no XSIAM credentials required,
+    # covers all Cortex products). The cortex_xql_query_authoring skill
+    # routes there.
+
+    - name: "find_xql_examples_rag"
+      method: "(runtime KB)"
+      description: "Semantic search over the bundled XQL example library. Thin wrapper around the runtime's knowledge_search built-in (manifest.knowledge.bundled[].name == 'xql-examples'), which serves the spec-compliant SqliteKnowledgeBase embedded via VertexEmbedder / text-embedding-004. Response is enriched with stage-doc snippets (xql_doc.md) and dataset-field listings (dataset_fields.md). Prefer the generic knowledge_search built-in for new code."
+      args:
+        - { name: "intent",     type: "string",  description: "Natural-language intent (e.g. 'failed logins from a new country').", required: true  }
+        - { name: "top_k",      type: "integer", description: "Maximum results (default 5, max 10).",                               required: false }
+      returns: { type: "object", description: "{ status, intent, matches: [{id, title, query, dataset, score}], stage_docs, dataset_fields }." }
+
+    # ─── Datasets ───────────────────────────────────────────────
+    - name: "get_datasets"
+      method: "GET /xql/get_datasets"
+      description: "List every dataset registered in XSIAM."
+      args: []
+      returns: { type: "array", description: "Dataset metadata." }
+
+    - name: "create_dataset"
+      method: "POST /xql/create_dataset"
+      description: "Create a new XSIAM dataset (typically for receiving custom log streams)."
+      args:
+        - { name: "dataset_name",   type: "string", description: "Name for new dataset (lowercase with underscores).", required: true  }
+        - { name: "dataset_schema", type: "object", description: "Schema definition with field types (name → type map).", required: false }
+        - { name: "dataset_type",   type: "string", description: "Dataset type (default: lookup).",                   required: false }
+      returns: { type: "object", description: "Created dataset metadata." }
+
+    - name: "get_dataset_fields"
+      method: "GET /xql/dataset_fields"
+      description: "Return the reference mapping of every XSIAM dataset to its available XDM fields (bundled dataset_fields.md)."
+      args: []
+      returns: { type: "object", description: "{ content } — the dataset→fields reference markdown." }
+
+    # ─── Cases / issues ─────────────────────────────────────────
+    - name: "get_cases"
+      method: "POST /incidents/get_incidents"
+      description: "Fetch XSIAM cases (formerly 'incidents') matching the supplied query, via the playground !getIssues XSOAR command."
+      args:
+        - { name: "query", type: "string", description: "Search query for cases (e.g., 'severity:high AND status:new').", required: true }
+      returns: { type: "object", description: "{ result }." }
+
+    - name: "get_issues"
+      method: "POST /issue/search/"
+      description: "Fetch XSIAM issues matching the supplied filters."
+      args:
+        - { name: "filters",     type: "array",   description: "Array of {field, operator, value}. field: id|external_id|severity|status.progress|detection.method|observation_time|_insert_time|last_modified|issue_domain|category|detection.rule_id|assigned_to|asset_ids|asset_names|asset_types (anything else is rejected, e.g. creation_time). Time fields take epoch milliseconds. operator: in|gte|lte.", required: false }
+        - { name: "search_from", type: "integer", description: "ROW offset for paging (default 0), never a timestamp.", required: false }
+      returns: { type: "object", description: "{ alerts: [...], total }." }
+
+    # ─── Assets ─────────────────────────────────────────────────
+    - name: "get_assets"
+      method: "POST /assets/"
+      description: "Fetch XSIAM assets matching the supplied filters."
+      args:
+        - { name: "filters",     type: "object",  description: "Filter object with AND/OR arrays of {SEARCH_FIELD, SEARCH_TYPE, SEARCH_VALUE}.", required: false }
+        - { name: "sort",        type: "array",   description: "Sort criteria (field and order).",   required: false }
+        - { name: "search_from", type: "integer", description: "Pagination offset (default 0).",      required: false }
+        - { name: "search_to",   type: "integer", description: "Pagination limit (default 100, max 1000).", required: false }
+      returns: { type: "object", description: "{ assets: [...], total }." }
+
+    - name: "get_asset_by_id"
+      method: "GET /assets/{id}"
+      description: "Fetch one asset by id."
+      args:
+        - { name: "asset_id", type: "string", description: "Asset id.", required: true }
+      returns: { type: "object", description: "Asset object." }
+
+    # ─── Lookup tables ──────────────────────────────────────────
+    - name: "add_lookup_data"
+      method: "POST /xql/lookups/add_data"
+      description: "Append rows to an XSIAM lookup dataset."
+      args:
+        - { name: "dataset_name", type: "string", description: "Name of the lookup dataset to add data to.", required: true  }
+        - { name: "data",         type: "array",  description: "List of records to add (each record is an object).", required: true  }
+        - { name: "key_fields",   type: "array",  description: "Optional unique key fields.",          required: false }
+      returns: { type: "object", description: "Insert result." }
+
+    - name: "get_lookup_data"
+      method: "POST /xql/lookups/get_data"
+      description: "Fetch rows from an XSIAM lookup dataset."
+      args:
+        - { name: "dataset_name", type: "string",  description: "Name of the lookup dataset to query.",     required: true  }
+        - { name: "filters",      type: "array",   description: "Filter conditions (field, operator, value).", required: false }
+        - { name: "limit",        type: "integer", description: "Max records 1-1000 (default 20).",          required: false }
+      returns: { type: "array", description: "Rows." }
+
+    - name: "remove_lookup_data"
+      method: "POST /xql/lookups/remove_data"
+      description: "Delete rows from an XSIAM lookup dataset (DESTRUCTIVE — denied in manifest tools.deny)."
+      args:
+        - { name: "dataset_name", type: "string", description: "Name of the lookup dataset.",                    required: true }
+        - { name: "filters",      type: "array",  description: "Filter conditions to identify records to delete.", required: true }
+      returns: { type: "object", description: "Delete result summary." }
+
+    # ─── Webhook log ingestion ──────────────────────────────────
+    - name: "send_webhook_log"
+      method: "POST {webhookEndpoint}"
+      description: |
+        Send a raw log event to the configured XSIAM webhook endpoint.
+        Use this for ad-hoc one-off log injection — bulk simulation
+        should go through the xlog connector instead.
+        Header convention: `Authorization: <webhookKey>` (raw, NOT
+        'Bearer' — see app/schema.py _get_webhook_headers in repo
+        root).
+      args:
+        - { name: "message",       type: "string", description: "Log message/body to send to the XSIAM HTTP custom collector.", required: true  }
+        - { name: "event_type",    type: "string", description: "Logical event type/name (default 'mcp_event').",            required: false }
+        - { name: "severity",      type: "string", description: "Severity label info|warning|error (default 'info').",       required: false }
+        - { name: "metadata_json", type: "string", description: "Optional JSON metadata payload to include.",                 required: false }
+      returns: { type: "object", description: "{ status, message_id }." }
+
+    # ─── Incidents, alerts, IoC and download (9 tools) ───────────
+
+    - name: "incidents_list"
+      method: "POST /public_api/v1/incidents/get_incidents/"
+      description: "List XSIAM incidents with filters. Mirror of xdr_incidents_list."
+      args:
+        - { name: "modification_time", type: "integer", description: "Unix-millis filter.",                                 required: false }
+        - { name: "after_modification", type: "boolean", description: "If true, modification_time is lower bound.",         required: false }
+        - { name: "creation_time",     type: "integer", description: "Unix-millis filter.",                                 required: false }
+        - { name: "after_creation",    type: "boolean", description: "If true, creation_time is lower bound.",              required: false }
+        - { name: "incident_id_list",  type: "array",   description: "Specific IDs.",                                       required: false }
+        - { name: "description",       type: "string",  description: "Substring match.",                                    required: false }
+        - { name: "status",            type: "string",  description: "new / under_investigation / resolved_* enum value.", required: false }
+        - { name: "search_from",       type: "integer", description: "Pagination offset (default 0).",                     required: false }
+        - { name: "search_to",         type: "integer", description: "Pagination upper (default 100).",                    required: false }
+      returns: { type: "object", description: "{ ok, incidents: [...] }" }
+
+    - name: "incidents_get_extra_data"
+      method: "POST /public_api/v1/incidents/get_incident_extra_data/"
+      description: "Full details for one XSIAM incident — alerts, artifacts, users, hosts."
+      args:
+        - { name: "incident_id",  type: "string",  description: "From xsiam_incidents_list.",      required: true  }
+        - { name: "alerts_limit", type: "integer", description: "Cap on alerts (default 50).",     required: false }
+      returns: { type: "object", description: "{ ok, incident: {...} }" }
+
+    - name: "incidents_update"
+      method: "POST /public_api/v1/incidents/update_incident/"
+      description: "Update XSIAM incident metadata (status/severity/assignee/comment)."
+      args:
+        - { name: "incident_id", type: "string", description: "Incident ID.",                            required: true }
+        - { name: "update_data", type: "object", description: "Fields to update — see data/knowledge/.../incidents/update.md.", required: true }
+      returns: { type: "object", description: "{ ok, incident_id, updated }" }
+
+    - name: "alerts_list"
+      method: "POST /public_api/v1/alerts/get_alerts_multi_events/"
+      description: "List XSIAM alerts, newest first (multi-event shape). For recent alerts pass since_minutes."
+      args:
+        - { name: "severity",      type: "array",   description: "Severity filter.",            required: false }
+        - { name: "status",        type: "array",   description: "Status filter.",              required: false }
+        - { name: "alert_source",  type: "array",   description: "Source filter. Analytics alerts are stored as MAGNIFIER and ANALYTICS_BIOC; correlation rules as CORRELATION.", required: false }
+        - { name: "since_minutes", type: "integer", description: "Only alerts created in the last N minutes, for example 60. Use this instead of a timestamp.", required: false }
+        - { name: "search_from",   type: "integer", description: "ROW offset for paging (default 0), never a timestamp.", required: false }
+        - { name: "search_to",     type: "integer", description: "ROW offset for paging (default 100); search_to minus search_from is at most 100.", required: false }
+      returns: { type: "object", description: "{ ok, alerts: [ {alert_id, name, severity, category, source, host_name, user_name, mitre..., description, event_count} ], returned, total }. Raw events are left out; query XQL for them." }
+
+    - name: "alerts_update"
+      method: "POST /public_api/v1/alerts/update_alerts/"
+      description: "Bulk-update one or more alerts (severity / status / resolve_comment)."
+      args:
+        - { name: "alert_id_list", type: "array",  description: "Alert IDs.",            required: true }
+        - { name: "update_data",   type: "object", description: "Update fields.",         required: true }
+      returns: { type: "object", description: "{ ok, updated_count, alert_id_list }" }
+
+    - name: "ioc_insert_json"
+      method: "POST /public_api/v1/indicators/insert_jsons/"
+      description: "Bulk-upload IoCs."
+      args:
+        - { name: "indicators", type: "array",   description: "List of IoC dicts (indicator/type/severity/reputation).", required: true  }
+        - { name: "validate",   type: "boolean", description: "Validate each before insert (default true).",            required: false }
+      returns: { type: "object", description: "{ ok, inserted_count, errors }" }
+
+    - name: "ioc_disable"
+      method: "POST /public_api/v1/indicators/disable_iocs/"
+      description: "Disable IoCs by value (stop alerting/blocking)."
+      args:
+        - { name: "indicators", type: "array", description: "IoC value strings.", required: true }
+      returns: { type: "object", description: "{ ok, disabled_count }" }
+
+    - name: "ioc_enable"
+      method: "POST /public_api/v1/indicators/enable_iocs/"
+      description: "Re-enable previously disabled IoCs."
+      args:
+        - { name: "indicators", type: "array", description: "IoC value strings.", required: true }
+      returns: { type: "object", description: "{ ok, enabled_count }" }
+
+    - name: "download_file"
+      method: "POST /public_api/v1/download/download_file/"
+      description: "Download bytes from an XSIAM-issued retrieval URL. Chain after xsiam_endpoints_retrieve_file."
+      args:
+        - { name: "file_link", type: "string", description: "Fully-qualified URL from xsiam_response_get_file_retrieval_details.", required: true }
+      returns: { type: "object", description: "{ ok, file_link, size_bytes, content_b64 }" }
+
+    # ─── Endpoints, response and scripts (18 tools) ──────────────
+
+    - name: "endpoints_list_all"
+      method: "POST /public_api/v1/endpoints/get_endpoints/"
+      description: "List ALL XSIAM endpoints (no filters)."
+      args: []
+      returns: { type: "object", description: "{ ok, endpoints: [...], total }" }
+
+    - name: "endpoints_get"
+      method: "POST /public_api/v1/endpoints/get_endpoint/"
+      description: "Filtered XSIAM endpoints. Mirror of xdr_endpoints_get."
+      args:
+        - { name: "endpoint_id_list", type: "array", description: "Specific IDs.",                   required: false }
+        - { name: "dist_name",        type: "array", description: "Distribution lists.",              required: false }
+        - { name: "ip_list",          type: "array", description: "IPv4/IPv6 addresses.",             required: false }
+        - { name: "group_name",       type: "array", description: "Endpoint group names.",            required: false }
+        - { name: "platform",         type: "array", description: "['windows'|'linux'|'macos'].",     required: false }
+        - { name: "alias",            type: "array", description: "Custom aliases.",                  required: false }
+        - { name: "hostname",         type: "array", description: "Hostnames.",                       required: false }
+        - { name: "isolate",          type: "array", description: "['isolated'|'unisolated'].",       required: false }
+      returns: { type: "object", description: "{ ok, endpoints: [...], total }" }
+
+    - name: "endpoints_isolate"
+      method: "POST /public_api/v1/endpoints/isolate/"
+      description: "Isolate matching XSIAM endpoints. At least one filter required."
+      args:
+        - { name: "endpoint_id_list", type: "array", description: "Endpoint IDs.",          required: false }
+        - { name: "dist_name",        type: "array", description: "Distribution lists.",    required: false }
+        - { name: "ip_list",          type: "array", description: "IPv4/IPv6.",             required: false }
+        - { name: "platform",         type: "array", description: "Platforms.",             required: false }
+        - { name: "hostname",         type: "array", description: "Hostnames.",             required: false }
+      returns: { type: "object", description: "{ ok, action_id, endpoints_affected }" }
+
+    - name: "endpoints_unisolate"
+      method: "POST /public_api/v1/endpoints/unisolate/"
+      description: "Restore network connectivity to isolated XSIAM endpoints."
+      args:
+        - { name: "endpoint_id_list", type: "array", description: "Endpoint IDs.",   required: false }
+        - { name: "dist_name",        type: "array", description: "Dist lists.",     required: false }
+        - { name: "ip_list",          type: "array", description: "IPv4/IPv6.",      required: false }
+        - { name: "platform",         type: "array", description: "Platforms.",      required: false }
+        - { name: "hostname",         type: "array", description: "Hostnames.",      required: false }
+      returns: { type: "object", description: "{ ok, action_id, endpoints_affected }" }
+
+    - name: "endpoints_scan"
+      method: "POST /public_api/v1/endpoints/scan/"
+      description: "Trigger scan on matching XSIAM endpoints. At least one filter required."
+      args:
+        - { name: "endpoint_id_list", type: "array", description: "Endpoint IDs.",   required: false }
+        - { name: "dist_name",        type: "array", description: "Dist lists.",     required: false }
+        - { name: "ip_list",          type: "array", description: "IPv4/IPv6.",      required: false }
+        - { name: "platform",         type: "array", description: "Platforms.",      required: false }
+        - { name: "hostname",         type: "array", description: "Hostnames.",      required: false }
+      returns: { type: "object", description: "{ ok, action_id, endpoints_affected }" }
+
+    - name: "endpoints_scan_all"
+      method: "POST /public_api/v1/endpoints/scan/"
+      description: "Scan EVERY XSIAM endpoint (high-impact, separate tool so it can be disabled)."
+      args: []
+      returns: { type: "object", description: "{ ok, action_id }" }
+
+    - name: "endpoints_set_alias"
+      method: "POST /public_api/v1/endpoints/update_agent_name/"
+      description: "Set or change alias for one or more XSIAM endpoints."
+      args:
+        - { name: "endpoint_id_list", type: "array",  description: "Endpoints.", required: true }
+        - { name: "alias_name",       type: "string", description: "New alias.", required: true }
+      returns: { type: "object", description: "{ ok, endpoint_id_list, alias_name }" }
+
+    - name: "endpoints_retrieve_file"
+      method: "POST /public_api/v1/endpoints/file_retrieval/"
+      description: "Retrieve files from XSIAM endpoints. files = {windows/linux/macos: [paths]}."
+      args:
+        - { name: "endpoint_id_list", type: "array",  description: "Targets.", required: true }
+        - { name: "files",            type: "object", description: "Per-platform paths.", required: true }
+      returns: { type: "object", description: "{ ok, action_id, endpoints_count }" }
+
+    - name: "endpoints_quarantine_file"
+      method: "POST /public_api/v1/endpoints/quarantine/"
+      description: "Quarantine a file across XSIAM endpoints by path + SHA-256."
+      args:
+        - { name: "endpoint_id_list", type: "array",  description: "Targets.",      required: true }
+        - { name: "file_path",        type: "string", description: "Absolute path.", required: true }
+        - { name: "file_hash",        type: "string", description: "SHA-256.",       required: true }
+      returns: { type: "object", description: "{ ok, action_id, file_path }" }
+
+    - name: "response_get_action_status"
+      method: "POST /public_api/v1/actions/get_action_status/"
+      description: "Status of any XSIAM response action by action_id."
+      args:
+        - { name: "action_id", type: "string", description: "From any response-action tool.", required: true }
+      returns: { type: "object", description: "{ ok, action_id, status_per_endpoint }" }
+
+    - name: "response_get_file_retrieval_details"
+      method: "POST /public_api/v1/actions/file_retrieval_details/"
+      description: "Download URLs for a completed XSIAM file_retrieval action."
+      args:
+        - { name: "action_id", type: "string", description: "From xsiam_endpoints_retrieve_file.", required: true }
+      returns: { type: "object", description: "{ ok, files: [...] }" }
+
+    - name: "scripts_list"
+      method: "POST /public_api/v1/scripts/get_scripts/"
+      description: "List XSIAM scripts library with optional filters."
+      args:
+        - { name: "name",              type: "array",   description: "Script name filter.",       required: false }
+        - { name: "windows_supported", type: "boolean", description: "Windows-supported filter.", required: false }
+        - { name: "linux_supported",   type: "boolean", description: "Linux-supported filter.",   required: false }
+        - { name: "macos_supported",   type: "boolean", description: "macOS-supported filter.",   required: false }
+      returns: { type: "object", description: "{ ok, scripts: [...] }" }
+
+    - name: "scripts_get_metadata"
+      method: "POST /public_api/v1/scripts/get_script_metadata/"
+      description: "Get full definition of one XSIAM script."
+      args:
+        - { name: "script_uid", type: "string", description: "From xsiam_scripts_list.", required: true }
+      returns: { type: "object", description: "{ ok, script: {...} }" }
+
+    - name: "scripts_run_script"
+      method: "POST /public_api/v1/scripts/run_script/"
+      description: "Run a library script on XSIAM endpoints."
+      args:
+        - { name: "script_uid",        type: "string",  description: "From xsiam_scripts_list.",    required: true  }
+        - { name: "endpoint_id_list",  type: "array",   description: "Targets.",                    required: true  }
+        - { name: "parameters_values", type: "object",  description: "Script params.",              required: false }
+        - { name: "timeout",           type: "integer", description: "Seconds (default 600).",      required: false }
+      returns: { type: "object", description: "{ ok, action_id }" }
+
+    - name: "scripts_run_snippet"
+      method: "POST /public_api/v1/scripts/run_snippet_code_script/"
+      description: "Ad-hoc PowerShell/bash/Python snippet on XSIAM endpoints."
+      args:
+        - { name: "snippet_code",     type: "string",  description: "Script text.",            required: true  }
+        - { name: "endpoint_id_list", type: "array",   description: "Targets.",                required: true  }
+        - { name: "timeout",          type: "integer", description: "Seconds (default 600).",  required: false }
+      returns: { type: "object", description: "{ ok, action_id }" }
+
+    - name: "scripts_get_execution_status"
+      method: "POST /public_api/v1/scripts/get_script_execution_status/"
+      description: "Poll script-execution status."
+      args:
+        - { name: "action_id", type: "string", description: "From script run.", required: true }
+      returns: { type: "object", description: "{ ok, action_id, status_per_endpoint }" }
+
+    - name: "scripts_get_execution_results"
+      method: "POST /public_api/v1/scripts/get_script_execution_results/"
+      description: "Retrieve results of a completed XSIAM script execution."
+      args:
+        - { name: "action_id", type: "string", description: "From script run.", required: true }
+      returns: { type: "object", description: "{ ok, action_id, results }" }
+
+    - name: "scripts_get_execution_result_files"
+      method: "POST /public_api/v1/scripts/get_script_execution_result_files/"
+      description: "Get files an XSIAM script produced on a specific endpoint."
+      args:
+        - { name: "action_id",   type: "integer", description: "Action ID.",    required: true }
+        - { name: "endpoint_id", type: "integer", description: "Endpoint ID.",  required: true }
+      returns: { type: "object", description: "{ ok, action_id, endpoint_id, file_link }" }
+
+    # ─── Admin and XSIAM-unique (18 tools) ───────────────────────
+
+    - name: "audit_list_management_logs"
+      method: "POST /public_api/v1/audits/management_logs/"
+      description: "List XSIAM management-actions audit log."
+      args:
+        - { name: "audit_owner_email", type: "array",   description: "Filter by owner email.",                          required: false }
+        - { name: "audit_severity",    type: "array",   description: "Values: SEV_010_INFO/SEV_020_LOW/SEV_030_MEDIUM/SEV_040_HIGH.", required: false }
+        - { name: "audit_result",      type: "array",   description: "SUCCESS / FAIL / PARTIAL.",                       required: false }
+        - { name: "timestamp_gte",     type: "integer", description: "Unix-millis lower bound.",                        required: false }
+        - { name: "timestamp_lte",     type: "integer", description: "Unix-millis upper bound.",                        required: false }
+        - { name: "search_from",       type: "integer", description: "Pagination (default 0).",                          required: false }
+        - { name: "search_to",         type: "integer", description: "Pagination (default 100).",                        required: false }
+      returns: { type: "object", description: "{ ok, audit_entries: [...] }" }
+
+    - name: "audit_list_agent_logs"
+      method: "POST /public_api/v1/audits/agents_reports/"
+      description: "List XSIAM per-agent audit log."
+      args:
+        - { name: "endpoint_ids",   type: "array",   description: "Endpoint IDs.",       required: false }
+        - { name: "endpoint_names", type: "array",   description: "Hostnames.",          required: false }
+        - { name: "type_",          type: "array",   description: "Event type.",         required: false }
+        - { name: "sub_type",       type: "array",   description: "Event sub_type.",     required: false }
+        - { name: "result",         type: "array",   description: "SUCCESS / FAIL.",     required: false }
+        - { name: "timestamp_gte",  type: "integer", description: "Lower bound.",        required: false }
+        - { name: "timestamp_lte",  type: "integer", description: "Upper bound.",        required: false }
+        - { name: "search_from",    type: "integer", description: "Pagination.",         required: false }
+        - { name: "search_to",      type: "integer", description: "Pagination.",         required: false }
+      returns: { type: "object", description: "{ ok, audit_entries: [...] }" }
+
+    - name: "distribution_list"
+      method: "POST /public_api/v1/distributions/get_distributions/"
+      description: "List XSIAM distribution lists (installer bundles)."
+      args: []
+      returns: { type: "object", description: "{ ok, distributions: [...] }" }
+
+    - name: "distribution_create"
+      method: "POST /public_api/v1/distributions/create/"
+      description: "Create new XSIAM distribution list."
+      args:
+        - { name: "name",          type: "string", description: "Display name.",                            required: true  }
+        - { name: "platform",      type: "string", description: "windows / linux / macos / android.",      required: true  }
+        - { name: "package_type",  type: "string", description: "standalone / upgrade (default standalone).", required: false }
+        - { name: "agent_version", type: "string", description: "Specific version (default latest GA).",    required: false }
+        - { name: "description",   type: "string", description: "Operator notes.",                          required: false }
+      returns: { type: "object", description: "{ ok, distribution_id }" }
+
+    - name: "distribution_get_url"
+      method: "POST /public_api/v1/distributions/get_dist_url/"
+      description: "Get installer URL for an XSIAM distribution."
+      args:
+        - { name: "distribution_id", type: "string", description: "From xsiam_distribution_list / _create.", required: true }
+      returns: { type: "object", description: "{ ok, download_url }" }
+
+    - name: "distribution_versions"
+      method: "POST /public_api/v1/distributions/get_versions/"
+      description: "List XSIAM agent versions per platform."
+      args: []
+      returns: { type: "object", description: "{ ok, versions: {...} }" }
+
+    - name: "alert_exclusions_list"
+      method: "POST /public_api/v1/alerts_exclusion/get_alert_exclusion/"
+      description: "List XSIAM alert-exclusion rules."
+      args:
+        - { name: "tenant_id",   type: "string",  description: "Optional tenant filter.",                  required: false }
+        - { name: "search_from", type: "integer", description: "Pagination (default 0).",                  required: false }
+        - { name: "search_to",   type: "integer", description: "Pagination (default 100).",                required: false }
+      returns: { type: "object", description: "{ ok, exclusions: [...] }" }
+
+    - name: "alert_exclusions_create"
+      method: "POST /public_api/v1/alerts_exclusion/create_alert_exclusion/"
+      description: "Create XSIAM alert-exclusion rule."
+      args:
+        - { name: "name",              type: "string", description: "Operator-readable name.", required: true  }
+        - { name: "filter_expression", type: "object", description: "Filter dict.",            required: true  }
+        - { name: "comment",           type: "string", description: "Description.",            required: false }
+      returns: { type: "object", description: "{ ok, exclusion_id }" }
+
+    - name: "alert_exclusions_delete"
+      method: "POST /public_api/v1/alerts_exclusion/delete_alert_exclusion/"
+      description: "Delete XSIAM alert-exclusion rule."
+      args:
+        - { name: "alert_exclusion_id", type: "string", description: "From xsiam_alert_exclusions_list.", required: true }
+      returns: { type: "object", description: "{ ok, alert_exclusion_id, deleted }" }
+
+    - name: "hash_get_analytics"
+      method: "POST /public_api/v1/hash_exceptions/get_hash_analytics/"
+      description: "Get XSIAM analytics for a file hash."
+      args:
+        - { name: "file_hash", type: "string", description: "SHA-256.", required: true }
+      returns: { type: "object", description: "{ ok, hash, analytics }" }
+
+    - name: "hash_blocklist"
+      method: "POST /public_api/v1/hash_exceptions/blocklist/"
+      description: "Add SHA-256 hashes to XSIAM blocklist."
+      args:
+        - { name: "file_hashes", type: "array",  description: "SHA-256 strings.", required: true  }
+        - { name: "comment",     type: "string", description: "Operator note.",   required: false }
+      returns: { type: "object", description: "{ ok, blocked_count }" }
+
+    - name: "exploits_list"
+      method: "POST /public_api/v1/exploits/get_exploits/"
+      description: "List XSIAM exploit detections."
+      args:
+        - { name: "endpoint_id_list", type: "array",   description: "Endpoint filter.", required: false }
+        - { name: "cve_id",           type: "array",   description: "CVE filter.",      required: false }
+        - { name: "search_from",      type: "integer", description: "Pagination.",      required: false }
+        - { name: "search_to",        type: "integer", description: "Pagination.",      required: false }
+      returns: { type: "object", description: "{ ok, exploits: [...] }" }
+
+    - name: "exploits_get_details"
+      method: "POST /public_api/v1/exploits/get_exploit_details/"
+      description: "Full details of one XSIAM exploit detection."
+      args:
+        - { name: "exploit_id", type: "string", description: "From xsiam_exploits_list.", required: true }
+      returns: { type: "object", description: "{ ok, exploit: {...} }" }
+
+    - name: "parsers_list"
+      method: "POST /public_api/v1/parser/get_parsers/"
+      description: "XSIAM-unique. List parsers (vendor-log → XDM transformers)."
+      args:
+        - { name: "vendor",  type: "string",  description: "Vendor name filter.",  required: false }
+        - { name: "product", type: "string",  description: "Product filter.",      required: false }
+        - { name: "enabled", type: "boolean", description: "Enabled-state filter.", required: false }
+      returns: { type: "object", description: "{ ok, parsers: [...] }" }
+
+    - name: "parsers_get"
+      method: "POST /public_api/v1/parser/get_parser/"
+      description: "XSIAM-unique. Get full parser definition."
+      args:
+        - { name: "parser_id", type: "string", description: "From xsiam_parsers_list.", required: true }
+      returns: { type: "object", description: "{ ok, parser: {...} }" }
+
+    - name: "datamodel_describe"
+      method: "POST /public_api/v1/xql/start_xql_query/ + poll"
+      description: |
+        XSIAM-licensed datamodel introspection. Returns the XDM-typed schema
+        for a dataset (field names + types + descriptions). XDR-only tenants
+        return 'Invalid License - XSIAM' here.
+      args:
+        - { name: "dataset", type: "string", description: "Dataset name (xdr_data, endpoints, etc.).", required: true }
+      returns: { type: "object", description: "{ ok, dataset, fields: [...] }" }
+
+    - name: "broker_list"
+      method: "POST /public_api/v1/broker/list_brokers/"
+      description: "XSIAM-unique. List Broker VMs (on-prem data collectors)."
+      args: []
+      returns: { type: "object", description: "{ ok, brokers: [...] }" }
+
+    - name: "broker_get"
+      method: "POST /public_api/v1/broker/get_broker/"
+      description: "Full status + config for one XSIAM Broker VM."
+      args:
+        - { name: "broker_id", type: "string", description: "From xsiam_broker_list.", required: true }
+      returns: { type: "object", description: "{ ok, broker: {...} }" }

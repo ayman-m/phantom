@@ -1,0 +1,415 @@
+schema_version: 1
+id: CyberArkPAS
+pack_name: CyberArkPAS
+rule_name: CyberArkISP
+dataset_name: cyberark_isp_raw
+vendor: CyberArk
+product: CyberArkPAS
+description: CyberArk Identity Security Platform (ISP) is a privileged-access management suite — it brokers
+  all access to sensitive credentials, vaults, and privileged sessions. Each event records the privileged
+  user, the safe / target system being accessed, the policy applied, session metadata, and any breakglass
+  actions. Simulate CyberArk ISP to validate detections for privileged credential abuse, off-hours vault
+  access, or session-recording bypass attempts.
+how_to_use: |
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `cyberark`
+  - **product**: `isp`
+
+  Broker derives → `cyberark_isp_raw`.
+
+  Use the lowercased forms (`cyberark` / `isp`) — broker derives `cyberark_isp_raw`. The full product name `Identity Security Platform` would derive a different dataset.
+
+  **MR pattern**: Mixed. Reads flat `event_type`, `username`, `action_taken`; also extracts `endpoint.deviceId` and `endpoint.hostname` via nested JSON.
+
+  **Composite (nested-JSON) fields**: Pack `endpoint` and `target_user` as JSON-string objects. The MR pulls `endpoint.deviceId` and `target_user.directoryName`.
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: `timestamp` must be RFC-3339 with millisecond precision (`...000Z`).
+
+  **Saturation strategy**: Mixed-MR — ~10 XDM single-event.
+
+  **Single-event XDM ceiling**: ~10 XDM single-event (mixed MR).
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = cyberark_isp_raw
+  | filter xdm.event.id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+categories:
+- Identity and Access Management
+version: 1.1.6
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMxRjFGMUYiPkN5YmVyQXJrPC90ZXh0Pjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: accessMethod
+  type: string
+  description: Access method (RDP/SSH/HTTPS/Connector). Free-form text; may contain whitespace and punctuation.
+  example: POST
+- name: accountId
+  type: string
+  description: Vendor-emitted field 'AccountId'. Free-form text; may contain whitespace and punctuation.
+  example: acct-2d1ba60b
+- name: accountName
+  type: string
+  description: Vendor-emitted field 'AccountName'. Free-form text; may contain whitespace and punctuation.
+  example: tenant-acme-prod
+- name: action
+  type: string
+  description: Action taken by the vendor's enforcement engine. Free-form text; may contain whitespace
+    and punctuation.
+  example: allow
+- name: actionType
+  type: string
+  description: Vendor-emitted field 'ActionType'. Free-form text; may contain whitespace and punctuation.
+  example: create
+- name: applicationCode
+  type: string
+  description: Vendor-emitted field 'ApplicationCode'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: auditCode
+  type: string
+  description: Audit code (event-specific identifier). Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: auditType
+  type: string
+  description: Audit type (logon/access/admin/...). Free-form text; may contain whitespace and punctuation.
+  example: AuditEvent
+- name: cloudAssets
+  type: string
+  description: Vendor-emitted field 'CloudAssets'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: cloudIdentities
+  type: string
+  description: Vendor-emitted field 'CloudIdentities'. Free-form text; may contain whitespace and punctuation.
+  example: 00u1ab2c3d4e5f6
+- name: cloudProvider
+  type: string
+  description: Vendor-emitted field 'CloudProvider'. Free-form text; may contain whitespace and punctuation.
+  example: 00u1ab2c3d4e5f6
+- name: cloudWorkspacesAndRoles
+  type: string
+  description: Vendor-emitted field 'CloudWorkspacesAndRoles'. Free-form text; may contain whitespace
+    and punctuation.
+  example: role-admin
+- name: command
+  type: string
+  description: Vendor-emitted field 'Command'. Free-form text; may contain whitespace and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: component
+  type: string
+  description: PAS component (Vault/PVWA/CPM/PSM/PTA). Free-form text; may contain whitespace and punctuation.
+  example: auth-service
+- name: correlationId
+  type: string_short
+  description: Unique identifier — assigned by CyberArk per event. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: e49751fc-7bed-5581-9224-b88fd0da
+- name: customData
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: app_url, application_id, application_name,
+    authentication_method, browser_name, client_ip_address, cookie_session, denied_by_user, device_id,
+    device_name, device_os, entity_name, entity_uuid, factors, failure_reason, geoip_city_name, geoip_country_name,
+    geoip_latitude, geoip_longitude, internal_session_id, level, mechanism, mobile_device, object_name,
+    policy_name, proxy_id, role_id, role_name, roles, session_guid, source_ip_address, status, success,
+    target_user_id, user_agent, user_state (each key defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: identityType
+  type: string
+  description: Vendor-emitted field 'IdentityType'. Free-form text; may contain whitespace and punctuation.
+  example: AuditEvent
+- name: isDr
+  type: boolean
+  description: Whether this is a disaster-recovery operation. Literal 'true' or 'false' (case-insensitive);
+    not '1'/'0'.
+  example: 'true'
+- name: message
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: originRegion
+  type: string
+  description: Vendor-emitted field 'OriginRegion'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: safe
+  type: string
+  description: Vendor-emitted field 'Safe'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: serviceName
+  type: string
+  description: Vendor-emitted field 'ServiceName'. Free-form text; may contain whitespace and punctuation.
+  example: sshd
+- name: sessionId
+  type: string_short
+  description: Unique identifier — assigned by CyberArk per event. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sess-f23b9d57-732
+- name: source
+  type: ipv4
+  description: Vendor-emitted field 'Source'. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: target
+  type: string
+  description: Vendor-emitted field 'Target'. Free-form text; may contain whitespace and punctuation.
+  example: target_object
+- name: targetAccount
+  type: string
+  description: Vendor-emitted field 'TargetAccount'. Free-form text; may contain whitespace and punctuation.
+  example: tenant-acme-prod
+- name: targetPlatform
+  type: string
+  description: Vendor-emitted field 'TargetPlatform'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: tenantId
+  type: string
+  description: Vendor-emitted field 'TenantId'. Free-form text; may contain whitespace and punctuation.
+  example: tenant-8250b2a3
+- name: timestamp
+  type: datetime
+  description: Timestamp emitted by CyberArk. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: userId
+  type: string
+  description: User account associated with the event. Free-form text; may contain whitespace and punctuation.
+  example: usr-35c923fc
+- name: username
+  type: user
+  description: User account associated with the event. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName depending on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: uuid
+  type: string_short
+  description: Unique identifier — assigned by CyberArk per event. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: 2e8e53a9-8e6a-5d72-bd2e-a6aa7ece6eb3
+- name: customData.app_url
+  type: url
+  description: Full URL with scheme — as CyberArk captured it. Full URL with scheme (http/https/ftp);
+    percent-encoded if non-ASCII.
+  example: https://example.com/path?q=1
+- name: customData.application_id
+  type: string_short
+  description: Opaque identifier emitted by CyberArk. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: cyb-fdc10862
+- name: customData.application_name
+  type: string
+  description: Human-readable name as displayed by CyberArk. Free-form text; may contain whitespace and
+    punctuation.
+  example: operator-visible value
+- name: customData.authentication_method
+  type: string
+  description: Vendor-emitted field 'CustomData › authentication method'. Leaf of the 'customData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: customData.browser_name
+  type: string
+  description: Human-readable name as displayed by CyberArk. Free-form text; may contain whitespace and
+    punctuation.
+  example: Chrome 124.0.6367.155
+- name: customData.client_ip_address
+  type: ipv4
+  description: Vendor-emitted field 'CustomData › client ip address'. Leaf of the 'customData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: customData.cookie_session
+  type: string
+  description: Vendor-emitted field 'CustomData › cookie session'. Leaf of the 'customData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sess-9f8c2337abc
+- name: customData.denied_by_user
+  type: user
+  description: User account associated with the event. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jdoe
+- name: customData.device_id
+  type: string_short
+  description: Opaque identifier emitted by CyberArk. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: cyb-881399f7
+- name: customData.device_name
+  type: string
+  description: Human-readable name as displayed by CyberArk. Free-form text; may contain whitespace and
+    punctuation.
+  example: host-prod-01
+- name: customData.device_os
+  type: string
+  description: Vendor-emitted field 'CustomData › device os'. Leaf of the 'customData' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: Linux
+- name: customData.entity_name
+  type: string
+  description: Human-readable name as displayed by CyberArk. Free-form text; may contain whitespace and
+    punctuation.
+  example: operator-visible value
+- name: customData.entity_uuid
+  type: string_short
+  description: Unique identifier — assigned by CyberArk per event. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: c52912cb-f50e-5bcc-9f92-c324b0e753c4
+- name: customData.factors
+  type: string
+  description: Vendor-emitted field 'CustomData › factors'. Leaf of the 'customData' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: customData.failure_reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text; may contain whitespace
+    and punctuation.
+  example: normal_operation
+- name: customData.geoip_city_name
+  type: ipv4
+  description: Human-readable name as displayed by CyberArk. Free-form text; may contain whitespace and
+    punctuation.
+  example: 192.168.1.42
+- name: customData.geoip_country_name
+  type: string
+  description: Human-readable name as displayed by CyberArk. Free-form text; may contain whitespace and
+    punctuation.
+  example: US
+- name: customData.geoip_latitude
+  type: string
+  description: Vendor-emitted field 'CustomData › geoip latitude'. Leaf of the 'customData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: '37.7749'
+- name: customData.geoip_longitude
+  type: string
+  description: Vendor-emitted field 'CustomData › geoip longitude'. Leaf of the 'customData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: '-122.4194'
+- name: customData.internal_session_id
+  type: string_short
+  description: Unique identifier — assigned by CyberArk per event. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sess-8118620b-ab5
+- name: customData.level
+  type: string_short
+  description: Severity level (string label, e.g., info/warn/error). Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: info
+- name: customData.mechanism
+  type: string
+  description: Vendor-emitted field 'CustomData › mechanism'. Leaf of the 'customData' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: customData.mobile_device
+  type: string
+  description: Vendor-emitted field 'CustomData › mobile device'. Leaf of the 'customData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: host-prod-01
+- name: customData.object_name
+  type: string
+  description: Human-readable name as displayed by CyberArk. Free-form text; may contain whitespace and
+    punctuation.
+  example: operator-visible value
+- name: customData.policy_name
+  type: string
+  description: Human-readable name as displayed by CyberArk. Free-form text; may contain whitespace and
+    punctuation.
+  example: policy-default-deny
+- name: customData.proxy_id
+  type: string_short
+  description: Opaque identifier emitted by CyberArk. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: cyb-837d99a4
+- name: customData.role_id
+  type: string_short
+  description: Opaque identifier emitted by CyberArk. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: cyb-4ba8a075
+- name: customData.role_name
+  type: string
+  description: Human-readable name as displayed by CyberArk. Free-form text; may contain whitespace and
+    punctuation.
+  example: role-admin
+- name: customData.roles
+  type: string
+  description: Vendor-emitted field 'CustomData › roles'. Leaf of the 'customData' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: role-admin
+- name: customData.session_guid
+  type: string_short
+  description: Unique identifier — assigned by CyberArk per event. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: 52be9982-5481-51d4-8bdb-716634f0489a
+- name: customData.source_ip_address
+  type: ipv4
+  description: Vendor-emitted field 'CustomData › source ip address'. Leaf of the 'customData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: customData.status
+  type: string_short
+  description: Status code returned by CyberArk. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: success
+- name: customData.success
+  type: string
+  description: Vendor-emitted field 'CustomData › success'. Leaf of the 'customData' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: customData.target_user_id
+  type: string_short
+  description: Opaque identifier emitted by CyberArk. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: cyb-5481b465
+- name: customData.user_agent
+  type: string
+  description: Vendor-emitted field 'CustomData › user agent'. Leaf of the 'customData' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: customData.user_state
+  type: string
+  description: Vendor-emitted field 'CustomData › user state'. Leaf of the 'customData' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: CA
+use_cases:
+- PAM
+validated: true

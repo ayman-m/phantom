@@ -1,0 +1,520 @@
+schema_version: 1
+id: Trellix_ePO
+pack_name: Trellix_ePO
+rule_name: Trellix_ePO
+dataset_name: trellix_epo_raw
+vendor: McAfee
+product: Trellix_ePO
+description: Parsing and modeling rules for Trelix ePO logs via syslog in XML format
+categories:
+- Analytics & SIEM
+version: 1.0.5
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TWNBZmVlPC90aXRsZT48cGF0aCBkPSJNMTIgNC44MjMzTDEuNTc5MyAwdjE5LjE3NjdMMTIgMjRsMTAuNDIwNy00LjgyMzNWMHptNi4xNzIgMTEuNjI2bC02LjE0MyAyLjg0MjgtNi4xNDM4LTIuODQyOVY2LjY4OTRsNi4xNDM5IDIuODQxOCA2LjE0MjktMi44NDE4eiIvPjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: parsed_fields
+  type: json
+  description: — see leaf entries for nested paths. JSON object with 45 keys; full
+    key list defined as dotted-path leaves below.
+  example: '{}'
+- name: parsed_fields.AgentGUID
+  type: string
+  description: Vendor-emitted field 'Parsed fields › AgentGUID'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_agentguid
+- name: parsed_fields.AnalyzerContentVersion
+  type: string
+  description: Vendor-emitted field 'Parsed fields › AnalyzerContentVersion'. Leaf
+    of the 'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_analyzercontentv
+- name: parsed_fields.AnalyzerHostName
+  type: host
+  description: Vendor-emitted field 'Parsed fields › AnalyzerHostName'. Leaf of the
+    'parsed_fields' composite. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host.example.com
+- name: parsed_fields.AnalyzerName
+  type: string
+  description: Vendor-emitted field 'Parsed fields › AnalyzerName'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_analyzername
+- name: parsed_fields.AnalyzerRuleName
+  type: string
+  description: Vendor-emitted field 'Parsed fields › AnalyzerRuleName'. Leaf of the
+    'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_analyzerrulename
+- name: parsed_fields.AnalyzerVersion
+  type: string
+  description: Vendor-emitted field 'Parsed fields › AnalyzerVersion'. Leaf of the
+    'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_analyzerversion
+- name: parsed_fields.EventID
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Leaf of
+    the 'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: evt-40a5e630
+- name: parsed_fields.FileMD5Hash
+  type: hash_md5
+  description: Vendor-emitted field 'Parsed fields › FileMD5Hash'. Leaf of the 'parsed_fields'
+    composite. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: parsed_fields.IPAddress
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields › IPAddress'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: parsed_fields.MachineName
+  type: string
+  description: Vendor-emitted field 'Parsed fields › MachineName'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_machinename
+- name: parsed_fields.OSName
+  type: string
+  description: Vendor-emitted field 'Parsed fields › OSName'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: parsed_fields.RawMACAddress
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields › RawMACAddress'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: parsed_fields.SourceFilePath
+  type: string
+  description: Filesystem path reported by the vendor. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: parsed_fields.SourceHostName
+  type: host
+  description: Source hostname or FQDN. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: parsed_fields.SourceIPV4
+  type: string
+  description: Vendor-emitted field 'Parsed fields › SourceIPV4'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_sourceipv4
+- name: parsed_fields.SourceMAC
+  type: string
+  description: Vendor-emitted field 'Parsed fields › SourceMAC'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_sourcemac
+- name: parsed_fields.SourceParentProcessName
+  type: string
+  description: File or process name reported by the vendor. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_sourceparentproc
+- name: parsed_fields.SourcePort
+  type: integer_port
+  description: TCP/UDP source port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: parsed_fields.SourceProcessHash
+  type: hash_md5
+  description: Vendor-emitted field 'Parsed fields › SourceProcessHash'. Leaf of the
+    'parsed_fields' composite. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: parsed_fields.SourceProcessName
+  type: file_path
+  description: File or process name reported by the vendor. Leaf of the 'parsed_fields'
+    composite. Absolute filesystem path; vendor-native separator (forward slash on
+    POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: parsed_fields.SourceProcessSigned
+  type: string
+  description: Vendor-emitted field 'Parsed fields › SourceProcessSigned'. Leaf of
+    the 'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_sourceprocesssig
+- name: parsed_fields.SourceProcessSigner
+  type: string
+  description: Vendor-emitted field 'Parsed fields › SourceProcessSigner'. Leaf of
+    the 'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_sourceprocesssig
+- name: parsed_fields.SourceSigned
+  type: string
+  description: Vendor-emitted field 'Parsed fields › SourceSigned'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_sourcesigned
+- name: parsed_fields.SourceUserName
+  type: string
+  description: Vendor-emitted field 'Parsed fields › SourceUserName'. Leaf of the
+    'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_sourceusername
+- name: parsed_fields.TargetFileName
+  type: file_path
+  description: File or process name reported by the vendor. Leaf of the 'parsed_fields'
+    composite. Absolute filesystem path; vendor-native separator (forward slash on
+    POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: parsed_fields.TargetHash
+  type: hash_md5
+  description: Vendor-emitted field 'Parsed fields › TargetHash'. Leaf of the 'parsed_fields'
+    composite. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: parsed_fields.TargetHostName
+  type: host
+  description: Vendor-emitted field 'Parsed fields › TargetHostName'. Leaf of the
+    'parsed_fields' composite. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host.example.com
+- name: parsed_fields.TargetMAC
+  type: mac
+  description: Vendor-emitted field 'Parsed fields › TargetMAC'. Leaf of the 'parsed_fields'
+    composite. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: parsed_fields.TargetName
+  type: string
+  description: Vendor-emitted field 'Parsed fields › TargetName'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: target_object
+- name: parsed_fields.TargetPath
+  type: string
+  description: Vendor-emitted field 'Parsed fields › TargetPath'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_targetpath
+- name: parsed_fields.TargetPort
+  type: integer_port
+  description: Vendor-emitted field 'Parsed fields › TargetPort'. Leaf of the 'parsed_fields'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '443'
+- name: parsed_fields.TargetProcessName
+  type: string
+  description: File or process name reported by the vendor. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_targetprocessnam
+- name: parsed_fields.TargetProcessSigned
+  type: string
+  description: Vendor-emitted field 'Parsed fields › TargetProcessSigned'. Leaf of
+    the 'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_targetprocesssig
+- name: parsed_fields.TargetSigned
+  type: string
+  description: Vendor-emitted field 'Parsed fields › TargetSigned'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_targetsigned
+- name: parsed_fields.TargetSigner
+  type: string
+  description: Vendor-emitted field 'Parsed fields › TargetSigner'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_targetsigner
+- name: parsed_fields.TargetURL
+  type: url
+  description: Vendor-emitted field 'Parsed fields › TargetURL'. Leaf of the 'parsed_fields'
+    composite. Full URL with scheme (http/https/ftp); percent-encoded if it contains
+    non-ASCII characters.
+  example: https://example.com/path
+- name: parsed_fields.TargetUserName
+  type: string
+  description: Vendor-emitted field 'Parsed fields › TargetUserName'. Leaf of the
+    'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_targetusername
+- name: parsed_fields.ThreatActionTaken
+  type: string
+  description: Vendor-emitted field 'Parsed fields › ThreatActionTaken'. Leaf of the
+    'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_threatactiontake
+- name: parsed_fields.ThreatCategory
+  type: string
+  description: Vendor-emitted field 'Parsed fields › ThreatCategory'. Leaf of the
+    'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_threatcategory
+- name: parsed_fields.ThreatEventID
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Leaf of
+    the 'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_threateventid
+- name: parsed_fields.ThreatHandled
+  type: string
+  description: Vendor-emitted field 'Parsed fields › ThreatHandled'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_threathandled
+- name: parsed_fields.ThreatName
+  type: string
+  description: Vendor-emitted field 'Parsed fields › ThreatName'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Generic.Malware.A
+- name: parsed_fields.ThreatSeverity
+  type: string
+  description: Vendor-emitted field 'Parsed fields › ThreatSeverity'. Leaf of the
+    'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_threatseverity
+- name: parsed_fields.ThreatType
+  type: string
+  description: Vendor-emitted field 'Parsed fields › ThreatType'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_threattype
+- name: parsed_fields.UserName
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: AgentGUID
+  type: string
+  description: Observer unique identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_agentguid
+- name: AnalyzerContentVersion
+  type: string
+  description: Observer content version. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_analyzercontentv
+- name: AnalyzerHostName
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: AnalyzerName
+  type: string
+  description: Observer type. Free-form text; may contain whitespace and punctuation.
+  example: sample_analyzername
+- name: AnalyzerRuleName
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_analyzerrulename
+- name: AnalyzerVersion
+  type: string
+  description: Observer version. Free-form text; may contain whitespace and punctuation.
+  example: sample_analyzerversion
+- name: EventID
+  type: string
+  description: Event ID. Free-form text; may contain whitespace and punctuation.
+  example: evt-9cfdfc5e
+- name: IPAddress
+  type: ipv4
+  description: Ipaddress. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: OSName
+  type: string
+  description: Source host OS. Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: RawMACAddress
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: SourceFilePath
+  type: string
+  description: Source process executable directory. Free-form text; may contain whitespace
+    and punctuation.
+  example: /var/log/app.log
+- name: SourceHostName
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: SourceIPV4
+  type: ipv4
+  description: Sourceipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: SourceMAC
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: SourceParentProcessName
+  type: string
+  description: Source process parent ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_sourceparentproc
+- name: SourcePort
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: SourceProcessHash
+  type: hash_md5
+  description: Source process executable MD5. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: SourceProcessName
+  type: string
+  description: Source process executable extension. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sourceprocessnam
+- name: SourceProcessSigned
+  type: string
+  description: Source process executable is signed. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sourceprocesssig
+- name: SourceUserName
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: TargetFileName
+  type: string
+  description: Destination file extension. Free-form text; may contain whitespace
+    and punctuation.
+  example: document.pdf
+- name: TargetHash
+  type: hash_md5
+  description: Destination file MD5. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: TargetHostName
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: TargetPath
+  type: string
+  description: Targetpath. Free-form text; may contain whitespace and punctuation.
+  example: sample_targetpath
+- name: TargetPort
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: TargetProcessName
+  type: string
+  description: Destination process executable extension. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_targetprocessnam
+- name: TargetProcessSigned
+  type: string
+  description: Destination process executable is signed. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_targetprocesssig
+- name: TargetURL
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: TargetUserName
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: ThreatActionTaken
+  type: string
+  description: Observer action. Free-form text; may contain whitespace and punctuation.
+  example: sample_threatactiontake
+- name: ThreatCategory
+  type: string
+  description: Alert category. Free-form text; may contain whitespace and punctuation.
+  example: sample_threatcategory
+- name: ThreatEventID
+  type: string
+  description: Alert original threat ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_threateventid
+- name: ThreatHandled
+  type: string
+  description: Event is completed. Free-form text; may contain whitespace and punctuation.
+  example: sample_threathandled
+- name: ThreatName
+  type: string
+  description: Alert name. Free-form text; may contain whitespace and punctuation.
+  example: Generic.Malware.A
+- name: ThreatSeverity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: ThreatType
+  type: string
+  description: Alert subcategory. Free-form text; may contain whitespace and punctuation.
+  example: sample_threattype
+- name: agent_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: os
+  type: string
+  description: Source host OS family. Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: source_process_signer
+  type: string
+  description: Source process executable signer. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_signer
+- name: target_directory
+  type: string
+  description: Destination file directory. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_directory
+- name: target_file_name
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: target_mac
+  type: mac
+  description: Destination host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: target_process_signer
+  type: string
+  description: Destination process executable signer. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_signer
+- name: windows
+  type: string
+  description: Source host OS family. Free-form text; may contain whitespace and punctuation.
+  example: sample_windows
+use_cases:
+- AV
+- EDR
+- Email
+how_to_use: |
+  ## trellix epo → Cortex XSIAM (dataset `trellix_epo_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `trellix_epo_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `trellix`
+    - **product**: `epo`
+
+    These normalize → `trellix_epo_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `parsed_fields -> TargetFileName`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~49 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.category`, `xdm.alert.name`, `xdm.alert.original_threat_id`, `xdm.alert.original_threat_name`, `xdm.alert.severity`, `xdm.alert.subcategory`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `trellix`, Product = `epo`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = trellix_epo_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

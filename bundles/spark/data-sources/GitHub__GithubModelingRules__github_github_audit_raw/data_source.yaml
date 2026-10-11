@@ -1,0 +1,200 @@
+schema_version: 1
+id: GitHub
+pack_name: GitHub
+rule_name: GithubModelingRules
+dataset_name: github_github_audit_raw
+vendor: GitHub
+product: GitHub
+description: Manage GitHub issues and pull requests directly from Cortex XSOAR
+categories:
+- Code Repositories
+version: 2.2.11
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjEzOXB4IiB2aWV3Qm94PSIwIDAgNTEyIDEzOSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCI+CiAgICA8Zz4KICAgICAgICA8cGF0aCBkPSJNOTguNjk2MTU5OCw1OS4zMTI0NDc0IEw1NS42MzU0OTYyLDU5LjMxMjQ0NzQgQzU0LjUyNDcyODIsNTkuMzEyNDQ3NCA1My42MjMwOTYsNjAuMjE1MTQ2NCA1My42MjMwOTYsNjEuMzI1OTE0NCBMNTMuNjIzMDk2LDgyLjM3OTI4ODIgQzUzLjYyMzA5Niw4My40OTAwNTYyIDU0LjUyNDcyODIsODQuMzkzODIyNCA1NS42MzU0OTYyLDg0LjM5MzgyMjQgTDcyLjQzMzU5MzYsODQuMzkzODIyNCBMNzIuNDMzNTkzNiwxMTAuNTUwNzUzIEM3Mi40MzM1OTM2LDExMC41NTA3NTMgNjguNjYxNjc3NSwxMTEuODM2NTEzIDU4LjIzMzY5MDIsMTExLjgzNjUxMyBDNDUuOTMwOTQ4LDExMS44MzY1MTMgMjguNzQ0NDU1LDEwNy4zNDExNTcgMjguNzQ0NDU1LDY5LjU0OTQzODIgQzI4Ljc0NDQ1NSwzMS43NDkxODM1IDQ2LjY0MDUxNjUsMjYuNzc1ODAyOSA2My40NDE4MTU0LDI2Ljc3NTgwMjkgQzc3Ljk4NTI5OTUsMjYuNzc1ODAyOSA4NC4yNTA4NDE1LDI5LjMzNjY1MSA4OC4yMzcyMjg4LDMwLjU3MDEyNjQgQzg5LjQ4OTkxMDMsMzAuOTU0MjUzNyA5MC42NDg2OTQsMjkuNzA2OTA3IDkwLjY0ODY5NCwyOC41OTUwNzIyIEw5NS40NTI0MTg4LDguMjUzNDAwNjIgQzk1LjQ1MjQxODgsNy43MzM3NjE4MiA5NS4yNzYzNjAzLDcuMTA3NDIxMDMgOTQuNjgzMDk3MSw2LjY4MTY3OTk5IEM5My4wNjQ0Mjc4LDUuNTI3MTY0MjIgODMuMTg3MDIyNSwtMS40MjEwODU0N2UtMTQgNTguMjMzNjkwMiwtMS40MjEwODU0N2UtMTQgQzI5LjQ4NzEwMSwtMS40MjEwODU0N2UtMTQgMCwxMi4yMzAxODQ2IDAsNzEuMDIyOTkzIEMwLDEyOS44MTc5MzUgMzMuNzYwNTE2NSwxMzguNTc5MjM4IDYyLjIwOTQwNjgsMTM4LjU3OTIzOCBDODUuNzY0OTQzMiwxMzguNTc5MjM4IDEwMC4wNTQ0NzYsMTI4LjUxMjk3IDEwMC4wNTQ0NzYsMTI4LjUxMjk3IEMxMDAuNjQzNDcxLDEyOC4xODc1MjkgMTAwLjcwNzQ5MywxMjcuMzY0ODU2IDEwMC43MDc0OTMsMTI2Ljk4NzEzMSBMMTAwLjcwNzQ5Myw2MS4zMjU5MTQ0IEMxMDAuNzA3NDkzLDYwLjIxNTE0NjQgOTkuODA2OTI3OCw1OS4zMTI0NDc0IDk4LjY5NjE1OTgsNTkuMzEyNDQ3NCBaIE0zMjAuNDk1NDk3LDcuMzU5MjM3NzYgQzMyMC40OTU0OTcsNi4yMzg4NjY2NCAzMTkuNjA3NzM3LDUuMzM1MTAwNTkgMzE4LjQ5Njk2OSw1LjMzNTEwMDU5IEwyOTQuMjUxMDcyLDUuMzM1MTAwNTkgQzI5My4xNDM1MDMsNS4zMzUxMDA1OSAyOTIuMjQyOTQsNi4yMzg4NjY2NCAyOTIuMjQyOTQsNy4zNTkyMzc3NiBDMjkyLjI0Mjk0LDcuMzY0NTcyODggMjkyLjI0OTM0LDU0LjIxNTI5MiAyOTIuMjQ5MzQsNTQuMjE1MjkyIEwyNTQuNDU2NTU2LDU0LjIxNTI5MiBMMjU0LjQ1NjU1Niw3LjM1OTIzNzc2IEMyNTQuNDU2NTU2LDYuMjM4ODY2NjQgMjUzLjU2NDUyNiw1LjMzNTEwMDU5IDI1Mi40NTU4OTMsNS4zMzUxMDA1OSBMMjI4LjIxMTA2MSw1LjMzNTEwMDU5IEMyMjcuMTA3NzY0LDUuMzM1MTAwNTkgMjI2LjIwODI2NSw2LjIzODg2NjY0IDIyNi4yMDgyNjUsNy4zNTkyMzc3NiBMMjI2LjIwODI2NSwxMzQuMjMxMTMxIEMyMjYuMjA4MjY1LDEzNS4zNTA0MzUgMjI3LjEwNzc2NCwxMzYuMjYxNjcgMjI4LjIxMTA2MSwxMzYuMjYxNjcgTDI1Mi40NTU4OTMsMTM2LjI2MTY3IEMyNTMuNTY0NTI2LDEzNi4yNjE2NyAyNTQuNDU2NTU2LDEzNS4zNTA0MzUgMjU0LjQ1NjU1NiwxMzQuMjMxMTMxIEwyNTQuNDU2NTU2LDc5Ljk2MzU1NDcgTDI5Mi4yNDkzNCw3OS45NjM1NTQ3IEMyOTIuMjQ5MzQsNzkuOTYzNTU0NyAyOTIuMTgzMTg3LDEzNC4yMjY4NjMgMjkyLjE4MzE4NywxMzQuMjMxMTMxIEMyOTIuMTgzMTg3LDEzNS4zNTA0MzUgMjkzLjA4MjY4NCwxMzYuMjYxNjcgMjk0LjE5MTMxNywxMzYuMjYxNjcgTDMxOC40OTQ4MzUsMTM2LjI2MTY3IEMzMTkuNjA1NjA0LDEzNi4yNjE2NyAzMjAuNDkzMzY0LDEzNS4zNTA0MzUgMzIwLjQ5NTQ5NywxMzQuMjMxMTMxIEwzMjAuNDk1NDk3LDcuMzU5MjM3NzYgWiBNMTQ0LjM3MTAyMywyNC4zMjE2NTY1IEMxNDQuMzcxMDIzLDE1LjU5MTI5OCAxMzcuMzcxMzcxLDguNTM2MTYwOTQgMTI4LjczNTk3Nyw4LjUzNjE2MDk0IEMxMjAuMTA5MTIsOC41MzYxNjA5NCAxMTMuMTA0MTMzLDE1LjU5MTI5OCAxMTMuMTA0MTMzLDI0LjMyMTY1NjUgQzExMy4xMDQxMzMsMzMuMDQyNDEyIDEyMC4xMDkxMiw0MC4xMTY3NTU0IDEyOC43MzU5NzcsNDAuMTE2NzU1NCBDMTM3LjM3MTM3MSw0MC4xMTY3NTU0IDE0NC4zNzEwMjMsMzMuMDQyNDEyIDE0NC4zNzEwMjMsMjQuMzIxNjU2NSBaIE0xNDIuNDQ3MTg2LDEwNy41MzQyODggTDE0Mi40NDcxODYsNDguOTY5ODIxNCBDMTQyLjQ0NzE4Niw0Ny44NTc5ODY0IDE0MS41NDk4MjIsNDYuOTQ4ODg1MiAxNDAuNDQxMTg4LDQ2Ljk0ODg4NTIgTDExNi4yNzIxMTUsNDYuOTQ4ODg1MiBDMTE1LjE2MzQ4MSw0Ni45NDg4ODUyIDExNC4xNzExNTMsNDguMDkyNzMwOSAxMTQuMTcxMTUzLDQ5LjIwNDU2NTcgTDExNC4xNzExNTMsMTMzLjEwOTY5MyBDMTE0LjE3MTE1MywxMzUuNTc1NTc2IDExNS43MDc2NjIsMTM2LjMwODYxOSAxMTcuNjk2NTg3LDEzNi4zMDg2MTkgTDEzOS40NzIzMzQsMTM2LjMwODYxOSBDMTQxLjg2MTM5MiwxMzYuMzA4NjE5IDE0Mi40NDcxODYsMTM1LjEzNTk2NCAxNDIuNDQ3MTg2LDEzMy4wNzAyMTMgTDE0Mi40NDcxODYsMTA3LjUzNDI4OCBaIE00MTMuMTYxOTI5LDQ2Ljk0ODg4NTIgTDM4OS4xMDE2OSw0Ni45NDg4ODUyIEMzODcuOTk4Mzg5LDQ2Ljk0ODg4NTIgMzg3LjA5OTk2Myw0Ny44NTc5ODY0IDM4Ny4wOTk5NjMsNDguOTc3MjkwNiBMMzg3LjA5OTk2MywxMTEuMTg2Njk3IEMzODcuMDk5OTYzLDExMS4xODY2OTcgMzgwLjk4ODA2OCwxMTUuNjU4NTc5IDM3Mi4zMTIxMjgsMTE1LjY1ODU3OSBDMzYzLjYzNzI1NiwxMTUuNjU4NTc5IDM2MS4zMzQ2MjcsMTExLjcyMjM0MSAzNjEuMzM0NjI3LDEwMy4yMjc3OTQgTDM2MS4zMzQ2MjcsNDguOTc3MjkwNiBDMzYxLjMzNDYyNyw0Ny44NTc5ODY0IDM2MC40MzgzMyw0Ni45NDg4ODUyIDM1OS4zMzM5NjIsNDYuOTQ4ODg1MiBMMzM0LjkxNTIwNiw0Ni45NDg4ODUyIEMzMzMuODEyOTc4LDQ2Ljk0ODg4NTIgMzMyLjkxMDI3Nyw0Ny44NTc5ODY0IDMzMi45MTAyNzcsNDguOTc3MjkwNiBMMzMyLjkxMDI3NywxMDcuMzM1ODIyIEMzMzIuOTEwMjc3LDEzMi41NjY1NzkgMzQ2Ljk3MjUzNywxMzguNzM5MjkxIDM2Ni4zMTc2MDgsMTM4LjczOTI5MSBDMzgyLjE4NzQsMTM4LjczOTI5MSAzOTQuOTgzMTA2LDEyOS45NzE1ODcgMzk0Ljk4MzEwNiwxMjkuOTcxNTg3IEMzOTQuOTgzMTA2LDEyOS45NzE1ODcgMzk1LjU5MjM3NCwxMzQuNTkxNzg0IDM5NS44Njc2NjQsMTM1LjE0MDIzMiBDMzk2LjE0NDAyNCwxMzUuNjg2NTQ2IDM5Ni44NjIxMjUsMTM2LjIzODE5NiAzOTcuNjM3ODUsMTM2LjIzODE5NiBMNDEzLjE3MjU5NywxMzYuMTY5OTA2IEM0MTQuMjc0ODI5LDEzNi4xNjk5MDYgNDE1LjE3NzUyOCwxMzUuMjU4NjcxIDQxNS4xNzc1MjgsMTM0LjE0NDcwMiBMNDE1LjE3MDA1OSw0OC45NzcyOTA2IEM0MTUuMTcwMDU5LDQ3Ljg1Nzk4NjQgNDE0LjI3MDU2LDQ2Ljk0ODg4NTIgNDEzLjE2MTkyOSw0Ni45NDg4ODUyIFogTTQ2OC41OTY4MjIsMTE1LjcwNjU5NSBDNDYwLjI1MTY2MSwxMTUuNDUyNjQ0IDQ1NC41OTExMTYsMTExLjY2NTc4OSA0NTQuNTkxMTE2LDExMS42NjU3ODkgTDQ1NC41OTExMTYsNzEuNDg4MjEzOSBDNDU0LjU5MTExNiw3MS40ODgyMTM5IDQ2MC4xNzU4OTgsNjguMDY1MjEzNCA0NjcuMDI3MjM1LDY3LjQ1Mjc0MzcgQzQ3NS42OTE0NDEsNjYuNjc3MDIwMiA0ODQuMDM5ODA0LDY5LjI5NDQyMDMgNDg0LjAzOTgwNCw4OS45NjI2MDAyIEM0ODQuMDM5ODA0LDExMS43NTc1NTMgNDgwLjI3MjE1NiwxMTYuMDU4NzExIDQ2OC41OTY4MjIsMTE1LjcwNjU5NSBaIE00NzguMDg2ODk5LDQ0LjIyMzcxNTkgQzQ2NC40MjE1NzMsNDQuMjIzNzE1OSA0NTUuMTI2NzYsNTAuMzIwNjY4OSA0NTUuMTI2NzYsNTAuMzIwNjY4OSBMNDU1LjEyNjc2LDcuMzU5MjM3NzYgQzQ1NS4xMjY3Niw2LjIzODg2NjY0IDQ1NC4yMzE1MzIsNS4zMzUxMDA1OSA0NTMuMTI2MDk3LDUuMzM1MTAwNTkgTDQyOC44MTE5MTMsNS4zMzUxMDA1OSBDNDI3LjcwNjQ3OSw1LjMzNTEwMDU5IDQyNi44MDgwNDgsNi4yMzg4NjY2NCA0MjYuODA4MDQ4LDcuMzU5MjM3NzYgTDQyNi44MDgwNDgsMTM0LjIzMTEzMSBDNDI2LjgwODA0OCwxMzUuMzUwNDM1IDQyNy43MDY0NzksMTM2LjI2MTY3IDQyOC44MTUxMTIsMTM2LjI2MTY3IEw0NDUuNjg0NzAyLDEzNi4yNjE2NyBDNDQ2LjQ0NDQxNywxMzYuMjYxNjcgNDQ3LjAxOTU0MiwxMzUuODcwMDc0IDQ0Ny40NDQyMTUsMTM1LjE4Mzk4IEM0NDcuODYzNTU1LDEzNC41MDIxNTQgNDQ4LjQ2ODU1NywxMjkuMzM0NTc1IDQ0OC40Njg1NTcsMTI5LjMzNDU3NSBDNDQ4LjQ2ODU1NywxMjkuMzM0NTc1IDQ1OC40MTEwNSwxMzguNzU2MzYzIDQ3Ny4yMzIyMTYsMTM4Ljc1NjM2MyBDNDk5LjMyODA2OSwxMzguNzU2MzYzIDUxMiwxMjcuNTQ4Mzg0IDUxMiw4OC40NDEwMjkzIEM1MTIsNDkuMzMzNjc1MiA0OTEuNzYxODI5LDQ0LjIyMzcxNTkgNDc4LjA4Njg5OSw0NC4yMjM3MTU5IFogTTIxMi4yMjkyMzUsNDYuNzMxMjEzIEwxOTQuMDQxODc2LDQ2LjczMTIxMyBDMTk0LjA0MTg3Niw0Ni43MzEyMTMgMTk0LjAxNDEzNCwyMi43MDkzODkyIDE5NC4wMTQxMzQsMjIuNzA0MDU0IEMxOTQuMDE0MTM0LDIxLjc5NDk1MjkgMTkzLjU0NTcxMiwyMS4zNDA0MDI0IDE5Mi40OTQ2OTcsMjEuMzQwNDAyNCBMMTY3LjcwOTk1NCwyMS4zNDA0MDI0IEMxNjYuNzQ2NDM1LDIxLjM0MDQwMjQgMTY2LjIyODkzLDIxLjc2NDAwOTQgMTY2LjIyODkzLDIyLjY5MDE4MjkgTDE2Ni4yMjg5Myw0Ny41MTk3NDA4IEMxNjYuMjI4OTMsNDcuNTE5NzQwOCAxNTMuODA4ODE2LDUwLjUxODA2NzUgMTUyLjk2OTA3MSw1MC43NjAyODEgQzE1Mi4xMzI1MjcsNTEuMDAyNDk0NyAxNTEuNTE2ODU3LDUxLjc3Mzk1IDE1MS41MTY4NTcsNTIuNjkzNzIxNSBMMTUxLjUxNjg1Nyw2OC4yOTY3NTY3IEMxNTEuNTE2ODU3LDY5LjQxOTI2MTkgMTUyLjQxMzE1NCw3MC4zMjQwOTQ4IDE1My41MjE3ODgsNzAuMzI0MDk0OCBMMTY2LjIyODkzLDcwLjMyNDA5NDggTDE2Ni4yMjg5MywxMDcuODU5NzI5IEMxNjYuMjI4OTMsMTM1LjczOTg5NyAxODUuNzg1Mjc1LDEzOC40Nzg5MzggMTk4Ljk4MjE4LDEzOC40Nzg5MzggQzIwNS4wMTE5MTEsMTM4LjQ3ODkzOCAyMTIuMjI0OTY2LDEzNi41NDIyOTYgMjEzLjQxNTc2LDEzNi4xMDI2ODQgQzIxNC4xMzU5OTksMTM1LjgzODA2MyAyMTQuNTU0MjcxLDEzNS4wOTIyMTYgMjE0LjU1NDI3MSwxMzQuMjgzNDE1IEwyMTQuNTc0NTQ0LDExNy4xMTkzMjkgQzIxNC41NzQ1NDQsMTE2LjAwMDAyNSAyMTMuNjI5MTY1LDExNS4wOTQxMjUgMjEyLjU2NDI3OSwxMTUuMDk0MTI1IEMyMTEuNTA0NzI4LDExNS4wOTQxMjUgMjA4Ljc5MzQzLDExNS41MjUyMDEgMjA2LjAwMjEwNiwxMTUuNTI1MjAxIEMxOTcuMDY5MDEzLDExNS41MjUyMDEgMTk0LjA0MTg3NiwxMTEuMzcxMjkyIDE5NC4wNDE4NzYsMTA1Ljk5NDU3NyBDMTk0LjA0MTg3NiwxMDAuNjIyMTMxIDE5NC4wNDA4MSw3MC4zMjQwOTQ4IDE5NC4wNDA4MSw3MC4zMjQwOTQ4IEwyMTIuMjI5MjM1LDcwLjMyNDA5NDggQzIxMy4zMzc4NjgsNzAuMzI0MDk0OCAyMTQuMjM1MjMzLDY5LjQxOTI2MTkgMjE0LjIzNTIzMyw2OC4yOTY3NTY3IEwyMTQuMjM1MjMzLDQ4Ljc1MzIxNjIgQzIxNC4yMzUyMzMsNDcuNjMzOTEyIDIxMy4zMzc4NjgsNDYuNzMxMjEzIDIxMi4yMjkyMzUsNDYuNzMxMjEzIFoiIGZpbGw9IiMxMTExMEYiPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: action
+  type: string_short
+  description: Audit action (e.g. 'repo.create', 'team.add_member'). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: token
+- name: actor
+  type: user
+  description: User performing the action. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jsmith
+- name: actor_location
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: country_code
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: created_at
+  type: datetime
+  description: ISO-8601 timestamp marking when this state was recorded. ISO-8601 timestamp
+    with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: org
+  type: string
+  description: Organization slug. Free-form text; may contain whitespace and punctuation.
+  example: jsmith
+- name: repo
+  type: string
+  description: Repository full name (owner/name). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_repo
+- name: actor_location.country_code
+  type: country_code
+  description: Country resolved from actor IP. ISO 3166-1 alpha-2 uppercase country
+    code.
+  example: US
+- name: '@timestamp'
+  type: timestamp_ms
+  description: Audit event timestamp. Unsigned epoch milliseconds since 1970-01-01
+    UTC; bare digits.
+  example: '1748263381000'
+- name: _document_id
+  type: string_short
+  description: Unique document id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: actor_id
+  type: integer
+  description: Numeric user id. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: actor_ip
+  type: ipv4
+  description: Actor IP address. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: business
+  type: string
+  description: GitHub Enterprise account slug. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_business
+- name: business_id
+  type: integer
+  description: Enterprise account numeric id. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: hashed_token
+  type: hash_sha256
+  description: Token hash (for PAT/OAuth attribution). 64-character lowercase hex
+    SHA-256 digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: operation_type
+  type: enum
+  description: 'Type of operation. One of: create, modify, remove, access, authentication,
+    transfer (case-sensitive).'
+  enum_values:
+  - create
+  - modify
+  - remove
+  - access
+  - authentication
+  - transfer
+  example: create
+- name: org_id
+  type: integer
+  description: Organization numeric id. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: permission
+  type: string_short
+  description: Permission level (admin/write/read). Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token
+- name: programmatic_access_type
+  type: string_short
+  description: How the API was accessed (PAT/OAuth/etc.). Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token
+- name: repo_id
+  type: integer
+  description: Repository numeric id. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: team
+  type: string
+  description: Team slug. Free-form text; may contain whitespace and punctuation.
+  example: sample_team
+- name: token_id
+  type: integer
+  description: Token numeric id. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: token_scopes
+  type: string
+  description: OAuth scopes. Free-form text; may contain whitespace and punctuation.
+  example: sample_scopes
+- name: user
+  type: user
+  description: Target user (for team/member events). Account name as the vendor reports
+    it — login name, UPN, or sAMAccountName; no domain prefix unless vendor emits
+    one.
+  example: jdoe
+- name: user_agent
+  type: string_long
+  description: User-Agent of the request. Free-form text; may span multiple lines
+    or contain large payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: user_id
+  type: integer
+  description: Target user numeric id. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+use_cases:
+- DevOps
+how_to_use: |
+  ## Sending GitHub audit logs to Cortex XSIAM
+
+  Status: NOT mappable via synthetic CEF/syslog. GitHub audit
+  is a JSON-native source ingested through an HTTP collector. The tenant INGEST
+  rule for github_github_audit_raw parses a JSON created_at field and does NOT
+  generically extract CEF extensions — so CEF-delivered events land with their
+  fields packed in cefRawExtension and the modeling rule's `action` column is
+  absent. `datamodel dataset = github_github_audit_raw` returns zero modeled rows
+  over 365 days.
+
+  Why CEF can't work here: the broker routes by CEF header, but the GitHub INGEST
+  rule expects JSON columns (action, actor, org, repo, created_at as 13-digit
+  epoch-ms). CEF leaves them unparsed; pure JSON over UDP has no routing header
+  so the broker drops it.
+
+  To onboard XDM: send GitHub audit events as JSON through an XSIAM HTTP Collector
+  (with the dataset target + API key), not via the syslog broker — a separate
+  ingestion path Phantom's synthetic-syslog worker does not implement today.
+  Until then this source is NOT in the validated set.
+
+  MR pattern (for reference): gated on action wildcards (account*, org*, repo*,
+  ...); maps at most ~5 XDM fields (xdm.source.user.username,
+  xdm.target.user.username, xdm.target.cloud.project, xdm.event.operation).
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,228 @@
+schema_version: 1
+id: Silverfort
+pack_name: Silverfort
+rule_name: Silverfort
+dataset_name: silverfort_admin_console_raw
+vendor: Silverfort
+product: Silverfort
+description: Silverfort protects organizations from data breaches by delivering strong authentication
+  across entire corporate networks and cloud environments, without requiring any modifications to endpoints
+  or servers. Using patent-pending technology, Silverfort's agentless approach enables multi-factor authentication
+  and AI-driven adaptive authentication even for systems that don’t support it today, including proprietary
+  systems, critical infrastructure, shared folders, IoT devices, and more. Use Silverfort integration
+  to get & update Silverfort risk severity. This integration was integrated and tested with Silverfort
+  version 2.12.
+categories:
+- Identity and Access Management
+version: 2.0.38
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwQTI1NDAiPlNpbHZlcmZvcnQ8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: app
+  type: string_short
+  description: 'Authentication protocol, mapped to xdm.auth.auth_method. The rule SPLITS on this: SSO/SAML/OIDC
+    take the authentication-story branch (logon type, auth service, user_type, outcome-reason taxonomy);
+    any other value (Kerberos, NTLM, LDAP) takes the base branch and does NOT reach preset = authentication_story.'
+  example: SSO
+  is_gate: true
+  enum_values:
+  - SSO
+  - SAML
+  - OIDC
+- name: cefdeviceeventclassid
+  is_gate: true
+  type: string_short
+  description: Silverfort event class. The modeling rule gates on "Authentication"; the "MFA" class is
+    explicitly unsupported by the rule.
+  example: Authentication
+  enum_values:
+  - Authentication
+- name: cefseverity
+  type: integer
+  description: CEF severity score (0-10) as classified by Silverfort. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: cs1
+  type: enum
+  description: Silverfort risk severity, mapped to xdm.alert.severity.
+  example: High
+  enum_values:
+  - Low
+  - Medium
+  - High
+  - Critical
+- name: cs10
+  type: enum
+  description: Source city, mapped to xdm.source.location.city.
+  example: Riyadh
+  enum_values:
+  - Riyadh
+  - Jeddah
+  - Dammam
+  - Dubai
+  - Cairo
+  - n/a
+- name: cs11
+  type: enum
+  description: Source coordinates as "<latitude>,<longitude>". The rule splits on the comma and to_float()s
+    each half into xdm.source.location.latitude/longitude. Any value that is not a comma-separated numeric
+    pair (and not "n/a") nulls both.
+  example: 24.7136,46.6753
+  enum_values:
+  - 24.7136,46.6753
+  - 21.4858,39.1925
+  - 26.4207,50.0888
+  - 25.2048,55.2708
+  - 30.0444,31.2357
+  - n/a
+- name: cs2
+  type: enum
+  description: Authentication verdict. Drives xdm.event.outcome (contains "Allowed" -> SUCCESS, "Denied"
+    -> FAILED) AND the parenthesised text is regex-extracted into xdm.event.outcome_reason. A value with
+    no parentheses yields NOT_SPECIFIED.
+  example: Allowed
+  enum_values:
+  - Allowed
+  - Denied (Bad Password)
+  - Denied (Locked account)
+  - Denied (Account disabled, expired or locked out)
+  - Denied (Conditional access applied)
+  - Denied (Unauthorized workstation)
+- name: cs3
+  type: enum
+  description: Policy action taken by Silverfort, mapped to xdm.observer.action. "n/a" maps to null.
+  example: Allow
+  enum_values:
+  - Allow
+  - Deny
+  - MFA
+  - Notify
+- name: cs5
+  type: string
+  description: Outcome reason, used only on the non-SSO branch where it overrides the value parsed out
+    of cs2. Send "n/a" on SSO/SAML/OIDC events.
+  example: n/a
+- name: cs7
+  type: enum
+  description: Risk indicators, underscore-delimited by the vendor. The rule replaces underscores with
+    spaces and splits on comma into xdm.alert.risks. "n/a" suppresses the field.
+  example: Malicious_IP
+  enum_values:
+  - Malicious_IP
+  - Brute_Force
+  - Lateral_Movement
+  - Suspicious_Source
+  - Abnormal_Working_Hours
+  - n/a
+- name: cs8
+  type: enum
+  description: Matched Silverfort policy, mapped to xdm.network.rule with underscores replaced by spaces.
+    "n/a" suppresses the field.
+  example: MFA_Policy_Privileged_Accounts
+  enum_values:
+  - MFA_Policy_Privileged_Accounts
+  - Block_Legacy_Authentication
+  - Service_Account_Protection
+  - n/a
+- name: cs9
+  type: enum
+  description: Source country, mapped to xdm.source.location.country. Feeds the geo-velocity detectors.
+    "n/a" suppresses the field.
+  example: Saudi Arabia
+  enum_values:
+  - Saudi Arabia
+  - United Arab Emirates
+  - Egypt
+  - Turkey
+  - n/a
+- name: destinationServiceName
+  type: string
+  description: Service principal or resource name, mapped to xdm.target.resource.name (falls back to dhost
+    when empty).
+  example: cifs/FS-01.acme.local
+- name: dhost
+  type: host
+  description: 'Machine or resource the user authenticated TO. This is the user-to-machine binding: the
+    rule sends it to xdm.target.host.hostname when it is not an IP, and to xdm.target.ipv4/ipv6 when it
+    is.'
+  example: FS-01.acme.local
+- name: dntdom
+  type: string
+  description: Target NT domain, mapped to xdm.target.domain.
+  example: Acme
+- name: msg
+  type: string
+  description: Free-text description, mapped to xdm.event.description.
+  example: User authenticated to FS-01.acme.local via Silverfort SSO
+- name: rt
+  type: string
+  description: 'Event time as an EPOCH INTEGER — 10 (s), 13 (ms), 16 (us) or 19 (ns) digits. The parsing
+    rule filters on that digit pattern and derives _time from it, so this is the back-dating handle for
+    this source. An ISO-8601 string does NOT match the filter: the row still lands (no_hit=keep) but _time
+    falls back to ingestion time.'
+  example: '1788700000000'
+- name: shost
+  type: host
+  description: Workstation the authentication originated FROM, mapped to xdm.source.host.hostname. The
+    literal "n/a" is mapped to null by the rule.
+  example: WS-014.acme.local
+- name: sntdom
+  type: string
+  description: Source NT domain, mapped to xdm.source.user.domain and used to build the UPN when suser
+    is a bare username.
+  example: Acme
+- name: src
+  type: ipv4
+  description: Source IP, mapped to xdm.source.ipv4 or xdm.source.ipv6 by is_ipv4()/is_ipv6().
+  example: 10.20.14.37
+- name: suser
+  type: string
+  description: Authenticating user. Silverfort emits either a bare username or a UPN; the rule regex-extracts
+    the local part and derives xdm.source.user.upn. Send UPN form so both username and upn populate.
+  example: ahmed.alharbi@example-isp.example
+use_cases:
+- MFA
+- Identity
+how_to_use: "## silverfort admin console → Cortex XSIAM (dataset `silverfort_admin_console_raw`)\n\n \
+  \ **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces\n  non-alphanumerics\
+  \ with `_`, and appends `_raw` to choose the dataset (target: `silverfort_admin_console_raw`).\n\n \
+  \ **Required CEF header for XSIAM**:\n  - **vendor**: `silverfort`\n  - **product**: `admin_console`\n\
+  \n  These normalize → `silverfort_admin_console_raw`.\n\n  **Ingestion shape**: **Flat / CEF-compatible.**\
+  \ The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and\
+  \ the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once\
+  \ the dataset is XDM-bound.\n\n  - **Modeling-rule gate**: `cefdeviceeventclassid = \"Authentication\"\
+  \ AND app ~= \"SSO|SAML|OIDC\"` — seed that field with an accepted value or the rule drops the row (XDM\
+  \ stays 0).\n\n  **XDM mapping**: ~33 fields mapped to the unified data model (`xdm.*`), including:\
+  \ `xdm.alert.risks`, `xdm.alert.severity`, `xdm.auth.auth_method`, `xdm.auth.service`, `xdm.event.description`,\
+  \ `xdm.event.operation`.\n\n  **Operator setup**: This data source's modeling rule reads CEF-shaped\
+  \ columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|silverfort|admin_console|...|<extensions>`)\
+  \ — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker\
+  \ routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config\
+  \ is required beyond standard CEF ingestion.\n\n  **Status**: Routing, gate and field inventory are derived from the\
+  \ parsing/modeling rules.\n  **Not yet XDM-validated** (no `validated` pill); validate by\n  streaming a CEF batch and confirming a rich\
+  \ `xdm.*` count over a wide window.\n\n  **Verify** (once the dataset is XDM-bound, wide ≥7d window):\n\
+  \n      config timeframe = 30d | datamodel dataset = silverfort_admin_console_raw | sort desc _time\
+  \ | fields xdm.* | limit 20\n\n**How simulation works — read this before generating.** `phantom_create_data_worker`\n\
+  resolves each field's value in this order:\n\n  1. `observables_dict[field]` — explicit; always wins.\
+  \ Values are LISTS.\n  2. `is_gate` + `example` — gate fields are auto-pinned to their example.\n  3.\
+  \ declared `type` — ipv4/user/url/datetime are synthesized plausibly.\n  4. field-name heuristic.\n\
+  \  5. random token.\n\n**A field's `example` below is DOCUMENTATION ONLY unless that field is marked\n\
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --\nan enum, an HTTP\
+  \ method, a status code, a resource path, a numeric type code, an\nXML or JSON blob -- MUST be passed\
+  \ in `observables_dict`, with keys spelled\nexactly as `fields[]` spells them (dotted leaves included,\
+  \ e.g.\n`event_data.param2`). Anything you leave out is randomly generated, and the rule\nwill map it\
+  \ to garbage or drop the event."

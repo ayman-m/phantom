@@ -1,0 +1,518 @@
+schema_version: 1
+id: Netskope
+pack_name: Netskope
+rule_name: NetskopeEventCollector
+dataset_name: netskope_netskope_raw
+vendor: Netskope
+product: Netskope
+description: Cloud access security broker that enables to find, understand, and secure
+  cloud apps.
+categories:
+- Network Security
+version: 4.2.3
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMxNzUxRDAiPk5ldHNrb3BlPC90ZXh0Pjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: supporting_data.data_values
+  type: string_short
+  description: Nested leaf of `supporting_data` — the modeling rule reads it at $.data_values.
+  example: sample value
+- name: supporting_data.data_values[1]
+  type: string_short
+  description: Nested leaf of `supporting_data` — the modeling rule reads it at $.data_values[1].
+  example: sample value
+- name: access_method
+  type: string
+  description: Vendor-emitted field 'Access method'. Free-form text; may contain whitespace
+    and punctuation.
+  example: GET
+- name: account_id
+  type: string_short
+  description: Opaque identifier emitted by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: net-0ee24df4
+- name: action
+  type: string
+  description: Action taken (allow/block/alert/quarantine). Free-form text; may contain
+    whitespace and punctuation.
+  example: allow
+- name: activity
+  type: string
+  description: Vendor-emitted field 'Activity'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_activity
+- name: activity_status
+  type: string_short
+  description: Status code returned by Netskope. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: activity_type
+  type: string_short
+  description: Type/category classifier emitted by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: alert
+  type: string
+  description: Vendor-emitted field 'Alert'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_alert
+- name: alert_name
+  type: string
+  description: Human-readable name as displayed by Netskope. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: alert_type
+  type: string_short
+  description: Type/category classifier emitted by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: app
+  type: string_short
+  description: Application name emitted by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token_value
+- name: app_session_id
+  type: string_short
+  description: Unique identifier — assigned by Netskope per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: sess-ecb52537-72b
+- name: audit_log_event
+  type: string
+  description: Vendor-emitted field 'Audit log event'. Free-form text; may contain
+    whitespace and punctuation.
+  example: login
+- name: browser
+  type: string
+  description: Vendor-emitted field 'Browser'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_browser
+- name: browser_session_id
+  type: string_short
+  description: Unique identifier — assigned by Netskope per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: sess-5acc2f8d-a8e
+- name: category
+  type: url
+  description: Netskope's category classifier for the event. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: ccl
+  type: string
+  description: Cloud Confidence Level (Netskope risk tier). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_ccl
+- name: client_bytes
+  type: integer_byte_count
+  description: Byte count. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '42'
+- name: conn_duration
+  type: integer
+  description: Duration (typically milliseconds) of the operation. Signed decimal
+    integer; bare digits, optional leading minus.
+  example: '42'
+- name: details
+  type: string_long
+  description: Additional details payload emitted by Netskope. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by Netskope for this record.
+- name: device
+  type: string
+  description: Vendor-emitted field 'Device'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_device
+- name: dom
+  type: string
+  description: Vendor-emitted field 'Dom'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dom
+- name: domain
+  type: domain
+  description: DNS domain reported by Netskope — bare domain, no scheme/path/port.
+    Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: dst_country
+  type: country_code
+  description: Country (ISO 3166-1 alpha-2 code or descriptive label). ISO 3166-1
+    alpha-2 uppercase country code (e.g., US, DE, JP).
+  example: US
+- name: dst_latitude
+  type: float
+  description: Vendor-emitted field 'Dst latitude'. Decimal number with optional fractional
+    part; bare digits with optional minus and decimal point.
+  example: '3.14'
+- name: dst_location
+  type: string
+  description: Location label (region/site/zone) emitted by Netskope. Free-form text;
+    may contain whitespace and punctuation.
+  example: us-east
+- name: dst_longitude
+  type: float
+  description: Destination location longitude. Decimal number with optional fractional
+    part; bare digits with optional minus and decimal point.
+  example: '3.14'
+- name: dst_region
+  type: string_short
+  description: Cloud region or geographic region label. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: us-east-1
+- name: dst_timezone
+  type: string
+  description: Vendor-emitted field 'Dst timezone'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_timezone
+- name: dsthost
+  type: host
+  description: Destination hostname or FQDN reported by the vendor. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: dstip
+  type: ipv4
+  description: Destination address of the connection target. Dotted-quad IPv4 literal
+    (e.g., 192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: dstport
+  type: integer
+  description: Destination TCP/UDP port. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: event_type
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: file_path
+  type: string
+  description: Source process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: /var/log/app.log
+- name: file_type
+  type: string
+  description: Source process executable file type. Free-form text; may contain whitespace
+    and punctuation.
+  example: authentication
+- name: filename
+  type: string
+  description: Source process executable filename. Free-form text; may contain whitespace
+    and punctuation.
+  example: document.pdf
+- name: hostname
+  type: host
+  description: Human-readable name as displayed by Netskope. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: incident_id
+  type: string_short
+  description: Unique identifier — assigned by Netskope per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: net-917edf89
+- name: instance_id
+  type: string_short
+  description: Opaque identifier emitted by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: net-db99996d
+- name: ip_protocol
+  type: string
+  description: Vendor-emitted field 'Ip protocol'. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: local_md5
+  type: hash_md5
+  description: MD5 digest of the artifact. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: local_sha256
+  type: hash_sha256
+  description: SHA-256 digest of the artifact. 64-character lowercase hex SHA-256
+    digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: malware_name
+  type: string
+  description: Human-readable name as displayed by Netskope. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: malware_severity
+  type: string_short
+  description: Event severity as classified by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: INFO
+- name: malware_type
+  type: string_short
+  description: Type/category classifier emitted by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: managed_app
+  type: string_short
+  description: Application name emitted by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token_value
+- name: md5
+  type: hash_md5
+  description: MD5 digest as reported by the vendor. 32-character lowercase hex MD5
+    digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: object
+  type: file_path
+  description: Vendor-emitted field 'Object'. Absolute filesystem path; vendor-native
+    separator (forward slash on POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: object_type
+  type: string_short
+  description: Type/category classifier emitted by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: organization_unit
+  type: string
+  description: Vendor-emitted field 'Organization unit'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_unit
+- name: os
+  type: string
+  description: Vendor-emitted field 'Os'. Free-form text; may contain whitespace and
+    punctuation.
+  example: Linux
+- name: os_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: page
+  type: url
+  description: Vendor-emitted field 'Page'. Full URL with scheme (http/https/ftp);
+    percent-encoded if it contains non-ASCII characters.
+  example: https://example.com/path
+- name: protocol
+  type: string
+  description: Network protocol name or numeric IANA assignment. Free-form text; may
+    contain whitespace and punctuation.
+  example: tcp
+- name: referer
+  type: url
+  description: HTTP Referer header value. Full URL with scheme (http/https/ftp); percent-encoded
+    if non-ASCII.
+  example: https://example.com/path?q=1
+- name: region_name
+  type: string
+  description: Human-readable name as displayed by Netskope. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: request_id
+  type: string_short
+  description: Unique identifier — assigned by Netskope per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: req-b1cf17f5-3d5
+- name: risk_level
+  type: string_short
+  description: Severity level (string label, e.g., info/warn/error). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: info
+- name: server_bytes
+  type: integer_byte_count
+  description: Byte count. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '42'
+- name: session_duration
+  type: integer
+  description: Duration (typically milliseconds) of the operation. Signed decimal
+    integer; bare digits, optional leading minus.
+  example: '42'
+- name: severity
+  type: string
+  description: Event severity as classified by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: INFO
+- name: severity_level
+  type: string_short
+  description: Severity level (string label, e.g., info/warn/error). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: info
+- name: sha256
+  type: hash_sha256
+  description: SHA-256 digest as reported by the vendor. 64-character lowercase hex
+    SHA-256 digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: site
+  type: string
+  description: Vendor-emitted field 'Site'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_site
+- name: source_log_event
+  type: string
+  description: Vendor-emitted field 'Source log event'. Free-form text; may contain
+    whitespace and punctuation.
+  example: login
+- name: src_country
+  type: country_code
+  description: Country (ISO 3166-1 alpha-2 code or descriptive label). ISO 3166-1
+    alpha-2 uppercase country code (e.g., US, DE, JP).
+  example: US
+- name: src_latitude
+  type: float
+  description: Vendor-emitted field 'Src latitude'. Decimal number with optional fractional
+    part; bare digits with optional minus and decimal point.
+  example: '3.14'
+- name: src_location
+  type: string
+  description: Location label (region/site/zone) emitted by Netskope. Free-form text;
+    may contain whitespace and punctuation.
+  example: us-east
+- name: src_longitude
+  type: float
+  description: Vendor-emitted field 'Src longitude'. Decimal number with optional
+    fractional part; bare digits with optional minus and decimal point.
+  example: '3.14'
+- name: src_region
+  type: string_short
+  description: Cloud region or geographic region label. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: us-east-1
+- name: src_timezone
+  type: string
+  description: Vendor-emitted field 'Src timezone'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_timezone
+- name: srcip
+  type: ipv4
+  description: Source address of the connection initiator. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: srcport
+  type: integer
+  description: Source TCP/UDP port. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: supporting_data
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: data_type,
+    data_values[0] (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: timestamp
+  type: datetime
+  description: Timestamp emitted by Netskope. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: title
+  type: string
+  description: Title/headline of the event or item. Free-form text; may contain whitespace
+    and punctuation.
+  example: Sample subject line
+- name: total_packets
+  type: integer
+  description: Vendor-emitted field 'Total packets'. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: traffic_type
+  type: string
+  description: Traffic type (CloudApp/Web/etc.). Free-form text; may contain whitespace
+    and punctuation.
+  example: authentication
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: ur_normalized
+  type: string
+  description: Normalized user (UPN-normalized). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_normalized
+- name: url
+  type: url
+  description: Full URL with scheme — as Netskope captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: user
+  type: string
+  description: User account associated with the event. Free-form text; may contain
+    whitespace and punctuation.
+  example: jdoe
+- name: user_id
+  type: string
+  description: User account associated with the event. Free-form text; may contain
+    whitespace and punctuation.
+  example: net-b8a030cf
+- name: useragent
+  type: string_long
+  description: Client User-Agent header value as received by Netskope. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: userip
+  type: ipv4
+  description: Vendor-emitted field 'Userip'. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: userkey
+  type: string
+  description: Vendor-emitted field 'Userkey'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_userkey
+- name: web_url
+  type: url
+  description: Full URL with scheme — as Netskope captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: supporting_data.data_type
+  type: integer
+  description: Type/category classifier emitted by Netskope. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: '443'
+- name: supporting_data.data_values[0]
+  type: integer
+  description: Vendor-emitted field 'Supporting data › data values[0]'. Leaf of the
+    'supporting_data' composite. Free-form text; may contain whitespace and punctuation.
+  example: '443'
+use_cases:
+- CASB
+- Proxy
+how_to_use: |
+  ## Sending Netskope logs to Cortex XSIAM
+
+  Required CEF header:
+
+  - vendor: `Netskope`
+  - product: `Netskope`
+
+  Broker derives -> `netskope_netskope_raw`.
+
+  Status: raw lands, XDM does NOT map on a stock tenant.
+  Synthetic CEF events route in and the broker auto-extracts the columns
+  correctly (e.g. source_log_event=application, the modeling-rule gate value),
+  but `datamodel dataset = netskope_netskope_raw` returns ZERO modeled rows over
+  a 365-day window — the modeling rule does not fire for the broker-auto-created
+  dataset on a stock tenant.
+
+  To onboard XDM: install the Netskope content pack in the XSIAM tenant so the
+  dataset is created XDM-modeled (associated with its modeling rule), then
+  re-verify. Until then this source is NOT in the validated set.
+
+  MR pattern (for reference): gated on source_log_event in {page, application,
+  alert, audit, network}; the application branch is richest. Seed
+  observables_dict={"source_log_event": ["application"]} once onboarded.
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

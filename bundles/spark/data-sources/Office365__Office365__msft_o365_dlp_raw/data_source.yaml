@@ -1,0 +1,272 @@
+schema_version: 1
+id: Office365
+pack_name: Office365
+rule_name: Office365
+dataset_name: msft_o365_dlp_raw
+vendor: Microsoft
+product: Office365
+description: The Office 365 DLP (Data Loss Prevention) audit stream surfaces every policy match across
+  Exchange, SharePoint, OneDrive, and Teams — the matching policy rule, the sensitive-information types
+  detected, the action taken (block / notify / encrypt), and the affected document or message. Simulate
+  DLP events to validate incident-response runbooks for confidential data exposure, policy-tuning workflows,
+  and DLP-driven case automation.
+how_to_use: |
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `msft`
+  - **product**: `o365_dlp`
+
+  Broker derives → `msft_o365_dlp_raw`.
+
+  Use `msft` / `o365_dlp` to broker-derive `msft_o365_dlp_raw`. Also set `Workload=DLP` + the appropriate `RecordType` in the raw payload.
+
+  **MR pattern**: Mixed. DLP-specific flat `PolicyId`, `PolicyName`, `RuleName`, `SensitiveInfoDetections[]`.
+
+  **Composite (nested-JSON) fields**: Pack `SensitiveInfoDetections` as JSON-string array. `ExceptionInfo` as JSON-string object.
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: `Workload=DLP` + `RecordType` discriminator.
+
+  **Saturation strategy**: Mixed MR — ~8 XDM.
+
+  **Single-event XDM ceiling**: ~8 XDM single-event.
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = msft_o365_dlp_raw
+  | filter xdm.event.id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+categories:
+- Analytics & SIEM
+- Cloud Services
+- Cloud Security
+version: 1.0.22
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTEwcHgiIHZpZXdCb3g9IjAgMCA1MTIgMTEwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQiPgogICAgPHRpdGxlPk1pY3Jvc29mdDwvdGl0bGU+CiAgICA8Zz4KICAgICAgICA8cGF0aCBkPSJNNTEyLDQ5LjQ0ODY0MjggTDUxMiw0MC40NDQzMzc2IEw1MDAuODE4MjY3LDQwLjQ0NDMzNzYgTDUwMC44MTgyNjcsMjYuNDQ1Njg5IEw1MDAuNDQxODk5LDI2LjU2MTQ2MjIgTDQ4OS45MzkzMjgsMjkuNzc0NjMyMiBMNDg5LjczMjU0NiwyOS44Mzc3ODExIEw0ODkuNzMyNTQ2LDQwLjQ0NDMzNzYgTDQ3My4xNTU5MzIsNDAuNDQ0MzM3NiBMNDczLjE1NTkzMiwzNC41MzYxOTA5IEM0NzMuMTU1OTMyLDMxLjc4NDg3NTQgNDczLjc3MTMyNiwyOS42NzkyODk1IDQ3NC45ODM1MzksMjguMjc1MTUyOCBDNDc2LjE4NzcwMywyNi44ODc3MzIgNDc3LjkxMDA2MSwyNi4xODI1NjgxIDQ4MC4xMDYwMzcsMjYuMTgyNTY4MSBDNDgxLjY4NTM4MiwyNi4xODI1NjgxIDQ4My4zMjA0NDUsMjYuNTU0NjUyIDQ4NC45NjU0MTUsMjcuMjg4Mjk0OCBMNDg1LjM3Nzc0MSwyNy40NzIxNjk4IEw0ODUuMzc3NzQxLDE3Ljk4OTI5NDIgTDQ4NS4xODM5NjEsMTcuOTE4MDk2OSBDNDgzLjY0OTE5MiwxNy4zNjY0NzE3IDQ4MS41NjA5NDEsMTcuMDg4NDkyMyA0NzguOTczNjg5LDE3LjA4ODQ5MjMgQzQ3NS43MTIyMjgsMTcuMDg4NDkyMyA0NzIuNzQ4NTU5LDE3Ljc5Nzk4OTkgNDcwLjE2NDQwMywxOS4yMDQ2MDMgQzQ2Ny41NzgzODksMjAuNjEzMDczNSA0NjUuNTQ0MDAxLDIyLjYyMzkzNTkgNDY0LjExOTQzMywyNS4xODA4NTE2IEM0NjIuNjk5MiwyNy43MzQ2NzE3IDQ2MS45Nzg1NTgsMzAuNjg0MTAxNiA0NjEuOTc4NTU4LDMzLjk0ODAzODUgTDQ2MS45Nzg1NTgsNDAuNDQ0MzM3NiBMNDU0LjE5MjY1OCw0MC40NDQzMzc2IEw0NTQuMTkyNjU4LDQ5LjQ0ODY0MjggTDQ2MS45Nzg1NTgsNDkuNDQ4NjQyOCBMNDYxLjk3ODU1OCw4Ny4zODIwMDI2IEw0NzMuMTU1OTMyLDg3LjM4MjAwMjYgTDQ3My4xNTU5MzIsNDkuNDQ4NjQyOCBMNDg5LjczMjU0Niw0OS40NDg2NDI4IEw0ODkuNzMyNTQ2LDczLjU1NDg0NjggQzQ4OS43MzI1NDYsODMuNDgyODYxIDQ5NC40MTU0NzgsODguNTE0MzUwOSA1MDMuNjUwNzExLDg4LjUxNDM1MDkgQzUwNS4xNjg3NjQsODguNTE0MzUwOSA1MDYuNzY1NDY4LDg4LjMzNjA0NzggNTA4LjM5Njc5Miw4Ny45ODc0OTAxIEM1MTAuMDU2NjQ1LDg3LjYzMDI2NDggNTExLjE4NzEzNiw4Ny4yNzMwMzk2IDUxMS44NTI2NTIsODYuODkxNjY5MSBMNTEyLDg2LjgwNDk5NCBMNTEyLDc3LjcxNzEwOTMgTDUxMS41NDU1NzQsNzguMDE3OTk1NiBDNTEwLjkzODg0OSw3OC40MjI4OTIyIDUxMC4xODM1MzcsNzguNzUyODc2NyA1MDkuMjk3NjE5LDc4Ljk5ODA0MzUgQzUwOC40MDc5MzYsNzkuMjQ4MTYzIDUwNy42NjUwMDYsNzkuMzczODQyIDUwNy4wODk4NzksNzkuMzczODQyIEM1MDQuOTI2MDczLDc5LjM3Mzg0MiA1MDMuMzI1NzA0LDc4Ljc5MDY0MjMgNTAyLjMzMjAxLDc3LjY0MDMzOTkgQzUwMS4zMjc4MTgsNzYuNDc5NTEyNiA1MDAuODE4MzE3LDc0LjQ0ODgzODcgNTAwLjgxODMxNyw3MS42MDg5OTA4IEw1MDAuODE4MzE3LDQ5LjQ0ODY0MjggTDUxMiw0OS40NDg2NDI4IEw1MTIsNDkuNDQ4NjQyOCBaIE00MjkuMjMxODM3LDc5LjM3NDcwODcgQzQyNS4xNzQ4MjMsNzkuMzc0NzA4NyA0MjEuOTc2NTExLDc4LjAyOTM4NzIgNDE5LjcyMjM0LDc1LjM3OTYwNTQgQzQxNy40NTQ1NDcsNzIuNzE2MjAzMyA0MTYuMzA1NDgzLDY4LjkxOTIxNDYgNDE2LjMwNTQ4Myw2NC4wOTUxMjU5IEM0MTYuMzA1NDgzLDU5LjExODExNzUgNDE3LjQ1NDU0Nyw1NS4yMjI2OTA2IDQxOS43MjM1NzgsNTIuNTEyMjM2MyBDNDIxLjk3ODk4OCw0OS44MTk3MzYxIDQyNS4xNDY5NjMsNDguNDUzMzY1IDQyOS4xNDA4MjgsNDguNDUzMzY1IEM0MzMuMDE2NDQ0LDQ4LjQ1MzM2NSA0MzYuMTAxNDU4LDQ5Ljc1ODQ0NDQgNDM4LjMxMTA1NCw1Mi4zMzQ1NTIzIEM0NDAuNTMyNDE0LDU0LjkyMzY2MTUgNDQxLjY1OTE5LDU4Ljc4ODEzMyA0NDEuNjU5MTksNjMuODIzMzM3NSBDNDQxLjY1OTE5LDY4LjkyMDQ1MjkgNDQwLjU5OTI3Nyw3Mi44MzU2OTExIDQzOC41MDkxNjksNzUuNDU0NTE3NSBDNDM2LjQzMzkxOSw3OC4wNTQxNTE1IDQzMy4zMTI5OTYsNzkuMzc0NzA4NyA0MjkuMjMxODM3LDc5LjM3NDcwODcgTDQyOS4yMzE4MzcsNzkuMzc0NzA4NyBaIE00MjkuNzI5NiwzOS4zMTM0NzUxIEM0MjEuOTg5NTEzLDM5LjMxMzQ3NTEgNDE1Ljg0MTc3MSw0MS41ODEyNjczIDQxMS40NTkxMDcsNDYuMDU0MzIxOSBDNDA3LjA3ODkxOCw1MC41Mjc5OTU1IDQwNC44NTc1NTksNTYuNzE4NDU1NCA0MDQuODU3NTU5LDY0LjQ1NjA2NTggQzQwNC44NTc1NTksNzEuODA0ODc2NSA0MDcuMDI1Njc1LDc3LjcxNjExODYgNDExLjMwMTg1Myw4Mi4wMjI2MzMyIEM0MTUuNTc4MDMyLDg2LjMzMTAwNSA0MjEuMzk3NjQ1LDg4LjUxMzM2MDQgNDI4LjU5NzI1MSw4OC41MTMzNjA0IEM0MzYuMTAwMjIsODguNTEzMzYwNCA0NDIuMTI1Mzc4LDg2LjIxMzk5MzYgNDQ2LjUwNjgwNCw4MS42NzkwMjgzIEM0NTAuODg3NjExLDc3LjE0ODM5NjcgNDUzLjEwNzExNCw3MS4wMTY3NTIxIDQ1My4xMDcxMTQsNjMuNDU5OTIxMSBDNDUzLjEwNzExNCw1NS45OTU5NTY0IDQ1MS4wMjQ0MzUsNTAuMDQwNzU3NiA0NDYuOTE0Nzk3LDQ1Ljc2MjcyMiBDNDQyLjgwMzMwMSw0MS40ODI4MjkyIDQzNy4wMjAyMTQsMzkuMzEzNDc1MSA0MjkuNzI5NiwzOS4zMTM0NzUxIEw0MjkuNzI5NiwzOS4zMTM0NzUxIFogTTM4Ni44MzYyNTQsMzkuMzEzMjI3NSBDMzgxLjU3MTM2LDM5LjMxMzIyNzUgMzc3LjIxNjU1Niw0MC42NTk3ODcxIDM3My44ODk0Nyw0My4zMTUxNDA5IEMzNzAuNTQyNTczLDQ1Ljk4NTk3MjQgMzY4Ljg0NDk3OSw0OS40ODk1MDM5IDM2OC44NDQ5NzksNTMuNzI4NTM1NyBDMzY4Ljg0NDk3OSw1NS45MzE5NDA3IDM2OS4yMTE0OSw1Ny44ODk1NTk4IDM2OS45MzI3NTIsNTkuNTQ5Mzg4IEMzNzAuNjU4MzQ2LDYxLjIxNTQwNzQgMzcxLjc4MTQwOCw2Mi42ODE0NTQ5IDM3My4yNzI4MzksNjMuOTEyMjQxNCBDMzc0Ljc1Mzc0NCw2NS4xMzMxMjIyIDM3Ny4wMzgyNTMsNjYuNDEyMTk5MSAzODAuMDY2OTI4LDY3LjcxMjk0NDcgQzM4Mi42MTIwODIsNjguNzYwNDc1NCAzODQuNTEwODg1LDY5LjY0NzAzNzkgMzg1LjcxNjkwNyw3MC4zNDUzOTE2IEMzODYuODk1Njg5LDcxLjAyOTUwNTggMzg3LjczMjcyMyw3MS43MTc5NTM3IDM4OC4yMDUxMDIsNzIuMzg3ODI4NSBDMzg4LjY2Mzg2MSw3My4wNDM0NjM4IDM4OC44OTcyNjUsNzMuOTQwNTUxMSAzODguODk3MjY1LDc1LjA0ODc1NDIgQzM4OC44OTcyNjUsNzguMjAxODcwNyAzODYuNTM1OTg3LDc5LjczNjAyMDEgMzgxLjY3NjYwOSw3OS43MzYwMjAxIEMzNzkuODc0Mzg2LDc5LjczNjAyMDEgMzc3LjgxODMyOSw3OS4zNjAyMjE2IDM3NS41NjYwMTQsNzguNjE3OTExMiBDMzczLjMxMjQ2Miw3Ny44NzY4MzkxIDM3MS4yMDY4NzUsNzYuODExMzU0MyAzNjkuMzA4NjksNzUuNDQ0OTgzMiBMMzY4Ljg0NDk3OSw3NS4xMTI1MjIzIEwzNjguODQ0OTc5LDg1Ljg3MzIzNjcgTDM2OS4wMTUyMzQsODUuOTUyNDgyNSBDMzcwLjU5NzA1NCw4Ni42ODI0MTA2IDM3Mi41OTA1ODIsODcuMjk3ODAzOSAzNzQuOTQwNzE1LDg3Ljc4MjU2NTQgQzM3Ny4yODY1MTUsODguMjY3MzI2OCAzNzkuNDE3NDg0LDg4LjUxNDM1MDkgMzgxLjI2OTIzNiw4OC41MTQzNTA5IEMzODYuOTgyMzY0LDg4LjUxNDM1MDkgMzkxLjU4Mjk1NSw4Ny4xNjA5ODEgMzk0LjkzOTc1OCw4NC40OTAxNDk2IEMzOTguMzE4MjI5LDgxLjgwMDc0NDkgNDAwLjAzMDY4Miw3OC4yMTQ4NzIgNDAwLjAzMDY4Miw3My44Mjg0OTI2IEM0MDAuMDMwNjgyLDcwLjY2NDg1MTIgMzk5LjEwODgzLDY3Ljk1MTMwMTMgMzk3LjI5MTc0OSw2NS43NjMzNzQgQzM5NS40ODc2NjgsNjMuNTkyNzgxNyAzOTIuMzU2MjIsNjEuNjAwNDkyNiAzODcuOTg3Nzk1LDU5LjgzOTEzMDYgQzM4NC41MDc3ODksNTguNDQyNDIzMiAzODIuMjc4MzgzLDU3LjI4MjgzNDEgMzgxLjM1OTAwNyw1Ni4zOTMxNzYgQzM4MC40NzI0NDQsNTUuNTMzMjM1MSAzODAuMDIyMzUzLDU0LjMxNzMwNzMgMzgwLjAyMjM1Myw1Mi43Nzc1ODU5IEMzODAuMDIyMzUzLDUxLjQxMjQ1MyAzODAuNTc3NjkzLDUwLjMxOTEwODUgMzgxLjcxODcwOSw0OS40MzMxNjUxIEMzODIuODY4MzkyLDQ4LjU0Mjg4NzkgMzg0LjQ2ODE2Niw0OC4wOTAzMjAxIDM4Ni40NzUzMTUsNDguMDkwMzIwMSBDMzg4LjMzNzU5MSw0OC4wOTAzMjAxIDM5MC4yNDMyMDUsNDguMzg0Mzk2MyAzOTIuMTM3Njc1LDQ4Ljk2MDc4NTggQzM5NC4wMzE1MjYsNDkuNTM3MTc1MiAzOTUuNjk0NDUsNTAuMzA5MjAyNyAzOTcuMDgzMTA5LDUxLjI1Mzk2MTQgTDM5Ny41MzkzOTIsNTEuNTY1OTkxOCBMMzk3LjUzOTM5Miw0MS4zNTgxNDA4IEwzOTcuMzY0MTg1LDQxLjI4MjYwOTYgQzM5Ni4wODMyNSw0MC43MzM0NjEgMzk0LjM5NDMyNCw0MC4yNjM1NTgxIDM5Mi4zNDMyMTksMzkuODgyMTg3NiBDMzkwLjMwMDE2MywzOS41MDQ1MzE4IDM4OC40NDcxNzMsMzkuMzEzMjI3NSAzODYuODM2MjU0LDM5LjMxMzIyNzUgTDM4Ni44MzYyNTQsMzkuMzEzMjI3NSBaIE0zMzkuNzA2MDQ3LDc5LjM3NDcwODcgQzMzNS42NTAyNzEsNzkuMzc0NzA4NyAzMzIuNDUwNzIxLDc4LjAyOTM4NzIgMzMwLjE5NzE2OSw3NS4zNzk2MDU0IEMzMjcuOTI4NzU3LDcyLjcxNjIwMzMgMzI2Ljc4MTU1LDY4LjkyMDQ1MjkgMzI2Ljc4MTU1LDY0LjA5NTEyNTkgQzMyNi43ODE1NSw1OS4xMTgxMTc1IDMyNy45Mjk5OTYsNTUuMjIyNjkwNiAzMzAuMTk5NjQ1LDUyLjUxMjIzNjMgQzMzMi40NTMxOTgsNDkuODE5NzM2MSAzMzUuNjIwNTU0LDQ4LjQ1MzM2NSAzMzkuNjE2Mjc2LDQ4LjQ1MzM2NSBDMzQzLjQ5MDY1NCw0OC40NTMzNjUgMzQ2LjU3NTY2OCw0OS43NTg0NDQ0IDM0OC43ODU4ODMsNTIuMzM0NTUyMyBDMzUxLjAwNzI0Myw1NC45MjM2NjE1IDM1Mi4xMzQwMTksNTguNzg4MTMzIDM1Mi4xMzQwMTksNjMuODIzMzM3NSBDMzUyLjEzNDAxOSw2OC45MjA0NTI5IDM1MS4wNzM0ODcsNzIuODM1NjkxMSAzNDguOTgzMzc5LDc1LjQ1NDUxNzUgQzM0Ni45MDgxMjksNzguMDU0MTUxNSAzNDMuNzg4NDQ0LDc5LjM3NDcwODcgMzM5LjcwNjA0Nyw3OS4zNzQ3MDg3IEwzMzkuNzA2MDQ3LDc5LjM3NDcwODcgWiBNMzQwLjIwNTA0OCwzOS4zMTM0NzUxIEMzMzIuNDYzMTAzLDM5LjMxMzQ3NTEgMzI2LjMxNTM2Miw0MS41ODEyNjczIDMyMS45MzQ1NTUsNDYuMDU0MzIxOSBDMzE3LjU1NDM2Niw1MC41Mjc5OTU1IDMxNS4zMzE3NjksNTYuNzE4NDU1NCAzMTUuMzMxNzY5LDY0LjQ1NjA2NTggQzMxNS4zMzE3NjksNzEuODA3OTcyMSAzMTcuNTAxMTIzLDc3LjcxNjExODYgMzIxLjc3NzMwMSw4Mi4wMjI2MzMyIEMzMjYuMDUzNDgsODYuMzMxMDA1IDMzMS44NzI0NzUsODguNTEzMzYwNCAzMzkuMDcyNjk5LDg4LjUxMzM2MDQgQzM0Ni41NzM4MTEsODguNTEzMzYwNCAzNTIuNjAwODI2LDg2LjIxMzk5MzYgMzU2Ljk4MjI1Miw4MS42NzkwMjgzIEMzNjEuMzYxODIyLDc3LjE0ODM5NjcgMzYzLjU4MjU2Miw3MS4wMTY3NTIxIDM2My41ODI1NjIsNjMuNDU5OTIxMSBDMzYzLjU4MjU2Miw1NS45OTU5NTY0IDM2MS40OTkyNjQsNTAuMDQwNzU3NiAzNTcuMzg5MDA2LDQ1Ljc2MjcyMiBDMzUzLjI3NjI3Myw0MS40ODI4MjkyIDM0Ny40OTQ0MjQsMzkuMzEzNDc1MSAzNDAuMjA1MDQ4LDM5LjMxMzQ3NTEgTDM0MC4yMDUwNDgsMzkuMzEzNDc1MSBaIE0yOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQwLjQ0NDMzNzYgTDI4Ny4zMjM2OTksNDAuNDQ0MzM3NiBMMjg3LjMyMzY5OSw4Ny4zODA3NjQ0IEwyOTguMzY0ODcsODcuMzgwNzY0NCBMMjk4LjM2NDg3LDYzLjM3MTE0MTEgQzI5OC4zNjQ4Nyw1OS4yODgxMjQ1IDI5OS4yOTA0MzYsNTUuOTM0NDE3MSAzMDEuMTE2ODA0LDUzLjQwMTAyNzUgQzMwMi45MjAyNjUsNTAuODk3OTc0NCAzMDUuMzIzNjQzLDQ5LjYyOTQyMjMgMzA4LjI1NzU5NSw0OS42Mjk0MjIzIEMzMDkuMjUxODgxLDQ5LjYyOTQyMjMgMzEwLjM2ODEzMyw0OS43OTM0ODU5IDMxMS41NzcyNTEsNTAuMTE3ODk4NSBDMzEyLjc3Mzk4Niw1MC40NDA0NTM3IDMxMy42NDA3MzgsNTAuNzkwMjQ5NSAzMTQuMTUyMTIxLDUxLjE1ODYxODggTDMxNC42MTU4MzMsNTEuNDk0Nzk0NCBMMzE0LjYxNTgzMyw0MC4zNjM4NTM2IEwzMTQuNDM2OTExLDQwLjI4NzA4NDIgQzMxMy40MDg1NzMsMzkuODQ5OTk0IDMxMS45NTQyODgsMzkuNjI5NTkxNiAzMTAuMTEzNjgsMzkuNjI5NTkxNiBDMzA3LjMzOTQ1OCwzOS42Mjk1OTE2IDMwNC44NTYyMTYsNDAuNTIxMTA3IDMwMi43Mjk1OCw0Mi4yNzYyNzc4IEMzMDAuODYyOTcsNDMuODE5MDk0NyAyOTkuNTEzMzE0LDQ1LjkzNDU4NjQgMjk4LjQ4MTg4MSw0OC41NzI2MDUxIEwyOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQ4LjU3MjYwNTEgWiBNMjY3LjU1MTU2MywzOS4zMTMyMjc1IEMyNjIuNDg2NjQxLDM5LjMxMzIyNzUgMjU3Ljk2ODM5MSw0MC4zOTk3NjE4IDI1NC4xMjQ5Nyw0Mi41NDA2MzY5IEMyNTAuMjc0MTE4LDQ0LjY4NjQ2NDkgMjQ3LjI5NjIwOSw0Ny43NTA0Mjk5IDI0NS4yNjk4NjksNTEuNjQ2NDc1OCBDMjQzLjI1MjgxNiw1NS41MzMyMzUxIDI0Mi4yMjg4MTEsNjAuMDczMTUzNCAyNDIuMjI4ODExLDY1LjEzNTU5ODYgQzI0Mi4yMjg4MTEsNjkuNTcwMjY4NSAyNDMuMjIxODYsNzMuNjQwMjgzNyAyNDUuMTg0NDMyLDc3LjIyNjc3NTggQzI0Ny4xNDgyNDMsODAuODE5NDU4OSAyNDkuOTI4MDM3LDgzLjYzMDIwODggMjUzLjQ0NjQyNyw4NS41Nzk3Nzk1IEMyNTYuOTU5ODY1LDg3LjUyNjg3MzkgMjYxLjAyMDU5Myw4OC41MTQzNTA5IDI2NS41MTY1NTUsODguNTE0MzUwOSBDMjcwLjc2MzQ5NCw4OC41MTQzNTA5IDI3NS4yNDMzNTksODcuNDY0OTYzIDI3OC44MzU0MjMsODUuMzk2NTIzNSBMMjc4Ljk4MDI5NSw4NS4zMTI5NDM5IEwyNzguOTgwMjk1LDc1LjE5Nzk1OTIgTDI3OC41MTY1ODMsNzUuNTM2NjExMiBDMjc2Ljg4OTU2Nyw3Ni43MjE1ODM3IDI3NS4wNzEyNDgsNzcuNjY3NTgwNiAyNzMuMTE0ODY2LDc4LjM0OTIxODQgQzI3MS4xNjM0MzgsNzkuMDMwMjM3MSAyNjkuMzg0MTIyLDc5LjM3NDQ2MTEgMjY3LjgyNDU4OSw3OS4zNzQ0NjExIEMyNjMuNDkyMDczLDc5LjM3NDQ2MTEgMjYwLjAxNDU0Myw3OC4wMTg2MTQ4IDI1Ny40ODk4MjEsNzUuMzQ2NTQ1MSBDMjU0Ljk1OTUyNyw3Mi42NzAxNDE3IDI1My42NzY3MzYsNjguOTEyNzc1OSAyNTMuNjc2NzM2LDY0LjE4NDAyOTggQzI1My42NzY3MzYsNTkuNDI1NTY2NSAyNTUuMDE0NjI4LDU1LjU3MTYxOTkgMjU3LjY1MTQwOCw1Mi43Mjc0MzgxIEMyNjAuMjc5NTIxLDQ5Ljg5MTkyNCAyNjMuNzYzODYsNDguNDUzNzM2NCAyNjguMDA2NjA3LDQ4LjQ1MzczNjQgQzI3MS42MzU4MTcsNDguNDUzNzM2NCAyNzUuMTcyMTYxLDQ5LjY4MjY2NTUgMjc4LjUxNzgyMSw1Mi4xMDk1Njg1IEwyNzguOTgwMjk1LDUyLjQ0NTc0NDEgTDI3OC45ODAyOTUsNDEuNzg3ODAxNyBMMjc4LjgzMTA4OSw0MS43MDM2MDMgQzI3Ny41NzE4MjQsNDAuOTk5MDU4MiAyNzUuODU1MDM3LDQwLjQxNzA5NjggMjczLjcyMjgzLDM5Ljk3NTY3MjkgQzI3MS42MDA1MjgsMzkuNTM1NDg3MiAyNjkuNTI0NjU5LDM5LjMxMzIyNzUgMjY3LjU1MTU2MywzOS4zMTMyMjc1IEwyNjcuNTUxNTYzLDM5LjMxMzIyNzUgWiBNMjM0LjYyNDU1Nyw0MC40NDQ0NjE0IEwyMjMuNTgzMzg3LDQwLjQ0NDQ2MTQgTDIyMy41ODMzODcsODcuMzgwODg4MSBMMjM0LjYyNDU1Nyw4Ny4zODA4ODgxIEwyMzQuNjI0NTU3LDQwLjQ0NDQ2MTQgTDIzNC42MjQ1NTcsNDAuNDQ0NDYxNCBaIE0yMjkuMjE2NjQ5LDIwLjQ0OTEzMzggQzIyNy4zOTk1NjgsMjAuNDQ5MTMzOCAyMjUuODE0NjUyLDIxLjA2NzYyMjUgMjI0LjUxMjY2NywyMi4yOTM0NTYyIEMyMjMuMjA1MTEyLDIzLjUyMzAwNDQgMjIyLjU0MTQyOCwyNS4wNzA3NzQyIDIyMi41NDE0MjgsMjYuODk3MTQyNCBDMjIyLjU0MTQyOCwyOC42OTUwMzE4IDIyMy4xOTcwNjQsMzAuMjE0MzIyNiAyMjQuNDkxNjE4LDMxLjQxMTA1ODEgQzIyNS43NzgxMjQsMzIuNjA0MDc5MSAyMjcuMzY3OTkzLDMzLjIwODk0NzQgMjI5LjIxNjY0OSwzMy4yMDg5NDc0IEMyMzEuMDY0Njg2LDMzLjIwODk0NzQgMjMyLjY2MDc0NywzMi42MDQwNzkxIDIzMy45NjI3MywzMS40MTI5MTU1IEMyMzUuMjczMzgyLDMwLjIxNDMyMjYgMjM1LjkzNzY4NSwyOC42OTUwMzE4IDIzNS45Mzc2ODUsMjYuODk3MTQyNCBDMjM1LjkzNzY4NSwyNS4xMzQ1NDIzIDIzNS4yOTEzMzYsMjMuNjAyMjUwMiAyMzQuMDE2NTkzLDIyLjM0Mjk4NDggQzIzMi43NDM3MDcsMjEuMDg2MTk1OCAyMzEuMTI4NDU1LDIwLjQ0OTEzMzggMjI5LjIxNjY0OSwyMC40NDkxMzM4IEwyMjkuMjE2NjQ5LDIwLjQ0OTEzMzggWiBNMjAxLjY2ODg4NCwzNi45ODE1NDMzIEwyMDEuNjY4ODg0LDg3LjM4MDY0MDYgTDIxMi45MzY2NDcsODcuMzgwNjQwNiBMMjEyLjkzNjY0NywyMS44ODY0NTQ2IEwxOTcuMzQxOTM5LDIxLjg4NjQ1NDYgTDE3Ny41MTkzNDIsNzAuNTMzNDc2NiBMMTU4LjI4MzA0MSwyMS44ODY0NTQ2IEwxNDIuMDUzMTI4LDIxLjg4NjQ1NDYgTDE0Mi4wNTMxMjgsODcuMzgwNjQwNiBMMTUyLjY0MTczLDg3LjM4MDY0MDYgTDE1Mi42NDE3MywzNi45NzY1OTA1IEwxNTMuMDA1NzY1LDM2Ljk3NjU5MDUgTDE3My4zMTg2OTUsODcuMzgwNjQwNiBMMTgxLjMwOTUyMSw4Ny4zODA2NDA2IEwyMDEuMzA1NDY3LDM2Ljk4MTU0MzMgTDIwMS42Njg4ODQsMzYuOTgxNTQzMyBMMjAxLjY2ODg4NCwzNi45ODE1NDMzIFoiIGZpbGw9IiM3MDZENkUiPjwvcGF0aD4KICAgICAgICA8Zz4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0YxNTExQiIgcG9pbnRzPSI1MS45Mzk0Mzc3IDUxLjkzOTQzNzcgMCA1MS45Mzk0Mzc3IDAgMCA1MS45Mzk0Mzc3IDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzgwQ0MyOCIgcG9pbnRzPSIxMDkuMjg2NzgzIDUxLjkzOTQzNzcgNTcuMzQ3OTY0MiA1MS45Mzk0Mzc3IDU3LjM0Nzk2NDIgMCAxMDkuMjg2NzgzIDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzAwQURFRiIgcG9pbnRzPSI1MS45MzgxOTk1IDEwOS4zMDcyMTMgMCAxMDkuMzA3MjEzIDAgNTcuMzY3Nzc1NyA1MS45MzgxOTk1IDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0ZCQkMwOSIgcG9pbnRzPSIxMDkuMjg2NzgzIDEwOS4zMDcyMTMgNTcuMzQ3OTY0MiAxMDkuMzA3MjEzIDU3LjM0Nzk2NDIgNTcuMzY3Nzc1NyAxMDkuMjg2NzgzIDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: AppAccessContext
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: CorrelationId (each key defined
+    as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: EndpointMetaData
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: DeviceName, EnforcementMode,
+    FileExtension, FileType (each key defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: ExceptionInfo
+  type: string
+  description: Vendor-emitted field 'ExceptionInfo'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: ExchangeMetaData
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: BCC, CC, FileSize, From, MessageID,
+    Sent, Subject, To (each key defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: Id
+  type: string_short
+  description: Opaque identifier emitted by Microsoft. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: mic-66507d6d
+- name: ObjectId
+  type: string
+  description: Vendor-emitted field 'ObjectId'. Free-form text; may contain whitespace and punctuation.
+  example: 00u1ab2c3d4e5f6
+- name: Operation
+  type: string
+  description: Vendor-emitted field 'Operation'. Free-form text; may contain whitespace and punctuation.
+  example: create
+- name: OrganizationId
+  type: string
+  description: Vendor-emitted field 'OrganizationId'. Free-form text; may contain whitespace and punctuation.
+  example: tenant-acme-prod
+- name: PolicyDetails
+  type: string
+  description: Vendor-emitted field 'PolicyDetails'. Free-form text; may contain whitespace and punctuation.
+  example: policy-default-deny
+- name: RecordType
+  type: integer
+  description: Vendor-emitted field 'RecordType'. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: ResultStatus
+  type: string
+  description: Vendor-emitted field 'ResultStatus'. Free-form text; may contain whitespace and punctuation.
+  example: SUCCESS
+- name: Scope
+  type: integer
+  description: Vendor-emitted field 'Scope'. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: SharePointMetaData
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: FileName, FilePathUrl, FileSize,
+    From, SiteCollectionUrl (each key defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: UserId
+  type: string
+  description: User account associated with the event. Free-form text; may contain whitespace and punctuation.
+  example: usr-d7f97bd7
+- name: UserKey
+  type: string
+  description: Vendor-emitted field 'UserKey'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: UserType
+  type: integer
+  description: User type (0=Regular, 1=Reserved, 2=Admin, 3=DcAdmin, 4=System, 5=Application, 6=ServicePrincipal,
+    7=CustomPolicy, 8=SystemPolicy). Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: Workload
+  type: string
+  description: Vendor-emitted field 'Workload'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: evaluationsource
+  type: string
+  description: Source of evaluation rule (DLP). Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: AppAccessContext.CorrelationId
+  type: string
+  description: Vendor-emitted field 'AppAccessContext › CorrelationId'. Leaf of the 'AppAccessContext'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 256e8731-67a2-502c-9dce-9115f0b1
+- name: EndpointMetaData.DeviceName
+  type: host
+  description: Vendor-emitted field 'EndpointMetaData › DeviceName'. Leaf of the 'EndpointMetaData' composite.
+    Hostname or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: EndpointMetaData.EnforcementMode
+  type: string
+  description: Vendor-emitted field 'EndpointMetaData › EnforcementMode'. Leaf of the 'EndpointMetaData'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: EndpointMetaData.FileExtension
+  type: string
+  description: Vendor-emitted field 'EndpointMetaData › FileExtension'. Leaf of the 'EndpointMetaData'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: pdf
+- name: EndpointMetaData.FileType
+  type: string
+  description: Vendor-emitted field 'EndpointMetaData › FileType'. Leaf of the 'EndpointMetaData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: AuditEvent
+- name: ExchangeMetaData.BCC
+  type: email
+  is_array: true
+  description: Vendor-emitted field 'ExchangeMetaData › BCC'. Leaf of the 'ExchangeMetaData' composite.
+    RFC 5322 'local@domain' address; one address only — use an array field for multiple addresses.
+  example: user@example.com
+- name: ExchangeMetaData.CC
+  type: email
+  is_array: true
+  description: Vendor-emitted field 'ExchangeMetaData › CC'. Leaf of the 'ExchangeMetaData' composite.
+    RFC 5322 'local@domain' address; one address only — use an array field for multiple addresses.
+  example: user@example.com
+- name: ExchangeMetaData.FileSize
+  type: string
+  description: Vendor-emitted field 'ExchangeMetaData › FileSize'. Leaf of the 'ExchangeMetaData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: ExchangeMetaData.From
+  type: email
+  description: Vendor-emitted field 'ExchangeMetaData › From'. Leaf of the 'ExchangeMetaData' composite.
+    RFC 5322 'local@domain' address; one address only — use an array field for multiple addresses.
+  example: user@example.com
+- name: ExchangeMetaData.MessageID
+  type: string
+  description: Vendor-emitted field 'ExchangeMetaData › MessageID'. Leaf of the 'ExchangeMetaData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: msg-5934e8f7-089
+- name: ExchangeMetaData.Sent
+  type: string
+  description: Vendor-emitted field 'ExchangeMetaData › Sent'. Leaf of the 'ExchangeMetaData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: ExchangeMetaData.Subject
+  type: string
+  description: Subject line — typically email subject or event summary. Free-form text; may contain whitespace
+    and punctuation.
+  example: Sample subject line
+- name: ExchangeMetaData.To
+  type: email
+  is_array: true
+  description: Vendor-emitted field 'ExchangeMetaData › To'. Leaf of the 'ExchangeMetaData' composite.
+    RFC 5322 'local@domain' address; one address only — use an array field for multiple addresses.
+  example: user@example.com
+- name: SharePointMetaData.FileName
+  type: string
+  description: File or process name reported by the vendor. Leaf of the 'SharePointMetaData' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: document.pdf
+- name: SharePointMetaData.FilePathUrl
+  type: url
+  description: Filesystem path reported by the vendor. Leaf of the 'SharePointMetaData' composite. Full
+    URL with scheme (http/https/ftp); percent-encoded if it contains non-ASCII characters.
+  example: https://example.com/path
+- name: SharePointMetaData.FileSize
+  type: string
+  description: Vendor-emitted field 'SharePointMetaData › FileSize'. Leaf of the 'SharePointMetaData'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: SharePointMetaData.From
+  type: user
+  description: Vendor-emitted field 'SharePointMetaData › From'. Leaf of the 'SharePointMetaData' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending on the source;
+    no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: SharePointMetaData.SiteCollectionUrl
+  type: url
+  description: Vendor-emitted field 'SharePointMetaData › SiteCollectionUrl'. Leaf of the 'SharePointMetaData'
+    composite. Full URL with scheme (http/https/ftp); percent-encoded if it contains non-ASCII characters.
+  example: https://example.com/path
+use_cases:
+- Cloud
+- SaaS
+- Identity
+validated: true

@@ -1,0 +1,18 @@
+{
+  "category": "direct_mapped_cef",
+  "cef_dict_hits": 5,
+  "dataset": "zscaler_zpa_raw",
+  "modeling_rule_present": true,
+  "modeling_rule_source_filenames": [
+    "ZscalerZPA__ZscalerZPA_1_3.xif"
+  ],
+  "operator_setup_notes": "This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|Zscaler|ZscalerZPA|...|<extensions>`) \u2014 the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.",
+  "operator_setup_required": false,
+  "pack_name": "ZscalerZPA",
+  "parsing_rule_present": false,
+  "parsing_rule_source_filename": null,
+  "product": "ZscalerZPA",
+  "uses_raw_json": false,
+  "uses_raw_log": false,
+  "vendor": "Zscaler"
+}

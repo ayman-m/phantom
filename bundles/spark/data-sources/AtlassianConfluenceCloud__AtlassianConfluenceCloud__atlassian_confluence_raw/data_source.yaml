@@ -1,0 +1,176 @@
+schema_version: 1
+id: AtlassianConfluenceCloud
+pack_name: AtlassianConfluenceCloud
+rule_name: AtlassianConfluenceCloud
+dataset_name: atlassian_confluence_raw
+vendor: Atlassian
+product: AtlassianConfluenceCloud
+description: Atlassian Confluence Cloud allows users to interact with confluence entities
+  like content, space, users and groups. Users can also manage the space permissions.
+categories:
+- IT Services
+version: 1.1.13
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMjU2cHgiIGhlaWdodD0iMjU2cHgiIHZpZXdCb3g9IjAgMCAyNTYgMjU2IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDxkZWZzPgogICAgICAgIDxsaW5lYXJHcmFkaWVudCB4MT0iOTkuNjg2NTUzMSUiIHkxPSIxNS44MDA3OTg4JSIgeDI9IjM5LjgzNTkwMTElIiB5Mj0iOTcuNDM3ODM1NSUiIGlkPSJsaW5lYXJHcmFkaWVudC0xIj4KICAgICAgICAgICAgPHN0b3Agc3RvcC1jb2xvcj0iIzAwNTJDQyIgb2Zmc2V0PSIwJSI+PC9zdG9wPgogICAgICAgICAgICA8c3RvcCBzdG9wLWNvbG9yPSIjMjY4NEZGIiBvZmZzZXQ9IjkyLjMlIj48L3N0b3A+CiAgICAgICAgPC9saW5lYXJHcmFkaWVudD4KICAgIDwvZGVmcz4KCQk8Zz4KCQkJCTxwYXRoIGQ9Ik03NS43OTI5MDIyLDExNy45NDkzNTIgQzcxLjk3MzQzNSwxMTMuODY5MTggNjYuMDIyMDc0MywxMTQuMTAwNDUxIDYzLjQyNjIzODIsMTE5LjI5MjEyMyBMMC43OTExODA4NjUsMjQ0LjU2NTA0MSBDLTAuMzcwMDAwMjE0LDI0Ni44ODYyMDcgLTAuMjQ2MzIyNDIsMjQ5LjY0MzE1MSAxLjExODAzMzIzLDI1MS44NTEwMiBDMi40ODIzODg4OCwyNTQuMDU4ODg5IDQuODkyODAzOTMsMjU1LjQwMjc0MSA3LjQ4ODIxMzY1LDI1NS40MDI1MTYgTDk0LjcxNjQzNSwyNTUuNDAyNTE2IEM5Ny41NzE2NDAxLDI1NS40Njg3MDYgMTAwLjE5NzUxLDI1My44NDU2MDEgMTAxLjQxNDg2OSwyNTEuMjYyMDc0IEMxMjAuMjIzNDY4LDIxMi4zNzM1OSAxMDguODI4MTQsMTUzLjI0NTQzNCA3NS43OTI5MDIyLDExNy45NDkzNTIgWiIgZmlsbD0idXJsKCNsaW5lYXJHcmFkaWVudC0xKSI+PC9wYXRoPgoJCQkJPHBhdGggZD0iTTEyMS43NTYwNzEsNC4wMTE0OTE4IEM4Ni43MjM0OTc1LDU5LjUxNjQwOTggODkuMDM0ODAwOCwxMjAuOTg5NTA4IDExMi4xMDk5ODksMTY3LjE0MTI4NyBMMTU0LjE3MDM4MywyNTEuMjYyMDc0IEMxNTUuNDM4NzAzLDI1My43OTg3MzMgMTU4LjAzMTM0OSwyNTUuNDAxMDk1IDE2MC44Njc0MTYsMjU1LjQwMTExNSBMMjQ4LjA5NDIzNSwyNTUuNDAxMTE1IEMyNTAuNjg5NjQ1LDI1NS40MDEzMzkgMjUzLjEwMDA2LDI1NC4wNTc0ODcgMjU0LjQ2NDQxNiwyNTEuODQ5NjE4IEMyNTUuODI4NzcxLDI0OS42NDE3NSAyNTUuOTUyNDQ5LDI0Ni44ODQ4MDUgMjU0Ljc5MTI2OCwyNDQuNTYzNjM5IEMyNTQuNzkxMjY4LDI0NC41NjM2MzkgMTM3LjQ0NDYyLDkuODM2NzA0OTIgMTM0LjQ5Mjc2OCwzLjk2MzgzNjA3IEMxMzEuODUzNDgxLC0xLjI5MzcxMzExIDEyNS4xNDk0NCwtMS4zNjUxOTY3MiAxMjEuNzU2MDcxLDQuMDExNDkxOCBaIiBmaWxsPSIjMjY4MUZGIj48L3BhdGg+CgkJPC9nPgo8L3N2Zz4K
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: affectedobject
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: name,
+    objectType (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: associatedobjects
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: author
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: accountId,
+    displayName (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: category
+  type: string_short
+  description: Atlassian's category classifier for the event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: access_control
+- name: changedvalues
+  type: string
+  description: Vendor-emitted field 'Changedvalues'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_changedvalues
+- name: description
+  type: string_long
+  description: Free-form human-readable description from Atlassian. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Atlassian.
+- name: parsed_fields_changed_values_new
+  type: string
+  description: Vendor-emitted field 'Parsed fields changed values new'. Free-form
+    text; may contain whitespace and punctuation.
+  example: sample_new
+- name: parsed_fields_changed_values_old
+  type: string
+  description: Vendor-emitted field 'Parsed fields changed values old'. Free-form
+    text; may contain whitespace and punctuation.
+  example: sample_old
+- name: remoteaddress
+  type: ipv4
+  description: Vendor-emitted field 'Remoteaddress'. Dotted-quad IPv4 literal (e.g.,
+    192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: summary
+  type: string
+  description: Vendor-emitted field 'Summary'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Event recorded by Atlassian.
+- name: superadmin
+  type: string
+  description: Whether the actor is a superadmin. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_superadmin
+- name: sysadmin
+  type: string
+  description: Whether the actor is a sysadmin. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sysadmin
+- name: affectedobject.name
+  type: string
+  description: Human-readable name as displayed by Atlassian. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: affectedobject.objectType
+  type: string
+  description: Vendor-emitted field 'Affectedobject › objectType'. Leaf of the 'affectedobject'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_objecttype
+- name: associatedobjects[].name
+  type: string
+  description: Human-readable name as displayed by Atlassian. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: associatedobjects[].objectType
+  type: string
+  description: Vendor-emitted field 'Associatedobjects[] › objectType'. Free-form
+    text; may contain whitespace and punctuation.
+  example: sample_objecttype
+- name: author.accountId
+  type: string
+  description: Vendor-emitted field 'Author › accountId'. Leaf of the 'author' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: acct-8d0ae137
+- name: author.displayName
+  type: user
+  description: Vendor-emitted field 'Author › displayName'. Leaf of the 'author' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending
+    on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+use_cases:
+- DevOps
+- Collab
+how_to_use: |
+  ## atlassian confluence → Cortex XSIAM (dataset `atlassian_confluence_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `atlassian_confluence_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `atlassian`
+    - **product**: `confluence`
+
+    These normalize → `atlassian_confluence_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `affectedobject -> name`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~12 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.description`, `xdm.event.operation`, `xdm.event.type`, `xdm.source.ipv4`, `xdm.source.user.identifier`, `xdm.source.user.username`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = atlassian_confluence_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

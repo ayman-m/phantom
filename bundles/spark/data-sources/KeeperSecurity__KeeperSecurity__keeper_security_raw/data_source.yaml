@@ -1,0 +1,228 @@
+schema_version: 1
+id: KeeperSecurity
+pack_name: KeeperSecurity
+rule_name: KeeperSecurity
+dataset_name: keeper_security_raw
+vendor: Keeper Security
+product: KeeperSecurity
+description: Use Keeper Security to manage and extract data regarding your Keeper
+  Security products.
+categories:
+- Authentication & Identity Management
+version: 1.0.9
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNzAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM3RjZDMDAiPktlZXBlciBTZWN1cml0eTwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: attachment_id
+  type: file_path
+  description: Opaque identifier emitted by Keeper Security. Absolute filesystem path;
+    vendor-native separator.
+  example: /var/log/example.log
+- name: audit_event_type
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: device_name
+  type: string
+  description: Human-readable name as displayed by Keeper Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: email_domain
+  type: domain
+  description: DNS domain reported by Keeper Security — bare domain, no scheme/path/port.
+    Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: enforcement
+  type: string
+  description: Vendor-emitted field 'Enforcement'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_enforcement
+- name: file_format
+  type: string
+  description: Vendor-emitted field 'File format'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_format
+- name: folder_uid
+  type: string
+  description: Vendor-emitted field 'Folder uid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uid
+- name: from_username
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: gateway_uid
+  type: string
+  description: Vendor-emitted field 'Gateway uid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uid
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Keeper Security. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: kee-6562a442
+- name: ip_address
+  type: ipv4
+  description: IPv4/IPv6 address — vendor-emitted, no version split. Free-form text;
+    may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: keeper_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: name
+  type: string
+  description: Human-readable name as displayed by Keeper Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: node
+  type: string
+  description: Vendor-emitted field 'Node'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_node
+- name: node_id
+  type: string_short
+  description: Opaque identifier emitted by Keeper Security. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: kee-66212d2e
+- name: plan
+  type: string
+  description: Vendor-emitted field 'Plan'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_plan
+- name: protocol
+  type: string
+  description: Network protocol name or numeric IANA assignment. Free-form text; may
+    contain whitespace and punctuation.
+  example: tcp
+- name: recipient
+  type: string
+  description: Vendor-emitted field 'Recipient'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_recipient
+- name: record_uid
+  type: string
+  description: Vendor-emitted field 'Record uid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uid
+- name: report_name
+  type: string
+  description: Human-readable name as displayed by Keeper Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: '443'
+- name: result_code
+  type: integer
+  description: Vendor-emitted field 'Result code'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '200'
+- name: role_id
+  type: string_short
+  description: Opaque identifier emitted by Keeper Security. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: kee-8bce93ca
+- name: secret_uid
+  type: string
+  description: Vendor-emitted field 'Secret uid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uid
+- name: shared_folder_uid
+  type: string
+  description: Vendor-emitted field 'Shared folder uid'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_uid
+- name: team_uid
+  type: string
+  description: Vendor-emitted field 'Team uid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uid
+- name: to_username
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jdoe
+- name: username
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName depending on the source; no domain
+    prefix unless the vendor emits one.
+  example: jsmith
+- name: value
+  type: string
+  description: Vendor-emitted field 'Value'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_value
+use_cases:
+- MFA
+- Identity
+how_to_use: |
+  ## Keeper Security KeeperSecurity → Cortex XSIAM (dataset `keeper_security_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `keeper_security_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `keeper_security`. The marketplace pack's display name `Keeper Security` / `KeeperSecurity` normalizes to `keeper_security_keepersecurity_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `keeper_security` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~22 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.id`, `xdm.event.outcome`, `xdm.event.outcome_reason`, `xdm.event.type`, `xdm.intermediate.user.username`, `xdm.network.application_protocol`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = keeper_security_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

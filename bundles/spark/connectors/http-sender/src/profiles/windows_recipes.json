@@ -1,0 +1,1358 @@
+{
+ "machine_account_domain_admins": [
+  {
+   "event_id": 4728,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 120 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A member was added to a security-enabled global group.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nMember:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>\n\tAccount Name:\t\tCN=<CHANGE: machine>,CN=Computers,DC=phantom,DC=lab\n\nGroup:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-512\n\tGroup Name:\t\tDomain Admins\n\tGroup Domain:\t\tPHANTOM\n\nAdditional Information:\n\tPrivileges:\t\t-",
+    "task": "Security Group Management"
+   },
+   "event_data": {
+    "MemberName": "CN=<CHANGE: machine>,CN=Computers,DC=phantom,DC=lab",
+    "MemberSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>",
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "Domain Admins",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-512",
+    "PrivilegeList": "-"
+   }
+  }
+ ],
+ "privileged_group_add": [
+  {
+   "event_id": 4728,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 120 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A member was added to a security-enabled global group.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nMember:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: member RID>\n\tAccount Name:\t\tCN=<CHANGE: member display name>,OU=Users,DC=phantom,DC=lab\n\nGroup:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-512\n\tGroup Name:\t\tDomain Admins\n\tGroup Domain:\t\tPHANTOM\n\nAdditional Information:\n\tPrivileges:\t\t-",
+    "task": "Security Group Management"
+   },
+   "event_data": {
+    "MemberName": "CN=<CHANGE: member display name>,OU=Users,DC=phantom,DC=lab",
+    "MemberSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: member RID>",
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "Domain Admins",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-512",
+    "PrivilegeList": "-"
+   }
+  }
+ ],
+ "dcsync": [
+  {
+   "event_id": 4624,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 310 s>",
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "TargetUserName": "<CHANGE: actor>",
+    "TargetDomainName": "PHANTOM",
+    "TargetLogonId": "<CHANGE: actor logon id>",
+    "LogonType": "3",
+    "LogonProcessName": "Kerberos",
+    "AuthenticationPackageName": "Kerberos",
+    "WorkstationName": "<CHANGE: attacker host>",
+    "IpAddress": "<CHANGE: attacker IP>",
+    "IpPort": "51510"
+   }
+  },
+  {
+   "event_id": 4662,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 300 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "An operation was performed on an object.\n\nSubject :\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nObject:\n\tObject Server:\t\tDS\n\tObject Type:\t\t%{bf967aba-0de6-11d0-a285-00aa003049e2}\n\tObject Name:\t\tCN=krbtgt,CN=Users,DC=phantom,DC=lab\n\tHandle ID:\t\t0x0\n\nOperation:\n\tOperation Type:\t\tObject Access\n\tAccess Mask:\t\t0x100\n\tProperties:\t\t{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ad-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ae-9c07-11d1-f79f-00c04fc2dcd2}; {89e95b76-444d-4c62-991a-0facbeda640c}\n\t\t\tCN=krbtgt,CN=Users,DC=phantom,DC=lab\n\nAdditional Information:\n\tParameter 1:\t\t-\n\tParameter 2:\t\t-",
+    "task": "Directory Service Access"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "ObjectServer": "DS",
+    "ObjectType": "%{bf967aba-0de6-11d0-a285-00aa003049e2}",
+    "ObjectName": "CN=krbtgt,CN=Users,DC=phantom,DC=lab",
+    "HandleId": "0x0",
+    "OperationType": "Object Access",
+    "AccessMask": "0x100",
+    "Properties": "{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ad-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ae-9c07-11d1-f79f-00c04fc2dcd2}; {89e95b76-444d-4c62-991a-0facbeda640c}",
+    "Parameter1": "-",
+    "Parameter2": "-"
+   }
+  },
+  {
+   "event_id": 4662,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 296 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "An operation was performed on an object.\n\nSubject :\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nObject:\n\tObject Server:\t\tDS\n\tObject Type:\t\t%{bf967aba-0de6-11d0-a285-00aa003049e2}\n\tObject Name:\t\tCN=krbtgt,CN=Users,DC=phantom,DC=lab\n\tHandle ID:\t\t0x0\n\nOperation:\n\tOperation Type:\t\tObject Access\n\tAccess Mask:\t\t0x100\n\tProperties:\t\t{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ad-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ae-9c07-11d1-f79f-00c04fc2dcd2}; {89e95b76-444d-4c62-991a-0facbeda640c}\n\t\t\tCN=krbtgt,CN=Users,DC=phantom,DC=lab\n\nAdditional Information:\n\tParameter 1:\t\t-\n\tParameter 2:\t\t-",
+    "task": "Directory Service Access"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "ObjectServer": "DS",
+    "ObjectType": "%{bf967aba-0de6-11d0-a285-00aa003049e2}",
+    "ObjectName": "CN=krbtgt,CN=Users,DC=phantom,DC=lab",
+    "HandleId": "0x0",
+    "OperationType": "Object Access",
+    "AccessMask": "0x100",
+    "Properties": "{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ad-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ae-9c07-11d1-f79f-00c04fc2dcd2}; {89e95b76-444d-4c62-991a-0facbeda640c}",
+    "Parameter1": "-",
+    "Parameter2": "-"
+   }
+  },
+  {
+   "event_id": 4662,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 292 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "An operation was performed on an object.\n\nSubject :\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nObject:\n\tObject Server:\t\tDS\n\tObject Type:\t\t%{bf967aba-0de6-11d0-a285-00aa003049e2}\n\tObject Name:\t\tCN=krbtgt,CN=Users,DC=phantom,DC=lab\n\tHandle ID:\t\t0x0\n\nOperation:\n\tOperation Type:\t\tObject Access\n\tAccess Mask:\t\t0x100\n\tProperties:\t\t{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ad-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ae-9c07-11d1-f79f-00c04fc2dcd2}; {89e95b76-444d-4c62-991a-0facbeda640c}\n\t\t\tCN=krbtgt,CN=Users,DC=phantom,DC=lab\n\nAdditional Information:\n\tParameter 1:\t\t-\n\tParameter 2:\t\t-",
+    "task": "Directory Service Access"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "ObjectServer": "DS",
+    "ObjectType": "%{bf967aba-0de6-11d0-a285-00aa003049e2}",
+    "ObjectName": "CN=krbtgt,CN=Users,DC=phantom,DC=lab",
+    "HandleId": "0x0",
+    "OperationType": "Object Access",
+    "AccessMask": "0x100",
+    "Properties": "{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ad-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ae-9c07-11d1-f79f-00c04fc2dcd2}; {89e95b76-444d-4c62-991a-0facbeda640c}",
+    "Parameter1": "-",
+    "Parameter2": "-"
+   }
+  },
+  {
+   "event_id": 4662,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 288 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "An operation was performed on an object.\n\nSubject :\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nObject:\n\tObject Server:\t\tDS\n\tObject Type:\t\t%{bf967aba-0de6-11d0-a285-00aa003049e2}\n\tObject Name:\t\tCN=krbtgt,CN=Users,DC=phantom,DC=lab\n\tHandle ID:\t\t0x0\n\nOperation:\n\tOperation Type:\t\tObject Access\n\tAccess Mask:\t\t0x100\n\tProperties:\t\t{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ad-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ae-9c07-11d1-f79f-00c04fc2dcd2}; {89e95b76-444d-4c62-991a-0facbeda640c}\n\t\t\tCN=krbtgt,CN=Users,DC=phantom,DC=lab\n\nAdditional Information:\n\tParameter 1:\t\t-\n\tParameter 2:\t\t-",
+    "task": "Directory Service Access"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "ObjectServer": "DS",
+    "ObjectType": "%{bf967aba-0de6-11d0-a285-00aa003049e2}",
+    "ObjectName": "CN=krbtgt,CN=Users,DC=phantom,DC=lab",
+    "HandleId": "0x0",
+    "OperationType": "Object Access",
+    "AccessMask": "0x100",
+    "Properties": "{1131f6aa-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ad-9c07-11d1-f79f-00c04fc2dcd2}; {1131f6ae-9c07-11d1-f79f-00c04fc2dcd2}; {89e95b76-444d-4c62-991a-0facbeda640c}",
+    "Parameter1": "-",
+    "Parameter2": "-"
+   }
+  }
+ ],
+ "guest_account_enabled": [
+  {
+   "event_id": 4722,
+   "computer": "PHSRV-FS01",
+   "time": "<CHANGE: now minus 70 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was enabled.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nTarget Account:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-501\n\tAccount Name:\t\tGuest\n\tAccount Domain:\t\tPHANTOM",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "Guest",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-501"
+   }
+  }
+ ],
+ "sms_admins": [
+  {
+   "event_id": 4732,
+   "computer": "PHSRV-FS01",
+   "time": "<CHANGE: now minus 300 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A member was added to a security-enabled local group.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nMember:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t-\n\nGroup:\n\tSecurity ID:\t\tS-1-5-32-1001\n\tGroup Name:\t\tSMS Admins\n\tGroup Domain:\t\tPHSRV-FS01\n\nAdditional Information:\n\tPrivileges:\t\t-",
+    "task": "Security Group Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "MemberName": "-",
+    "MemberSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "TargetUserName": "SMS Admins",
+    "TargetDomainName": "PHSRV-FS01",
+    "TargetSid": "S-1-5-32-1001",
+    "PrivilegeList": "-"
+   }
+  }
+ ],
+ "weak_service_tickets": [
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 600 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690000-b22c-4e5f-8a00-000000000000}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SQL01.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55000\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "MSSQLSvc/PHSRV-SQL01.phantom.lab:1433",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55000",
+    "Status": "0x0",
+    "LogonGuid": "{47690000-b22c-4e5f-8a00-000000000000}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 575 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690001-b22c-4e5f-8a00-000000000001}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SQL02.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55001\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "MSSQLSvc/PHSRV-SQL02.phantom.lab:1433",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55001",
+    "Status": "0x0",
+    "LogonGuid": "{47690001-b22c-4e5f-8a00-000000000001}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 550 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690002-b22c-4e5f-8a00-000000000002}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SQL03.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55002\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "MSSQLSvc/PHSRV-SQL03.phantom.lab:1433",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55002",
+    "Status": "0x0",
+    "LogonGuid": "{47690002-b22c-4e5f-8a00-000000000002}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 525 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690003-b22c-4e5f-8a00-000000000003}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SQL04.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55003\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "MSSQLSvc/PHSRV-SQL04.phantom.lab:1433",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55003",
+    "Status": "0x0",
+    "LogonGuid": "{47690003-b22c-4e5f-8a00-000000000003}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 500 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690004-b22c-4e5f-8a00-000000000004}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SQL05.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55004\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "MSSQLSvc/PHSRV-SQL05.phantom.lab:1433",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55004",
+    "Status": "0x0",
+    "LogonGuid": "{47690004-b22c-4e5f-8a00-000000000004}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 475 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690005-b22c-4e5f-8a00-000000000005}\n\nService Information:\n\tService Name:\t\tHTTP/web01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55005\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "HTTP/web01.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55005",
+    "Status": "0x0",
+    "LogonGuid": "{47690005-b22c-4e5f-8a00-000000000005}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 450 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690006-b22c-4e5f-8a00-000000000006}\n\nService Information:\n\tService Name:\t\tHTTP/web02.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55006\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "HTTP/web02.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55006",
+    "Status": "0x0",
+    "LogonGuid": "{47690006-b22c-4e5f-8a00-000000000006}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 425 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690007-b22c-4e5f-8a00-000000000007}\n\nService Information:\n\tService Name:\t\tHTTP/web03.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55007\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "HTTP/web03.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55007",
+    "Status": "0x0",
+    "LogonGuid": "{47690007-b22c-4e5f-8a00-000000000007}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 400 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690008-b22c-4e5f-8a00-000000000008}\n\nService Information:\n\tService Name:\t\tHTTP/web04.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55008\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "HTTP/web04.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55008",
+    "Status": "0x0",
+    "LogonGuid": "{47690008-b22c-4e5f-8a00-000000000008}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 375 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690009-b22c-4e5f-8a00-000000000009}\n\nService Information:\n\tService Name:\t\tHTTP/web05.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55009\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "HTTP/web05.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55009",
+    "Status": "0x0",
+    "LogonGuid": "{47690009-b22c-4e5f-8a00-000000000009}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 350 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000a-b22c-4e5f-8a00-00000000000a}\n\nService Information:\n\tService Name:\t\tHTTP/web06.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55010\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "HTTP/web06.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55010",
+    "Status": "0x0",
+    "LogonGuid": "{4769000a-b22c-4e5f-8a00-00000000000a}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 325 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000b-b22c-4e5f-8a00-00000000000b}\n\nService Information:\n\tService Name:\t\tHTTP/web07.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55011\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "HTTP/web07.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55011",
+    "Status": "0x0",
+    "LogonGuid": "{4769000b-b22c-4e5f-8a00-00000000000b}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 300 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000c-b22c-4e5f-8a00-00000000000c}\n\nService Information:\n\tService Name:\t\tCIFS/PHSRV-FS01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55012\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "CIFS/PHSRV-FS01.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55012",
+    "Status": "0x0",
+    "LogonGuid": "{4769000c-b22c-4e5f-8a00-00000000000c}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 275 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000d-b22c-4e5f-8a00-00000000000d}\n\nService Information:\n\tService Name:\t\tCIFS/PHSRV-FS02.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55013\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "CIFS/PHSRV-FS02.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55013",
+    "Status": "0x0",
+    "LogonGuid": "{4769000d-b22c-4e5f-8a00-00000000000d}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 250 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000e-b22c-4e5f-8a00-00000000000e}\n\nService Information:\n\tService Name:\t\tCIFS/PHSRV-FS03.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55014\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "CIFS/PHSRV-FS03.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55014",
+    "Status": "0x0",
+    "LogonGuid": "{4769000e-b22c-4e5f-8a00-00000000000e}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 225 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000f-b22c-4e5f-8a00-00000000000f}\n\nService Information:\n\tService Name:\t\tCIFS/PHSRV-FS04.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55015\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "CIFS/PHSRV-FS04.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55015",
+    "Status": "0x0",
+    "LogonGuid": "{4769000f-b22c-4e5f-8a00-00000000000f}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 200 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690010-b22c-4e5f-8a00-000000000010}\n\nService Information:\n\tService Name:\t\tLDAP/PHDC01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55016\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "LDAP/PHDC01.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55016",
+    "Status": "0x0",
+    "LogonGuid": "{47690010-b22c-4e5f-8a00-000000000010}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 175 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690011-b22c-4e5f-8a00-000000000011}\n\nService Information:\n\tService Name:\t\tLDAP/PHDC02.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55017\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "LDAP/PHDC02.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55017",
+    "Status": "0x0",
+    "LogonGuid": "{47690011-b22c-4e5f-8a00-000000000011}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 150 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690012-b22c-4e5f-8a00-000000000012}\n\nService Information:\n\tService Name:\t\tLDAP/PHDC03.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55018\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "LDAP/PHDC03.phantom.lab",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x17",
+    "IpAddress": "::ffff:<CHANGE: client IP>",
+    "IpPort": "55018",
+    "Status": "0x0",
+    "LogonGuid": "{47690012-b22c-4e5f-8a00-000000000012}",
+    "TransmittedServices": "-"
+   }
+  }
+ ],
+ "excessive_lockouts": [
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 900 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 1>\n\tAccount Name:\t\t<CHANGE: lockout user 1>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: lockout user 1>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 1>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 870 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 2>\n\tAccount Name:\t\t<CHANGE: lockout user 2>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: lockout user 2>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 2>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 840 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 3>\n\tAccount Name:\t\t<CHANGE: lockout user 3>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: lockout user 3>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 3>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 810 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 4>\n\tAccount Name:\t\t<CHANGE: lockout user 4>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: lockout user 4>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 4>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 780 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 5>\n\tAccount Name:\t\t<CHANGE: lockout user 5>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: lockout user 5>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 5>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 750 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 6>\n\tAccount Name:\t\t<CHANGE: lockout user 6>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: lockout user 6>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 6>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 720 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 7>\n\tAccount Name:\t\t<CHANGE: lockout user 7>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: lockout user 7>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 7>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 690 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 8>\n\tAccount Name:\t\t<CHANGE: lockout user 8>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: lockout user 8>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 8>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 660 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 9>\n\tAccount Name:\t\t<CHANGE: lockout user 9>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: lockout user 9>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 9>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 630 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 10>\n\tAccount Name:\t\t<CHANGE: lockout user 10>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: lockout user 10>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: lockout RID 10>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 850 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>\n\tAccount Name:\t\t<CHANGE: repeat lockout user>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: repeat lockout user>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 810 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>\n\tAccount Name:\t\t<CHANGE: repeat lockout user>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: repeat lockout user>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 770 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>\n\tAccount Name:\t\t<CHANGE: repeat lockout user>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: repeat lockout user>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 730 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>\n\tAccount Name:\t\t<CHANGE: repeat lockout user>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: repeat lockout user>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 690 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>\n\tAccount Name:\t\t<CHANGE: repeat lockout user>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: repeat lockout user>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>"
+   }
+  },
+  {
+   "event_id": 4740,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 650 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was locked out.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-18\n\tAccount Name:\t\tSYSTEM\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t0x3E7\n\nAccount That Was Locked Out:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>\n\tAccount Name:\t\t<CHANGE: repeat lockout user>\n\nAdditional Information:\n\tCaller Computer Name:\t\t<CHANGE: caller host>",
+    "task": "User Lockout"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-18",
+    "SubjectUserName": "PHDC02$",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "0x3E7",
+    "TargetUserName": "<CHANGE: repeat lockout user>",
+    "TargetDomainName": "<CHANGE: caller host>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: repeat lockout RID>"
+   }
+  }
+ ],
+ "samaccountname_change": [
+  {
+   "event_id": 4781,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 260 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "The name of an account was changed:\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nAccount Whose Name Was Changed:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>\n\tOld Account Name:\t<CHANGE: machine>$\n\tNew Account Name:\t<CHANGE: machine>",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "OldTargetUserName": "<CHANGE: machine>$",
+    "NewTargetUserName": "<CHANGE: machine>",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>"
+   }
+  }
+ ],
+ "multiple_account_deletions": [
+  {
+   "event_id": 4726,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 150 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was deleted.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nTarget Account:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 1>\n\tAccount Name:\t\t<CHANGE: deleted user 1>\n\tAccount Domain:\t\tPHANTOM",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "<CHANGE: deleted user 1>",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 1>",
+    "PrivilegeList": "-"
+   }
+  },
+  {
+   "event_id": 4726,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 135 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was deleted.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nTarget Account:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 2>\n\tAccount Name:\t\t<CHANGE: deleted user 2>\n\tAccount Domain:\t\tPHANTOM",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "<CHANGE: deleted user 2>",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 2>",
+    "PrivilegeList": "-"
+   }
+  },
+  {
+   "event_id": 4726,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 120 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was deleted.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nTarget Account:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 3>\n\tAccount Name:\t\t<CHANGE: deleted user 3>\n\tAccount Domain:\t\tPHANTOM",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "<CHANGE: deleted user 3>",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 3>",
+    "PrivilegeList": "-"
+   }
+  },
+  {
+   "event_id": 4726,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 105 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was deleted.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nTarget Account:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 4>\n\tAccount Name:\t\t<CHANGE: deleted user 4>\n\tAccount Domain:\t\tPHANTOM",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "<CHANGE: deleted user 4>",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 4>",
+    "PrivilegeList": "-"
+   }
+  },
+  {
+   "event_id": 4726,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 90 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was deleted.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nTarget Account:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 5>\n\tAccount Name:\t\t<CHANGE: deleted user 5>\n\tAccount Domain:\t\tPHANTOM",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "<CHANGE: deleted user 5>",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 5>",
+    "PrivilegeList": "-"
+   }
+  },
+  {
+   "event_id": 4726,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 75 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was deleted.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nTarget Account:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 6>\n\tAccount Name:\t\t<CHANGE: deleted user 6>\n\tAccount Domain:\t\tPHANTOM",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "<CHANGE: deleted user 6>",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: deleted RID 6>",
+    "PrivilegeList": "-"
+   }
+  }
+ ],
+ "hidden_user_created": [
+  {
+   "event_id": 4720,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 120 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was created.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nNew Account:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>\n\tAccount Name:\t\t<CHANGE: machine>$\n\tAccount Domain:\t\tPHANTOM\n\nAttributes:\n\tSAM Account Name:\t<CHANGE: machine>$\n\tDisplay Name:\t\t-\n\tUser Principal Name:\t-",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "<CHANGE: machine>$",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>",
+    "SamAccountName": "<CHANGE: machine>$",
+    "DisplayName": "-",
+    "UserPrincipalName": "-",
+    "PrivilegeList": "-"
+   }
+  }
+ ],
+ "default_account_masquerade": [
+  {
+   "event_id": 4720,
+   "computer": "<CHANGE: machine>",
+   "time": "<CHANGE: now minus 130 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was created.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nNew Account:\n\tSecurity ID:\t\tS-1-5-21-7654321-7654321-7654321-<CHANGE: machine RID>\n\tAccount Name:\t\tDefaultAccount\n\tAccount Domain:\t\t<CHANGE: machine>\n\nAttributes:\n\tSAM Account Name:\tDefaultAccount",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "DefaultAccount",
+    "TargetDomainName": "<CHANGE: machine>",
+    "TargetSid": "S-1-5-21-7654321-7654321-7654321-<CHANGE: machine RID>",
+    "SamAccountName": "DefaultAccount",
+    "PrivilegeList": "-"
+   }
+  },
+  {
+   "event_id": 4720,
+   "computer": "<CHANGE: machine>",
+   "time": "<CHANGE: now minus 120 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was created.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nNew Account:\n\tSecurity ID:\t\tS-1-5-21-7654321-7654321-7654321-<CHANGE: member RID>\n\tAccount Name:\t\tGuest\n\tAccount Domain:\t\t<CHANGE: machine>\n\nAttributes:\n\tSAM Account Name:\tGuest",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "Guest",
+    "TargetDomainName": "<CHANGE: machine>",
+    "TargetSid": "S-1-5-21-7654321-7654321-7654321-<CHANGE: member RID>",
+    "SamAccountName": "Guest",
+    "PrivilegeList": "-"
+   }
+  }
+ ],
+ "spoofed_samaccountname_tickets": [
+  {
+   "event_id": 4781,
+   "computer": "PHDC<CHANGE: actor RID>",
+   "time": "<CHANGE: now minus 300 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "The name of an account was changed:\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nAccount Whose Name Was Changed:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>\n\tOld Account Name:\t<CHANGE: machine>$\n\tNew Account Name:\tPHDC<CHANGE: actor RID>\n\nAdditional Information:\n\tPrivileges:\t-",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "OldTargetUserName": "<CHANGE: machine>$",
+    "NewTargetUserName": "PHDC<CHANGE: actor RID>",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>",
+    "PrivilegeList": "-"
+   }
+  },
+  {
+   "event_id": 4768,
+   "computer": "PHDC<CHANGE: actor RID>",
+   "time": "<CHANGE: now minus 240 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos authentication ticket (TGT) was requested.\n\nAccount Information:\n\tAccount Name:\t\tPHDC<CHANGE: actor RID>\n\tSupplied Realm Name:\tPHANTOM.LAB\n\tUser ID:\t\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>\n\nService Information:\n\tService Name:\t\tkrbtgt\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-502\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: attacker IP>\n\tClient Port:\t\t50001\n\nAdditional Information:\n\tTicket Options:\t\t0x40810010\n\tResult Code:\t\t0x0\n\tTicket Encryption Type:\t0x12\n\tPre-Authentication Type:\t2\n\nCertificate Information:\n\tCertificate Issuer Name:\t\t\n\tCertificate Serial Number:\t\n\tCertificate Thumbprint:\t\t\n",
+    "task": "Kerberos Authentication Service"
+   },
+   "event_data": {
+    "TargetUserName": "PHDC<CHANGE: actor RID>",
+    "TargetDomainName": "PHANTOM.LAB",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>",
+    "ServiceName": "krbtgt",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-502",
+    "TicketOptions": "0x40810010",
+    "Status": "0x0",
+    "TicketEncryptionType": "0x12",
+    "PreAuthType": "2",
+    "IpAddress": "::ffff:<CHANGE: attacker IP>",
+    "IpPort": "50001",
+    "CertIssuerName": "",
+    "CertSerialNumber": "",
+    "CertThumbprint": ""
+   }
+  },
+  {
+   "event_id": 4769,
+   "computer": "PHDC<CHANGE: actor RID>",
+   "time": "<CHANGE: now minus 220 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\tPHDC<CHANGE: actor RID>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{00000003-b22c-4e5f-8a00-000000000004}\n\nService Information:\n\tService Name:\t\tPHDC<CHANGE: actor RID>$\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1001\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: attacker IP>\n\tClient Port:\t\t50002\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x12\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "task": "Kerberos Service Ticket Operations"
+   },
+   "event_data": {
+    "TargetUserName": "PHDC<CHANGE: actor RID>@PHANTOM.LAB",
+    "TargetDomainName": "PHANTOM.LAB",
+    "ServiceName": "PHDC<CHANGE: actor RID>$",
+    "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1001",
+    "TicketOptions": "0x40810000",
+    "TicketEncryptionType": "0x12",
+    "IpAddress": "::ffff:<CHANGE: attacker IP>",
+    "IpPort": "50002",
+    "Status": "0x0",
+    "LogonGuid": "{00000003-b22c-4e5f-8a00-000000000004}",
+    "TransmittedServices": "-"
+   }
+  },
+  {
+   "event_id": 4781,
+   "computer": "PHDC<CHANGE: actor RID>",
+   "time": "<CHANGE: now minus 150 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "The name of an account was changed:\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nAccount Whose Name Was Changed:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>\n\tOld Account Name:\tPHDC<CHANGE: actor RID>\n\tNew Account Name:\t<CHANGE: machine>$\n\nAdditional Information:\n\tPrivileges:\t-",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "OldTargetUserName": "PHDC<CHANGE: actor RID>",
+    "NewTargetUserName": "<CHANGE: machine>$",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>",
+    "PrivilegeList": "-"
+   }
+  }
+ ],
+ "shadow_credentials": [
+  {
+   "event_id": 5136,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 120 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A directory service object was modified.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nDirectory Service:\n\tName:\tphantom.lab\n\tType:\tActive Directory Domain Services\n\nObject:\n\tDN:\tCN=<CHANGE: machine>,CN=Computers,DC=phantom,DC=lab\n\tGUID:\t{<CHANGE: actor RID>0000-4d5e-6f70-8192-a3b4c5d6e7f8}\n\tClass:\tcomputer\n\nAttribute:\n\tLDAP Display Name:\tmsDS-KeyCredentialLink\n\tSyntax (OID):\t2.5.5.7\n\tValue:\tB:828:0002000020000a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1:CN=<CHANGE: machine>,CN=Computers,DC=phantom,DC=lab\n\nOperation:\n\tType:\tValue Added\n\tCorrelation ID:\t{<CHANGE: actor RID>1111-1f2a-3b4c-5d6e-7f8091a2b3c4}\n\tApplication Correlation ID:\t-",
+    "task": "Directory Service Changes"
+   },
+   "event_data": {
+    "OpCorrelationID": "{<CHANGE: actor RID>1111-1f2a-3b4c-5d6e-7f8091a2b3c4}",
+    "AppCorrelationID": "-",
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "DSName": "phantom.lab",
+    "DSType": "%%14676",
+    "ObjectDN": "CN=<CHANGE: machine>,CN=Computers,DC=phantom,DC=lab",
+    "ObjectGUID": "{<CHANGE: actor RID>0000-4d5e-6f70-8192-a3b4c5d6e7f8}",
+    "ObjectClass": "computer",
+    "AttributeLDAPDisplayName": "msDS-KeyCredentialLink",
+    "AttributeSyntaxOID": "2.5.5.7",
+    "AttributeValue": "B:828:0002000020000a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1:CN=<CHANGE: machine>,CN=Computers,DC=phantom,DC=lab",
+    "OperationType": "%%14674"
+   }
+  }
+ ],
+ "delegation_to_krbtgt": [
+  {
+   "event_id": 4738,
+   "computer": "PHDC02",
+   "time": "<CHANGE: now minus 120 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "A user account was changed.\n\nSubject:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>\n\tAccount Name:\t\t<CHANGE: actor>\n\tAccount Domain:\t\tPHANTOM\n\tLogon ID:\t\t<CHANGE: actor logon id>\n\nTarget Account:\n\tSecurity ID:\t\tS-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>\n\tAccount Name:\t\tsvc.dl.<CHANGE: actor RID>\n\tAccount Domain:\t\tPHANTOM\n\nChanged Attributes:\n\tSAM Account Name:\t-\n\tDisplay Name:\t-\n\tUser Principal Name:\t-\n\tHome Directory:\t-\n\tHome Drive:\t-\n\tScript Path:\t-\n\tProfile Path:\t-\n\tUser Workstations:\t-\n\tPassword Last Set:\t-\n\tAccount Expires:\t-\n\tPrimary Group ID:\t-\n\tAllowedToDelegateTo:\tkrbtgt/PHANTOM.LAB\n\tOld UAC Value:\t0x10\n\tNew UAC Value:\t0x1000010\n\tUser Account Control:\t\n\t\t'Trusted To Authenticate For Delegation' - Enabled\n\tUser Parameters:\t-\n\tSID History:\t-\n\tLogon Hours:\t-\n\nAdditional Information:\n\tPrivileges:\t\t-",
+    "task": "User Account Management"
+   },
+   "event_data": {
+    "Dummy": "-",
+    "SubjectUserSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: actor RID>",
+    "SubjectUserName": "<CHANGE: actor>",
+    "SubjectDomainName": "PHANTOM",
+    "SubjectLogonId": "<CHANGE: actor logon id>",
+    "TargetUserName": "svc.dl.<CHANGE: actor RID>",
+    "TargetDomainName": "PHANTOM",
+    "TargetSid": "S-1-5-21-3623811015-3361044348-30300820-<CHANGE: machine RID>",
+    "PrivilegeList": "-",
+    "SamAccountName": "-",
+    "DisplayName": "-",
+    "UserPrincipalName": "-",
+    "HomeDirectory": "-",
+    "HomePath": "-",
+    "ScriptPath": "-",
+    "ProfilePath": "-",
+    "UserWorkstations": "-",
+    "PasswordLastSet": "-",
+    "AccountExpires": "-",
+    "PrimaryGroupId": "-",
+    "AllowedToDelegateTo": "krbtgt/PHANTOM.LAB",
+    "OldUacValue": "0x10",
+    "NewUacValue": "0x1000010",
+    "UserAccountControl": "\n\t\t%%2096",
+    "UserParameters": "-",
+    "SidHistory": "-",
+    "LogonHours": "-"
+   }
+  }
+ ],
+ "privileged_certificate_request": [
+  {
+   "event_id": 4887,
+   "computer": "PHCA01",
+   "time": "<CHANGE: now minus 120 s>",
+   "provider": "Microsoft-Windows-Security-Auditing",
+   "rendering": {
+    "message": "Certificate Services approved a certificate request and issued a certificate.\n\nRequest ID:\t<CHANGE: actor RID>\nRequester:\tPHANTOM\\<CHANGE: machine>$\nAttributes:\tCertificateTemplate:DomainController\nccm:PHDC02.phantom.lab\nDisposition:\t3\nSubject Key Identifier:\t0a1b2c3d4e5f60718293a4b5c6d7e8f9<CHANGE: actor RID>00000\nSerial Number:\t5a6b7c8d9e0f1a2b3c4d5e6f<CHANGE: actor RID>0000",
+    "task": "Certification Services"
+   },
+   "event_data": {
+    "RequestId": "<CHANGE: actor RID>",
+    "Requester": "PHANTOM\\<CHANGE: machine>$",
+    "Attributes": "CertificateTemplate:DomainController\nccm:PHDC02.phantom.lab",
+    "Disposition": "3",
+    "SubjectKeyIdentifier": "0a1b2c3d4e5f60718293a4b5c6d7e8f9<CHANGE: actor RID>00000",
+    "SerialNumber": "5a6b7c8d9e0f1a2b3c4d5e6f<CHANGE: actor RID>0000"
+   }
+  }
+ ]
+}

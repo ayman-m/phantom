@@ -1,0 +1,1776 @@
+{
+  "_meta": {
+    "generated_by": "scripts/organize_rules_by_dataset.py",
+    "source_modeling": "scripts/maintainer/modeling_rules",
+    "source_parsing": "scripts/maintainer/parsing_rules"
+  },
+  "by_category": {
+    "_orphans_no_yaml": [
+      "FireEye_HX_raw",
+      "cisco_sma_raw",
+      "lanels2_netbox_raw",
+      "msft_o365_azure_ad_raw"
+    ],
+    "direct_mapped_cef": [
+      {
+        "dataset": "akamai_guardicore_raw",
+        "pack_name": "GuardiCore",
+        "product": "GuardiCore",
+        "vendor": "Akamai"
+      },
+      {
+        "dataset": "aruba_networks_clearpass_raw",
+        "pack_name": "HPEArubaClearPass",
+        "product": "clearpass",
+        "vendor": "aruba_networks"
+      },
+      {
+        "dataset": "aws_guardduty_raw",
+        "pack_name": "AWS-GuardDuty",
+        "product": "guardduty",
+        "vendor": "aws"
+      },
+      {
+        "dataset": "check_point_application_control_raw",
+        "pack_name": "CheckpointFirewall",
+        "product": "CheckpointFirewall",
+        "vendor": "Check Point"
+      },
+      {
+        "dataset": "check_point_identity_awareness_raw",
+        "pack_name": "CheckpointFirewall",
+        "product": "CheckpointFirewall",
+        "vendor": "Check Point"
+      },
+      {
+        "dataset": "check_point_smartdefense_raw",
+        "pack_name": "CheckpointFirewall",
+        "product": "CheckpointFirewall",
+        "vendor": "Check Point"
+      },
+      {
+        "dataset": "check_point_url_filtering_raw",
+        "pack_name": "CheckpointFirewall",
+        "product": "CheckpointFirewall",
+        "vendor": "Check Point"
+      },
+      {
+        "dataset": "check_point_vpn_1_firewall_1_raw",
+        "pack_name": "CheckpointFirewall",
+        "product": "CheckpointFirewall",
+        "vendor": "Check Point"
+      },
+      {
+        "dataset": "cisco_firepower_raw",
+        "pack_name": "CiscoFirepower",
+        "product": "CiscoFirepower",
+        "vendor": "Cisco"
+      },
+      {
+        "dataset": "claroty_ctd_raw",
+        "pack_name": "Claroty",
+        "product": "Claroty",
+        "vendor": "Claroty"
+      },
+      {
+        "dataset": "code42_code42_raw",
+        "pack_name": "Code42",
+        "product": "Code42",
+        "vendor": "Code42"
+      },
+      {
+        "dataset": "cyber_ark_vault_raw",
+        "pack_name": "CyberArkEPV",
+        "product": "vault",
+        "vendor": "cyber-ark"
+      },
+      {
+        "dataset": "cyberark_epm_raw",
+        "pack_name": "CyberArkEPM",
+        "product": "CyberArkEPM",
+        "vendor": "CyberArk"
+      },
+      {
+        "dataset": "cyberark_pta_raw",
+        "pack_name": "CyberArk_Privileged_Threat_Analytics",
+        "product": "CyberArk_Privileged_Threat_Analytics",
+        "vendor": "CyberArk"
+      },
+      {
+        "dataset": "fireeye_mps_raw",
+        "pack_name": "FireEyeNX",
+        "product": "mps",
+        "vendor": "fireeye"
+      },
+      {
+        "dataset": "forcepoint_email_security_raw",
+        "pack_name": "ForcepointEmailSecurity",
+        "product": "ForcepointEmailSecurity",
+        "vendor": "Forcepoint"
+      },
+      {
+        "dataset": "forcepoint_firewall_raw",
+        "pack_name": "Forcepoint",
+        "product": "Forcepoint",
+        "vendor": "Forcepoint"
+      },
+      {
+        "dataset": "forcepoint_forcepoint_dlp_raw",
+        "pack_name": "ForcepointDLP",
+        "product": "Forcepoint DLP",
+        "vendor": "Forcepoint"
+      },
+      {
+        "dataset": "forcepoint_security_raw",
+        "pack_name": "ForcepointSWG",
+        "product": "ForcepointSWG",
+        "vendor": "Forcepoint"
+      },
+      {
+        "dataset": "forescout_technologies_counteract_raw",
+        "pack_name": "ForeScoutCounterACT",
+        "product": "ForeScoutCounterACT",
+        "vendor": "Forescout"
+      },
+      {
+        "dataset": "fortinet_fortigate_raw",
+        "pack_name": "FortiGate",
+        "product": "Fortigate",
+        "vendor": "Fortinet"
+      },
+      {
+        "dataset": "fortinet_fortiweb_raw",
+        "pack_name": "FortinetFortiwebVM",
+        "product": "fortiweb",
+        "vendor": "fortinet"
+      },
+      {
+        "dataset": "google_cloud_logging_raw",
+        "pack_name": "GoogleCloudLogging",
+        "product": "Cloud Logging",
+        "vendor": "Google"
+      },
+      {
+        "dataset": "google_dns_raw",
+        "pack_name": "GoogleCloudLogging",
+        "product": "GoogleCloudLogging",
+        "vendor": "Google"
+      },
+      {
+        "dataset": "ibm_guardium_dsc_raw",
+        "pack_name": "IBMGuardium",
+        "product": "IBMGuardium",
+        "vendor": "IBM"
+      },
+      {
+        "dataset": "ibm_guardium_raw",
+        "pack_name": "IBMGuardium",
+        "product": "IBMGuardium",
+        "vendor": "IBM"
+      },
+      {
+        "dataset": "illusive_illusive_raw",
+        "pack_name": "IllusiveNetworks",
+        "product": "IllusiveNetworks",
+        "vendor": "Illusive Networks"
+      },
+      {
+        "dataset": "imperva_inc__securesphere_raw",
+        "pack_name": "Imperva_WAF",
+        "product": "Imperva_WAF",
+        "vendor": "Imperva"
+      },
+      {
+        "dataset": "incapsula_siemintegration_raw",
+        "pack_name": "Incapsula",
+        "product": "Incapsula",
+        "vendor": "Imperva"
+      },
+      {
+        "dataset": "lancope_stealthwatch_raw",
+        "pack_name": "CiscoStealthwatch",
+        "product": "CiscoStealthwatch",
+        "vendor": "Cisco"
+      },
+      {
+        "dataset": "manageengine_adauditplus_raw",
+        "pack_name": "ManageEngine-ADAudit",
+        "product": "ManageEngine-ADAudit",
+        "vendor": "ManageEngine"
+      },
+      {
+        "dataset": "manageengine_adssp_raw",
+        "pack_name": "ManageEngine-ADSelfServicePlus",
+        "product": "adssp",
+        "vendor": "manageengine"
+      },
+      {
+        "dataset": "mcafee_database_security_raw",
+        "pack_name": "McAfeeDatabaseSecurity",
+        "product": "McAfeeDatabaseSecurity",
+        "vendor": "McAfee"
+      },
+      {
+        "dataset": "microsoft_365_defender_raw",
+        "pack_name": "MicrosoftDefenderAdvancedThreatProtection",
+        "product": "Defender",
+        "vendor": "Microsoft 365"
+      },
+      {
+        "dataset": "microsoft_ata_raw",
+        "pack_name": "MicrosoftAdvancedThreatAnalytics",
+        "product": "MicrosoftAdvancedThreatAnalytics",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "microsoft_azure_atp_raw",
+        "pack_name": "MicrosoftDefenderforIdentity",
+        "product": "MicrosoftDefenderforIdentity",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_graph_security_alerts_raw",
+        "pack_name": "MicrosoftGraphSecurity",
+        "product": "Graph Security Alerts",
+        "vendor": "msft"
+      },
+      {
+        "dataset": "netskope_netskope_raw",
+        "pack_name": "Netskope",
+        "product": "Netskope",
+        "vendor": "Netskope"
+      },
+      {
+        "dataset": "observeit_observeit_raw",
+        "pack_name": "ProofpointObserveIT",
+        "product": "ProofpointObserveIT",
+        "vendor": "Proofpoint"
+      },
+      {
+        "dataset": "okta_okta_raw",
+        "pack_name": "Okta",
+        "product": "okta",
+        "vendor": "okta"
+      },
+      {
+        "dataset": "okta_sso_raw",
+        "pack_name": "Okta",
+        "product": "Okta",
+        "vendor": "Okta"
+      },
+      {
+        "dataset": "silverfort_admin_console_raw",
+        "pack_name": "Silverfort",
+        "product": "admin_console",
+        "vendor": "silverfort"
+      },
+      {
+        "dataset": "thycotic_software_secret_server_raw",
+        "pack_name": "DelineaSS",
+        "product": "DelineaSS",
+        "vendor": "Delinea"
+      },
+      {
+        "dataset": "tippingpoint_unityone_raw",
+        "pack_name": "TrendMicroTippingPoint",
+        "product": "TrendMicroTippingPoint",
+        "vendor": "Trend Micro"
+      },
+      {
+        "dataset": "trend_micro_deep_security_agent_raw",
+        "pack_name": "TrendMicroDeepSecurity",
+        "product": "TrendMicroDeepSecurity",
+        "vendor": "Trend Micro"
+      },
+      {
+        "dataset": "trend_micro_deep_security_manager_raw",
+        "pack_name": "TrendMicroDeepSecurity",
+        "product": "TrendMicroDeepSecurity",
+        "vendor": "Trend Micro"
+      },
+      {
+        "dataset": "trend_micro_email_security_raw",
+        "pack_name": "TrendMicroEmailSecurity",
+        "product": "TrendMicroEmailSecurity",
+        "vendor": "Trend Micro"
+      },
+      {
+        "dataset": "trend_micro_vision_one_raw",
+        "pack_name": "TrendMicroVisionOne",
+        "product": "TrendMicroVisionOne",
+        "vendor": "Trend Micro"
+      },
+      {
+        "dataset": "ubiquiti_unifi_raw",
+        "pack_name": "UbiquitiUnifi",
+        "product": "UbiquitiUnifi",
+        "vendor": "Ubiquiti"
+      },
+      {
+        "dataset": "watchguard_xtm_raw",
+        "pack_name": "WatchguardFirebox",
+        "product": "WatchguardFirebox",
+        "vendor": "WatchGuard"
+      },
+      {
+        "dataset": "withsecure_endpoint_protection_raw",
+        "pack_name": "WithSecure",
+        "product": "WithSecure",
+        "vendor": "WithSecure"
+      },
+      {
+        "dataset": "zeronetworks_segment_raw",
+        "pack_name": "ZeroNetworksSegment",
+        "product": "ZeroNetworksSegment",
+        "vendor": "Zero Networks"
+      },
+      {
+        "dataset": "zscaler_zpa_raw",
+        "pack_name": "ZscalerZPA",
+        "product": "ZscalerZPA",
+        "vendor": "Zscaler"
+      }
+    ],
+    "direct_mapped_other": [
+      {
+        "dataset": "1password_1password_raw",
+        "pack_name": "OnePassword",
+        "product": "OnePassword",
+        "vendor": "1Password"
+      },
+      {
+        "dataset": "abnormal_security_email_protection_raw",
+        "pack_name": "AbnormalSecurity",
+        "product": "AbnormalSecurity",
+        "vendor": "Abnormal Security"
+      },
+      {
+        "dataset": "absolute_secure_endpoint_raw",
+        "pack_name": "Absolute",
+        "product": "secure_endpoint",
+        "vendor": "absolute"
+      },
+      {
+        "dataset": "admin_by_request_raw",
+        "pack_name": "AdminByRequest",
+        "product": "AdminByRequest",
+        "vendor": "Admin By Request"
+      },
+      {
+        "dataset": "akamai_waf_raw",
+        "pack_name": "Akamai_SIEM",
+        "product": "WAF",
+        "vendor": "Akamai"
+      },
+      {
+        "dataset": "alibaba_action_trail_raw",
+        "pack_name": "AlibabaActionTrail",
+        "product": "action_trail",
+        "vendor": "alibaba"
+      },
+      {
+        "dataset": "amazon_aws_raw",
+        "pack_name": "AWS-CloudTrail",
+        "product": "aws",
+        "vendor": "amazon"
+      },
+      {
+        "dataset": "appsentinels_appsentinels_raw",
+        "pack_name": "AppSentinelsAi",
+        "product": "AppSentinelsAi",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "armis_security_activities_raw",
+        "pack_name": "Armis",
+        "product": "Armis",
+        "vendor": "Armis"
+      },
+      {
+        "dataset": "armis_security_devices_raw",
+        "pack_name": "Armis",
+        "product": "Armis",
+        "vendor": "Armis"
+      },
+      {
+        "dataset": "armis_security_raw",
+        "pack_name": "Armis",
+        "product": "security",
+        "vendor": "armis"
+      },
+      {
+        "dataset": "aruba_central_raw",
+        "pack_name": "HPEArubaCentral",
+        "product": "HPEArubaCentral",
+        "vendor": "HPE"
+      },
+      {
+        "dataset": "atlassian_confluence_raw",
+        "pack_name": "AtlassianConfluenceCloud",
+        "product": "confluence",
+        "vendor": "atlassian"
+      },
+      {
+        "dataset": "aws_security_hub_raw",
+        "pack_name": "AWS-SecurityHub",
+        "product": "AWS-SecurityHub",
+        "vendor": "Amazon Web Services"
+      },
+      {
+        "dataset": "aws_waf_raw",
+        "pack_name": "AWS_WAF",
+        "product": "waf",
+        "vendor": "aws"
+      },
+      {
+        "dataset": "bitsight_bitsight_raw",
+        "pack_name": "BitSight",
+        "product": "BitSight",
+        "vendor": "Bitsight"
+      },
+      {
+        "dataset": "bitwarden_password_manager_raw",
+        "pack_name": "BitwardenPasswordManager",
+        "product": "BitwardenPasswordManager",
+        "vendor": "Bitwarden"
+      },
+      {
+        "dataset": "bloodhound_enterprise_raw",
+        "pack_name": "BloodHoundEnterprise",
+        "product": "BloodHoundEnterprise",
+        "vendor": "SpecterOps BloodHound"
+      },
+      {
+        "dataset": "box_box_raw",
+        "pack_name": "Box",
+        "product": "box",
+        "vendor": "box"
+      },
+      {
+        "dataset": "celonis_celonis_raw",
+        "pack_name": "Celonis",
+        "product": "Celonis",
+        "vendor": "Celonis"
+      },
+      {
+        "dataset": "cisco_appdynamics_raw",
+        "pack_name": "CiscoAppDynamics",
+        "product": "CiscoAppDynamics",
+        "vendor": "Cisco"
+      },
+      {
+        "dataset": "cisco_secure_endpoint_raw",
+        "pack_name": "AMP",
+        "product": "AMP",
+        "vendor": "Cisco"
+      },
+      {
+        "dataset": "cisco_thousandeyes_raw",
+        "pack_name": "CiscoThousandEyes",
+        "product": "CiscoThousandEyes",
+        "vendor": "Cisco"
+      },
+      {
+        "dataset": "cisco_webex_raw",
+        "pack_name": "CiscoSpark",
+        "product": "CiscoSpark",
+        "vendor": "Cisco"
+      },
+      {
+        "dataset": "cloudflare_waf_raw",
+        "pack_name": "CloudflareWAF",
+        "product": "waf",
+        "vendor": "cloudflare"
+      },
+      {
+        "dataset": "cloudflare_zerotrust_raw",
+        "pack_name": "CloudflareZeroTrust",
+        "product": "CloudflareZeroTrust",
+        "vendor": "Cloudflare"
+      },
+      {
+        "dataset": "cohesity_helios_raw",
+        "pack_name": "CohesityHelios",
+        "product": "CohesityHelios",
+        "vendor": "Cohesity"
+      },
+      {
+        "dataset": "commvault_backupsolution_raw",
+        "pack_name": "CommvaultBackupSolutions",
+        "product": "CommvaultBackupSolutions",
+        "vendor": "HashiCorp"
+      },
+      {
+        "dataset": "corelight_zeek_raw",
+        "pack_name": "CorelightZeek",
+        "product": "zeek",
+        "vendor": "corelight"
+      },
+      {
+        "dataset": "cybelangel_platform_raw",
+        "pack_name": "CybelAngel",
+        "product": "CybelAngel",
+        "vendor": "CybelAngel"
+      },
+      {
+        "dataset": "cyberark_identity_raw",
+        "pack_name": "CyberArkIdentity",
+        "product": "identity",
+        "vendor": "cyberark"
+      },
+      {
+        "dataset": "cyberark_isp_raw",
+        "pack_name": "CyberArkPAS",
+        "product": "CyberArkPAS",
+        "vendor": "CyberArk"
+      },
+      {
+        "dataset": "cyfirma_decyfir_raw",
+        "pack_name": "DeCYFIR",
+        "product": "DeCYFIR",
+        "vendor": "CYFIRMA DeCYFIR"
+      },
+      {
+        "dataset": "darktrace_darktrace_raw",
+        "pack_name": "Darktrace",
+        "product": "Darktrace",
+        "vendor": "Darktrace"
+      },
+      {
+        "dataset": "digital_guardian_arc_raw",
+        "pack_name": "DigitalGuardian",
+        "product": "DigitalGuardian",
+        "vendor": "Digital Guardian"
+      },
+      {
+        "dataset": "docusign_docusign_raw",
+        "pack_name": "Docusign",
+        "product": "Docusign",
+        "vendor": "DocuSign"
+      },
+      {
+        "dataset": "dragos_platform_raw",
+        "pack_name": "Dragos_Platform",
+        "product": "Dragos_Platform",
+        "vendor": "Dragos"
+      },
+      {
+        "dataset": "dropbox_dropbox_raw",
+        "pack_name": "Dropbox",
+        "product": "Dropbox",
+        "vendor": "Dropbox"
+      },
+      {
+        "dataset": "druva_druva_raw",
+        "pack_name": "Druva",
+        "product": "Druva",
+        "vendor": "Druva"
+      },
+      {
+        "dataset": "duo_duo_raw",
+        "pack_name": "DuoAdminApi",
+        "product": "DuoAdminApi",
+        "vendor": "Duo Security"
+      },
+      {
+        "dataset": "exabeam_threat_center_raw",
+        "pack_name": "Exabeam",
+        "product": "Exabeam",
+        "vendor": "Exabeam"
+      },
+      {
+        "dataset": "extrahop_revealx_raw",
+        "pack_name": "ExtraHop",
+        "product": "ExtraHop",
+        "vendor": "ExtraHop"
+      },
+      {
+        "dataset": "fireeye_etp_raw",
+        "pack_name": "FireEyeETP",
+        "product": "FireEyeETP",
+        "vendor": "McAfee"
+      },
+      {
+        "dataset": "genesys_cloud_raw",
+        "pack_name": "GenesysCloud",
+        "product": "GenesysCloud",
+        "vendor": "Genesys"
+      },
+      {
+        "dataset": "genetec_security_center_raw",
+        "pack_name": "GenetecSecurityCenter",
+        "product": "GenetecSecurityCenter",
+        "vendor": "Genetec"
+      },
+      {
+        "dataset": "gitguardian_enterprise_raw",
+        "pack_name": "GitGuardian",
+        "product": "GitGuardian",
+        "vendor": "GitGuardian"
+      },
+      {
+        "dataset": "github_github_audit_raw",
+        "pack_name": "GitHub",
+        "product": "github-audit",
+        "vendor": "Github"
+      },
+      {
+        "dataset": "gitlab_gitlab_raw",
+        "pack_name": "GitLab",
+        "product": "gitlab",
+        "vendor": "gitlab"
+      },
+      {
+        "dataset": "google_apigee_raw",
+        "pack_name": "GoogleApigee",
+        "product": "GoogleApigee",
+        "vendor": "Google"
+      },
+      {
+        "dataset": "google_scc_raw",
+        "pack_name": "GoogleCloudSCC",
+        "product": "SCC",
+        "vendor": "Google"
+      },
+      {
+        "dataset": "google_workspace_chrome_raw",
+        "pack_name": "GoogleChrome",
+        "product": "Workspace Chrome",
+        "vendor": "Google"
+      },
+      {
+        "dataset": "google_workspace_drive_raw",
+        "pack_name": "GoogleDrive",
+        "product": "drive",
+        "vendor": "google_workspace"
+      },
+      {
+        "dataset": "hello_world_raw",
+        "pack_name": "HelloWorld",
+        "product": "world",
+        "vendor": "hello"
+      },
+      {
+        "dataset": "ibm_maas360_security_raw",
+        "pack_name": "IBMMaaS360Security",
+        "product": "IBMMaaS360Security",
+        "vendor": "IBM"
+      },
+      {
+        "dataset": "ibm_security_verify_raw",
+        "pack_name": "IBMSecurityVerify",
+        "product": "security verify",
+        "vendor": "ibm"
+      },
+      {
+        "dataset": "ibm_storagescale_raw",
+        "pack_name": "IBMStorageScale",
+        "product": "IBMStorageScale",
+        "vendor": "IBM"
+      },
+      {
+        "dataset": "infoblox_bloxone_threat_defense_raw",
+        "pack_name": "InfobloxBloxOne",
+        "product": "InfobloxBloxOne",
+        "vendor": "Infoblox"
+      },
+      {
+        "dataset": "ironscales_ironscales_raw",
+        "pack_name": "IronscalesEventCollector",
+        "product": "IronscalesEventCollector",
+        "vendor": "Ironscales"
+      },
+      {
+        "dataset": "jamf_pro_raw",
+        "pack_name": "jamf",
+        "product": "pro",
+        "vendor": "jamf"
+      },
+      {
+        "dataset": "jamf_protect_raw",
+        "pack_name": "JamfProtect",
+        "product": "JamfProtect",
+        "vendor": "Jamf"
+      },
+      {
+        "dataset": "keeper_security_raw",
+        "pack_name": "KeeperSecurity",
+        "product": "KeeperSecurity",
+        "vendor": "Keeper Security"
+      },
+      {
+        "dataset": "knowbe4_kmsat_raw",
+        "pack_name": "KnowBe4_KMSAT",
+        "product": "KnowBe4_KMSAT",
+        "vendor": "KnowBe4"
+      },
+      {
+        "dataset": "lenels2_netbox_raw",
+        "pack_name": "LenelS2NetBox",
+        "product": "LenelS2NetBox",
+        "vendor": "LenelS2"
+      },
+      {
+        "dataset": "lookout_mobile_endpoint_security_raw",
+        "pack_name": "LookoutMobileEndpointSecurity",
+        "product": "LookoutMobileEndpointSecurity",
+        "vendor": "Lookout"
+      },
+      {
+        "dataset": "manage_engine_raw",
+        "pack_name": "ManageEngine",
+        "product": "ManageEngine",
+        "vendor": "ManageEngine"
+      },
+      {
+        "dataset": "mcafee_epo_raw",
+        "pack_name": "epo",
+        "product": "ePO",
+        "vendor": "McAfee"
+      },
+      {
+        "dataset": "microsoft_adfs_raw",
+        "pack_name": "MicrosoftADFS",
+        "product": "windows",
+        "vendor": "microsoft"
+      },
+      {
+        "dataset": "microsoft_amsi_raw",
+        "pack_name": "MicrosoftWindowsAMSI",
+        "product": "windows",
+        "vendor": "microsoft"
+      },
+      {
+        "dataset": "microsoft_defender_cloud_apps_raw",
+        "pack_name": "MicrosoftCloudAppSecurity",
+        "product": "defender_cloud_apps",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "microsoft_defender_for_cloud_raw",
+        "pack_name": "AzureSecurityCenter",
+        "product": "defender_for_cloud",
+        "vendor": "microsoft"
+      },
+      {
+        "dataset": "microsoft_dhcp_raw",
+        "pack_name": "MicrosoftDHCP",
+        "product": "DHCP",
+        "vendor": "microsoft"
+      },
+      {
+        "dataset": "microsoft_sysmon_raw",
+        "pack_name": "MicrosoftWindowsSysmon",
+        "product": "windows",
+        "vendor": "microsoft"
+      },
+      {
+        "dataset": "microsoft_windows_raw",
+        "pack_name": "MicrosoftWindowsEvents",
+        "product": "windows",
+        "vendor": "microsoft"
+      },
+      {
+        "dataset": "mimecast_mimecast_raw",
+        "pack_name": "Mimecast",
+        "product": "mimecast",
+        "vendor": "mimecast"
+      },
+      {
+        "dataset": "monday_monday_raw",
+        "pack_name": "Monday",
+        "product": "Monday",
+        "vendor": "monday.com"
+      },
+      {
+        "dataset": "mongodb_atlas_raw",
+        "pack_name": "MongoDBAtlas",
+        "product": "MongoDBAtlas",
+        "vendor": "MongoDB"
+      },
+      {
+        "dataset": "msft_adfs_raw",
+        "pack_name": "MicrosoftADFS",
+        "product": "MicrosoftADFS",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_azure_ad_audit_raw",
+        "pack_name": "MicrosoftEntraID",
+        "product": "MicrosoftEntraID",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_azure_ad_raw",
+        "pack_name": "MicrosoftEntraID",
+        "product": "MicrosoftEntraID",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_azure_aks_raw",
+        "pack_name": "AzureKubernetesServices",
+        "product": "azure",
+        "vendor": "msft"
+      },
+      {
+        "dataset": "msft_azure_app_service_raw",
+        "pack_name": "AzureAppService",
+        "product": "Azure",
+        "vendor": "MSFT"
+      },
+      {
+        "dataset": "msft_azure_firewall_raw",
+        "pack_name": "AzureFirewall",
+        "product": "azure",
+        "vendor": "msft"
+      },
+      {
+        "dataset": "msft_azure_waf_raw",
+        "pack_name": "AzureWAF",
+        "product": "azure",
+        "vendor": "msft"
+      },
+      {
+        "dataset": "msft_exchange_raw",
+        "pack_name": "MicrosoftExchangeServer",
+        "product": "exchange",
+        "vendor": "msft"
+      },
+      {
+        "dataset": "msft_intune_raw",
+        "pack_name": "MicrosoftIntune",
+        "product": "Intune",
+        "vendor": "MSFT"
+      },
+      {
+        "dataset": "msft_o365_dlp_raw",
+        "pack_name": "Office365",
+        "product": "Office365",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_o365_emails_raw",
+        "pack_name": "Office365",
+        "product": "Office365",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_o365_exchange_online_raw",
+        "pack_name": "Office365",
+        "product": "Office365",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_o365_general_raw",
+        "pack_name": "Office365",
+        "product": "Office365",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_o365_sharepoint_online_raw",
+        "pack_name": "Office365",
+        "product": "Office365",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "netbox_irm_raw",
+        "pack_name": "NetBox",
+        "product": "NetBox",
+        "vendor": "NetBox"
+      },
+      {
+        "dataset": "netmotion_vpn_raw",
+        "pack_name": "NetmotionVPN",
+        "product": "vpn",
+        "vendor": "netmotion"
+      },
+      {
+        "dataset": "nvidia_doca_argus_raw",
+        "pack_name": "NVIDIA_DOCA_Argus",
+        "product": "doca_argus",
+        "vendor": "nvidia"
+      },
+      {
+        "dataset": "okta_asa_raw",
+        "pack_name": "OktaASA",
+        "product": "OktaASA",
+        "vendor": "Okta"
+      },
+      {
+        "dataset": "okta_auth0_raw",
+        "pack_name": "OktaAuth0",
+        "product": "OktaAuth0",
+        "vendor": "Okta"
+      },
+      {
+        "dataset": "onelogin_iam_raw",
+        "pack_name": "OneLogin",
+        "product": "OneLogin",
+        "vendor": "OneLogin"
+      },
+      {
+        "dataset": "oracle_cloud_infrastructure_raw",
+        "pack_name": "OracleCloudInfrastructure",
+        "product": "OracleCloudInfrastructure",
+        "vendor": "Oracle"
+      },
+      {
+        "dataset": "oracle_db_raw",
+        "pack_name": "Oracle",
+        "product": "db",
+        "vendor": "oracle"
+      },
+      {
+        "dataset": "oracle_oam_raw",
+        "pack_name": "Oracle_IAM",
+        "product": "oam",
+        "vendor": "oracle"
+      },
+      {
+        "dataset": "orca_security_raw",
+        "pack_name": "Orca",
+        "product": "Orca",
+        "vendor": "Orca Security"
+      },
+      {
+        "dataset": "paloaltonetworks_saassecurity_raw",
+        "pack_name": "PrismaSaasSecurity",
+        "product": "saassecurity",
+        "vendor": "paloaltonetworks"
+      },
+      {
+        "dataset": "prisma_cloud_compute_raw",
+        "pack_name": "PrismaCloudCompute",
+        "product": "cloud_compute",
+        "vendor": "prisma"
+      },
+      {
+        "dataset": "prisma_cloud_raw",
+        "pack_name": "PrismaCloud",
+        "product": "cloud",
+        "vendor": "prisma"
+      },
+      {
+        "dataset": "proofpoint_casb_raw",
+        "pack_name": "ProofpointCasb",
+        "product": "casb",
+        "vendor": "proofpoint"
+      },
+      {
+        "dataset": "proofpoint_email_security_raw",
+        "pack_name": "ProofpointEmailSecurity",
+        "product": "email_security",
+        "vendor": "proofpoint"
+      },
+      {
+        "dataset": "proofpoint_isolation_raw",
+        "pack_name": "ProofpointIsolation",
+        "product": "ProofpointIsolation",
+        "vendor": "Proofpoint"
+      },
+      {
+        "dataset": "proofpoint_tap_raw",
+        "pack_name": "ProofpointTAP",
+        "product": "Tap",
+        "vendor": "Proofpoint"
+      },
+      {
+        "dataset": "proofpoint_threat_response_raw",
+        "pack_name": "ProofpointThreatResponse",
+        "product": "threat_response",
+        "vendor": "proofpoint"
+      },
+      {
+        "dataset": "qualys_assets_raw",
+        "pack_name": "qualys",
+        "product": "qualys",
+        "vendor": "Qualys"
+      },
+      {
+        "dataset": "qualys_qualys_raw",
+        "pack_name": "qualys",
+        "product": "qualys",
+        "vendor": "Qualys"
+      },
+      {
+        "dataset": "radware_cloud_ddos_raw",
+        "pack_name": "RadwareCloudDDoSProtectionServices",
+        "product": "RadwareCloudDDoSProtectionServices",
+        "vendor": "Radware"
+      },
+      {
+        "dataset": "recorded_future_intelligence_cloud_raw",
+        "pack_name": "RecordedFuture",
+        "product": "RecordedFuture",
+        "vendor": "Recorded Future"
+      },
+      {
+        "dataset": "reliaquest_greymatter_drp_raw",
+        "pack_name": "DigitalShadows",
+        "product": "DigitalShadows",
+        "vendor": "ReliaQuest"
+      },
+      {
+        "dataset": "retarus_secure_email_gateway_raw",
+        "pack_name": "RetarusSecureEmailGateway",
+        "product": "RetarusSecureEmailGateway",
+        "vendor": "Retarus"
+      },
+      {
+        "dataset": "runzero_runzero_raw",
+        "pack_name": "RunZero",
+        "product": "RunZero",
+        "vendor": "runZero"
+      },
+      {
+        "dataset": "safenet_trusted_access_raw",
+        "pack_name": "SafeNet_Trusted_Access",
+        "product": "trusted_access",
+        "vendor": "safenet"
+      },
+      {
+        "dataset": "sailpoint_identitynow_raw",
+        "pack_name": "SailPointIdentityNow",
+        "product": "SailPointIdentityNow",
+        "vendor": "SailPoint"
+      },
+      {
+        "dataset": "salesforce_audit_raw",
+        "pack_name": "Salesforce",
+        "product": "audit",
+        "vendor": "salesforce"
+      },
+      {
+        "dataset": "salesforce_event_audit_raw",
+        "pack_name": "Salesforce",
+        "product": "Salesforce",
+        "vendor": "Salesforce"
+      },
+      {
+        "dataset": "salesforce_eventlogfile_raw",
+        "pack_name": "Salesforce",
+        "product": "Salesforce",
+        "vendor": "Salesforce"
+      },
+      {
+        "dataset": "salesforce_login_raw",
+        "pack_name": "Salesforce",
+        "product": "Salesforce",
+        "vendor": "Salesforce"
+      },
+      {
+        "dataset": "salesforce_realtime_raw",
+        "pack_name": "Salesforce",
+        "product": "Salesforce",
+        "vendor": "Salesforce"
+      },
+      {
+        "dataset": "saviynt_eic_raw",
+        "pack_name": "SaviyntEIC",
+        "product": "SaviyntEIC",
+        "vendor": "Saviynt"
+      },
+      {
+        "dataset": "sentinelone_xdr_raw",
+        "pack_name": "SentinelOne",
+        "product": "SentinelOne",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "servicenow_servicenow_raw",
+        "pack_name": "ServiceNow",
+        "product": "ServiceNow",
+        "vendor": "ServiceNow"
+      },
+      {
+        "dataset": "shodan_banner_raw",
+        "pack_name": "Shodan",
+        "product": "Shodan",
+        "vendor": "Shodan"
+      },
+      {
+        "dataset": "slack_slack_raw",
+        "pack_name": "Slack",
+        "product": "slack",
+        "vendor": "slack"
+      },
+      {
+        "dataset": "symantec_cloud_soc_raw",
+        "pack_name": "SymantecCloudSOC",
+        "product": "SymantecCloudSOC",
+        "vendor": "Symantec"
+      },
+      {
+        "dataset": "symantec_endpoint_security_raw",
+        "pack_name": "SymantecEndpointSecurity",
+        "product": "SymantecEndpointSecurity",
+        "vendor": "Symantec"
+      },
+      {
+        "dataset": "teamviewer_tensor_raw",
+        "pack_name": "TeamViewer",
+        "product": "TeamViewer",
+        "vendor": "TeamViewer"
+      },
+      {
+        "dataset": "tenable_io_raw",
+        "pack_name": "Tenable_io",
+        "product": "Tenable_io",
+        "vendor": "Tenable"
+      },
+      {
+        "dataset": "tenable_io_vulnerabilities_raw",
+        "pack_name": "Tenable_io",
+        "product": "Tenable_io",
+        "vendor": "Tenable"
+      },
+      {
+        "dataset": "thycotic_alm_raw",
+        "pack_name": "DelineaALM",
+        "product": "DelineaALM",
+        "vendor": "Delinea"
+      },
+      {
+        "dataset": "vectra_vectra_raw",
+        "pack_name": "Vectra_AI",
+        "product": "Vectra_AI",
+        "vendor": "Vectra AI"
+      },
+      {
+        "dataset": "vmware_carbon_black_cloud_raw",
+        "pack_name": "CarbonBlackDefense",
+        "product": "CarbonBlackDefense",
+        "vendor": "Carbon Black"
+      },
+      {
+        "dataset": "workday_activity_raw",
+        "pack_name": "Workday",
+        "product": "activity",
+        "vendor": "workday"
+      },
+      {
+        "dataset": "workday_signon_raw",
+        "pack_name": "Workday",
+        "product": "Workday",
+        "vendor": "Workday"
+      },
+      {
+        "dataset": "zoom_zoom_raw",
+        "pack_name": "Zoom",
+        "product": "Zoom",
+        "vendor": "Zoom"
+      }
+    ],
+    "raw_json_based": [],
+    "raw_log_based": [
+      {
+        "dataset": "Cisco_SMA_raw",
+        "pack_name": "CiscoSMA",
+        "product": "CiscoSMA",
+        "vendor": "Cisco"
+      },
+      {
+        "dataset": "F5_ASM_raw",
+        "pack_name": "F5ASM",
+        "product": "F5ASM",
+        "vendor": "F5"
+      },
+      {
+        "dataset": "Juniper_SRX_raw",
+        "pack_name": "JuniperSRX",
+        "product": "JuniperSRX",
+        "vendor": "Juniper"
+      },
+      {
+        "dataset": "VMware_ESXi_raw",
+        "pack_name": "VMwareESXi",
+        "product": "VMwareESXi",
+        "vendor": "VMware"
+      },
+      {
+        "dataset": "VMware_vCenter_raw",
+        "pack_name": "VMwareVCenter",
+        "product": "VMwareVCenter",
+        "vendor": "VMware"
+      },
+      {
+        "dataset": "apache_httpd_raw",
+        "pack_name": "ApacheWebServer",
+        "product": "httpd",
+        "vendor": "apache"
+      },
+      {
+        "dataset": "apache_tomcat_raw",
+        "pack_name": "ApacheTomcat",
+        "product": "tomcat",
+        "vendor": "apache"
+      },
+      {
+        "dataset": "apple_macos_raw",
+        "pack_name": "MacOS",
+        "product": "MacOS",
+        "vendor": "Apple"
+      },
+      {
+        "dataset": "arista_switch_raw",
+        "pack_name": "AristaSwitch",
+        "product": "switch",
+        "vendor": "arista"
+      },
+      {
+        "dataset": "atlassian_bitbucket_raw",
+        "pack_name": "Bitbucket",
+        "product": "bitbucket",
+        "vendor": "atlassian"
+      },
+      {
+        "dataset": "atlassian_jira_raw",
+        "pack_name": "Jira",
+        "product": "jira",
+        "vendor": "atlassian"
+      },
+      {
+        "dataset": "avaya_communication_manager_raw",
+        "pack_name": "AvayaAuraCommunicationManager",
+        "product": "AvayaAuraCommunicationManager",
+        "vendor": "Avaya"
+      },
+      {
+        "dataset": "aws_elb_raw",
+        "pack_name": "AWS_ELB",
+        "product": "elb",
+        "vendor": "aws"
+      },
+      {
+        "dataset": "barracuda_cgfw_raw",
+        "pack_name": "Barracuda_Cloudgen_Firewall",
+        "product": "cgfw",
+        "vendor": "barracuda"
+      },
+      {
+        "dataset": "barracuda_email_protection_raw",
+        "pack_name": "BarracudaEmailProtection",
+        "product": "BarracudaEmailProtection",
+        "vendor": "Barracuda"
+      },
+      {
+        "dataset": "barracuda_waf_raw",
+        "pack_name": "BarracudaWAF",
+        "product": "waf",
+        "vendor": "barracuda"
+      },
+      {
+        "dataset": "beyondtrust_passwordsafe_raw",
+        "pack_name": "BeyondTrust_Password_Safe",
+        "product": "passwordsafe",
+        "vendor": "beyondtrust"
+      },
+      {
+        "dataset": "beyondtrust_pra_raw",
+        "pack_name": "BeyondTrustPrivilegedRemoteAccess",
+        "product": "pra",
+        "vendor": "beyondtrust"
+      },
+      {
+        "dataset": "beyondtrust_remote_support_raw",
+        "pack_name": "BeyondTrustRemoteSupport",
+        "product": "remote_support",
+        "vendor": "beyondtrust"
+      },
+      {
+        "dataset": "bluecat_address_manager_raw",
+        "pack_name": "BluecatAddressManager",
+        "product": "address_manager",
+        "vendor": "bluecat"
+      },
+      {
+        "dataset": "brocade_switch_raw",
+        "pack_name": "BrocadeSwitch",
+        "product": "switch",
+        "vendor": "brocade"
+      },
+      {
+        "dataset": "cisco_asa_raw",
+        "pack_name": "CiscoASA",
+        "product": "asa",
+        "vendor": "cisco"
+      },
+      {
+        "dataset": "cisco_asr_raw",
+        "pack_name": "CiscoASR",
+        "product": "asr",
+        "vendor": "cisco"
+      },
+      {
+        "dataset": "cisco_catalyst_raw",
+        "pack_name": "CiscoCatalyst",
+        "product": "catalyst",
+        "vendor": "cisco"
+      },
+      {
+        "dataset": "cisco_esa_raw",
+        "pack_name": "IronPort",
+        "product": "IronPort",
+        "vendor": "Cisco"
+      },
+      {
+        "dataset": "cisco_ise_raw",
+        "pack_name": "cisco-ise",
+        "product": "ise",
+        "vendor": "cisco"
+      },
+      {
+        "dataset": "cisco_isr_raw",
+        "pack_name": "CiscoISR",
+        "product": "isr",
+        "vendor": "cisco"
+      },
+      {
+        "dataset": "cisco_meraki_raw",
+        "pack_name": "cisco-meraki",
+        "product": "meraki",
+        "vendor": "cisco"
+      },
+      {
+        "dataset": "cisco_nexus_raw",
+        "pack_name": "CiscoNexus",
+        "product": "nexus",
+        "vendor": "cisco"
+      },
+      {
+        "dataset": "cisco_umbrella_raw",
+        "pack_name": "Cisco-umbrella-cloud-security",
+        "product": "umbrella",
+        "vendor": "cisco"
+      },
+      {
+        "dataset": "cisco_wlc_raw",
+        "pack_name": "Cisco_Wireless_LAN_Controller",
+        "product": "wlc",
+        "vendor": "cisco"
+      },
+      {
+        "dataset": "citrix_adc_raw",
+        "pack_name": "CitrixADC",
+        "product": "adc",
+        "vendor": "citrix"
+      },
+      {
+        "dataset": "clearswift_dlp_raw",
+        "pack_name": "ClearswiftDLP",
+        "product": "dlp",
+        "vendor": "clearswift"
+      },
+      {
+        "dataset": "dell_emc_unity_raw",
+        "pack_name": "DellEMCUnity",
+        "product": "unity",
+        "vendor": "dell_emc"
+      },
+      {
+        "dataset": "f5_apm_raw",
+        "pack_name": "F5APM",
+        "product": "apm",
+        "vendor": "f5"
+      },
+      {
+        "dataset": "f5_ltm_raw",
+        "pack_name": "F5LTM",
+        "product": "ltm",
+        "vendor": "f5"
+      },
+      {
+        "dataset": "f5_waf_raw",
+        "pack_name": "F5BigIPAWAF",
+        "product": "waf",
+        "vendor": "f5"
+      },
+      {
+        "dataset": "fireeye_hx_audit_raw",
+        "pack_name": "FireEyeHX",
+        "product": "FireEyeHX",
+        "vendor": "FireEye"
+      },
+      {
+        "dataset": "fireeye_hx_raw",
+        "pack_name": "FireEyeHX",
+        "product": "FireEyeHX",
+        "vendor": "FireEye"
+      },
+      {
+        "dataset": "fortinet_fortimail_raw",
+        "pack_name": "Fortimail",
+        "product": "fortimail",
+        "vendor": "fortinet"
+      },
+      {
+        "dataset": "fortinet_fortimanager_raw",
+        "pack_name": "FortiManager",
+        "product": "fortimanager",
+        "vendor": "fortinet"
+      },
+      {
+        "dataset": "hashicorp_vault_raw",
+        "pack_name": "HashiCorp-Vault",
+        "product": "vault",
+        "vendor": "hashicorp"
+      },
+      {
+        "dataset": "hpe_switch_raw",
+        "pack_name": "HPESwitch",
+        "product": "HPESwitch",
+        "vendor": "HPE"
+      },
+      {
+        "dataset": "huawei_fw_raw",
+        "pack_name": "HuaweiFW",
+        "product": "fw",
+        "vendor": "huawei"
+      },
+      {
+        "dataset": "huawei_network_devices_raw",
+        "pack_name": "HuaweiNetworkDevices",
+        "product": "network_devices",
+        "vendor": "huawei"
+      },
+      {
+        "dataset": "ibm_aix_raw",
+        "pack_name": "IBM_AIX",
+        "product": "IBM_AIX",
+        "vendor": "IBM"
+      },
+      {
+        "dataset": "ibm_ldap_raw",
+        "pack_name": "IBMDirectoryServer",
+        "product": "ldap",
+        "vendor": "ibm"
+      },
+      {
+        "dataset": "iis_iis_raw",
+        "pack_name": "MicrosoftIISWebServer",
+        "product": "iis",
+        "vendor": "iis"
+      },
+      {
+        "dataset": "infoblox_infoblox_raw",
+        "pack_name": "Infoblox",
+        "product": "infoblox",
+        "vendor": "infoblox"
+      },
+      {
+        "dataset": "ivanti_connect_secure_raw",
+        "pack_name": "IvantiConnectSecure",
+        "product": "connect_secure",
+        "vendor": "ivanti"
+      },
+      {
+        "dataset": "ivanti_vtm_raw",
+        "pack_name": "IvantiPulseSecureVTM",
+        "product": "vtm",
+        "vendor": "ivanti"
+      },
+      {
+        "dataset": "juniper_srx_raw",
+        "pack_name": "JuniperSRX",
+        "product": "srx",
+        "vendor": "juniper"
+      },
+      {
+        "dataset": "kiteworks_kiteworks_raw",
+        "pack_name": "Kiteworks",
+        "product": "kiteworks",
+        "vendor": "kiteworks"
+      },
+      {
+        "dataset": "kubernetes_kubernetes_raw",
+        "pack_name": "Kubernetes",
+        "product": "kubernetes",
+        "vendor": "kubernetes"
+      },
+      {
+        "dataset": "linux_linux_raw",
+        "pack_name": "LinuxEventsCollection",
+        "product": "linux",
+        "vendor": "linux"
+      },
+      {
+        "dataset": "manageengine_admanager_raw",
+        "pack_name": "ManageEngine-ADManager",
+        "product": "admanager",
+        "vendor": "manageengine"
+      },
+      {
+        "dataset": "mcafee_nsm_raw",
+        "pack_name": "McAfeeNSM",
+        "product": "NSM",
+        "vendor": "McAfee"
+      },
+      {
+        "dataset": "mcafee_webgateway_raw",
+        "pack_name": "McAfeeWebGateway",
+        "product": "webgateway",
+        "vendor": "mcafee"
+      },
+      {
+        "dataset": "microsoft_dns_raw",
+        "pack_name": "MicrosoftDNS",
+        "product": "windows",
+        "vendor": "microsoft"
+      },
+      {
+        "dataset": "msft_azure_devops_raw",
+        "pack_name": "AzureDevOps",
+        "product": "azure",
+        "vendor": "msft"
+      },
+      {
+        "dataset": "msft_azure_flowlogs_raw",
+        "pack_name": "AzureFlowLogs",
+        "product": "AzureFlowLogs",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_azure_raw",
+        "pack_name": "MicrosoftEntraID",
+        "product": "azure",
+        "vendor": "msft"
+      },
+      {
+        "dataset": "msft_ecm_raw",
+        "pack_name": "MicrosoftECM",
+        "product": "MicrosoftECM",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_nps_raw",
+        "pack_name": "MicrosoftNPS",
+        "product": "nps",
+        "vendor": "msft"
+      },
+      {
+        "dataset": "msft_radius_raw",
+        "pack_name": "MicrosoftNPS",
+        "product": "MicrosoftNPS",
+        "vendor": "Microsoft"
+      },
+      {
+        "dataset": "msft_wsus_raw",
+        "pack_name": "MicrosoftWSUS",
+        "product": "WSUS",
+        "vendor": "MSFT"
+      },
+      {
+        "dataset": "mysql_enterprise_raw",
+        "pack_name": "MySQLEnterprise",
+        "product": "enterprise",
+        "vendor": "mysql"
+      },
+      {
+        "dataset": "nasuni_file_services_raw",
+        "pack_name": "NasuniFileServices",
+        "product": "file_services",
+        "vendor": "nasuni"
+      },
+      {
+        "dataset": "nginx_nginx_raw",
+        "pack_name": "NGINXWebServer",
+        "product": "nginx",
+        "vendor": "nginx"
+      },
+      {
+        "dataset": "okta_oag_raw",
+        "pack_name": "OktaOAG",
+        "product": "oag",
+        "vendor": "okta"
+      },
+      {
+        "dataset": "portnox_portnox_raw",
+        "pack_name": "Portnox",
+        "product": "Portnox",
+        "vendor": "Portnox"
+      },
+      {
+        "dataset": "proofpoint_ps_raw",
+        "pack_name": "ProofpointServerProtection",
+        "product": "ps",
+        "vendor": "proofpoint"
+      },
+      {
+        "dataset": "radware_access_logs_raw",
+        "pack_name": "RadwareCloudServices",
+        "product": "access_logs",
+        "vendor": "radware"
+      },
+      {
+        "dataset": "radware_appwall_raw",
+        "pack_name": "RadwareCloudServices",
+        "product": "RadwareCloudServices",
+        "vendor": "Radware"
+      },
+      {
+        "dataset": "reblaze_waf_raw",
+        "pack_name": "ReblazeWAF",
+        "product": "waf",
+        "vendor": "reblaze"
+      },
+      {
+        "dataset": "rsa_securid_raw",
+        "pack_name": "RSASecureID",
+        "product": "RSASecureID",
+        "vendor": "RSA"
+      },
+      {
+        "dataset": "secureauth_idp_raw",
+        "pack_name": "SecureAuthIdentityPlatform",
+        "product": "idp",
+        "vendor": "secureauth"
+      },
+      {
+        "dataset": "semperis_dsp_raw",
+        "pack_name": "SemperisDSP",
+        "product": "dsp",
+        "vendor": "semperis"
+      },
+      {
+        "dataset": "siemens_sipass_raw",
+        "pack_name": "Siemens_SiPass",
+        "product": "sipass",
+        "vendor": "siemens"
+      },
+      {
+        "dataset": "sonicwall_ns_raw",
+        "pack_name": "SonicWallNSv",
+        "product": "ns",
+        "vendor": "sonicwall"
+      },
+      {
+        "dataset": "squid_squid_raw",
+        "pack_name": "Squid",
+        "product": "squid",
+        "vendor": "squid"
+      },
+      {
+        "dataset": "symantec_bluecoatproxysg_raw",
+        "pack_name": "SymantecBlueCoatProxySG",
+        "product": "bluecoatproxysg",
+        "vendor": "symantec"
+      },
+      {
+        "dataset": "symantec_dlp_raw",
+        "pack_name": "SymantecDLP",
+        "product": "SymantecDLP",
+        "vendor": "Symantec"
+      },
+      {
+        "dataset": "symantec_ep_raw",
+        "pack_name": "SymantecEndpointProtection",
+        "product": "ep",
+        "vendor": "symantec"
+      },
+      {
+        "dataset": "symantec_swg_raw",
+        "pack_name": "SymantecCloudSecureWebGateway",
+        "product": "swg",
+        "vendor": "symantec"
+      },
+      {
+        "dataset": "synopsys_coverity_raw",
+        "pack_name": "SynopsysCoverity",
+        "product": "coverity",
+        "vendor": "synopsys"
+      },
+      {
+        "dataset": "tableau_log_raw",
+        "pack_name": "Tableau",
+        "product": "log",
+        "vendor": "tableau"
+      },
+      {
+        "dataset": "tanium_integrity_monitor_raw",
+        "pack_name": "Tanium",
+        "product": "integrity_monitor",
+        "vendor": "tanium"
+      },
+      {
+        "dataset": "tanium_threat_response_raw",
+        "pack_name": "TaniumThreatResponse",
+        "product": "threat_response",
+        "vendor": "tanium"
+      },
+      {
+        "dataset": "thinkst_canary_raw",
+        "pack_name": "ThinkstCanary",
+        "product": "ThinkstCanary",
+        "vendor": "Thinkst"
+      },
+      {
+        "dataset": "tigera_calico_raw",
+        "pack_name": "TigeraCalico",
+        "product": "calico",
+        "vendor": "tigera"
+      },
+      {
+        "dataset": "trellix_epo_raw",
+        "pack_name": "Trellix_ePO",
+        "product": "epo",
+        "vendor": "trellix"
+      },
+      {
+        "dataset": "trendmicro_iwss_raw",
+        "pack_name": "TrendMicroInterScanWebSecurity",
+        "product": "iwss",
+        "vendor": "trendmicro"
+      },
+      {
+        "dataset": "unix_auditd_raw",
+        "pack_name": "Auditd",
+        "product": "auditd",
+        "vendor": "unix"
+      },
+      {
+        "dataset": "vmware_esxi_raw",
+        "pack_name": "VMwareESXi",
+        "product": "ESXi",
+        "vendor": "VMware"
+      },
+      {
+        "dataset": "vmware_nsx_raw",
+        "pack_name": "VMWareNSX",
+        "product": "nsx",
+        "vendor": "vmware"
+      },
+      {
+        "dataset": "vmware_vcenter_raw",
+        "pack_name": "VMwareVCenter",
+        "product": "vcenter",
+        "vendor": "vmware"
+      },
+      {
+        "dataset": "zscaler_cloudnss_raw",
+        "pack_name": "Zscaler",
+        "product": "cloudnss",
+        "vendor": "zscaler"
+      },
+      {
+        "dataset": "zscaler_nssfwlog_raw",
+        "pack_name": "Zscaler",
+        "product": "Zscaler",
+        "vendor": "Zscaler"
+      },
+      {
+        "dataset": "zscaler_nssweblog_raw",
+        "pack_name": "Zscaler",
+        "product": "Zscaler",
+        "vendor": "Zscaler"
+      }
+    ]
+  },
+  "counts": {
+    "direct_mapped_cef": 53,
+    "direct_mapped_other": 138,
+    "orphans_no_yaml": 4,
+    "raw_json_based": 0,
+    "raw_log_based": 100,
+    "total": 291
+  }
+}

@@ -1,0 +1,50 @@
+# Sample SOC-scenario benchmark corpus.
+#
+# Three cases the operator can run end-to-end against the chat route
+# to validate that the benchmark scaffolding and runner work
+# together. Cases are intentionally narrow (one expected tool per
+# case) so the Jaccard score is interpretable.
+#
+# Usage:
+#   - From chat: "run the phantom-soc-v1 benchmark"
+#     (agent invokes the bench_run MCP tool with manifest=phantom-soc-v1)
+#   - From shell on the agent container:
+#     docker exec phantom_agent python -c \
+#       "from usecase.benchmark_runner import run_manifest_sync; \
+#        s = run_manifest_sync('phantom-soc-v1'); \
+#        print(s.run_id, s.correctness_rate)"
+
+manifest:
+  id: phantom-soc-v1
+  version: "1.0"
+  description: |
+    Three SOC-scenario cases exercising the most common agent paths:
+    log generation (xlog), scenario reading, and a no-tool conversational
+    turn. Built to validate the bench runner; not yet a quality SLO.
+  cases:
+    - id: generate-syslog
+      prompt: |
+        Generate 5 SYSLOG-format logs to udp://localhost:514. Use the
+        xlog.create_data_worker tool. Don't ask for confirmation;
+        just run it.
+      expected_output_match: "xlog.create_data_worker"
+      expected_tool_calls:
+        - xlog.create_data_worker
+      max_wall_seconds: 60.0
+
+    - id: list-scenarios
+      prompt: |
+        List the available scenario manifests in scenarios/ready/.
+        Use the phantom_list_scenarios tool. One call, no follow-up.
+      expected_output_match: "scenario"
+      expected_tool_calls:
+        - phantom_list_scenarios
+      max_wall_seconds: 30.0
+
+    - id: conversational-no-tool
+      prompt: |
+        What's the difference between a SYSLOG log and a CEF log?
+        Answer briefly without calling any tools.
+      expected_output_match: "syslog"
+      expected_tool_calls: []
+      max_wall_seconds: 30.0

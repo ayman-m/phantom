@@ -1,0 +1,289 @@
+schema_version: 1
+id: AvayaAuraCommunicationManager
+pack_name: AvayaAuraCommunicationManager
+rule_name: AvayaAuraCommunicationManager
+dataset_name: avaya_communication_manager_raw
+vendor: Avaya
+product: AvayaAuraCommunicationManager
+description: The Avaya Aura Communication Manager is an extensible IP telephony platform
+  that delivers rich voice, video, mobility, messaging and engagement capabilities
+  on a resilient, distributed network that supports SIP/IP-based, digital and analog
+  communication devices.
+categories:
+- Analytics & SIEM
+version: 1.0.3
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8IS0tIENyZWF0ZWQgd2l0aCBOb3RlcGFkIC0tPg0KPCEtLSAoUEQpIEphbnVhcnkgMjUsIDIwMDYgLSBfQ3JvdGFsdXMgaG9ycmlkdXNfICAtLT4NCjxzdmcNCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyINCiAgIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIg0KICAgdmVyc2lvbj0iMS4wIg0KICAgd2lkdGg9IjM1MCINCiAgIGhlaWdodD0iMTAwIg0KICAgaWQ9IkF2YXlhIExvZ28iPg0KICAgPGRlZnM+DQogICAgPHBhdGgNCiAgICAgICBmaWxsPSIjQ0MwMDAwIg0KICAgICAgIGQ9Ik0gMCw3Mg0KICAgICAgICAgIEwgMzQsMA0KICAgICAgICAgIEggNDQNCiAgICAgICAgICBMIDc4LDcyDQogICAgICAgICAgSCA2NA0KICAgICAgICAgIEwgMzksMTggMjQsNTENCiAgICAgICAgICBIIDQ3DQogICAgICAgICAgTCA1Miw2MQ0KICAgICAgICAgIEggMTkNCiAgICAgICAgICBMIDE0LDcyDQogICAgICAgICAgWiINCiAgICAgICBpZD0iTGV0dGVyQSIgLz4NCiAgICA8cGF0aA0KICAgICAgIGZpbGw9IiNDQzAwMDAiDQogICAgICAgZD0iTSAwLDANCiAgICAgICAgICBMIDM0LDcyDQogICAgICAgICAgSCA0NA0KICAgICAgICAgIEwgNzgsMA0KICAgICAgICAgIEggNjQNCiAgICAgICAgICBMIDM5LDU1DQogICAgICAgICAgTCAxNCwwDQogICAgICAgICAgWiINCiAgICAgICBpZD0iTGV0dGVyViIgLz4NCiAgICA8cGF0aA0KICAgICAgIGZpbGw9IiNDQzAwMDAiDQogICAgICAgZD0iTSAwLDANCiAgICAgICAgICBMIDMwLDcxDQogICAgICAgICAgTCAxNyw5OA0KICAgICAgICAgIEggMzENCiAgICAgICAgICBMIDc4LDANCiAgICAgICAgICBIIDYzDQogICAgICAgICAgTCAzNyw1Ng0KICAgICAgICAgIEwgMTUsMA0KICAgICAgICAgIFoiDQogICAgICAgaWQ9IkxldHRlclkiIC8+DQogIDwvZGVmcz4NCiAgPHVzZSB4PSI0LjAiICAgeT0iMS4wIiAgeGxpbms6aHJlZj0iI0xldHRlckEiIC8+DQogIDx1c2UgeD0iNjkuMCIgIHk9IjEuMCIgIHhsaW5rOmhyZWY9IiNMZXR0ZXJWIiAvPg0KICA8dXNlIHg9IjEzMy4wIiB5PSIxLjAiICB4bGluazpocmVmPSIjTGV0dGVyQSIgLz4NCiAgPHVzZSB4PSIyMDAuMCIgeT0iMS4wIiAgeGxpbms6aHJlZj0iI0xldHRlclkiIC8+DQogIDx1c2UgeD0iMjY0LjAiIHk9IjEuMCIgIHhsaW5rOmhyZWY9IiNMZXR0ZXJBIiAvPg0KPC9zdmc+DQo=
+  source: wikipedia:File:Avaya_Logo.svg
+  license: Wikimedia Commons / vendor trademark
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'avaya: avayaauracommunicationmanager=AvayaAuraCommunicationManager action=allow user=jdoe'
+- name: accessed_field_name
+  type: string
+  description: Destination resource ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: accessed_field_value
+  type: string
+  description: Destination resource value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_value
+- name: accessed_web_page
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_page
+- name: action_r_status
+  type: string
+  description: Action r status. Free-form text; may contain whitespace and punctuation.
+  example: success
+- name: action_r_status_reason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: attempt_num
+  type: integer
+  description: Source sent packets. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: attempt_outcome
+  type: string_short
+  description: Attempt outcome. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: event_outcome
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: event_type
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: ip_evt_reason
+  type: string
+  description: Ip evt reason. Free-form text; may contain whitespace and punctuation.
+  example: normal_operation
+- name: module_name
+  type: string
+  description: Module name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: operation
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: create
+- name: pid
+  type: integer
+  description: Source process PID. Free-form text; may contain whitespace and punctuation.
+  example: '4242'
+- name: ppid
+  type: string
+  description: Source process parent ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_ppid
+- name: process_id
+  type: string_short
+  description: Process id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: process_name
+  type: string
+  description: Source process name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: protocol
+  type: string
+  description: Network IP protocol. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: pwd
+  type: string
+  description: Source process executable directory. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_pwd
+- name: session_id
+  type: string_short
+  description: Network session ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: sid
+  type: string
+  description: Sid. Free-form text; may contain whitespace and punctuation.
+  example: sample_sid
+- name: src_board
+  type: string
+  description: Source host device category. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_board
+- name: src_ip
+  type: ipv4
+  description: Src ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: src_net_reg
+  type: string
+  description: Source host device ID. Free-form text; may contain whitespace and punctuation.
+  example: sample_reg
+- name: src_port
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: syslog_hostname
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: syslog_priority
+  type: string
+  description: Syslog priority. Free-form text; may contain whitespace and punctuation.
+  example: INFO
+- name: syslog_severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: target_cmd
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: target_ip
+  type: ipv4
+  description: Target ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_ip_addresses
+  type: ipv4
+  description: Target ip addresses. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: target_ipv4_addresses
+  type: ipv4
+  description: Destination host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_ipv6_addresses
+  type: ipv6
+  description: Destination host IPv6 addresses. Colon-separated hexadecimal IPv6 literal
+    (RFC 4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: target_net_reg
+  type: string
+  description: Destination host device ID. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_reg
+- name: target_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: target_username
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: tty
+  type: string
+  description: Source interface. Free-form text; may contain whitespace and punctuation.
+  example: sample_tty
+- name: user_profile
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: sample_profile
+- name: user_uid
+  type: string
+  description: Source user identifier. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_uid
+- name: user_uname
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+use_cases:
+- Voice
+how_to_use: |
+  ## Avaya AvayaAuraCommunicationManager → Cortex XSIAM (dataset `avaya_communication_manager_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire, and a Broker syslog collector row must
+  supply them. The local parsing-rule snapshot has no INGEST block for this
+  pack, so the literal is UNCONFIRMED -- do not assume the display
+  `vendor`/`product` fields are it (for the 75 sources where the literal IS
+  known, all 75 differ from the display values). Confirm empirically that
+  events land in `avaya_communication_manager_raw` and that `unknown_unknown_raw` did not grow.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `avaya_communication_manager_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `avaya_communication_manager`. The marketplace pack's display name `Avaya` / `AvayaAuraCommunicationManager` normalizes to `avaya_avayaauracommunicationmanager_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `avaya_communication_manager` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log !~= ":\s+>#2,"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~36 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.event.description`, `xdm.event.log_level`, `xdm.event.operation_sub_type`, `xdm.event.outcome`, `xdm.event.outcome_reason`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `Avaya`, Product = `AvayaAuraCommunicationManager`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = avaya_communication_manager_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

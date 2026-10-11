@@ -1,0 +1,533 @@
+schema_version: 1
+id: CyberArkIdentity
+pack_name: CyberArkIdentity
+rule_name: CyberArkIdentityEventCollector
+dataset_name: cyberark_identity_raw
+vendor: CyberArk
+product: CyberArkIdentity
+description: This integration collects events from the Idaptive Next-Gen Access (INGA)
+  using REST APIs.
+categories:
+- Analytics & SIEM
+version: 1.1.11
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMxRjFGMUYiPkN5YmVyQXJrPC90ZXh0Pjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: AffectedTenant
+  type: string
+  description: Tenant affected by the operation. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_affectedtenant
+- name: Alias
+  type: string
+  description: Vendor-emitted field 'Alias'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_alias
+- name: AppId
+  type: string
+  description: Vendor-emitted field 'AppId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_appid
+- name: AppName
+  type: string
+  description: Vendor-emitted field 'AppName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Salesforce
+- name: ApplicationID
+  type: string
+  description: Vendor-emitted field 'ApplicationID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_applicationid
+- name: ApplicationName
+  type: string
+  description: Vendor-emitted field 'ApplicationName'. Free-form text; may contain
+    whitespace and punctuation.
+  example: Salesforce
+- name: ApplicationType
+  type: string
+  description: Vendor-emitted field 'ApplicationType'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_applicationtype
+- name: AuthMethod
+  type: string
+  description: Vendor-emitted field 'AuthMethod'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_authmethod
+- name: Changer
+  type: string
+  description: Vendor-emitted field 'Changer'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_changer
+- name: ChangerUuid
+  type: string
+  description: Vendor-emitted field 'ChangerUuid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_changeruuid
+- name: ClientAddress
+  type: ipv4
+  description: Vendor-emitted field 'ClientAddress'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: Cname
+  type: string
+  description: Vendor-emitted field 'Cname'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cname
+- name: ConnectorUuid
+  type: string
+  description: Vendor-emitted field 'ConnectorUuid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_connectoruuid
+- name: DSName
+  type: string
+  description: Directory Service name (AD/LDAP). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dsname
+- name: DSType
+  type: string
+  description: Directory Service type (AD/LDAP/Generic). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_dstype
+- name: DSUuid
+  type: string
+  description: Vendor-emitted field 'DSUuid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dsuuid
+- name: DeleteReason
+  type: string
+  description: Vendor-emitted field 'DeleteReason'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_deletereason
+- name: Description
+  type: string_long
+  description: Free-form human-readable description from CyberArk. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by CyberArk.
+- name: DeviceID
+  type: string
+  description: Vendor-emitted field 'DeviceID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: dev-f9fdaac2
+- name: DeviceName
+  type: string
+  description: Vendor-emitted field 'DeviceName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_devicename
+- name: DirectoryServicePartnerName
+  type: string
+  description: Directory Service partner name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_directoryservice
+- name: DirectoryServiceUuid
+  type: string
+  description: Vendor-emitted field 'DirectoryServiceUuid'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_directoryservice
+- name: EmailAddress
+  type: ipv4
+  description: Vendor-emitted field 'EmailAddress'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: EnrollProfileUser
+  type: string
+  description: User being enrolled (device enrollment). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_enrollprofileuse
+- name: EntityName
+  type: string
+  description: Vendor-emitted field 'EntityName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_entityname
+- name: EntityType
+  type: string
+  description: Entity type (User/Device/Role/Application/...). Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_entitytype
+- name: EntityUuid
+  type: string
+  description: Vendor-emitted field 'EntityUuid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_entityuuid
+- name: EventType
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: Exception
+  type: string
+  description: Vendor-emitted field 'Exception'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_exception
+- name: FailedMessage
+  type: string
+  description: Vendor-emitted field 'FailedMessage'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_failedmessage
+- name: FailureReason
+  type: string
+  description: Vendor-emitted field 'FailureReason'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_failurereason
+- name: From
+  type: string
+  description: Vendor-emitted field 'From'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_from
+- name: FromIPAddress
+  type: ipv4
+  description: Vendor-emitted field 'FromIPAddress'. Dotted-quad IPv4 literal (e.g.,
+    192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: HostAddress
+  type: ipv4
+  description: Vendor-emitted field 'HostAddress'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: ID
+  type: string_short
+  description: Opaque identifier emitted by CyberArk. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: cyb-f893ab5b
+- name: ImpersonateTargetName
+  type: string
+  description: User being impersonated (target). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_impersonatetarge
+- name: ImpersonateTargetUuid
+  type: string
+  description: Vendor-emitted field 'ImpersonateTargetUuid'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_impersonatetarge
+- name: ImpersonatorUuid
+  type: string
+  description: Vendor-emitted field 'ImpersonatorUuid'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_impersonatoruuid
+- name: JobUniqueId
+  type: string
+  description: Vendor-emitted field 'JobUniqueId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_jobuniqueid
+- name: Key
+  type: string
+  description: Vendor-emitted field 'Key'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_key
+- name: Level
+  type: string_short
+  description: Severity level (string label, e.g., info/warn/error). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: info
+- name: LicenseType
+  type: string
+  description: Vendor-emitted field 'LicenseType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_licensetype
+- name: LocalAccountUuid
+  type: string
+  description: Vendor-emitted field 'LocalAccountUuid'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_localaccountuuid
+- name: MachineName
+  type: string
+  description: Vendor-emitted field 'MachineName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_machinename
+- name: MfaReason
+  type: string
+  description: Vendor-emitted field 'MfaReason'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mfareason
+- name: MfaResult
+  type: string
+  description: Vendor-emitted field 'MfaResult'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mfaresult
+- name: MobileAppType
+  type: string
+  description: Vendor-emitted field 'MobileAppType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mobileapptype
+- name: NewEntity
+  type: string
+  description: New entity state (post-change). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_newentity
+- name: NewLicenseType
+  type: string
+  description: New license type (after change). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_newlicensetype
+- name: NewState
+  type: string
+  description: Vendor-emitted field 'NewState'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_newstate
+- name: NormalizedUser
+  type: string
+  description: Vendor-emitted field 'NormalizedUser'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_normalizeduser
+- name: OU
+  type: string
+  description: Vendor-emitted field 'OU'. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_ou
+- name: ObjectName
+  type: string
+  description: Vendor-emitted field 'ObjectName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_objectname
+- name: ObjectType
+  type: string
+  description: Vendor-emitted field 'ObjectType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_objecttype
+- name: OldEntity
+  type: string
+  description: Vendor-emitted field 'OldEntity'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_oldentity
+- name: OldLicenseType
+  type: string
+  description: Destination resource before type. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_oldlicensetype
+- name: OldState
+  type: string
+  description: Vendor-emitted field 'OldState'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_oldstate
+- name: PreviousUserState
+  type: string
+  description: Destination resource before value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_previoususerstat
+- name: ProfileName
+  type: string
+  description: File or process name reported by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: document.pdf
+- name: ProxyId
+  type: string
+  description: Proxy server id (Identity Connector). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_proxyid
+- name: ReplaceDomain
+  type: string
+  description: Vendor-emitted field 'ReplaceDomain'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_replacedomain
+- name: RequestDeviceOS
+  type: string
+  description: Operating system of the requesting device. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_requestdeviceos
+- name: RequestHostName
+  type: string
+  description: Hostname the request came from. Free-form text; may contain whitespace
+    and punctuation.
+  example: host01.example.com
+- name: RequestIsMobileDevice
+  type: string
+  description: Whether the request was from a mobile device. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_requestismobiled
+- name: Result
+  type: string_short
+  description: Result string emitted by CyberArk. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: Role
+  type: string
+  description: Vendor-emitted field 'Role'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Admin
+- name: RoleId
+  type: string
+  description: Vendor-emitted field 'RoleId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_roleid
+- name: Session
+  type: string
+  description: Vendor-emitted field 'Session'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_session
+- name: SessionId
+  type: string_short
+  description: Unique identifier — assigned by CyberArk per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: sess-78b85457-bff
+- name: SetPath
+  type: string
+  description: Vendor-emitted field 'SetPath'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_setpath
+- name: SyncAction
+  type: string
+  description: Sync action (create/update/delete). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_syncaction
+- name: SyncActionReason
+  type: string
+  description: Vendor-emitted field 'SyncActionReason'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_syncactionreason
+- name: SyncResult
+  type: string
+  description: Vendor-emitted field 'SyncResult'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_syncresult
+- name: Target
+  type: string
+  description: Vendor-emitted field 'Target'. Free-form text; may contain whitespace
+    and punctuation.
+  example: target_object
+- name: TargetUser
+  type: string
+  description: Target user the action was performed on. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_targetuser
+- name: TargetUserID
+  type: string
+  description: Destination/target user account name. Free-form text; may contain whitespace
+    and punctuation.
+  example: usr-a8c25346
+- name: Tenant
+  type: string
+  description: Vendor-emitted field 'Tenant'. Free-form text; may contain whitespace
+    and punctuation.
+  example: tenant-e980e1e2
+- name: Thumbprint
+  type: string
+  description: Vendor-emitted field 'Thumbprint'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_thumbprint
+- name: To
+  type: string
+  description: Destination/target of the operation. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_to
+- name: Type
+  type: string_short
+  description: Type/category classifier emitted by CyberArk. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: UserGuid
+  type: string
+  description: Vendor-emitted field 'UserGuid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_userguid
+- name: UserName
+  type: string
+  description: User name performing the action. Free-form text; may contain whitespace
+    and punctuation.
+  example: jdoe
+- name: UserState
+  type: string
+  description: User state (active/disabled/locked/...). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_userstate
+- name: Uuid
+  type: string_short
+  description: Unique identifier — assigned by CyberArk per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: 2fee9468-2e79-5a2a-8963-0cb209574ee7
+- name: Value
+  type: string
+  description: Vendor-emitted field 'Value'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_value
+- name: WhenLogged
+  type: string
+  description: Vendor-emitted field 'WhenLogged'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_whenlogged
+- name: WhenOccurred
+  type: string
+  description: Vendor-emitted field 'WhenOccurred'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_whenoccurred
+- name: _TableName
+  type: string
+  description: Audit table name (Identity-internal). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_tablename
+- name: _product
+  type: string
+  description: Vendor-emitted field ' product'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CyberArkIdentity
+- name: _vendor
+  type: string
+  description: Vendor-emitted field ' vendor'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CyberArk
+use_cases:
+- PAM
+how_to_use: |
+  ## cyberark identity → Cortex XSIAM (dataset `cyberark_identity_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `cyberark_identity_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `cyberark`
+    - **product**: `identity`
+
+    These normalize → `cyberark_identity_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `EventType in ("Cloud.Core.OAuthToken.Create", "Cloud.Core.Logout", "Cloud.Core.MfaSummary", "Cloud.Core.StartImpersonate","Cloud.Core.Login", "Cloud.Core.LoginF` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~20 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.auth_method`, `xdm.event.description`, `xdm.event.outcome`, `xdm.event.outcome_reason`, `xdm.event.type`, `xdm.session_context_id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = cyberark_identity_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

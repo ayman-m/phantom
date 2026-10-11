@@ -1,0 +1,214 @@
+schema_version: 1
+id: AlibabaActionTrail
+pack_name: AlibabaActionTrail
+rule_name: AlibabaModelingRules
+dataset_name: alibaba_action_trail_raw
+vendor: Alibaba
+product: AlibabaActionTrail
+description: Alibaba Cloud ActionTrail records management-plane API calls across an Alibaba Cloud account
+  — the rough equivalent of AWS CloudTrail. Each row captures the API name, the caller's RAM identity,
+  the source IP, the target resource id, the request and response shape, and the outcome. Simulate this
+  to validate detections for unauthorized resource creation, privilege escalation in RAM policies, or
+  large-scale data export from object storage.
+how_to_use: |
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `alibaba`
+  - **product**: `action_trail`
+
+  Broker derives → `alibaba_action_trail_raw`.
+
+  Use the lowercased, underscore-separated form (`alibaba` / `action_trail`) rather than the marketing display name (`Alibaba ActionTrail`) — the broker normalizes non-alphanumerics to `_`, so display-name input would derive `alibaba_actiontrail_alibaba_actiontrail_raw` which doesn't match the operator's PR.
+
+  **MR pattern**: Flat-field. MR reads top-level CEF extensions directly (`event_eventtype`, `event_principalid`, `event_apiVersion`, `event_eventsource`, etc.).
+
+  **Composite (nested-JSON) fields**: None. The MR reads flat, underscore-flattened columns such as `event_useridentity_principalid` and `event_useridentity_accesskeyid`.
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: The parsing rule's only filter is `__time__ ~= "\d+"`; send `__time__` as an epoch integer. `eventTime` and `event_eventTime` are not read by the parsing rule or either modeling rule.
+
+  **Saturation strategy**: Single event fits comfortably under MTU. One event populates every field its branch assigns (12 reachable on branch A with the current schema).
+
+  **Single-event XDM ceiling**: branch A of the v1.3 rule has 13 assignments; 12 are reachable with the current schema.
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = alibaba_action_trail_raw
+  | filter xdm.event.id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  ### Make it map to XDM
+
+  The active `alibaba_action_trail_raw` modeling rule (v1.3) only runs when `event_eventtype` is one of `"ApiCall"`, `"ConsoleOperation"`, `"AliyunServiceEvent"`, `"PasswordReset"`. When simulating, pass `observables_dict={"event_eventtype": "ApiCall"}` to `phantom_create_data_worker` so the gate matches. The rule then populates core XDM: `xdm.event.type` <- `event_eventtype`, `xdm.event.id` <- `event_eventid`, `xdm.event.operation` <- `event_eventname`, `xdm.source.ipv4` <- `event_sourceipaddress`, `xdm.source.user.username` <- `event_useridentity_username`, `xdm.source.user.identifier` <- `event_useridentity_principalid`, `xdm.target.cloud.region` <- `event_acsregion`, and `xdm.target.resource.name`/`xdm.target.resource.type` <- `event_resourcename`/`event_resourcetype`.
+
+  **Simulation recipe — reverse-engineered from this pack's parsing + modeling rules.**
+
+  Routing: vendor `alibaba` / product `action_trail`.
+  (Taken VERBATIM from the pack's parsing rule, not derived. AlibabaActionTrail__AlibabaParsingRules.xif line 1 is [INGEST:vendor="alibaba", product="action_trail", target_dataset="alibaba_action_trail_raw", no_hit=keep]. These literals also happen to agree with the broker derivation (lower(alibaba)_lower(action_trail)_raw = alibaba_action_trail_raw), so both methods concur. grep across scripts/maintainer/parsing_rules/ shows this is the ONLY INGEST block in the corpus claiming vendor="alibaba", so the pair is unique and no discriminator is required. Do NOT use the display labels Alibaba/AlibabaActionTrail from the YAML's vendor/product keys as the wire header - those are marketing labels and would derive alibaba_alibabaactiontrail_raw.)
+
+  Gate: `event_eventtype` must be one of `ApiCall`, `ConsoleOperation`, `AliyunServiceEvent`, `PasswordReset`.
+  no_hit: The MODELING-rule gate is a plain leading `filter event_eventtype in(...)`: a non-matching value does not drop the row, it just maps zero XDM (the row still sits in alibaba_action_trail_raw). The PARSING rule is separately gated on `filter __time__ ~= "\d+"` with no_hit=keep, so a non-numeric __time__ also does not drop the event - it only forfeits the _time rewrite. Nothing on this source is drop-on-miss.
+
+  Pass this verbatim as `observables_dict` (keys are schema field names; values are LISTS):
+
+  ```json
+  {
+    "event_eventtype": [
+      "ApiCall"
+    ],
+    "__time__": [
+      "1788350400"
+    ],
+    "event_useridentity_type": [
+      "ram-user"
+    ],
+    "event_acsregion": [
+      "cn-hangzhou"
+    ],
+    "event_eventid": [
+      "evt-phantom-520d02e3"
+    ],
+    "event_eventname": [
+      "CreateInstance"
+    ],
+    "event_resourcetype": [
+      "ACS::ECS::Instance"
+    ],
+    "event_resourcename": [
+      "i-bp1phantom0a2b3c4d"
+    ],
+    "event_sourceipaddress": [
+      "203.0.113.42"
+    ],
+    "event_useridentity_principalid": [
+      "281458543950271833"
+    ],
+    "event_useridentity_username": [
+      "svc-deploy"
+    ]
+  }
+  ```
+
+  Populates: `xdm.event.type`, `xdm.event.id`, `xdm.event.operation`, `xdm.target.cloud.region`, `xdm.target.resource.name`, `xdm.target.resource.type`, `xdm.source.ipv4`, `xdm.source.user.user_type`, `xdm.source.user.identifier`, `xdm.source.user.username`, `xdm.observer.vendor`, `xdm.observer.product`
+
+  - NO composite / nested-JSON fields exist on this source. Every assignment in both modeling-rule versions reads a bare top-level column (event_acsregion, event_eventid, event_useridentity_principalid, ...). The rule reads flat, underscore-flattened columns named event_useridentity_principalid and event_useridentity_accesskeyid; sending a JSON object named userIdentity maps nothing. Ship every field as an ordinary flat CEF extension.
+  - TWO independent statements live under the single `[MODEL: dataset=alibaba_action_trail_raw]` header in v1.3 (the second `filter ... | alter ...;` has no header of its own). They are evaluated independently against the dataset and their gates are mutually exclusive, so exactly one fires per event. Branch A (ApiCall / ConsoleOperation / AliyunServiceEvent / PasswordReset) is the richer one - it is the only one that sets xdm.event.type, xdm.target.cloud.region, and xdm.target.resource.{name,type}. Branch B (ConsoleSignin / ConsoleSignout) trades those for xdm.source.location.region and xdm.session_context_id. The recipe targets branch A.
+  - Gate matching is case- and spelling-exact. `ApiCall` is the literal - `apicall`, `APICall`, `ApiCall ` (trailing space) all miss. Same for the branch-B literals `ConsoleSignin` / `ConsoleSignout` (note: `Signin`, not `SignIn`).
+  - xdm.observer.vendor and xdm.observer.product are assigned from `_vendor` and `_product`, which are ingestion-stamped META fields. They are deliberately absent from the recipe - the broker derives them from the CEF header, so they populate as `alibaba` / `action_trail` for free once routing is right. Never attempt to seed them from the event body.
+  - __time__ is the VENDOR's own column (Alibaba SLS emits `__time__` on every record), not a Cortex meta field, and the pack's parsing rule reads it as an ordinary column - so it is legitimately seedable as a CEF extension and belongs in the recipe. Do not confuse it with `_time`, which is what the rule WRITES. If the broker ever refuses a double-underscore extension key, no_hit=keep means the event still lands and _time simply falls back to ingest time.
+  - The recipe pins __time__ to a fixed epoch, so every generated event carries the SAME _time. That is correct for a point-in-time validation run but wrong for a sustained campaign - refresh the value each run, or omit it and accept ingest-time _time (which is safe here precisely because no_hit=keep). Never leave it to the generator's integer synthesis.
+  - `eventTime` and `event_eventTime` do not appear anywhere in the parsing rule, either modeling rule, or fields[]. Sending RFC3339 timestamps under those names produces two dead columns and leaves _time unset; the parsing rule's only filter is `__time__ ~= "\d+"`.
+  - Branch A of v1.3 has 13 assignments; with the current schema 12 are reachable (the 13th, xdm.event.description, is blocked by the missing event_errormessage field). Declaring event_errormessage lifts it to 13.
+  - No RULE chaining anywhere - grep for `call` across both .xif files returns nothing, so the MODEL blocks are self-contained and there is no secondary rule to satisfy.
+  - Both modeling-rule versions are present in the corpus. The base file uses the legacy `XDM.Audit.*` / `XDM.Auth.*` capitalised form; _1_3 uses the modern lowercase `xdm.*` form. The schema's how_to_use names v1.3 as active, and the recipe's field requirements are a superset of the base rule's anyway (identical gate, identical source columns), so one recipe satisfies both. The only divergence that matters: the base rule reads __time__ directly for XDM.Audit.event_timestamp, giving that field a second reason to be well-formed.
+  - Verify with: `datamodel dataset = alibaba_action_trail_raw | filter xdm.event.id = "evt-phantom-520d02e3" | fields xdm.* | limit 1`. Expect 12 populated paths. If the row is present but every xdm.* is null, the gate missed - re-check the exact casing of event_eventtype. If no row exists at all, routing missed - confirm the CEF header is `alibaba` / `action_trail` and check that unknown_unknown_raw did not grow.
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+
+categories:
+- Analytics & SIEM
+version: 1.1.15
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNCRjRGMDAiPkFsaWJhYmE8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: __time__
+  type: integer
+  description: Vendor-emitted field '  time  '. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: event_acsregion
+  type: string
+  description: Vendor-emitted field 'Event acsregion'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: event_eventid
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: evt-520d02e3
+- name: event_eventname
+  type: string
+  description: Vendor-emitted field 'Event eventname'. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_eventtype
+  is_gate: true
+  type: string
+  description: Modeling-rule GATE — must equal one of "ApiCall", "ConsoleOperation", "AliyunServiceEvent",
+    "PasswordReset" for XDM to map. ActionTrail event type (ConsoleOperation/ApiCall/...). Free-form text;
+    may contain whitespace and punctuation.
+  example: ApiCall
+- name: event_resourcename
+  type: string
+  description: Vendor-emitted field 'Event resourcename'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: event_resourcetype
+  type: string
+  description: Vendor-emitted field 'Event resourcetype'. Free-form text; may contain whitespace and punctuation.
+  example: AuditEvent
+- name: event_sourceipaddress
+  type: ipv4
+  description: Vendor-emitted field 'Event sourceipaddress'. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: event_useridentity_principalid
+  type: string
+  description: Vendor-emitted field 'Event useridentity principalid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: AIDAJDPLRKLG7UEXAMPLE
+- name: event_useridentity_type
+  type: string
+  description: User identity type (root/RAM/service). Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: event_useridentity_username
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jsmith
+use_cases:
+- Cloud
+validated: true

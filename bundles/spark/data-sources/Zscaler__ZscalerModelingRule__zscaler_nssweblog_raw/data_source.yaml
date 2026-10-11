@@ -1,0 +1,339 @@
+schema_version: 1
+id: Zscaler
+pack_name: Zscaler
+rule_name: ZscalerModelingRule
+dataset_name: zscaler_nssweblog_raw
+vendor: Zscaler
+product: Zscaler
+description: Zscaler is a cloud security solution built for performance and flexible
+  scalability.
+categories:
+- Network Security
+version: 1.5.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDdBQUMiPlpzY2FsZXI8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: act
+  type: enum
+  enum_values:
+  - Allowed
+  - Blocked
+  description: Action Zscaler took (NSS `action`) -> xdm.observer.action. Keep it
+    consistent with `reason` and `outcome`.
+  example: Allowed
+- name: reason
+  type: string
+  description: Why Zscaler allowed or blocked the transaction (NSS `reason`) ->
+    xdm.event.outcome_reason. `Allowed` for permitted traffic; the policy reason
+    (e.g. "Not allowed to browse this category") for blocks.
+  example: Allowed
+- name: app
+  type: enum
+  enum_values:
+  - HTTP
+  - HTTPS
+  - SSL
+  description: Transport protocol of the transaction (NSS `protocol`) ->
+    xdm.network.protocol_layers. Not the application name — that is
+    `destinationServiceName`.
+  example: HTTPS
+- name: cat
+  type: string
+  description: URL category (NSS `urlcat`) -> xdm.network.application_protocol_category.
+    Zscaler category names such as "Web-based Email", "Professional Services",
+    "Corporate Marketing".
+  example: Web-based Email
+- name: cs2
+  type: string
+  description: URL category again, as the labelled custom string (NSS `urlcat`)
+    -> xdm.network.http.url_category. Send the same value as `cat`.
+  example: Web-based Email
+- name: ZscalerNSSWeblogURLClass
+  type: enum
+  enum_values:
+  - Business Use
+  - General Surfing
+  - Bandwidth Loss
+  - Productivity Loss
+  - Legal Liability
+  - Privacy Risk
+  - Security Risk
+  description: URL class (NSS `urlclass`) -> xdm.event.type.
+  example: Business Use
+- name: dhost
+  type: host
+  description: Destination hostname (NSS `ehost`) -> xdm.network.http.domain. Bare
+    hostname, no scheme.
+  example: outlook.office.com
+- name: dst
+  type: ipv4
+  description: Destination server IP (NSS `sip`) -> xdm.target.ipv4 and
+    xdm.target.host.ipv4_addresses. Bare dotted quad.
+  example: 52.96.88.10
+- name: src
+  type: ipv4
+  description: Client IP as Zscaler saw it (NSS `cip`) — the location's egress IP
+    for tunnelled users -> xdm.source.host.ipv4_addresses. Bare dotted quad.
+  example: 203.0.113.10
+- name: sourceTranslatedAddress
+  type: ipv4
+  description: The endpoint's internal IP (NSS `cintip`) -> xdm.source.ipv4. Use
+    the same internal IP the host has in firewall and Windows logs so the sources
+    stitch to one endpoint.
+  example: 10.20.14.16
+- name: devicehostname
+  type: host
+  description: Endpoint hostname (NSS `devicehostname`) -> xdm.source.host.hostname.
+  example: WS-1006
+- name: suser
+  type: user
+  description: Authenticated user (NSS `login`) -> xdm.source.user.username.
+  example: noura.aldosari
+- name: spriv
+  type: string
+  description: Zscaler location name (NSS `location`) -> xdm.source.zone.
+  example: Riyadh-HQ
+- name: request
+  type: url
+  description: Full requested URL (NSS `eurl`) -> xdm.network.http.url.
+  example: https://outlook.office.com/mail/inbox
+- name: requestMethod
+  type: enum
+  enum_values:
+  - GET
+  - POST
+  - PUT
+  - HEAD
+  - CONNECT
+  description: HTTP method (NSS `reqmethod`) -> xdm.network.http.method.
+  example: GET
+- name: outcome
+  type: enum
+  enum_values:
+  - '200'
+  - '204'
+  - '301'
+  - '302'
+  - '304'
+  - '403'
+  - '404'
+  description: HTTP response code (NSS `respcode`) -> xdm.network.http.response_code.
+    Bare digits.
+  example: '200'
+- name: contenttype
+  type: string_short
+  description: Response MIME type (NSS `contenttype`) -> xdm.network.http.content_type.
+  example: text/html
+- name: requestClientApplication
+  type: string
+  description: Browser user agent (NSS `ua`) -> xdm.source.user_agent.
+  example: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
+    like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/128.0.0.0
+- name: destinationServiceName
+  type: string
+  description: Cloud application Zscaler identified (NSS `appname`) ->
+    xdm.target.interface.
+  example: Outlook
+- name: externalId
+  type: integer
+  description: Zscaler record id (NSS `recordid`) -> xdm.session_context_id.
+  example: '7202938472'
+- name: fileType
+  type: string_short
+  description: Downloaded file type (NSS `filetype`) ->
+    xdm.target.process.executable.file_type. `None` when no file was transferred.
+  example: None
+- name: in
+  type: integer_byte_count
+  description: Response bytes, server to client (NSS `respsize`) -> xdm.target.sent_bytes.
+  example: '18432'
+- name: out
+  type: integer_byte_count
+  description: Request bytes, client to server (NSS `reqsize`) -> xdm.source.sent_bytes.
+  example: '1024'
+- name: cs4
+  type: string
+  description: Threat category (NSS `malwarecat`) -> xdm.alert.category. `None` on
+    clean traffic, as the real feed emits; a real Zscaler threat class on a malware
+    block.
+  example: None
+- name: cs5
+  type: string
+  description: Threat name (NSS `threatname`) -> xdm.alert.name. `None` on clean
+    traffic.
+  example: None
+- name: cn1
+  type: integer
+  description: Page risk score, 0-100 (NSS `riskscore`) -> xdm.alert.severity.
+  example: '0'
+- name: cs3
+  type: string
+  description: Malware class (NSS `malwareclass`). Not read by the modeling rule.
+  example: None
+- name: cs6
+  type: string
+  description: DLP engine (NSS `dlpeng`). Not read by the modeling rule.
+  example: None
+- name: destinationTranslatedAddress
+  type: ipv4
+  description: Translated destination IP. Not read by the modeling rule.
+  example: 52.96.88.10
+- name: proto
+  type: string_short
+  description: Transport protocol. Not read — the rule pins xdm.network.ip_protocol
+    to TCP.
+  example: TCP
+- name: spt
+  type: integer_port
+  description: Client source port. Not read — the rule pins xdm.source.port to 0.
+  example: '51514'
+- name: dpt
+  type: integer_port
+  description: Server port. Not read — the rule pins xdm.target.port to 0.
+  example: '443'
+use_cases:
+- Proxy
+- CASB
+validated: true
+how_to_use: |
+  ## Zscaler NSS Web Log → Cortex XSIAM (dataset `zscaler_nssweblog_raw`)
+
+  Required CEF header for XSIAM:
+  - vendor: `Zscaler`
+  - product: `NSSWebLog`
+
+  The display labels (`Zscaler`/`Zscaler`) derive `zscaler_zscaler_raw`, a different
+  dataset. No parsing rule claims `Zscaler`/`NSSWebLog`, so the broker derives
+  `zscaler_nssweblog_raw` from the header. The standard CEF destination lands it there
+  directly — no dedicated broker applet. (Zscaler's own feed template spells the
+  product `NSSWeblog`; the broker lowercases either way.)
+
+  **No gate.** The `zscaler_nssweblog_raw` modeling block is unconditional. The
+  `sourcetype = "zscalernss-*"` filters in the same rule file belong to the
+  `zscaler_cloudnss_raw` block. `sourcetype` does nothing here, and it isn't a key the
+  broker recognizes, so it only corrupts the value in front of it (below).
+
+  ### Send only the keys in `fields[]` — anything else corrupts its neighbour
+
+  The broker splits CEF extensions only at keys it recognizes for this feed: the CEF
+  dictionary plus Zscaler's NSS feed keys (`devicehostname`, `spriv`, `contenttype`,
+  `ZscalerNSSWeblogURLClass`). An unrecognized key is not a boundary, so its
+  `key=value` text is glued onto the value of the key before it. For example:
+
+      act   = "allowed action=Allowed"
+      proto = "tcp appname=GitHub url=https://github.com/ urlcategory=Technology ... statuscode=200"
+
+  The event still lands and still counts as "modeled", but those columns are garbage
+  and everything glued into them is lost. The same happens to `cefName`,
+  `cefSeverity` and `cefVersion` sent as extensions (they come from the CEF header;
+  `act` became `"Allowed cefName=Web Transaction"`).
+
+  Zscaler's NSS documentation names fields differently from the CEF keys its feed
+  emits. Translate before sending:
+
+  | NSS field | CEF key to send | Maps to |
+  |---|---|---|
+  | `action` | `act` | `xdm.observer.action` |
+  | `reason` | `reason` | `xdm.event.outcome_reason` |
+  | `protocol` | `app` | `xdm.network.protocol_layers` |
+  | `urlcat` | `cat` and `cs2` | `xdm.network.application_protocol_category`, `xdm.network.http.url_category` |
+  | `urlclass` | `ZscalerNSSWeblogURLClass` | `xdm.event.type` |
+  | `ehost` / `host` | `dhost` | `xdm.network.http.domain` |
+  | `sip` | `dst` | `xdm.target.ipv4`, `xdm.target.host.ipv4_addresses` |
+  | `cip` | `src` | `xdm.source.host.ipv4_addresses` |
+  | `cintip` | `sourceTranslatedAddress` | `xdm.source.ipv4` |
+  | `devicehostname` | `devicehostname` | `xdm.source.host.hostname` |
+  | `login` / `user` | `suser` | `xdm.source.user.username` |
+  | `location` | `spriv` | `xdm.source.zone` |
+  | `eurl` / `url` | `request` | `xdm.network.http.url` |
+  | `reqmethod` | `requestMethod` | `xdm.network.http.method` |
+  | `respcode` / `statuscode` | `outcome` | `xdm.network.http.response_code` |
+  | `contenttype` | `contenttype` | `xdm.network.http.content_type` |
+  | `ua` / `useragent` | `requestClientApplication` | `xdm.source.user_agent` |
+  | `appname` | `destinationServiceName` | `xdm.target.interface` |
+  | `recordid` | `externalId` | `xdm.session_context_id` |
+  | `filetype` | `fileType` | `xdm.target.process.executable.file_type` |
+  | `respsize` | `in` | `xdm.target.sent_bytes` |
+  | `reqsize` | `out` | `xdm.source.sent_bytes` |
+  | `malwarecat` | `cs4` | `xdm.alert.category` |
+  | `threatname` | `cs5` | `xdm.alert.name` |
+  | `riskscore` | `cn1` | `xdm.alert.severity` |
+
+  The rule pins `xdm.source.port` and `xdm.target.port` to 0 and `xdm.network.ip_protocol`
+  to TCP, so `spt`, `dpt` and `proto` never reach XDM.
+
+  ### Verified recipe
+
+  Keep one endpoint's identity fixed per worker (the same user, hostname and internal IP
+  it has in firewall and Windows logs), and keep each transaction coherent: one
+  destination's `dhost`, `dst`, `request`, `destinationServiceName` and category
+  together.
+
+      act=Allowed  reason=Allowed  app=HTTPS  cat=cs2=Web-based Email
+      ZscalerNSSWeblogURLClass=Business Use  dhost=outlook.office.com  dst=52.96.88.10
+      src=<location egress IP>  sourceTranslatedAddress=<endpoint internal IP>
+      devicehostname=<endpoint>  suser=<user>  spriv=<location>
+      request=https://outlook.office.com/mail/inbox  requestMethod=GET|POST  outcome=200
+      contenttype=text/html  requestClientApplication=<browser UA>
+      destinationServiceName=Outlook  in / out=<byte counts>
+
+  **Status**: With a mixed key set (CEF keys and NSS-feed keys together),
+  **20** distinct xdm fields model, almost all of them geo/ASN enrichment of `dst`;
+  HTTP, user, hostname and user agent are null. The recipe above models **44**, and **48**
+  with `cs4`/`cs5`/`cn1`/`fileType` populated. Every raw column is clean.
+
+  **Verify** (wide ≥7d window; count distinct non-null fields across rows, not one row):
+
+      config timeframe = 7d | datamodel dataset = zscaler_nssweblog_raw | sort desc _time | fields xdm.* | limit 30
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+
+  ### The threat-verdict fields need real values
+
+  `cs4`, `cs5` and `cn1` feed `xdm.alert.category`, `xdm.alert.name` and
+  `xdm.alert.severity` — the only fields on this source that distinguish a blocked
+  *malware* download from a blocked *policy-violation* page. On clean traffic send
+  what the real feed sends: `None`, `None`, `0`. On a malware block use a real Zscaler
+  threat class and name. Random placeholders map a meaningless value, which reads as
+  working and is therefore worse than null.
+
+  `xdm.observer.action` (from `act`) survives independently, so allow/block
+  disposition is intact even when these are empty — what is lost is
+  malicious-versus-benign.
+
+  ### Attribution
+
+  `sourceTranslatedAddress` and `src` both sit behind `is_ipv4()` guards, so they
+  must be bare dotted quads. The tell that the guard is live: on a feed where
+  `dst` carried a token, `xdm.target.ipv4` was populated while
+  `xdm.target.host.ipv4_addresses` — fed from the same column through the guard —
+  was 0%.

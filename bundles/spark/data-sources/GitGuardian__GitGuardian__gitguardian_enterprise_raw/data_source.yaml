@@ -1,0 +1,208 @@
+schema_version: 1
+id: GitGuardian
+pack_name: GitGuardian
+rule_name: GitGuardian
+dataset_name: gitguardian_enterprise_raw
+vendor: GitGuardian
+product: GitGuardian
+description: GitGuardian is a developer-first solution scanning GitHub activity in
+  real-time for API secret tokens, database credentials, certificates.
+categories:
+- Analytics & SIEM
+version: 1.0.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTggNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDAwMDAiPkdpdEd1YXJkaWFuPC90ZXh0Pjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: actor_email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: actor_ip
+  type: ipv4
+  description: Vendor-emitted field 'Actor ip'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: actor_name
+  type: user
+  description: Human-readable name as displayed by GitGuardian. Account name as the
+    vendor reports it — login name, UPN, or sAMAccountName; no domain prefix unless
+    vendor emits one.
+  example: jsmith
+- name: api_url
+  type: url
+  description: Full URL with scheme — as GitGuardian captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path?q=1
+- name: assignee
+  type: string
+  description: Vendor-emitted field 'Assignee'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_assignee
+- name: category
+  type: string_short
+  description: GitGuardian's category classifier for the event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: access_control
+- name: commit_sha
+  type: string
+  description: Vendor-emitted field 'Commit sha'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sha
+- name: display_name
+  type: string
+  description: Human-readable name as displayed by GitGuardian. Free-form text; may
+    contain whitespace and punctuation.
+  example: John Doe
+- name: file_path
+  type: file_path
+  description: Filesystem path reported by the vendor. Absolute filesystem path; vendor-native
+    separator (forward slash on POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by GitGuardian. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: git-64f04d57
+- name: payload
+  type: string
+  description: Vendor-emitted field 'Payload'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_payload
+- name: repo_name
+  type: string
+  description: Human-readable name as displayed by GitGuardian. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: severity
+  type: integer
+  description: Event severity as classified by the vendor. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: source_log_type
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'incident'
+- name: status
+  type: string
+  description: Status code returned by the vendor. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: tags
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: target_user_email
+  type: email
+  description: Destination/target user account name. Free-form text; may contain whitespace
+    and punctuation.
+  example: user@example.com
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by GitGuardian. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: url
+  type: url
+  description: Full URL with scheme — as GitGuardian captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: who
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: who[].email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: who[].github_id
+  type: string_short
+  description: Opaque identifier emitted by GitGuardian. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: git-a95cac08
+- name: who[].github_login
+  type: string
+  description: Vendor-emitted field 'Who[] › github login'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_login
+- name: who[].id
+  type: string_short
+  description: Opaque identifier emitted by GitGuardian. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: git-bae96025
+- name: who[].name
+  type: string
+  description: Human-readable name as displayed by GitGuardian. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+use_cases:
+- DevOps
+how_to_use: |
+  ## GitGuardian GitGuardian → Cortex XSIAM (dataset `gitguardian_enterprise_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `gitguardian_enterprise_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `gitguardian_enterprise`. The marketplace pack's display name `GitGuardian` / `GitGuardian` normalizes to `gitguardian_gitguardian_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `gitguardian_enterprise` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON. CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `source_log_type = "incident"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~21 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.event.description`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = gitguardian_enterprise_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,88 @@
+schema_version: 1
+id: syslog
+name: Syslog
+description: >
+  Forward records to a syslog server over UDP, TCP, or TLS.
+  Supports RFC3164 and RFC5424 framing with configurable facility.
+  When pointed at an XSIAM broker VM and sending CEF-formatted records
+  (use phantom_create_data_worker with type='CEF' + vendor + product),
+  the broker auto-routes into the XSIAM dataset named
+  '<vendor>_<product>_raw' (e.g. 'phantom_smoke_test_raw' for
+  vendor=phantom, product=smoke_test).
+category: On-prem SIEM
+icon: settings_ethernet
+iconColor: '#a7c8ff'
+iconBg: rgba(167, 200, 255, 0.15)
+handler: bundles.spark.destinations.syslog.handler
+probe:
+  send_test_message: true
+fields:
+  - name: host
+    display: Host
+    type: string
+    required: true
+    description: Syslog server hostname or IP
+  - name: port
+    display: Port
+    type: number
+    required: true
+    defaultValue: '514'
+  - name: protocol
+    display: Protocol
+    type: select
+    required: true
+    options:
+      - udp
+      - tcp
+      - tls
+    defaultValue: udp
+  - name: framing
+    display: Framing
+    type: select
+    options:
+      - rfc3164
+      - rfc5424
+    defaultValue: rfc5424
+    description: >
+      Message format. RFC5424 includes structured data; RFC3164 is the
+      older BSD format.
+  - name: facility
+    display: Facility
+    type: select
+    options:
+      - kern
+      - user
+      - mail
+      - daemon
+      - auth
+      - syslog
+      - local0
+      - local1
+      - local2
+      - local3
+      - local4
+      - local5
+      - local6
+      - local7
+    defaultValue: local0
+  - name: tls_ca_cert
+    display: CA certificate (PEM)
+    type: textarea
+    visible_when:
+      field: protocol
+      value: tls
+    description: >
+      Optional PEM-encoded CA cert for verifying the server. Leave blank
+      to use the system trust store.
+  - name: tls_client_cert
+    display: Client certificate (PEM)
+    type: textarea
+    visible_when:
+      field: protocol
+      value: tls
+  - name: tls_client_key
+    display: Client key (PEM)
+    type: secret
+    visible_when:
+      field: protocol
+      value: tls

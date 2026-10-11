@@ -1,0 +1,210 @@
+schema_version: 1
+id: Box
+pack_name: Box
+rule_name: BoxEventsCollector
+dataset_name: box_box_raw
+vendor: Box
+product: Box
+description: Manage Box users
+categories:
+- Identity and Access Management
+- IT Services
+version: 3.2.19
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMjc3cHgiIHZpZXdCb3g9IjAgMCA1MTIgMjc3IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQiPgogICAgPHRpdGxlPmJveDwvdGl0bGU+CiAgICA8Zz4KICAgICAgICA8cGF0aCBkPSJNNTA3LjQ4NTgxLDI0NS40MzM5NDMgQzUxMy44NzczMTksMjU0LjM4MjA1NiA1MTIuNTk5MDE3LDI2NS44ODY3NzIgNTA0LjkyOTIwNiwyNzIuMjc4MjgxIEM0OTUuOTgxMDk0LDI3OC42Njk3OSA0ODMuMTk4MDc2LDI3Ny4zOTE0ODggNDc2LjgwNjU2NywyNjkuNzIxNjc3IEw0MzIuMDY2MDA0LDIxMi4xOTgwOTcgTDM4OC42MDM3NDQsMjY4LjQ0MzM3NiBDMzgyLjIxMjIzNSwyNzcuMzkxNDg4IDM2OS40MjkyMTcsMjc3LjM5MTQ4OCAzNjAuNDgxMTA0LDI3MC45OTk5NzkgQzM1MS41MzI5OTIsMjY0LjYwODQ3IDM1MC4yNTQ2OSwyNTMuMTAzNzU0IDM1Ni42NDYxOTksMjQ0LjE1NTY0MiBMNDA3Ljc3ODI3LDE3Ny42ODM5NDkgTDM1Ni42NDYxOTksMTExLjIxMjI1NiBDMzUwLjI1NDY5LDEwMi4yNjQxNDMgMzUyLjgxMTI5NCw4OS40ODExMjUyIDM2MC40ODExMDQsODMuMDg5NjE2MiBDMzY5LjQyOTIxNyw3Ni42OTgxMDczIDM4Mi4yMTIyMzUsNzkuMjU0NzEwOSAzODguNjAzNzQ0LDg2LjkyNDUyMTYgTDQzMi4wNjYwMDQsMTQ0LjQ0ODEwMiBMNDc2LjgwNjU2Nyw4OS40ODExMjUyIEM0ODMuMTk4MDc2LDgwLjUzMzAxMjcgNDk0LjcwMjc5Miw3OS4yNTQ3MTA5IDUwNC45MjkyMDYsODUuNjQ2MjE5OCBDNTEzLjg3NzMxOSw5Mi4wMzc3Mjg4IDUxMy44NzczMTksMTA0LjgyMDc0NyA1MDcuNDg1ODEsMTEzLjc2ODg1OSBMNDU3LjYzMjA0LDE3OC45NjIyNSBMNTA3LjQ4NTgxLDI0NS40MzM5NDMgTDUwNy40ODU4MSwyNDUuNDMzOTQzIFogTTI3NC44MzQ4ODQsMjM3Ljc2NDEzMyBDMjQxLjU5OTAzOCwyMzcuNzY0MTMzIDIxNC43NTQ3LDIxMi4xOTgwOTcgMjE0Ljc1NDcsMTc4Ljk2MjI1IEMyMTQuNzU0NywxNDcuMDA0NzA2IDI0MS41OTkwMzgsMTIwLjE2MDM2OCAyNzQuODM0ODg0LDEyMC4xNjAzNjggQzMwOC4wNzA3MzEsMTIwLjE2MDM2OCAzMzQuOTE1MDY5LDE0Ny4wMDQ3MDYgMzM0LjkxNTA2OSwxNzguOTYyMjUgQzMzMy42MzY3NjcsMjEyLjE5ODA5NyAzMDYuNzkyNDI5LDIzNy43NjQxMzMgMjc0LjgzNDg4NCwyMzcuNzY0MTMzIFogTTk4LjQyOTIzNzcsMjM3Ljc2NDEzMyBDNjUuMTkzMzkxMiwyMzcuNzY0MTMzIDM4LjM0OTA1MzYsMjEyLjE5ODA5NyAzOC4zNDkwNTM2LDE3OC45NjIyNSBDMzguMzQ5MDUzNiwxNDcuMDA0NzA2IDY1LjE5MzM5MTIsMTIwLjE2MDM2OCA5OC40MjkyMzc3LDEyMC4xNjAzNjggQzEzMS42NjUwODQsMTIwLjE2MDM2OCAxNTguNTA5NDIyLDE0Ny4wMDQ3MDYgMTU4LjUwOTQyMiwxNzguOTYyMjUgQzE1OC41MDk0MjIsMjEyLjE5ODA5NyAxMzEuNjY1MDg0LDIzNy43NjQxMzMgOTguNDI5MjM3NywyMzcuNzY0MTMzIFogTTI3NC44MzQ4ODQsODEuODExMzE0NCBDMjM3Ljc2NDEzMyw4MS44MTEzMTQ0IDIwNC41MjgyODYsMTAyLjI2NDE0MyAxODcuOTEwMzYzLDEzMi45NDMzODYgQzE3MS4yOTI0NCwxMDIuMjY0MTQzIDEzOC4wNTY1OTMsODEuODExMzE0NCA5OS43MDc1Mzk1LDgxLjgxMTMxNDQgQzc2LjY5ODEwNzMsODEuODExMzE0NCA1Ni4yNDUyNzg3LDg5LjQ4MTEyNTIgMzkuNjI3MzU1NCwxMDAuOTg1ODQxIEwzOS42MjczNTU0LDE5LjE3NDUyNjggQzM5LjYyNzM1NTQsOC45NDgxMTI1MiAzMC42NzkyNDI5LDAgMjAuNDUyODI4NiwwIEM4Ljk0ODExMjUyLDAgMCw4Ljk0ODExMjUyIDAsMTkuMTc0NTI2OCBMMCwxODAuMjQwNTUyIEMxLjI3ODMwMTc5LDIzMy45MjkyMjcgNDQuNzQwNTYyNiwyNzYuMTEzMTg2IDk4LjQyOTIzNzcsMjc2LjExMzE4NiBDMTM2Ljc3ODI5MSwyNzYuMTEzMTg2IDE3MC4wMTQxMzgsMjU0LjM4MjA1NiAxODYuNjMyMDYxLDIyMy43MDI4MTMgQzIwMy4yNDk5ODQsMjU0LjM4MjA1NiAyMzYuNDg1ODMxLDI3Ni4xMTMxODYgMjczLjU1NjU4MywyNzYuMTEzMTg2IEMzMjguNTIzNTYsMjc2LjExMzE4NiAzNzMuMjY0MTIyLDIzMi42NTA5MjUgMzczLjI2NDEyMiwxNzcuNjgzOTQ5IEMzNzQuNTQyNDI0LDEyNS4yNzM1NzUgMzI5LjgwMTg2MSw4MS44MTEzMTQ0IDI3NC44MzQ4ODQsODEuODExMzE0NCBaIiBmaWxsPSIjMDA2MUQ1Ij48L3BhdGg+CiAgICA8L2c+Cjwvc3ZnPgo=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: additional_details
+  type: json
+  description: 'Additional event details (JSON). JSON object with keys: shield_alert,
+    shield_download_enforcment, shield_external_collab_enforcment (each key defined
+    as a dotted-path leaf below).'
+  example: '{}'
+- name: created_by
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: id, login,
+    type (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: event_id
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Free-form
+    text; may contain whitespace and punctuation.
+  example: box-f2e63293
+- name: event_type
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'COPY'
+- name: ip_address
+  type: ipv4
+  description: IPv4/IPv6 address — vendor-emitted, no version split. Dotted-quad IPv4
+    literal (e.g., 192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: source
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: id, item_id,
+    item_name, item_type, login, name, owned_by, parent, type (each key defined as
+    a dotted-path leaf below).'
+  example: '{}'
+- name: additional_details.shield_alert.alert_summary.alert_activities.item_name
+  type: string
+  description: Human-readable name as displayed by Box. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: additional_details.shield_alert.alert_summary.upload_activity.item_name
+  type: string
+  description: Human-readable name as displayed by Box. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: additional_details.shield_download_enforcment.item.name
+  type: string
+  description: Human-readable name as displayed by Box. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: additional_details.shield_external_collab_enforcment.item.name
+  type: string
+  description: Human-readable name as displayed by Box. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: created_by.id
+  type: string_short
+  description: Opaque identifier emitted by Box. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: box-3609ab87
+- name: created_by.login
+  type: user
+  description: Vendor-emitted field 'Created by › login'. Leaf of the 'created_by'
+    composite. Account name as the vendor reports it — login name, UPN, or sAMAccountName
+    depending on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: created_by.type
+  type: string_short
+  description: Type/category classifier emitted by Box. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: source.id
+  type: string_short
+  description: Opaque identifier emitted by Box. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: box-dfa9accf
+- name: source.item_id
+  type: string_short
+  description: Opaque identifier emitted by Box. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: box-f0a7c20e
+- name: source.item_name
+  type: string
+  description: Human-readable name as displayed by Box. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: source.item_type
+  type: string_short
+  description: Type/category classifier emitted by Box. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: source.login
+  type: user
+  description: Vendor-emitted field 'Source › login'. Leaf of the 'source' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending
+    on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: source.name
+  type: string
+  description: Source/initiating user account name. Leaf of the 'source' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: source.owned_by.id
+  type: string_short
+  description: Opaque identifier emitted by Box. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: box-00098eac
+- name: source.owned_by.login
+  type: user
+  description: Vendor-emitted field 'Source › owned by › login'. Leaf of the 'source'
+    composite. Account name as the vendor reports it — login name, UPN, or sAMAccountName
+    depending on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: source.owned_by.type
+  type: string_short
+  description: Type/category classifier emitted by Box. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: source.parent.id
+  type: string_short
+  description: Opaque identifier emitted by Box. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: box-3e0b5ae2
+- name: source.type
+  type: string_short
+  description: Type/category classifier emitted by Box. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+use_cases:
+- Storage
+- Collab
+how_to_use: |
+  ## box box → Cortex XSIAM (dataset `box_box_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `box_box_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `box`
+    - **product**: `box`
+
+    These normalize → `box_box_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.type`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `event_type in ("ACCESS_GRANTED","ACCESS_REVOKED","ADD_DEVICE_ASSOCIATION","ADD_DEVICE_ASSOCIATION","ANNOTATIONV2_CREATE","ANNOTATIONV2_DELETE","ANNOTATIONV2_EDI` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~37 fields mapped to the unified data model (`xdm.*`), including: `XDM.Audit.TriggeredBy.identity.name`, `XDM.Audit.TriggeredBy.identity.type`, `XDM.Audit.TriggeredBy.identity.uuid`, `XDM.Audit.TriggeredBy.ipv4`, `XDM.Audit.audited_resource.id`, `XDM.Audit.audited_resource.name`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = box_box_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

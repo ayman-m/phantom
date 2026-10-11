@@ -1,0 +1,276 @@
+schema_version: 1
+id: ApacheWebServer
+pack_name: ApacheWebServer
+rule_name: ApacheWebServerModelingRules
+dataset_name: apache_httpd_raw
+vendor: Apache
+product: ApacheWebServer
+description: Modeling Rules for the Apache Web Server logs collector
+categories:
+- Analytics & SIEM
+version: 1.0.13
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+QXBhY2hlPC90aXRsZT48cGF0aCBkPSJNMTcuODA1IDIuMTk3di4wNjZoLjE1NnYuNDRoLjA3MnYtLjQ0aC4xNTZ2LS4wNjZ6bS45IDBsLS4xNzUuMzUzLS4xNzItLjM1M2gtLjA4N3YuNTA2aC4wNjdWMi4zbC4xNzIuMzVoLjA0NWwuMTcyLS4zNXYuNDA0aC4wNjZ2LS41MDZ6bS00LjI1NyAxYy0uMjA0LjMxLS40MjQuNjYtLjY2IDEuMDZsLS4wNC4wNjJhNDQuNDU3IDQ0LjQ1NyAwIDAwLTEuMjY1IDIuMjljLS4xODcuMzYtLjM4Ljc0Mi0uNTc3IDEuMTQ2bDIuMjY3LS4yNWMuNjYtLjMwMi45NTUtLjU3OCAxLjI0Mi0uOTc2YTE1LjUgMTUuNSAwIDAwLjIzLS4zNDJjLjIzLS4zNjMuNDYtLjc2My42NjMtMS4xNi4xOTctLjM4Ni4zNy0uNzY3LjUwNS0xLjExLjA4My0uMjIuMTUtLjQyMi4xOTgtLjYuMDQyLS4xNTguMDc0LS4zMDcuMS0uNDUtLjg4NC4xNS0xLjk2NS4yOTUtMi42NjguMzN6TTExLjg5NCA3Ljc4bC0uMDc3LjE2Yy0uMDc4LjE2LS4xNTcuMzItLjIzNi40ODgtLjA4Ni4xOC0uMTcyLjM2NC0uMjYuNTUybC0uMTMyLjI4N2E3NS4yNjUgNzUuMjY1IDAgMDAtMS40MjcgMy4zYy0uMTYzLjM5Ny0uMzI3LjgwNy0uNDkzIDEuMjMtLjE1LjM4LS4yOTcuNzY1LS40NSAxLjE2NGwtLjAyLjA2Yy0uMTUuMzk2LS4zLjgwMi0uNDUzIDEuMjJsLS4wMS4wMjcuNzItLjA4YS4yMTMuMjEzIDAgMDEtLjA0Mi0uMDA2Yy44NjMtLjEwNiAyLjAxLS43NSAyLjc1LTEuNTQ3LjM0Mi0uMzY3LjY1Mi0uOC45NC0xLjMwNi4yMTMtLjM3Ny40MTMtLjc5NS42MDQtMS4yNTguMTY4LS40MDUuMzI4LS44NDMuNDgtMS4zMTgtLjE5Ni4xMDUtLjQyMy4xOC0uNjczLjIzNWEyLjE4NCAyLjE4NCAwIDAxLS4yNzMuMDQ2Yy44MDYtLjMxIDEuMzE0LS45MDUgMS42ODMtMS42NGEyLjgxNiAyLjgxNiAwIDAxLS45NjguNDI4Yy0uMDYuMDEyLS4xMTYuMDIyLS4xNzQuMDNsLS4wNDMuMDA2aC4wMDJjLjI3OC0uMTE4LjUxNC0uMjQ4LjcxOC0uNDAzYTIuNTcxIDIuNTcxIDAgMDAuNjM3LS42OThsLjA2My0uMTA0LjA3Ny0uMTU0YTguMTA3IDguMTA3IDAgMDAuMzY3LS44NWwuMDMtLjA4OGEzLjA0IDMuMDQgMCAwMC4xMjMtLjQ2My43MzMuNzMzIDAgMDEtLjA5NC4wNjVjLS4yNDMuMTQ1LS42Ni4yNzctLjk5Ni4zNGwuNjYzLS4wNzQtLjY2NC4wNzNoLS4wMTdsLS4xLjAxN2MuMDA2LS4wMDMuMDEtLjAwNi4wMTctLjAwOGwtMi4yNjUuMjUtLjAxMy4wMjJ6TTguMjcgMTYuNDVjLS4xMTcuMzIzLS4yMzYuNjU0LS4zNTUuOTkybC0uMDA1LjAxNWMtLjAxNi4wNDYtLjAzMi4wOTQtLjA1LjE0Mi0uMDguMjI3LS4xNS40MzItLjMxLjkuMjY0LjEyLjQ3NS40MzUuNjc1Ljc5M2ExLjQ0IDEuNDQgMCAwMC0uNDY2LS45OWMxLjI5My4wNiAyLjQxLS4yNyAyLjk5LTEuMjE3LjA1LS4wODQuMDk2LS4xNzMuMTQtLjI2OC0uMjYuMzMzLS41OS40NzQtMS4yLjQ0IDAgMC0uMDA0IDAtLjAwNS4wMDJsLjAwNC0uMDAyYy45LS40MDQgMS4zNTQtLjc5IDEuNzU0LTEuNDMzLjA5NC0uMTUzLjE4Ni0uMzIuMjgtLjUwMy0uNzg4LjgxLTEuNzAyIDEuMDQtMi42NjQuODY1bC0uNzIuMDc4YTYuNDMgNi40MyAwIDAwLS4wNjcuMTgzek0xNS40Mi4xMTJjLS4zNzYuMjIyLTEgLjg1LTEuNzQ4IDEuNzYzbC42ODYgMS4yOTRjLjQ4LS42ODcuOTctMS4zMDcgMS40NjItMS44MzZsLjA1OC0uMDYyYy0uMDIuMDItLjA0LjA0LS4wNTcuMDYyLS4xNi4xNzYtLjY0NC43NC0xLjM3NSAxLjg2My43MDMtLjAzNSAxLjc4NC0uMTggMi42NjYtLjMzLjI2Mi0xLjQ3LS4yNTgtMi4xNDItLjI1OC0yLjE0MnMtLjY2LTEuMDctMS40MzYtLjYxem0tMy4wODQgNi40MDJhNDAuMjUzIDQwLjI1MyAwIDAxMS4zMDYtMi4yNmwuMDQtLjA2NGMuMjI0LS4zNTIuNDUtLjY5My42NzctMS4wMmwtLjY4NS0xLjI5My0uMTU3LjE5MmMtLjE5Ny4yNDUtLjQwMy41MS0uNjEzLjc5YTM5Ljg1MyAzOS44NTMgMCAwMC0yLjAxNiAyLjk3bC0uMDIyLjAzOC44OTMgMS43NjNjLjE5LS4zNzguMzgtLjc1Mi41NzUtMS4xMTh6bS0zLjczIDguMzJjLjE1OC0uNDA2LjMxOS0uODEuNDgzLTEuMjI1LjE1Ni0uMzk0LjMyLS43OS40ODQtMS4xOWE5MS4xMzMgOTEuMTMzIDAgMDExLjYtMy42MDRsLjIwNS0uNDI0Yy4xMi0uMjQzLjIzNy0uNDg1LjM2LS43MjRhLjEyNS4xMjUgMCAwMS4wMi0uMDRsLS44OTUtMS43NjMtLjA0NC4wN2MtLjIwNy4zNC0uNDE0LjY4Ny0uNjE3IDEuMDQyYTM4LjA1NiAzOC4wNTYgMCAwMC0xLjA5MiAyLjA0bC0uMDk0LjE5M2EyNC41NzMgMjQuNTczIDAgMDAtMS4yNTggMy4wODcgMTguNDkyIDE4LjQ5MiAwIDAwLS41MiAxLjk5N2wuODk2IDEuNzdjLjExNy0uMzE3LjI0LS42MzguMzY0LS45NjN6bS0xLjM3Ni0uNDc2YTEzLjM4IDEzLjM4IDAgMDAtLjIzNCAxLjY5MmMwIC4wMi0uMDA0LjA0LS4wMDUuMDYtLjI4LS40NS0xLjAzLS44ODgtMS4wMjYtLjg4NC41MzcuNzc4Ljk0NCAxLjU1IDEuMDA1IDIuMzEtLjI5LjA1OC0uNjg0LS4wMjctMS4xNC0uMTk1LjQ3NS40MzYuODMuNTU2Ljk3LjU4OC0uNDM0LjAzLS44OS4zMjgtMS4zNDYuNjcuNjY4LS4yNyAxLjIxLS4zOCAxLjU5Ni0uMjktLjYxIDEuNzQtMS4yMyAzLjY1NS0xLjg0MyA1LjY5YS41MzguNTM4IDAgMDAuMzY0LS4zNTRjLjExLS4zNjguODQtMi43ODYgMS45NzgtNS45NjVsLjA5Ny0uMjcuMDI4LS4wNzhjLjEyLS4zMzIuMjQ2LS42NzIuMzc0LTEuMDJsLjA5LS4yMzd2LS4wMDRMNy4yNCAxNC4zYy0uMDAzLjAyLS4wMS4wNC0uMDEyLjA2eiIvPjwvc3ZnPg==
+  source: simpleicons:apache
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'apache: apachewebserver=ApacheWebServer action=allow user=jdoe'
+- name: Error
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_error
+- name: Logs
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_logs
+- name: Referrer
+  type: url
+  description: Network HTTP referrer. Free-form text; may contain whitespace and punctuation.
+  example: https://example.com/
+- name: Source_code_file_line
+  type: string
+  description: Destination resource ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_line
+- name: User_agent
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: Username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: bytes_size
+  type: integer_byte_count
+  description: Destination sent bytes. Free-form text; may contain whitespace and
+    punctuation.
+  example: '1024'
+- name: core
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_core
+- name: dest_domain
+  type: domain
+  description: Destination domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: dest_file_name
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: dest_file_path
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: dest_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: error_status_code
+  type: string
+  description: Source user identifier. Free-form text; may contain whitespace and
+    punctuation.
+  example: success
+- name: event_description
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Apache.
+- name: http_method
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: http_response_code
+  type: integer
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: '200'
+- name: http_url
+  type: url
+  description: Network HTTP URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: in
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_in
+- name: info
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: see message
+- name: local_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: message
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: message1
+  type: string
+  description: Message1. Free-form text; may contain whitespace and punctuation.
+  example: sample_message1
+- name: message2
+  type: string
+  description: Message2. Free-form text; may contain whitespace and punctuation.
+  example: sample_message2
+- name: observer_name
+  type: string
+  description: Observer name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: observer_name_temp2
+  type: string
+  description: Observer name temp2. Free-form text; may contain whitespace and punctuation.
+  example: sample_temp2
+- name: pid
+  type: integer
+  description: Source process PID. Free-form text; may contain whitespace and punctuation.
+  example: '4242'
+- name: process_id
+  type: string_short
+  description: Source process PID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: remote_ipv4
+  type: ipv4
+  description: Remote ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: severity
+  type: string_short
+  description: Event log level. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: severity1
+  type: string_short
+  description: Severity1. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: severity2
+  type: string_short
+  description: Severity2. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: source_hostname
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: sourceipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: sourceipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: target_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: tid
+  type: integer
+  description: Source process thread ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: '1024'
+- name: tls_protocol_version
+  type: string
+  description: Network TLS protocol version. Free-form text; may contain whitespace
+    and punctuation.
+  example: 1.0.0
+- name: uri
+  type: string
+  description: Destination module path. Free-form text; may contain whitespace and
+    punctuation.
+  example: /api/v1/path?q=1
+use_cases:
+- WebServer
+- AppServer
+how_to_use: |
+  ## apache httpd → Cortex XSIAM (dataset `apache_httpd_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `apache` / product `httpd`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `apache_httpd_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `apache`
+    - **product**: `httpd`
+
+    These normalize → `apache_httpd_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log contains "emerg" or  _raw_log contains "alert" or  _raw_log contains "error" or  _raw_log contains "warn" or  _raw_log contains "notice"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~40 fields mapped to the unified data model (`xdm.*`), including: `XDM.Audit.TriggeredBy.identity.uuid`, `XDM.Audit.TriggeredBy.ipv4`, `XDM.Audit.audited_resource.id`, `XDM.Audit.event_timestamp`, `XDM.Audit.identity.uuid`, `XDM.Audit.threat.description`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `apache`, Product = `httpd`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = apache_httpd_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

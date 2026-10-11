@@ -1,0 +1,25 @@
+# phantom-connector-runtime — dependencies for the base image that
+# every per-connector container inherits from. Per-connector images
+# (xlog, xsiam, caldera, web) add their OWN deps on top via their own
+# requirements.txt. Keep this list lean — anything here lands in
+# every connector image.
+
+# MCP server framework. Each connector container exposes an MCP
+# server on its own port; the agent's MCP proxies tool calls to it.
+fastmcp>=2.13.1
+mcp>=1.21.2
+
+# HTTP transport — used by both FastMCP (inbound) and the audit
+# forwarder (outbound POST to the agent's /api/v1/audit endpoint).
+httpx>=0.27.0
+uvicorn>=0.30.0
+starlette>=0.39.0
+
+# AES-256-GCM for SecretStore decryption. Same library phantom-agent
+# uses to encrypt; vendoring a thin reader in runtime/secret_store_client.py
+# gives connector containers byte-identical decrypt behavior.
+cryptography>=42.0.0
+
+# Pydantic for the optional config validation surface — keeps parity
+# with how phantom-agent shapes its Settings objects.
+pydantic>=2.0.0

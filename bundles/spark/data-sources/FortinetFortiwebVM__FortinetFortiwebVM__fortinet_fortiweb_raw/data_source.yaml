@@ -1,0 +1,333 @@
+schema_version: 1
+id: FortinetFortiwebVM
+pack_name: FortinetFortiwebVM
+rule_name: FortinetFortiwebVM
+dataset_name: fortinet_fortiweb_raw
+vendor: Fortinet
+product: FortinetFortiwebVM
+description: The Fortiweb integration manages WAF policies and blocks cookies, URLs,
+  and hostnames.
+categories:
+- Network Security
+version: 2.0.18
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+Rm9ydGluZXQ8L3RpdGxlPjxwYXRoIGQ9Ik0wIDkuNzg1aDYuNzg4djQuNDU0SDB6bTguNjY2LTYuMzNoNi42Njh2NC40NTNIOC42NjZ6bTAgMTIuNjM3aDYuNjY4djQuNDU0SDguNjY2em04LjUyMi02LjMwN0gyNHY0LjQ1NGgtNi44MTJ6TTIuNzkyIDMuNDU1QzEuMzcyIDMuODE0LjI2NSA1LjQwNCAwIDcuNDI1di41MDZoNi43ODhWMy40NTR6TTAgMTYuMDkxdi41NTRjLjI0IDEuOTI2IDEuMjc2IDMuNDY2IDIuNjI0IDMuOWg0LjE4OHYtNC40NTR6bTI0LTguMTg0di0uNTA2Yy0uMjY1LTEuOTk4LTEuMzcyLTMuNTg3LTIuNzkyLTMuOTcyaC00LjAydjQuNDU0SDI0ek0yMS4zNzYgMjAuNTdjMS4zMjQtLjQ1OCAyLjM2LTEuOTc0IDIuNjI0LTMuOXYtLjU1NGgtNi44MTJ2NC40NTRaIi8+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: act
+  type: string_short
+  description: CEF action — what Fortinet did with the event (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: app
+  type: string_short
+  description: Application name emitted by Fortinet. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token_value
+- name: cat
+  is_gate: true
+  type: string
+  description: Log category — selects which modeling-rule block runs. trafficlog
+    (web traffic, reads the http_* fields), attack (WAF alerts), audit (admin
+    actions, reads cs1-cs6). See how_to_use.
+  example: 'trafficlog'
+- name: cefDeviceEventClassId
+  type: string_short
+  description: CEF device-event class ID — vendor-specific event-type identifier.
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceVersion
+  type: string_short
+  description: CEF device-version field — version of the Fortinet product emitting
+    this event. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefName
+  type: string_short
+  description: CEF event name — short human-readable label for the event class. Short
+    opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefSeverity
+  type: integer
+  description: CEF severity score (0-10) as classified by Fortinet. Signed decimal
+    integer; bare digits, optional leading minus.
+  example: '42'
+- name: cipher_suite
+  type: string
+  description: Vendor-emitted field 'Cipher suite'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_suite
+- name: cn1
+  type: integer
+  description: Vendor-emitted field 'Cn1'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: cn3
+  type: integer
+  description: Vendor-emitted field 'Cn3'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: cs1
+  type: string
+  description: Vendor-emitted field 'Cs1'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs2
+  type: user
+  description: Vendor-emitted field 'Cs2'. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jsmith
+- name: cs3
+  type: string
+  description: Vendor-emitted field 'Cs3'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs4
+  type: string
+  description: Vendor-emitted field 'Cs4'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs5
+  type: string
+  description: Vendor-emitted field 'Cs5'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs6
+  type: string
+  description: Vendor-emitted field 'Cs6'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: deviceexternalid
+  type: string
+  description: Vendor-emitted field 'Deviceexternalid'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_deviceexternalid
+- name: dhost
+  type: host
+  description: CEF destination host — hostname or FQDN of the target endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: dpt
+  type: integer_port
+  description: CEF destination port — TCP/UDP port on the target side. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '42'
+- name: dst
+  type: ipv4
+  description: CEF destination IP — IPv4/IPv6 address of the target endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 198.51.100.7
+- name: dst_port
+  type: integer
+  description: Destination TCP/UDP port. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: http_agent
+  type: string
+  description: Vendor-emitted field 'Http agent'. Free-form text; may contain whitespace
+    and punctuation.
+  example: phantom-agent-01
+- name: http_host
+  type: host
+  description: Vendor-emitted field 'Http host'. Hostname or fully-qualified domain
+    name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: http_method
+  type: string
+  description: Vendor-emitted field 'Http method'. Free-form text; may contain whitespace
+    and punctuation.
+  example: GET
+- name: http_refer
+  type: string
+  description: Vendor-emitted field 'Http refer'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_refer
+- name: http_request_bytes
+  type: integer_byte_count
+  description: Byte count. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '42'
+- name: http_response_bytes
+  type: integer_byte_count
+  description: Byte count. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '42'
+- name: http_retcode
+  type: integer
+  description: Vendor-emitted field 'Http retcode'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: http_url
+  type: url
+  description: Full URL with scheme — as Fortinet captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: in
+  type: integer
+  description: Vendor-emitted field 'In'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: log_timestamp
+  type: integer
+  description: Event timestamp as reported by the vendor. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: msg
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: Operation completed successfully.
+- name: original_src
+  type: ipv4
+  description: Vendor-emitted field 'Original src'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: out
+  type: integer
+  description: Vendor-emitted field 'Out'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: outcome
+  type: string
+  description: Event outcome reported by the vendor. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: proto
+  type: string
+  description: Network protocol (e.g. tcp/udp/icmp). Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: request
+  type: url
+  description: HTTP request line or full request payload as captured by Fortinet.
+    Full URL with scheme (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: requestClientApplication
+  type: string
+  description: Vendor-emitted field 'RequestClientApplication'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_requestclientapp
+- name: requestMethod
+  type: string_short
+  description: HTTP request method (GET/POST/PUT/DELETE/etc.). Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: token_value
+- name: rt
+  type: integer
+  description: Vendor-emitted field 'Rt'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: service
+  type: string
+  description: Vendor-emitted field 'Service'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sshd
+- name: spt
+  type: integer_port
+  description: CEF source port — TCP/UDP port on the source side. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '42'
+- name: src
+  type: ipv4
+  description: CEF source IP — IPv4/IPv6 address of the source endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: src_port
+  type: integer
+  description: Source TCP/UDP port. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: status
+  type: string
+  description: Status code returned by the vendor. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: user_name
+  type: user
+  description: Human-readable name as displayed by Fortinet. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+use_cases:
+- Firewall
+- Network
+- WAF
+how_to_use: |
+  ## fortinet fortiweb → Cortex XSIAM (dataset `fortinet_fortiweb_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `fortinet_fortiweb_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `fortinet`
+    - **product**: `fortiweb`
+
+    These normalize → `fortinet_fortiweb_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate — `cat` selects one of THREE blocks, and they read different fields.**
+      Pick the block first, then send ITS fields; the right fields under the wrong `cat` land
+      raw, count as "modeled", and still map almost nothing.
+
+      | `cat` | Use for | Reads |
+      |---|---|---|
+      | `trafficlog` (default) | web traffic through the WAF | `src`, `dst`, `src_port`, `dst_port`, `service`, `original_src`, `user_name`, `http_method`, `http_url`, `http_host`, `http_refer`, `http_retcode`, `http_agent`, `http_request_bytes`, `http_response_bytes`, `status` (`success`/`failure`), `cipher_suite` |
+      | `attack` | WAF attack alerts | CEF keys: `cefName`, `cefDeviceEventClassId`, `cs1` (application), `cs3`, `cs4` (event type), `src`, `spt`, `dpt`, `app`, `act`, `dhost`, `request` |
+      | `audit` | admin/config actions | CEF keys: `cefName`, `cefSeverity`, `cs1` (user id), `cs2` (username), `cs3` (log level), `cs4` (device id), `cs6`, `request`, `requestMethod`, `requestClientApplication`, `dhost`, `msg` |
+
+      **Verified**: the same persona and volume modeled **13** distinct
+      xdm fields under `cat = "audit"` with the trafficlog field set, and **26** under
+      `cat = "trafficlog"` (HTTP method/URL/referrer/response code, TLS cipher, user identity,
+      bytes in both directions). Trafficlog recipe (keep identity fields fixed per worker):
+
+          cat=trafficlog  src=original_src=<client IP>  user_name=<user>  dst=<web server IP>
+          dst_port=443  service=https  http_host=portal.example.local  http_method=GET|POST
+          http_url=/portal/...  http_refer=https://...  http_retcode=200  http_agent=<browser UA>
+          http_request_bytes / http_response_bytes=<integers>  status=success
+          cipher_suite=TLS_AES_256_GCM_SHA384
+
+    **XDM mapping**: ~48 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.category`, `xdm.alert.description`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.original_threat_id`, `xdm.alert.original_threat_name`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|fortinet|fortiweb|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Derived from the parsing/modeling rules. The `trafficlog`
+    block is verified on a live tenant (26 xdm fields, above); `attack` and `audit`
+    are documented from the rule but not yet verified, so the source keeps no `validated` pill.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = fortinet_fortiweb_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

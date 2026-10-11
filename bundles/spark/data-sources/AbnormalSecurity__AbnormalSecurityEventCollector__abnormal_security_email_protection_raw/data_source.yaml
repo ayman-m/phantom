@@ -1,0 +1,199 @@
+schema_version: 1
+id: AbnormalSecurity
+pack_name: AbnormalSecurity
+rule_name: AbnormalSecurityEventCollector
+dataset_name: abnormal_security_email_protection_raw
+vendor: Abnormal Security
+product: AbnormalSecurity
+description: Abnormal Security detects and protects against the whole spectrum of
+  email attacks
+categories:
+- Email
+version: 2.4.7
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMDYgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM2MjE4OUYiPkFibm9ybWFsIFNlY3VyaXR5PC90ZXh0Pjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: abxMessageId
+  type: string
+  description: Vendor-emitted field 'AbxMessageId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: msg-c3cc83d0-1cc
+- name: abxPortalUrl
+  type: string
+  description: Vendor-emitted field 'AbxPortalUrl'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '443'
+- name: attachmentNames
+  type: string
+  description: Vendor-emitted field 'AttachmentNames'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_attachmentnames
+- name: attackStrategy
+  type: string
+  description: Vendor-emitted field 'AttackStrategy'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_attackstrategy
+- name: attackType
+  type: string
+  description: Vendor-emitted field 'AttackType'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_attacktype
+- name: attackVector
+  type: string
+  description: Attack vector (Phishing/BEC/Extortion/etc.). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_attackvector
+- name: attackedParty
+  type: string
+  description: Targeted party (recipient or org role). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_attackedparty
+- name: autoRemediated
+  type: string
+  description: Whether auto-remediation was applied. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_autoremediated
+- name: ccEmails
+  type: email
+  description: Vendor-emitted field 'CcEmails'. Free-form text; may contain whitespace
+    and punctuation.
+  example: user@example.com
+- name: fromAddress
+  type: email
+  description: Vendor-emitted field 'FromAddress'. RFC 5322 'local@domain' address;
+    one address only — use an array field for multiple addresses.
+  example: user@example.com
+- name: fromName
+  type: string
+  description: Vendor-emitted field 'FromName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_fromname
+- name: internetMessageId
+  type: string
+  description: Vendor-emitted field 'InternetMessageId'. Free-form text; may contain
+    whitespace and punctuation.
+  example: msg-33b0cde2-867
+- name: isRead
+  type: string
+  description: Vendor-emitted field 'IsRead'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_isread
+- name: postRemediated
+  type: string
+  description: Whether post-delivery remediation was applied. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_postremediated
+- name: recipientAddress
+  type: ipv4
+  description: Vendor-emitted field 'RecipientAddress'. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: remediationStatus
+  type: string
+  description: Vendor-emitted field 'RemediationStatus'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_remediationstatu
+- name: replyToEmails
+  type: email
+  description: Vendor-emitted field 'ReplyToEmails'. Free-form text; may contain whitespace
+    and punctuation.
+  example: user@example.com
+- name: returnPath
+  type: email
+  description: Vendor-emitted field 'ReturnPath'. RFC 5322 'local@domain' address;
+    one address only — use an array field for multiple addresses.
+  example: user@example.com
+- name: senderIpAddress
+  type: ipv4
+  description: Vendor-emitted field 'SenderIpAddress'. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: subject
+  type: string
+  description: Subject line — typically email subject or event summary. Free-form
+    text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: summaryInsights
+  type: string
+  description: Vendor-emitted field 'SummaryInsights'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_summaryinsights
+- name: threatId
+  type: string
+  description: Vendor-emitted field 'ThreatId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: thr-83549fcd
+- name: toAddresses
+  type: ipv4
+  description: Vendor-emitted field 'ToAddresses'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: urls
+  type: url
+  description: Vendor-emitted field 'Urls'. Free-form text; may contain whitespace
+    and punctuation.
+  example: https://example.com/path?q=1
+use_cases:
+- Email
+how_to_use: |
+  ## Abnormal Security AbnormalSecurity → Cortex XSIAM (dataset `abnormal_security_email_protection_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `abnormal_security_email_protection_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `abnormal_security_email_protection`. The marketplace pack's display name `Abnormal Security` / `AbnormalSecurity` normalizes to `abnormal_security_abnormalsecurity_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `abnormal_security_email_protection` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~17 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.category`, `xdm.alert.description`, `xdm.alert.name`, `xdm.email.attachment.filename`, `xdm.email.cc`, `xdm.email.message_id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = abnormal_security_email_protection_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

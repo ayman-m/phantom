@@ -1,0 +1,489 @@
+apiVersion: phantom.agentic/v1alpha1
+kind: AgentBundle
+metadata:
+  id: phantom-soc-simulation-agent
+  name: Phantom Agent
+  version: 1.0.0
+  description: Continuous SOC simulation agent with synthetic telemetry, MCP tools, Caldera orchestration, XSIAM validation, and reporting.
+  createdBy: ayman-m/phantom
+  labels:
+    domain: security-operations
+    category: soc-simulation
+    runtime: docker-compose
+
+identity:
+  displayName: Phantom Agent
+  icon: logos/phantom.svg
+  homepage: README.md
+  capabilities:
+    - synthetic-log-generation
+    - scenario-simulation
+    - caldera-adversary-emulation
+    - xsiam-detection-validation
+    - attack-coverage-reporting
+
+runtime:
+  mode: compose
+  composeFile: docker-compose.yml
+  lifecycle:
+    commandFile: scripts/agent_lifecycle.sh
+    operations:
+      install:
+        command: scripts/install_agent_bundle.sh <bundle.tar.gz> <target-dir>
+      import:
+        command: scripts/import_agent_bundle.sh <bundle.tar.gz> <target-dir>
+      setup:
+        command: open http://localhost:3000
+      applySetup:
+        command: scripts/agent_lifecycle.sh apply-setup
+      start:
+        command: scripts/agent_lifecycle.sh start
+      stop:
+        command: scripts/agent_lifecycle.sh stop
+      restart:
+        command: scripts/agent_lifecycle.sh restart
+      status:
+        command: scripts/agent_lifecycle.sh status
+      health:
+        command: scripts/agent_lifecycle.sh health
+      logs:
+        command: scripts/agent_lifecycle.sh logs
+      export:
+        command: scripts/agent_lifecycle.sh export
+  requiredImages:
+    - name: phantom
+      image: phantom:local
+      service: phantom
+      buildContext: .
+      dockerfile: Dockerfile
+      artifact: images/phantom-local.tar
+    - name: phantom-mcp
+      image: phantom-mcp:local
+      service: phantom-mcp
+      buildContext: bundles/spark/mcp
+      dockerfile: bundles/spark/mcp/Dockerfile
+      artifact: images/phantom-mcp-local.tar
+    - name: phantom-agent
+      image: phantom-agent:local
+      service: phantom-agent
+      buildContext: mcp/agent
+      dockerfile: mcp/agent/Dockerfile
+      artifact: images/phantom-agent-local.tar
+    - name: caldera
+      image: caldera:local
+      service: caldera
+      buildContext: third_party/caldera
+      dockerfile: third_party/caldera/Dockerfile
+      artifact: images/caldera-local.tar
+  standalone:
+    supported: true
+    launch:
+      command: docker compose up -d
+      health:
+        - service: phantom
+          url: http://localhost:8999/health
+        - service: phantom-mcp
+          url: http://localhost:8080/ping/
+        - service: phantom-agent
+          url: http://localhost:3000/api/auth/status
+        - service: caldera
+          url: http://localhost:8888/
+
+interfaces:
+  ui:
+    service: phantom-agent
+    url: http://localhost:3000
+    orchestratorMountPath: /agents/phantom-soc-simulation-agent
+    bundle:
+      type: a2ui-contract
+      protocol: a2ui
+      version: v0.9
+      manifest: a2ui/manifest.json
+      catalogs:
+        - a2ui/catalogs/phantom-ui.v0.1.json
+      surfaces:
+        - a2ui/surfaces/chat.jsonl
+        - a2ui/surfaces/setup.jsonl
+        - a2ui/surfaces/skills.jsonl
+        - a2ui/surfaces/workflows.jsonl
+        - a2ui/surfaces/telemetry.jsonl
+        - a2ui/surfaces/bundle.jsonl
+        - a2ui/surfaces/reports.jsonl
+      dataModelSchema: a2ui/schemas/phantom-data-model.schema.json
+      eventsSchema: a2ui/schemas/phantom-events.schema.json
+      standaloneRenderer:
+        type: nextjs-standalone
+        image: phantom-agent:local
+        entrypoint: server.js
+      runtimeEndpoints:
+        manifest: /api/a2ui/manifest
+        catalog: /api/a2ui/catalogs/phantom-ui.v0.1
+        surface: /api/a2ui/surfaces/{surfaceId}
+        schema: /api/a2ui/schemas/{schemaId}
+        events: /api/a2ui/events
+      defaultRoute: /
+    auth:
+      type: basic-form
+      usernameRef: UI_USER
+      passwordRef: UI_PASSWORD
+  agentApi:
+    service: phantom-agent
+    externalBaseUrl: http://localhost:3000/api/agent
+    endpoints:
+      - method: GET
+        path: /manifest
+        purpose: Discover the agent runtime contract for orchestration import.
+      - method: GET
+        path: /health
+        purpose: Check Phantom, MCP, UI, and Caldera readiness.
+      - method: GET
+        path: /workflows
+        purpose: List guided workflows and required tool outputs.
+      - method: POST
+        path: /workflows
+        purpose: Materialize a guided workflow prompt by workflow ID.
+      - method: GET
+        path: /reports
+        purpose: Proxy coverage and simulation export reports from Phantom REST.
+  a2ui:
+    service: phantom-agent
+    protocol: a2ui
+    version: v0.9
+    manifestFile: a2ui/manifest.json
+    runtimeBaseUrl: http://localhost:3000/api/a2ui
+    endpoints:
+      - method: GET
+        path: /manifest
+        purpose: Discover the portable UI contract for import or standalone rendering.
+      - method: GET
+        path: /catalogs/phantom-ui.v0.1
+        purpose: Load the Phantom trusted component catalog.
+      - method: GET
+        path: /surfaces/{surfaceId}
+        purpose: Stream A2UI JSONL messages for a named surface.
+      - method: GET
+        path: /schemas/{schemaId}
+        purpose: Load A2UI data model and event schemas.
+      - method: POST
+        path: /events
+        purpose: Accept named A2UI UI events and return data model updates.
+  mcp:
+    service: phantom-mcp
+    transport: streamable-http
+    url: http://phantom-mcp:8080/api/v1/stream/mcp
+    externalUrl: http://localhost:8080/api/v1/stream/mcp
+    auth:
+      type: bearer-token
+      tokenRef: MCP_TOKEN
+    connectorInstances:
+      - id: primary-phantom-mcp
+        purpose: Phantom simulation tools and bundled workflows.
+        urlRef: MCP_URL
+        tokenRef: MCP_TOKEN
+        required: true
+      - id: caldera-mcp
+        purpose: Optional Caldera operation tools when Caldera is owned outside the agent.
+        urlRef: CALDERA_MCP_URL
+        tokenRef: CALDERA_MCP_TOKEN
+        required: false
+      - id: xsiam-mcp
+        purpose: Optional XSIAM query, validation, and collector tools.
+        urlRef: XSIAM_MCP_URL
+        tokenRef: XSIAM_MCP_TOKEN
+        required: false
+      - id: xlog-mcp
+        purpose: Optional Xlog/log-collector tools.
+        urlRef: XLOG_MCP_URL
+        tokenRef: XLOG_MCP_TOKEN
+        required: false
+  rest:
+    service: phantom
+    # externalBaseUrl stays http: it is the published host port the
+    # operator reaches from their workstation.
+    baseUrl: https://xlog:8000/api/v1
+    externalBaseUrl: http://localhost:8999/api/v1
+    endpoints:
+      - method: GET
+        path: /simulations
+      - method: POST
+        path: /simulations
+      - method: GET
+        path: /simulations/{simulation_id}
+      - method: POST
+        path: /simulations/{simulation_id}/validations
+      - method: GET
+        path: /coverage-report
+      - method: GET
+        path: /simulations/{simulation_id}/export
+  graphql:
+    service: phantom
+    # externalUrl stays http (tunnel-terminated form).
+    url: https://xlog:8000/
+    externalUrl: http://localhost:8999/
+  caldera:
+    service: caldera
+    url: http://caldera:8888
+    externalUrl: http://localhost:8888
+
+tools:
+  provider: phantom-mcp
+  catalogMode: live-with-bundled-snapshot
+  catalogFile: tool-catalog.yaml
+  snapshotFile: tool-snapshot.json
+  snapshotSchemaMode: gemini-compatible-sanitized
+  policy:
+    default: allow
+    deny: []
+  groups:
+    phantom:
+      - phantom_create_data_worker
+      - phantom_create_scenario_worker
+      - phantom_list_workers
+      - phantom_get_field_info
+      - phantom_generate_observables
+      - phantom_run_detection_validation
+      - phantom_get_simulation_result
+      - phantom_generate_coverage_report
+    caldera:
+      - caldera_get_all_abilities
+      - caldera_create_adversary
+      - caldera_create_operation
+      - caldera_update_operation
+      - caldera_get_operation_report
+      - caldera_get_operation_event_logs
+    xsiam:
+      - xsiam_run_xql_query
+      - xsiam_get_cases
+      - xsiam_send_webhook_log
+      - xsiam_get_datasets
+      - xsiam_find_xql_examples_rag
+
+knowledge:
+  sources:
+    - id: simulation-skills
+      path: bundles/spark/mcp/skills
+      mount: /app/skills
+      type: markdown-skill-library
+    - id: xql-resources
+      path: bundles/spark/mcp/resources
+      type: markdown-reference
+    - id: ready-scenarios
+      path: scenarios/ready
+      type: scenario-json
+
+memory:
+  export:
+    mode: optional
+    enabledByEnv: INCLUDE_STATE=1
+    artifacts:
+      - id: phantom-db
+        path: state/phantom/phantom.db
+      - id: mcp-skills
+        path: state/mcp/skills
+      - id: caldera-data
+        path: state/caldera/data
+  import:
+    mode: materialize-volumes
+    script: scripts/import_agent_bundle.sh
+    restore:
+      enabledByEnv: RESTORE_STATE=1
+      composeProjectEnv: COMPOSE_PROJECT_NAME
+      volumeOverrides:
+        phantom-db: PHANTOM_DATA_VOLUME
+        mcp-skills: PHANTOM_MCP_SKILLS_VOLUME
+        caldera-data: CALDERA_DATA_VOLUME
+    notes:
+      - Import script loads images and creates an env template.
+      - State restore is supported when state artifacts are present in the bundle.
+      - State restore is opt-in to avoid overwriting target volumes unexpectedly.
+  stores:
+    - id: phantom-db
+      type: sqlite
+      service: phantom
+      path: /data/phantom.db
+      volume: phantom_data
+      contains:
+        - simulations
+        - workers
+        - scenario_packages
+        - validation_results
+        - environment_profiles
+        - run_artifacts
+    - id: mcp-skills
+      type: volume
+      service: phantom-mcp
+      volume: phantom_mcp_skills
+      path: /app/skills
+    - id: caldera-data
+      type: volume
+      service: caldera
+      volume: caldera_data
+      path: /usr/src/app/data
+    - id: caldera-conf
+      type: volume
+      service: caldera
+      volume: caldera_conf
+      path: /usr/src/app/conf
+      exportable: false
+      containsSecrets: true
+
+secrets:
+  policy: references-only
+  bindingTemplate: secret-bindings.example.yaml
+  materialization:
+    script: scripts/materialize_secret_bindings.py
+    output: .env.secret-refs
+    defaultMode: provider-references
+    rawValuesAllowed: false
+  providerBinding:
+    script: scripts/bind_secret_provider.py
+    enabledByEnv: BIND_SECRET_PROVIDER=1
+    providers:
+      - file
+      - http
+    http:
+      urlEnv: SECRET_PROVIDER_API_URL
+      tokenEnv: SECRET_PROVIDER_TOKEN
+  required:
+    - name: MCP_TOKEN
+      purpose: Authenticate UI-to-MCP calls.
+    - name: UI_PASSWORD
+      purpose: UI login password.
+    - name: GOOGLE_APPLICATION_CREDENTIALS
+      purpose: Vertex AI service account JSON or key path.
+  optional:
+    - GEMINI_API_KEY
+    - CALDERA_MCP_TOKEN
+    - XSIAM_MCP_TOKEN
+    - XLOG_MCP_TOKEN
+    - CALDERA_RED_PASSWORD
+    - SSL_CERT_PEM
+    - SSL_KEY_PEM
+
+configuration:
+  variables:
+    - ANIMATED
+    - CALDERA_RED_USER
+    - CALDERA_URL
+    - CALDERA_VARIANT
+    - CALDERA_MCP_URL
+    - GEMINI_MODEL
+    - LOGGING_DIR
+    - LOGGING_STORAGE_SIZE
+    - LOGGING_TRUNCATE_LIMIT
+    - MCP_HOST
+    - MCP_PATH
+    - MCP_PORT
+    - MCP_TOOL_CACHE_TTL_MS
+    - MCP_TRANSPORT
+    - MCP_URL
+    - XLOG_URL
+    - PLAYGROUND_ID
+    - REBUILD_XQL_CHROMA
+    - TECHNOLOGY_STACK
+    - UI_USER
+    - XSIAM_MCP_URL
+    - XLOG_MCP_URL
+    - WORKERS_NUMBER
+    - XSIAM_MANDATORY_PARSED_FIELDS
+    - XSIAM_OPTIONAL_PARSED_FIELDS
+
+observability:
+  contractFile: observability.contract.yaml
+  healthchecks:
+    - service: phantom
+      url: https://xlog:8000/health
+    - service: phantom-mcp
+      url: http://phantom-mcp:8080/ping/
+    - service: phantom-agent
+      url: http://phantom-agent:3000/api/auth/status
+    - service: caldera
+      url: http://caldera:8888/
+  reports:
+    - id: coverage-report
+      endpoint: /api/v1/coverage-report
+      formats:
+        - json
+    - id: simulation-export
+      endpoint: /api/v1/simulations/{simulation_id}/export
+      formats:
+        - json
+        - csv
+        - markdown
+
+onboarding:
+  importScript: scripts/import_agent_bundle.sh
+  targetPlatform:
+    steps:
+      - verify-signature
+      - load-images
+      - create-volumes
+      - bind-secrets
+      - materialize-compose
+      - register-interfaces
+      - run-healthchecks
+  standalone:
+    steps:
+      - load-images
+      - bind-local-env
+      - docker-compose-up
+      - open-ui
+
+export:
+  format: tar.gz
+  manifest: bundles/phantom-agent.bundle.yaml
+  script: scripts/export_agent_bundle.sh
+  include:
+    - bundles/spark/manifest.yaml
+    - bundles/spark/prompts/system.md
+    - bundles/spark/skills
+    - bundles/spark/kbs
+    - bundles/spark/ui/a2ui
+    - bundles/spark/README.md
+    - bundles/tool-catalog.yaml
+    - tool-snapshot.json
+    - bundles/secret-bindings.example.yaml
+    - bundles/observability.contract.yaml
+    - a2ui/manifest.json
+    - a2ui/catalogs/phantom-ui.v0.1.json
+    - a2ui/schemas/phantom-data-model.schema.json
+    - a2ui/schemas/phantom-events.schema.json
+    - a2ui/surfaces/chat.jsonl
+    - a2ui/surfaces/setup.jsonl
+    - a2ui/surfaces/skills.jsonl
+    - a2ui/surfaces/workflows.jsonl
+    - a2ui/surfaces/telemetry.jsonl
+    - a2ui/surfaces/bundle.jsonl
+    - a2ui/surfaces/reports.jsonl
+    - bundle-manifest.json
+    - bundle-signature.json
+    - docs/agent-bundle-architecture.md
+    - docker-compose.yml
+    - config.yml
+    - bundles/spark/mcp/skills
+    - bundles/spark/mcp/resources
+    - scenarios/ready
+    - logos
+    - scripts/agent_lifecycle.sh
+    - scripts/install_agent_bundle.sh
+    - scripts/import_agent_bundle.sh
+    - scripts/generate_mcp_tool_snapshot.py
+    - scripts/generate_bundle_manifest.py
+    - scripts/verify_agent_bundle.py
+    - scripts/materialize_secret_bindings.py
+    - scripts/validate_tool_snapshot.py
+    - scripts/bind_secret_provider.py
+    - scripts/validate_spark_bundle.py
+    - scripts/export_spark_agent_bundle.sh
+  imageArchives:
+    enabled: true
+    directory: images
+  integrity:
+    checksum: sha256
+    manifestFile: bundle-manifest.json
+    checksumFile: checksums.sha256
+    signature:
+      mode: optional-hmac-sha256
+      file: bundle-signature.json
+      signingKeyEnv: BUNDLE_SIGNING_KEY
+      signingKeyFileEnv: BUNDLE_SIGNING_KEY_FILE

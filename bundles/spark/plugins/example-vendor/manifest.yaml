@@ -1,0 +1,106 @@
+# Reference plugin — Round-15 / Phase X.
+#
+# This plugin exists to prove the loader works end-to-end. It
+# demonstrates each contribution kind with realistic SOC content:
+# a skill (FortiGate-specific tactics), a scenario (one of our
+# bundled scenarios re-exported), and three memory seeds (vendor
+# trivia the agent uses to ground its tool selection).
+#
+# Plugins go under `bundles/spark/plugins/<name>/`. The MCP loader
+# picks them up at boot and applies their contributions
+# idempotently (skill files copied, memory seeds added if missing).
+#
+# Real plugins look like:
+#   - "the-crowdstrike-plugin" → CrowdStrike-specific scenarios +
+#      a CrowdStrike MCP connector + memory seeds for the most
+#      common CrowdStrike event-type → MITRE technique mappings
+#   - "the-okta-plugin" → Okta auth-spray scenarios + a memory
+#      seed listing Okta's notable rate-limit behaviors
+#
+# Set `enabled: false` to keep the plugin discoverable but skip
+# its contributions on boot.
+
+name: example-vendor
+version: 1.0.0
+description: |
+  Reference plugin demonstrating plugin contributions: a skill,
+  three memory seeds, and three agent definitions. Ships disabled by
+  default to maintain a minimal initial state. Operators who want the
+  demo content for plugin authoring can flip `enabled: true` here and
+  restart phantom-agent to seed 3 memories, 1 skill, and 3 subagents.
+enabled: false
+
+skills:
+  - skills/example-vendor-tactics.md
+
+# Scenarios are listed by relative path from the plugin dir. The
+# loader copies them into scenarios/ready/ with the plugin name
+# as a prefix to avoid collisions. Plugins shouldn't ship the
+# same scenario the bundle already has; this entry is intentionally
+# left empty for the reference plugin.
+scenarios: []
+
+# Round-15 / Phase S — agent definitions contributed by the plugin.
+# Each entry can be either an inline dict OR a relative path to a
+# YAML file. The plugin loader upserts these with origin
+# `plugin:example-vendor` so /agents shows their provenance.
+#
+# These three reference agents demonstrate the scoped-tool pattern:
+#  - red-team-emulator: caldera_* only (no XSIAM, no xlog scenarios
+#    that could pollute the SIEM).
+#  - blue-team-validator: xsiam read-only + memory_search (verifies
+#    coverage without mutating XSIAM state).
+#  - coverage-reporter: read-only across xsiam + caldera + phantom
+#    (composes a reporting summary; can't write anywhere).
+agents:
+  - agents/red-team-emulator.yaml
+  - agents/blue-team-validator.yaml
+  - agents/coverage-reporter.yaml
+
+memory_seeds:
+  - key: example-vendor.tactics-quick-reference
+    scope: agent
+    value: |
+      Common SOC tactics worth keeping in mind (vendor-agnostic):
+      - When the operator says "auth spray", they mean repeated
+        failed-then-successful logins from a single source IP across
+        multiple usernames. xlog has fortigate-auth-spray and
+        okta-credential-stuffing scenarios for this.
+      - Detection-coverage queries should always join against
+        the rule's xsiam_id, not the rule name (names rename on
+        ruleset upgrades).
+      - When validating coverage after a scenario runs, allow at
+        least 2 minutes for log ingestion before running XQL.
+    meta:
+      source: plugin:example-vendor
+      version: 1.0.0
+      kind: tactics-reference
+
+  - key: example-vendor.fortigate-event-mapping
+    scope: agent
+    value: |
+      FortiGate event-type → MITRE technique mapping (common cases):
+      - 32168 (login_failed): T1110.001 (Password Guessing)
+      - 32169 (login_succeeded after failures): T1078 (Valid Accounts)
+      - 0102046 (admin_login): T1078.003 (Local Accounts)
+      - 23001 (vpn_tunnel_up): T1133 (External Remote Services)
+      For a fuller mapping, see scenarios/ready/fortigate-*.json.
+    meta:
+      source: plugin:example-vendor
+      version: 1.0.0
+      kind: vendor-event-mapping
+
+  - key: example-vendor.coverage-pitfalls
+    scope: agent
+    value: |
+      Coverage validation pitfalls to call out when reviewing:
+      - XSIAM rules with NO time window in their XQL fire on
+        startup (false positives during the first ingestion).
+      - Rules referencing source_ip in (10.0.0.0/8) miss
+        anything from the public-facing FortiGate at 192.168.x.x.
+      - "alert_count" in coverage_report includes deduped alerts
+        but excludes ones suppressed by the analyst stage.
+    meta:
+      source: plugin:example-vendor
+      version: 1.0.0
+      kind: validation-pitfalls

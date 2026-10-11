@@ -1,0 +1,45 @@
+- id: 9c7f4d5a-3b21-4e88-a3f9-d4a9c2e7b1f3
+  name: "Phantom: Ransack (curated)"
+  description: >
+    Phantom-curated variant of stockpile Ransack (de07f52d). The stock Ransack chain
+    fails silently on a fresh lab because T1005 "Find files" searches C:\Users for
+    sensitive-extension files (png, yml, wav per source facts) and finds nothing on
+    clean Windows Server hosts. With zero host.file.path facts produced, the
+    downstream "Stage sensitive files" never dispatches, "Compress staged directory"
+    runs on an empty dir and fails, and "Exfil staged directory" never reaches the
+    chain. Result: ~60% chain success, ransomware-relevant half untested, zero
+    Cortex preventions captured (path never exercised at the EDR layer).
+
+    This curated variant prepends a decoy-file-setup ability that drops 27 lab-safe
+    decoy files in C:\Users\Public\Documents\Decoys before the chain runs. The rest
+    of the atomic_ordering matches stockpile Ransack exactly (preserving the
+    intended detection coverage). End-state: full chain completes through staging +
+    compression + exfil, giving Cortex the opportunity to fire its full ransomware-
+    behavior signature set.
+
+    Phantom-bundled: ships in the caldera image.
+  atomic_ordering:
+    # Phantom pre-condition: drop decoy files so T1005 has something to find
+    - 7e88a8b1-1c4f-4dcb-9c92-aef82a7c5d11
+    # Stockpile Ransack atomic_ordering, verbatim
+    - 90c2efaa-8205-480d-8bb6-61d90dbaf81b  # T1005 Find files
+    - c0da588f-79f0-4263-8998-7496b1a40596  # T1033 Identify active user
+    - c1cd6388-3ced-48c7-a511-0434c6ba8f48  # T1087.001 Find local users
+    - feaced8f-f43f-452a-9500-a5219488abb8  # T1087.001 Identify local users
+    - b6f545ef-f802-4537-b59d-2cb19831c8ed  # T1016 Snag broadcast IP
+    - 3b5db901-2cb8-4df7-8043-c4628a6a5d5a  # T1057 Find user processes
+    - 530e47c6-8592-42bf-91df-c59ffbd8541b  # T1135 View admin shares
+    - 26c8b8b5-7b5b-4de1-a128-7d37fb14f517  # T1018 Discover DC (nltest)
+    - a52d1e10-c19c-4d51-8bf3-7e4c9a3f8e91  # T1518.001 Phantom AV/EDR multi-path discovery
+    - 5c4dd985-89e3-4590-9b57-71fed66ff4e2  # T1069.001 Permission groups (gpresult)
+    - b81f4c93-2e8a-4f29-9b7d-e5a216d4f9c2  # T1518.001 Phantom Identify Firewalls Get-NetFirewallProfile
+    - ce485320-41a4-42e8-a510-f5a8fe96a644  # T1018 Discover Mail Server
+    - b007fc38-9eb7-4320-92b3-9a3ad3e6ec25  # T1217 Get Chrome Bookmarks
+    - 6469befa-748a-4b9c-a96d-f191fde47d89  # T1074.001 Create staging dir
+    - 90c2efaa-8205-480d-8bb6-61d90dbaf81b  # T1005 Find files (re-discovery)
+    - 4e97e699-93d7-4040-b5a3-2e906a58199e  # T1074.001 Stage sensitive files (now dispatches with decoys present)
+    - 300157e5-f4ad-4569-b533-9d1fa0e74d74  # T1560.001 Compress staged dir (now succeeds — dir has content)
+    - ea713bc4-63f0-491c-9a6f-0b01d560b87e  # T1041 Exfil staged directory (now dispatches — zip exists)
+  objective: 495a9828-cc81-44fe-a4b5-d3b41882a6b5
+  has_repeatable_abilities: true
+  tags: []

@@ -1,0 +1,42 @@
+- id: e5a9c1b2-7d40-4836-9c4a-8b1f3e6d5a7e
+  name: "Phantom: Lateral Movement Sweep (curated)"
+  description: >
+    Phantom-curated lateral movement adversary that bypasses the workgroup
+    DNS-PTR-records gap by using known-working abilities with hardcoded targets.
+    All 7 stockpile lateral-movement adversaries we tested (Worm, Lateral Movement
+    Certutil/Esentutl, Service Creation Lateral, Mount Share + 4 sandcat-copy
+    abilities) failed to dispatch their lateral steps in our lab because they
+    require `remote.host.fqdn` facts that the basic source can't provide and
+    Find Hostname (`nbtstat -A` against ARP-discovered IPs) returns "Host not
+    found" on workgroup hosts.
+
+    This curated sweep uses three known-working approaches:
+
+      1. **Phantom lateral target marker** — pre-condition that documents the
+         hardcoded target (win-host-02 / 10.0.0.16) for telemetry visibility.
+      2. **Phantom lateral ability** (`55aee52f`) — multi-method
+         SMB+WMI+WinRM real cross-host RCE, hardcoded target inside encoded
+         PowerShell, no fact prereqs, proven working in the phishing chain.
+      3. **Caldera discovery abilities** that ARE workgroup-compatible — Local
+         FQDN (74d1b640) + Discover local hosts (13379ae1) for context, even
+         though they don't satisfy the stockpile lateral movement abilities'
+         FQDN requirements.
+
+    Cortex coverage expectation: SMB share map + WMI remote exec + WinRM
+    Invoke-Command — classic lateral movement signatures Cortex's behavioral
+    rules should catch.
+
+    Phantom-bundled: ships in the caldera image.
+  atomic_ordering:
+    - a4f1b2c8-9d3e-4506-b8a1-c25d4f6e8b07  # Phantom: Pre-populate lateral movement target facts (marker)
+    - 74d1b640-7f1e-4b36-beba-23a8228f39e0  # Caldera: Local FQDN (discovery, no prereqs)
+    - 13379ae1-d20e-4162-91f8-320d78a35e7f  # Caldera: Discover local hosts (discovery, no prereqs)
+    - 55aee52f-e755-46b5-b7e7-37c4bf13a2c3  # PHANTOM: Lateral movement to win-host-02 — real SMB+WMI+WinRM+RCE
+  objective: 495a9828-cc81-44fe-a4b5-d3b41882a6b5
+  has_repeatable_abilities: false
+  tags:
+    - phantom-curated
+    - lateral-movement
+    - smb
+    - wmi
+    - winrm

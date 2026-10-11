@@ -1,0 +1,328 @@
+schema_version: 1
+id: FireEyeHX
+pack_name: FireEyeHX
+rule_name: FireEyeHXModelingRules
+dataset_name: fireeye_hx_raw
+vendor: FireEye
+product: FireEyeHX
+description: FireEye Endpoint Security is an integrated solution that detects and
+  protects endpoints against known and unknown threats. The FireEye HX Cortex XSOAR
+  integration provides access to information about endpoints, acquisitions, alerts,
+  indicators, and containment. Customers can extract critical data and effectively
+  operate the security operations automated playbooks.
+categories:
+- Endpoint
+version: 2.4.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNFMTFBMkIiPkZpcmVFeWU8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _id
+  type: string_short
+  description: Opaque identifier emitted by FireEye. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 6f623ba8-8ab2-5aec-a2e0-54376b46001f
+- name: appliance
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: _id (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: categoryOutcome
+  type: string
+  description: Vendor-emitted field 'CategoryOutcome'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_categoryoutcome
+- name: categoryTupleDescription
+  type: string
+  description: FireEye event category tuple description. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_categorytupledes
+- name: cefName
+  type: string_short
+  description: CEF event name — short human-readable label for the event class. Short
+    opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefSeverity
+  type: integer
+  description: CEF severity score (0-10) as classified by FireEye. Signed decimal
+    integer; bare digits, optional leading minus.
+  example: '42'
+- name: cefVersion
+  type: string_short
+  description: CEF specification version — typically `0` for CEF 1.x. Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: condition
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: event_type
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: cs1
+  type: string
+  description: Device custom string 1 (see cs1Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs10
+  type: string
+  description: Device custom string 10 (see cs10Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs10
+- name: cs10Label
+  type: string
+  description: Vendor-emitted field 'Cs10Label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs10label
+- name: cs1Label
+  type: string
+  description: Vendor-emitted field 'Cs1Label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs2
+  type: string
+  description: Device custom string 2 (see cs2Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs2Label
+  type: string
+  description: Vendor-emitted field 'Cs2Label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs3
+  type: string
+  description: Device custom string 3 (see cs3Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs3Label
+  type: string
+  description: Vendor-emitted field 'Cs3Label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs4
+  type: string
+  description: Device custom string 4 (see cs4Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs4Label
+  type: string
+  description: Vendor-emitted field 'Cs4Label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs6
+  type: string
+  description: Device custom string 6 (see cs6Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs6Label
+  type: string
+  description: Vendor-emitted field 'Cs6Label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs7
+  type: string
+  description: Device custom string 7 (see cs7Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs7
+- name: cs7Label
+  type: string
+  description: Vendor-emitted field 'Cs7Label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs7label
+- name: cs8
+  type: string
+  description: Device custom string 8 (see cs8Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs8
+- name: cs8Label
+  type: string
+  description: Vendor-emitted field 'Cs8Label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs8label
+- name: cs9
+  type: string
+  description: Device custom string 9 (see cs9Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs9
+- name: cs9Label
+  type: string
+  description: Vendor-emitted field 'Cs9Label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs9label
+- name: dhost
+  type: host
+  description: CEF destination host — hostname or FQDN of the target endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: dmac
+  type: mac
+  description: CEF destination MAC address. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: dntdom
+  type: string
+  description: Vendor-emitted field 'Dntdom'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dntdom
+- name: dst
+  type: ipv4
+  description: CEF destination IP — IPv4/IPv6 address of the target endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 198.51.100.7
+- name: dvchost
+  type: string
+  description: Vendor-emitted field 'Dvchost'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dvchost
+- name: event_id
+  type: integer
+  description: Unique identifier for this event as assigned by the vendor. Signed
+    decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: event_type
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: event_values
+  type: string
+  description: FireEye event values (key-value extras). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_values
+- name: externalId
+  type: string
+  description: Vendor-emitted field 'ExternalId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: ext-99d43ecc-7b1
+- name: filePath
+  type: file_path
+  description: Filesystem path reported by the vendor. Absolute filesystem path; vendor-native
+    separator (forward slash on POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: fname
+  type: file_path
+  description: Vendor-emitted field 'Fname'. Absolute filesystem path; vendor-native
+    separator (forward slash on POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: indicator
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: category,
+    display_name, name (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: md5values
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: msg
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: Operation completed successfully.
+- name: request
+  type: url
+  description: HTTP request line or full request payload as captured by FireEye. Full
+    URL with scheme (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: resolution
+  type: string
+  description: Vendor-emitted field 'Resolution'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_resolution
+- name: source
+  type: ipv4
+  description: Vendor-emitted field 'Source'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: subtype
+  type: string
+  description: Vendor-emitted field 'Subtype'. Free-form text; may contain whitespace
+    and punctuation.
+  example: login
+- name: suser
+  type: user
+  description: CEF source user — username of the actor initiating the event. Account
+    name as the vendor reports it — login name, UPN, or sAMAccountName; no domain
+    prefix unless vendor emits one.
+  example: jsmith
+- name: appliance._id
+  type: string_short
+  description: Opaque identifier emitted by FireEye. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: fir-f976a1b5
+- name: condition.event_type
+  type: string
+  description: Event type or category as the vendor classifies it. Leaf of the 'condition'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: indicator.category
+  type: string_short
+  description: FireEye's category classifier for the event. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: access_control
+- name: indicator.display_name
+  type: string
+  description: Human-readable name as displayed by FireEye. Free-form text; may contain
+    whitespace and punctuation.
+  example: John Doe
+- name: indicator.name
+  type: string
+  description: Human-readable name as displayed by FireEye. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+use_cases:
+- EDR
+- Email
+how_to_use: |
+  ## FireEye FireEyeHX → Cortex XSIAM (dataset `fireeye_hx_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `fireeye_hx_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `fireeye_hx`. The marketplace pack's display name `FireEye` / `FireEyeHX` normalizes to `fireeye_fireeyehx_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `fireeye_hx` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$['addressNotificationEvent/address']`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `_raw_log contains "Action ID"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~59 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.subcategory`, `xdm.auth.auth_method`, `xdm.event.description`, `xdm.event.id`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `FireEye`, Product = `FireEyeHX`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = fireeye_hx_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

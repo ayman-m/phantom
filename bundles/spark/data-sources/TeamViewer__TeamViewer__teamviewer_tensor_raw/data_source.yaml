@@ -1,0 +1,144 @@
+schema_version: 1
+id: TeamViewer
+pack_name: TeamViewer
+rule_name: TeamViewer
+dataset_name: teamviewer_tensor_raw
+vendor: TeamViewer
+product: TeamViewer
+description: This is the TeamViewer event collector integration for XSIAM
+categories:
+- Analytics & SIEM
+version: 1.0.17
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+VGVhbVZpZXdlcjwvdGl0bGU+PHBhdGggZD0ibTIwLjE3IDExLjk5OC02LjIyNS0zLjQwMS42ODUgMi4xNDRIOS4zN2wuNjg0LTIuMTQ1TDMuODI5IDEybDYuMjI1IDMuNDA0LS42ODMtMi4xNDdoNS4yNmwtLjY4NiAyLjE0N3pNMjAuNDQ4IDBIMy41NTNBMy41NTMgMy41NTMgMCAwIDAgLjAwMSAzLjU1MnYxNi44OTVBMy41NTMgMy41NTMgMCAwIDAgMy41NTMgMjRoMTYuODk1QTMuNTUzIDMuNTUzIDAgMCAwIDI0IDIwLjQ0N1YzLjU1MkEzLjU1MyAzLjU1MyAwIDAgMCAyMC40NDggMHpNMTIgMjEuNjQ2Yy01LjMyOCAwLTkuNjQ4LTQuMzItOS42NDgtOS42NDggMC01LjMyOSA0LjMyLTkuNjQ2IDkuNjQ4LTkuNjQ2UzIxLjY1IDYuNjcyIDIxLjY1IDEycy00LjMyIDkuNjQ4LTkuNjQ5IDkuNjQ4eiIvPjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: AffectedItem
+  type: string
+  description: Vendor-emitted field 'AffectedItem'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_affecteditem
+- name: Author
+  type: user
+  description: Vendor-emitted field 'Author'. Account name as the vendor reports it
+    — login name, UPN, or sAMAccountName depending on the source; no domain prefix
+    unless the vendor emits one.
+  example: jsmith
+- name: EventDetails
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: EventName
+  type: string
+  description: Vendor-emitted field 'EventName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: login
+- name: EventType
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'Policy'
+- name: Changes
+  type: string
+  description: Destination resource before value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_changes
+- name: Entities
+  type: string
+  description: Entities. Free-form text; may contain whitespace and punctuation.
+  example: sample_entities
+- name: NewValue
+  type: string
+  description: Destination resource value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_newvalue
+- name: OldValue
+  type: string
+  description: Destination resource before value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_oldvalue
+- name: PropertyCategory
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_propertycategory
+- name: PropertyName
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_propertyname
+- name: operation_type_change
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_change
+- name: sessionType
+  type: string
+  description: Sessiontype. Free-form text; may contain whitespace and punctuation.
+  example: sample_sessiontype
+use_cases:
+- Collab
+how_to_use: |
+  ## TeamViewer TeamViewer → Cortex XSIAM (dataset `teamviewer_tensor_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `teamviewer_tensor_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `teamviewer_tensor`. The marketplace pack's display name `TeamViewer` / `TeamViewer` normalizes to `teamviewer_teamviewer_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `teamviewer_tensor` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.OldValue`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `EventType in ("Policy", "User role", "User profile", "Company administration", "Group management")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~14 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.description`, `xdm.event.operation_sub_type`, `xdm.event.type`, `xdm.network.session_id`, `xdm.source.user.identifier`, `xdm.source.user.username`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = teamviewer_tensor_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

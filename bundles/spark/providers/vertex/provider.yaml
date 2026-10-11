@@ -1,0 +1,93 @@
+# Google Cloud Vertex AI provider for the Phantom SOC simulation agent.
+#
+# Per spark-agents spec v1.2 §7.6 — model providers are parallel to
+# tool connectors but contribute models, not tools. The setup form
+# collects per-instance config (project_id, region) + secrets
+# (service account JSON); the runtime materializes provider instances
+# and queries them for the model catalog the modelRequirements
+# resolver picks from.
+#
+# Tool names are NOT relevant here — providers don't expose tools.
+# Models are advertised via spec.models[] below; the runtime can also
+# query Provider.list_models() for a dynamic catalog.
+
+id: "vertex"
+version: "1.0.0"
+description: "Google Cloud Vertex AI — Gemini chat + embedding models."
+
+source:
+  language: "python"
+  entrypoint: "src.provider:Provider"
+
+# `runtimeMapping` is irrelevant for providers (no tool dispatch),
+# but the spec allows it for symmetry with connectors. Defaults to
+# class-style instantiation.
+runtimeMapping:
+  style: "class"
+
+executionMode: "persistent"
+
+configSchema:
+  type: "object"
+  required: ["project_id"]
+  properties:
+    project_id:
+      type: "string"
+      description: "GCP project ID where the Vertex AI service is enabled."
+    region:
+      type: "string"
+      description: "Vertex AI region (e.g. us-central1, europe-west4)."
+      default: "us-central1"
+
+secretSlots:
+  - name: "serviceAccountJson"
+    description: |
+      GCP service account JSON file content (the entire JSON document,
+      not a file path). The agent uses this to authenticate to Vertex.
+      The service account needs the Vertex AI User role.
+    required: true
+
+# Default model catalog. The Provider.list_models() method can override
+# this to query Vertex's API dynamically. The agent's modelRequirements
+# resolver picks from this catalog — match `family` and `supports`
+# values against the manifest's preferFamily + mustSupport.
+spec:
+  models:
+    # Chat models
+    - id: "gemini-3.1-pro-preview"
+      family: "gemini-3"
+      kind: "chat"
+      contextWindow: 1048576
+      supports: ["streaming", "tool_use", "vision"]
+    - id: "gemini-3.7-flash"
+      family: "gemini-3"
+      kind: "chat"
+      contextWindow: 1048576
+      supports: ["streaming", "tool_use", "vision"]
+    - id: "gemini-2.5-pro"
+      family: "gemini-2.5"
+      kind: "chat"
+      contextWindow: 2097152
+      supports: ["streaming", "tool_use", "vision"]
+    - id: "gemini-2.5-flash"
+      family: "gemini-2.5"
+      kind: "chat"
+      contextWindow: 1048576
+      supports: ["streaming", "tool_use", "vision"]
+    - id: "gemini-2.0-flash"
+      family: "gemini-2.0"
+      kind: "chat"
+      contextWindow: 1048576
+      supports: ["streaming", "tool_use", "vision"]
+
+    # Embedding models
+    - id: "text-embedding-004"
+      family: "text-embedding"
+      kind: "embedding"
+      contextWindow: 8192
+      dimensions: 768
+    - id: "text-embedding-005"
+      family: "text-embedding"
+      kind: "embedding"
+      contextWindow: 8192
+      dimensions: 768

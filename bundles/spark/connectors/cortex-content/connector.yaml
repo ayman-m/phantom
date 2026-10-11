@@ -1,0 +1,239 @@
+# Cortex Content tool connector — fetches XSIAM/XSOAR content packs from
+# the public demisto/content GitHub repository.
+#
+# Tool names auto-namespace as `cortex-content/<bare_name>` in the
+# agent's tool catalog. The bundle manifest's tools.allow includes
+# `cortex-content/*`.
+#
+# What this connector fetches:
+#   - Pack metadata (name, description, version, supportedModules)
+#   - ModelingRules (XSIAM data-model parsers — .xif + .yml + _schema.json)
+#   - ParsingRules (pre-XDM raw-log normalization rules)
+#   - CorrelationRules (XQL queries that produce alerts)
+#
+# What this connector does NOT fetch (yet, deferred to a later release):
+#   - Playbooks (large XSOAR YAML graphs)
+#   - Integrations (XSOAR Python integration definitions)
+#   - Scripts (XSOAR automation scripts)
+#   - Classifiers / IncidentFields / IncidentTypes / Layouts
+#
+# Fetch path:
+#   - File contents → raw.githubusercontent.com (CDN, no rate limit)
+#   - Directory listings → api.github.com (anonymous 60/hr; auth'd
+#     5000/hr via optional GITHUB_TOKEN env var on the agent container)
+#
+# Cache: 24h TTL by default, file-backed under
+# /app/data/cortex-content-cache/ (volume-survives, operator-pinned via
+# the configurable `cacheTtlSeconds` below).
+#
+# Why this connector exists: without a reference for what a canonical XDM
+# data-model parser looks like for a given data source, the chat agent has
+# to guess XDM paths when asked to model a data source (for example
+# xdm.network.bytes / xdm.network.lb.* do not exist). A live reference of
+# the ~26 packs that ship ModelingRules gives the agent the canonical
+# shape per data source, and `index_kb` embeds these into the knowledge KB
+# for semantic search.
+
+id: "cortex-content"
+version: "1.0.0"
+description: "Palo Alto Networks Cortex Content marketplace fetch + KB embedding. Tools: cortex_list_packs, cortex_search_packs, cortex_get_pack, cortex_list_modeling_rules, cortex_get_modeling_rule, cortex_list_parsing_rules, cortex_get_parsing_rule, cortex_list_correlation_rules, cortex_get_correlation_rule, cortex_index_kb."
+displayName: "Cortex content (playbooks)"
+tags: ["cortex", "content", "playbooks", "marketplace", "kb", "automation"]
+logo: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMwZjBhMmUiLz48cmVjdCB4PSIxNCIgeT0iMTQiIHdpZHRoPSIzNiIgaGVpZ2h0PSI4IiByeD0iMiIgc3Ryb2tlPSIjYTc4YmZhIiBzdHJva2Utd2lkdGg9IjEuNSIgZmlsbD0iIzFjMTI0OCIvPjxyZWN0IHg9IjE0IiB5PSIyNiIgd2lkdGg9IjM2IiBoZWlnaHQ9IjgiIHJ4PSIyIiBzdHJva2U9IiNhNzhiZmEiIHN0cm9rZS13aWR0aD0iMS41IiBmaWxsPSIjMWMxMjQ4Ii8+PHJlY3QgeD0iMTQiIHk9IjM4IiB3aWR0aD0iMzYiIGhlaWdodD0iOCIgcng9IjIiIHN0cm9rZT0iI2E3OGJmYSIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9IiMxYzEyNDgiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjE4IiByPSIxLjUiIGZpbGw9IiNmZjlhM2EiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjMwIiByPSIxLjUiIGZpbGw9IiNmZjlhM2EiLz48Y2lyY2xlIGN4PSIyMCIgY3k9IjQyIiByPSIxLjUiIGZpbGw9IiNmZjlhM2EiLz48cGF0aCBkPSJNMjYgMThoMThNMjYgMzBoMThNMjYgNDJoMTgiIHN0cm9rZT0iI2M0YjVmZCIgc3Ryb2tlLXdpZHRoPSIxLjIiLz48L3N2Zz4="
+
+source:
+  language: "python"
+  entrypoint: "src.connector"
+
+# Tool dispatch — `cortex_` prefix matching the function names in
+# src/connector.py. The agent sees
+# `cortex-content/list_packs`, `cortex-content/get_modeling_rule`, etc.;
+# the loader maps each to `cortex_list_packs`, `cortex_get_modeling_rule`.
+runtimeMapping:
+  # Universal connector container model.
+  # cortex-content reads from public GitHub APIs only; no secrets and
+  # no destructive ops, so the container model adds isolation benefits
+  # with no behavioral cost. See architecture page #marketplace-logic.
+  style: "container"
+  functionPrefix: "cortex_"
+
+executionMode: "persistent"
+
+configSchema:
+  type: "object"
+  properties:
+    githubRepo:
+      type: "string"
+      description: "GitHub owner/name of the content repo. Defaults to demisto/content (the public XSOAR + XSIAM marketplace repo Palo Alto maintains). Override only when testing against a fork or mirror."
+      default: "demisto/content"
+    githubBranch:
+      type: "string"
+      description: "Branch to fetch from. Defaults to master."
+      default: "master"
+    cacheTtlSeconds:
+      type: "integer"
+      description: "How long fetched directory listings + file contents are reused before re-fetching from GitHub. Defaults to 86400 (24 hours). Operator can lower for development against a freshly-updated mirror or raise to reduce GitHub API hits."
+      default: 86400
+    requestTimeoutSeconds:
+      type: "integer"
+      description: "Per-request HTTP timeout when calling the GitHub API or raw.githubusercontent.com. 30 seconds is generous; lower if the operator's network is reliably fast and they want faster failure."
+      default: 30
+
+# Optional GITHUB_TOKEN — raises the api.github.com rate limit from
+# 60/hr (anonymous) to 5000/hr (authenticated). Most flows are well
+# within 60/hr because raw file contents go via the CDN (no API limit);
+# the API hits are directory listings and pack metadata. The connector
+# works fully without a token — the slot is here so operators with
+# heavy refresh schedules or large content-pack inventories can opt in.
+secretSlots:
+  - name: "githubToken"
+    description: "Personal access token (no scopes required for public repo reads). When set, lifts api.github.com rate limit from 60/hr to 5000/hr."
+    optional: true
+
+spec:
+  tools:
+    # ─── Pack discovery ───────────────────────────────────────────────
+    - name: "list_packs"
+      method: "(github api)"
+      description: "List all packs in the demisto/content repository, optionally filtered by supportedModules (e.g. 'xsiam'). Returns name + description + version + supportedModules per pack. Paginated via offset/limit for the ~1000+ pack inventory. PRIMARY discovery tool when the operator asks 'what content packs are available for X?' or 'is there a pack for <vendor>?'."
+      args:
+        - { name: "supported_module", type: "string",  description: "Filter by supportedModules in pack_metadata (e.g. 'xsiam', 'agentix', 'marketplacev2'). Omit to list every pack.", required: false }
+        - { name: "limit",            type: "integer", description: "Max packs to return per page. Default 100, max 500.",                                                  required: false }
+        - { name: "offset",           type: "integer", description: "Skip the first N packs (pagination cursor). Default 0.",                                              required: false }
+      returns: { type: "object", description: "{ packs: [{name, description, version, supportedModules, marketplaces, categories}], total, limit, offset, has_more }." }
+
+    - name: "search_packs"
+      method: "(github search api)"
+      description: "Fuzzy-search packs by name/keyword/category. The query matches against pack name, description, keywords, and categories — useful when the operator says 'find me a pack for okta logs' or 'is there content for cisco esa?'. Returns top matches ordered by relevance."
+      args:
+        - { name: "query",  type: "string",  description: "Search term — vendor name, log source, category, or keyword. Free-form; case-insensitive.", required: true  }
+        - { name: "limit",  type: "integer", description: "Max results. Default 20, max 100.",                                                            required: false }
+      returns: { type: "object", description: "{ matches: [{name, description, version, supportedModules, relevance_score}], query, total_matched }." }
+
+    - name: "get_pack"
+      method: "(github api)"
+      description: "Fetch the full pack_metadata.json + top-level file tree for a single pack. Use this AFTER list_packs/search_packs to drill into a specific pack — e.g. 'show me the F5APM pack contents'."
+      args:
+        - { name: "pack_name", type: "string", description: "Exact pack name (filesystem-safe identifier — what list_packs returns in the `name` field). Case-sensitive.", required: true }
+      returns: { type: "object", description: "{ pack_name, metadata: {...}, tree: [{name, type: 'dir'|'file', size}], readme: '...' }." }
+
+    # ─── ModelingRules (XSIAM XDM data-model parsers) ─────────────────
+    - name: "list_modeling_rules"
+      method: "(github api)"
+      description: "List the ModelingRules directories under a pack — each modeling rule lives at Packs/<pack>/ModelingRules/<RuleName>/ with three files: <Rule>.xif (the XQL data-model code), <Rule>.yml (rule metadata), and <Rule>_schema.json (dataset → field type schema). Use this when the operator asks 'what data models does the F5APM pack ship?'."
+      args:
+        - { name: "pack_name", type: "string", description: "Pack to list ModelingRules under.", required: true }
+      returns: { type: "object", description: "{ pack_name, modeling_rules: [{name, datasets: [...], summary}] }. Returns an empty array if the pack has no ModelingRules directory." }
+
+    - name: "get_modeling_rule"
+      method: "(github api)"
+      description: "Fetch the three-file bundle for ONE modeling rule: the .xif (XQL code with [MODEL: dataset=...] blocks), the .yml (rule metadata: name, fromVersion, tags), and the _schema.json (dataset → field-type schema). This is the canonical XDM mapping reference for that data source. PRIMARY tool when the operator says 'show me how Cortex models cisco_esa_raw' or 'pull the F5APM modeling rule so I can adapt it'."
+      args:
+        - { name: "pack_name", type: "string", description: "Pack containing the rule (e.g. 'F5APM').",                                             required: true }
+        - { name: "rule_name", type: "string", description: "Modeling rule directory name (usually same as pack name — e.g. 'F5APM').",            required: true }
+      returns: { type: "object", description: "{ pack_name, rule_name, xif: '...XQL code...', yml: '...metadata...', schema: {dataset: {...fields...}} }." }
+
+    # ─── ParsingRules (pre-XDM raw log parsing) ───────────────────────
+    - name: "list_parsing_rules"
+      method: "(github api)"
+      description: "List the ParsingRules directories under a pack. ParsingRules run BEFORE ModelingRules — they normalize the raw log shape (regex extraction, field renaming, type coercion) so the modeling rule's [MODEL] block can map cleanly to XDM. Use when the operator asks 'how does this pack pre-process its raw logs?'."
+      args:
+        - { name: "pack_name", type: "string", description: "Pack to list ParsingRules under.", required: true }
+      returns: { type: "object", description: "{ pack_name, parsing_rules: [{name, summary}] }. Returns an empty array if the pack has no ParsingRules directory." }
+
+    - name: "get_parsing_rule"
+      method: "(github api)"
+      description: "Fetch the three-file bundle for ONE parsing rule (same shape as get_modeling_rule: .xif + .yml + _schema.json). The .xif contains XQL [RULE:] extraction blocks. Use when the operator wants to understand or adapt how a pack normalizes its incoming logs."
+      args:
+        - { name: "pack_name", type: "string", description: "Pack containing the rule.",                       required: true }
+        - { name: "rule_name", type: "string", description: "Parsing rule directory name.",                     required: true }
+      returns: { type: "object", description: "{ pack_name, rule_name, xif, yml, schema }." }
+
+    # ─── CorrelationRules (XQL alert queries) ─────────────────────────
+    - name: "list_correlation_rules"
+      method: "(github api)"
+      description: "List the CorrelationRules directories under a pack. CorrelationRules are XQL queries that PRODUCE alerts when matched — the operator-facing detection logic for a vendor's content. Use when the operator asks 'what detections does the AWS pack ship?'."
+      args:
+        - { name: "pack_name", type: "string", description: "Pack to list CorrelationRules under.", required: true }
+      returns: { type: "object", description: "{ pack_name, correlation_rules: [{name, summary}] }. Empty array if the pack has no CorrelationRules directory." }
+
+    - name: "get_correlation_rule"
+      method: "(github api)"
+      description: "Fetch ONE correlation rule's content (the .yml metadata + the .xql query). Use when the operator wants to see the detection logic for a specific rule, adapt it for their tenant, or ask 'how does Cortex detect <attack pattern> for <vendor>?'."
+      args:
+        - { name: "pack_name", type: "string", description: "Pack containing the rule.",  required: true }
+        - { name: "rule_name", type: "string", description: "Correlation rule name.",      required: true }
+      returns: { type: "object", description: "{ pack_name, rule_name, yml, xql: '...XQL query...' }." }
+
+    # ─── KB indexing ──────────────────────────────────────────────────
+    - name: "index_kb"
+      method: "(github api + KB upsert)"
+      description: "Walk one pack's ModelingRules + ParsingRules + CorrelationRules and upsert each into the agent's knowledge_search KB. After this runs, the agent can semantic-search 'XDM rule for cisco_esa logs' via the standard knowledge_search tool with kb_name='cortex-content' instead of round-tripping through list_*/get_* one rule at a time. Idempotent: re-running indexes only rules whose content actually changed (source_hash dedupe). PRIMARY tool when the operator says 'index the F5APM pack' or 'add the AWS pack to the KB so I can search it'."
+      args:
+        - { name: "pack_name",  type: "string",  description: "Pack to index (e.g. 'F5APM'). Use list_packs/search_packs to discover names first.",                                              required: true  }
+        - { name: "rule_types", type: "array",   description: "Optional subset of {'modeling','parsing','correlation'}. Default = all three. Pass ['modeling'] when only the data-model parser is needed.", required: false }
+        - { name: "kb_name",    type: "string",  description: "Target KB namespace. Default 'cortex-content'. Override only when isolating an experiment from the main KB.",                  required: false }
+      returns: { type: "object", description: "{ pack_name, kb_name, indexed: {modeling: N, parsing: N, correlation: N}, unchanged: M, errors: [{rule_type, rule_name, error}] }. `indexed` counts insert+update; `unchanged` counts source_hash hits (no re-embed); `errors` is per-rule failures that didn't abort the whole call." }
+
+    # ─── Marketplace data sources ─────────────────────────────────────
+    - name: "extract_vendor_schema"
+      method: "(github raw: ModelingRules/<rule>_schema.json)"
+      description: |
+        Return the RAW VENDOR FIELD INVENTORY for one ModelingRule —
+        i.e. the structured field schema (name + type + is_array) that
+        the vendor's logs are expected to contain. Reads <rule>_schema.json
+        directly (Cortex publishes the structured field types alongside
+        every modeling rule so XSIAM can validate ingested logs).
+
+        Use this when: building a vendor-faithful log simulator that
+        needs to emit fields matching what Cortex's modeling rules
+        expect; populating a data-source detail page in the marketplace;
+        answering 'what fields does FortiGate's modeling rule consume?'
+
+        For packs whose modeling rule extracts fields via regex from
+        _raw_log (F5APM-style), `is_rawlog_only=True` is set on each
+        affected dataset; regex-template extraction is not supported for
+        those packs.
+      args:
+        - { name: "pack_name", type: "string", description: "Pack containing the rule (e.g. 'FortiGate').",                                       required: true }
+        - { name: "rule_name", type: "string", description: "Modeling rule directory name (e.g. 'FortiGate_1_3'). Use list_modeling_rules first.", required: true }
+      returns: { type: "object", description: "{ ok, pack_name, rule_name, datasets: {dataset_name: {field_count, non_meta_field_count, fields: [{name,type,is_array}], is_rawlog_only}}, total_field_count, is_structured, source_path }." }
+
+    - name: "extract_vendor_logo"
+      method: "(github raw: Integrations/<int>_dark.svg or _image.png)"
+      description: |
+        Find the canonical vendor logo URL for a pack. Search order:
+          1. Packs/<pack>/Integrations/<int>/<int>_dark.svg  (preferred — scales + theme-friendly)
+          2. Packs/<pack>/Integrations/<int>/<int>_image.png (fallback)
+          3. Packs/<pack>/Author_image.png                   (last resort)
+
+        Returns the raw GitHub URL — NOT the bytes. The UI renders it
+        via `<img src="...">`; MCP responses stay JSON-only and avoid
+        base64-encoding overhead. raw.githubusercontent.com is on a
+        CDN so the URL is cache-friendly.
+
+        Use this when: rendering vendor cards in the marketplace data-
+        sources page; rendering vendor headers on a data-source detail
+        view; building any operator UI that needs a vendor brand mark.
+      args:
+        - { name: "pack_name", type: "string", description: "Pack to find a logo for (e.g. 'FortiGate', 'AWS-CloudTrail').", required: true }
+      returns: { type: "object", description: "{ ok, pack_name, logo_url: url|null, logo_type: 'svg'|'png'|null, source_path: str|null, searched_paths: [str] }." }
+
+    - name: "extract_vendor_catalog"
+      method: "(github raw: walks all packs + schema.json + logo lookup)"
+      description: |
+        Roll-up: catalog EVERY ModelingRule across the content repo into
+        one structured response. Returns one row per (pack, rule, dataset)
+        triple, each with field count + logo URL + rawlog flag + pack
+        metadata. Powers the marketplace data-sources page's vendor list.
+
+        First call is slow (~30-60s for ~217 rules, walks the repo tree
+        + fetches schema.json + logo URL per rule); subsequent calls hit
+        the connector's 24h cache. Use `pack_limit` for fast testing.
+
+        PRIMARY tool for the marketplace data-sources surface.
+      args:
+        - { name: "xsiam_only",     type: "boolean", description: "Only include packs with supportedModules containing 'xsiam'. Default true (the marketplace's data-sources page filters to XSIAM-ingestion-relevant packs).", required: false }
+        - { name: "include_rawlog", type: "boolean", description: "Include rawlog-only rules (is_rawlog_only=True). Default true. Set false to omit them entirely (the marketplace filters to structured packs only).",   required: false }
+        - { name: "pack_limit",     type: "integer", description: "Process at most this many packs (0 = all). Useful for first-call testing.",                                                                                  required: false }
+      returns: { type: "object", description: "{ ok, rows: [{pack_name, rule_name, dataset_name, field_count, non_meta_field_count, is_rawlog_only, logo_url, logo_type, supported_modules, pack_description, pack_version}], packs_scanned, rules_found, structured_rules, rawlog_rules, filter: {...} }." }

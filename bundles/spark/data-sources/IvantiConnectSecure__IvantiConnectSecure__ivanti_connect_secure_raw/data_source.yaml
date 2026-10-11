@@ -1,0 +1,396 @@
+schema_version: 1
+id: IvantiConnectSecure
+pack_name: IvantiConnectSecure
+rule_name: IvantiConnectSecure
+dataset_name: ivanti_connect_secure_raw
+vendor: Ivanti
+product: IvantiConnectSecure
+description: XSIAM Modeling & Parsing Rules for ICS (Ivanti Connect Secure).
+categories:
+- Network Security
+version: 1.0.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI1LjQuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9Ikl2YW50aV9sb2dvIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB4PSIwcHgiCgkgeT0iMHB4IiB2aWV3Qm94PSIwIDAgNjMyIDI2OSIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNjMyIDI2OTsiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPgoJLnN0MHtmaWxsOiNGRjE1MTU7fQo8L3N0eWxlPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNjAuNCwxMTcuNWgzMC41djEwNC4zSDYwLjRWMTE3LjV6Ii8+CjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik02MC40LDYwLjNoMzAuNXYzMC41SDYwLjRWNjAuM3oiLz4KPHBhdGggY2xhc3M9InN0MCIgZD0iTTE4NS4zLDExNy41bC0yMy45LDcwLjdsLTIzLjUtNzAuN2gtMzIuOGwzOC4yLDEwNC4zaDMzLjhsMzcuNi0xMDQuM0gxODUuM3oiLz4KPHBhdGggY2xhc3M9InN0MCIgZD0iTTMwOC43LDE1My42YzAtNC43LTAuMi0xNy4xLTcuMi0yNS42Yy0xMC4zLTEyLTI4LjUtMTMuNC0zNy4xLTEzLjRjLTkuOSwwLTIyLjEsMS43LTMxLjYsOC41CgljLTEwLjksNy44LTExLjYsMTktMTEuOCwyNC41aDMwYy0wLjItMy4zLDAuNi02LjUsMi4zLTkuM2MyLjctMy43LDctNS45LDExLjYtNS44YzIuOSwwLDEwLjksMSwxMy42LDguN2MxLjIsMy43LDEuNCw3LDEuNCwxMy44CgljLTEwLjEsMC0yOC41LDAtNDEuMiw1LjhjLTE5LjIsOC45LTIyLjEsMjQuMS0yMi4xLDMyLjRjLTAuMSw4LjUsMy4xLDE2LjgsOS4xLDIyLjljNC4xLDMuOSwxMC45LDguMiwyNiw4LjIKCWM1LjgsMCwxOS42LDAsMzEuMS0xNi43Yy0wLjEsNC44LDAuMyw5LjUsMSwxNC4yaDI3LjZjLTEuNy04LjctMi42LTE3LjUtMi41LTI2LjRMMzA4LjcsMTUzLjZ6IE0yNzQuMSwxOTguNmMtMy4zLDMuOC04LDYtMTMsNgoJYy0xMC4xLDAtMTQuOS03LjgtMTQuOS0xNC45YzAtMTIuNCwxNC0xOC42LDMzLjYtMTYuOUMyNzkuOSwxODQsMjc5LjQsMTkyLDI3NC4xLDE5OC42TDI3NC4xLDE5OC42eiIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNDIyLjEsMTM0LjRjLTIuNy03LjItMTEuMy0xOS42LTMxLjgtMTkuNmMtMjIuNywwLTMwLjksMTMuNC0zMy44LDE4LjFsLTAuOC0xNS41aC0yOS4zCgljMC42LDcuMiwwLjYsMTguNCwwLjYsMTguOHY4NS42aDMwLjd2LTYxYzAtOCwxLjktMTMuMiwzLjctMTUuOWMzLjYtNS4yLDkuNi04LjIsMTUuOS04LjFjNi4zLTAuMiwxMi4xLDMuMiwxNC45LDguOQoJYzEuNiwzLjMsMS42LDcsMS42LDExLjN2NjQuOEg0MjV2LTU2LjNDNDI1LDE0Ni4yLDQyNC4zLDE0MC44LDQyMi4xLDEzNC40TDQyMi4xLDEzNC40eiIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNDg2LjEsOTEuMmwtMzAuMyw4LjN2MThoLTIwdjIwLjJoMjB2NTcuOWMwLDguNywwLDI4LjEsMzAuNywyOC4xYzgtMC4xLDE2LTEuMiwyMy43LTMuM3YtMjAKCWMtMy40LDAuNC02LjksMC42LTEwLjMsMC42Yy0xMy42LDAtMTMuNi02LTEzLjgtMTUuNXYtNDcuOWgyNC44di0yMC4yaC0yNC44TDQ4Ni4xLDkxLjJMNDg2LjEsOTEuMnoiLz4KPHBhdGggY2xhc3M9InN0MCIgZD0iTTUyNy4xLDExNy41aDMwLjV2MTA0LjNoLTMwLjVWMTE3LjV6Ii8+CjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik01MjcuMSw3MC41aDIwLjN2MjAuM2gtMjAuM1Y3MC41eiIvPgo8cGF0aCBjbGFzcz0ic3QwIiBkPSJNNTU3LjcsNjAuM3YzMC41SDU3OFY0MGgtNTAuOXYyMC40TDU1Ny43LDYwLjN6Ii8+Cjwvc3ZnPgo=
+  source: wikipedia:File:Ivanti_Logo_RGB_red.svg
+  license: Wikimedia Commons CC BY-SA 4.0
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'ivanti: ivanticonnectsecure=IvantiConnectSecure action=allow user=jdoe'
+- name: Aa
+  type: string
+  description: Event tags. Free-form text; may contain whitespace and punctuation.
+  example: sample_aa
+- name: Ll
+  type: string
+  description: Event tags. Free-form text; may contain whitespace and punctuation.
+  example: sample_ll
+- name: alert_id
+  type: string_short
+  description: Alert subcategory. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: application_name
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: bytes_rcvd
+  type: string
+  description: Destination sent bytes. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_rcvd
+- name: bytes_sent
+  type: string
+  description: Source sent bytes. Free-form text; may contain whitespace and punctuation.
+  example: sample_sent
+- name: client_os
+  type: string
+  description: Source host OS. Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: client_version
+  type: string
+  description: Observer version. Free-form text; may contain whitespace and punctuation.
+  example: 1.0.0
+- name: dst_hostname
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: dst_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: dst_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: duration
+  type: integer
+  description: Event duration. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: error_code
+  type: integer
+  description: Error code. Free-form text; may contain whitespace and punctuation.
+  example: '200'
+- name: event_id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: event_name
+  type: string
+  description: Observer action. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_name1
+  type: string
+  description: Event name1. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_name2
+  type: string
+  description: Event name2. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_name3
+  type: string
+  description: Event name3. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_name4
+  type: string
+  description: Event name4. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_name5
+  type: string
+  description: Event name5. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_name6
+  type: string
+  description: Event name6. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_name_custom1
+  type: string
+  description: Event name custom1. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: full_user_name
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: fw
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: host_ip_target
+  type: host
+  description: Host ip target. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: log_event_code
+  type: integer
+  description: Log event code. Free-form text; may contain whitespace and punctuation.
+  example: '200'
+- name: log_event_name
+  type: string
+  description: Log event name. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: log_event_type
+  type: string
+  description: Log event type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: log_event_type_and_name
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: ogin
+  type: string
+  description: Event tags. Free-form text; may contain whitespace and punctuation.
+  example: sample_ogin
+- name: os
+  type: string
+  description: Source host OS family. Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: pri
+  type: string
+  description: Pri. Free-form text; may contain whitespace and punctuation.
+  example: sample_pri
+- name: proto
+  type: string
+  description: Network application protocol category. Free-form text; may contain
+    whitespace and punctuation.
+  example: tcp
+- name: realm
+  type: string
+  description: Realm. Free-form text; may contain whitespace and punctuation.
+  example: sample_realm
+- name: reason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: reason2
+  type: string
+  description: Reason2. Free-form text; may contain whitespace and punctuation.
+  example: sample_reason2
+- name: roles
+  type: string
+  description: Roles. Free-form text; may contain whitespace and punctuation.
+  example: sample_roles
+- name: session_id
+  type: string_short
+  description: Network session ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: session_id2
+  type: string
+  description: Session id2. Free-form text; may contain whitespace and punctuation.
+  example: sample_id2
+- name: severity
+  type: string_short
+  description: Event log level. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: src
+  type: ipv4
+  description: Src. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: src_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: succeeded
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: successful
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: syslog_app_name
+  type: string
+  description: Intermediate application name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: syslog_facility
+  type: string
+  description: Syslog facility. Free-form text; may contain whitespace and punctuation.
+  example: sample_facility
+- name: syslog_header
+  type: string
+  description: Syslog header. Free-form text; may contain whitespace and punctuation.
+  example: 'Content-Type: application/json'
+- name: syslog_hostname
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: syslog_msg
+  type: string
+  description: Syslog msg. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: syslog_msg_id
+  type: string_short
+  description: Syslog msg id. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: syslog_priority
+  type: string
+  description: Syslog priority. Free-form text; may contain whitespace and punctuation.
+  example: INFO
+- name: syslog_process_id
+  type: string_short
+  description: Intermediate process identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: syslog_severity
+  type: string_short
+  description: Syslog severity. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: syslog_structured_data
+  type: string
+  description: Syslog structured data. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_data
+- name: syslog_structured_data_segments
+  type: string
+  description: Syslog structured data segments. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_segments
+- name: target_share_domain
+  type: domain
+  description: Destination domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: target_share_server
+  type: string
+  description: Target share server. Free-form text; may contain whitespace and punctuation.
+  example: sample_server
+- name: type
+  type: string
+  description: Event original event type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: user
+  type: string
+  description: User. Free-form text; may contain whitespace and punctuation.
+  example: jdoe
+- name: user_agent
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: user_domain
+  type: domain
+  description: Source user domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: user_name
+  type: user
+  description: Source user upn. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jdoe
+- name: uthentication
+  type: string
+  description: Event tags. Free-form text; may contain whitespace and punctuation.
+  example: sample_uthentication
+- name: vpn
+  type: string
+  description: Vpn. Free-form text; may contain whitespace and punctuation.
+  example: sample_vpn
+- name: windows
+  type: string
+  description: Source host OS family. Free-form text; may contain whitespace and punctuation.
+  example: sample_windows
+use_cases:
+- VPN
+- Endpoint
+how_to_use: |
+  ## ivanti connect secure → Cortex XSIAM (dataset `ivanti_connect_secure_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `ivanti` / product `connect_secure`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `ivanti_connect_secure_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `ivanti`
+    - **product**: `connect_secure`
+
+    These normalize → `ivanti_connect_secure_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~43 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.event.description`, `xdm.event.duration`, `xdm.event.id`, `xdm.event.log_level`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `ivanti`, Product = `connect_secure`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = ivanti_connect_secure_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

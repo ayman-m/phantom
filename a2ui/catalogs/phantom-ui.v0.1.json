@@ -1,0 +1,188 @@
+{
+  "id": "phantom-ui.v0.1",
+  "name": "Phantom Agent UI Catalog",
+  "version": "0.1.0",
+  "description": "Trusted A2UI component catalog for SOC simulation, tool telemetry, skills, workflows, and bundle operations.",
+  "components": {
+    "PhantomShell": {
+      "description": "Top-level Phantom agent application shell.",
+      "required": ["title", "main"],
+      "props": {
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "statusPath": { "type": "dataPath" },
+        "navigation": { "type": "componentId" },
+        "main": { "type": "componentId" },
+        "aside": { "type": "componentId" }
+      }
+    },
+    "NavigationRail": {
+      "description": "Agent navigation surface for sessions and primary views.",
+      "required": ["itemsPath"],
+      "props": {
+        "itemsPath": { "type": "dataPath" },
+        "activePath": { "type": "dataPath" },
+        "selectEvent": { "type": "eventName" }
+      }
+    },
+    "Panel": {
+      "description": "Framed section with title, description, and one child component.",
+      "required": ["title", "child"],
+      "props": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "child": { "type": "componentId" }
+      }
+    },
+    "Stack": {
+      "description": "Vertical layout container.",
+      "required": ["children"],
+      "props": {
+        "children": { "type": "componentIdList" },
+        "gap": { "type": "string", "enum": ["sm", "md", "lg"] }
+      }
+    },
+    "ChatSurface": {
+      "description": "Conversation surface composed of messages and prompt composer.",
+      "required": ["messages", "composer"],
+      "props": {
+        "messages": { "type": "componentId" },
+        "composer": { "type": "componentId" }
+      }
+    },
+    "MessageList": {
+      "description": "Bound chat transcript with user, assistant, tool, and system messages.",
+      "required": ["itemsPath"],
+      "props": {
+        "itemsPath": { "type": "dataPath" }
+      }
+    },
+    "PromptComposer": {
+      "description": "Prompt input that emits a named chat event.",
+      "required": ["valuePath", "submitEvent"],
+      "props": {
+        "valuePath": { "type": "dataPath" },
+        "placeholder": { "type": "string" },
+        "submitLabel": { "type": "string" },
+        "submitEvent": { "type": "eventName" }
+      }
+    },
+    "WorkflowLauncher": {
+      "description": "Guided workflow launcher for repeatable SOC simulation tasks.",
+      "required": ["itemsPath", "runEvent"],
+      "props": {
+        "itemsPath": { "type": "dataPath" },
+        "runEvent": { "type": "eventName" }
+      }
+    },
+    "SkillCatalog": {
+      "description": "Browse and open MCP-backed Phantom skills.",
+      "required": ["itemsPath"],
+      "props": {
+        "itemsPath": { "type": "dataPath" },
+        "openEvent": { "type": "eventName" }
+      }
+    },
+    "LiveTelemetryPanel": {
+      "description": "Timeline of model, MCP, workflow, and backend events.",
+      "required": ["itemsPath"],
+      "props": {
+        "itemsPath": { "type": "dataPath" }
+      }
+    },
+    "AgentBundlePanel": {
+      "description": "Bundle readiness, manifest, health probes, and export actions.",
+      "required": ["manifestPath", "healthPath"],
+      "props": {
+        "manifestPath": { "type": "dataPath" },
+        "healthPath": { "type": "dataPath" },
+        "refreshEvent": { "type": "eventName" },
+        "exportEvent": { "type": "eventName" }
+      }
+    },
+    "ReportViewer": {
+      "description": "Executive and analyst report surface.",
+      "required": ["reportsPath"],
+      "props": {
+        "reportsPath": { "type": "dataPath" },
+        "exportEvent": { "type": "eventName" }
+      }
+    },
+    "CoverageMatrix": {
+      "description": "ATT&CK coverage and detection validation matrix.",
+      "required": ["coveragePath"],
+      "props": {
+        "coveragePath": { "type": "dataPath" },
+        "selectTechniqueEvent": { "type": "eventName" }
+      }
+    },
+    "OperationTimeline": {
+      "description": "Caldera operation timeline linked to generated defensive telemetry.",
+      "required": ["operationPath"],
+      "props": {
+        "operationPath": { "type": "dataPath" }
+      }
+    },
+    "SetupWizard": {
+      "description": "First-run setup surface for standalone Phantom imports.",
+      "required": ["groupsPath", "submitEvent"],
+      "props": {
+        "groupsPath": { "type": "dataPath" },
+        "submitEvent": { "type": "eventName" }
+      }
+    },
+    "CredentialUpload": {
+      "description": "Service account JSON upload bound to a setup field.",
+      "required": ["valuePath"],
+      "props": {
+        "valuePath": { "type": "dataPath" },
+        "accept": { "type": "string" }
+      }
+    },
+    "SecretField": {
+      "description": "Sensitive setup field supplied by an operator or secret provider.",
+      "required": ["valuePath"],
+      "props": {
+        "valuePath": { "type": "dataPath" }
+      }
+    }
+  },
+  "events": {
+    "phantom.setup.save": {
+      "description": "Persist first-run setup values for standalone runtime.",
+      "target": "POST /api/setup"
+    },
+    "phantom.chat.send": {
+      "description": "Send a user prompt to the Phantom agent.",
+      "target": "POST /api/chat"
+    },
+    "phantom.navigation.select": {
+      "description": "Switch the active Phantom UI surface or session.",
+      "target": "renderer"
+    },
+    "phantom.workflow.run": {
+      "description": "Materialize and run a guided workflow.",
+      "target": "POST /api/agent/workflows"
+    },
+    "phantom.skill.open": {
+      "description": "Open a Phantom skill detail panel.",
+      "target": "GET /api/skills"
+    },
+    "phantom.bundle.refresh": {
+      "description": "Refresh manifest and health probes.",
+      "target": "GET /api/agent/manifest + GET /api/agent/health"
+    },
+    "phantom.bundle.export": {
+      "description": "Request export of a signed Phantom agent bundle.",
+      "target": "scripts/export_agent_bundle.sh"
+    },
+    "phantom.report.export": {
+      "description": "Export a coverage or simulation report.",
+      "target": "GET /api/agent/reports"
+    },
+    "phantom.coverage.selectTechnique": {
+      "description": "Inspect a technique in the coverage matrix.",
+      "target": "renderer"
+    }
+  }
+}

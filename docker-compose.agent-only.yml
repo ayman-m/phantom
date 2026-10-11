@@ -1,0 +1,121 @@
+# Split-deploy compose file — phantom-agent ONLY.
+#
+# This compose recipe is for the recipient of a slim Phantom agent
+# bundle who runs the agent on a different host than xlog/caldera.
+# Two assumptions:
+#
+#   1. The recipient has the `phantom-agent:local` image loaded
+#      (either via `docker load < images/phantom-agent-local.tar`
+#      from a slim bundle export, or by pulling from a registry).
+#   2. xlog and caldera (the local SOC services) run on a SEPARATE
+#      machine, exposing their ports to this host's network. The
+#      operator types their remote URLs into the setup form at
+#      first run; nothing in this compose file references them.
+#
+# What's intentionally absent vs the full docker-compose.yml:
+#
+#   * No `xlog:` service — the agent calls remote xlog over the network
+#   * No `caldera:` service — same, remote caldera
+#   * No bind-mount of ./bundles/spark — the bundle is COPYed into
+#     the phantom-agent image at build time, so /app/bundle inside
+#     the container is fully self-contained. (Recipients of the slim
+#     bundle don't have the bundle source on disk anyway.)
+#   * No `depends_on` — there's nothing to wait for locally.
+#
+# First-run flow on this machine:
+#   1. docker load < images/phantom-agent-local.tar
+#   2. set MCP_TOKEN in .env (or let the entrypoint generate one
+#      ephemerally on first boot)
+#   3. docker compose -f docker-compose.agent-only.yml up -d
+#   4. open http://<this-host>:3000 and complete the setup form,
+#      providing the URLs of the REMOTE xlog/caldera + XSIAM creds.
+#
+# See docs/split-deploy.md for the recipient-facing guide.
+
+services:
+  phantom-agent:
+    image: phantom-agent:local
+    container_name: phantom_agent
+    restart: unless-stopped
+    environment:
+      # Pinned image version (from .env), surfaced to the UI via
+      # /api/agent/version for the sidebar chip + About modal.
+      - PHANTOM_VERSION
+      # Bundle-internal MCP coordination token. If unset, the
+      # entrypoint generates an ephemeral random one (rotates on
+      # every restart). Set in .env to keep it stable across
+      # reboots — necessary for any external integration that
+      # caches the bearer.
+      - MCP_TOKEN
+      # AES-256-GCM key for SecretStore encryption-at-rest. When set,
+      # all operator-supplied secrets are encrypted before touching
+      # disk. When unset, secrets are stored as plaintext (with a
+      # loud startup warning) — preserves upgrade compatibility for
+      # existing deploys. Generate with `openssl rand -base64 32`
+      # and pin in .env. **Lose it = lose every operator secret**;
+      # the operator would have to re-fill the setup form.
+      - PHANTOM_SECRET_KEK
+      # Notification channel:* webhook URLs (one env var per
+      # manifest-declared channel). Channels with no URL set
+      # silently skip dispatch; their notifications still persist
+      # for operator review via /api/v1/notifications. Variable
+      # name is PHANTOM_NOTIFICATION_CHANNEL_<UPPER_NAME> with
+      # hyphens replaced by underscores. Today's manifest declares
+      # channel:soc and channel:purple-team.
+      - PHANTOM_NOTIFICATION_CHANNEL_SOC
+      - PHANTOM_NOTIFICATION_CHANNEL_PURPLE_TEAM
+      # Runtime mount paths consumed by the agent + embedded MCP:
+      - PHANTOM_AGENT_SETUP_PATH=/app/runtime/setup.json
+      - PHANTOM_AGENT_ENV_EXPORT_PATH=/app/runtime/.env.generated
+      - BUNDLE_ROOT=/app/bundle
+      - DATA_ROOT=/app/data
+      # MCP transport defaults — operator can override via .env if
+      # they want a non-standard port mapping.
+      - MCP_TRANSPORT=${MCP_TRANSPORT:-streamable-http}
+      - MCP_HOST=${MCP_HOST:-0.0.0.0}
+      - MCP_PORT=${MCP_PORT:-8080}
+      - MCP_PATH=${MCP_PATH:-/api/v1/stream/mcp}
+      # v1.2 stage 3E — Spark-platform supersession. Optional;
+      # leave unset for standalone mode.
+      - SPARK_PLATFORM_GATEWAY
+    volumes:
+      # Operator setup data — Phase-5 SecretStore, /app/data state,
+      # generated env. Persists across container restarts.
+      - ./.phantom-agent:/app/runtime
+      # MCP runtime state (audit log, instance store, KB, jobs,
+      # sessions, memory). Named volume so docker manages it.
+      - phantom_mcp_data:/app/data
+      # Skills volume (seeded from /app/mcp/skills-default at first run).
+      - phantom_mcp_skills:/app/skills
+    ports:
+      # Next.js UI — operator browses to http://<this-host>:3000
+      - "3000:3000"
+      # Embedded MCP admin + JSON-RPC. Exposed so external SOC tools
+      # (or our smoke test) can hit /api/v1/* from outside the host.
+      # If only the local browser needs MCP access (the typical case
+      # since the UI talks to MCP via 127.0.0.1 inside the container),
+      # the operator can drop this mapping for tighter security.
+      - "8080:8080"
+    healthcheck:
+      # TLS-aware: tries HTTPS first (agent now defaults to HTTPS via
+      # the auto-generated cert at /tls/cert.pem from the entrypoint),
+      # falls back to plain HTTP for older / TLS-disabled stacks.
+      # -k accepts the self-signed cert. Mirrors the pattern in
+      # docker-compose.yml + installer/docker-compose.yml.
+      test:
+        - "CMD-SHELL"
+        - "(curl -ksf https://localhost:3000/api/auth/status || curl -sf http://localhost:3000/api/auth/status) && (curl -ksf https://localhost:8080/ping/ || curl -sf http://localhost:8080/ping/) || exit 1"
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      # Generous start period because the entrypoint runs MCP
+      # initialization (sqlite schema setup, KB ingestion, instance
+      # auto-migration) before Next.js comes up.
+      start_period: 60s
+
+volumes:
+  # Names match the full docker-compose.yml so an operator who
+  # later switches between split-deploy and all-in-one keeps the
+  # same persistent data.
+  phantom_mcp_data:
+  phantom_mcp_skills:

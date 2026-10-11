@@ -1,0 +1,244 @@
+schema_version: 1
+id: PrismaCloudCompute
+pack_name: PrismaCloudCompute
+rule_name: PrismaCloudCompute
+dataset_name: prisma_cloud_compute_raw
+vendor: Palo Alto Networks
+product: PrismaCloudCompute
+description: Use the Prisma Cloud Compute integration to fetch incidents from your Prisma Cloud Compute
+  environment.
+categories:
+- Cloud Security
+version: 1.7.30
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjQgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNDODQ2MjQiPlBhbG8gQWx0byBOZXR3b3JrczwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: accountID
+  type: string
+  description: Vendor-emitted field 'AccountID'. Free-form text; may contain whitespace and punctuation.
+  example: acct-c2d49ea5
+- name: accountIDs
+  type: string
+  description: Vendor-emitted field 'AccountIDs'. Free-form text; may contain whitespace and punctuation.
+  example: '123456789012'
+- name: aggregated
+  type: string
+  description: Whether events were aggregated. Free-form text; may contain whitespace and punctuation.
+  example: sample_aggregated
+- name: aggregatedAlerts
+  type: string
+  description: Vendor-emitted field 'AggregatedAlerts'. Free-form text; may contain whitespace and punctuation.
+  example: sample_aggregatedalerts
+- name: appID
+  type: string
+  description: Vendor-emitted field 'AppID'. Free-form text; may contain whitespace and punctuation.
+  example: sample_appid
+- name: category
+  type: string_short
+  description: Palo Alto Networks's category classifier for the event. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: access_control
+- name: cluster
+  type: string
+  description: Vendor-emitted field 'Cluster'. Free-form text; may contain whitespace and punctuation.
+  example: prod-us-east-1
+- name: collections
+  type: string
+  description: Destination host device category. Free-form text; may contain whitespace and punctuation.
+  example: sample_collections
+- name: command
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: complianceIssues
+  type: string
+  description: Vendor-emitted field 'ComplianceIssues'. Free-form text; may contain whitespace and punctuation.
+  example: sample_complianceissues
+- name: container
+  type: string
+  description: Destination process container ID. Free-form text; may contain whitespace and punctuation.
+  example: container-abc123
+- name: dropped
+  type: string
+  description: Vendor-emitted field 'Dropped'. Free-form text; may contain whitespace and punctuation.
+  example: sample_dropped
+- name: forensics
+  type: string
+  description: Vendor-emitted field 'Forensics'. Free-form text; may contain whitespace and punctuation.
+  example: sample_forensics
+- name: fqdn
+  type: host
+  description: Fully-qualified domain name (dotted labels per RFC 1035). Hostname or fully-qualified domain
+    name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: function
+  type: string
+  description: Vendor-emitted field 'Function'. Free-form text; may contain whitespace and punctuation.
+  example: sample_function
+- name: host
+  type: host
+  description: Hostname or FQDN as reported by Palo Alto Networks. Hostname or fully-qualified domain
+    name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: image
+  type: string
+  description: Vendor-emitted field 'Image'. Free-form text; may contain whitespace and punctuation.
+  example: /usr/bin/explorer.exe
+- name: imageID
+  type: string
+  description: Vendor-emitted field 'ImageID'. Free-form text; may contain whitespace and punctuation.
+  example: ami-0abcdef1234567890
+- name: labels
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: Name, app, maintainer, name,
+    osDistro, osVersion (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: message
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: namespaces
+  type: string
+  description: Kubernetes namespaces involved. Free-form text; may contain whitespace and punctuation.
+  example: sample_namespaces
+- name: osDistro
+  type: string
+  description: Vendor-emitted field 'OsDistro'. Free-form text; may contain whitespace and punctuation.
+  example: sample_osdistro
+- name: osRelease
+  type: string
+  description: Vendor-emitted field 'OsRelease'. Free-form text; may contain whitespace and punctuation.
+  example: sample_osrelease
+- name: provider
+  type: string
+  description: Vendor-emitted field 'Provider'. Free-form text; may contain whitespace and punctuation.
+  example: aws
+- name: region
+  type: string_short
+  description: Cloud region or geographic region label. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: us-east-1
+- name: rest
+  type: string
+  description: Vendor-emitted field 'Rest'. Free-form text; may contain whitespace and punctuation.
+  example: sample_rest
+- name: rule
+  type: string
+  description: Vendor-emitted field 'Rule'. Free-form text; may contain whitespace and punctuation.
+  example: Allow-Internal
+- name: runtime
+  type: string
+  description: Container runtime (docker/containerd/cri-o). Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_runtime
+- name: startupProcess
+  type: string
+  description: Vendor-emitted field 'StartupProcess'. Free-form text; may contain whitespace and punctuation.
+  example: sample_startupprocess
+- name: tags
+  type: string
+  description: Vendor-emitted field 'Tags'. Free-form text; may contain whitespace and punctuation.
+  example: sample_tags
+- name: time
+  type: datetime
+  description: Time-of-day emitted by Palo Alto Networks. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by Palo Alto Networks. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: authentication
+- name: user
+  type: user
+  description: User account associated with the event. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName depending on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: vulnerabilities
+  type: string
+  description: Vendor-emitted field 'Vulnerabilities'. Free-form text; may contain whitespace and punctuation.
+  example: sample_vulnerabilities
+- name: labels.Name
+  type: string
+  description: Human-readable name as displayed by Palo Alto Networks. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: labels.app
+  type: string_short
+  description: Application name emitted by Palo Alto Networks. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token_value
+- name: labels.maintainer
+  type: string
+  description: Vendor-emitted field 'Labels › maintainer'. Leaf of the 'labels' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_maintainer
+- name: labels.name
+  type: string
+  description: Human-readable name as displayed by Palo Alto Networks. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: labels.osDistro
+  type: string
+  description: Vendor-emitted field 'Labels › osDistro'. Leaf of the 'labels' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_osdistro
+- name: labels.osVersion
+  type: string
+  description: Vendor-emitted field 'Labels › osVersion'. Leaf of the 'labels' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: 5.15.0-101-generic
+use_cases:
+- Firewall
+- XDR
+validated: true
+how_to_use: |
+  ## Prisma Cloud Compute -> Cortex XSIAM (dataset `prisma_cloud_compute_raw`)
+
+  **Validated** — maps **29 xdm fields** end-to-end via CEF-over-syslog
+  (distinct non-null across 20 rows) with the PrismaCloudCompute content pack installed.
+
+  Routing — from the INGEST/parsing rule (no guessing):
+  - vendor: `prisma`
+  - product: `cloud_compute`
+  `[INGEST: vendor="prisma", product="cloud_compute", target_dataset="prisma_cloud_compute_raw", no_hit=keep]`.
+  Unconditional modeling rule (no gate). Send a `time` field (`%h %d %Y %H:%M:%S`) so _time parses.
+
+  Mostly flat fields (user, fqdn, host, rule, type, region, message, category, accountID,
+  container, command, osRelease, collections, provider, osDistro, image, ...) plus a `labels`
+  JSON composite. NOTE: a few labels paths use bracket-notation literal-dot keys
+  ($['baseimage.name'], $['org.opencontainers.image.*']) the dotted-leaf convention can't
+  express — those specific fallbacks stay unmapped, but `image` covers the same XDM target.
+
+  Verify (wide >=7d window, count distinct across >=20 rows):
+      config timeframe = 30d | datamodel dataset = prisma_cloud_compute_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

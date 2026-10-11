@@ -1,0 +1,456 @@
+schema_version: 1
+id: BeyondTrust_Password_Safe
+pack_name: BeyondTrust_Password_Safe
+rule_name: BeyondTrust_Password_Safe
+dataset_name: beyondtrust_passwordsafe_raw
+vendor: BeyondTrust
+product: BeyondTrust_Password_Safe
+description: Unified password and session management for seamless accountability and
+  control over privileged accounts.
+categories:
+- Identity and Access Management
+version: 1.1.13
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/png
+  data: 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
+  source: baked/Packs/BeyondTrust_Password_Safe/Integrations/BeyondTrust_Password_Safe/BeyondTrust_Password_Safe_image.png
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: 'Native beyondtrust_passwordsafe log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: NO branches — a single unfiltered MODEL statement runs ~70 regextracts over _raw_log plus ~14 post-extraction regexes over derived vars, so ONE line can satisfy them all. Built as a Password Safe credential-release event'
+  example: 'Agent Desc: BeyondInsight Event Forwarder,Agent ID: BIEF-01,Agent Ver: 23.2.1,AuditID: 4471829,LogID: 88231145,Category: Password Management,Event Name: PasswordReleaseRequestApproved,Event Desc: Password release request approved and credential retrieved,Operation: Retrieve,Result: S,Details: Type=Password Application=RDP ReleaseRequestId=88213,Target: Asset:SRV-DB01 Account:CORP\svc_oracle,User: CORP\jdoe,UserID: 5521,AppUserID: 9007,Email: jdoe@corp.example.com,Source IP: 10.44.12.87,Source Host: WKS-JDOE-01,Client IP Address: 10.44.12.87,Client Id: BIC-9f2a41,Account ID: 771,Login Account ID: 3312,Managed System ID: 214,Managed System Name: SRV-DB01,Managed System Type: Database,Name: SRV-DB01,DNS Name: srv-db01.corp.example.com,NetBIOS Name: SRVDB01,Domain Name: corp.example.com,OS: Windows Server 2019,Platform name: Windows,Port: 1433,ObjectID: 9912,ObjectType: ManagedAccount,Owner: "CORP\dbaadmin",OwnerId: "1187",CreatedBy: "CORP\jsmith",ModifiedBy: "CORP\jsmith",Group: PasswordSafeAdmins,GroupId: 27,RoleUsed: Requestor,Workgroup Desc: Corporate Datacenter,Workgroup ID: 4,Workgroup Location: us-east-1,Jumphost: bt-jump01.corp.example.com,Applications: SQL Server Management Studio,Elevation Command: sqlcmd -S SRV-DB01 -E,Folder: Database Credentials,FolderPath: Root\Database Credentials,Title: Emergency DB maintenance access,Description: Access approved under change ticket CHG0041882,Message: "Credential retrieved for CORP\svc_oracle. NetBiosName=SRVDB01,Domain=corp",FileName: session_88213.rdp'
+- name: agent_description
+  type: string
+  description: Observer name. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by BeyondTrust.
+- name: agent_id
+  type: string_short
+  description: Observer type. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: agent_version
+  type: string
+  description: Observer version. Free-form text; may contain whitespace and punctuation.
+  example: 1.0.0
+- name: app_user_id
+  type: string_short
+  description: App user id. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: applications
+  type: string
+  description: Applications. Free-form text; may contain whitespace and punctuation.
+  example: sample_applications
+- name: audit_id
+  type: string_short
+  description: Audit id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: auth_type
+  type: string
+  description: Auth method. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: category
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: access_control
+- name: client_id
+  type: string_short
+  description: Client id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: client_ip
+  type: ipv4
+  description: Client ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: client_ipv4
+  type: ipv4
+  description: Client ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: client_ipv6
+  type: ipv6
+  description: Client ipv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: created_by
+  type: string
+  description: Created by. Free-form text; may contain whitespace and punctuation.
+  example: sample_by
+- name: description
+  type: string
+  description: Description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by BeyondTrust.
+- name: details
+  type: string
+  description: Details. Free-form text; may contain whitespace and punctuation.
+  example: see message
+- name: dns_name
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: domain_name
+  type: domain
+  description: Domain name. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: elevation_command
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: email
+  type: email
+  description: Email recipients. RFC 5322 'local@domain' address; one address only
+    — use an array field for multiple addresses.
+  example: user@example.com
+- name: event_desc
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by BeyondTrust.
+- name: event_name
+  type: string
+  description: Event original event type. Free-form text; may contain whitespace and
+    punctuation.
+  example: login
+- name: event_target
+  type: string
+  description: Destination resource value. Free-form text; may contain whitespace
+    and punctuation.
+  example: target_object
+- name: file_name
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: folder
+  type: string
+  description: Destination file directory. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_folder
+- name: folder_path
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: group_id
+  type: string_short
+  description: Group id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: group_name
+  type: string
+  description: Destination user groups. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: hostname
+  type: host
+  description: Hostname. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: id
+  type: string_short
+  description: Id. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: is_event_outcome_failure
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: is_event_outcome_successful
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: is_failed
+  type: string
+  description: Is failed. Free-form text; may contain whitespace and punctuation.
+  example: sample_failed
+- name: jump_host
+  type: host
+  description: Intermediate host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: log_id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: login_account_id
+  type: string_short
+  description: Source user identifier. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: managed_account_id
+  type: string_short
+  description: Managed account id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: managed_entity_type
+  type: string
+  description: Managed entity type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: managed_system_id
+  type: string_short
+  description: Managed system id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: managed_system_name
+  type: string
+  description: Managed system name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: message
+  type: string
+  description: Message. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: modified_by
+  type: string
+  description: Modified by. Free-form text; may contain whitespace and punctuation.
+  example: sample_by
+- name: netbios_name
+  type: string
+  description: Netbios name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: object_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: object_type
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: operation
+  type: string
+  description: Event operation. Free-form text; may contain whitespace and punctuation.
+  example: create
+- name: os_platform
+  type: string
+  description: Os platform. Free-form text; may contain whitespace and punctuation.
+  example: linux
+- name: os_uppercase
+  type: string
+  description: Destination host OS family. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uppercase
+- name: owner
+  type: string
+  description: Owner. Free-form text; may contain whitespace and punctuation.
+  example: sample_owner
+- name: owner_details
+  type: string
+  description: Destination resource parent ID. Free-form text; may contain whitespace
+    and punctuation.
+  example: see message
+- name: owner_id
+  type: string_short
+  description: Owner id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: report_name
+  type: integer_port
+  description: Destination resource name. Unsigned integer 0-65535 representing a
+    TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: request_id
+  type: string_short
+  description: Session context id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: response_code
+  type: integer
+  description: Response code. Free-form text; may contain whitespace and punctuation.
+  example: '200'
+- name: result
+  type: string
+  description: Result. Free-form text; may contain whitespace and punctuation.
+  example: success
+- name: role_used
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: sample_used
+- name: source_host
+  type: host
+  description: Source host. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: source_ip
+  type: ipv4
+  description: Source ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: target_account
+  type: string
+  description: Target account. Free-form text; may contain whitespace and punctuation.
+  example: acct-d7a880f4
+- name: target_application
+  type: string
+  description: Destination application name. Free-form text; may contain whitespace
+    and punctuation.
+  example: Salesforce
+- name: target_asset
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: target_host_os
+  type: host
+  description: Destination host OS. Hostname or fully-qualified domain name (RFC 1035
+    dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: target_host_platform
+  type: host
+  description: Target host platform. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: target_netbios_name
+  type: string
+  description: Target netbios name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: target_user_domain
+  type: domain
+  description: Destination user domain. Bare DNS domain name; no scheme, no path,
+    no port.
+  example: example.com
+- name: target_user_name
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: title
+  type: string
+  description: Title. Free-form text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: user
+  type: string
+  description: User. Free-form text; may contain whitespace and punctuation.
+  example: jdoe
+- name: user_domain
+  type: domain
+  description: Source user domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: user_id
+  type: string_short
+  description: Destination user identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: user_name
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: workgroup
+  type: string
+  description: Source user OU. Free-form text; may contain whitespace and punctuation.
+  example: sample_workgroup
+- name: workgroup_description
+  type: string
+  description: Workgroup description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by BeyondTrust.
+- name: workgroup_id
+  type: string_short
+  description: Workgroup id. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: workgroup_location
+  type: string
+  description: Source location region. Free-form text; may contain whitespace and
+    punctuation.
+  example: us-east
+use_cases:
+- PAM
+how_to_use: |
+  ## beyondtrust passwordsafe → Cortex XSIAM (dataset `beyondtrust_passwordsafe_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `beyondtrust` / product `passwordsafe`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `beyondtrust_passwordsafe_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `beyondtrust`
+    - **product**: `passwordsafe`
+
+    These normalize → `beyondtrust_passwordsafe_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~45 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.auth_method`, `xdm.email.recipients`, `xdm.event.description`, `xdm.event.id`, `xdm.event.operation`, `xdm.event.original_event_type`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `beyondtrust`, Product = `passwordsafe`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = beyondtrust_passwordsafe_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,400 @@
+schema_version: 1
+id: CiscoCatalyst
+pack_name: CiscoCatalyst
+rule_name: CiscoCatalyst
+dataset_name: cisco_catalyst_raw
+vendor: Cisco
+product: CiscoCatalyst
+description: Cisco Catalyst switch
+categories:
+- Network Security
+version: 1.0.12
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+Q2lzY288L3RpdGxlPjxwYXRoIGQ9Ik0xNi4zMzEgMTguMTcxVjE3LjA2bC0uMDIyLjAxYy0uMjUuMTIxLS41MjIuMTktLjgwMS4yMDNhMS4xODYgMS4xODYgMCAwMS0uODA2LS4yMzcgMS4wMzggMS4wMzggMCAwMS0uMzUyLS40OTggMS4yMSAxLjIxIDAgMDEtLjAyMy0uNjY3Yy4wNTItLjIyNS4xNzgtLjQyNi4zNTctLjU2OS4xNi0uMTM0LjM1NS0uMjE4LjU2Mi0uMjQyYTEuODUgMS44NSAwIDAxMS4wNjEuMTk4bC4wMjQuMDEzdi0xLjExN2wtLjA1MS0uMDE0YTIuODYyIDIuODYyIDAgMDAtMS4wMTEtLjEzMiAyLjM0IDIuMzQgMCAwMC0uOTAzLjIwNmMtLjI4Ny4xMzItLjU0LjMyNy0uNzM5LjU3MWEyLjIyMSAyLjIyMSAwIDAwLS4wNCAyLjcwNWMuMjk1LjM3OC43MDkuNjQ1IDEuMTc1Ljc1Ni40OTEuMTIgMS4wMDYuMTAyIDEuNDg3LS4wNTJsLjA4Mi0uMDIzTTUuMzM2IDE4LjE3MVYxNy4wNmwtLjAyMi4wMWMtLjI1LjEyMS0uNTIyLjE5LS44MDEuMjAzYTEuMTgzIDEuMTgzIDAgMDEtLjgwNi0uMjM3IDEuMDMgMS4wMyAwIDAxLS4zNTEtLjQ5OCAxLjIwMiAxLjIwMiAwIDAxLS4wMjQtLjY2N2MuMDUyLS4yMjUuMTc3LS40MjYuMzU3LS41NjkuMTYtLjEzNC4zNTUtLjIxOC41NjItLjI0MmExLjg1IDEuODUgMCAwMTEuMDYxLjE5OGwuMDI0LjAxM3YtMS4xMTdsLS4wNTEtLjAxNGEyLjg2MiAyLjg2MiAwIDAwLTEuMDExLS4xMzIgMi4zNDQgMi4zNDQgMCAwMC0uOTAzLjIwNiAyLjA4IDIuMDggMCAwMC0uNzQuNTcxIDIuMjI0IDIuMjI0IDAgMDAtLjA0MSAyLjcwNSAyLjExIDIuMTEgMCAwMDEuMTc2Ljc1NmMuNDkxLjEyIDEuMDA1LjEwMiAxLjQ4Ny0uMDUybC4wODMtLjAyM005LjI2IDE3LjI0OWwtLjAwNC45NTcuMDcuMDEyYy4yMi4wNDEuNDQxLjA2OS42NjQuMDg1LjE5NS4wMTkuMzkxLjAyMi41ODcuMDEyLjE4Ny0uMDE0LjM3Mi0uMDQ5LjU1MS0uMTA0LjIxLS4wNi40MDUtLjE2My41NzEtLjMwNWExLjE2IDEuMTYgMCAwMC4zMzMtLjQ3OCAxLjMxIDEuMzEgMCAwMC0uMDA3LS45NiAxLjA2OCAxLjA2OCAwIDAwLS4yOTgtLjQxNCAxLjI2MSAxLjI2MSAwIDAwLS40MzgtLjI1NWwtLjcyMi0uMjY4YS4zODguMzg4IDAgMDEtLjE5Ny0uMTg4LjI0NS4yNDUgMCAwMS4wMDgtLjIxOS4zODIuMzgyIDAgMDEuMTU0LS4xNDIuNzk4Ljc5OCAwIDAxLjI1Ny0uMDc0Yy4xNTMtLjAyMi4zMDgtLjAyMS40Ni4wMDUuMTguMDIuMzU4LjA1MS41MzMuMDk2bC4wMzguMDA4di0uODgzbC0uMDY5LS4wMTVhNC43NDkgNC43NDkgMCAwMC0uNTQzLS4wOTcgMi44NDQgMi44NDQgMCAwMC0uNzE0LS4wMDNjLS4zLjAyNy0uNTg1LjE0My0uODIxLjMzLS4xNi4xMjYtLjI4MS4yOTMtLjM1MS40ODQtLjEwNC4yOS0uMTA1LjYwOCAwIC44OTkuMDU0LjE0NS4xNC4yNzQuMjUyLjM4MS4wOTcuMDkzLjIwNy4xNzMuMzI3LjIzNi4xNTcuMDg0LjMyNC4xNDkuNDk3LjE5NS4wNTcuMDE3LjExNC4wMzUuMTcuMDU0bC4wODUuMDMxLjAyNC4wMWMuMDg0LjAzLjE2Mi4wNzguMjI2LjE0LjA0NS4wNDIuMDguMDk0LjEwMS4xNTFhLjMyNS4zMjUgMCAwMS4wMDEuMTYxLjMzOS4zMzkgMCAwMS0uMTY2LjE5OC44NTYuODU2IDAgMDEtLjI3NS4wODYgMi4wMzIgMi4wMzIgMCAwMS0uNDI3LjAyMSA1LjIwOCA1LjIwOCAwIDAxLS41NTctLjA3NCA5LjE5NSA5LjE5NSAwIDAxLS4yODctLjA2N2wtLjAzMy0uMDA2em0tMi40NzUuOTk1aDEuMDV2LTQuMTY3aC0xLjA1djQuMTY3em0xMi4xNjItMi45MzZhMS4wOTUgMS4wOTUgMCAwMTEuNTQxLjE1OCAxLjA5NCAxLjA5NCAwIDAxLS4xNTcgMS41NDFsLS4wMTcuMDE0YTEuMDk2IDEuMDk2IDAgMDEtMS4zNjctMS43MTNtLTEuNTI1Ljg1NGEyLjE5MyAyLjE5MyAwIDAwMi42NjYgMi4xMDcgMi4xMzkgMi4xMzkgMCAwMC43MDEtMy45MzcgMi4yMDcgMi4yMDcgMCAwMC0zLjM2NyAxLjgzTTIyLjk2MSAxMC43MjhhLjUyLjUyIDAgMDAxLjAzOSAwVjkuNTczYS41Mi41MiAwIDAwLTEuMDM5IDB2MS4xNTVNMjAuMTE3IDEwLjcyOGEuNTIyLjUyMiAwIDAwMS4wNDEgMFY4LjEzOWEuNTIxLjUyMSAwIDAwLTEuMDQgMHYyLjU4OU0xNy4yMzEgMTEuNzcxYS41MjEuNTIxIDAgMDAxLjAzOSAwVjYuMTdhLjUyLjUyIDAgMDAtMS4wMzkgMHY1LjYwMU0xNC4zOTMgMTAuNzI4YS41MjEuNTIxIDAgMDAxLjA0IDBWOC4xMzlhLjUyLjUyIDAgMDAtMS4wMzkgMHYyLjU4OU0xMS40OTQgMTAuNzI4YS41MjIuNTIyIDAgMDAxLjAzOSAwVjkuNTczYS41Mi41MiAwIDAwLTEuMDM5IDB2MS4xNTVNOC42MjQgMTAuNzI4YS41Mi41MiAwIDAwMS4wMzkgMFY4LjEzOWEuNTIuNTIgMCAwMC0xLjAzOSAwdjIuNTg5TTUuNzM3IDExLjc3MWEuNTIuNTIgMCAwMDEuMDM5IDBWNi4xN2EuNTIuNTIgMCAwMC0xLjAzOSAwdjUuNjAxTTIuODc2IDEwLjcyOGEuNTIyLjUyMiAwIDAwMS4wNCAwVjguMTM5YS41Mi41MiAwIDAwLTEuMDM5IDB2Mi41ODlNMCAxMC43MjhhLjUyMS41MjEgMCAwMDEuMDM5IDBWOS41NzNhLjUyLjUyIDAgMDAtMS4wMzkgMHYxLjE1NSIvPjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _final_reporting_device_ip
+  type: ipv4
+  description: Vendor-emitted field ' final reporting device ip'. Free-form text;
+    may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: _raw_log
+  type: string
+  description: 'Native cisco_catalyst log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: IOS mnemonic branch (%SYS-5-CONFIG_I). The rule GATES on _raw_log ~= "%\S+-\d-\S+:" so an IOS mnemonic must be present. The inner Cisco header <189>1247: host: 5821: is REQUIRED, not leftover framing: the device_hostname'
+  example: '<189>1247: cat9k-core-01: 5821: {{now:%b %e %H:%M:%S.123 UTC}}: %SYS-5-CONFIG_I: Configured from console by admin on vty0 (10.14.22.87)'
+- name: parsed_fields
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: description,
+    device_ip, event_id, facility, mnemonic, sequence_number, severity (each key defined
+    as a dotted-path leaf below).'
+  example: '{}'
+- name: parsed_fields.description
+  type: string_long
+  description: Free-form human-readable description from Cisco. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Event recorded by Cisco.
+- name: parsed_fields.device_ip
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields › device ip'. Leaf of the 'parsed_fields'
+    composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding
+    brackets or quotes.
+  example: 203.0.113.42
+- name: parsed_fields.event_id
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Leaf of
+    the 'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: cis-1053230d
+- name: parsed_fields.facility
+  type: string
+  description: Vendor-emitted field 'Parsed fields › facility'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_facility
+- name: parsed_fields.mnemonic
+  type: string
+  description: Vendor-emitted field 'Parsed fields › mnemonic'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_mnemonic
+- name: parsed_fields.sequence_number
+  type: integer
+  description: Vendor-emitted field 'Parsed fields › sequence number'. Leaf of the
+    'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: '7'
+- name: parsed_fields.severity
+  type: string_short
+  description: Event severity as classified by Cisco. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: INFO
+- name: access_mode
+  type: string
+  description: Auth method. Free-form text; may contain whitespace and punctuation.
+  example: sample_mode
+- name: change_state
+  type: string
+  description: Observer action. Free-form text; may contain whitespace and punctuation.
+  example: CA
+- name: client_mac_address
+  type: mac
+  description: Client mac address. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: client_mac_formatted
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: cmd
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: device_hostname
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: device_ip
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: device_product_id
+  type: string_short
+  description: Source host device model. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: device_serial_number
+  type: integer
+  description: Observer unique identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: '7'
+- name: dhcp_server_ip
+  type: ipv4
+  description: Network dhcp siaddr. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: event
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: event_name
+  type: string
+  description: Event name. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: formatted_mac_address
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: formatted_tgt_mac_address
+  type: mac
+  description: Destination host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: gateway_ip
+  type: ipv4
+  description: Gateway ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: gateway_name
+  type: host
+  description: Intermediate host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: gw_ipv4
+  type: ipv4
+  description: Gw ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: gw_ipv6
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: interface
+  type: string
+  description: Destination interface. Free-form text; may contain whitespace and punctuation.
+  example: eth0
+- name: interface_port_id
+  type: integer_port
+  description: Destination interface. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: ip_mask
+  type: string
+  description: Source subnet. Free-form text; may contain whitespace and punctuation.
+  example: sample_mask
+- name: mac_address
+  type: mac
+  description: Mac address. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: meaningful
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_meaningful
+- name: name
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: names
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_names
+- name: necessary
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_necessary
+- name: outcome_reason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: policy_name
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: process_name
+  type: string
+  description: Source process name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: rename
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_rename
+- name: seq_number
+  type: integer
+  description: Network session ID. Free-form text; may contain whitespace and punctuation.
+  example: '7'
+- name: server_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: server_name
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: session_id
+  type: string_short
+  description: Session context id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: source_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ip
+  type: ipv4
+  description: Src ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: target_ipv4
+  type: ipv4
+  description: Target ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: tgt_ip
+  type: ipv4
+  description: Tgt ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: tgt_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: tgt_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: tgt_mac_address
+  type: mac
+  description: Tgt mac address. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: tgt_user
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: tgt_user_domain
+  type: domain
+  description: Destination user domain. Bare DNS domain name; no scheme, no path,
+    no port.
+  example: example.com
+- name: user_domain
+  type: domain
+  description: Source user domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: user_role
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: Admin
+- name: username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: vague
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_vague
+- name: vlan
+  type: integer
+  description: Source vlan. Free-form text; may contain whitespace and punctuation.
+  example: '100'
+- name: vlan_id
+  type: string_short
+  description: Source vlan. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+use_cases:
+- Network
+- Firewall
+- EDR
+how_to_use: |
+  ## cisco catalyst → Cortex XSIAM (dataset `cisco_catalyst_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `cisco` / product `catalyst`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `cisco_catalyst_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `cisco`
+    - **product**: `catalyst`
+
+    These normalize → `cisco_catalyst_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `parsed_fields -> mnemonic`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `_raw_log ~= "%\S+\-\d\-\S+:"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~42 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.auth.auth_method`, `xdm.event.description`, `xdm.event.id`, `xdm.event.log_level`, `xdm.event.outcome`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `cisco`, Product = `catalyst`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = cisco_catalyst_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

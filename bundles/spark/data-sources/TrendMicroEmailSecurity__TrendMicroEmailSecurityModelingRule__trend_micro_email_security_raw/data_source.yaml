@@ -1,0 +1,230 @@
+schema_version: 1
+id: TrendMicroEmailSecurity
+pack_name: TrendMicroEmailSecurity
+rule_name: TrendMicroEmailSecurityModelingRule
+dataset_name: trend_micro_email_security_raw
+vendor: Trend Micro
+product: TrendMicroEmailSecurity
+description: Trend Micro Email Security is an enterprise grade solution to stop phishing,
+  ransomware, BEC, other advanced email threats, and spam
+categories:
+- Analytics & SIEM
+version: 1.0.12
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+VHJlbmQgTWljcm88L3RpdGxlPjxwYXRoIGQ9Ik0xMiAwQzUuMzggMCAwIDUuMzcgMCAxMkMwIDE0LjQ1IC43MzQgMTYuNzIgMiAxOC42MkMxLjUgMTcuNDUgMS41OCAxNS45NCAyLjE5IDE0LjI5TDIuMiAxNC4yNUwyLjI1IDE0LjEyTDIuMyAxNEwyLjMyIDEzLjk1QzIuNTQgMTMuNCAyLjgyIDEyLjgzIDMuMTYgMTIuMjZDMy4yMSAxMi4xNiAzLjI1IDEyLjA3IDMuMyAxMkwxLjg2IDEyTDIuMjEgMTEuMjFDMy40IDEwLjg4IDUuMzggMTAuMjIgNy4yNyA4LjM5TDcuMzIgOC4zOUg4LjMyTDcuMDMgMTEuMTRMOS4xIDExLjE0TDguNzIgMTEuOTZMNi42NiAxMS45NlM1LjY5IDEzLjkgNS4zNiAxNS4yOEM1LjExIDE2LjgyIDUuMzYgMTggNi43NCAxOC40MUM3LjU5IDE4LjY3IDguNjYgMTguNjEgOS44MSAxOC4yOUMxMi41IDE3LjQ1IDE1LjM0IDE1LjYyIDE3LjQzIDEzLjE4QzIwLjg3IDkuMTkgMjAuOTQgNS4xIDE3LjU4IDQuMDVDMTUuNDMgMy4zOCAxMi4zOSA0LjEzIDkuNTggNS44QzEzLjA4IDMuNTQgMTYuOTQgMi41IDE5LjU5IDMuMzFDMjAuMDkgMy40NiAyMC41MyAzLjY4IDIwLjg5IDMuOTRBMTEuOTcgMTEuOTcgMCAwIDAgMTIgME0yMi4xNyA1LjYzQzIzIDcuODEgMjEuOTcgMTEuMDcgMTkuMiAxNC4yOUMxNS4wNCAxOS4xMyA4LjQ3IDIyLjA1IDQuNSAyMC44M0E0LjQ2IDQuNDYgMCAwIDEgMy4yNCAyMC4yMUExMS45NiAxMS45NiAwIDAgMCAxMiAyNEMxOC42MyAyNCAyNCAxOC42MyAyNCAxMkMyNCA5LjY2IDIzLjMzIDcuNSAyMi4xNyA1LjYzWiIvPjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: action
+  type: string
+  description: Action taken (allow/block/quarantine). Free-form text; may contain
+    whitespace and punctuation.
+  example: allow
+- name: attachments
+  type: string
+  description: Vendor-emitted field 'Attachments'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_attachments
+- name: deliveredTo
+  type: string
+  description: Vendor-emitted field 'DeliveredTo'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_deliveredto
+- name: deliveryTime
+  type: datetime
+  description: Vendor-emitted field 'DeliveryTime'. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: details
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: fileInfo,
+    riskLevel, threatNames, urlInfo (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: direction
+  type: string
+  description: Vendor-emitted field 'Direction'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_direction
+- name: domainName
+  type: string
+  description: Vendor-emitted field 'DomainName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_domainname
+- name: embeddedUrls
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: eventSubtype
+  type: string
+  description: Vendor-emitted field 'EventSubtype'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_eventsubtype
+- name: eventType
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: genTime
+  type: datetime
+  description: Vendor-emitted field 'GenTime'. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: headerFrom
+  type: string
+  description: Vendor-emitted field 'HeaderFrom'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_headerfrom
+- name: headerTo
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: logType
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_logtype
+- name: mailID
+  type: string
+  description: Vendor-emitted field 'MailID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mailid
+- name: messageID
+  type: string
+  description: Vendor-emitted field 'MessageID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: msg-810dae32-77b
+- name: policyAction
+  type: string
+  description: Vendor-emitted field 'PolicyAction'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_policyaction
+- name: policyName
+  type: string
+  description: Vendor-emitted field 'PolicyName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Default-Policy
+- name: reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: recipient
+  type: string
+  description: Vendor-emitted field 'Recipient'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_recipient
+- name: recipients
+  type: string
+  description: Vendor-emitted field 'Recipients'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_recipients
+- name: sender
+  type: string
+  description: Vendor-emitted field 'Sender'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sender
+- name: senderIP
+  type: string
+  description: Vendor-emitted field 'SenderIP'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_senderip
+- name: size
+  type: integer_byte_count
+  description: Size in bytes of the payload/object. Unsigned decimal byte count; bare
+    digits, no unit suffix.
+  example: '42'
+- name: subject
+  type: string
+  description: Subject line — typically email subject or event summary. Free-form
+    text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: timestamp
+  type: datetime
+  description: Timestamp emitted by Trend Micro. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: tlsInfo
+  type: string
+  description: Vendor-emitted field 'TlsInfo'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_tlsinfo
+- name: details.fileInfo
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Details › fileInfo'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_fileinfo
+- name: details.riskLevel
+  type: string
+  description: Vendor-emitted field 'Details › riskLevel'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_risklevel
+- name: details.threatNames
+  type: string
+  description: Vendor-emitted field 'Details › threatNames'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_threatnames
+- name: details.urlInfo
+  type: url
+  is_array: true
+  description: Vendor-emitted field 'Details › urlInfo'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: https://example.com/path?q=1
+use_cases:
+- AV
+- EDR
+how_to_use: |
+  ## Trend Micro TrendMicroEmailSecurity → Cortex XSIAM (dataset `trend_micro_email_security_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `trend_micro_email_security_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `trend_micro_email_security`. The marketplace pack's display name `Trend Micro` / `TrendMicroEmailSecurity` normalizes to `trend_micro_trendmicroemailsecurity_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `trend_micro_email_security` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.fileName`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~31 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.category`, `xdm.alert.name`, `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.email.attachment.extension`, `xdm.email.attachment.filename`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|Trend Micro|TrendMicroEmailSecurity|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = trend_micro_email_security_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,17 @@
+id: 9e8a1f4d-2c5b-4d7e-bf03-a14b8e92c5d6
+name: "Phantom Lookalike Validation"
+description: "5-step adversary that runs all lab-safe lookalike abilities in sequence. Use to validate Cortex XDR detection coverage for techniques that signature-block real exploitation (LSASS dump, Fodhelper UAC bypass, ETW patching, AMSI bypass, comsvcs MiniDump). Each ability emits the detection pattern without achieving the malicious effect — sandcat agent survives the full chain.."
+atomic_ordering:
+- 760dd8ec-f9b6-569a-b8d7-97f68f56e391   # 1. Powerkatz-Lite LSASS lookalike (T1003.001)
+- 25a01a28-b2be-5844-8700-e279b9da4721   # 2. Comsvcs MiniDump trace (T1003.001 alt)
+- d80039be-e7f0-59f0-8e3b-5439a7b60ca6   # 3. Fodhelper registry trace (T1548.002)
+- 248cd93a-bb50-565c-b5a4-318a84ffe870   # 4. AMSI bypass signature marker (T1562.001)
+- 597caab2-3cae-5b80-b4cb-2f4a2f385cf8   # 5. ETW patch reconnaissance (T1562.006)
+objective: 495a9828-cab1-44dd-a0ca-66e58177d8cc
+tags:
+- phantom
+- lookalike
+- detection-validation
+- lab-safe
+- cortex-xdr-test
+has_repeatable_abilities: false

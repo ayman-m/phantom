@@ -1,0 +1,256 @@
+schema_version: 1
+id: Slack
+pack_name: Slack
+rule_name: SlackModelingRules
+dataset_name: slack_slack_raw
+vendor: Slack
+product: Slack
+description: Interact with Slack API - collect logs, send messages and notifications
+  to your Slack team.
+categories:
+- Messaging and Conferencing
+version: 3.8.0
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTMwcHgiIHZpZXdCb3g9IjAgMCA1MTIgMTMwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDxnPgoJCQkJPHBhdGggZD0iTTE2My41OTI3NTcsMTAxLjg4NDkwOSBMMTY5Ljk3OTg3OSw4Ny4wNTAzMDE4IEMxNzYuODgyMDkzLDkyLjIwMTIwNzIgMTg2LjA1MDcwNCw5NC44Nzk2NzgxIDE5NS4xMTYyOTgsOTQuODc5Njc4MSBDMjAxLjgxMjQ3NSw5NC44Nzk2NzgxIDIwNi4wMzYyMTcsOTIuMzA0MjI1NCAyMDYuMDM2MjE3LDg4LjM4OTUzNzIgQzIwNS45MzMxOTksNzcuNDY5NjE3NyAxNjUuOTYyMTczLDg2LjAyMDEyMDcgMTY1LjY1MzExOSw1OC42MTczMDM4IEMxNjUuNTUwMTAxLDQ0LjcwOTg1OTIgMTc3LjkxMjI3NCwzMy45OTU5NzU5IDE5NS40MjUzNTIsMzMuOTk1OTc1OSBDMjA1LjgzMDE4MSwzMy45OTU5NzU5IDIxNi4yMzUwMSwzNi41NzE0Mjg2IDIyMy42NTIzMTQsNDIuNDQzNDYwOCBMMjE3LjY3NzI2NCw1Ny41ODcxMjI3IEMyMTAuODc4MDY4LDUzLjI2MDM2MjIgMjAyLjQzMDU4NCw1MC4xNjk4MTg5IDE5NC4zOTUxNzEsNTAuMTY5ODE4OSBDMTg4LjkzNTIxMSw1MC4xNjk4MTg5IDE4NS4zMjk1NzcsNTIuNzQ1MjcxNiAxODUuMzI5NTc3LDU2LjA0MTg1MTEgQzE4NS40MzI1OTYsNjYuNzU1NzM0NCAyMjUuNzEyNjc2LDYwLjg4MzcwMjIgMjI2LjEyNDc0OCw4Ny4wNTAzMDE4IEMyMjYuMTI0NzQ4LDEwMS4yNjY4MDEgMjE0LjA3MTYzLDExMS4yNTk1NTcgMTk2Ljc2NDU4OCwxMTEuMjU5NTU3IEMxODQuMDkzMzYsMTExLjI1OTU1NyAxNzIuNDUyMzE0LDEwOC4yNzIwMzIgMTYzLjU5Mjc1NywxMDEuODg0OTA5IFogTTQwOC42NzI4MzcsODEuNjkzMzYwMiBMNDI2LjI4ODkzNCw5MS40ODAwODA1IEM0MTkuNjk1Nzc1LDEwMy4zMjcxNjMgNDA3LjEyNzU2NSwxMTEuMjU5NTU3IDM5Mi42MDIwMTIsMTExLjI1OTU1NyBDMzcxLjI3NzI2NCwxMTEuMjU5NTU3IDM1My45NzAyMjEsOTMuOTUyNTE1MSAzNTMuOTcwMjIxLDcyLjYyNzc2NjYgQzM1My45NzAyMjEsNTEuMzAzMDE4MSAzNzEuMjc3MjY0LDMzLjk5NTk3NTkgMzkyLjYwMjAxMiwzMy45OTU5NzU5IEM0MDcuMDI0NTQ3LDMzLjk5NTk3NTkgNDE5LjY5NTc3NSw0Mi4wMzEzODgzIDQyNi4yODg5MzQsNTMuNzc1NDUyNyBMNDA4LjY3MjgzNyw2My41NjIxNzMgQzQwNS40NzkyNzYsNTcuOTk5MTk1MiAzOTkuNTA0MjI1LDU0LjE4NzUyNTIgMzkyLjYwMjAxMiw1NC4xODc1MjUyIEMzODIuNDAzMjE5LDU0LjE4NzUyNTIgMzc0LjE2MTc3MSw2Mi40Mjg5NzM4IDM3NC4xNjE3NzEsNzIuNjI3NzY2NiBDMzc0LjE2MTc3MSw4Mi44MjY1NTk0IDM4Mi40MDMyMTksOTEuMDY4MDA4IDM5Mi42MDIwMTIsOTEuMDY4MDA4IEMzOTkuNTA0MjI1LDkxLjA2ODAwOCA0MDUuNDc5Mjc2LDg3LjI1NjMzOCA0MDguNjcyODM3LDgxLjY5MzM2MDIgWiBNMjM0Ljk4NDMwNiwxLjk1NzM0NDA2IEwyNTcuMDMwMTgxLDEuOTU3MzQ0MDYgTDI1Ny4wMzAxODEsMTA5LjgxNzMwNCBMMjM0Ljk4NDMwNiwxMDkuODE3MzA0IEwyMzQuOTg0MzA2LDEuOTU3MzQ0MDYgWiBNNDM0Ljk0MjQ1NSwxLjk1NzM0NDA2IEw0NTYuOTg4MzMsMS45NTczNDQwNiBMNDU2Ljk4ODMzLDY1LjMxMzQ4MDkgTDQ4MS45MTg3MTIsMzUuNTQxMjQ3NSBMNTA4LjkwOTQ1NywzNS41NDEyNDc1IEw0NzguMTA3MDQyLDcxLjM5MTU0OTMgTDUxMS4zODE4OTEsMTA5LjgxNzMwNCBMNDgzLjE1NDkzLDEwOS44MTczMDQgTDQ1Ni45ODgzMyw3Ny40Njk2MTc3IEw0NTYuOTg4MzMsMTA5LjgxNzMwNCBMNDM0Ljk0MjQ1NSwxMDkuODE3MzA0IEw0MzQuOTQyNDU1LDEuOTU3MzQ0MDYgWiBNMzIyLjU0OTY5OCw4MS44OTkzOTY0IEwzMjIuNTQ5Njk4LDYzLjY2NTE5MTEgQzMxOS4zNTYxMzcsNTguMzA4MjQ5NSAzMTIuNzYyOTc4LDU0LjE4NzUyNTIgMzA1LjM0NTY3NCw1NC4xODc1MjUyIEMyOTUuMTQ2ODgxLDU0LjE4NzUyNTIgMjg2LjkwNTQzMyw2Mi40Mjg5NzM4IDI4Ni45MDU0MzMsNzIuNjI3NzY2NiBDMjg2LjkwNTQzMyw4Mi44MjY1NTk0IDI5NS4xNDY4ODEsOTEuMDY4MDA4IDMwNS4zNDU2NzQsOTEuMDY4MDA4IEMzMTIuNzYyOTc4LDkxLjA2ODAwOCAzMTkuMzU2MTM3LDg3LjE1MzMxOTkgMzIyLjU0OTY5OCw4MS44OTkzOTY0IFogTTMyMi41NDk2OTgsMzUuNTQxMjQ3NSBMMzQ0LjU5NTU3MywzNS41NDEyNDc1IEwzNDQuNTk1NTczLDEwOS43MTQyODYgTDMyMi41NDk2OTgsMTA5LjcxNDI4NiBMMzIyLjU0OTY5OCwxMDAuOTU3NzQ2IEMzMTguOTQ0MDY0LDEwNy4wMzU4MTUgMzA5Ljk4MTQ4OSwxMTEuMjU5NTU3IDMwMC42MDY4NDEsMTExLjI1OTU1NyBDMjgxLjIzOTQzNywxMTEuMjU5NTU3IDI2NS45OTI3NTcsOTMuOTUyNTE1MSAyNjUuOTkyNzU3LDcyLjUyNDc0ODUgQzI2NS45OTI3NTcsNTEuMDk2OTgxOSAyODEuMjM5NDM3LDMzLjk5NTk3NTkgMzAwLjYwNjg0MSwzMy45OTU5NzU5IEMzMDkuOTgxNDg5LDMzLjk5NTk3NTkgMzE4Ljk0NDA2NCwzOC4yMTk3MTgzIDMyMi41NDk2OTgsNDQuMjk3Nzg2NyBMMzIyLjU0OTY5OCwzNS41NDEyNDc1IFoiIGZpbGw9IiMwMDAwMDAiPjwvcGF0aD4KCQkJCTxwYXRoIGQ9Ik0yNy4yOTk3OTg4LDgxLjc5NjM3ODMgQzI3LjI5OTc5ODgsODkuMzE2NzAwMiAyMS4yMjE3MzA0LDk1LjM5NDc2ODYgMTMuNzAxNDA4NSw5NS4zOTQ3Njg2IEM2LjE4MTA4NjUyLDk1LjM5NDc2ODYgMC4xMDMwMTgxMDksODkuMzE2NzAwMiAwLjEwMzAxODEwOSw4MS43OTYzNzgzIEMwLjEwMzAxODEwOSw3NC4yNzYwNTYzIDYuMTgxMDg2NTIsNjguMTk3OTg3OSAxMy43MDE0MDg1LDY4LjE5Nzk4NzkgTDI3LjI5OTc5ODgsNjguMTk3OTg3OSBMMjcuMjk5Nzk4OCw4MS43OTYzNzgzIFogTTM0LjA5ODk5NCw4MS43OTYzNzgzIEMzNC4wOTg5OTQsNzQuMjc2MDU2MyA0MC4xNzcwNjI0LDY4LjE5Nzk4NzkgNDcuNjk3Mzg0Myw2OC4xOTc5ODc5IEM1NS4yMTc3MDYyLDY4LjE5Nzk4NzkgNjEuMjk1Nzc0Niw3NC4yNzYwNTYzIDYxLjI5NTc3NDYsODEuNzk2Mzc4MyBMNjEuMjk1Nzc0NiwxMTUuNzkyMzU0IEM2MS4yOTU3NzQ2LDEyMy4zMTI2NzYgNTUuMjE3NzA2MiwxMjkuMzkwNzQ0IDQ3LjY5NzM4NDMsMTI5LjM5MDc0NCBDNDAuMTc3MDYyNCwxMjkuMzkwNzQ0IDM0LjA5ODk5NCwxMjMuMzEyNjc2IDM0LjA5ODk5NCwxMTUuNzkyMzU0IEwzNC4wOTg5OTQsODEuNzk2Mzc4MyBaIiBmaWxsPSIjRTAxRTVBIj48L3BhdGg+CgkJCQk8cGF0aCBkPSJNNDcuNjk3Mzg0MywyNy4xOTY3ODA3IEM0MC4xNzcwNjI0LDI3LjE5Njc4MDcgMzQuMDk4OTk0LDIxLjExODcxMjMgMzQuMDk4OTk0LDEzLjU5ODM5MDMgQzM0LjA5ODk5NCw2LjA3ODA2ODQxIDQwLjE3NzA2MjQsMCA0Ny42OTczODQzLDAgQzU1LjIxNzcwNjIsMCA2MS4yOTU3NzQ2LDYuMDc4MDY4NDEgNjEuMjk1Nzc0NiwxMy41OTgzOTAzIEw2MS4yOTU3NzQ2LDI3LjE5Njc4MDcgTDQ3LjY5NzM4NDMsMjcuMTk2NzgwNyBaIE00Ny42OTczODQzLDM0LjA5ODk5NCBDNTUuMjE3NzA2MiwzNC4wOTg5OTQgNjEuMjk1Nzc0Niw0MC4xNzcwNjI0IDYxLjI5NTc3NDYsNDcuNjk3Mzg0MyBDNjEuMjk1Nzc0Niw1NS4yMTc3MDYyIDU1LjIxNzcwNjIsNjEuMjk1Nzc0NiA0Ny42OTczODQzLDYxLjI5NTc3NDYgTDEzLjU5ODM5MDMsNjEuMjk1Nzc0NiBDNi4wNzgwNjg0MSw2MS4yOTU3NzQ2IDAsNTUuMjE3NzA2MiAwLDQ3LjY5NzM4NDMgQzAsNDAuMTc3MDYyNCA2LjA3ODA2ODQxLDM0LjA5ODk5NCAxMy41OTgzOTAzLDM0LjA5ODk5NCBMNDcuNjk3Mzg0MywzNC4wOTg5OTQgWiIgZmlsbD0iIzM2QzVGMCI+PC9wYXRoPgoJCQkJPHBhdGggZD0iTTEwMi4xOTM5NjQsNDcuNjk3Mzg0MyBDMTAyLjE5Mzk2NCw0MC4xNzcwNjI0IDEwOC4yNzIwMzIsMzQuMDk4OTk0IDExNS43OTIzNTQsMzQuMDk4OTk0IEMxMjMuMzEyNjc2LDM0LjA5ODk5NCAxMjkuMzkwNzQ0LDQwLjE3NzA2MjQgMTI5LjM5MDc0NCw0Ny42OTczODQzIEMxMjkuMzkwNzQ0LDU1LjIxNzcwNjIgMTIzLjMxMjY3Niw2MS4yOTU3NzQ2IDExNS43OTIzNTQsNjEuMjk1Nzc0NiBMMTAyLjE5Mzk2NCw2MS4yOTU3NzQ2IEwxMDIuMTkzOTY0LDQ3LjY5NzM4NDMgWiBNOTUuMzk0NzY4Niw0Ny42OTczODQzIEM5NS4zOTQ3Njg2LDU1LjIxNzcwNjIgODkuMzE2NzAwMiw2MS4yOTU3NzQ2IDgxLjc5NjM3ODMsNjEuMjk1Nzc0NiBDNzQuMjc2MDU2Myw2MS4yOTU3NzQ2IDY4LjE5Nzk4NzksNTUuMjE3NzA2MiA2OC4xOTc5ODc5LDQ3LjY5NzM4NDMgTDY4LjE5Nzk4NzksMTMuNTk4MzkwMyBDNjguMTk3OTg3OSw2LjA3ODA2ODQxIDc0LjI3NjA1NjMsLTcuMTA1NDI3MzZlLTE1IDgxLjc5NjM3ODMsLTcuMTA1NDI3MzZlLTE1IEM4OS4zMTY3MDAyLC03LjEwNTQyNzM2ZS0xNSA5NS4zOTQ3Njg2LDYuMDc4MDY4NDEgOTUuMzk0NzY4NiwxMy41OTgzOTAzIEw5NS4zOTQ3Njg2LDQ3LjY5NzM4NDMgWiIgZmlsbD0iIzJFQjY3RCI+PC9wYXRoPgoJCQkJPHBhdGggZD0iTTgxLjc5NjM3ODMsMTAyLjE5Mzk2NCBDODkuMzE2NzAwMiwxMDIuMTkzOTY0IDk1LjM5NDc2ODYsMTA4LjI3MjAzMiA5NS4zOTQ3Njg2LDExNS43OTIzNTQgQzk1LjM5NDc2ODYsMTIzLjMxMjY3NiA4OS4zMTY3MDAyLDEyOS4zOTA3NDQgODEuNzk2Mzc4MywxMjkuMzkwNzQ0IEM3NC4yNzYwNTYzLDEyOS4zOTA3NDQgNjguMTk3OTg3OSwxMjMuMzEyNjc2IDY4LjE5Nzk4NzksMTE1Ljc5MjM1NCBMNjguMTk3OTg3OSwxMDIuMTkzOTY0IEw4MS43OTYzNzgzLDEwMi4xOTM5NjQgWiBNODEuNzk2Mzc4Myw5NS4zOTQ3Njg2IEM3NC4yNzYwNTYzLDk1LjM5NDc2ODYgNjguMTk3OTg3OSw4OS4zMTY3MDAyIDY4LjE5Nzk4NzksODEuNzk2Mzc4MyBDNjguMTk3OTg3OSw3NC4yNzYwNTYzIDc0LjI3NjA1NjMsNjguMTk3OTg3OSA4MS43OTYzNzgzLDY4LjE5Nzk4NzkgTDExNS44OTUzNzIsNjguMTk3OTg3OSBDMTIzLjQxNTY5NCw2OC4xOTc5ODc5IDEyOS40OTM3NjMsNzQuMjc2MDU2MyAxMjkuNDkzNzYzLDgxLjc5NjM3ODMgQzEyOS40OTM3NjMsODkuMzE2NzAwMiAxMjMuNDE1Njk0LDk1LjM5NDc2ODYgMTE1Ljg5NTM3Miw5NS4zOTQ3Njg2IEw4MS43OTYzNzgzLDk1LjM5NDc2ODYgWiIgZmlsbD0iI0VDQjIyRSI+PC9wYXRoPgoJCTwvZz4KPC9zdmc+Cg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: actor.type
+  type: string_short
+  description: Nested leaf of `actor` — the modeling rule reads it at $.type.
+  example: sample value
+- name: action
+  type: string
+  description: Action taken by the vendor's enforcement engine. Free-form text; may
+    contain whitespace and punctuation.
+  example: allow
+- name: actor
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: user (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: context
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: app, ip_address,
+    session_id, ua (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: date_create
+  type: integer
+  description: Vendor-emitted field 'Date create'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: entity
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: app, channel,
+    enterprise, file, huddles, message, type, user, usergroups, workflow, workspace
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-ef2a5710
+- name: actor.user.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-d1c2898f
+- name: actor.user.name
+  type: user
+  description: Human-readable name as displayed by Slack. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: context.app.name
+  type: string
+  description: Human-readable name as displayed by Slack. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: context.ip_address
+  type: ipv4
+  description: Vendor-emitted field 'Context › ip address'. Leaf of the 'context'
+    composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding
+    brackets or quotes.
+  example: 203.0.113.42
+- name: context.session_id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sess-d52cf191-5d6
+- name: context.ua
+  type: string
+  description: Vendor-emitted field 'Context › ua'. Leaf of the 'context' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_ua
+- name: entity.app.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-0e581c75
+- name: entity.app.name
+  type: string
+  description: Human-readable name as displayed by Slack. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: entity.channel.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-8877828d
+- name: entity.channel.name
+  type: string
+  description: Human-readable name as displayed by Slack. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: entity.enterprise.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-1a04ceb5
+- name: entity.enterprise.name
+  type: string
+  description: Human-readable name as displayed by Slack. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: entity.file.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-110fab56
+- name: entity.file.name
+  type: string
+  description: File or process name reported by the vendor. Leaf of the 'entity' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: entity.huddles.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-6e5cc6cd
+- name: entity.huddles.name
+  type: string
+  description: Human-readable name as displayed by Slack. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: entity.message.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-1b1d522a
+- name: entity.message.name
+  type: string
+  description: Human-readable name as displayed by Slack. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: entity.type
+  type: string_short
+  description: Type/category classifier emitted by Slack. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: entity.user.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-ecf619bd
+- name: entity.user.name
+  type: user
+  description: Human-readable name as displayed by Slack. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: entity.usergroups.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-d0f07053
+- name: entity.usergroups.name
+  type: string
+  description: Human-readable name as displayed by Slack. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: entity.workflow.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-467bd3bf
+- name: entity.workflow.name
+  type: string
+  description: Human-readable name as displayed by Slack. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: entity.workspace.id
+  type: string_short
+  description: Opaque identifier emitted by Slack. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sla-e4fe4de1
+- name: entity.workspace.name
+  type: string
+  description: Human-readable name as displayed by Slack. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+use_cases:
+- Collab
+how_to_use: |
+  ## slack slack → Cortex XSIAM (dataset `slack_slack_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `slack_slack_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `slack`
+    - **product**: `slack`
+
+    These normalize → `slack_slack_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.type`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `action not in ("user_login","user_logout")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~83 fields mapped to the unified data model (`xdm.*`), including: `XDM.Audit.TriggeredBy.agent.version`, `XDM.Audit.TriggeredBy.identity.name`, `XDM.Audit.TriggeredBy.identity.type`, `XDM.Audit.TriggeredBy.identity.uuid`, `XDM.Audit.TriggeredBy.ipv4`, `XDM.Audit.audited_resource.id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = slack_slack_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

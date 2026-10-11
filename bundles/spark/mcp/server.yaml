@@ -1,0 +1,28 @@
+# Embedded MCP server for the Phantom SOC simulation agent.
+#
+# Per Spark agent bundle spec v1.2 §7.4 — the runtime spawns this MCP
+# in standalone mode and skips it in Spark-platform mode (where the
+# platform's central connector-manager MCP supersedes it).
+#
+# Job:
+#   1. Read every toolConnectors[] entry from ../manifest.yaml
+#   2. Load each connector per ../connectors/<id>/connector.yaml
+#      (source.entrypoint)
+#   3. Read materialized instances from data_root/instances.db
+#      (rows written when the operator submits the setup form per
+#      manifest's setup.bindsInstances[] templates)
+#   4. Build a tool catalog namespaced as `<connector_id>/<tool_name>`
+#   5. Serve the catalog over MCP (JSON-RPC) on a local port
+#   6. Dispatch tools/call requests to the right connector instance
+
+id: "phantom-embedded-mcp"
+version: "1.0.0"
+description: "Embedded MCP that aggregates Phantom's tool connectors (caldera, xsiam, xlog) for the agent."
+
+source:
+  language: "python"
+  entrypoint: "src.server:create_server"
+
+# Ephemeral local port by default; runtime captures the bind address
+# and passes it to the agent at boot.
+listenPort: null

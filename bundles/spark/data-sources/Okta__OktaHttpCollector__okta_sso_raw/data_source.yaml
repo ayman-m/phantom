@@ -1,0 +1,926 @@
+schema_version: 1
+id: Okta
+pack_name: Okta
+rule_name: OktaHttpCollector
+dataset_name: okta_sso_raw
+vendor: Okta
+product: Okta HTTP
+delivery: http
+description: 'The HTTP-collector variant of Okta System Log events (`okta_sso_raw`): one JSON object per event,
+  delivered by the `http-sender` connector to an XSIAM HTTP Log Collector (Vendor Okta, Product Sso) instead of
+  syslog/CEF. Simulate it to test sign-in, MFA and admin-audit detections over HTTP delivery with real nested JSON.'
+how_to_use: |
+  **Use this source when the goal is Cortex Analytics alerts.** Analytics reads data that arrives with the source's identity, so send it with the `http-sender` connector: the strongest route is the Cribl destination `cribl_okta_sso` (the Okta SSO source UUID: native collector type, stories and 25 detectors), and the generic HTTP collector destination fires FastPass. The syslog/CEF Okta source is for checking parsing and modeling; do not wait for Analytics alerts from it (identical data alerts over HTTP and not over CEF).
+
+  ## Simulating Okta over HTTP (JSON, `http-sender` connector)
+
+  This source describes Okta System Log events (the objects returned by Okta's `GET /api/v1/logs`) as they
+  are delivered to a Cortex XSIAM **HTTP Log Collector** and land in dataset `okta_sso_raw`
+  (`_vendor=Okta`, `_product=Sso`). It is the HTTP-delivery sibling of
+  the syslog/CEF Okta sources and was written for HTTP, not copied from them.
+
+  **Two Okta collectors can exist on a tenant.** Okta/Sso writes `okta_sso_raw` (the dataset this source is
+  catalogued under) and Okta/Okta writes `okta_okta_raw`. Both bind the Okta pack; `okta_okta_raw` produces 58 distinct `xdm.*` fields from one event. The sender has a destination for each: `okta_sso` (used in
+  the calls below) and `okta_okta` (the `okta` profile's preferred one, with no dataset-mismatch warning for
+  either). Which collector a given Cortex detector reads is NOT established here.
+
+  **Do NOT use `phantom_create_data_worker`, syslog, CEF, `schema_override` or `observables_dict` for this
+  source.** Delivery is the `http-sender` connector's `list_destinations`, `send_test_event`,
+  `generate_events` and `send_events` tools, and for two reasons: (1) the payload is one real JSON object
+  per event, with nested objects and arrays as real JSON, not CEF composites packed into strings; (2) the
+  dataset is fixed by the collector configured in XSIAM (Vendor Okta, Product Sso), not by anything in
+  the event, so there is no CEF header to set and no routing literal to get wrong. The sender adds no
+  fields: every object you send arrives exactly as you wrote it, so never put `_time`, `_vendor` or
+  `_product` in it (Cortex stamps those).
+
+  ### Prerequisites
+
+  1. An `http-sender` connector instance with a destination named **`okta_sso`** (a destination's name is its
+     dataset without `_raw`). Check with `http-sender.list_destinations`: the row must show
+     `destination: okta_sso`, `dataset: okta_sso_raw`, `ready: true`. If it is missing or not ready, stop and
+     tell the operator; you cannot create or read collector keys.
+  2. The Cortex **Okta content pack** installed on the tenant; it binds `okta_sso_raw` to the Okta parsing
+     and modeling rules. Without the pack the dataset is raw-only: no `_time` from `published`, no `xdm.*`.
+
+  ### Quick start (exact calls)
+
+  ```text
+  http-sender.list_destinations   {}
+  http-sender.send_test_event     {"destination": "okta_sso", "profile": "okta"}
+  ```
+
+  `send_test_event` sends one benign `user.session.start` for `phantom.test@<userDomain>` and returns
+  `test_id` (its `uuid`) plus a ready-made XQL query. Run it first; then wait for it to land (see Timing).
+
+  Built-in scenarios (`generate_events`). Always preview with `"dry_run": true` first (builds and returns the
+  first 3 events without sending), then repeat the same call without it. Common arguments:
+  `count` (1-5000, default 20), `spread_seconds` (width of the window the events are spread across, default
+  120), `start_offset_minutes` (end the window this many minutes in the past, to back-date; default 0),
+  `target_user` (victim, bare name or email, never `DOMAIN\user`), `source_ip` (attacker address; default a
+  random real out-of-country address). Nothing is ever dated after now.
+
+  **Addresses are real, so Cortex can geo-resolve them.** Cortex derives country, city, ASN and ISP from the
+  IP itself and ignores any label in the event. Each benign user therefore has ONE stable Saudi home address
+  (a real regional-ISP range, checked with Cortex's `iploc`), the same on every run, with
+  `client.geographicalContext` and `securityContext` filled with what Cortex resolves for it. Attack scenarios
+  default to an out-of-country address, never a home one, so geo, ASN and new-country detections have something
+  to profile; `source_ip` overrides the default (an address outside the built-in pools is sent as given, with
+  empty geography).
+
+  | Scenario | Use when | What it sends |
+  |---|---|---|
+  | `benign_logins` | You need normal background traffic or a baseline | Alternating `user.session.start` SUCCESS and `user.authentication.sso` SUCCESS, cycling through 12 home users, each from one stable real Saudi ISP address (Cortex resolves it to Saudi Arabia), 6 apps |
+  | `failed_then_success` | Brute-force-then-compromise, account takeover | `count-1` x `user.session.start` FAILURE (reason INVALID_CREDENTIALS) for ONE victim from ONE attacker IP, then one SUCCESS |
+  | `password_spray` | One IP against many accounts | `count` x `user.session.start` FAILURE, each for a different user (the 12 users, then numbered variants), one attacker IP; `target_user` is ignored |
+  | `mfa_fatigue` | MFA push bombing | For ONE victim, alternating `system.push.send_factor_verify_push` SUCCESS and `user.mfa.okta_verify.deny_push` FAILURE (reason USER_REJECTED_OKTA_VERIFY_PUSH), ending with one `user.authentication.auth_via_mfa` SUCCESS; use `count` >= 3 |
+
+  ```text
+  http-sender.generate_events {"profile":"okta","scenario":"failed_then_success","destination":"okta_sso","count":8,"spread_seconds":120,"target_user":"khalid.alotaibi","source_ip":"80.130.44.45","dry_run":true}
+  http-sender.generate_events {"profile":"okta","scenario":"password_spray","destination":"okta_sso","count":40,"spread_seconds":300,"source_ip":"49.36.20.77"}
+  http-sender.generate_events {"profile":"okta","scenario":"mfa_fatigue","destination":"okta_sso","count":9,"spread_seconds":240,"target_user":"noura.alharbi"}
+  http-sender.generate_events {"profile":"okta","scenario":"benign_logins","destination":"okta_sso","count":120,"spread_seconds":3600,"start_offset_minutes":30}
+  ```
+
+  Any other Okta event type: build the JSON yourself from the field guide below and send it with
+  `send_events` (1-5000 objects, sent exactly as given). `generate_events` only knows the 4 scenarios above.
+
+  **Worked example 1, a user login (`user.session.start`)**. Replace `published` with the current UTC time
+  (or the back-dated time you want) and give every event a fresh `uuid`. The nested objects use real Okta's shape, the same
+  shape the okta profile sends:
+
+  ```text
+  http-sender.send_events {"destination": "okta_sso", "events": [{
+    "uuid": "6b1f0a52-9d3e-4c7a-8f21-3e5a7c4d9b10",
+    "published": "2026-10-01T09:15:42.318Z",
+    "eventType": "user.session.start",
+    "displayMessage": "User login to Okta",
+    "legacyEventType": "core.user_auth.login_success",
+    "severity": "INFO",
+    "version": "0",
+    "actor": {"id": "00u1a2b3c4d5e6f7g8h", "type": "User", "alternateId": "noura.alharbi@phantom-lab.example", "displayName": "Noura Alharbi", "detailEntry": null},
+    "client": {"userAgent": {"rawUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36", "os": "Windows 10", "browser": "CHROME"}, "zone": "null", "device": "Computer", "id": null, "ipAddress": "144.86.80.11", "geographicalContext": {"city": "Dammam", "state": "Eastern Province", "country": "Saudi Arabia", "postalCode": null, "geolocation": {"lat": 26.4336, "lon": 50.1116}}},
+    "outcome": {"result": "SUCCESS", "reason": null},
+    "target": [{"id": "0oa1b2c3d4e5f6g7h8i", "type": "AppInstance", "alternateId": "Okta Dashboard", "displayName": "Okta Dashboard", "detailEntry": null}],
+    "authenticationContext": {"authenticationProvider": "OKTA_AUTHENTICATION_PROVIDER", "credentialProvider": "OKTA_CREDENTIAL_PROVIDER", "credentialType": "PASSWORD", "externalSessionId": "idx9fQ2lKz8a1b2c3d4e5f6g", "authnContextClassRef": "urn:oasis:names:tc:SAML:2.0:ac:classes:Password", "issuer": null, "interface": null, "authenticationStep": 0},
+    "securityContext": {"asNumber": 25019, "asOrg": "Example Telecom JSC", "isp": "Example Telecom JSC", "domain": "example-isp.example", "isProxy": false},
+    "debugContext": {"debugData": {"requestId": "ZmK2qP8aLr5tB9xW3nYc4gAAABc", "requestUri": "/idp/idx/identify", "threatSuspected": "false", "url": "/idp/idx/identify?"}},
+    "transaction": {"type": "WEB", "id": "ZmK2qP8aLr5tB9xW3nYc4gAAABc", "detail": {}},
+    "request": {"ipChain": [{"ip": "144.86.80.11", "version": "V4", "source": null}]}
+  }]}
+  ```
+
+  **Worked example 2, an admin/audit event (`user.account.privilege.grant`)**. An admin grants a role to a
+  user; the actor is the admin, `target[0]` is the user who received it (type `User`), which is what the rule
+  models as the target user. For `system.api_token.create` use the same skeleton with
+  `eventType: system.api_token.create`, `displayMessage: "Create API token"`,
+  `legacyEventType: "api.token.create"` and `target` =
+  `[{"id":"00T1a2b3c4d5e6f7g8h","type":"Token","alternateId":"phantom-lab-automation","displayName":"phantom-lab-automation","detailEntry":null}]`
+  (a Token target is carried raw, not modelled).
+
+  ```text
+  http-sender.send_events {"destination": "okta_sso", "events": [{
+    "uuid": "0c7e51d8-42aa-4b6f-9a3d-1f8b2e6c4a97",
+    "published": "2026-10-01T09:21:07.204Z",
+    "eventType": "user.account.privilege.grant",
+    "displayMessage": "Grant user privilege",
+    "legacyEventType": "core.user.admin_privilege.granted",
+    "severity": "INFO",
+    "version": "0",
+    "actor": {"id": "00u9z8y7x6w5v4u3t2s", "type": "User", "alternateId": "phantom.admin@phantom-lab.example", "displayName": "Phantom Admin", "detailEntry": null},
+    "client": {"userAgent": {"rawUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15", "os": "Mac OS X", "browser": "SAFARI"}, "zone": "null", "device": "Computer", "id": null, "ipAddress": "80.130.44.45", "geographicalContext": {"city": "Cologne", "state": "North Rhine-Westphalia", "country": "Germany", "postalCode": null, "geolocation": {"lat": 50.9178, "lon": 6.8882}}},
+    "outcome": {"result": "SUCCESS", "reason": null},
+    "target": [
+      {"id": "00u1a2b3c4d5e6f7g8h", "type": "User", "alternateId": "noura.alharbi@phantom-lab.example", "displayName": "Noura Alharbi", "detailEntry": null}
+    ],
+    "authenticationContext": {"authenticationProvider": "OKTA_AUTHENTICATION_PROVIDER", "credentialProvider": "OKTA_CREDENTIAL_PROVIDER", "credentialType": "PASSWORD", "externalSessionId": "idx3kL9mPq2rS4tU6vW8xY0z", "authnContextClassRef": "urn:oasis:names:tc:SAML:2.0:ac:classes:Password", "issuer": null, "interface": null, "authenticationStep": 0},
+    "securityContext": {"asNumber": 3320, "asOrg": "Deutsche Telekom AG", "isp": "Deutsche Telekom AG", "domain": "deutsche.example", "isProxy": false},
+    "debugContext": {"debugData": {"requestId": "Yq3wE5rT7yU9iO1pA2sDfGAAABd", "requestUri": "/api/v1/users/00u1a2b3c4d5e6f7g8h/roles", "threatSuspected": "false", "url": "/api/v1/users/00u1a2b3c4d5e6f7g8h/roles", "privilegeGranted": "Organization administrator"}},
+    "transaction": {"type": "WEB", "id": "Yq3wE5rT7yU9iO1pA2sDfGAAABd", "detail": {}},
+    "request": {"ipChain": [{"ip": "80.130.44.45", "version": "V4", "source": null}]}
+  }]}
+  ```
+
+  **Worked example 3, FastPass declined a phishing attempt (`user.authentication.auth_via_mfa`)**. The shape
+  that fired the FastPass BIOC in our runs: a FAILED MFA verification whose reason is exactly
+  `FastPass declined phishing attempt`, from the AiTM proxy's address (here an out-of-country hosting range), with
+  `threatSuspected` `"true"`, `risk` `{level=HIGH}` and the phishing URL in `logOnlySecurityData`:
+
+  ```text
+  http-sender.send_events {"destination": "okta_sso", "events": [{
+    "uuid": "a41d7c30-5be2-4f98-b6a1-7c2e9d0f3b58",
+    "published": "2026-10-01T09:30:11.502Z",
+    "eventType": "user.authentication.auth_via_mfa",
+    "displayMessage": "FastPass declined phishing attempt",
+    "legacyEventType": "core.user.factor.attempt_fail",
+    "severity": "WARN",
+    "version": "0",
+    "actor": {"id": "00u1a2b3c4d5e6f7g8h", "type": "User", "alternateId": "noura.alharbi@phantom-lab.example", "displayName": "Noura Alharbi", "detailEntry": null},
+    "client": {"userAgent": {"rawUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36", "os": "Windows 10", "browser": "CHROME"}, "zone": "null", "device": "Computer", "id": null, "ipAddress": "45.83.220.99", "geographicalContext": {"city": "Malmö", "state": "Skåne County", "country": "Sweden", "postalCode": null, "geolocation": {"lat": 55.6078, "lon": 12.9982}}},
+    "outcome": {"result": "FAILURE", "reason": "FastPass declined phishing attempt"},
+    "target": [],
+    "authenticationContext": {"authenticationProvider": "FACTOR_PROVIDER", "credentialProvider": "OKTA_CREDENTIAL_PROVIDER", "credentialType": "SIGNED_NONCE", "externalSessionId": "idx5nR7tV9xZ1bD3fH5jL7n", "issuer": null, "interface": null, "authenticationStep": 0},
+    "securityContext": {"asNumber": 39351, "asOrg": "31173 Services AB", "isp": "31173 Services AB", "domain": "31173.example", "isProxy": true},
+    "debugContext": {"debugData": {"requestId": "Wn8qC2eR4tY6uI0oP1aSdFAAABe", "requestUri": "/idp/idx/challenge/answer", "url": "/idp/idx/challenge/answer?", "factor": "SIGNED_NONCE", "risk": "{level=HIGH}", "behaviors": "{New Geo-Location=POSITIVE, New Device=NEGATIVE, New IP=POSITIVE, New State=NEGATIVE, New Country=NEGATIVE, Velocity Behavior=NEGATIVE, New City=NEGATIVE}", "threatSuspected": "true", "logOnlySecurityData": "{\"behaviors\":{},\"phishingUrl\":\"https://okta-secure-login.example/login/login.htm?fromURI=%2Fapp%2FuserHome\",\"originCheckResult\":\"MISMATCH\",\"requestedUri\":\"/idp/idx/challenge/answer?\"}"}},
+    "transaction": {"type": "WEB", "id": "Wn8qC2eR4tY6uI0oP1aSdFAAABe", "detail": {}},
+    "request": {"ipChain": [{"ip": "45.83.220.99", "version": "V4", "source": null}]}
+  }]}
+  ```
+
+  ### Field guide (what the rule enforces)
+
+  The reference rule is the Okta pack's `OktaModelingRules_2_11` (2_0 is the same without the
+  `xdm.*.identity.*` and `xdm.logon.fingerprint` mappings). Its `okta_sso_raw` block reads the System Log
+  objects as top-level columns (`actor`, `client`, `outcome`, `target`, `debugContext`, `securityContext`,
+  `authenticationContext`, `transaction`, `request`) and extracts with `json_extract_scalar`, so each must be a
+  real JSON object (or, for `target` and `request.ipChain`, an array). The `okta_sso_raw` model has **no
+  eventType filter**: any event that parses maps. Rules that matter:
+
+  - **Identity**: `xdm.source.user.upn` / `xdm.source.identity.upn` come from `actor.alternateId` ONLY when
+    `actor.type` is `User` or `AppUser` (case-insensitive). A `SystemPrincipal` actor yields no source user at all.
+    Keep logins bare UPNs (`name@phantom-lab.example`); a `DOMAIN\user` form collapses identity in Cortex
+    analytics. `actor.displayName` should be `First Last`.
+  - **Authentication type**: `xdm.event.type` is `authentication` only for these 10 event types: `user.authentication.sso`, `user.session.start`, `user.mfa.okta_verify.deny_push`, `user.mfa.factor.update`, `user.authentication.auth_via_mfa`, `user.authentication.auth_via_AD_agent`, `user.authentication.verify`, `user.authentication.auth_via_radius`, `user.authentication.auth_via_richclient`, `system.push.send_factor_verify_push`.
+    Everything else maps but with an empty `xdm.event.type`.
+  - **Outcome**: `outcome.result` SUCCESS/ALLOW -> SUCCESS, FAILURE/DENY -> FAILED, CHALLENGE/SKIPPED ->
+    PARTIAL, UNKNOWN -> UNKNOWN. `outcome.reason` strings are normalised (see the field's description); use the
+    exact Okta strings (for a denied push: `User rejected Okta push verify`, which the rule maps to
+    `user_reject`; the profile's `USER_REJECTED_OKTA_VERIFY_PUSH` is not recognised and passes through raw).
+  - **Target**: only `target[0]` is read, and only `AppInstance` (resource id/name) and `User` (target user)
+    produce `xdm.target.*`.
+  - **Network**: `client.ipAddress` goes to `xdm.source.ipv4` (or `ipv6` if it contains a colon);
+    `request.ipChain[].ip` to the host address lists; `securityContext.*` to `xdm.source.asn.*`;
+    `client.geographicalContext.*` to `xdm.source.location.*`. Latitude, longitude, `asNumber` are JSON numbers.
+  - **Shapes: send real Okta's shape, which is also what the profile sends.** The rule reads a few
+    paths that real Okta's shape does not contain, and that mismatch is inferred from reading the rule and
+    has not been confirmed on data: it reads `authenticationContext.authenticationProvider.{credentialProvider,credentialType,externalSessionId}`
+    (real Okta has `authenticationProvider` as a string and the other keys flat), and
+    `debugContext.debugData.risk.{level,reasons}` (real Okta has `risk` as the flat string `{level=HIGH}`). With the
+    real shape those paths are absent, so `xdm.auth.mfa.provider`, `xdm.auth.mfa.method`, `xdm.network.session_id`,
+    `xdm.alert.severity` and the anonymizer flag are expected to stay null. Sending the object forms instead is an
+    untested experiment.
+  - **`json_extract` keeps JSON quotes on string values** (the rule uses `json_extract_scalar` for most
+    fields, which does not, but plain `json_extract` for `debugData.threatSuspected`, `debugData.risk.*`,
+    `debugData.behaviors` and `debugData.originalPrincipal.type`). For those fields what the rule produces from a
+    string value is not established: check `xdm.alert.risks` and `xdm.auth.privilege_level` on a sample before
+    depending on them.
+
+  Key event types (the complete 175-type list is the `eventType`
+  enum in the field list):
+
+  - `user.authentication.sso`: User single sign on to app (SAML 2.0 or OIDC).
+  - `user.session.start`: User login to Okta (password, FastPass, or MFA). Includes `debugContext`, `authenticationContext`, geo/IP context, and authenticator targets.
+  - `user.mfa.okta_verify.deny_push`: User explicitly denies an Okta Verify push notification.
+  - `user.mfa.factor.update`: MFA factor configuration updated.
+  - `user.authentication.auth_via_mfa`: MFA factor verification (Okta Verify Push, TOTP, SMS, Email, FastPass).
+  - `user.authentication.auth_via_AD_agent`: Authentication delegated to the Okta AD agent.
+  - `user.authentication.verify`: Identity verification step (password accepted; MFA step now required).
+  - `user.authentication.auth_via_radius`: RADIUS authentication (corporate WiFi, VPN gateway, NAC).
+  - `user.authentication.auth_via_richclient`: Authentication from a rich (non-browser) client.
+  - `system.push.send_factor_verify_push`: Okta Verify push notification sent.
+  - `user.session.end`: User logout from Okta.
+  - `user.session.access_admin_app`: User accesses the Okta Admin Console from an active session.
+  - `user.authentication.auth_via_webauthn`: WebAuthn/FIDO2 hardware key or passkey authentication (YubiKey, Touch ID, Windows Hello, Passkey).
+  - `user.account.lock`: Account locked after repeated authentication failures.
+  - `user.account.update_password`: User self-service password change.
+  - `user.account.reset_password`: Admin resets a user's password.
+  - `user.account.privilege.grant`: Admin role or privilege granted to a user.
+  - `user.account.privilege.revoke`: Admin role or privilege revoked from a user.
+  - `user.mfa.factor.reset_all`: Admin resets all MFA factors for a user.
+  - `user.mfa.factor.deactivate`: MFA factor removed from user's account.
+  - `user.lifecycle.create`: New user account created.
+  - `user.lifecycle.deactivate`: Account deactivated (soft delete).
+  - `user.risk.detect`: Risk signal detected for a user (new country, anomalous behaviour, known threat IP).
+  - `group.privilege.grant`: Admin privilege granted to a group.
+  - `system.api_token.create`: API token created by an admin.
+  - `system.idp.lifecycle.create`: External Identity Provider created.
+  - `system.log_stream.lifecycle.delete`: Log streaming destination deleted.
+  - `policy.rule.update`: Policy rule updated (e.g., MFA requirement changed).
+  - `iam.resourceset.bindings.add`: Admin role binding created (user assigned to custom role).
+  - `security.threat.detected`: Okta ThreatInsight detected a threat (credential stuffing, brute force).
+  - `security.session.detect_client_roaming`: Session token used from a different IP than it was issued to.
+  - `app.oauth2.as.token.detect_reuse`: One-time refresh token reuse detected (potential session hijack).
+  - `application.policy.sign_on.deny_access`: Sign-on policy denied user access to an application.
+
+  ### Timing and back-dating
+
+  `published` is the event time. The parsing rule sets `_time = published` **only at ingest and only because the
+  Okta pack is installed**; events sent before the pack was installed keep their ingestion time forever, and an
+  event whose `published` does not match the rule's pattern (needs `T`, `hh:mm:ss`, then `.`, digits or `Z`, so
+  `2026-10-01T09:15:42Z` or `...42.318Z`; offsets such as `+00:00` do not match) is kept but stamped with the
+  ingestion time (the rule is `no_hit=keep`). To back-date, set `published` earlier, or pass
+  `start_offset_minutes` to `generate_events`. HTTP 200 only means the collector accepted the request; on this
+  tenant events become queryable **5-7 minutes** after sending. Wait that long before concluding anything.
+
+  ### Verify (XQL)
+
+  Raw, by the event id (the test id from `send_test_event`, or any `uuid` you sent):
+
+  ```xql
+  dataset = okta_sso_raw
+  | filter uuid = "<uuid>"
+  ```
+
+  Mapped:
+
+  ```xql
+  datamodel dataset = okta_sso_raw
+  | fields _time, xdm.source.user.upn, xdm.event.type, xdm.event.outcome, xdm.source.ipv4
+  | limit 20
+  ```
+
+  Expect a `failed_then_success` run to map `xdm.source.user.upn`, `xdm.event.type`
+  = `authentication`, `xdm.event.outcome` FAILED/SUCCESS and `xdm.source.ipv4`. **Never judge mapping from one
+  row**: count the distinct non-null `xdm.*` columns over at least 20 rows and a wide time window.
+
+  ### Analytics
+
+  One example, not a promise for other detectors: a single `user.authentication.auth_via_mfa` event whose
+  `outcome.reason` said FastPass declined a phishing attempt fires the Cortex Analytics BIOC "Okta FastPass
+  reported phishing attack suspected" within about 2 minutes. Worked example 3 above is that shape: `outcome.result` FAILURE and `outcome.reason` exactly
+  `FastPass declined phishing attempt`. Do not extrapolate this to other detectors; Analytics detectors need
+  baselines and licensing that are tenant-specific.
+
+  ### Scope
+
+  Never claim `validated` for this source. Mapping validation of a data source stays on the syslog/CEF path
+  (see the Okta syslog sources); this HTTP variant exists to simulate Okta delivery and attacks over an XSIAM
+  HTTP Log Collector.
+categories:
+- Identity and Access Management
+version: 3.4.6
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-10-01T09:00:00Z'
+updated_at: '2026-10-01T09:00:00Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTY5cHgiIHZpZXdCb3g9IjAgMCA1MTIgMTY5IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDx0aXRsZT5va3RhPC90aXRsZT4KICAgIDxnPgogICAgICAgIDxwYXRoIGQ9Ik00NjMuOTg5NDk4LDExMC45MzA1MTUgQzQ0OS42ODk0OTUsMTEwLjkzMDUxNSA0MzkuNjA5MTY1LDk5Ljc3MTgyNDQgNDM5LjYwOTE2NSw4NS4wOTY3MzkzIEM0MzkuNjA5MTY1LDcwLjQyMTY1NDIgNDQ5LjY4OTQ5NSw1OS4yNjI5NjMzIDQ2My45ODk0OTgsNTkuMjYyOTYzMyBDNDc4LjI4OTUwMSw1OS4yNjI5NjMzIDQ4OC4wODg1Miw3MC40MjE2NTQyIDQ4OC4wODg1Miw4NS4wOTY3MzkzIEM0ODguMDg4NTIsOTkuNzcxODI0NCA0NzguMTQ4ODQ1LDExMC45MzA1MTUgNDYzLjk4OTQ5OCwxMTAuOTMwNTE1IFogTTQ2MS42OTIxMjEsMTI2LjMwODg3OSBDNDczLjIyNTg5MywxMjYuMzA4ODc5IDQ4My4wMjQ5MTIsMTIxLjgwNzg5NSA0ODkuMjEzNzY2LDExMi4zODM5NTggQzQ5MC4zODU4OTcsMTIxLjUyNjU4MyA0OTYuOTk2NzE4LDEyNC44NTU0MzYgNTA1LjM0MjI5NCwxMjQuODU1NDM2IEw1MTIsMTI0Ljg1NTQzNiBMNTEyLDExMC4zNjc4OTIgTDUwOS4xMzk5OTksMTEwLjM2Nzg5MiBDNTA0LjQwNDU4OSwxMTAuMzY3ODkyIDUwMy4yMzI0NTcsMTA4LjA3MDUxNSA1MDMuMjMyNDU3LDEwMi42Nzg3MSBMNTAzLjIzMjQ1Nyw0NS4zODQ5Mjc2IEw0ODcuOTQ3ODY0LDQ1LjM4NDkyNzYgTDQ4Ny45NDc4NjQsNTcuMTUzMTI2OCBDNDgyLjc0MzYsNDguOTAxMzIxOCA0NzIuOTQ0NTgyLDQzLjkzMTQ4NDcgNDYxLjY5MjEyMSw0My45MzE0ODQ3IEM0NDEuNjI1MjMxLDQzLjkzMTQ4NDcgNDIzLjE5OTMyNSw2MC43NjMyOTE1IDQyMy4xOTkzMjUsODUuMDk2NzM5MyBDNDIzLjE5OTMyNSwxMDkuNDMwMTg3IDQ0MS42NzIxMTYsMTI2LjI2MTk5NCA0NjEuNjkyMTIxLDEyNi4yNjE5OTQgTDQ2MS42OTIxMjEsMTI2LjMwODg3OSBaIE0zODIuOTcxNzc2LDEwNi40Mjk1MzEgQzM4Mi45NzE3NzYsMTE5LjQ2MzYzMiAzOTEuMDM2MDQsMTI0Ljg1NTQzNiA0MDAuNjk0NDAzLDEyNC44NTU0MzYgTDQxOS4zMDc4NDksMTI0Ljg1NTQzNiBMNDE5LjMwNzg0OSwxMTAuMzY3ODkyIEw0MDUuNzU4MDEsMTEwLjM2Nzg5MiBDNDAwLjEzMTc4LDExMC4zNjc4OTIgMzk4Ljk1OTY0OCwxMDguMjExMTcgMzk4Ljk1OTY0OCwxMDIuNjc4NzEgTDM5OC45NTk2NDgsNTkuODcyNDcxNyBMNDE5LjMwNzg0OSw1OS44NzI0NzE3IEw0MTkuMzA3ODQ5LDQ1LjM4NDkyNzYgTDM5OC45NTk2NDgsNDUuMzg0OTI3NiBMMzk4Ljk1OTY0OCwxOC43MDcyMTcxIEwzODIuOTcxNzc2LDE4LjcwNzIxNzEgTDM4Mi45NzE3NzYsMTA2LjQyOTUzMSBaIE0zMTAuMTU4OTc0LDEyNC44NTU0MzYgTDMyNi4xNDY4NDYsMTI0Ljg1NTQzNiBMMzI2LjE0Njg0Niw5MC43Njk4NTUzIEwzMzEuNDkxNzY1LDkwLjc2OTg1NTMgTDM1OC43MzIwOTksMTI0Ljg1NTQzNiBMMzc4LjkzOTY0NCwxMjQuODU1NDM2IEwzNDQuMTk3NjY5LDgxLjYyNzIzMDQgTDM3MC44NzUzOCw0NS4zODQ5Mjc2IEwzNTIuODcxNDQyLDQ1LjM4NDkyNzYgTDMzMS4wNjk3OTgsNzYuMDAwOTk5NyBMMzI2LjE0Njg0Niw3Ni4wMDA5OTk3IEwzMjYuMTQ2ODQ2LDE4LjcwNzIxNzEgTDMxMC4xNTg5NzQsMTguNzA3MjE3MSBMMzEwLjE1ODk3NCwxMjQuODU1NDM2IFogTTI1OC4yNTY5OTYsNDMuOTMxNDg0NyBDMjM1Ljg5MjcyOSw0My45MzE0ODQ3IDIxNy40NjY4MjMsNjAuNzYzMjkxNSAyMTcuNDY2ODIzLDg1LjA5NjczOTMgQzIxNy40NjY4MjMsMTA5LjQzMDE4NyAyMzUuOTM5NjE0LDEyNi4yNjE5OTQgMjU4LjI1Njk5NiwxMjYuMjYxOTk0IEMyODAuNTc0Mzc3LDEyNi4yNjE5OTQgMjk5LjA0NzE2OCwxMDkuNDMwMTg3IDI5OS4wNDcxNjgsODUuMDk2NzM5MyBDMjk5LjA0NzE2OCw2MC43NjMyOTE1IDI4MC41NzQzNzcsNDMuOTMxNDg0NyAyNTguMjU2OTk2LDQzLjkzMTQ4NDcgTDI1OC4yNTY5OTYsNDMuOTMxNDg0NyBaIE0yNTguMjU2OTk2LDExMC45MzA1MTUgQzI0My45NTY5OTMsMTEwLjkzMDUxNSAyMzMuODc2NjYzLDk5Ljc3MTgyNDQgMjMzLjg3NjY2Myw4NS4wOTY3MzkzIEMyMzMuODc2NjYzLDcwLjQyMTY1NDIgMjQzLjk1Njk5Myw1OS4yNjI5NjMzIDI1OC4yNTY5OTYsNTkuMjYyOTYzMyBDMjcyLjU1Njk5OSw1OS4yNjI5NjMzIDI4Mi42MzczMjksNzAuNDIxNjU0MiAyODIuNjM3MzI5LDg1LjA5NjczOTMgQzI4Mi42MzczMjksOTkuNzcxODI0NCAyNzIuNTU2OTk5LDExMC45MzA1MTUgMjU4LjI1Njk5NiwxMTAuOTMwNTE1IEwyNTguMjU2OTk2LDExMC45MzA1MTUgWiIgZmlsbD0iIzAwMDAwMCI+PC9wYXRoPgogICAgICAgIDxwYXRoIGQ9Ik05Mi43OTg5Mjc4LDEuMTcyMTMxNCBMODkuMzI5NDE4OCw0My45MzE0ODQ3IEM4Ny42ODg0MzQ5LDQzLjc0Mzk0MzcgODYuMDQ3NDUwOSw0My42NTAxNzMyIDg0LjM1OTU4MTcsNDMuNjUwMTczMiBDODIuMjQ5NzQ1Miw0My42NTAxNzMyIDgwLjE4Njc5NCw0My43OTA4Mjg5IDc4LjE3MDcyOCw0NC4xMTkwMjU3IEw3Ni4yMDE1NDcyLDIzLjM5NTc0MjcgQzc2LjE1NDY2MiwyMi43MzkzNDkxIDc2LjY3MDM5OTgsMjIuMTc2NzI2IDc3LjMyNjc5MzQsMjIuMTc2NzI2IEw4MC44NDMxODc1LDIyLjE3NjcyNiBMNzkuMTU1MzE4MywxLjIxOTAxNjY1IEM3OS4xMDg0MzMxLDAuNTYyNjIzMDcgNzkuNjI0MTcwOSwwIDgwLjIzMzY3OTIsMCBMOTEuNzIwNTY2OSwwIEM5Mi4zNzY5NjA1LDAgOTIuODkyNjk4MywwLjU2MjYyMzA3IDkyLjc5ODkyNzgsMS4yMTkwMTY2NSBMOTIuNzk4OTI3OCwxLjIxOTAxNjY1IEw5Mi43OTg5Mjc4LDEuMTcyMTMxNCBaIE02My44MjM4Mzk3LDMuMjgxOTY3OTEgQzYzLjYzNjI5ODcsMi42NzI0NTk1OCA2Mi45Nzk5MDUxLDIuMjk3Mzc3NTMgNjIuMzcwMzk2NywyLjUzMTgwMzgxIEw1MS41ODY3ODc5LDYuNDcwMTY1MyBDNTAuOTc3Mjc5Niw2LjcwNDU5MTU4IDUwLjY5NTk2ODEsNy40MDc4NzA0MiA1MC45NzcyNzk2LDcuOTcwNDkzNDkgTDU5Ljc0NDgyMjQsMjcuMDk5Njc3OSBMNTYuNDE1OTY5MywyOC4zMTg2OTQ1IEM1NS44MDY0NjA5LDI4LjU1MzEyMDggNTUuNTI1MTQ5NCwyOS4yNTYzOTk2IDU1LjgwNjQ2MDksMjkuODE5MDIyNyBMNjQuNzYxNTQ0OCw0OC42MjAwMTAzIEM2Ny45OTY2Mjc0LDQ2LjgzODM3MDYgNzEuNTEzMDIxNiw0NS40Nzg2OTgxIDc1LjIxNjk1NjgsNDQuNjM0NzYzNSBMNjMuODcwNzI0OSwzLjI4MTk2NzkxIEw2My44MjM4Mzk3LDMuMjgxOTY3OTEgWiBNMzcuMzgwNTU1NCwxNS4xOTA4MjI5IEw2Mi4xODI4NTU3LDUwLjE2NzIyMzcgQzU5LjA0MTU0MzYsNTIuMjMwMTc1IDU2LjE4MTU0Myw1NC42NjgyMDgzIDUzLjc0MzUwOTcsNTcuNDgxMzIzNiBMMzguODgwODgzNiw0Mi44NTMxMjM4IEMzOC40MTIwMzEsNDIuMzg0MjcxMyAzOC40NTg5MTYzLDQxLjYzNDEwNzIgMzguOTI3NzY4OCw0MS4yMTIxMzk5IEw0MS42NDcxMTM3LDM4Ljk2MTY0NzYgTDI2Ljg3ODI1ODEsMjQuMDA1MjUxIEMyNi40MDk0MDU1LDIzLjUzNjM5ODQgMjYuNDU2MjkwOCwyMi43ODYyMzQzIDI2Ljk3MjAyODYsMjIuMzY0MjY3IEwzNS43Mzk1NzE0LDE1LjAwMzI4MTkgQzM2LjI1NTMwOTMsMTQuNTgxMzE0NiAzNi45NTg1ODgxLDE0LjY3NTA4NTEgMzcuMzMzNjcwMSwxNS4xOTA4MjI5IEwzNy4zODA1NTU0LDE1LjE5MDgyMjkgWiBNMTYuNTYzNTAxOCwzNS40NDUyNTM0IEMxNi4wNDc3NjQsMzUuMDcwMTcxMyAxNS4yOTc1OTk5LDM1LjI1NzcxMjQgMTQuOTY5NDAzMSwzNS44MjAzMzU0IEw5LjI0OTQwMTkxLDQ1Ljc2MDAwOTcgQzguOTIxMjA1MTIsNDYuMzIyNjMyNyA5LjE1NTYzMTQsNDcuMDI1OTExNiA5LjcxODI1NDQ3LDQ3LjMwNzIyMzEgTDI4Ljc1MzY2ODMsNTYuMzA5MTkyMiBMMjYuOTcyMDI4Niw1OS4zNTY3MzM5IEMyNi42NDM4MzE4LDU5LjkxOTM1NjkgMjYuODc4MjU4MSw2MC42Njk1MjEgMjcuNDg3NzY2NCw2MC45MDM5NDczIEw0Ni40Mjk0MDk4LDY5LjU3NzcxOTYgQzQ3Ljc4OTA4MjIsNjYuMDYxMzI1NCA0OS42MTc2MDcyLDYyLjc3OTM1NzUgNTEuODY4MDk5NCw1OS44MjU1ODY0IEwxNi41NjM1MDE4LDM1LjQ0NTI1MzQgWiBNMi41NDQ4MTAzMyw2Mi40NTExNjA3IEMyLjYzODU4MDg0LDYxLjc5NDc2NzIgMy4yOTQ5NzQ0Miw2MS40MTk2ODUxIDMuOTA0NDgyNzUsNjEuNTYwMzQwOSBMNDUuMzk3OTM0MSw3Mi4zOTA4MzUgQzQ0LjMxOTU3MzMsNzUuOTA3MjI5MiA0My43MTAwNjQ5LDc5LjYxMTE2NDQgNDMuNjE2Mjk0NCw4My40NTU3NTUzIEwyMi44NDYxMjYxLDgxLjc2Nzg4NjEgQzIyLjE4OTczMjUsODEuNzIxMDAwOSAyMS43MjA4OCw4MS4xMTE0OTI2IDIxLjg2MTUzNTcsODAuNDU1MDk5IEwyMi40NzEwNDQxLDc2Ljk4NTU5IEwxLjUxMzMzNDcsNzUuMDE2NDA5MyBDMC44NTY5NDExMiw3NC45Njk1MjQgMC40MzQ5NzM4MTgsNzQuMzYwMDE1NyAwLjUyODc0NDMzLDczLjcwMzYyMjEgTDIuNDk3OTI1MDcsNjIuNDA0Mjc1NSBMMi40OTc5MjUwNyw2Mi40MDQyNzU1IEwyLjU0NDgxMDMzLDYyLjQ1MTE2MDcgWiBNMC45OTc1OTY4ODgsOTAuNDg4NTQzNyBDMC4zNDEyMDMzMDYsOTAuNTM1NDI5IC0wLjA4MDc2Mzk5Niw5MS4xNDQ5MzczIDAuMDEzMDA2NTE1Niw5MS44MDEzMzA5IEwyLjAyOTA3MjUyLDEwMy4xMDA2NzggQzIuMTIyODQzMDMsMTAzLjc1NzA3MSAyLjc3OTIzNjYxLDEwNC4xMzIxNTMgMy4zODg3NDQ5MywxMDMuOTkxNDk3IEwyMy43MzY5NDYsOTguNjkzNDYzNSBMMjQuMzQ2NDU0MywxMDIuMTYyOTcyIEMyNC40NDAyMjQ4LDEwMi44MTkzNjYgMjUuMDk2NjE4NCwxMDMuMTk0NDQ4IDI1LjcwNjEyNjcsMTAzLjA1Mzc5MiBMNDUuNzczMDE2Miw5Ny41MjEzMzIxIEM0NC42MDA4ODQ4LDk0LjA1MTgyMzIgNDMuODUwNzIwNyw5MC4zNDc4ODggNDMuNjYzMTc5Nyw4Ni41NTAxODIyIEwwLjk1MDcxMTYzMiw5MC40ODg1NDM3IEwwLjk5NzU5Njg4OCw5MC40ODg1NDM3IFogTTcuNjU1MzAzMjEsMTIwLjIxMzc5NiBDNy4zMjcxMDY0MiwxMTkuNjUxMTczIDcuNTYxNTMyNywxMTguOTQ3ODk0IDguMTI0MTU1NzcsMTE4LjY2NjU4MiBMNDYuODUxMzc3MSwxMDAuMjg3NTYyIEM0OC4zMDQ4MiwxMDMuNzU3MDcxIDUwLjI3NDAwMDcsMTA2Ljk5MjE1NCA1Mi42MTgyNjM1LDEwOS44OTkwNCBMMzUuNjQ1ODAwOSwxMjEuOTk1NDM2IEMzNS4xMzAwNjMxLDEyMi4zNzA1MTggMzQuMzc5ODk5LDEyMi4yMjk4NjIgMzQuMDUxNzAyMiwxMjEuNjY3MjM5IEwzMi4yNzAwNjI1LDExOC41NzI4MTIgTDE0Ljk2OTQwMzEsMTMwLjUyODU1MiBDMTQuNDUzNjY1MywxMzAuOTAzNjM0IDEzLjcwMzUwMTIsMTMwLjcxNjA5MyAxMy4zNzUzMDQ0LDEzMC4xNTM0NyBMNy42MDg0MTc5NiwxMjAuMjEzNzk2IEw3LjY1NTMwMzIxLDEyMC4yMTM3OTYgWiBNNTQuNTg3NDQ0MywxMTIuMTQ5NTMyIEwyNC40NDAyMjQ4LDE0Mi42NzE4MzMgQzIzLjk3MTM3MjIsMTQzLjE0MDY4NiAyNC4wMTgyNTc1LDE0My44OTA4NSAyNC41MzM5OTUzLDE0NC4zMTI4MTcgTDMzLjM0ODQyMzQsMTUxLjY3MzgwMyBDMzMuODY0MTYxMiwxNTIuMDk1NzcgMzQuNTY3NDQwMSwxNTIuMDAxOTk5IDM0Ljk0MjUyMjEsMTUxLjQ4NjI2MiBMNDcuMTMyNjg4NiwxMzQuMzI2MjU4IEw0OS44NTIwMzM0LDEzNi42MjM2MzUgQzUwLjM2Nzc3MTMsMTM3LjA0NTYwMyA1MS4xMTc5MzU0LDEzNi45NTE4MzIgNTEuNDkzMDE3NCwxMzYuMzg5MjA5IEw2My4zMDgxMDE5LDExOS4yMjkyMDYgQzYwLjExOTkwNDUsMTE3LjI2MDAyNSA1Ny4xNjYxMzM0LDExNC44Njg4NzcgNTQuNjM0MzI5NSwxMTIuMTQ5NTMyIEw1NC41ODc0NDQzLDExMi4xNDk1MzIgWiBNNDguNjMzMDE2OCwxNjEuMTQ0NjI0IEM0OC4wMjM1MDg1LDE2MC45MTAxOTggNDcuNzQyMTk2OSwxNjAuMjA2OTE5IDQ4LjAyMzUwODUsMTU5LjY0NDI5NiBMNjUuODg2NzkwOSwxMjAuNjM1NzYzIEM2OS4xNjg3NTg4LDEyMi4zMjM2MzIgNzIuNzMyMDM4MywxMjMuNTg5NTM0IDc2LjQzNTk3MzUsMTI0LjI5MjgxMyBMNzEuMTg0ODI0OCwxNDQuNDUzNDczIEM3MS4wNDQxNjkxLDE0NS4wNjI5ODEgNzAuMzQwODkwMiwxNDUuNDM4MDY0IDY5LjczMTM4MTksMTQ1LjIwMzYzNyBMNjYuNDAyNTI4NywxNDMuOTg0NjIxIEw2MC44MjMxODMzLDE2NC4yODU5MzYgQzYwLjYzNTY0MjMsMTY0Ljg5NTQ0NSA1OS45NzkyNDg3LDE2NS4yNzA1MjcgNTkuMzY5NzQwNCwxNjUuMDM2MSBMNDguNTg2MTMxNSwxNjEuMDk3NzM5IEw0OC41ODYxMzE1LDE2MS4wOTc3MzkgTDQ4LjYzMzAxNjgsMTYxLjE0NDYyNCBaIE03OS4zODk3NDQ2LDEyNC44MDg1NTEgTDc1LjkyMDIzNTcsMTY3LjU2NzkwNCBDNzUuODczMzUwNCwxNjguMjI0Mjk4IDc2LjM4OTA4ODIsMTY4Ljc4NjkyMSA3Ni45OTg1OTY2LDE2OC43ODY5MjEgTDg4LjQ4NTQ4NDIsMTY4Ljc4NjkyMSBDODkuMTQxODc3OCwxNjguNzg2OTIxIDg5LjY1NzYxNTYsMTY4LjIyNDI5OCA4OS41NjM4NDUxLDE2Ny41Njc5MDQgTDg3Ljg3NTk3NTksMTQ2LjYxMDE5NSBMOTEuMzkyMzcwMSwxNDYuNjEwMTk1IEM5Mi4wNDg3NjM3LDE0Ni42MTAxOTUgOTIuNTY0NTAxNSwxNDYuMDQ3NTcyIDkyLjUxNzYxNjIsMTQ1LjM5MTE3OCBMOTAuNTQ4NDM1NSwxMjQuNjY3ODk1IEM4OC41MzIzNjk1LDEyNC45OTYwOTIgODYuNDY5NDE4MiwxMjUuMTM2NzQ4IDg0LjM1OTU4MTcsMTI1LjEzNjc0OCBDODIuNjcxNzEyNSwxMjUuMTM2NzQ4IDgxLjAzMDcyODYsMTI1LjA0Mjk3NyA3OS4zODk3NDQ2LDEyNC44MDg1NTEgTDc5LjM4OTc0NDYsMTI0LjgwODU1MSBaIE0xMjAuNzQyNTQsOS4wNDg4NTQzNyBDMTIxLjAyMzg1Miw4LjQzOTM0NjA1IDEyMC43NDI1NCw3Ljc4Mjk1MjQ3IDEyMC4xMzMwMzIsNy41NDg1MjYxOSBMMTA5LjM0OTQyMywzLjYxMDE2NDcgQzEwOC43Mzk5MTUsMy4zNzU3Mzg0MiAxMDguMDgzNTIxLDMuNzUwODIwNDcgMTA3Ljg5NTk4LDQuMzYwMzI4NzkgTDEwMi4zMTY2MzUsMjQuNjYxNjQ0NiBMOTguOTg3NzgxNSwyMy40NDI2Mjc5IEM5OC4zNzgyNzMyLDIzLjIwODIwMTYgOTcuNzIxODc5NiwyMy41ODMyODM3IDk3LjUzNDMzODYsMjQuMTkyNzkyIEw5Mi4yODMxOSw0NC4zNTM0NTIgQzk2LjAzNDAxMDQsNDUuMTAzNjE2MSA5OS41NTA0MDQ2LDQ2LjM2OTUxOCAxMDIuODMyMzczLDQ4LjAxMDUwMiBMMTIwLjc0MjU0LDkuMDQ4ODU0MzcgTDEyMC43NDI1NCw5LjA0ODg1NDM3IFogTTE0NC4yNzg5MzksMjYuMDY4MjAyMiBMMTE0LjEzMTcxOSw1Ni41OTA1MDM4IEMxMTEuNTk5OTE1LDUzLjg3MTE1ODkgMTA4LjY5MzAyOSw1MS40ODAwMTA5IDEwNS40NTc5NDcsNDkuNTEwODMwMSBMMTE3LjI3MzAzMSwzMi4zNTA4MjY1IEMxMTcuNjQ4MTEzLDMxLjgzNTA4ODcgMTE4LjM5ODI3NywzMS42OTQ0MzI5IDExOC45MTQwMTUsMzIuMTE2NDAwMiBMMTIxLjYzMzM2LDM0LjQxMzc3NzggTDEzMy44MjM1MjcsMTcuMjUzNzc0MSBDMTM0LjE5ODYwOSwxNi43MzgwMzYzIDEzNC45NDg3NzMsMTYuNjQ0MjY1OCAxMzUuNDE3NjI1LDE3LjA2NjIzMzEgTDE0NC4yMzIwNTMsMjQuNDI3MjE4MyBDMTQ0Ljc0Nzc5MSwyNC44NDkxODU2IDE0NC43NDc3OTEsMjUuNTk5MzQ5NyAxNDQuMzI1ODI0LDI2LjA2ODIwMjIgTDE0NC4yNzg5MzksMjYuMDY4MjAyMiBaIE0xNjAuNTk1MDA4LDUwLjA3MzQ1MzIgQzE2MS4yMDQ1MTYsNDkuNzkyMTQxNyAxNjEuMzkyMDU3LDQ5LjA4ODg2MjggMTYxLjA2Mzg2LDQ4LjUyNjIzOTggTDE1NS4yOTY5NzQsMzguNTg2NTY1NSBDMTU0Ljk2ODc3NywzOC4wMjM5NDI1IDE1NC4yMTg2MTMsMzcuODgzMjg2NyAxNTMuNzAyODc1LDM4LjIxMTQ4MzUgTDEzNi40MDIyMTYsNTAuMTY3MjIzNyBMMTM0LjYyMDU3Niw0Ny4xMTk2ODIxIEMxMzQuMjkyMzc5LDQ2LjU1NzA1OSAxMzMuNTQyMjE1LDQ2LjM2OTUxOCAxMzMuMDI2NDc3LDQ2Ljc5MTQ4NTMgTDExNi4wNTQwMTUsNTguODg3ODgxMyBDMTE4LjM5ODI3Nyw2MS43OTQ3NjcyIDEyMC4zMjA1NzMsNjUuMDI5ODQ5OCAxMjEuODIwOTAxLDY4LjQ5OTM1ODcgTDE2MC41NDgxMjIsNTAuMTIwMzM4NSBMMTYwLjU5NTAwOCw1MC4wNzM0NTMyIFogTTE2Ni42OTAwOTEsNjUuNjM5MzU4MSBMMTY4LjY1OTI3Miw3Ni45Mzg3MDQ4IEMxNjguNzUzMDQyLDc3LjU5NTA5ODQgMTY4LjMzMTA3NSw3OC4xNTc3MjE0IDE2Ny42NzQ2ODEsNzguMjUxNDkyIEwxMjQuOTYyMjEzLDgyLjIzNjczODcgQzEyNC43NzQ2NzIsNzguMzkyMTQ3NyAxMjQuMDI0NTA4LDc0LjczNTA5NzggMTIyLjg1MjM3Nyw3MS4yNjU1ODg4IEwxNDIuOTE5MjY2LDY1LjczMzEyODcgQzE0My41Mjg3NzUsNjUuNTQ1NTg3NiAxNDQuMTg1MTY4LDY1Ljk2NzU1NDkgMTQ0LjI3ODkzOSw2Ni42MjM5NDg1IEwxNDQuODg4NDQ3LDcwLjA5MzQ1NzQgTDE2NS4yMzY2NDgsNjQuNzk1NDIzNSBDMTY1Ljg0NjE1Niw2NC42NTQ3Njc4IDE2Ni41MDI1NSw2NS4wMjk4NDk4IDE2Ni41OTYzMiw2NS42ODYyNDM0IEwxNjYuNTk2MzIsNjUuNjg2MjQzNCBMMTY2LjY5MDA5MSw2NS42MzkzNTgxIFogTTE2NC43Njc3OTUsMTA3LjEzMjgxIEMxNjUuMzc3MzA0LDEwNy4yNzM0NjUgMTY2LjAzMzY5NywxMDYuODk4MzgzIDE2Ni4xMjc0NjgsMTA2LjI0MTk5IEwxNjguMDk2NjQ5LDk0Ljk0MjY0MyBDMTY4LjE5MDQxOSw5NC4yODYyNDk0IDE2Ny43Njg0NTIsOTMuNzIzNjI2NCAxNjcuMTEyMDU4LDkzLjYyOTg1NTkgTDE0Ni4xNTQzNDksOTEuNjYwNjc1MSBMMTQ2Ljc2Mzg1Nyw4OC4xOTExNjYyIEMxNDYuODU3NjI4LDg3LjUzNDc3MjYgMTQ2LjQzNTY2LDg2Ljk3MjE0OTUgMTQ1Ljc3OTI2Nyw4Ni44NzgzNzkgTDEyNS4wMDkwOTksODUuMTkwNTA5OCBDMTI0LjkxNTMyOCw4OS4wMzUxMDA4IDEyNC4zMDU4Miw5Mi43MzkwMzYgMTIzLjIyNzQ1OSw5Ni4yNTU0MzAyIEwxNjQuNzIwOTEsMTA3LjA4NTkyNCBMMTY0LjcyMDkxLDEwNy4wODU5MjQgTDE2NC43Njc3OTUsMTA3LjEzMjgxIFogTTE1My43MDI4NzUsMTMyLjkxOTcgQzE1My4zNzQ2NzgsMTMzLjQ4MjMyMyAxNTIuNjI0NTE0LDEzMy42MjI5NzkgMTUyLjEwODc3NiwxMzMuMjk0NzgyIEwxMTYuODA0MTc5LDEwOC45MTQ0NDkgQzExOS4wNTQ2NzEsMTA1Ljk2MDY3OCAxMjAuODgzMTk2LDEwMi42Nzg3MSAxMjIuMjQyODY4LDk5LjE2MjMxNiBMMTQxLjE4NDUxMiwxMDcuODM2MDg4IEMxNDEuNzk0MDIsMTA4LjExNzQgMTQyLjAyODQ0NiwxMDguODIwNjc5IDE0MS43MDAyNSwxMDkuMzgzMzAyIEwxMzkuOTE4NjEsMTEyLjQzMDg0MyBMMTU4Ljk1NDAyNCwxMjEuNDMyODEzIEMxNTkuNTE2NjQ3LDEyMS43MTQxMjQgMTU5Ljc1MTA3MywxMjIuNDE3NDAzIDE1OS40MjI4NzYsMTIyLjk4MDAyNiBMMTUzLjcwMjg3NSwxMzIuOTE5NyBMMTUzLjcwMjg3NSwxMzIuOTE5NyBMMTUzLjcwMjg3NSwxMzIuOTE5NyBaIE0xMDYuNDg5NDIyLDExOC41MjU5MjcgTDEzMS4yOTE3MjMsMTUzLjUwMjMyOCBDMTMxLjY2NjgwNSwxNTQuMDE4MDY1IDEzMi40MTY5NjksMTU0LjExMTgzNiAxMzIuODg1ODIxLDE1My42ODk4NjkgTDE0MS42NTMzNjQsMTQ2LjMyODg4MyBDMTQyLjE2OTEwMiwxNDUuOTA2OTE2IDE0Mi4xNjkxMDIsMTQ1LjE1Njc1MiAxNDEuNzQ3MTM1LDE0NC42ODc4OTkgTDEyNi45NzgyNzksMTI5LjczMTUwMyBMMTI5LjY5NzYyNCwxMjcuNDgxMDExIEMxMzAuMjEzMzYyLDEyNy4wNTkwNDMgMTMwLjIxMzM2MiwxMjYuMzA4ODc5IDEyOS43NDQ1MDksMTI1Ljg0MDAyNyBMMTE0Ljg4MTg4MywxMTEuMjExODI3IEMxMTIuMzk2OTY1LDExNC4wMjQ5NDIgMTA5LjU4Mzg0OSwxMTYuNTA5ODYxIDEwNi40NDI1MzcsMTE4LjUyNTkyNyBMMTA2LjQ0MjUzNywxMTguNTI1OTI3IEwxMDYuNDg5NDIyLDExOC41MjU5MjcgWiBNMTA2LjI1NDk5NiwxNjYuMTYxMzQ3IEMxMDUuNjQ1NDg4LDE2Ni4zOTU3NzMgMTA0Ljk4OTA5NCwxNjYuMDIwNjkxIDEwNC44MDE1NTMsMTY1LjQxMTE4MyBMOTMuNDU1MzIxNCwxMjQuMDU4Mzg3IEM5Ny4xNTkyNTY2LDEyMy4yMTQ0NTIgMTAwLjY3NTY1MSwxMjEuODU0NzggMTAzLjkxMDczMywxMjAuMDczMTQgTDExMi44NjU4MTcsMTM4Ljg3NDEyOCBDMTEzLjE0NzEyOSwxMzkuNDgzNjM2IDExMi44NjU4MTcsMTQwLjE4NjkxNSAxMTIuMjU2MzA5LDE0MC4zNzQ0NTYgTDEwOC45Mjc0NTYsMTQxLjU5MzQ3MyBMMTE3LjY5NDk5OSwxNjAuNzIyNjU3IEMxMTcuOTc2MzEsMTYxLjMzMjE2NSAxMTcuNjk0OTk5LDE2MS45ODg1NTkgMTE3LjA4NTQ5LDE2Mi4yMjI5ODUgTDEwNi4zMDE4ODEsMTY2LjE2MTM0NyBMMTA2LjMwMTg4MSwxNjYuMTYxMzQ3IEwxMDYuMjU0OTk2LDE2Ni4xNjEzNDcgWiIgZmlsbD0iIzAwMDAwMCI+PC9wYXRoPgogICAgPC9nPgo8L3N2Zz4K
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- JSON
+is_rawlog_only: false
+fields:
+- name: published
+  type: datetime
+  description: 'Event time, and the Cortex parsing-rule gate. ISO-8601 UTC with a T separator, seconds, and a trailing
+    Z or fractional digits (Okta form: millisecond precision plus Z). The INGEST rule (`okta`/`sso` -> `okta_sso_raw`,
+    no_hit=keep) matches `.*T\d{2}:\d{2}:\d{2}[\.\dZ]+` and then sets `_time = published`; an offset form such as
+    `+00:00` or an epoch number does not match, so the event is kept but stamped with the ingestion time. Set this
+    per event; back-date by setting an earlier value. The `example` is illustrative, never reuse it verbatim.'
+  example: '2026-10-01T09:15:42.318Z'
+  is_gate: true
+- name: uuid
+  type: string_short
+  description: Unique id of the log event (a UUID). Mapped to `xdm.event.id`. Make it unique per event and keep
+    it as the marker you query for when verifying an event landed.
+  example: 6b1f0a52-9d3e-4c7a-8f21-3e5a7c4d9b10
+- name: eventType
+  type: enum
+  description: 'Okta event type (dotted, lower-case except a few segments such as `auth_via_AD_agent`). Mapped to
+    `xdm.event.original_event_type`. The okta_sso_raw model has NO eventType filter, so every type maps; the value
+    decides `xdm.event.type` (set to `authentication` only for 10 types: user.authentication.sso, user.session.start,
+    user.mfa.okta_verify.deny_push, user.mfa.factor.update, user.authentication.auth_via_mfa, user.authentication.auth_via_AD_agent,
+    user.authentication.verify, user.authentication.auth_via_radius, user.authentication.auth_via_richclient, system.push.send_factor_verify_push;
+    any other type gives an empty `xdm.event.type`), `xdm.event.operation` (AUTH_MFA when the type contains authentication,
+    oauth2 or mfa; AUTH_LOGIN when it contains session, access_request, import, kerberos_rich_client, iwa or ldap;
+    otherwise the raw type) and `xdm.auth.service` (IDP for session.start / MFA / verify / policy.evaluate_sign_on
+    types, SP for user.authentication.sso).'
+  example: user.session.start
+  enum_values:
+  - user.session.start
+  - user.session.end
+  - user.session.clear
+  - user.session.access_admin_app
+  - user.session.context.change
+  - user.session.expire
+  - user.authentication.sso
+  - user.authentication.auth_via_mfa
+  - user.authentication.verify
+  - user.authentication.auth_via_webauthn
+  - user.authentication.auth_via_kerberos
+  - user.authentication.auth_via_radius
+  - user.authentication.auth_via_IDP
+  - user.authentication.auth_via_inbound_SAML
+  - user.authentication.auth_via_social
+  - user.authentication.slo
+  - user.authentication.universal_logout
+  - user.account.update_password
+  - user.account.reset_password
+  - user.account.expire_password
+  - user.account.lock
+  - user.account.lock.limit
+  - user.account.unlock
+  - user.account.unlock_by_admin
+  - user.account.unlock_token
+  - user.account.update_profile
+  - user.account.update_primary_email
+  - user.account.update_secondary_email
+  - user.account.update_phone
+  - user.account.privilege.grant
+  - user.account.privilege.revoke
+  - user.account.report_suspicious_activity_by_enduser
+  - user.lifecycle.create
+  - user.lifecycle.activate
+  - user.lifecycle.reactivate
+  - user.lifecycle.suspend
+  - user.lifecycle.unsuspend
+  - user.lifecycle.deactivate
+  - user.lifecycle.delete.initiated
+  - user.lifecycle.delete.completed
+  - user.mfa.factor.activate
+  - user.mfa.factor.deactivate
+  - user.mfa.factor.suspend
+  - user.mfa.factor.update
+  - user.mfa.factor.reset_all
+  - user.mfa.factor.challenge
+  - user.mfa.okta_verify
+  - user.mfa.okta_verify.deny_push
+  - user.mfa.attempt_bypass
+  - user.risk.detect
+  - user.risk.change
+  - user.registration.create
+  - group.lifecycle.create
+  - group.lifecycle.delete
+  - group.user_membership.add
+  - group.user_membership.remove
+  - group.profile.update
+  - group.privilege.grant
+  - group.privilege.revoke
+  - group.application_assignment.add
+  - group.application_assignment.remove
+  - application.lifecycle.create
+  - application.lifecycle.activate
+  - application.lifecycle.deactivate
+  - application.lifecycle.delete
+  - application.lifecycle.update
+  - application.user_membership.add
+  - application.user_membership.remove
+  - application.user_membership.provision
+  - application.user_membership.deprovision
+  - application.policy.sign_on.deny_access
+  - app.generic.provision.assign_user_to_app
+  - app.generic.import.started.incremental_import
+  - app.generic.import.success
+  - app.generic.unauth_app_access_attempt
+  - app.user_management.push_new_user
+  - app.user_management.push_user_deactivation
+  - app.user_management.push_password_update.success
+  - app.user_management.push_password_update.failure
+  - app.user_management.push_profile_update.success
+  - app.access_request.request
+  - app.access_request.grant
+  - app.access_request.deny
+  - app.oauth2.as.authorize
+  - app.oauth2.as.authorize.scope_denied
+  - app.oauth2.as.token.grant.access_token
+  - app.oauth2.as.token.grant.refresh_token
+  - app.oauth2.as.token.grant.id_token
+  - app.oauth2.as.introspect
+  - app.oauth2.as.token.revoke
+  - app.oauth2.as.token.detect_reuse
+  - app.oauth2.as.consent.grant
+  - app.oauth2.as.consent.revoke
+  - app.oauth2.signon
+  - app.oauth2.client.lifecycle.create
+  - app.oauth2.client.lifecycle.delete
+  - policy.evaluate_sign_on
+  - policy.lifecycle.create
+  - policy.lifecycle.update
+  - policy.lifecycle.delete
+  - policy.lifecycle.activate
+  - policy.lifecycle.deactivate
+  - policy.rule.add
+  - policy.rule.update
+  - policy.rule.delete
+  - policy.rule.activate
+  - policy.rule.deactivate
+  - policy.auth_reevaluate.fail
+  - policy.entity_risk.evaluate
+  - policy.entity_risk.action
+  - security.threat.detected
+  - security.attack.start
+  - security.attack.end
+  - security.breached_credential.detected
+  - security.session.detect_client_roaming
+  - security.trusted_origin.create
+  - security.trusted_origin.update
+  - security.trusted_origin.delete
+  - security.events.provider.receive_event
+  - security.authenticator.lifecycle.activate
+  - security.authenticator.lifecycle.deactivate
+  - zone.create
+  - zone.update
+  - zone.delete
+  - zone.activate
+  - zone.deactivate
+  - zone.make_blacklist
+  - zone.remove_blacklist
+  - system.api_token.create
+  - system.api_token.revoke
+  - system.api_token.update
+  - system.api_token.enable
+  - system.agent.ad.push_password_update
+  - system.email.send_factor_verify_message
+  - system.email.password_reset.sent_message
+  - system.email.new_device_notification.sent_message
+  - system.sms.send_factor_verify_message
+  - system.sms.send_password_reset_message
+  - system.voice.send_mfa_challenge_call
+  - system.voice.send_password_reset_call
+  - system.push.send_factor_verify_push
+  - system.idp.lifecycle.create
+  - system.idp.lifecycle.update
+  - system.idp.lifecycle.delete
+  - system.idp.lifecycle.activate
+  - system.idp.lifecycle.deactivate
+  - system.org.rate_limit.violation
+  - system.org.rate_limit.warning
+  - system.org.rate_limit.burst
+  - system.log_stream.lifecycle.create
+  - system.log_stream.lifecycle.delete
+  - system.mfa.factor.activate
+  - system.mfa.factor.deactivate
+  - iam.role.create
+  - iam.role.delete
+  - iam.role.update
+  - iam.resourceset.bindings.add
+  - iam.resourceset.bindings.delete
+  - device.enrollment.create
+  - device.user.add
+  - device.user.remove
+  - device.lifecycle.activate
+  - device.lifecycle.deactivate
+  - device.lifecycle.delete
+  - device.lifecycle.suspend
+  - device.lifecycle.unsuspend
+  - device.assurance.policy.evaluate
+  - hook.outbound.request.sent
+  - user.authentication.auth_via_AD_agent
+  - user.authentication.auth_via_richclient
+  - user.session.impersonation.grant
+  - user.session.impersonation.initiate
+  - user.session.impersonation.extend
+  - user.session.impersonation.revoke
+  - system.event_hook.lifecycle.delete
+- name: displayMessage
+  type: string
+  description: Human-readable summary of the event. Mapped to `xdm.event.description`.
+  example: User login to Okta
+- name: legacyEventType
+  type: string
+  description: Okta's legacy event type string. Mapped to `xdm.observer.action`.
+  example: core.user_auth.login_success
+- name: severity
+  type: enum
+  description: Event severity. Mapped to `xdm.event.log_level` (DEBUG, INFO to INFORMATIONAL, WARN to WARNING, ERROR).
+    Use WARN for failed logins.
+  example: INFO
+  enum_values:
+  - DEBUG
+  - INFO
+  - WARN
+  - ERROR
+- name: version
+  type: string_short
+  description: Okta log-event schema version, always the string "0". Not read by the rule.
+  example: '0'
+- name: device
+  type: json
+  description: Device object of the event. The profile sends null; the rule does not read it.
+  example: 'null'
+- name: actor
+  type: json
+  description: 'Who performed the action: a real nested JSON object (not a string, not a CEF composite) with keys
+    id, type, alternateId, displayName, detailEntry. Read by the rule through its leaves.'
+  example: '{"id":"00u1a2b3c4d5e6f7g8h","type":"User","alternateId":"noura.alharbi@phantom-lab.example","displayName":"Noura
+    Alharbi","detailEntry":null}'
+- name: actor.id
+  type: string_short
+  description: Okta id of the actor (00u... for users). Mapped to `xdm.source.user.identifier` / `xdm.source.identity.identifier`
+    only when actor.type is User or AppUser.
+  example: 00u1a2b3c4d5e6f7g8h
+- name: actor.type
+  type: enum
+  description: 'Actor type. The rule lower-cases it: `user` and `appuser` give a regular user and populate `xdm.source.user.*`
+    / `xdm.source.identity.*` (upn, username, names, identifier) and an interactive `xdm.logon.type`; `systemprincipal`
+    (Okta itself or an agent) populates none of the user fields, so an automation-driven event yields no source
+    user. Use User for anything a human did.'
+  example: User
+  enum_values:
+  - User
+  - AppUser
+  - SystemPrincipal
+  - PublicClientApp
+  - Client
+- name: actor.alternateId
+  type: email
+  description: The actor's login, UPN-shaped (an email). Mapped to `xdm.source.user.upn` / `xdm.source.identity.upn`
+    for User and AppUser actors. Always send the bare form `name@domain`; a `DOMAIN\user` form collapses identity
+    in Cortex analytics.
+  example: noura.alharbi@phantom-lab.example
+- name: actor.displayName
+  type: string
+  description: Actor's display name. Mapped to `xdm.source.user.username`; the first token (up to a space or comma)
+    becomes `first_name` and the rest `last_name`, so send `First Last`.
+  example: Noura Alharbi
+- name: actor.detailEntry
+  type: json
+  description: Extra actor detail. Usually null; not read by the rule.
+  example: 'null'
+- name: client
+  type: json
+  description: 'The requesting client: nested JSON object with userAgent, zone, device, id, ipAddress and geographicalContext.
+    Read by the rule through its leaves.'
+  example: '{"userAgent":{"rawUserAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126.0.0.0","os":"Windows
+    10","browser":"CHROME"},"zone":"null","device":"Computer","id":null,"ipAddress":"144.86.80.11","geographicalContext":{"city":"Dammam","state":"Eastern
+    Province","country":"Saudi Arabia","postalCode":null,"geolocation":{"lat":26.4336,"lon":50.1116}}}'
+- name: client.ipAddress
+  type: ipv4
+  description: Client address. Mapped to `xdm.source.ipv4` (or `xdm.source.ipv6` when it contains a colon). Send a
+    real, geo-resolvable public address, since Cortex derives country, city and ASN from it, not from the event's labels.
+  example: 144.86.80.11
+- name: client.id
+  type: string_short
+  description: Okta client / device id, often null. Mapped to `xdm.source.host.device_id`.
+- name: client.device
+  type: enum
+  description: Device class. Mapped to `xdm.source.host.device_category`.
+  example: Computer
+  enum_values:
+  - Computer
+  - Mobile
+  - Tablet
+  - Unknown
+- name: client.zone
+  type: string
+  description: Okta network zone the client matched. Okta sends the string "null" when none. Mapped to `xdm.source.zone`.
+  example: 'null'
+- name: client.userAgent.rawUserAgent
+  type: string
+  description: Raw User-Agent header. Mapped to `xdm.source.user_agent`; the literal value "unknown" (any case)
+    is dropped to null.
+  example: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36
+- name: client.userAgent.os
+  type: string
+  description: Operating system parsed from the user agent. Mapped to `xdm.source.host.os`; `xdm.source.host.os_family`
+    is derived from it (windows, mac, ios, android, linux, ...).
+  example: Windows 10
+- name: client.userAgent.browser
+  type: string
+  description: Browser parsed from the user agent. Mapped to `xdm.source.application.name`.
+  example: CHROME
+- name: client.geographicalContext.city
+  type: string
+  description: City of the client address. Mapped to `xdm.source.location.city`.
+  example: Dammam
+- name: client.geographicalContext.state
+  type: string
+  description: State or province. Mapped to `xdm.source.location.region`.
+  example: Eastern Province
+- name: client.geographicalContext.country
+  type: string
+  description: Country as a full name (Okta sends names, not ISO codes). Mapped to `xdm.source.location.country`.
+  example: Saudi Arabia
+- name: client.geographicalContext.postalCode
+  type: string
+  description: Postal code, often null. Not read by the rule.
+- name: client.geographicalContext.geolocation.lat
+  type: float
+  description: Latitude as a JSON number. Mapped to `xdm.source.location.latitude`.
+  example: 26.4336
+- name: client.geographicalContext.geolocation.lon
+  type: float
+  description: Longitude as a JSON number. Mapped to `xdm.source.location.longitude`.
+  example: 50.1116
+- name: outcome
+  type: json
+  description: 'Result of the action: nested JSON object with result and reason (reason may be null).'
+  example: '{"result":"SUCCESS","reason":null}'
+- name: outcome.result
+  type: enum
+  description: 'Outcome. Mapped to `xdm.event.outcome`: SUCCESS and ALLOW give SUCCESS; FAILURE and DENY give FAILED;
+    CHALLENGE and SKIPPED give PARTIAL; UNKNOWN gives UNKNOWN; any other string is passed through unchanged.'
+  example: SUCCESS
+  enum_values:
+  - SUCCESS
+  - FAILURE
+  - CHALLENGE
+  - SKIPPED
+  - ALLOW
+  - DENY
+  - UNKNOWN
+- name: outcome.reason
+  type: string
+  description: 'Why the outcome occurred; null on plain success. Mapped to `xdm.event.outcome_reason`, which normalises
+    these values: UNKNOWN_USER gives user_does_not_exist; INVALID_CREDENTIALS and "Authentication failed: bad username
+    or password" give bad_credentials; LOCKED_OUT and "Authentication failed: account is locked" give account_locked;
+    USER_ACCOUNT_EXPIRE, GENERAL_NONSUCCESS and "Authentication failed: account is expired" give account_expired_or_disabled;
+    "Login failed." gives failed_login; PASSWORD_BASED_LOGIN_DISALLOWED gives auth_policy_access_violation; VERIFICATION_ERROR
+    gives mfa_failure; DEL_AUTH_TIMEOUT gives mfa_expired; "User rejected Okta push verify" gives user_reject; "Login
+    aborted" gives user_cancelled. Anything else passes through as the raw string.'
+  example: INVALID_CREDENTIALS
+- name: target
+  type: json
+  description: 'What the action acted on: a real JSON ARRAY of objects (empty array when none), each with id, type,
+    alternateId, displayName, detailEntry. The okta_sso_raw rule reads only the FIRST element: type AppInstance
+    fills `xdm.target.resource.id` (id) and `xdm.target.resource.name` (alternateId); type User fills `xdm.target.user.*`
+    / `xdm.target.identity.*` (upn from alternateId, username from displayName, first/last name, identifier from
+    id). Other types (Token, Role, UserGroup, PolicyEntity, ...) are carried raw but not modelled.'
+  example: '[{"id":"0oa1b2c3d4e5f6g7h8i","type":"AppInstance","alternateId":"Salesforce","displayName":"Salesforce","detailEntry":null}]'
+  is_array: true
+- name: target[].id
+  type: string_short
+  description: Okta id of the target (0oa... for apps, 00u... for users).
+  example: 0oa1b2c3d4e5f6g7h8i
+- name: target[].type
+  type: string
+  description: 'Target type: AppInstance, User, Token, Role, UserGroup, PolicyEntity, AuthenticatorEnrollment, etc.
+    Only AppInstance and User (first element) are modelled.'
+  example: AppInstance
+- name: target[].alternateId
+  type: string
+  description: Target login or app name. Mapped to `xdm.target.resource.name` (AppInstance) or `xdm.target.user.upn`
+    (User).
+  example: Salesforce
+- name: target[].displayName
+  type: string
+  description: Target display name. For User targets mapped to `xdm.target.user.username`, split into first and
+    last name on the first space.
+  example: Salesforce
+- name: target[].detailEntry
+  type: json
+  description: Extra target detail. Usually null; not read.
+  example: 'null'
+- name: authenticationContext
+  type: json
+  description: 'Authentication context: nested JSON object in real Okta''s flat form: authenticationProvider (a
+    string), credentialProvider, credentialType, externalSessionId, authnContextClassRef, issuer, interface, authenticationStep.
+    This is what real Okta and the http-sender okta profile send. NOTE: the Cortex rule reads `authenticationProvider.credentialProvider`
+    / `.credentialType` / `.externalSessionId` (an object form, see those leaves), which this flat form does not
+    satisfy.'
+  example: '{"authenticationProvider":"OKTA_AUTHENTICATION_PROVIDER","credentialProvider":"OKTA_CREDENTIAL_PROVIDER","credentialType":"PASSWORD","externalSessionId":"idx9fQ2lKz8a1b2c3d4e5f6g","issuer":null,"interface":null,"authenticationStep":0}'
+- name: authenticationContext.authenticationProvider
+  type: string
+  description: 'Real Okta sends a string: OKTA_AUTHENTICATION_PROVIDER for password logins, FACTOR_PROVIDER for
+    MFA factors. The Cortex rule instead reads three keys beneath it as if it were an object (the next three leaves).'
+  example: OKTA_AUTHENTICATION_PROVIDER
+- name: authenticationContext.authenticationProvider.credentialProvider
+  type: string
+  description: 'Rule-read path (object form, derived from reading the rule): mapped to `xdm.auth.mfa.provider`.
+    With real Okta''s flat form this path is absent, so the XDM field stays null.'
+  example: OKTA_CREDENTIAL_PROVIDER
+- name: authenticationContext.authenticationProvider.credentialType
+  type: string
+  description: 'Rule-read path (object form, derived from the rule): mapped to `xdm.auth.mfa.method`. Absent in real Okta''s
+    flat form, so the XDM field stays null.'
+  example: PASSWORD
+- name: authenticationContext.authenticationProvider.externalSessionId
+  type: string_short
+  description: 'Rule-read path (object form, derived from the rule): mapped to `xdm.network.session_id`. Absent in real Okta''s
+    flat form, so the XDM field stays null.'
+  example: idx9fQ2lKz8a1b2c3d4e5f6g
+- name: authenticationContext.credentialProvider
+  type: string
+  description: Real-Okta flat credential provider (what the profile sends). Not read by the rule.
+  example: OKTA_CREDENTIAL_PROVIDER
+- name: authenticationContext.credentialType
+  type: string
+  description: 'Real-Okta flat credential type: PASSWORD, OKTA_VERIFY_PUSH, SIGNED_NONCE (FastPass), SMS, EMAIL,
+    TOKEN:SOFTWARE:TOTP. Not read by the rule.'
+  example: PASSWORD
+- name: authenticationContext.externalSessionId
+  type: string_short
+  description: Real-Okta flat external session id (idx... in Identity Engine). Not read by the rule.
+  example: idx9fQ2lKz8a1b2c3d4e5f6g
+- name: authenticationContext.authnContextClassRef
+  type: string
+  description: SAML authentication context class reference. Not read by the rule.
+  example: urn:oasis:names:tc:SAML:2.0:ac:classes:Password
+- name: authenticationContext.issuer
+  type: json
+  description: Issuer object, usually null. Not read.
+  example: 'null'
+- name: authenticationContext.interface
+  type: string
+  description: Authentication interface, usually null. Not read.
+- name: authenticationContext.authenticationStep
+  type: integer
+  description: Step number within the authentication flow. Not read.
+  example: 0
+- name: securityContext
+  type: json
+  description: 'Network context of the client address: nested JSON object (asNumber, asOrg, isp, domain, isProxy).'
+  example: '{"asNumber":25019,"asOrg":"Example Telecom JSC","isp":"Example Telecom JSC","domain":"example-isp.example","isProxy":false}'
+- name: securityContext.asNumber
+  type: integer
+  description: Autonomous system number as a JSON number. Mapped to `xdm.source.asn.as_number`.
+  example: 25019
+- name: securityContext.asOrg
+  type: string
+  description: AS organisation name. Mapped to `xdm.source.asn.as_name`.
+  example: Example Telecom JSC
+- name: securityContext.isp
+  type: string
+  description: ISP name. Mapped to `xdm.source.asn.isp`.
+  example: Example Telecom JSC
+- name: securityContext.domain
+  type: domain
+  description: ISP domain. Mapped to `xdm.source.asn.domain`; the literal "." is dropped to null.
+  example: example-isp.example
+- name: securityContext.isProxy
+  type: boolean
+  description: Whether Okta flags the client as a proxy. Mapped to `xdm.source.asn.is_proxy` (true only when the
+    value is the boolean true or the string "true").
+  example: false
+- name: debugContext
+  type: json
+  description: 'Debug data: nested JSON object holding a single `debugData` object. Read by the rule through its
+    leaves.'
+  example: '{"debugData":{"requestId":"ZmK2qP8aLr5tB9xW3nYc4gAAABc","requestUri":"/idp/idx/identify","threatSuspected":"false","url":"/idp/idx/identify?"}}'
+- name: debugContext.debugData
+  type: json
+  description: The debugData object. Free-form in Okta; the keys below are the ones the rule or the profile uses.
+  example: '{"threatSuspected":"false","requestUri":"/idp/idx/identify"}'
+- name: debugContext.debugData.requestId
+  type: string_short
+  description: Okta request id. Emitted by the profile; not mapped.
+  example: ZmK2qP8aLr5tB9xW3nYc4gAAABc
+- name: debugContext.debugData.requestUri
+  type: string
+  description: Request path. Emitted by the profile; not mapped.
+  example: /idp/idx/identify
+- name: debugContext.debugData.url
+  type: url
+  description: Request URL or path. Mapped to `xdm.network.http.url`.
+  example: /idp/idx/identify?
+- name: debugContext.debugData.threatSuspected
+  type: string
+  description: 'Real Okta (and the profile) send the STRING "true" or "false". The rule does `lowercase(to_string(json_extract(debugContext,
+    "$.debugData.threatSuspected")))` and compares to "false" to build the `xdm.alert.risks` tag `risky_signin:
+    FALSE` / `risky_signin: TRUE`; json_extract keeps the JSON quotes on a string value, so whether the string form
+    matches is not established (a JSON boolean would). Check `xdm.alert.risks` on a sample before relying on it.'
+  example: 'false'
+- name: debugContext.debugData.factor
+  type: string
+  description: 'Authentication factor. Lower-cased by the rule (json_extract_scalar) and, for eventType user.authentication.auth_via_mfa
+    only, mapped to `xdm.event.operation_sub_type`: yubikey and fido_webauthn give hardware_token; password_as_factor
+    gives password; okta_soft_token and okta_verify_push give application; email_factor gives email; sms_factor
+    gives sms; call_factor gives voice.'
+  example: OKTA_VERIFY_PUSH
+- name: debugContext.debugData.errorCode
+  type: string
+  description: 'Numeric error code (AD agent events). Matched by regex: 1326 maps the outcome reason to bad_credentials;
+    1331 and 1793 map it to account_expired_or_disabled.'
+  example: '1326'
+- name: debugContext.debugData.risk
+  type: string
+  description: Real Okta (and the profile) send risk as ONE flat string such as "{level=HIGH}", present only on authentication
+    events (session.start, auth_via_mfa, verify). The rule reads it as an object (`risk.level`, `risk.reasons`,
+    next two leaves); against the flat string those paths give null.
+  example: '{level=HIGH}'
+- name: debugContext.debugData.risk.level
+  type: string
+  description: 'Rule-read path (object form, derived from the rule): mapped to `xdm.alert.severity` via json_extract, which
+    keeps JSON quotes on strings, so the resulting value may carry quotes. Null against real Okta''s flat `risk`
+    string.'
+  example: HIGH
+- name: debugContext.debugData.risk.reasons
+  type: string
+  description: 'Rule-read path (object form), comma-separated risk reasons. Matched by regex: when it contains "Anonymizing
+    Proxy" the rule sets `xdm.intermediate.is_proxy` true and adds `anonymized_ip: TRUE` to `xdm.alert.risks`, else
+    `anonymized_ip: FALSE`. Null against a flat `risk` string.'
+  example: Anonymizing Proxy
+- name: debugContext.debugData.logOnlySecurityData
+  type: string
+  description: 'Okta''s log-only security data string (on FastPass phishing events: phishingUrl, originCheckResult
+    MISMATCH, requestedUri). Carried raw; not read by the rule.'
+  example: '{"behaviors":{},"phishingUrl":"https://okta-secure-login.example/login/login.htm","originCheckResult":"MISMATCH","requestedUri":"/idp/idx/challenge/answer?"}'
+- name: debugContext.debugData.behaviors
+  type: string
+  description: Okta behavior-detection result string. The rule splits it on commas, strips braces, and appends each
+    item to `xdm.alert.risks`.
+  example: '{New Geo-Location=POSITIVE, New Device=NEGATIVE, New IP=POSITIVE, New State=NEGATIVE, New Country=NEGATIVE,
+    Velocity=NEGATIVE, New City=POSITIVE}'
+- name: debugContext.debugData.originalPrincipal.type
+  type: string
+  description: 'Rule-read path (derived from the modeling rule): lower-cased by the rule; user, guest, admin and system map to `xdm.auth.privilege_level`.
+    The rule reads it with json_extract, which keeps JSON quotes on strings, so a string value may not hit those
+    branches and pass through raw instead. Not part of real Okta''s System Log debugData for most events.'
+  example: Admin
+- name: debugContext.debugData.deviceFingerprint
+  type: string
+  description: Device fingerprint. Mapped to `xdm.observer.unique_identifier`.
+  example: 7d8e3f4a1b2c9d6e5f0a4b3c2d1e8f9a
+- name: debugContext.debugData.dtHash
+  type: string
+  description: Device-token hash. Mapped to `xdm.logon.fingerprint` (modeling rule 2_11 and later).
+  example: 4f6a9c2e8b1d7035a4c9e6f2b8d1a3c5
+- name: debugContext.debugData.origin
+  type: string
+  description: Request origin. Mapped to `xdm.network.http.referrer`.
+  example: https://phantom-lab.okta.example
+- name: debugContext.debugData.proxyType
+  type: string
+  description: Proxy type detected by Okta. Mapped to `xdm.intermediate.application.name`.
+  example: Tor
+- name: debugContext.debugData.threatDetections
+  type: string
+  description: Threat detections string. Mapped to `xdm.network.rule`.
+- name: debugContext.debugData.privilegeGranted
+  type: string
+  description: On user.account.privilege.grant events, the role(s) granted. Carried raw; not read by the rule.
+  example: Organization administrator
+- name: transaction
+  type: json
+  description: 'Transaction context: nested JSON object (type, id, detail).'
+  example: '{"type":"WEB","id":"ZmK2qP8aLr5tB9xW3nYc4gAAABc","detail":{}}'
+- name: transaction.type
+  type: string
+  description: Transaction type (WEB, JOB). Mapped to `xdm.observer.type`.
+  example: WEB
+- name: transaction.id
+  type: string_short
+  description: Transaction id. Mapped to `xdm.session_context_id`.
+  example: ZmK2qP8aLr5tB9xW3nYc4gAAABc
+- name: transaction.detail
+  type: json
+  description: Free-form detail object, usually empty.
+  example: '{}'
+- name: transaction.detail.requestApiTokenId
+  type: string_short
+  description: Id of the API token that made the request, when one did. Mapped to `xdm.auth.mfa.client_details`.
+  example: 00T1a2b3c4d5e6f7g8h
+- name: request
+  type: json
+  description: 'Request context: nested JSON object holding `ipChain`.'
+  example: '{"ipChain":[{"ip":"144.86.80.11","geographicalContext":{"city":"Dammam","state":"Eastern Province","country":"Saudi
+    Arabia","postalCode":null,"geolocation":{"lat":26.4336,"lon":50.1116}},"version":"V4","source":null}]}'
+- name: request.ipChain
+  type: json
+  description: Real JSON array of hop objects (client first, then any proxies). Mapped as a list to `xdm.source.host.ipv4_addresses`
+    / `xdm.source.host.ipv6_addresses` (split by colon).
+  example: '[{"ip":"144.86.80.11","version":"V4","source":null}]'
+  is_array: true
+- name: request.ipChain[].ip
+  type: ipv4
+  description: Hop address. See `request.ipChain`.
+  example: 144.86.80.11
+- name: request.ipChain[].version
+  type: string_short
+  description: Address family, V4 or V6. Not read.
+  example: V4
+- name: request.ipChain[].source
+  type: string
+  description: Hop source label, usually null. Not read.
+- name: request.ipChain[].geographicalContext
+  type: json
+  description: Geography of the hop, same shape as client.geographicalContext. Not read.
+  example: '{"city":"Dammam","country":"Saudi Arabia"}'
+use_cases:
+- Identity
+- MFA
+- SaaS
+- PAM

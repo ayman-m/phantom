@@ -1,0 +1,328 @@
+schema_version: 1
+id: AdminByRequest
+pack_name: AdminByRequest
+rule_name: AdminByRequest
+dataset_name: admin_by_request_raw
+vendor: Admin By Request
+product: AdminByRequest
+description: AdminByRequest is a Privileged Access Management (PAM) solution that
+  enables secure, temporary elevation to local admin rights.
+categories:
+- Analytics & SIEM
+version: 1.0.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODggNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDczQUEiPkFkbWluIEJ5IFJlcXVlc3Q8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: additionalData
+  type: string
+  description: Vendor-emitted field 'AdditionalData'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_additionaldata
+- name: application
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: file,
+    name, path, scanResult, threat, vendor, virustotalLink (each key defined as a
+    dotted-path leaf below).'
+  example: '{}'
+- name: approvedBy
+  type: string
+  description: Admin who approved the request. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_approvedby
+- name: approvedByEmail
+  type: email
+  description: Vendor-emitted field 'ApprovedByEmail'. Free-form text; may contain
+    whitespace and punctuation.
+  example: user@example.com
+- name: auditLogURL
+  type: url
+  description: Vendor-emitted field 'AuditLogURL'. Free-form text; may contain whitespace
+    and punctuation.
+  example: https://example.com/path?q=1
+- name: auditlogLink
+  type: string
+  description: Vendor-emitted field 'AuditlogLink'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_auditloglink
+- name: computer
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: name,
+    platform (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: computerName
+  type: host
+  description: Vendor-emitted field 'ComputerName'. Hostname or fully-qualified domain
+    name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: deniedBy
+  type: string
+  description: Vendor-emitted field 'DeniedBy'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_deniedby
+- name: deniedByEmail
+  type: email
+  description: Vendor-emitted field 'DeniedByEmail'. Free-form text; may contain whitespace
+    and punctuation.
+  example: user@example.com
+- name: deniedReason
+  type: string
+  description: Vendor-emitted field 'DeniedReason'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_deniedreason
+- name: eventLevel
+  type: string
+  description: Vendor-emitted field 'EventLevel'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_eventlevel
+- name: eventText
+  type: string
+  description: Vendor-emitted field 'EventText'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_eventtext
+- name: reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: source_log_type
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'events'
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by Admin By Request. Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: authentication
+- name: user
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: account,
+    email (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: userAccount
+  type: string
+  description: Vendor-emitted field 'UserAccount'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_useraccount
+- name: userName
+  type: string
+  description: User account associated with the event. Free-form text; may contain
+    whitespace and punctuation.
+  example: jdoe
+- name: application.file
+  type: file_path
+  description: Vendor-emitted field 'Application › file'. Leaf of the 'application'
+    composite. Absolute filesystem path; vendor-native separator (forward slash on
+    POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: application.name
+  type: string
+  description: Human-readable name as displayed by Admin By Request. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: application.path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/example.log
+- name: application.scanResult
+  type: string
+  description: Vendor-emitted field 'Application › scanResult'. Leaf of the 'application'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_scanresult
+- name: application.threat
+  type: string
+  description: Vendor-emitted field 'Application › threat'. Leaf of the 'application'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_threat
+- name: application.vendor
+  type: string
+  description: Vendor-emitted field 'Application › vendor'. Leaf of the 'application'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_vendor
+- name: application.virustotalLink
+  type: string
+  description: Vendor-emitted field 'Application › virustotalLink'. Leaf of the 'application'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_virustotallink
+- name: computer.name
+  type: host
+  description: Human-readable name as displayed by Admin By Request. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: computer.platform
+  type: string
+  description: Vendor-emitted field 'Computer › platform'. Leaf of the 'computer'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: linux
+- name: user.account
+  type: user
+  description: Vendor-emitted field 'User › account'. Leaf of the 'user' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending
+    on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: user.email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+use_cases:
+- PAM
+how_to_use: |
+  ## Admin By Request AdminByRequest → Cortex XSIAM (dataset `admin_by_request_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `admin_by_request_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `admin_by_request`. The marketplace pack's display name `Admin By Request` / `AdminByRequest` normalizes to `admin_by_request_adminbyrequest_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `admin_by_request` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `application -> name`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `source_log_type = "auditlog"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~12 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.description`, `xdm.event.log_level`, `xdm.event.operation`, `xdm.event.outcome_reason`, `xdm.event.type`, `xdm.source.user.upn`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = admin_by_request_raw | sort desc _time | fields xdm.* | limit 20
+
+  **Simulation recipe — reverse-engineered from this pack's parsing + modeling rules.**
+
+  Routing: vendor `admin` / product `by_request`.
+  (DERIVED, not read from an INGEST block. There is NO parsing rule for this pack — `ls scripts/maintainer/parsing_rules/ | grep -i admin` is empty and `grep -rl admin_by_request parsing_rules/` returns nothing. Only the modeling rule exists. So the broker's derivation applies: dataset = <lower(vendor)>_<lower(product)>_raw with non-alphanumerics collapsed to `_`. To land in `admin_by_request_raw` the header must normalize to `admin_by_request`, which forces a TWO-PART split of the words. `admin` + `by_request` normalizes correctly. IMPORTANT: the split is genuinely ambiguous from the rule alone — `admin_by` + `request`, or `Admin` + `By Request`, normalize identically and are equally correct; pick one and stay consistent. What is NOT ambiguous is that the pack's DISPLAY names must not be used: vendor `Admin By Request` alone normalizes to `admin_by_request`, so pairing it with product `AdminByRequest` yields `admin_by_request_adminbyrequest_raw` — a different dataset, which is exactly the trap the schema's how_to_use already warns about. Because no INGEST block anywhere claims this pair, no parsing rule is consulted, nothing can drop the event, and the modeling rule still binds by dataset NAME only — this is the documented 'route by an unclaimed pair whose derived name equals the target dataset' bypass (same mechanism PANW ships for IllusiveNetworks). Verify empirically with `dataset = admin_by_request_raw | limit 1` after the first batch, and confirm `unknown_unknown_raw` did not grow.)
+
+  Gate: `source_log_type` must be one of `auditlog`, `events`, `request`.
+  no_hit: Raw row still lands; XDM stays empty. There is no parsing rule, so there is no `no_hit=drop` on this path — a wrong gate value is NOT discarded at ingest. The failure signature is the classic raw>0 / xdm=0, with no error row anywhere. Note this is the OPPOSITE of the usual gate trap and makes debugging easier here, not harder.
+
+  Composite: `application` must be a JSON OBJECT on the wire. Leaves read: `application.file`, `application.path`, `application.scanResult`, `application.name`, `application.vendor`, `application.threat`, `application.virustotalLink`, `application.sha256`
+
+  Composite: `computer` must be a JSON OBJECT on the wire. Leaves read: `computer.name`, `computer.platform`
+
+  Composite: `user` must be a JSON OBJECT on the wire. Leaves read: `user.account`, `user.email`
+
+  Pass this verbatim as `observables_dict` (keys are schema field names; values are LISTS):
+
+  ```json
+  {
+    "source_log_type": [
+      "auditlog"
+    ],
+    "type": [
+      "Run As Admin"
+    ],
+    "application.file": [
+      "setup.exe"
+    ],
+    "application.path": [
+      "C:\\Windows\\Temp\\setup.exe"
+    ],
+    "application.name": [
+      "Contoso Installer"
+    ],
+    "application.vendor": [
+      "Contoso Ltd"
+    ],
+    "application.threat": [
+      "0"
+    ],
+    "application.scanResult": [
+      "Clean"
+    ],
+    "application.virustotalLink": [
+      "https://www.virustotal.com/gui/file/a3f5b1c9d24e7089fbc61d3a8e5027b4c9d1f6a2837e40b5c6d9e1f2a3b4c5d6"
+    ],
+    "computer.name": [
+      "WKSTN-4471.corp.example.com"
+    ],
+    "computer.platform": [
+      "Windows"
+    ],
+    "user.account": [
+      "jsmith"
+    ],
+    "user.email": [
+      "jsmith@example.com"
+    ],
+    "reason": [
+      "Install approved vendor software"
+    ],
+    "approvedBy": [
+      "Alice Admin"
+    ],
+    "approvedByEmail": [
+      "alice.admin@example.com"
+    ],
+    "deniedBy": [
+      ""
+    ],
+    "deniedByEmail": [
+      ""
+    ],
+    "deniedReason": [
+      ""
+    ],
+    "auditLogURL": [
+      "https://www.adminbyrequest.com/auditlog/12345"
+    ]
+  }
+  ```
+
+  Populates: `xdm.event.type`, `xdm.event.operation`, `xdm.event.description`, `xdm.event.outcome_reason`, `xdm.target.host.hostname`, `xdm.target.host.os`, `xdm.target.file.filename`, `xdm.target.file.path`, `xdm.source.user.username`, `xdm.source.user.upn`
+
+  - BRANCH STRUCTURE — this is the key fact about this rule. The [MODEL] block is not one pipeline; it is THREE independent statements separated by `;`, each opening with its own `filter source_log_type = ...`. They evaluate independently against the dataset, exactly like INGEST sections, and they never chain. One event carries one source_log_type value and therefore hits exactly ONE branch. You cannot collect all three branches' mappings from a single event — to exercise the full surface you must emit three separate event shapes.
+  - BRANCH RICHNESS — auditlog and request are nearly identical and are the rich branches (11 XDM assignments each, 10 achievable given the sha256 gap). They differ in exactly one place: auditlog folds `auditLogURL` into the description under key `Audit_Log_URL`, request folds `auditlogLink` under key `Audit_Log_Link`. The events branch is the poor relation: 8 assignments, and it uniquely lacks xdm.source.user.upn, xdm.target.host.os, xdm.event.outcome_reason and xdm.target.file.sha256. The recipe above targets auditlog for maximum yield.
+  - FLAT/COMPOSITE SPLIT IS BRANCH-DEPENDENT — the single most likely source of a partial mapping here. auditlog and request read the COMPOSITES `computer -> name` and `user -> account` / `user -> email`. The events branch reads the FLAT columns `computerName`, `userAccount`, `userName` and has no email read at all. Seeding only the composites and then emitting an `events` event gives a null hostname and a random-token username; seeding only the flat columns and emitting `auditlog` gives a null hostname, null username and null upn. If you generate a mixed batch, seed both sets.
+  - NO PARSING RULE EXISTS for this pack — confirmed by both `ls scripts/maintainer/parsing_rules/ | grep -i admin` (empty) and `grep -rl admin_by_request parsing_rules/` (no match). Three consequences: (1) routing is by broker derivation only, hence the vendor/product ambiguity flagged in routing.note; (2) there is no `no_hit=drop`, so a wrong gate value never destroys the event — raw always lands and only XDM stays empty, which makes this source unusually easy to debug; (3) there is NO `_time` extraction anywhere, so `_time` will be the broker's receipt timestamp rather than a vendor-supplied event time. Do not expect event-time fidelity from this source.
+  - GATE MATCHING IS CASE-SENSITIVE AND EXACT. `filter source_log_type = "auditlog"` is plain string equality. The vendor's API arguably capitalizes these; the rule does not lowercase() or to_string() the column before comparing, so the literal on the wire must be exactly `auditlog`, `events`, or `request`. Anything else falls through all three branches to xdm=0.
+  - object_create IS NOT A CONCAT — an important negative finding, since the ADFS raw_param_2..15 trap does not apply here. `additional_data = object_create("Application_Name", application -> name, ...)` builds a JSON object key by key; a null member yields a key with a null value and does NOT poison the other keys or null the whole object. So xdm.event.description will populate even with members missing. The reason to seed the members anyway is quality, not survival: unseeded fields fall through to random-token generation (their `example` values are inert because none of them is is_gate), so an unseeded run produces a description object full of strings like `sample_deniedby`. Relatedly, the rule special-cases NO literal anywhere — there is no `if(x = "-")` branch — so unlike ADFS there is no vendor filler convention to reproduce. Empty string is the right value for the inapplicable members.
+  - COHERENT EVENT DESIGN — the recipe builds an APPROVED elevation, so the denied* trio is deliberately emptied rather than omitted. Omitting them would put random tokens into the description of an approved request. For the mirror case, invert: set deniedBy / deniedByEmail / deniedReason to real values and empty approvedBy / approvedByEmail. Keep application.threat and application.scanResult consistent with each other too ('0' + 'Clean', or a nonzero count + a malware verdict).
+  - BACKSLASH ESCAPING IS THE MAIN WAY THIS COMPOSITE BREAKS. `application.path` is realistically a Windows path, and that value has to survive two escaping layers: JSON string encoding inside the stringified `application` object, and CEF extension escaping on the wire (CEF escapes `\` and `=`). If either layer is wrong the JSON fails to parse and the ENTIRE application composite is lost — that is 6 XDM assignments and 4 description keys, not just the path. The recipe value decodes to the literal `C:\Windows\Temp\setup.exe` (single backslashes on the wire). Recommended de-risking for the first validation run: seed a path containing no backslashes, confirm the composite parses and application.name/vendor/file all populate, then reintroduce the Windows path and re-confirm. A sudden drop from 10 mapped fields to 4 between those two runs isolates the escaping fault immediately.
+  - DO NOT put the bare composite parents `application`, `computer`, or `user` into observables_dict. They are declared `type: json` with example `'{}'` purely as parent placeholders; the generator assembles the nested object from the dotted-leaf fields. Seeding a parent directly would override the assembled object with the literal string and null every leaf read beneath it.
+  - `type` COLLIDES WITH A COMMON CEF/reserved word and is also the schema's field name verbatim. It must go on the wire as an extension literally named `type`. Worth an explicit check on the first run (`dataset = admin_by_request_raw | fields type | limit 1`) that the column is present and not swallowed or renamed, since xdm.event.operation on both rich branches depends entirely on it.
+  - VALUES I INFERRED RATHER THAN DERIVED — stated explicitly so they are not mistaken for rule-backed facts. The rule validates none of these; all are straight assignments, so any token maps successfully and only realism is at stake. (a) `type` = 'Run As Admin' — from the Admin By Request product's elevation modes, not from the rule. (b) `application.scanResult` = 'Clean' — no enum in the rule; the true vendor vocabulary is unknown. (c) `application.threat` = '0' as a VirusTotal detection count — inferred from the adjacent virustotalLink field, not stated anywhere. The only value in the entire recipe that the rule genuinely CONSTRAINS is `eventLevel`, which must be exactly '0', '1' or '2'.
+  - VALIDATION QUERY once a batch has landed, using a wide window per the schema's own guidance: `config timeframe = 30d | datamodel dataset = admin_by_request_raw | sort desc _time | fields xdm.* | limit 20`. Expect 10 populated xdm.* fields for the auditlog recipe. Exactly 9 with sha256 null is the expected pass state given the schema gap; 0 populated with raw rows present means the gate literal is wrong; 4 populated (event.type, event.operation, event.description partially, and nothing host/file/user-side) means the application/computer/user composites arrived as flat columns instead of JSON objects.
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

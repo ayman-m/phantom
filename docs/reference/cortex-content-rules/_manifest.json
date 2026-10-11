@@ -1,0 +1,420 @@
+{
+ "repo": "demisto/content",
+ "commit": "8b3bcee4dcb24cda6fc9c605c7a2cbd1e30fb2a5",
+ "files": [
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules",
+   "file": "OktaModelingRules.xif",
+   "bytes": 25083,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules",
+   "file": "OktaModelingRules.yml",
+   "bytes": 142,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules",
+   "file": "OktaModelingRules_schema.json",
+   "bytes": 400,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules_1_3",
+   "file": "OktaModelingRules_1_3.xif",
+   "bytes": 26617,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules_1_3",
+   "file": "OktaModelingRules_1_3.yml",
+   "bytes": 142,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules_1_3",
+   "file": "OktaModelingRules_1_3_schema.json",
+   "bytes": 1125,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules_2_0",
+   "file": "OktaModelingRules_2_0.xif",
+   "bytes": 53763,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules_2_0",
+   "file": "OktaModelingRules_2_0.yml",
+   "bytes": 150,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules_2_0",
+   "file": "OktaModelingRules_2_0_schema.json",
+   "bytes": 2911,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules_2_11",
+   "file": "OktaModelingRules_2_11.xif",
+   "bytes": 55819,
+   "vs_local_mirror": "not in local mirror"
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules_2_11",
+   "file": "OktaModelingRules_2_11.yml",
+   "bytes": 133,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ModelingRules",
+   "rule": "OktaModelingRules_2_11",
+   "file": "OktaModelingRules_2_11_schema.json",
+   "bytes": 2911,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ParsingRules",
+   "rule": "Okta",
+   "file": "Okta.xif",
+   "bytes": 325,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "Okta",
+   "pack_version": "3.4.6",
+   "kind": "ParsingRules",
+   "rule": "Okta",
+   "file": "Okta.yml",
+   "bytes": 122,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "ProofpointEmailSecurity",
+   "pack_version": "1.0.29",
+   "kind": "ModelingRules",
+   "rule": "ProofpointEmailSecurity",
+   "file": "ProofpointEmailSecurity.xif",
+   "bytes": 6225,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "ProofpointEmailSecurity",
+   "pack_version": "1.0.29",
+   "kind": "ModelingRules",
+   "rule": "ProofpointEmailSecurity",
+   "file": "ProofpointEmailSecurity.yml",
+   "bytes": 190,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "ProofpointEmailSecurity",
+   "pack_version": "1.0.29",
+   "kind": "ModelingRules",
+   "rule": "ProofpointEmailSecurity",
+   "file": "ProofpointEmailSecurity_schema.json",
+   "bytes": 1273,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "ProofpointEmailSecurity",
+   "pack_version": "1.0.29",
+   "kind": "ModelingRules",
+   "rule": "ProofpointEmailSecurity_2_11",
+   "file": "ProofpointEmailSecurity_2_11.xif",
+   "bytes": 6344,
+   "vs_local_mirror": "not in local mirror"
+  },
+  {
+   "pack": "ProofpointEmailSecurity",
+   "pack_version": "1.0.29",
+   "kind": "ModelingRules",
+   "rule": "ProofpointEmailSecurity_2_11",
+   "file": "ProofpointEmailSecurity_2_11.yml",
+   "bytes": 173,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "ProofpointEmailSecurity",
+   "pack_version": "1.0.29",
+   "kind": "ModelingRules",
+   "rule": "ProofpointEmailSecurity_2_11",
+   "file": "ProofpointEmailSecurity_2_11_schema.json",
+   "bytes": 1273,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "ProofpointEmailSecurity",
+   "pack_version": "1.0.29",
+   "kind": "ParsingRules",
+   "rule": "ProofpointEmailSecurity",
+   "file": "ProofpointEmailSecurity.xif",
+   "bytes": 761,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "ProofpointEmailSecurity",
+   "pack_version": "1.0.29",
+   "kind": "ParsingRules",
+   "rule": "ProofpointEmailSecurity",
+   "file": "ProofpointEmailSecurity.yml",
+   "bytes": 163,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "ProofpointTAP",
+   "pack_version": "1.3.2",
+   "kind": "ModelingRules",
+   "rule": "ProofpointTAPModelingRules",
+   "file": "ProofpointTAPModelingRules.xif",
+   "bytes": 1315,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "ProofpointTAP",
+   "pack_version": "1.3.2",
+   "kind": "ModelingRules",
+   "rule": "ProofpointTAPModelingRules",
+   "file": "ProofpointTAPModelingRules.yml",
+   "bytes": 149,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "ProofpointTAP",
+   "pack_version": "1.3.2",
+   "kind": "ModelingRules",
+   "rule": "ProofpointTAPModelingRules",
+   "file": "ProofpointTAPModelingRules_schema.json",
+   "bytes": 1110,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "ProofpointTAP",
+   "pack_version": "1.3.2",
+   "kind": "ModelingRules",
+   "rule": "ProofpointTAPModelingRules_1_3",
+   "file": "ProofpointTAPModelingRules_1_3.xif",
+   "bytes": 2019,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "ProofpointTAP",
+   "pack_version": "1.3.2",
+   "kind": "ModelingRules",
+   "rule": "ProofpointTAPModelingRules_1_3",
+   "file": "ProofpointTAPModelingRules_1_3.yml",
+   "bytes": 131,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "ProofpointTAP",
+   "pack_version": "1.3.2",
+   "kind": "ModelingRules",
+   "rule": "ProofpointTAPModelingRules_1_3",
+   "file": "ProofpointTAPModelingRules_1_3_schema.json",
+   "bytes": 1917,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "ProofpointTAP",
+   "pack_version": "1.3.2",
+   "kind": "ParsingRules",
+   "rule": "ProofpointTAP",
+   "file": "ProofpointTAP.xif",
+   "bytes": 651,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "ProofpointTAP",
+   "pack_version": "1.3.2",
+   "kind": "ParsingRules",
+   "rule": "ProofpointTAP",
+   "file": "ProofpointTAP.yml",
+   "bytes": 139,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "GoogleDrive",
+   "pack_version": "1.5.8",
+   "kind": "ModelingRules",
+   "rule": "GoogleDrive_1_3",
+   "file": "GoogleDrive_1_3.xif",
+   "bytes": 1250,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "GoogleDrive",
+   "pack_version": "1.5.8",
+   "kind": "ModelingRules",
+   "rule": "GoogleDrive_1_3",
+   "file": "GoogleDrive_1_3.yml",
+   "bytes": 167,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "GoogleDrive",
+   "pack_version": "1.5.8",
+   "kind": "ModelingRules",
+   "rule": "GoogleDrive_1_3",
+   "file": "GoogleDrive_1_3_schema.json",
+   "bytes": 680,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "GoogleDrive",
+   "pack_version": "1.5.8",
+   "kind": "ModelingRules",
+   "rule": "GoogleDrive_2_11",
+   "file": "GoogleDrive_2_11.xif",
+   "bytes": 1322,
+   "vs_local_mirror": "not in local mirror"
+  },
+  {
+   "pack": "GoogleDrive",
+   "pack_version": "1.5.8",
+   "kind": "ModelingRules",
+   "rule": "GoogleDrive_2_11",
+   "file": "GoogleDrive_2_11.yml",
+   "bytes": 149,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "GoogleDrive",
+   "pack_version": "1.5.8",
+   "kind": "ModelingRules",
+   "rule": "GoogleDrive_2_11",
+   "file": "GoogleDrive_2_11_schema.json",
+   "bytes": 680,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "GoogleDrive",
+   "pack_version": "1.5.8",
+   "kind": "ParsingRules",
+   "rule": "GoogleDrive",
+   "file": "GoogleDrive.xif",
+   "bytes": 854,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "GoogleDrive",
+   "pack_version": "1.5.8",
+   "kind": "ParsingRules",
+   "rule": "GoogleDrive",
+   "file": "GoogleDrive.yml",
+   "bytes": 136,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "GoogleChrome",
+   "pack_version": "1.1.0",
+   "kind": "ModelingRules",
+   "rule": "GoogleChrome",
+   "file": "GoogleChrome.xif",
+   "bytes": 8787,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "GoogleChrome",
+   "pack_version": "1.1.0",
+   "kind": "ModelingRules",
+   "rule": "GoogleChrome",
+   "file": "GoogleChrome.yml",
+   "bytes": 169,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "GoogleChrome",
+   "pack_version": "1.1.0",
+   "kind": "ModelingRules",
+   "rule": "GoogleChrome",
+   "file": "GoogleChrome_schema.json",
+   "bytes": 309,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "GoogleChrome",
+   "pack_version": "1.1.0",
+   "kind": "ModelingRules",
+   "rule": "GoogleChrome_2_11",
+   "file": "GoogleChrome_2_11.xif",
+   "bytes": 9008,
+   "vs_local_mirror": "not in local mirror"
+  },
+  {
+   "pack": "GoogleChrome",
+   "pack_version": "1.1.0",
+   "kind": "ModelingRules",
+   "rule": "GoogleChrome_2_11",
+   "file": "GoogleChrome_2_11.yml",
+   "bytes": 152,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "GoogleChrome",
+   "pack_version": "1.1.0",
+   "kind": "ModelingRules",
+   "rule": "GoogleChrome_2_11",
+   "file": "GoogleChrome_2_11_schema.json",
+   "bytes": 309,
+   "vs_local_mirror": ""
+  },
+  {
+   "pack": "GoogleChrome",
+   "pack_version": "1.1.0",
+   "kind": "ParsingRules",
+   "rule": "GoogleChrome",
+   "file": "GoogleChrome.xif",
+   "bytes": 2684,
+   "vs_local_mirror": "identical to local mirror"
+  },
+  {
+   "pack": "GoogleChrome",
+   "pack_version": "1.1.0",
+   "kind": "ParsingRules",
+   "rule": "GoogleChrome",
+   "file": "GoogleChrome.yml",
+   "bytes": 139,
+   "vs_local_mirror": ""
+  }
+ ]
+}

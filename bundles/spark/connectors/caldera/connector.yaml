@@ -1,0 +1,535 @@
+# Caldera tool connector for the Phantom SOC simulation agent.
+#
+# Per Spark agent bundle spec v1.2 §7.4 — schema mirrors Spark
+# platform's installed_connectors.yaml_spec (see upstream
+# services/connector-manager/internal/mcp/pg_instance_store.go) so
+# the same artifact installs identically in standalone (loaded by
+# bundles/spark/mcp/) and in platform (auto-published to the
+# workspace marketplace via gateway.PublishConnector pending admin
+# approval).
+#
+# Tool names are auto-namespaced as `caldera/<tool_name>` by the
+# embedded MCP. The agent's manifest tools.allow lists `caldera/*`
+# (with explicit deny for destructive operations like delete_facts
+# and delete_relationships).
+
+id: "caldera"
+version: "1.0.0"
+description: "MITRE Caldera adversary emulation connector — abilities, adversaries, operations, agents, facts, relationships, schedules."
+displayName: "CALDERA (red-team)"
+tags: ["caldera", "red-team", "mitre-attack", "adversary-emulation", "sandcat"]
+logo: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMxZjBhMGEiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIyMCIgc3Ryb2tlPSIjZWY0NDQ0IiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIxMyIgc3Ryb2tlPSIjZWY0NDQ0IiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiLz48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSI2IiBmaWxsPSIjZWY0NDQ0Ii8+PHBhdGggZD0iTTMyIDZ2OE0zMiA1MHY4TTYgMzJoOE01MCAzMmg4IiBzdHJva2U9IiNlZjQ0NDQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PC9zdmc+"
+
+source:
+  language: "python"
+  entrypoint: "src.connector"
+
+# Tool dispatch — the underlying implementations are module-level
+# functions named `caldera_<tool>` (see spark-agents spec §7.4.1).
+#
+# runtimeMapping.style is "container" (see
+# docs/spec-per-instance-connector-containers.md).
+runtimeMapping:
+  # Universal connector container model.
+  # The agent's MCP proxies caldera/* tool calls over MCP-over-HTTP to
+  # a per-instance phantom-connector-caldera-<name> container. The
+  # caldera CONNECTOR (this YAML's source) is the Python wrapper that
+  # calls MITRE Caldera's REST API; the actual Caldera 5.3.0 BACKEND
+  # (the `caldera` container in docker-compose.yml) is unchanged. The
+  # wrapper is stateless — operation state lives in Caldera's own DB —
+  # so the wrapper container is safely restartable mid-operation.
+  style: "container"
+  functionPrefix: "caldera_"
+
+executionMode: "persistent"
+
+# JSONSchema for the per-instance config the operator supplies via
+# setup. Setup form fields ${setup.<key>} map into here per the
+# manifest's setup.bindsInstances[].template.config block.
+configSchema:
+  type: "object"
+  required: ["baseUrl", "redUser"]
+  properties:
+    baseUrl:
+      type: "string"
+      description: "Caldera server base URL (e.g. http://caldera:8888)."
+      default: "http://caldera:8888"
+    redUser:
+      type: "string"
+      description: "Red team username for authenticated calls."
+      default: "red"
+
+# Named secret slots; the manifest's setup.bindsInstances[].secretRefs
+# binds these to setup-supplied paths under data_root.
+secretSlots:
+  - name: "apiKey"
+    description: "Caldera REST API key (X-API-Key header)."
+    required: true
+  - name: "redPassword"
+    description: "Red team password for browser-flow operations."
+    required: true
+
+# Tool catalog. Tool names DROP the `caldera_` prefix that the legacy
+# in-process MCP used — the connector-id namespace already provides
+# it. e.g. legacy `caldera_get_all_abilities` → `caldera/get_all_abilities`.
+spec:
+  tools:
+    # ─── Health ─────────────────────────────────────────────────
+    - name: "health_check"
+      method: "GET /api/v2/health"
+      description: "Probe Caldera server health and version."
+      args: []
+      returns: { type: "object", description: "{ status, version }." }
+
+    # ─── Abilities ──────────────────────────────────────────────
+    - name: "get_all_abilities"
+      method: "GET /api/v2/abilities"
+      description: "List every ability registered on the Caldera server."
+      args: []
+      returns: { type: "array", description: "Ability objects." }
+
+    - name: "get_abilities_by_tactic"
+      method: "GET /api/v2/abilities?tactic={tactic}"
+      description: "List abilities filtered by ATT&CK tactic name."
+      args:
+        - { name: "tactic", type: "string", description: "ATT&CK tactic (e.g. discovery, lateral-movement).", required: true }
+      returns: { type: "array", description: "Ability objects." }
+
+    - name: "get_ability_by_id"
+      method: "GET /api/v2/abilities/{id}"
+      description: "Fetch one ability by its id."
+      args:
+        - { name: "id", type: "string", description: "Ability id (UUID).", required: true }
+      returns: { type: "object", description: "Ability object." }
+
+    # ─── Adversaries ────────────────────────────────────────────
+    - name: "get_adversaries"
+      method: "GET /api/v2/adversaries"
+      description: "List every adversary profile."
+      args: []
+      returns: { type: "array", description: "Adversary objects." }
+
+    - name: "get_adversary_by_name"
+      method: "GET /api/v2/adversaries?name={name}"
+      description: "Fetch the first adversary whose name matches."
+      args:
+        - { name: "name", type: "string", description: "Adversary display name.", required: true }
+      returns: { type: "object", description: "Adversary object." }
+
+    - name: "get_adversary_by_id"
+      method: "GET /api/v2/adversaries/{id}"
+      description: "Fetch one adversary by id."
+      args:
+        - { name: "id", type: "string", description: "Adversary id.", required: true }
+      returns: { type: "object", description: "Adversary object." }
+
+    - name: "get_adversary_by_ability_id"
+      method: "GET /api/v2/adversaries"
+      description: "Find adversaries that contain a given ability."
+      args:
+        - { name: "ability_id", type: "string", description: "Ability id to search for.", required: true }
+      returns: { type: "array", description: "Adversary objects containing the ability." }
+
+    - name: "create_adversary"
+      method: "POST /api/v2/adversaries"
+      description: "Create a new adversary profile."
+      args:
+        - { name: "name",        type: "string", description: "Adversary display name.",                required: true }
+        - { name: "description", type: "string", description: "Adversary description.",                  required: false }
+        - { name: "ability_ids", type: "array",  description: "Ability ids that compose this adversary.", required: true }
+      returns: { type: "object", description: "Created adversary object with assigned id." }
+
+    # ─── Agents ─────────────────────────────────────────────────
+    - name: "get_all_agents"
+      method: "GET /api/v2/agents"
+      description: "List every deployed Caldera agent (paw-tagged)."
+      args: []
+      returns: { type: "array", description: "Agent objects." }
+
+    - name: "get_agent_by_paw"
+      method: "GET /api/v2/agents/{paw}"
+      description: "Fetch one agent by its paw."
+      args:
+        - { name: "paw", type: "string", description: "Agent paw (short id).", required: true }
+      returns: { type: "object", description: "Agent object." }
+
+    # ─── Operations ─────────────────────────────────────────────
+    - name: "get_all_operations"
+      method: "GET /api/v2/operations"
+      description: "List every operation."
+      args: []
+      returns: { type: "array", description: "Operation objects." }
+
+    - name: "get_operation_by_id"
+      method: "GET /api/v2/operations/{id}"
+      description: "Fetch one operation by id."
+      args:
+        - { name: "id", type: "string", description: "Operation id.", required: true }
+      returns: { type: "object", description: "Operation object." }
+
+    - name: "wait_for_operation_progress"
+      method: "internal: polls GET /api/v2/operations/{id} every ~6s"
+      description: |
+        Wait inside the connector container for a Caldera operation to
+        advance OR truly complete. Returns a compact summary instead of the
+        full operation blob.
+
+        Returns as soon as:
+          - chain grows past last_chain_length (a new ability fired), OR
+          - state is TRUE terminal: finished/cleanup/out_of_time
+            (paused is NOT terminal — Caldera's atomic planner uses
+            paused BETWEEN ability dispatches), OR
+          - expected_total_abilities is set AND chain reached that count
+            AND every chain entry has terminal status (a pure chain.length
+            check is insufficient because Caldera queues all links at op
+            start with status=-3 pending), OR
+          - timeout_seconds elapses.
+
+        The response is a COMPACT summary (<2KB) instead of the full
+        operation blob. Includes done flag + chain_progress numbers +
+        recent_abilities + ready-to-copy next_call_args. Hand-holds the
+        LLM-orchestration pattern so it doesn't misread the response.
+      args:
+        - { name: "id", type: "string", description: "Operation id.", required: true }
+        - { name: "last_chain_length", type: "integer", description: "Chain length the agent last saw (0 on first call; chain_progress.total_entries on subsequent calls — see next_call_args).", required: false }
+        - { name: "expected_total_abilities", type: "integer", description: "Chain length that indicates full completion. For the kill chain this is 20 * number_of_agents_in_operation_group (40 with both agents in group=red). 0 (default) = don't know; rely on terminal state only.", required: false }
+        - { name: "timeout_seconds", type: "integer", description: "Max seconds to wait. Clamped to [5, 180]. Default 90.", required: false }
+        - { name: "poll_interval_seconds", type: "integer", description: "Internal poll cadence. Clamped to [2, 30]. Default 6.", required: false }
+      returns: { type: "object", description: "Compact summary: {done, state, operation_id, chain_progress: {total_entries, expected_total, completed_terminal, in_flight, succeeded, failed_parser}, recent_abilities: [{name, status, host}], next_call_args: {...} or None if done}." }
+
+    - name: "get_operations_summary"
+      method: "GET /api/v2/operations"
+      description: "Compact summary across all operations (status, started_at, adversary)."
+      args: []
+      returns: { type: "array", description: "Summary records." }
+
+    - name: "create_operation"
+      method: "POST /api/v2/operations"
+      description: "Launch a new operation against a configured adversary."
+      args:
+        - { name: "operation_name", type: "string", description: "Operation display name.", required: true }
+        - { name: "adversary_name", type: "string", description: "Adversary to run.",       required: true }
+      returns: { type: "object", description: "Created operation object." }
+
+    - name: "update_operation"
+      method: "PATCH /api/v2/operations/{id}"
+      description: "Apply a partial JSON Merge Patch to an operation (e.g. change state)."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.",                     required: true }
+        - { name: "payload",      type: "object", description: "Fields to merge (JSON Merge Patch).", required: true }
+      returns: { type: "object", description: "Updated operation object." }
+
+    - name: "replace_operation"
+      method: "PUT /api/v2/operations/{id}"
+      description: "Replace an operation wholesale with the provided payload."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.",                  required: true }
+        - { name: "payload",      type: "object", description: "Full operation replacement body.", required: true }
+      returns: { type: "object", description: "Replaced operation." }
+
+    - name: "get_operation_report"
+      method: "GET /api/v2/operations/{id}/report"
+      description: "Generate the post-run report for an operation."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.", required: true }
+      returns: { type: "object", description: "Operation report (steps, links, facts, output)." }
+
+    - name: "get_operation_event_logs"
+      method: "GET /api/v2/operations/{id}/event-logs"
+      description: "Stream of event logs for an operation."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.", required: true }
+      returns: { type: "array", description: "Event log records." }
+
+    - name: "get_operation_facts"
+      method: "GET /api/v2/operations/{id}/facts"
+      description: "Facts gathered during an operation."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.", required: true }
+      returns: { type: "array", description: "Fact objects." }
+
+    - name: "get_operation_relationships"
+      method: "GET /api/v2/operations/{id}/relationships"
+      description: "Relationships between facts for an operation."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.", required: true }
+      returns: { type: "array", description: "Relationship objects." }
+
+    # ─── Operation links ────────────────────────────────────────
+    - name: "get_operation_links"
+      method: "GET /api/v2/operations/{id}/links"
+      description: "Every link (planned/executed step) for an operation."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.", required: true }
+      returns: { type: "array", description: "Link objects." }
+
+    - name: "get_operation_link"
+      method: "GET /api/v2/operations/{id}/links/{link_id}"
+      description: "Fetch one link from an operation."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.", required: true }
+        - { name: "link_id",      type: "string", description: "Link id.",      required: true }
+      returns: { type: "object", description: "Link object." }
+
+    - name: "get_operation_link_result"
+      method: "GET /api/v2/operations/{id}/links/{link_id}/result"
+      description: "Fetch the execution result (stdout/stderr/exit) for a link."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.", required: true }
+        - { name: "link_id",      type: "string", description: "Link id.",      required: true }
+      returns: { type: "object", description: "Result object." }
+
+    - name: "add_link_to_operation"
+      method: "POST /api/v2/operations/{id}/links"
+      description: "Append a manual link (an ability invocation) to a running operation, targeting one agent."
+      args:
+        - { name: "operation_id",     type: "string", description: "Operation id to add the link to.",        required: true }
+        - { name: "ability_id",       type: "string", description: "Ability id (UUID) to execute.",           required: true }
+        - { name: "ability_executor", type: "string", description: "Executor to use (e.g. psh, cmd, sh).",    required: true }
+        - { name: "paw",              type: "string", description: "Paw of the agent that runs the ability.", required: true }
+      returns: { type: "object", description: "Created link object." }
+
+    - name: "get_operation_potential_links"
+      method: "GET /api/v2/operations/{id}/potential-links"
+      description: "Links the planner is considering but hasn't dispatched yet."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.", required: true }
+      returns: { type: "array", description: "Potential link objects." }
+
+    - name: "get_operation_potential_links_by_paw"
+      method: "GET /api/v2/operations/{id}/potential-links?paw={paw}"
+      description: "Potential links scoped to a specific agent."
+      args:
+        - { name: "operation_id", type: "string", description: "Operation id.", required: true }
+        - { name: "paw",          type: "string", description: "Agent paw.",    required: true }
+      returns: { type: "array", description: "Potential link objects." }
+
+    # ─── Custom abilities (Windows / Linux) ─────────────────────
+    - name: "create_windows_ability"
+      method: "POST /api/v2/abilities"
+      description: "Create a Windows-targeted ability; the PowerShell command is AI-generated from command_description."
+      args:
+        - { name: "name",                type: "string", description: "Ability name.",                                                 required: true }
+        - { name: "description",         type: "string", description: "Ability description.",                                          required: false }
+        - { name: "command_description", type: "string", description: "Natural-language description of the PowerShell command to generate (e.g. 'list all running processes').", required: true }
+        - { name: "tactic",              type: "string", description: "ATT&CK tactic.",                                                required: true }
+        - { name: "technique_name",      type: "string", description: "ATT&CK technique name (e.g. Process Discovery).",               required: true }
+        - { name: "technique_id",        type: "string", description: "ATT&CK technique id (e.g. T1057).",                            required: false }
+        - { name: "payloads",            type: "array",  description: "Payload filenames the ability requires.",                       required: false }
+      returns: { type: "object", description: "Created ability object." }
+
+    - name: "create_linux_ability"
+      method: "POST /api/v2/abilities"
+      description: "Create a Linux-targeted ability; the sh/bash command is AI-generated from command_description."
+      args:
+        - { name: "name",                type: "string", description: "Ability name.",                                                required: true }
+        - { name: "description",         type: "string", description: "Ability description.",                                         required: false }
+        - { name: "command_description", type: "string", description: "Natural-language description of the shell command to generate (e.g. 'list all network connections').", required: true }
+        - { name: "tactic",              type: "string", description: "ATT&CK tactic.",                                               required: true }
+        - { name: "technique_name",      type: "string", description: "ATT&CK technique name (e.g. System Network Connections Discovery).", required: true }
+        - { name: "technique_id",        type: "string", description: "ATT&CK technique id (e.g. T1049).",                           required: false }
+        - { name: "payloads",            type: "array",  description: "Payload filenames the ability requires.",                      required: false }
+      returns: { type: "object", description: "Created ability object." }
+
+    # ─── Payloads, planners, objectives, obfuscators, plugins ───
+    - name: "get_payloads"
+      method: "GET /api/v2/payloads"
+      description: "List every payload binary registered with Caldera."
+      args: []
+      returns: { type: "array", description: "Payload metadata." }
+
+    - name: "get_payload_by_name"
+      method: "GET /api/v2/payloads/{name}"
+      description: "Fetch payload metadata by name."
+      args:
+        - { name: "name", type: "string", description: "Payload filename.", required: true }
+      returns: { type: "object", description: "Payload metadata." }
+
+    - name: "get_planners"
+      method: "GET /api/v2/planners"
+      description: "List every planner."
+      args: []
+      returns: { type: "array", description: "Planner objects." }
+
+    - name: "get_planner_by_id"
+      method: "GET /api/v2/planners/{id}"
+      description: "Fetch one planner by id."
+      args:
+        - { name: "planner_id", type: "string", description: "Planner id.", required: true }
+      returns: { type: "object", description: "Planner object." }
+
+    - name: "get_objectives"
+      method: "GET /api/v2/objectives"
+      description: "List every objective."
+      args: []
+      returns: { type: "array", description: "Objective objects." }
+
+    - name: "get_objective_by_id"
+      method: "GET /api/v2/objectives/{id}"
+      description: "Fetch one objective by id."
+      args:
+        - { name: "objective_id", type: "string", description: "Objective id.", required: true }
+      returns: { type: "object", description: "Objective object." }
+
+    - name: "get_obfuscators"
+      method: "GET /api/v2/obfuscators"
+      description: "List every obfuscator (command-line obfuscation strategy)."
+      args: []
+      returns: { type: "array", description: "Obfuscator objects." }
+
+    - name: "get_obfuscator_by_name"
+      method: "GET /api/v2/obfuscators/{name}"
+      description: "Fetch one obfuscator by name."
+      args:
+        - { name: "name", type: "string", description: "Obfuscator name.", required: true }
+      returns: { type: "object", description: "Obfuscator object." }
+
+    - name: "get_plugins"
+      method: "GET /api/v2/plugins"
+      description: "List every Caldera plugin (loaded modules)."
+      args: []
+      returns: { type: "array", description: "Plugin metadata." }
+
+    - name: "get_plugin_by_name"
+      method: "GET /api/v2/plugins/{name}"
+      description: "Fetch one plugin by name."
+      args:
+        - { name: "name", type: "string", description: "Plugin name.", required: true }
+      returns: { type: "object", description: "Plugin metadata." }
+
+    - name: "get_contacts"
+      method: "GET /api/v2/contacts"
+      description: "List every C2 contact channel (HTTP, TCP, etc.)."
+      args: []
+      returns: { type: "array", description: "Contact configurations." }
+
+    - name: "get_contact_by_name"
+      method: "GET /api/v2/contacts/{name}"
+      description: "Fetch one contact by name."
+      args:
+        - { name: "name", type: "string", description: "Contact name.", required: true }
+      returns: { type: "object", description: "Contact configuration." }
+
+    # ─── Facts ──────────────────────────────────────────────────
+    - name: "get_facts"
+      method: "GET /api/v2/facts"
+      description: "List facts (key/value/source tuples) across operations, with optional sorting and field selection."
+      args:
+        - { name: "sort",    type: "string", description: "Field to sort results by (e.g. score).",     required: false }
+        - { name: "include", type: "array",  description: "Field names to include in each fact object.", required: false }
+        - { name: "exclude", type: "array",  description: "Field names to exclude from each fact object.", required: false }
+      returns: { type: "array", description: "Fact objects." }
+
+    - name: "create_fact"
+      method: "POST /api/v2/facts"
+      description: "Create one fact."
+      args:
+        - { name: "payload", type: "object", description: "Fact body { trait, value, source }.", required: true }
+      returns: { type: "object", description: "Created fact." }
+
+    - name: "update_facts"
+      method: "PATCH /api/v2/facts"
+      description: "Bulk-update facts."
+      args:
+        - { name: "payload", type: "object", description: "Update body.", required: true }
+      returns: { type: "object", description: "Result summary." }
+
+    - name: "delete_facts"
+      method: "DELETE /api/v2/facts"
+      description: "Delete facts matching a filter (DESTRUCTIVE — denied in manifest tools.deny)."
+      args:
+        - { name: "payload", type: "object", description: "Filter body.", required: true }
+      returns: { type: "object", description: "Result summary." }
+
+    # ─── Relationships ──────────────────────────────────────────
+    - name: "get_relationships"
+      method: "GET /api/v2/relationships"
+      description: "List relationships between facts."
+      args: []
+      returns: { type: "array", description: "Relationship objects." }
+
+    - name: "create_relationships"
+      method: "POST /api/v2/relationships"
+      description: "Create one or more relationships."
+      args:
+        - { name: "payload", type: "object", description: "Body containing relationship records.", required: true }
+      returns: { type: "object", description: "Created relationships." }
+
+    - name: "update_relationships"
+      method: "PATCH /api/v2/relationships"
+      description: "Bulk-update relationships."
+      args:
+        - { name: "payload", type: "object", description: "Update body.", required: true }
+      returns: { type: "object", description: "Result summary." }
+
+    - name: "delete_relationships"
+      method: "DELETE /api/v2/relationships"
+      description: "Delete relationships (DESTRUCTIVE — denied in manifest tools.deny)."
+      args:
+        - { name: "payload", type: "object", description: "Filter body.", required: true }
+      returns: { type: "object", description: "Result summary." }
+
+    # ─── Deploy commands ────────────────────────────────────────
+    - name: "get_deploy_commands"
+      method: "GET /api/v2/deploy_commands"
+      description: "List every deploy command (one-liners that drop and run an agent)."
+      args: []
+      returns: { type: "array", description: "Deploy command objects." }
+
+    - name: "get_deploy_command_by_ability_id"
+      method: "GET /api/v2/deploy_commands/{ability_id}"
+      description: "Deploy command associated with a given ability."
+      args:
+        - { name: "ability_id", type: "string", description: "Ability id.", required: true }
+      returns: { type: "object", description: "Deploy command." }
+
+    # ─── Schedules ──────────────────────────────────────────────
+    - name: "get_schedules"
+      method: "GET /api/v2/schedules"
+      description: "List every scheduled operation."
+      args: []
+      returns: { type: "array", description: "Schedule objects." }
+
+    - name: "get_schedule_by_id"
+      method: "GET /api/v2/schedules/{id}"
+      description: "Fetch one schedule by id."
+      args:
+        - { name: "schedule_id", type: "string", description: "Schedule id.", required: true }
+      returns: { type: "object", description: "Schedule object." }
+
+    - name: "create_schedule"
+      method: "POST /api/v2/schedules"
+      description: "Create a scheduled operation."
+      args:
+        - { name: "payload", type: "object", description: "Schedule body { name, schedule, task: { adversary_id, ... } }.", required: true }
+      returns: { type: "object", description: "Created schedule." }
+
+    - name: "update_schedule"
+      method: "PATCH /api/v2/schedules/{id}"
+      description: "Update a schedule."
+      args:
+        - { name: "schedule_id", type: "string", description: "Schedule id.", required: true }
+        - { name: "payload",     type: "object", description: "Patch body.",   required: true }
+      returns: { type: "object", description: "Updated schedule." }
+
+    # ─── Config ─────────────────────────────────────────────────
+    - name: "get_config"
+      method: "GET /api/v2/config/{name}"
+      description: "Fetch a Caldera config block (e.g. 'main', 'agent')."
+      args:
+        - { name: "name", type: "string", description: "Config block name.", required: true }
+      returns: { type: "object", description: "Config dict." }
+
+    - name: "update_main_config"
+      method: "PATCH /api/v2/config/main"
+      description: "Patch the main config block."
+      args:
+        - { name: "payload", type: "object", description: "Patch body.", required: true }
+      returns: { type: "object", description: "Updated config." }
+
+    - name: "update_agent_config"
+      method: "PATCH /api/v2/config/agents"
+      description: "Patch the agents config block."
+      args:
+        - { name: "payload", type: "object", description: "Patch body.", required: true }
+      returns: { type: "object", description: "Updated config." }

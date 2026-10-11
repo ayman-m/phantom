@@ -1,0 +1,234 @@
+schema_version: 1
+id: BitSight
+pack_name: BitSight
+rule_name: BitSight
+dataset_name: bitsight_bitsight_raw
+vendor: Bitsight
+product: BitSight
+description: The BitSight integration provides visibility into BitSight findings,
+  enabling remediation within your security program
+categories:
+- IT Services
+version: 1.3.6
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDdDODYiPkJpdHNpZ2h0PC90ZXh0Pjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _alert_data
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: agent_hostname,
+    alert_description, alert_name, alert_type (each key defined as a dotted-path leaf
+    below).'
+  example: '{}'
+- name: affects_rating
+  type: string
+  description: Whether the finding affects the BitSight rating. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_rating
+- name: asset_overrides
+  type: string
+  description: Vendor-emitted field 'Asset overrides'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_overrides
+- name: assets
+  type: string
+  description: Vendor-emitted field 'Assets'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_assets
+- name: attributed_companies
+  type: string
+  description: Attributed companies (subsidiaries). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_companies
+- name: details
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: country,
+    dest_port, diligence_annotations, remediations (each key defined as a dotted-path
+    leaf below).'
+  example: '{}'
+- name: evidence_key
+  type: string
+  description: Vendor-emitted field 'Evidence key'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_key
+- name: first_seen
+  type: string
+  description: Vendor-emitted field 'First seen'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_seen
+- name: impacts_risk_vector_details
+  type: string_long
+  description: Additional details payload emitted by Bitsight. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by Bitsight for this record.
+- name: last_seen
+  type: string
+  description: Vendor-emitted field 'Last seen'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_seen
+- name: pcap_id
+  type: string
+  description: Packet capture id (forensic evidence). Free-form text; may contain
+    whitespace and punctuation.
+  example: bit-11ad096c
+- name: remediation_history
+  type: string
+  description: Remediation history (JSON list). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_history
+- name: risk_category
+  type: string_short
+  description: Bitsight's category classifier for the event. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: access_control
+- name: risk_vector
+  type: string
+  description: BitSight risk vector (Spam/Botnet/Patching/...). Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_vector
+- name: risk_vector_label
+  type: string
+  description: Vendor-emitted field 'Risk vector label'. Free-form text; may contain
+    whitespace and punctuation.
+  example: auto-tagged
+- name: rolledup_observation_id
+  type: string_short
+  description: Opaque identifier emitted by Bitsight. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: bit-6bf696eb
+- name: severity
+  type: string
+  description: Event severity as classified by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: INFO
+- name: severity_category
+  type: string
+  description: Severity category (minor/moderate/material/severe). Free-form text;
+    may contain whitespace and punctuation.
+  example: access_control
+- name: temporary_id
+  type: string_short
+  description: Opaque identifier emitted by Bitsight. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: bit-d58c55ff
+- name: _alert_data.agent_hostname
+  type: host
+  description: Hostname or FQDN as reported by Bitsight. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: _alert_data.alert_description
+  type: string_long
+  description: Free-form human-readable description from Bitsight. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Bitsight.
+- name: _alert_data.alert_name
+  type: string
+  description: Human-readable name as displayed by Bitsight. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: _alert_data.alert_type
+  type: string_short
+  description: Type/category classifier emitted by Bitsight. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: details.country
+  type: country_code
+  description: Country (ISO 3166-1 alpha-2 code or descriptive label). ISO 3166-1
+    alpha-2 uppercase country code (e.g., US, DE, JP).
+  example: US
+- name: details.dest_port
+  type: integer_port
+  description: TCP/UDP destination port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: details.diligence_annotations.Status
+  type: string_short
+  description: Status code returned by Bitsight. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: details.diligence_annotations.annotation_tokens
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Details › diligence annotations › annotation
+    tokens'. Leaf of the 'details' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_tokens
+- name: details.diligence_annotations.transport
+  type: integer_port
+  description: Vendor-emitted field 'Details › diligence annotations › transport'.
+    Leaf of the 'details' composite. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: details.remediations
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Details › remediations'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_remediations
+use_cases:
+- CTEM
+how_to_use: |
+  ## Bitsight BitSight → Cortex XSIAM (dataset `bitsight_bitsight_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `bitsight_bitsight_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `Bitsight`
+    - **product**: `BitSight`
+
+    These normalize → `bitsight_bitsight_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.diligence_annotations.annotation_tokens`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~15 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.original_threat_name`, `xdm.alert.risks`, `xdm.alert.severity`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = bitsight_bitsight_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

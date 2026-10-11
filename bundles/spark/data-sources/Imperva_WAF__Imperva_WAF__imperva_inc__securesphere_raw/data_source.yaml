@@ -1,0 +1,128 @@
+schema_version: 1
+id: Imperva_WAF
+pack_name: Imperva_WAF
+rule_name: Imperva_WAF
+dataset_name: imperva_inc__securesphere_raw
+vendor: Imperva
+product: Imperva_WAF
+description: Use the Imperva WAF integration to manage IP groups and Web security policies in Imperva
+  WAF.
+categories:
+- Network Security
+version: 1.0.27
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNERTAwMDAiPkltcGVydmE8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: cefDeviceEventClassId
+  type: string_short
+  example: SQL_Injection
+  description: CEF signature id (header) -> xdm.event.original_event_type.
+- name: cefSeverity
+  type: integer
+  example: '7'
+  description: CEF severity (header) -> xdm.alert.severity.
+- name: cefDeviceVersion
+  type: string_short
+  example: '14.7'
+  description: CEF device version (header) -> xdm.observer.version.
+- name: cs1
+  type: string_short
+  example: BlockApp_Policy
+  description: Custom string 1 -> xdm.network.rule.
+- name: cs2
+  type: string_short
+  example: Web Application
+  description: Custom string 2 -> xdm.target.resource.type.
+- name: cs3
+  type: string_short
+  example: HTTP
+  description: Custom string 3 -> xdm.target.resource.sub_type.
+- name: cs4
+  type: string_short
+  example: payments-api
+  description: Custom string 4 -> xdm.target.application.name.
+- name: cs5
+  type: string_short
+  example: SQL Injection detected
+  description: Custom string 5 -> xdm.alert.name.
+- name: act
+  type: string_short
+  example: Blocked
+  description: Action taken -> xdm.observer.action.
+- name: src
+  type: ipv4
+  example: 203.0.113.44
+  description: Source IP -> xdm.source.ipv4/ipv6.
+- name: dst
+  type: ipv4
+  example: 10.4.2.9
+  description: Destination IP -> xdm.target.ipv4/ipv6.
+- name: spt
+  type: integer
+  example: 51344
+  description: Source port -> xdm.source.port.
+- name: dpt
+  type: integer
+  example: 443
+  description: Destination port -> xdm.target.port.
+- name: proto
+  type: integer
+  example: '6'
+  description: IP protocol number -> xdm.network.ip_protocol (6=TCP).
+- name: duser
+  type: string_short
+  example: svc_app
+  description: Destination user -> xdm.target.user.username.
+- name: cat
+  type: string_short
+  example: Alert
+  description: Event category -> xdm.event.type.
+use_cases:
+- WAF
+- Database
+how_to_use: |
+  ## Imperva WAF (SecureSphere) -> Cortex XSIAM (dataset `imperva_inc__securesphere_raw`)
+
+  Classic flat-CEF source. The modeling rule reads native CEF wire keys, so the
+  schema field NAMES are those keys (cs1-cs5, src, dst, spt, dpt, act, duser, cat,
+  cefDeviceEventClassId, cefSeverity, cefDeviceVersion) — not logical names.
+
+  Required CEF header (the broker derives the dataset from it):
+  - vendor: `Imperva Inc.`
+  - product: `SecureSphere`
+  Broker normalizes -> `imperva_inc__securesphere_raw`. Unconditional modeling rule (no gate).
+  Requires the Imperva_WAF content pack installed in XSIAM (binds the rule to the dataset).
+
+  Verify (wide >=7d window):
+      config timeframe = 30d | datamodel dataset = imperva_inc__securesphere_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,400 @@
+schema_version: 1
+id: SecureAuthIdentityPlatform
+pack_name: SecureAuthIdentityPlatform
+rule_name: SecureAuthIdentityPlatform
+dataset_name: secureauth_idp_raw
+vendor: SecureAuth
+product: SecureAuthIdentityPlatform
+description: The SecureAuth® Identity Platform is a flexible and adaptable identity
+  and access management solution that helps organizations prevent the misuse of credentials
+  and eliminate identity-related breaches.
+categories:
+- Identity and Access Management
+version: 1.0.4
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MTUuMTUwOCAxMTAuNzUxNSI+CiAgPHBhdGggZD0iTTU1LjM3NjgsMEMyNC43OTM3LDAsMCwyNC43OTE0LDAsNTUuMzc0N3MyNC43OTM3LDU1LjM3NjgsNTUuMzc2OCw1NS4zNzY4LDU1LjM3NDgtMjQuNzkxNyw1NS4zNzQ4LTU1LjM3NjhTODUuOTU5OSwwLDU1LjM3NjgsME04MS4xMTc2LDk5Ljk2MDVjLTcuOTMyOSw0LjU3OTMtMTYuNzM3Myw2LjkxOTctMjUuNjU4OSw2LjkxOTctNC40NzA4LDAtOC45NzI0LS41ODg0LTEzLjQwNzgtMS43NzYzLTQuOTcyOS0xLjMzNC05LjY0MDUtMy4zNjA0LTEzLjg5NjctNi4wMDE2bDkuNTY1My01LjUyMTVjLTMuMjU2My0xLjQ5NzYtNi4yODQ3LTMuMzk1Ny05LjAzLTUuNjQ3NmwtOC41OTY1LDQuOTYzOWMtMy42MTI0LTMuNDA2NS02Ljc0OTItNy4zNTk2LTkuMzAyLTExLjc3OTYtNi44NzU1LTExLjkxMDMtOC43MDI3LTI1Ljc4NDktNS4xNDMzLTM5LjA2NjgsMy41NTk0LTEzLjI4MTYsMTIuMDc4NC0yNC4zODQ1LDIzLjk4ODYtMzEuMjYsMTEuOTA4LTYuODc3NiwyNS43ODI4LTguNzAyNSwzOS4wNjQ1LTUuMTQzMiw1LjI1ODMsMS40MDkxLDEwLjE3MzcsMy41OTkxLDE0LjYyMjMsNi40NjM5bC05LjQ1MDMsNS40NTcyYzMuMTgzMiwxLjU0ODcsNi4xNDEsMy40ODY1LDguODE1NCw1Ljc2OTRsOC41NDU2LTQuOTMzMWMzLjM3MTMsMy4yNzg1LDYuMzExMiw3LjA0MzQsOC43MjY4LDExLjIyOSw2Ljg3NzYsMTEuOTEwMSw4LjcwMjcsMjUuNzgyNSw1LjE0MzMsMzkuMDY2NS0zLjU1OTQsMTMuMjgxOS0xMi4wNzYxLDI0LjM4NDgtMjMuOTg2MywzMS4yNiIgc3R5bGU9ImZpbGw6ICMxQTIyMzg7IHN0cm9rZS13aWR0aDogMHB4OyIvPgogIDxwYXRoIGQ9Ik03NS40NTgzLDU5LjI3OTJjLjMzNjItMS4yNjA4LjE2MzYtMi41NzctLjQ4ODktMy43MDc0LTEuMzQ3Mi0yLjMzMzktNC4zNDI1LTMuMTM3LTYuNjc2My0xLjc4OThsLTIxLjIwOCwxMi4yNTc2Yy0zLjMwNDksMS45MDctNy4xNTYzLDIuNDE1OC0xMC44NDM5LDEuNDI2OXMtNi43NjkyLTMuMzUzNi04LjY3ODItNi42NTg2Yy0zLjkzOTktNi44MjQ0LTEuNTkyOC0xNS41ODIzLDUuMjMxNy0xOS41MjIybDQxLjA3NzUtMjMuNzE2N2MtMi40MTM1LTEuMTc0Ny00Ljk1NTItMi4xMjc5LTcuNjA1NC0yLjgzODEtMy42MjM1LS45NzExLTcuMzA0NS0xLjQ1MTItMTAuOTU5LTEuNDUxMi03LjI5MTMsMC0xNC40ODc0LDEuOTExMy0yMC45NzEzLDUuNjU0My0yMC4wOTMsMTEuNjAyOC0yNy4wMDE2LDM3LjM4NzctMTUuNDAxLDU3LjQ4MDcsMi41Nzk0LDQuNDY2Miw1Ljg4NDMsOC4zNDQyLDkuNzUzNCwxMS41MTg1bDQ0LjQ5MDktMjUuNjg1M2MxLjEzMDQtLjY1MjQsMS45NDAxLTEuNzA3NywyLjI3ODYtMi45Njg4IiBzdHlsZT0iZmlsbDogIzFBMjIzODsgc3Ryb2tlLXdpZHRoOiAwcHg7Ii8+CiAgPHBhdGggZD0iTTc2LjQxNTQsOTEuODE1OWMyMC4wOTI5LTExLjYwMDMsMjcuMDAzNy0zNy4zODUyLDE1LjQwMS01Ny40ODA0LTIuNDM3OC00LjIyMS01LjUyNTktNy45MjE5LTkuMTI5Ni0xMC45OTY4bC00NS4xOTIyLDI2LjA5MDNjLTIuMzMxNSwxLjM0NzItMy4xMzQ2LDQuMzQyMi0xLjc4NzQsNi42NzYyLjY1MjUsMS4xMzA0LDEuNzA1NiwxLjk0LDIuOTY2NSwyLjI3ODYsMS4yNjMxLjMzODQsMi41Nzk0LjE2MzYsMy43MDk4LS40ODlsMjEuMjAzNi0xMi4yNTUyYzYuODI4OS0zLjk0MiwxNS41ODY4LTEuNTk1MSwxOS41MjY2LDUuMjI5NiwxLjkwOTIsMy4zMDQ3LDIuNDE1OCw3LjE1NjMsMS40MjY5LDEwLjg0MzktLjk4NjYsMy42ODc2LTMuMzUxNSw2Ljc2OTEtNi42NTg2LDguNjc4MmwtNDAuMTYzOSwyMy4xODhjMi4xNjEzLjk5NTQsNC40MjIyLDEuODEzOSw2Ljc2NywyLjQ0MiwxMC44NTUsMi45MDkxLDIyLjE5NjgsMS40MTU4LDMxLjkzMDMtNC4yMDUzIiBzdHlsZT0iZmlsbDogIzFBMjIzODsgc3Ryb2tlLXdpZHRoOiAwcHg7Ii8+CiAgPHBhdGggZD0iTTEzNy41MTYzLDcxLjQ5NTVjLTYuNzcxNSwwLTEyLjA2MjktMy4zNjIzLTEyLjI4NjQtOS43MjloOC4xNjA2Yy4yMjM1LDIuNDIwMSwxLjc0OTksMy41ODU4LDMuOTAyMywzLjU4NTgsMi4yNDA5LDAsMy42NzY2LTEuMTIxNSwzLjY3NjYtMi45NTk5LDAtNS44MjkxLTE1LjczOTUtMi42ODk5LTE1LjY0ODctMTMuODU0NiwwLTUuOTY0MSw0Ljg4NjYtOS4yODIzLDExLjQ3ODgtOS4yODIzLDYuODU5OSwwLDExLjQ3ODgsMy40MDY4LDExLjc5MjksOS40MTczaC04LjI5NTVjLS4xMzQ5LTIuMDE5OS0xLjU3MDUtMy4yMjk5LTMuNjMyMy0zLjI3NDItMS44MzgzLS4wNDQtMy4yMjc2Ljg5Ni0zLjIyNzYsMi44NjkyLDAsNS40NzA3LDE1LjU1OCwzLjAwNDIsMTUuNTU4LDEzLjU0MDgsMCw1LjI5MzYtNC4xMjU1LDkuNjg2OC0xMS40Nzg3LDkuNjg2OCIgc3R5bGU9ImZpbGw6ICMxQTIyMzg7IHN0cm9rZS13aWR0aDogMHB4OyIvPgogIDxwb2x5Z29uIHBvaW50cz0iMTc0LjI4ODcgNDUuODQ2MSAxNjIuNjc0OCA0NS44NDYxIDE2Mi42NzQ4IDUyLjIxMjggMTcyLjk0MzYgNTIuMjEyOCAxNzIuOTQzNiA1OC4xMzI2IDE2Mi42NzQ4IDU4LjEzMjYgMTYyLjY3NDggNjUuMDM4OCAxNzQuMjg4NyA2NS4wMzg4IDE3NC4yODg3IDcxLjE4MTkgMTU1LjAwNzQgNzEuMTgxOSAxNTUuMDA3NCAzOS43MDU0IDE3NC4yODg3IDM5LjcwNTQgMTc0LjI4ODcgNDUuODQ2MSIgc3R5bGU9ImZpbGw6ICMxQTIyMzg7IHN0cm9rZS13aWR0aDogMHB4OyIvPgogIDxwYXRoIGQ9Ik0xOTUuMDk3LDM5LjM0NDljNy40ODc5LDAsMTMuMTM3OSw0LjIxNjQsMTQuOTMyMSwxMS4wM2gtOC40MzA2Yy0xLjMwMDgtMi42OTAxLTMuNjc2Ni00LjAzNDktNi41OTIyLTQuMDM0OS00LjcwNzYsMC03LjkzNTEsMy40OTczLTcuOTM1MSw5LjA1NjZzMy4yMjc1LDkuMDU4Nyw3LjkzNTEsOS4wNTg3YzIuOTE1NiwwLDUuMjkxNC0xLjM0NTEsNi41OTIyLTQuMDM0OWg4LjQzMDZjLTEuNzk0MSw2LjgxNTUtNy40NDQyLDEwLjk4NTQtMTQuOTMyMSwxMC45ODU0LTkuMjgyMywwLTE1LjgyOC02LjU5MjItMTUuODI4LTE2LjAwOTJzNi41NDU3LTE2LjA1MTYsMTUuODI4LTE2LjA1MTYiIHN0eWxlPSJmaWxsOiAjMUEyMjM4OyBzdHJva2Utd2lkdGg6IDBweDsiLz4KICA8cGF0aCBkPSJNMjE1LjkwNjUsMzkuNzA0MWg3LjY2NzJ2MTguODMyMmMwLDMuNzIzLDEuODM4NCw1Ljg3MzMsNS40NzA3LDUuODczM3M1LjU2MTItMi4xNTAzLDUuNTYxMi01Ljg3MzN2LTE4LjgzMjJoNy42Njc1djE4Ljc4NzljMCw4LjcwMDQtNi4wOTg4LDEzLjAwMzItMTMuMzYxNSwxMy4wMDMyLTcuMzA4OSwwLTEzLjAwNTEtNC4zMDI4LTEzLjAwNTEtMTMuMDAzMnYtMTguNzg3OVoiIHN0eWxlPSJmaWxsOiAjMUEyMjM4OyBzdHJva2Utd2lkdGg6IDBweDsiLz4KICA8cGF0aCBkPSJNMjYxLjgyODIsMzkuNzA0NmM3LjcxMTgsMCwxMS41Njc0LDQuNDM3NSwxMS41Njc0LDkuOTA4MywwLDMuOTQ2My0yLjE1LDcuNjY5Ni02Ljk5NDgsOS4xMDNsNy4yNjQ5LDEyLjQ2NTVoLTguNjUzOWwtNi41NDgyLTExLjg4MzloLTEuODM4MnYxMS44ODM5aC03LjY2NzV2LTMxLjQ3NjhoMTIuODcwM1pNMjYxLjM3OTQsNDYuMDcxaC00Ljc1NHY3LjgwMjVoNC43NTRjMi44NjkyLDAsNC4yMTQtMS40ODAxLDQuMjE0LTMuOTQ2NiwwLTIuMzMxNS0xLjM0NDgtMy44NTU5LTQuMjE0LTMuODU1OSIgc3R5bGU9ImZpbGw6ICMxQTIyMzg7IHN0cm9rZS13aWR0aDogMHB4OyIvPgogIDxwb2x5Z29uIHBvaW50cz0iMjk4Ljc3OTggNDUuODQ2MSAyODcuMTY1OSA0NS44NDYxIDI4Ny4xNjU5IDUyLjIxMjggMjk3LjQzNDcgNTIuMjEyOCAyOTcuNDM0NyA1OC4xMzI2IDI4Ny4xNjU5IDU4LjEzMjYgMjg3LjE2NTkgNjUuMDM4OCAyOTguNzc5OCA2NS4wMzg4IDI5OC43Nzk4IDcxLjE4MTkgMjc5LjQ5ODQgNzEuMTgxOSAyNzkuNDk4NCAzOS43MDU0IDI5OC43Nzk4IDM5LjcwNTQgMjk4Ljc3OTggNDUuODQ2MSIgc3R5bGU9ImZpbGw6ICMxQTIyMzg7IHN0cm9rZS13aWR0aDogMHB4OyIvPgogIDxwYXRoIGQ9Ik0zMjQuMjA1OCw2NC4yMzE3aC0xMy42MzEzbC0yLjUxMDgsNi45NDg0aC00LjMwNWwxMS4yOTk4LTMxLjA3NDJoNC43MDc2bDExLjI1NTUsMzEuMDc0MmgtNC4zMDVsLTIuNTEwOC02Ljk0ODRaTTMxNy4zOTAzLDQ1LjEyOTdsLTUuNjUsMTUuNzgzOGgxMS4yOTk4bC01LjY0OTgtMTUuNzgzOFoiIHN0eWxlPSJmaWxsOiAjMUEyMjM4OyBzdHJva2Utd2lkdGg6IDBweDsiLz4KICA8cGF0aCBkPSJNMzMzLjg1MDIsMzkuOTI3N2g0LjA3OTJ2MTkuNzc0N2MwLDUuNzQwNSwzLjA5NDYsOC4yMDQ5LDcuNzEzNyw4LjIwNDlzNy42Njc1LTIuNDY0NCw3LjY2NzUtOC4yMDQ5di0xOS43NzQ3aDQuMDgxNHYxOS43MzA0YzAsOC4xMTYzLTUuMzM1NywxMS44MzcxLTExLjc5MzEsMTEuODM3MXMtMTEuNzQ4Ni0zLjcyMDktMTEuNzQ4Ni0xMS44Mzcxdi0xOS43MzA0WiIgc3R5bGU9ImZpbGw6ICMxQTIyMzg7IHN0cm9rZS13aWR0aDogMHB4OyIvPgogIDxwb2x5Z29uIHBvaW50cz0iMzYzLjU4MjggMzkuOTI3NyAzODQuNzQ4NyAzOS45Mjc3IDM4NC43NDg3IDQzLjI0NTkgMzc2LjIyNzQgNDMuMjQ1OSAzNzYuMjI3NCA3MS4xODExIDM3Mi4xNDgyIDcxLjE4MTEgMzcyLjE0ODIgNDMuMjQ1OSAzNjMuNTgyOCA0My4yNDU5IDM2My41ODI4IDM5LjkyNzciIHN0eWxlPSJmaWxsOiAjMUEyMjM4OyBzdHJva2Utd2lkdGg6IDBweDsiLz4KICA8cG9seWdvbiBwb2ludHM9IjQxMS4wNzE2IDU3LjAxMTcgMzk1LjE1MjggNTcuMDExNyAzOTUuMTUyOCA3MS4xODA2IDM5MS4wNzM2IDcxLjE4MDYgMzkxLjA3MzYgMzkuOTI3NCAzOTUuMTUyOCAzOS45Mjc0IDM5NS4xNTI4IDUzLjY0OTQgNDExLjA3MTYgNTMuNjQ5NCA0MTEuMDcxNiAzOS45Mjc0IDQxNS4xNTA4IDM5LjkyNzQgNDE1LjE1MDggNzEuMTgwNiA0MTEuMDcxNiA3MS4xODA2IDQxMS4wNzE2IDU3LjAxMTciIHN0eWxlPSJmaWxsOiAjMUEyMjM4OyBzdHJva2Utd2lkdGg6IDBweDsiLz4KPC9zdmc+
+  source: secureauth.com/assets/secureauth-logo-white-JQccCguH.svg (recolored white→#1A2238
+    for visibility on near-white card panel)
+  license: Vendor trademark; recoloration is a derivative for in-product display
+  fidelity: branded-recolored
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'secureauth: secureauthidentityplatform=SecureAuthIdentityPlatform action=allow user=jdoe'
+- name: Success
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: 'True'
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: allowed_tokens
+  type: string
+  description: Allowed tokens. Free-form text; may contain whitespace and punctuation.
+  example: sample_tokens
+- name: api_response_http_status_code
+  type: string
+  description: Api response http status code. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: appliance_id
+  type: string_short
+  description: Intermediate host device ID. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: appliance_machine_name
+  type: mac
+  description: Intermediate host hostname. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: appliance_name
+  type: host
+  description: Intermediate host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: auth_reg_method
+  type: string
+  description: Auth mfa method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: auth_reg_method_info
+  type: string
+  description: Auth mfa client details. Free-form text; may contain whitespace and
+    punctuation.
+  example: see message
+- name: browser_session_id
+  type: string_short
+  description: Network session ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: checked_ip
+  type: ipv4
+  description: Checked ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: comment
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: destination_site_url
+  type: url
+  description: Destination site url. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: duration_components
+  type: string
+  description: Duration components. Free-form text; may contain whitespace and punctuation.
+  example: sample_components
+- name: event_id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: event_type
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: hashed_unique_user_id
+  type: string_short
+  description: Source user identifier. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: hashed_user_id
+  type: string_short
+  description: Hashed user id. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: hostname
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: hour_part_seconds
+  type: string
+  description: Hour part seconds. Free-form text; may contain whitespace and punctuation.
+  example: sample_seconds
+- name: hours_minutes_seconds
+  type: string
+  description: Hours minutes seconds. Free-form text; may contain whitespace and punctuation.
+  example: sample_seconds
+- name: http_response_code
+  type: integer
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: '200'
+- name: is_status_code_successful
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: is_successful
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: minute_part_seconds
+  type: string
+  description: Minute part seconds. Free-form text; may contain whitespace and punctuation.
+  example: sample_seconds
+- name: ms
+  type: integer
+  description: Ms. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: passed
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: product_type
+  type: string
+  description: Auth method. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: realm
+  type: string
+  description: Destination domain. Free-form text; may contain whitespace and punctuation.
+  example: sample_realm
+- name: reported_ip
+  type: ipv4
+  description: Reported ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: request_duration
+  type: integer
+  description: Request duration. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: request_id
+  type: string_short
+  description: Session context id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: response_time
+  type: datetime
+  description: Response time. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: saml_consumer_site_url
+  type: url
+  description: Saml consumer site url. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: saml_target_url
+  type: url
+  description: Saml target url. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: seconds
+  type: string
+  description: Seconds. Free-form text; may contain whitespace and punctuation.
+  example: sample_seconds
+- name: src_ipv4_addresses
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv6_addresses
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: status_code
+  type: string
+  description: Status code. Free-form text; may contain whitespace and punctuation.
+  example: success
+- name: success
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: syslog_app_name
+  type: string
+  description: Syslog app name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: syslog_client_machine
+  type: mac
+  description: Syslog client machine. MAC address in colon-separated lowercase hex
+    (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: syslog_headers
+  type: string
+  description: Syslog headers. Free-form text; may contain whitespace and punctuation.
+  example: 'Content-Type: application/json'
+- name: syslog_msg
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: syslog_msg_id
+  type: string_short
+  description: Syslog msg id. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: syslog_priority
+  type: string
+  description: Syslog priority. Free-form text; may contain whitespace and punctuation.
+  example: INFO
+- name: syslog_process_id
+  type: string_short
+  description: Intermediate process PID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: syslog_severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: syslog_structured_data
+  type: string
+  description: Syslog structured data. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_data
+- name: target_url
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: total_request_duration_ms
+  type: integer
+  description: Event duration. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: trx_result
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: user_agent
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: user_domain
+  type: domain
+  description: Source user domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: user_host_address
+  type: host
+  description: User host address. Hostname or fully-qualified domain name (RFC 1035
+    dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: user_id
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: validation
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: version
+  type: string
+  description: Intermediate agent version. Free-form text; may contain whitespace
+    and punctuation.
+  example: 1.0.0
+- name: ws_trust_username
+  type: string
+  description: Ws trust username. Free-form text; may contain whitespace and punctuation.
+  example: jdoe
+- name: x_ms_client_application
+  type: string
+  description: Network HTTP header. Free-form text; may contain whitespace and punctuation.
+  example: Salesforce
+- name: x_real_ip
+  type: ipv4
+  description: X real ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: xff_ip
+  type: ipv4
+  description: Xff ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: xff_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+use_cases:
+- Identity
+- MFA
+how_to_use: |
+  ## secureauth idp → Cortex XSIAM (dataset `secureauth_idp_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `secureauth` / product `idp`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `secureauth_idp_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `secureauth`
+    - **product**: `idp`
+
+    These normalize → `secureauth_idp_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~34 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.auth.auth_method`, `xdm.auth.mfa.client_details`, `xdm.auth.mfa.method`, `xdm.event.description`, `xdm.event.duration`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `secureauth`, Product = `idp`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = secureauth_idp_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

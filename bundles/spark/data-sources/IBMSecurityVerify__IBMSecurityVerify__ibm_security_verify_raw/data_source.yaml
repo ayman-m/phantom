@@ -1,0 +1,338 @@
+schema_version: 1
+id: IBMSecurityVerify
+pack_name: IBMSecurityVerify
+rule_name: IBMSecurityVerify
+dataset_name: ibm_security_verify_raw
+vendor: IBM
+product: IBMSecurityVerify
+description: Centralize and streamline your identity and access management processes
+  with IBM Security Verify. This content pack provides comprehensive tools and integrations
+  to manage and protect user identities, enforce security policies, and ensure compliance
+  across your organization. Leverage automated workflows and API integrations to enhance
+  your security posture and simplify identity governance and administration.
+categories:
+- Analytics & SIEM
+version: 1.0.11
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMjA1cHgiIHZpZXdCb3g9IjAgMCA1MTIgMjA1IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDxnPgogICAgICAgIDxwYXRoIGQ9Ik05OS41NTU1MiwxOTAuMDYwNTc5IEw5OS41NTU1MiwyMDQuMjgyODE5IEwwLDIwNC4yODI4MTkgTDAsMTkwLjA2MDU3OSBMOTkuNTU1NTIsMTkwLjA2MDU3OSBaIE0yNTUuMTM4NCwxOTAuMDU5OTM5IEMyNDUuMTUxNjcxLDE5OS4yNDEwNjggMjMyLjA3MDU5NiwyMDQuMzE5NDkgMjE4LjUwNDk2LDIwNC4yODIwMTkgTDIxOC41MDQ5NiwyMDQuMjgyMDE5IEwxMTMuNzc3OTIsMjA0LjE0MTM3OSBMMTEzLjc3NzkyLDE5MC4wNTk5MzkgWiBNNDAzLjE2NjQsMTkwLjA1OTc3OSBMMzk4LjIsMjA0LjI4MjE3OSBMMzkzLjI3ODQsMTkwLjA1OTc3OSBMNDAzLjE2NjQsMTkwLjA1OTc3OSBaIE0zNTUuNTU1ODQsMTkwLjA2MDU3OSBMMzU1LjU1NTg0LDIwNC4yODI4MTkgTDI4NC40NDQ2NCwyMDQuMjgyODE5IEwyODQuNDQ0NjQsMTkwLjA2MDU3OSBMMzU1LjU1NTg0LDE5MC4wNjA1NzkgWiBNNTEyLDE5MC4wNjA1NzkgTDUxMiwyMDQuMjgyODE5IEw0NDAuODg4OCwyMDQuMjgyODE5IEw0NDAuODg4OCwxOTAuMDYwNTc5IEw1MTIsMTkwLjA2MDU3OSBaIE0yNzEuMjQ2NzIsMTYyLjkwODg5OSBDMjcwLjAyNjM2MiwxNjcuODk3ODcgMjY4LjA5OTcwOCwxNzIuNjg2OTczIDI2NS41MjUxMiwxNzcuMTMxMTM5IEwyNjUuNTI1MTIsMTc3LjEzMTEzOSBMMTEzLjc3NzkyLDE3Ny4xMzExMzkgTDExMy43Nzc5MiwxNjIuOTA4ODk5IFogTTQxMi42OTc2LDE2Mi45MDkzNzkgTDQwNy43MDU2LDE3Ny4xMzE3NzkgTDM4OC43MzkyLDE3Ny4xMzE3NzkgTDM4My43NDcyLDE2Mi45MDkzNzkgTDQxMi42OTc2LDE2Mi45MDkzNzkgWiBNMzU1LjU1NTg0LDE2Mi45MDg4OTkgTDM1NS41NTU4NCwxNzcuMTMxMTM5IEwyODQuNDQ0NjQsMTc3LjEzMTEzOSBMMjg0LjQ0NDY0LDE2Mi45MDg4OTkgTDM1NS41NTU4NCwxNjIuOTA4ODk5IFogTTUxMiwxNjIuOTA4ODk5IEw1MTIsMTc3LjEzMTEzOSBMNDQwLjg4ODgsMTc3LjEzMTEzOSBMNDQwLjg4ODgsMTYyLjkwODg5OSBMNTEyLDE2Mi45MDg4OTkgWiBNOTkuNTU1NTIsMTYyLjkwODg5OSBMOTkuNTU1NTIsMTc3LjEzMTEzOSBMMCwxNzcuMTMxMTM5IEwwLDE2Mi45MDg4OTkgTDk5LjU1NTUyLDE2Mi45MDg4OTkgWiBNNzEuMTExMDQsMTM1Ljc1NzM3OSBMNzEuMTExMDQsMTQ5Ljk3OTc3OSBMMjguNDQ0MzIsMTQ5Ljk3OTc3OSBMMjguNDQ0MzIsMTM1Ljc1NzM3OSBMNzEuMTExMDQsMTM1Ljc1NzM3OSBaIE0xODQuODg4OTYsMTM1Ljc1NzM3OSBMMTg0Ljg4ODk2LDE0OS45Nzk3NzkgTDE0Mi4yMjIyNCwxNDkuOTc5Nzc5IEwxNDIuMjIyMjQsMTM1Ljc1NzM3OSBMMTg0Ljg4ODk2LDEzNS43NTczNzkgWiBNMjcwLjkwNTc2LDEzNS43NTczNzkgQzI3Mi4xNjYwNDEsMTQwLjM5MzE5MiAyNzIuODA1NzU1LDE0NS4xNzU3MTEgMjcyLjgwODE2LDE0OS45Nzk3NzkgTDI3Mi44MDgxNiwxNDkuOTc5Nzc5IEwyMjQuOTY5NzYsMTQ5Ljk3OTc3OSBMMjI0Ljk2OTc2LDEzNS43NTczNzkgWiBNNDIyLjIzMDQsMTM1Ljc1NzM3OSBMNDE3LjIzNjgsMTQ5Ljk3OTc3OSBMMzc5LjIwOCwxNDkuOTc5Nzc5IEwzNzQuMjE0NCwxMzUuNzU3Mzc5IEw0MjIuMjMwNCwxMzUuNzU3Mzc5IFogTTM1NS41NTU2OCwxMzUuNzU3Mzc5IEwzNTUuNTU1NjgsMTQ5Ljk3OTc3OSBMMzEyLjg4ODk2LDE0OS45Nzk3NzkgTDMxMi44ODg5NiwxMzUuNzU3Mzc5IEwzNTUuNTU1NjgsMTM1Ljc1NzM3OSBaIE00ODMuNTU1NTIsMTM1Ljc1NzM3OSBMNDgzLjU1NTUyLDE0OS45Nzk3NzkgTDQ0MC44ODg4LDE0OS45Nzk3NzkgTDQ0MC44ODg4LDEzNS43NTczNzkgTDQ4My41NTU1MiwxMzUuNzU3Mzc5IFogTTcxLjExMTA0LDEwOC42MDYwMTkgTDcxLjExMTA0LDEyMi44MjgyNTkgTDI4LjQ0NDMyLDEyMi44MjgyNTkgTDI4LjQ0NDMyLDEwOC42MDYwMTkgTDcxLjExMTA0LDEwOC42MDYwMTkgWiBNMzU1LjU1NTY4LDEwOC42MDYwMTkgTDM1NS41NTU2OCwxMjIuODI4MjU5IEwzMTIuODg4OTYsMTIyLjgyODI1OSBMMzEyLjg4ODk2LDEwOC42MDYwMTkgTDM1NS41NTU2OCwxMDguNjA2MDE5IFogTTQ4My41NTU1MiwxMDguNjA2MDE5IEw0ODMuNTU1NTIsMTIyLjgyODI1OSBMNDQwLjg4ODgsMTIyLjgyODI1OSBMNDQwLjg4ODgsMTA4LjYwNjAxOSBMNDgzLjU1NTUyLDEwOC42MDYwMTkgWiBNMjUzLjY0NTc2LDEwOC42MDUzNzkgQzI1OC4zODI0MjEsMTEyLjYzNDc5NSAyNjIuMzk0ODA3LDExNy40NDQ4NzQgMjY1LjUwOTI4LDEyMi44Mjc0NTkgTDI2NS41MDkyOCwxMjIuODI3NDU5IEwxNDIuMjIxNzYsMTIyLjgyNzQ1OSBMMTQyLjIyMTc2LDEwOC42MDUzNzkgWiBNNDMxLjc2MTYsMTA4LjYwNTM3OSBMNDI2Ljc2OTYsMTIyLjgyNzc3OSBMMzY5LjY3NTIsMTIyLjgyNzc3OSBMMzY0LjY4MzIsMTA4LjYwNTM3OSBMNDMxLjc2MTYsMTA4LjYwNTM3OSBaIE0zOTQuMjI0LDgxLjQ1NDk3ODYgTDM5OC4yMjI0LDkyLjk1MDk3ODYgTDQwMi4yMTkyLDgxLjQ1NDk3ODYgTDQ4My41NTUyLDgxLjQ1NDk3ODYgTDQ4My41NTUyLDk1LjY3NzM3ODYgTDQ0MC44ODk2LDk1LjY3NzM3ODYgTDQ0MC44ODk2LDgyLjYwODU3ODYgTDQzNi4zMDA4LDk1LjY3NzM3ODYgTDM2MC4xNDQsOTUuNjc3Mzc4NiBMMzU1LjU1NTIsODIuNjA2OTc4NiBMMzU1LjU1NTIsOTUuNjc3Mzc4NiBMMzEyLjg4OTYsOTUuNjc3Mzc4NiBMMzEyLjg4OTYsODEuNDU0OTc4NiBMMzk0LjIyNCw4MS40NTQ5Nzg2IFogTTE0Mi4yMjIyNCw4MS40NTQzMzg2IEwyNjUuNTEwMjQsODEuNDU1MTM4NiBDMjYyLjM5NTU4Niw4Ni44Mzc3ODE2IDI1OC4zODMwNDIsOTEuNjQ3OTA5OSAyNTMuNjQ2MjQsOTUuNjc3Mzc4NiBMMjUzLjY0NjI0LDk1LjY3NzM3ODYgTDE0Mi4yMjIyNCw5NS42NzczNzg2IEwxNDIuMjIyMjQsODEuNDU0MzM4NiBaIE03MS4xMTEwNCw4MS40NTQzMzg2IEw3MS4xMTEwNCw5NS42NzY1Nzg2IEwyOC40NDQzMiw5NS42NzY1Nzg2IEwyOC40NDQzMiw4MS40NTQzMzg2IEw3MS4xMTEwNCw4MS40NTQzMzg2IFogTTcxLjExMTA0LDU0LjMwMjk3ODYgTDcxLjExMTA0LDY4LjUyNTIxODYgTDI4LjQ0NDMyLDY4LjUyNTIxODYgTDI4LjQ0NDMyLDU0LjMwMjk3ODYgTDcxLjExMTA0LDU0LjMwMjk3ODYgWiBNMTg0Ljg4ODk2LDU0LjMwMjk3ODYgTDE4NC44ODg5Niw2OC41MjUyMTg2IEwxNDIuMjIyMjQsNjguNTI1MjE4NiBMMTQyLjIyMjI0LDU0LjMwMjk3ODYgTDE4NC44ODg5Niw1NC4zMDI5Nzg2IFogTTI3Mi44MDgxNiw1NC4zMDMxMzg2IEMyNzIuODA1NzMzLDU5LjEwNzE1MjIgMjcyLjE2NjAxOSw2My44ODk2MTU1IDI3MC45MDU3Niw2OC41MjUzNzg2IEwyNzAuOTA1NzYsNjguNTI1Mzc4NiBMMjI0Ljk2OTc2LDY4LjUyNTM3ODYgTDIyNC45Njk3Niw1NC4zMDMxMzg2IFogTTM4NC43ODI0LDU0LjMwMjk3ODYgTDM4OS43MjgsNjguNTI1Mzc4NiBMMzEyLjg4OTYsNjguNTI1Mzc4NiBMMzEyLjg4OTYsNTQuMzAyOTc4NiBMMzg0Ljc4MjQsNTQuMzAyOTc4NiBaIE00ODMuNTU1Miw1NC4zMDI5Nzg2IEw0ODMuNTU1Miw2OC41MjUzNzg2IEw0MDYuNzE2OCw2OC41MjUzNzg2IEw0MTEuNjYyNCw1NC4zMDI5Nzg2IEw0ODMuNTU1Miw1NC4zMDI5Nzg2IFogTTk5LjU1NTUyLDI3LjE1MTQ1ODYgTDk5LjU1NTUyLDQxLjM3MzY5ODYgTDAsNDEuMzczNjk4NiBMMCwyNy4xNTE0NTg2IEw5OS41NTU1MiwyNy4xNTE0NTg2IFogTTI2NS41MjUxMiwyNy4xNTE0NTg2IEMyNjguMDk5NjI3LDMxLjU5NTU1MDUgMjcwLjAyNjI3NiwzNi4zODQ1MzU0IDI3MS4yNDY3Miw0MS4zNzMzNzg2IEwyNzEuMjQ2NzIsNDEuMzczMzc4NiBMMTEzLjc3NzkyLDQxLjM3MzM3ODYgTDExMy43Nzc5MiwyNy4xNTE0NTg2IFogTTUxMiwyNy4xNTA5Nzg2IEw1MTIsNDEuMzczMzc4NiBMNDE2LjE1ODQsNDEuMzczMzc4NiBMNDIxLjEwNCwyNy4xNTA5Nzg2IEw1MTIsMjcuMTUwOTc4NiBaIE0zNzUuMzQwOCwyNy4xNTA5Nzg2IEwzODAuMjg2NCw0MS4zNzMzNzg2IEwyODQuNDQ0OCw0MS4zNzMzNzg2IEwyODQuNDQ0OCwyNy4xNTA5Nzg2IEwzNzUuMzQwOCwyNy4xNTA5Nzg2IFogTTk5LjU1NTUyLDkuODU3MTY0MTllLTA1IEw5OS41NTU1MiwxNC4yMjIzMzg2IEwwLDE0LjIyMjMzODYgTDAsOS44NTcxNjQxOWUtMDUgTDk5LjU1NTUyLDkuODU3MTY0MTllLTA1IFogTTIxOC41MDQ5Niw0LjkxNTI5MjI2ZS0wNSBDMjMyLjA2Njg4NiwtMC4wMTgyMjE0MDM5IDI0NS4xNDEwODcsNS4wNTc1OTkzNyAyNTUuMTM3OTIsMTQuMjIyMTc4NiBMMjU1LjEzNzkyLDE0LjIyMjE3ODYgTDExMy43Nzc5MiwxNC4yMjIxNzg2IEwxMTMuNzc3OTIsNC45MTUyOTIyNmUtMDUgWiBNNTEyLDAuMDAwNTc4NTcxNjQyIEw1MTIsMTQuMjIyOTc4NiBMNDI1LjYsMTQuMjIyOTc4NiBMNDMwLjU0NTYsMC4wMDA1Nzg1NzE2NDIgTDUxMiwwLjAwMDU3ODU3MTY0MiBaIE0zNjUuODk5MiwwLjAwMDU3ODU3MTY0MiBMMzcwLjg0NDgsMTQuMjIyOTc4NiBMMjg0LjQ0NDgsMTQuMjIyOTc4NiBMMjg0LjQ0NDgsMC4wMDA1Nzg1NzE2NDIgTDM2NS44OTkyLDAuMDAwNTc4NTcxNjQyIFoiIGZpbGw9IiMwMDAwMDAiPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: data
+  type: json
+  description: — see leaf entries for nested paths. JSON object with 42 keys; full
+    key list defined as dotted-path leaves below.
+  example: '{}'
+- name: event_type
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: geoip
+  type: string
+  description: Vendor-emitted field 'Geoip'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_geoip
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by IBM. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: ibm-c947d153
+- name: servicename
+  type: string
+  description: Vendor-emitted field 'Servicename'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sshd
+- name: tenantid
+  type: string
+  description: Vendor-emitted field 'Tenantid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: tenant-bf098937
+- name: tenantname
+  type: string
+  description: Vendor-emitted field 'Tenantname'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_tenantname
+- name: data.action
+  type: string_short
+  description: Action taken by IBM's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: data.applicationid
+  type: string
+  description: Vendor-emitted field 'Data › applicationid'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_applicationid
+- name: data.applicationname
+  type: string
+  description: Vendor-emitted field 'Data › applicationname'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: Salesforce
+- name: data.approver
+  type: string
+  description: Vendor-emitted field 'Data › approver'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_approver
+- name: data.approver_username
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: data.beneficiary
+  type: string
+  description: Vendor-emitted field 'Data › beneficiary'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_beneficiary
+- name: data.beneficiary_username
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: data.cause
+  type: string
+  description: Vendor-emitted field 'Data › cause'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: normal_operation
+- name: data.deviceid
+  type: string
+  description: Vendor-emitted field 'Data › deviceid'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: dev-1fb6a47a
+- name: data.devicetype
+  type: string
+  description: Vendor-emitted field 'Data › devicetype'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_devicetype
+- name: data.dict_op
+  type: string
+  description: Vendor-emitted field 'Data › dict op'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: create
+- name: data.entitlement_name
+  type: string
+  description: Human-readable name as displayed by IBM. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: data.entitlement_rights
+  type: string
+  description: Vendor-emitted field 'Data › entitlement rights'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_rights
+- name: data.entitlement_type
+  type: string_short
+  description: Type/category classifier emitted by IBM. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: data.entitlementcategory
+  type: string
+  description: Vendor-emitted field 'Data › entitlementcategory'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_entitlementcateg
+- name: data.entitlementid
+  type: string
+  description: Vendor-emitted field 'Data › entitlementid'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_entitlementid
+- name: data.entitlementname
+  type: string
+  description: Vendor-emitted field 'Data › entitlementname'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_entitlementname
+- name: data.entitlements
+  type: string
+  description: Vendor-emitted field 'Data › entitlements'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_entitlements
+- name: data.entitlementsubtype
+  type: string
+  description: Vendor-emitted field 'Data › entitlementsubtype'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_entitlementsubty
+- name: data.entitlementtype
+  type: string
+  description: Vendor-emitted field 'Data › entitlementtype'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_entitlementtype
+- name: data.logoutresultdetail
+  type: string
+  description: Vendor-emitted field 'Data › logoutresultdetail'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_logoutresultdeta
+- name: data.messageid
+  type: string
+  description: Vendor-emitted field 'Data › messageid'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: msg-1295f47e-144
+- name: data.mfadevice
+  type: string
+  description: Vendor-emitted field 'Data › mfadevice'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_mfadevice
+- name: data.mfamethod
+  type: string
+  description: Vendor-emitted field 'Data › mfamethod'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_mfamethod
+- name: data.mfaresult
+  type: string
+  description: Vendor-emitted field 'Data › mfaresult'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_mfaresult
+- name: data.modified
+  type: string
+  description: Vendor-emitted field 'Data › modified'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_modified
+- name: data.origin
+  type: string
+  description: Vendor-emitted field 'Data › origin'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_origin
+- name: data.performedby
+  type: string
+  description: Vendor-emitted field 'Data › performedby'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_performedby
+- name: data.performedby_clientname
+  type: string
+  description: Vendor-emitted field 'Data › performedby clientname'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_clientname
+- name: data.performedby_username
+  type: user
+  description: (and 3 more). Leaf of the 'data' composite. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName depending on the source; no domain
+    prefix unless the vendor emits one.
+  example: jsmith
+- name: data.request
+  type: string
+  description: Vendor-emitted field 'Data › request'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_request
+- name: data.requestor
+  type: string
+  description: Vendor-emitted field 'Data › requestor'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_requestor
+- name: data.requestor_username
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jdoe
+- name: data.resource
+  type: string
+  description: Vendor-emitted field 'Data › resource'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_resource
+- name: data.result
+  type: string_short
+  description: Result string emitted by IBM. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: data.sourcetype
+  type: string
+  description: Vendor-emitted field 'Data › sourcetype'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_sourcetype
+- name: data.status
+  type: string_short
+  description: Status code returned by IBM. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: data.subject
+  type: string
+  description: Subject line — typically email subject or event summary. Free-form
+    text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: data.subtype
+  type: string
+  description: Vendor-emitted field 'Data › subtype'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: data.userid
+  type: string
+  description: Vendor-emitted field 'Data › userid'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: usr-8903a550
+- name: data.username
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: data.usersessionid
+  type: string
+  description: Vendor-emitted field 'Data › usersessionid'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sess-5f746fab-ee6
+use_cases:
+- Database
+- OS
+how_to_use: |
+  ## ibm security verify → Cortex XSIAM (dataset `ibm_security_verify_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `ibm_security_verify_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `ibm`
+    - **product**: `security verify`
+
+    These normalize → `ibm_security_verify_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `data -> origin`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `event_type = "management"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~42 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.auth_method`, `xdm.auth.mfa.client_details`, `xdm.auth.mfa.method`, `xdm.auth.service`, `xdm.event.description`, `xdm.event.id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = ibm_security_verify_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

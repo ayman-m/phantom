@@ -1,0 +1,354 @@
+schema_version: 1
+id: Claroty
+pack_name: Claroty
+rule_name: Claroty
+dataset_name: claroty_ctd_raw
+vendor: Claroty
+product: Claroty
+description: Use the Claroty CTD to manage assets and alerts.
+categories:
+- Network Security
+version: 1.0.34
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNDODNEMDMiPkNsYXJvdHk8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: cat
+  type: string
+  description: Vendor-emitted field 'Cat'. Free-form text; may contain whitespace
+    and punctuation.
+  example: access_control
+- name: cefDeviceEventClassId
+  type: string_short
+  description: CEF device-event class ID — vendor-specific event-type identifier.
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceVersion
+  type: string_short
+  description: CEF device-version field — version of the Claroty product emitting
+    this event. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefName
+  type: string_short
+  description: CEF event name — short human-readable label for the event class. Short
+    opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefSeverity
+  type: integer
+  description: CEF severity score (0-10) as classified by Claroty. Signed decimal
+    integer; bare digits, optional leading minus.
+  example: '42'
+- name: cs1
+  type: string
+  description: Device custom string 1 (see cs1Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs10
+  type: string
+  description: Device custom string 10 (see cs10Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs10
+- name: cs10label
+  type: string
+  description: Vendor-emitted field 'Cs10label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs10label
+- name: cs11
+  type: string
+  description: Device custom string 11 (see cs11Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs11
+- name: cs11label
+  type: string
+  description: Vendor-emitted field 'Cs11label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs11label
+- name: cs12
+  type: string
+  description: Device custom string 12 (see cs12Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs12
+- name: cs12label
+  type: string
+  description: Vendor-emitted field 'Cs12label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs12label
+- name: cs13
+  type: string
+  description: Device custom string 13 (see cs13Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs13
+- name: cs13label
+  type: string
+  description: Vendor-emitted field 'Cs13label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs13label
+- name: cs14
+  type: string
+  description: Device custom string 14 (see cs14Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs14
+- name: cs14label
+  type: string
+  description: Vendor-emitted field 'Cs14label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs14label
+- name: cs15
+  type: string
+  description: Device custom string 15 (see cs15Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs15
+- name: cs15label
+  type: string
+  description: Vendor-emitted field 'Cs15label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs15label
+- name: cs16
+  type: string
+  description: Device custom string 16 (see cs16Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs16
+- name: cs16label
+  type: string
+  description: Vendor-emitted field 'Cs16label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs16label
+- name: cs17
+  type: string
+  description: Device custom string 17 (see cs17Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs17
+- name: cs17label
+  type: string
+  description: Vendor-emitted field 'Cs17label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs17label
+- name: cs18
+  type: string
+  description: Device custom string 18 (see cs18Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs18
+- name: cs18label
+  type: string
+  description: Vendor-emitted field 'Cs18label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs18label
+- name: cs19
+  type: string
+  description: Device custom string 19 (see cs19Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs19
+- name: cs19label
+  type: string
+  description: Vendor-emitted field 'Cs19label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs19label
+- name: cs1label
+  type: string
+  description: Vendor-emitted field 'Cs1label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs2
+  type: string
+  description: Device custom string 2 (see cs2Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs20
+  type: string
+  description: Device custom string 20 (see cs20Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs20
+- name: cs20label
+  type: string
+  description: Vendor-emitted field 'Cs20label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs20label
+- name: cs21
+  type: string
+  description: Device custom string 21 (see cs21Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs21
+- name: cs21label
+  type: string
+  description: Vendor-emitted field 'Cs21label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs21label
+- name: cs22
+  type: string
+  description: Device custom string 22 (see cs22Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs22
+- name: cs22label
+  type: string
+  description: Vendor-emitted field 'Cs22label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs22label
+- name: cs2label
+  type: string
+  description: Vendor-emitted field 'Cs2label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs3
+  type: string
+  description: Vendor-emitted field 'Cs3'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs3label
+  type: string
+  description: Vendor-emitted field 'Cs3label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs4
+  type: string
+  description: Device custom string 4 (see cs4Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs4label
+  type: string
+  description: Vendor-emitted field 'Cs4label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs5
+  type: string
+  description: Device custom string 5 (see cs5Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs5label
+  type: string
+  description: Vendor-emitted field 'Cs5label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs6
+  type: string
+  description: Device custom string 6 (see cs6Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs6label
+  type: string
+  description: Vendor-emitted field 'Cs6label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: CustomField
+- name: cs7
+  type: string
+  description: Device custom string 7 (see cs7Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs7
+- name: cs7label
+  type: string
+  description: Vendor-emitted field 'Cs7label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs7label
+- name: cs8
+  type: string
+  description: Device custom string 8 (see cs8Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs8
+- name: cs8label
+  type: string
+  description: Vendor-emitted field 'Cs8label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs8label
+- name: cs9
+  type: string
+  description: Device custom string 9 (see cs9Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_cs9
+- name: cs9label
+  type: string
+  description: Vendor-emitted field 'Cs9label'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cs9label
+- name: dhost
+  type: host
+  description: CEF destination host — hostname or FQDN of the target endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: dmac
+  type: string
+  description: Destination host MAC addresses. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dmac
+- name: dst
+  type: ipv4
+  description: CEF destination IP — IPv4/IPv6 address of the target endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 198.51.100.7
+- name: externalid
+  type: string
+  description: Vendor-emitted field 'Externalid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: ext-d15579dd-ffe
+- name: msg
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: Operation completed successfully.
+- name: shost
+  type: host
+  description: CEF source host — hostname or FQDN of the source endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: smac
+  type: mac
+  description: CEF source MAC address. MAC address in colon-separated lowercase hex
+    (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: src
+  type: ipv4
+  description: CEF source IP — IPv4/IPv6 address of the source endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+use_cases:
+- ICS
+how_to_use: |
+  ## Claroty Claroty → Cortex XSIAM (dataset `claroty_ctd_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `claroty_ctd_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `claroty_ctd`. The marketplace pack's display name `Claroty` / `Claroty` normalizes to `claroty_claroty_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `claroty_ctd` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~48 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.original_threat_name`, `xdm.alert.severity`, `xdm.alert.subcategory`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|Claroty|Claroty|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = claroty_ctd_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

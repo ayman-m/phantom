@@ -1,0 +1,523 @@
+schema_version: 1
+id: AzureDevOps
+pack_name: AzureDevOps
+rule_name: AzureDevOps
+dataset_name: msft_azure_devops_raw
+vendor: Microsoft
+product: AzureDevOps
+description: Create and manage Git repositories in Azure DevOps Services.
+categories:
+- IT Services
+- Utilities
+- Cloud Service Provider
+version: 1.4.19
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTEwcHgiIHZpZXdCb3g9IjAgMCA1MTIgMTEwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQiPgogICAgPHRpdGxlPk1pY3Jvc29mdDwvdGl0bGU+CiAgICA8Zz4KICAgICAgICA8cGF0aCBkPSJNNTEyLDQ5LjQ0ODY0MjggTDUxMiw0MC40NDQzMzc2IEw1MDAuODE4MjY3LDQwLjQ0NDMzNzYgTDUwMC44MTgyNjcsMjYuNDQ1Njg5IEw1MDAuNDQxODk5LDI2LjU2MTQ2MjIgTDQ4OS45MzkzMjgsMjkuNzc0NjMyMiBMNDg5LjczMjU0NiwyOS44Mzc3ODExIEw0ODkuNzMyNTQ2LDQwLjQ0NDMzNzYgTDQ3My4xNTU5MzIsNDAuNDQ0MzM3NiBMNDczLjE1NTkzMiwzNC41MzYxOTA5IEM0NzMuMTU1OTMyLDMxLjc4NDg3NTQgNDczLjc3MTMyNiwyOS42NzkyODk1IDQ3NC45ODM1MzksMjguMjc1MTUyOCBDNDc2LjE4NzcwMywyNi44ODc3MzIgNDc3LjkxMDA2MSwyNi4xODI1NjgxIDQ4MC4xMDYwMzcsMjYuMTgyNTY4MSBDNDgxLjY4NTM4MiwyNi4xODI1NjgxIDQ4My4zMjA0NDUsMjYuNTU0NjUyIDQ4NC45NjU0MTUsMjcuMjg4Mjk0OCBMNDg1LjM3Nzc0MSwyNy40NzIxNjk4IEw0ODUuMzc3NzQxLDE3Ljk4OTI5NDIgTDQ4NS4xODM5NjEsMTcuOTE4MDk2OSBDNDgzLjY0OTE5MiwxNy4zNjY0NzE3IDQ4MS41NjA5NDEsMTcuMDg4NDkyMyA0NzguOTczNjg5LDE3LjA4ODQ5MjMgQzQ3NS43MTIyMjgsMTcuMDg4NDkyMyA0NzIuNzQ4NTU5LDE3Ljc5Nzk4OTkgNDcwLjE2NDQwMywxOS4yMDQ2MDMgQzQ2Ny41NzgzODksMjAuNjEzMDczNSA0NjUuNTQ0MDAxLDIyLjYyMzkzNTkgNDY0LjExOTQzMywyNS4xODA4NTE2IEM0NjIuNjk5MiwyNy43MzQ2NzE3IDQ2MS45Nzg1NTgsMzAuNjg0MTAxNiA0NjEuOTc4NTU4LDMzLjk0ODAzODUgTDQ2MS45Nzg1NTgsNDAuNDQ0MzM3NiBMNDU0LjE5MjY1OCw0MC40NDQzMzc2IEw0NTQuMTkyNjU4LDQ5LjQ0ODY0MjggTDQ2MS45Nzg1NTgsNDkuNDQ4NjQyOCBMNDYxLjk3ODU1OCw4Ny4zODIwMDI2IEw0NzMuMTU1OTMyLDg3LjM4MjAwMjYgTDQ3My4xNTU5MzIsNDkuNDQ4NjQyOCBMNDg5LjczMjU0Niw0OS40NDg2NDI4IEw0ODkuNzMyNTQ2LDczLjU1NDg0NjggQzQ4OS43MzI1NDYsODMuNDgyODYxIDQ5NC40MTU0NzgsODguNTE0MzUwOSA1MDMuNjUwNzExLDg4LjUxNDM1MDkgQzUwNS4xNjg3NjQsODguNTE0MzUwOSA1MDYuNzY1NDY4LDg4LjMzNjA0NzggNTA4LjM5Njc5Miw4Ny45ODc0OTAxIEM1MTAuMDU2NjQ1LDg3LjYzMDI2NDggNTExLjE4NzEzNiw4Ny4yNzMwMzk2IDUxMS44NTI2NTIsODYuODkxNjY5MSBMNTEyLDg2LjgwNDk5NCBMNTEyLDc3LjcxNzEwOTMgTDUxMS41NDU1NzQsNzguMDE3OTk1NiBDNTEwLjkzODg0OSw3OC40MjI4OTIyIDUxMC4xODM1MzcsNzguNzUyODc2NyA1MDkuMjk3NjE5LDc4Ljk5ODA0MzUgQzUwOC40MDc5MzYsNzkuMjQ4MTYzIDUwNy42NjUwMDYsNzkuMzczODQyIDUwNy4wODk4NzksNzkuMzczODQyIEM1MDQuOTI2MDczLDc5LjM3Mzg0MiA1MDMuMzI1NzA0LDc4Ljc5MDY0MjMgNTAyLjMzMjAxLDc3LjY0MDMzOTkgQzUwMS4zMjc4MTgsNzYuNDc5NTEyNiA1MDAuODE4MzE3LDc0LjQ0ODgzODcgNTAwLjgxODMxNyw3MS42MDg5OTA4IEw1MDAuODE4MzE3LDQ5LjQ0ODY0MjggTDUxMiw0OS40NDg2NDI4IEw1MTIsNDkuNDQ4NjQyOCBaIE00MjkuMjMxODM3LDc5LjM3NDcwODcgQzQyNS4xNzQ4MjMsNzkuMzc0NzA4NyA0MjEuOTc2NTExLDc4LjAyOTM4NzIgNDE5LjcyMjM0LDc1LjM3OTYwNTQgQzQxNy40NTQ1NDcsNzIuNzE2MjAzMyA0MTYuMzA1NDgzLDY4LjkxOTIxNDYgNDE2LjMwNTQ4Myw2NC4wOTUxMjU5IEM0MTYuMzA1NDgzLDU5LjExODExNzUgNDE3LjQ1NDU0Nyw1NS4yMjI2OTA2IDQxOS43MjM1NzgsNTIuNTEyMjM2MyBDNDIxLjk3ODk4OCw0OS44MTk3MzYxIDQyNS4xNDY5NjMsNDguNDUzMzY1IDQyOS4xNDA4MjgsNDguNDUzMzY1IEM0MzMuMDE2NDQ0LDQ4LjQ1MzM2NSA0MzYuMTAxNDU4LDQ5Ljc1ODQ0NDQgNDM4LjMxMTA1NCw1Mi4zMzQ1NTIzIEM0NDAuNTMyNDE0LDU0LjkyMzY2MTUgNDQxLjY1OTE5LDU4Ljc4ODEzMyA0NDEuNjU5MTksNjMuODIzMzM3NSBDNDQxLjY1OTE5LDY4LjkyMDQ1MjkgNDQwLjU5OTI3Nyw3Mi44MzU2OTExIDQzOC41MDkxNjksNzUuNDU0NTE3NSBDNDM2LjQzMzkxOSw3OC4wNTQxNTE1IDQzMy4zMTI5OTYsNzkuMzc0NzA4NyA0MjkuMjMxODM3LDc5LjM3NDcwODcgTDQyOS4yMzE4MzcsNzkuMzc0NzA4NyBaIE00MjkuNzI5NiwzOS4zMTM0NzUxIEM0MjEuOTg5NTEzLDM5LjMxMzQ3NTEgNDE1Ljg0MTc3MSw0MS41ODEyNjczIDQxMS40NTkxMDcsNDYuMDU0MzIxOSBDNDA3LjA3ODkxOCw1MC41Mjc5OTU1IDQwNC44NTc1NTksNTYuNzE4NDU1NCA0MDQuODU3NTU5LDY0LjQ1NjA2NTggQzQwNC44NTc1NTksNzEuODA0ODc2NSA0MDcuMDI1Njc1LDc3LjcxNjExODYgNDExLjMwMTg1Myw4Mi4wMjI2MzMyIEM0MTUuNTc4MDMyLDg2LjMzMTAwNSA0MjEuMzk3NjQ1LDg4LjUxMzM2MDQgNDI4LjU5NzI1MSw4OC41MTMzNjA0IEM0MzYuMTAwMjIsODguNTEzMzYwNCA0NDIuMTI1Mzc4LDg2LjIxMzk5MzYgNDQ2LjUwNjgwNCw4MS42NzkwMjgzIEM0NTAuODg3NjExLDc3LjE0ODM5NjcgNDUzLjEwNzExNCw3MS4wMTY3NTIxIDQ1My4xMDcxMTQsNjMuNDU5OTIxMSBDNDUzLjEwNzExNCw1NS45OTU5NTY0IDQ1MS4wMjQ0MzUsNTAuMDQwNzU3NiA0NDYuOTE0Nzk3LDQ1Ljc2MjcyMiBDNDQyLjgwMzMwMSw0MS40ODI4MjkyIDQzNy4wMjAyMTQsMzkuMzEzNDc1MSA0MjkuNzI5NiwzOS4zMTM0NzUxIEw0MjkuNzI5NiwzOS4zMTM0NzUxIFogTTM4Ni44MzYyNTQsMzkuMzEzMjI3NSBDMzgxLjU3MTM2LDM5LjMxMzIyNzUgMzc3LjIxNjU1Niw0MC42NTk3ODcxIDM3My44ODk0Nyw0My4zMTUxNDA5IEMzNzAuNTQyNTczLDQ1Ljk4NTk3MjQgMzY4Ljg0NDk3OSw0OS40ODk1MDM5IDM2OC44NDQ5NzksNTMuNzI4NTM1NyBDMzY4Ljg0NDk3OSw1NS45MzE5NDA3IDM2OS4yMTE0OSw1Ny44ODk1NTk4IDM2OS45MzI3NTIsNTkuNTQ5Mzg4IEMzNzAuNjU4MzQ2LDYxLjIxNTQwNzQgMzcxLjc4MTQwOCw2Mi42ODE0NTQ5IDM3My4yNzI4MzksNjMuOTEyMjQxNCBDMzc0Ljc1Mzc0NCw2NS4xMzMxMjIyIDM3Ny4wMzgyNTMsNjYuNDEyMTk5MSAzODAuMDY2OTI4LDY3LjcxMjk0NDcgQzM4Mi42MTIwODIsNjguNzYwNDc1NCAzODQuNTEwODg1LDY5LjY0NzAzNzkgMzg1LjcxNjkwNyw3MC4zNDUzOTE2IEMzODYuODk1Njg5LDcxLjAyOTUwNTggMzg3LjczMjcyMyw3MS43MTc5NTM3IDM4OC4yMDUxMDIsNzIuMzg3ODI4NSBDMzg4LjY2Mzg2MSw3My4wNDM0NjM4IDM4OC44OTcyNjUsNzMuOTQwNTUxMSAzODguODk3MjY1LDc1LjA0ODc1NDIgQzM4OC44OTcyNjUsNzguMjAxODcwNyAzODYuNTM1OTg3LDc5LjczNjAyMDEgMzgxLjY3NjYwOSw3OS43MzYwMjAxIEMzNzkuODc0Mzg2LDc5LjczNjAyMDEgMzc3LjgxODMyOSw3OS4zNjAyMjE2IDM3NS41NjYwMTQsNzguNjE3OTExMiBDMzczLjMxMjQ2Miw3Ny44NzY4MzkxIDM3MS4yMDY4NzUsNzYuODExMzU0MyAzNjkuMzA4NjksNzUuNDQ0OTgzMiBMMzY4Ljg0NDk3OSw3NS4xMTI1MjIzIEwzNjguODQ0OTc5LDg1Ljg3MzIzNjcgTDM2OS4wMTUyMzQsODUuOTUyNDgyNSBDMzcwLjU5NzA1NCw4Ni42ODI0MTA2IDM3Mi41OTA1ODIsODcuMjk3ODAzOSAzNzQuOTQwNzE1LDg3Ljc4MjU2NTQgQzM3Ny4yODY1MTUsODguMjY3MzI2OCAzNzkuNDE3NDg0LDg4LjUxNDM1MDkgMzgxLjI2OTIzNiw4OC41MTQzNTA5IEMzODYuOTgyMzY0LDg4LjUxNDM1MDkgMzkxLjU4Mjk1NSw4Ny4xNjA5ODEgMzk0LjkzOTc1OCw4NC40OTAxNDk2IEMzOTguMzE4MjI5LDgxLjgwMDc0NDkgNDAwLjAzMDY4Miw3OC4yMTQ4NzIgNDAwLjAzMDY4Miw3My44Mjg0OTI2IEM0MDAuMDMwNjgyLDcwLjY2NDg1MTIgMzk5LjEwODgzLDY3Ljk1MTMwMTMgMzk3LjI5MTc0OSw2NS43NjMzNzQgQzM5NS40ODc2NjgsNjMuNTkyNzgxNyAzOTIuMzU2MjIsNjEuNjAwNDkyNiAzODcuOTg3Nzk1LDU5LjgzOTEzMDYgQzM4NC41MDc3ODksNTguNDQyNDIzMiAzODIuMjc4MzgzLDU3LjI4MjgzNDEgMzgxLjM1OTAwNyw1Ni4zOTMxNzYgQzM4MC40NzI0NDQsNTUuNTMzMjM1MSAzODAuMDIyMzUzLDU0LjMxNzMwNzMgMzgwLjAyMjM1Myw1Mi43Nzc1ODU5IEMzODAuMDIyMzUzLDUxLjQxMjQ1MyAzODAuNTc3NjkzLDUwLjMxOTEwODUgMzgxLjcxODcwOSw0OS40MzMxNjUxIEMzODIuODY4MzkyLDQ4LjU0Mjg4NzkgMzg0LjQ2ODE2Niw0OC4wOTAzMjAxIDM4Ni40NzUzMTUsNDguMDkwMzIwMSBDMzg4LjMzNzU5MSw0OC4wOTAzMjAxIDM5MC4yNDMyMDUsNDguMzg0Mzk2MyAzOTIuMTM3Njc1LDQ4Ljk2MDc4NTggQzM5NC4wMzE1MjYsNDkuNTM3MTc1MiAzOTUuNjk0NDUsNTAuMzA5MjAyNyAzOTcuMDgzMTA5LDUxLjI1Mzk2MTQgTDM5Ny41MzkzOTIsNTEuNTY1OTkxOCBMMzk3LjUzOTM5Miw0MS4zNTgxNDA4IEwzOTcuMzY0MTg1LDQxLjI4MjYwOTYgQzM5Ni4wODMyNSw0MC43MzM0NjEgMzk0LjM5NDMyNCw0MC4yNjM1NTgxIDM5Mi4zNDMyMTksMzkuODgyMTg3NiBDMzkwLjMwMDE2MywzOS41MDQ1MzE4IDM4OC40NDcxNzMsMzkuMzEzMjI3NSAzODYuODM2MjU0LDM5LjMxMzIyNzUgTDM4Ni44MzYyNTQsMzkuMzEzMjI3NSBaIE0zMzkuNzA2MDQ3LDc5LjM3NDcwODcgQzMzNS42NTAyNzEsNzkuMzc0NzA4NyAzMzIuNDUwNzIxLDc4LjAyOTM4NzIgMzMwLjE5NzE2OSw3NS4zNzk2MDU0IEMzMjcuOTI4NzU3LDcyLjcxNjIwMzMgMzI2Ljc4MTU1LDY4LjkyMDQ1MjkgMzI2Ljc4MTU1LDY0LjA5NTEyNTkgQzMyNi43ODE1NSw1OS4xMTgxMTc1IDMyNy45Mjk5OTYsNTUuMjIyNjkwNiAzMzAuMTk5NjQ1LDUyLjUxMjIzNjMgQzMzMi40NTMxOTgsNDkuODE5NzM2MSAzMzUuNjIwNTU0LDQ4LjQ1MzM2NSAzMzkuNjE2Mjc2LDQ4LjQ1MzM2NSBDMzQzLjQ5MDY1NCw0OC40NTMzNjUgMzQ2LjU3NTY2OCw0OS43NTg0NDQ0IDM0OC43ODU4ODMsNTIuMzM0NTUyMyBDMzUxLjAwNzI0Myw1NC45MjM2NjE1IDM1Mi4xMzQwMTksNTguNzg4MTMzIDM1Mi4xMzQwMTksNjMuODIzMzM3NSBDMzUyLjEzNDAxOSw2OC45MjA0NTI5IDM1MS4wNzM0ODcsNzIuODM1NjkxMSAzNDguOTgzMzc5LDc1LjQ1NDUxNzUgQzM0Ni45MDgxMjksNzguMDU0MTUxNSAzNDMuNzg4NDQ0LDc5LjM3NDcwODcgMzM5LjcwNjA0Nyw3OS4zNzQ3MDg3IEwzMzkuNzA2MDQ3LDc5LjM3NDcwODcgWiBNMzQwLjIwNTA0OCwzOS4zMTM0NzUxIEMzMzIuNDYzMTAzLDM5LjMxMzQ3NTEgMzI2LjMxNTM2Miw0MS41ODEyNjczIDMyMS45MzQ1NTUsNDYuMDU0MzIxOSBDMzE3LjU1NDM2Niw1MC41Mjc5OTU1IDMxNS4zMzE3NjksNTYuNzE4NDU1NCAzMTUuMzMxNzY5LDY0LjQ1NjA2NTggQzMxNS4zMzE3NjksNzEuODA3OTcyMSAzMTcuNTAxMTIzLDc3LjcxNjExODYgMzIxLjc3NzMwMSw4Mi4wMjI2MzMyIEMzMjYuMDUzNDgsODYuMzMxMDA1IDMzMS44NzI0NzUsODguNTEzMzYwNCAzMzkuMDcyNjk5LDg4LjUxMzM2MDQgQzM0Ni41NzM4MTEsODguNTEzMzYwNCAzNTIuNjAwODI2LDg2LjIxMzk5MzYgMzU2Ljk4MjI1Miw4MS42NzkwMjgzIEMzNjEuMzYxODIyLDc3LjE0ODM5NjcgMzYzLjU4MjU2Miw3MS4wMTY3NTIxIDM2My41ODI1NjIsNjMuNDU5OTIxMSBDMzYzLjU4MjU2Miw1NS45OTU5NTY0IDM2MS40OTkyNjQsNTAuMDQwNzU3NiAzNTcuMzg5MDA2LDQ1Ljc2MjcyMiBDMzUzLjI3NjI3Myw0MS40ODI4MjkyIDM0Ny40OTQ0MjQsMzkuMzEzNDc1MSAzNDAuMjA1MDQ4LDM5LjMxMzQ3NTEgTDM0MC4yMDUwNDgsMzkuMzEzNDc1MSBaIE0yOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQwLjQ0NDMzNzYgTDI4Ny4zMjM2OTksNDAuNDQ0MzM3NiBMMjg3LjMyMzY5OSw4Ny4zODA3NjQ0IEwyOTguMzY0ODcsODcuMzgwNzY0NCBMMjk4LjM2NDg3LDYzLjM3MTE0MTEgQzI5OC4zNjQ4Nyw1OS4yODgxMjQ1IDI5OS4yOTA0MzYsNTUuOTM0NDE3MSAzMDEuMTE2ODA0LDUzLjQwMTAyNzUgQzMwMi45MjAyNjUsNTAuODk3OTc0NCAzMDUuMzIzNjQzLDQ5LjYyOTQyMjMgMzA4LjI1NzU5NSw0OS42Mjk0MjIzIEMzMDkuMjUxODgxLDQ5LjYyOTQyMjMgMzEwLjM2ODEzMyw0OS43OTM0ODU5IDMxMS41NzcyNTEsNTAuMTE3ODk4NSBDMzEyLjc3Mzk4Niw1MC40NDA0NTM3IDMxMy42NDA3MzgsNTAuNzkwMjQ5NSAzMTQuMTUyMTIxLDUxLjE1ODYxODggTDMxNC42MTU4MzMsNTEuNDk0Nzk0NCBMMzE0LjYxNTgzMyw0MC4zNjM4NTM2IEwzMTQuNDM2OTExLDQwLjI4NzA4NDIgQzMxMy40MDg1NzMsMzkuODQ5OTk0IDMxMS45NTQyODgsMzkuNjI5NTkxNiAzMTAuMTEzNjgsMzkuNjI5NTkxNiBDMzA3LjMzOTQ1OCwzOS42Mjk1OTE2IDMwNC44NTYyMTYsNDAuNTIxMTA3IDMwMi43Mjk1OCw0Mi4yNzYyNzc4IEMzMDAuODYyOTcsNDMuODE5MDk0NyAyOTkuNTEzMzE0LDQ1LjkzNDU4NjQgMjk4LjQ4MTg4MSw0OC41NzI2MDUxIEwyOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQ4LjU3MjYwNTEgWiBNMjY3LjU1MTU2MywzOS4zMTMyMjc1IEMyNjIuNDg2NjQxLDM5LjMxMzIyNzUgMjU3Ljk2ODM5MSw0MC4zOTk3NjE4IDI1NC4xMjQ5Nyw0Mi41NDA2MzY5IEMyNTAuMjc0MTE4LDQ0LjY4NjQ2NDkgMjQ3LjI5NjIwOSw0Ny43NTA0Mjk5IDI0NS4yNjk4NjksNTEuNjQ2NDc1OCBDMjQzLjI1MjgxNiw1NS41MzMyMzUxIDI0Mi4yMjg4MTEsNjAuMDczMTUzNCAyNDIuMjI4ODExLDY1LjEzNTU5ODYgQzI0Mi4yMjg4MTEsNjkuNTcwMjY4NSAyNDMuMjIxODYsNzMuNjQwMjgzNyAyNDUuMTg0NDMyLDc3LjIyNjc3NTggQzI0Ny4xNDgyNDMsODAuODE5NDU4OSAyNDkuOTI4MDM3LDgzLjYzMDIwODggMjUzLjQ0NjQyNyw4NS41Nzk3Nzk1IEMyNTYuOTU5ODY1LDg3LjUyNjg3MzkgMjYxLjAyMDU5Myw4OC41MTQzNTA5IDI2NS41MTY1NTUsODguNTE0MzUwOSBDMjcwLjc2MzQ5NCw4OC41MTQzNTA5IDI3NS4yNDMzNTksODcuNDY0OTYzIDI3OC44MzU0MjMsODUuMzk2NTIzNSBMMjc4Ljk4MDI5NSw4NS4zMTI5NDM5IEwyNzguOTgwMjk1LDc1LjE5Nzk1OTIgTDI3OC41MTY1ODMsNzUuNTM2NjExMiBDMjc2Ljg4OTU2Nyw3Ni43MjE1ODM3IDI3NS4wNzEyNDgsNzcuNjY3NTgwNiAyNzMuMTE0ODY2LDc4LjM0OTIxODQgQzI3MS4xNjM0MzgsNzkuMDMwMjM3MSAyNjkuMzg0MTIyLDc5LjM3NDQ2MTEgMjY3LjgyNDU4OSw3OS4zNzQ0NjExIEMyNjMuNDkyMDczLDc5LjM3NDQ2MTEgMjYwLjAxNDU0Myw3OC4wMTg2MTQ4IDI1Ny40ODk4MjEsNzUuMzQ2NTQ1MSBDMjU0Ljk1OTUyNyw3Mi42NzAxNDE3IDI1My42NzY3MzYsNjguOTEyNzc1OSAyNTMuNjc2NzM2LDY0LjE4NDAyOTggQzI1My42NzY3MzYsNTkuNDI1NTY2NSAyNTUuMDE0NjI4LDU1LjU3MTYxOTkgMjU3LjY1MTQwOCw1Mi43Mjc0MzgxIEMyNjAuMjc5NTIxLDQ5Ljg5MTkyNCAyNjMuNzYzODYsNDguNDUzNzM2NCAyNjguMDA2NjA3LDQ4LjQ1MzczNjQgQzI3MS42MzU4MTcsNDguNDUzNzM2NCAyNzUuMTcyMTYxLDQ5LjY4MjY2NTUgMjc4LjUxNzgyMSw1Mi4xMDk1Njg1IEwyNzguOTgwMjk1LDUyLjQ0NTc0NDEgTDI3OC45ODAyOTUsNDEuNzg3ODAxNyBMMjc4LjgzMTA4OSw0MS43MDM2MDMgQzI3Ny41NzE4MjQsNDAuOTk5MDU4MiAyNzUuODU1MDM3LDQwLjQxNzA5NjggMjczLjcyMjgzLDM5Ljk3NTY3MjkgQzI3MS42MDA1MjgsMzkuNTM1NDg3MiAyNjkuNTI0NjU5LDM5LjMxMzIyNzUgMjY3LjU1MTU2MywzOS4zMTMyMjc1IEwyNjcuNTUxNTYzLDM5LjMxMzIyNzUgWiBNMjM0LjYyNDU1Nyw0MC40NDQ0NjE0IEwyMjMuNTgzMzg3LDQwLjQ0NDQ2MTQgTDIyMy41ODMzODcsODcuMzgwODg4MSBMMjM0LjYyNDU1Nyw4Ny4zODA4ODgxIEwyMzQuNjI0NTU3LDQwLjQ0NDQ2MTQgTDIzNC42MjQ1NTcsNDAuNDQ0NDYxNCBaIE0yMjkuMjE2NjQ5LDIwLjQ0OTEzMzggQzIyNy4zOTk1NjgsMjAuNDQ5MTMzOCAyMjUuODE0NjUyLDIxLjA2NzYyMjUgMjI0LjUxMjY2NywyMi4yOTM0NTYyIEMyMjMuMjA1MTEyLDIzLjUyMzAwNDQgMjIyLjU0MTQyOCwyNS4wNzA3NzQyIDIyMi41NDE0MjgsMjYuODk3MTQyNCBDMjIyLjU0MTQyOCwyOC42OTUwMzE4IDIyMy4xOTcwNjQsMzAuMjE0MzIyNiAyMjQuNDkxNjE4LDMxLjQxMTA1ODEgQzIyNS43NzgxMjQsMzIuNjA0MDc5MSAyMjcuMzY3OTkzLDMzLjIwODk0NzQgMjI5LjIxNjY0OSwzMy4yMDg5NDc0IEMyMzEuMDY0Njg2LDMzLjIwODk0NzQgMjMyLjY2MDc0NywzMi42MDQwNzkxIDIzMy45NjI3MywzMS40MTI5MTU1IEMyMzUuMjczMzgyLDMwLjIxNDMyMjYgMjM1LjkzNzY4NSwyOC42OTUwMzE4IDIzNS45Mzc2ODUsMjYuODk3MTQyNCBDMjM1LjkzNzY4NSwyNS4xMzQ1NDIzIDIzNS4yOTEzMzYsMjMuNjAyMjUwMiAyMzQuMDE2NTkzLDIyLjM0Mjk4NDggQzIzMi43NDM3MDcsMjEuMDg2MTk1OCAyMzEuMTI4NDU1LDIwLjQ0OTEzMzggMjI5LjIxNjY0OSwyMC40NDkxMzM4IEwyMjkuMjE2NjQ5LDIwLjQ0OTEzMzggWiBNMjAxLjY2ODg4NCwzNi45ODE1NDMzIEwyMDEuNjY4ODg0LDg3LjM4MDY0MDYgTDIxMi45MzY2NDcsODcuMzgwNjQwNiBMMjEyLjkzNjY0NywyMS44ODY0NTQ2IEwxOTcuMzQxOTM5LDIxLjg4NjQ1NDYgTDE3Ny41MTkzNDIsNzAuNTMzNDc2NiBMMTU4LjI4MzA0MSwyMS44ODY0NTQ2IEwxNDIuMDUzMTI4LDIxLjg4NjQ1NDYgTDE0Mi4wNTMxMjgsODcuMzgwNjQwNiBMMTUyLjY0MTczLDg3LjM4MDY0MDYgTDE1Mi42NDE3MywzNi45NzY1OTA1IEwxNTMuMDA1NzY1LDM2Ljk3NjU5MDUgTDE3My4zMTg2OTUsODcuMzgwNjQwNiBMMTgxLjMwOTUyMSw4Ny4zODA2NDA2IEwyMDEuMzA1NDY3LDM2Ljk4MTU0MzMgTDIwMS42Njg4ODQsMzYuOTgxNTQzMyBMMjAxLjY2ODg4NCwzNi45ODE1NDMzIFoiIGZpbGw9IiM3MDZENkUiPjwvcGF0aD4KICAgICAgICA8Zz4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0YxNTExQiIgcG9pbnRzPSI1MS45Mzk0Mzc3IDUxLjkzOTQzNzcgMCA1MS45Mzk0Mzc3IDAgMCA1MS45Mzk0Mzc3IDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzgwQ0MyOCIgcG9pbnRzPSIxMDkuMjg2NzgzIDUxLjkzOTQzNzcgNTcuMzQ3OTY0MiA1MS45Mzk0Mzc3IDU3LjM0Nzk2NDIgMCAxMDkuMjg2NzgzIDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzAwQURFRiIgcG9pbnRzPSI1MS45MzgxOTk1IDEwOS4zMDcyMTMgMCAxMDkuMzA3MjEzIDAgNTcuMzY3Nzc1NyA1MS45MzgxOTk1IDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0ZCQkMwOSIgcG9pbnRzPSIxMDkuMjg2NzgzIDEwOS4zMDcyMTMgNTcuMzQ3OTY0MiAxMDkuMzA3MjEzIDU3LjM0Nzk2NDIgNTcuMzY3Nzc1NyAxMDkuMjg2NzgzIDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: ActorCUID
+  type: string
+  description: Vendor-emitted field 'ActorCUID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_actorcuid
+- name: ActorUPN
+  type: string
+  description: Vendor-emitted field 'ActorUPN'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_actorupn
+- name: Area
+  is_gate: true
+  type: string
+  description: Vendor-emitted field 'Area'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 'Git'
+- name: AuthenticationMechanism
+  type: string
+  description: Vendor-emitted field 'AuthenticationMechanism'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_authenticationme
+- name: Category
+  type: string_short
+  description: Microsoft's category classifier for the event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: access_control
+- name: CorrelationId
+  type: string_short
+  description: Unique identifier — assigned by Microsoft per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: b3b514bf-fb48-5f68-b474-9e7df64a
+- name: Data
+  type: json
+  description: '— see leaf entries for nested paths. JSON array; each element is an
+    object with keys: AgentId, AgentName, AgentPoolId, AgentPoolName, ApprovalType,
+    CallerProcedure, ChangedPermission, ConnectionId, ConnectionName, ConnectionType,
+    DisplayName, EnvironmentName, EventSummary, ExtensionName, GroupId, GroupIdentifier,
+    GroupName, MemberDisplayName, MemberId, NamespaceName, OwnerName, Path, PermissionModifiedTo,
+    PipeLineName, PipelineId, PolicyTypeDisplayName, PolicyTypeId, ProcessName, PublisherName,
+    Reason, ReleaseEnvironmentSteps, ReleaseId, ReleaseName, RepoId, RepoName, ResourceId,
+    ResourceType, SubjectDescriptor, SubjectDisplayName, TargetUser, Token, TokenType,
+    Type, UserIdentifier, VariableGroupId, VariableGroupName, VariableGroupType, Version
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: Details
+  type: string_long
+  description: Additional details payload emitted by Microsoft. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by Microsoft for this record.
+- name: Id
+  type: string_short
+  description: Opaque identifier emitted by Microsoft. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: mic-66507d6d
+- name: IpAddress
+  type: ipv4
+  description: IPv4/IPv6 address — vendor-emitted, no version split. Free-form text;
+    may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: OperationName
+  type: string
+  description: Vendor-emitted field 'OperationName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_operationname
+- name: ProjectId
+  type: string
+  description: Vendor-emitted field 'ProjectId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: proj-4a915056
+- name: ProjectName
+  type: string
+  description: Vendor-emitted field 'ProjectName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_projectname
+- name: TimeGenerated
+  type: datetime
+  description: Vendor-emitted field 'TimeGenerated'. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: Type
+  type: string_short
+  description: Type/category classifier emitted by Microsoft. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: UserAgent
+  type: string_long
+  description: Client User-Agent header value as received by Microsoft. Free-form
+    text; may span multiple lines or contain large payloads.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'microsoft: azuredevops=AzureDevOps action=allow user=jdoe'
+- name: Data.AgentId
+  type: string
+  description: Vendor-emitted field 'Data › AgentId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: dev-069e6345
+- name: Data.AgentName
+  type: string
+  description: Vendor-emitted field 'Data › AgentName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: phantom-agent-01
+- name: Data.AgentPoolId
+  type: string
+  description: Vendor-emitted field 'Data › AgentPoolId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_agentpoolid
+- name: Data.AgentPoolName
+  type: string
+  description: Vendor-emitted field 'Data › AgentPoolName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_agentpoolname
+- name: Data.ApprovalType
+  type: string
+  description: Vendor-emitted field 'Data › ApprovalType'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_approvaltype
+- name: Data.CallerProcedure
+  type: string
+  description: Vendor-emitted field 'Data › CallerProcedure'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_callerprocedure
+- name: Data.ChangedPermission
+  type: string
+  description: Vendor-emitted field 'Data › ChangedPermission'. Leaf of the 'Data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_changedpermissio
+- name: Data.ConnectionId
+  type: string
+  description: Vendor-emitted field 'Data › ConnectionId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_connectionid
+- name: Data.ConnectionName
+  type: string
+  description: Vendor-emitted field 'Data › ConnectionName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_connectionname
+- name: Data.ConnectionType
+  type: string
+  description: Vendor-emitted field 'Data › ConnectionType'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_connectiontype
+- name: Data.DisplayName
+  type: string
+  description: Vendor-emitted field 'Data › DisplayName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: John Doe
+- name: Data.EnvironmentName
+  type: string
+  description: Vendor-emitted field 'Data › EnvironmentName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_environmentname
+- name: Data.EventSummary
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: Data.EventSummary[].PermissionNames
+  type: string
+  description: Vendor-emitted field 'Data › EventSummary[] › PermissionNames'. Leaf
+    of the 'Data' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_permissionnames
+- name: Data.ExtensionName
+  type: string
+  description: Vendor-emitted field 'Data › ExtensionName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: pdf
+- name: Data.GroupId
+  type: string
+  description: Vendor-emitted field 'Data › GroupId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: grp-597f32fb
+- name: Data.GroupIdentifier
+  type: string
+  description: Vendor-emitted field 'Data › GroupIdentifier'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_groupidentifier
+- name: Data.GroupName
+  type: string
+  description: Vendor-emitted field 'Data › GroupName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: admins
+- name: Data.MemberDisplayName
+  type: user
+  description: Vendor-emitted field 'Data › MemberDisplayName'. Leaf of the 'Data'
+    composite. Account name as the vendor reports it — login name, UPN, or sAMAccountName
+    depending on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: Data.MemberId
+  type: string
+  description: Vendor-emitted field 'Data › MemberId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_memberid
+- name: Data.NamespaceName
+  type: string
+  description: Vendor-emitted field 'Data › NamespaceName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_namespacename
+- name: Data.OwnerName
+  type: string
+  description: Vendor-emitted field 'Data › OwnerName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_ownername
+- name: Data.Path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/app.log
+- name: Data.PermissionModifiedTo
+  type: string
+  description: Vendor-emitted field 'Data › PermissionModifiedTo'. Leaf of the 'Data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_permissionmodifi
+- name: Data.PipeLineName
+  type: string
+  description: Vendor-emitted field 'Data › PipeLineName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_pipelinename
+- name: Data.PipelineId
+  type: string
+  description: Vendor-emitted field 'Data › PipelineId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_pipelineid
+- name: Data.PolicyTypeDisplayName
+  type: string
+  description: Vendor-emitted field 'Data › PolicyTypeDisplayName'. Leaf of the 'Data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: John Doe
+- name: Data.PolicyTypeId
+  type: string
+  description: Vendor-emitted field 'Data › PolicyTypeId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_policytypeid
+- name: Data.ProcessName
+  type: string
+  description: File or process name reported by the vendor. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: Data.PublisherName
+  type: string
+  description: Vendor-emitted field 'Data › PublisherName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_publishername
+- name: Data.Reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: Data.ReleaseEnvironmentSteps
+  type: string
+  description: Vendor-emitted field 'Data › ReleaseEnvironmentSteps'. Leaf of the
+    'Data' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_releaseenvironme
+- name: Data.ReleaseId
+  type: string
+  description: Vendor-emitted field 'Data › ReleaseId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_releaseid
+- name: Data.ReleaseName
+  type: string
+  description: Vendor-emitted field 'Data › ReleaseName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_releasename
+- name: Data.RepoId
+  type: string
+  description: Vendor-emitted field 'Data › RepoId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_repoid
+- name: Data.RepoName
+  type: string
+  description: Vendor-emitted field 'Data › RepoName'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_reponame
+- name: Data.ResourceId
+  type: string
+  description: Vendor-emitted field 'Data › ResourceId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: res-2c60db32
+- name: Data.ResourceType
+  type: string
+  description: Vendor-emitted field 'Data › ResourceType'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_resourcetype
+- name: Data.SubjectDescriptor
+  type: string
+  description: Vendor-emitted field 'Data › SubjectDescriptor'. Leaf of the 'Data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_subjectdescripto
+- name: Data.SubjectDisplayName
+  type: string
+  description: Vendor-emitted field 'Data › SubjectDisplayName'. Leaf of the 'Data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: John Doe
+- name: Data.TargetUser
+  type: user
+  description: Destination/target user — recipient or affected account. Account name
+    as the vendor reports it — login name, UPN, or sAMAccountName; no domain prefix
+    unless vendor emits one.
+  example: jdoe
+- name: Data.Token
+  type: string
+  description: Vendor-emitted field 'Data › Token'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_token
+- name: Data.TokenType
+  type: string
+  description: Vendor-emitted field 'Data › TokenType'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_tokentype
+- name: Data.Type
+  type: string_short
+  description: Type/category classifier emitted by Microsoft. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: Data.UserIdentifier
+  type: user
+  description: Vendor-emitted field 'Data › UserIdentifier'. Leaf of the 'Data' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending
+    on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: Data.VariableGroupId
+  type: string
+  description: Vendor-emitted field 'Data › VariableGroupId'. Leaf of the 'Data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_variablegroupid
+- name: Data.VariableGroupName
+  type: string
+  description: Vendor-emitted field 'Data › VariableGroupName'. Leaf of the 'Data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_variablegroupnam
+- name: Data.VariableGroupType
+  type: string
+  description: Vendor-emitted field 'Data › VariableGroupType'. Leaf of the 'Data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_variablegrouptyp
+- name: Data.Version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+use_cases:
+- Cloud
+- SaaS
+- Identity
+how_to_use: |
+  ## msft azure → Cortex XSIAM (dataset `msft_azure_devops_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `msft` / product `azure`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `msft_azure_devops_raw`).
+
+    **Not a simple CEF vendor/product route.** The parsing rule ingests under the broad identity `msft`/`azure` (which normalizes to `msft_azure_raw`, a parent dataset) and splits events into per-channel datasets — `msft_azure_devops_raw` is one of them — by event channel/category downstream. A single CEF `deviceVendor`/`deviceProduct` header does NOT by itself land events in `msft_azure_devops_raw`. Ingest the source via its native path (Windows agent / WEC, or Azure diagnostic settings) so the rule routes the specific channel to `msft_azure_devops_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `get_data -> IpAddress`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `Area = "Licensing" OR _raw_log ->[0].data.Area = "Licensing"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~38 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.auth_method`, `xdm.event.description`, `xdm.event.id`, `xdm.event.operation_sub_type`, `xdm.event.original_event_type`, `xdm.event.outcome`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `msft`, Product = `azure`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = msft_azure_devops_raw | sort desc _time | fields xdm.* | limit 20
+
+  **Simulation recipe — reverse-engineered from this pack's parsing + modeling rules.**
+
+  Routing: vendor `msft` / product `azure`.
+  Discriminator: Type = "AzureDevOpsAuditing" (case-sensitive, exact) — plus TimeGenerated matching \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z
+  (Taken VERBATIM from the pack's INGEST block: [INGEST:vendor="msft", product="azure", target_dataset="msft_azure_devops_raw", no_hit = drop] in scripts/maintainer/parsing_rules/AzureDevOps__AzureDevOps.xif. NOT derived — the derived name for msft/azure would be msft_azure_raw, which is a DIFFERENT dataset (MicrosoftEntraID pack). The explicit target_dataset= in the INGEST header is what routes here. This also contradicts the YAML's how_to_use, which claims a plain CEF deviceVendor/deviceProduct header cannot land events in msft_azure_devops_raw — it can, and does, provided the branch-A filter matches.)
+
+  Gate: `Area` must be one of `Licensing`, `Extension`, `Git`, `Group`, `Library`, `Token`, `Policy`, `Project`, `Release`, `Permissions`, `Pipelines`.
+  no_hit: The MODEL block's Area gate has a catch-all fallback branch (line 198: Area NOT IN (the 11 above)), so an unlisted Area still maps the ~18 generic fields — only the Area-specific extras are lost. The real drop risk is upstream: the PARSING rule is no_hit = drop, so an event whose Type != "AzureDevOpsAuditing" or whose TimeGenerated lacks fractional seconds is discarded at ingest with NO raw row and NO error anywhere.
+
+  Composite: `Data` must be a JSON OBJECT on the wire. Leaves read: `Data.RepoId`, `Data.RepoName`
+
+  Pass this verbatim as `observables_dict` (keys are schema field names; values are LISTS):
+
+  ```json
+  {
+    "Type": [
+      "AzureDevOpsAuditing"
+    ],
+    "TimeGenerated": [
+      "2026-09-02T14:23:01.0324070Z"
+    ],
+    "Area": [
+      "Git"
+    ],
+    "ActorCUID": [
+      "3f2a1c88-9b41-4d7e-a5c6-0d8e1f4b27aa"
+    ],
+    "ActorUPN": [
+      "jdoe@contoso.com"
+    ],
+    "AuthenticationMechanism": [
+      "PAT authorizedFor(Code_Read Code_Write)"
+    ],
+    "Category": [
+      "Modify"
+    ],
+    "CorrelationId": [
+      "b3b514bf-fb48-5f68-b474-9e7df64a1c02"
+    ],
+    "Details": [
+      "Repository \"phantom-payments\" was created by user jdoe@contoso.com"
+    ],
+    "Id": [
+      "7c1e6a90-2f45-4b8a-9d31-5e6f7a8b9c01"
+    ],
+    "IpAddress": [
+      "192.0.2.45"
+    ],
+    "OperationName": [
+      "Git.RepositoryCreated"
+    ],
+    "ProjectId": [
+      "9a4c2d10-77b3-4e19-8c5f-1b2a3c4d5e6f"
+    ],
+    "ProjectName": [
+      "PhantomPayments"
+    ],
+    "UserAgent": [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+    ],
+    "Data.RepoId": [
+      "4d5e6f70-8a9b-4c1d-2e3f-4a5b6c7d8e9f"
+    ],
+    "Data.RepoName": [
+      "phantom-payments"
+    ]
+  }
+  ```
+
+  Populates: `xdm.source.user.upn`, `xdm.source.user.identifier`, `xdm.source.user.identity_type`, `xdm.source.user.scope`, `xdm.auth.auth_method`, `xdm.session_context_id`, `xdm.event.description`, `xdm.event.operation_sub_type`, `xdm.event.type`, `xdm.event.id`, `xdm.event.original_event_type`, `xdm.event.tags`, `xdm.event.outcome`, `xdm.source.cloud.project_id`, `xdm.source.cloud.project`, `xdm.source.cloud.provider`, `xdm.source.user_agent`, `xdm.source.ipv4`, `xdm.target.resource.type`, `xdm.target.resource.id`, `xdm.target.resource.name`
+
+  - UNREACHABLE BRANCH — the parsing rule has two filters in one INGEST block. Branch B gates on `_raw_log->[0].eventTime` and `_raw_log->[0].eventType = "AzureDevOpsAuditEvent"` — that is the Azure Event Hub shape, where _raw_log is a JSON ARRAY. Over syslog/CEF _raw_log is the broker-populated raw line, not a JSON array, so branch B can never fire. Branch A (flat TimeGenerated + Type) is our only path. Never try to seed _raw_log.
+  - CONSEQUENCE OF BRANCH A — in the modeling rule, `get_data = _raw_log ->[0].data{}` (line 3) is therefore ALWAYS null. Every `coalesce(X, get_data -> X)` collapses to the FLAT column X, every `get_data_*` variable is null, and every `get_data_Data -> Y` is null. The flat `Data -> Y` composite is the only side that carries data. This is why the recipe uses flat columns plus a real `Data` JSON object and nothing else. It also makes the Event-Hub-only reads irrelevant: get_data -> CategoryDisplayName (line 20), get_data -> ActionId (line 26), get_data -> eventType (line 29), and the camelCase variants get_data_Data -> processName (141) / callerProcedure (194) / eventSummary[].permissionNames (177).
+  - SHARED VENDOR/PRODUCT — five INGEST blocks claim this pair after the broker lowercases: msft_azure_devops_raw (this one), msft_azure_aks_raw (AzureKubernetesServices), msft_azure_firewall_raw (AzureFirewall), msft_azure_app_service_raw (declared MSFT/Azure, lowercases to the same pair), and msft_azure_raw (MicrosoftEntraID). `Type = "AzureDevOpsAuditing"` is the discriminator, and it is doubly load-bearing: the Entra block's filter contains `AND Type NOT IN ("AzureDevOpsAuditing", ...)`, so setting it simultaneously selects us and de-selects the sibling. Verified by reading all five INGEST filters.
+  - DO NOT EMIT a lowercase `category` extension. AKS gates on `category in ("kube-audit", ...)`, AzureFirewall on `category = "AZFW*"`, AppService on `category in ("AppServiceHTTPLogs", ...)`, and Entra on a `category not in (...)` list. Our schema field is `Category` (capital C) and is a different column — but a stray lowercase `category` carrying any of those values would pull the event into a sibling dataset, where it still lands somewhere and fails silently.
+  - DO NOT put the bare `Data` key in observables_dict. observables_dict always wins over the generator's dotted-leaf folding, so `Data: ["{}"]` would overwrite the nested object with an empty literal and null every `Data -> X` read — losing xdm.target.resource.id and xdm.target.resource.name. Pass only the dotted leaves.
+  - _time IS FROZEN BY THE PINNED TimeGenerated. Because `alter _time = TimeGenerated` copies the value verbatim and the regex forces us to pin it, every event in a batch lands at the same instant. Regenerate the TimeGenerated value to 'now' (format %Y-%m-%dT%H:%M:%S.%7NZ) at send time, or at minimum keep it inside the intended query window — otherwise the rows exist but fall outside the operator's timeframe.
+  - xdm.source.ipv6 will be null with the recipe above, and that is correct: the v6 regextract `((?:[a-fA-F\d]{0,4}\:){2,7}[a-fA-F\d]{0,4})` needs at least two colons, which a dotted-quad IPv4 does not have. Line 9/10 populate v4 and v6 independently from the same source column, so one of them is always empty.
+  - ALL-ZEROS GUID IS A SENTINEL in two places. ActorCUID = 00000000-0000-0000-0000-000000000000 sets IsUser=False, which nulls xdm.source.user.identifier and sets xdm.source.user.identity_type to IDENTITY_TYPE_MACHINE (lines 11/14/15). ProjectId = the same literal nulls xdm.source.cloud.project_id (line 21). Use it deliberately to simulate a service identity, never by accident.
+  - DOC INCONSISTENCY IN THE SCHEMA — how_to_use documents the gate as `Area = "Licensing"`, while the fields[] entry pins is_gate Area to example 'Git'. Both are accepted branch literals so neither drops, but the two disagree about which branch the default event exercises. The recipe follows the pinned example (Git). how_to_use also asserts that a CEF vendor/product header alone cannot route to this dataset — that is incorrect; the INGEST block names msft_azure_devops_raw explicitly.
+  - ALTERNATE AREA BRANCHES (if the gate is repinned) — Licensing: Data.UserIdentifier, Data.GroupIdentifier, Data.Reason, plus Details carrying exactly one double-quoted name (regextract `\"(.+)\"` is greedy). Extension: Data.PublisherName, Data.ExtensionName, Data.Version. Group: Data.CallerProcedure, Data.GroupId, Data.GroupName, Data.MemberId, Data.MemberDisplayName. Library: set EXACTLY ONE of Data.AgentPoolId / Data.ConnectionId / Data.VariableGroupId — line 95 picks resource type from whichever is first non-null, so two set values mis-type the resource; add Data.AgentName + Data.AgentId for xdm.target.agent.*. Token: Data.OwnerName must be shaped `user "jdoe"` for regextract `user\s\"(.+)\"` (line 113), plus Data.TokenType / Data.DisplayName / Data.TargetUser; OperationName must contain the CASE-SENSITIVE substring `Ssh` to get resource.type "SSH Key", otherwise it defaults to "Personal Access Token". Policy: Data.PolicyTypeId, Data.PolicyTypeDisplayName. Project: Data.ProcessName, Data.Path. Release: Data.ReleaseId or Data.PipelineId + Data.PipeLineName, Data.ApprovalType. Permissions: Data.NamespaceName, Data.Token, Data.SubjectDisplayName, Data.PermissionModifiedTo, Data.ChangedPermission, and Data.SubjectDescriptor shaped with a literal backslash before the UPN (regex `.+\\+(.+)`), e.g. `Microsoft.IdentityModel.Claims.ClaimsIdentity;72f988bf\jdoe@contoso.com`. Pipelines: Data.EnvironmentName, Data.ResourceId, Data.ResourceType, Data.PipelineId.
+  - RULE BUG — the Project branch (lines 139/144) and the Release branch (line 152) use `OperationName IN ("*Area*")`, `IN ("*IterationPath*")`, `IN ("*Pipeline*")`, `IN ("*Failed")`, `IN ("*Queued")`, `IN ("*Completed")`. XQL `IN` is exact-list membership, not glob, so these wildcard entries never match any realistic OperationName and ResourceType falls through to null (Project) or "Release" (Release branch default). To get a deterministic Project outcome, use one of the literal values the same expression enumerates — Project.AreaPath.Create, Project.AreaPath.Delete, Project.AreaPath.Update, Project.IterationPath.Create, Project.IterationPath.Update, Project.IterationPath.Delete, Project.Process.Modify, Project.Process.ModifyWithoutOldProcess — which map to OUTCOME_SUCCESS. Anything else lands on OUTCOME_UNKNOWN. I could not confirm on a live tenant that XQL `IN` rejects globs, so treat this as high-confidence-from-syntax rather than empirically proven.
+  - CEF WIRE HYGIENE — keep `=` and `\` out of extension values (CEF requires escaping them). The recipe values above are deliberately free of both, except the intentional backslash in the Permissions-branch SubjectDescriptor noted above, which must survive to the column for its regex to fire.
+  - Constants that populate unconditionally on every branch, no seeding needed: xdm.source.user.scope = SCOPE_TYPE_AZURE, xdm.source.cloud.provider = CLOUD_PROVIDER_AZURE, xdm.event.tags = [EVENT_TAG_SAAS], and on the Git branch xdm.target.resource.type = "Git Repository" and xdm.event.outcome = OUTCOME_SUCCESS.
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

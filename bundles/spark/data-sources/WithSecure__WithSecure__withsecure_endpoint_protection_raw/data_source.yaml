@@ -1,0 +1,384 @@
+schema_version: 1
+id: WithSecure
+pack_name: WithSecure
+rule_name: WithSecure
+dataset_name: withsecure_endpoint_protection_raw
+vendor: WithSecure
+product: WithSecure
+description: connect to SIEM with WithSecure
+categories:
+- Analytics & SIEM
+version: 1.0.12
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDc4QTUiPldpdGhTZWN1cmU8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: action
+  type: string
+  description: Action taken by the vendor's enforcement engine. Free-form text; may
+    contain whitespace and punctuation.
+  example: allow
+- name: details
+  type: json
+  description: — see leaf entries for nested paths. JSON object with 51 keys; full
+    key list defined as dotted-path leaves below.
+  example: '{}'
+- name: device
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: agentId,
+    id, name (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: engine
+  type: string
+  description: Vendor-emitted field 'Engine'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_engine
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by WithSecure. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: wit-25065d5b
+- name: severity
+  type: string
+  description: Event severity as classified by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: INFO
+- name: source
+  type: ipv4
+  description: Vendor-emitted field 'Source'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: details.accessorPath
+  type: string
+  description: Vendor-emitted field 'Details › accessorPath'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_accessorpath
+- name: details.alertType
+  type: string
+  description: Vendor-emitted field 'Details › alertType'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_alerttype
+- name: details.appName
+  type: string
+  description: Vendor-emitted field 'Details › appName'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: Salesforce
+- name: details.appliedRule
+  type: string
+  description: Vendor-emitted field 'Details › appliedRule'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_appliedrule
+- name: details.categories
+  type: string
+  description: Vendor-emitted field 'Details › categories'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_categories
+- name: details.commandLine
+  type: string_long
+  description: Process command-line as launched (executable + arguments). Free-form
+    text; may span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by WithSecure for this record.
+- name: details.computerName
+  type: host
+  description: Vendor-emitted field 'Details › computerName'. Leaf of the 'details'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: details.creator
+  type: string
+  description: Vendor-emitted field 'Details › creator'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_creator
+- name: details.description
+  type: string_long
+  description: Free-form human-readable description from WithSecure. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by WithSecure.
+- name: details.deviceId
+  type: string
+  description: Vendor-emitted field 'Details › deviceId'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: dev-c7bd161b
+- name: details.deviceName
+  type: host
+  description: Vendor-emitted field 'Details › deviceName'. Leaf of the 'details'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: details.devicePath
+  type: host
+  description: Vendor-emitted field 'Details › devicePath'. Leaf of the 'details'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: details.filePath
+  type: string
+  description: Filesystem path reported by the vendor. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: details.hostIpAddress
+  type: ipv4
+  description: Vendor-emitted field 'Details › hostIpAddress'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: details.incidentId
+  type: string
+  description: Vendor-emitted field 'Details › incidentId'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: evt-d89960ab
+- name: details.infectionName
+  type: string
+  description: Vendor-emitted field 'Details › infectionName'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_infectionname
+- name: details.initiator
+  type: file_path
+  description: Vendor-emitted field 'Details › initiator'. Leaf of the 'details' composite.
+    Absolute filesystem path; vendor-native separator (forward slash on POSIX, backslash
+    on Windows).
+  example: /var/log/example.log
+- name: details.initiator_hash
+  type: hash_sha256
+  description: Vendor-emitted field 'Details › initiator hash'. Leaf of the 'details'
+    composite. 64-character lowercase hex SHA-256 digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: details.initiator_signer_name
+  type: string
+  description: Human-readable name as displayed by WithSecure. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: details.ip
+  type: ipv4
+  description: Vendor-emitted field 'Details › ip'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: details.ipProtocol
+  type: string
+  description: Vendor-emitted field 'Details › ipProtocol'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_ipprotocol
+- name: details.localAddress
+  type: ipv4
+  description: Vendor-emitted field 'Details › localAddress'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: details.localPort
+  type: integer_port
+  description: Vendor-emitted field 'Details › localPort'. Leaf of the 'details' composite.
+    Unsigned integer 0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: details.name
+  type: string
+  description: Human-readable name as displayed by WithSecure. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: details.path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/example.log
+- name: details.port
+  type: integer_port
+  description: TCP/UDP port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: details.process
+  type: string
+  description: Vendor-emitted field 'Details › process'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: details.processId
+  type: integer
+  description: Operating-system process identifier. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: details.reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: details.remoteAddress
+  type: ipv4
+  description: Vendor-emitted field 'Details › remoteAddress'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: details.remotePort
+  type: integer_port
+  description: Vendor-emitted field 'Details › remotePort'. Leaf of the 'details'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '443'
+- name: details.reputation
+  type: string
+  description: Vendor-emitted field 'Details › reputation'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_reputation
+- name: details.resolution
+  type: string
+  description: Vendor-emitted field 'Details › resolution'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_resolution
+- name: details.size
+  type: integer_byte_count
+  description: Size in bytes of the payload/object. Unsigned decimal byte count; bare
+    digits, no unit suffix.
+  example: '1024'
+- name: details.systemDataChannel
+  type: string
+  description: Vendor-emitted field 'Details › systemDataChannel'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_systemdatachanne
+- name: details.systemDataComputer
+  type: string
+  description: Vendor-emitted field 'Details › systemDataComputer'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_systemdatacomput
+- name: details.systemDataEventId
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Leaf of
+    the 'details' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_systemdataeventi
+- name: details.systemDataLevel
+  type: string
+  description: Vendor-emitted field 'Details › systemDataLevel'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_systemdatalevel
+- name: details.systemDataOpcode
+  type: string
+  description: Vendor-emitted field 'Details › systemDataOpcode'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_systemdataopcode
+- name: details.systemDataProcessId
+  type: string
+  description: Vendor-emitted field 'Details › systemDataProcessId'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_systemdataproces
+- name: details.systemDataProviderName
+  type: string
+  description: Vendor-emitted field 'Details › systemDataProviderName'. Leaf of the
+    'details' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_systemdataprovid
+- name: details.systemDataUserInfoDomain
+  type: string
+  description: Vendor-emitted field 'Details › systemDataUserInfoDomain'. Leaf of
+    the 'details' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_systemdatauserin
+- name: details.systemDataUserInfoSid
+  type: string
+  description: Vendor-emitted field 'Details › systemDataUserInfoSid'. Leaf of the
+    'details' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_systemdatauserin
+- name: details.systemDataUserInfoUsername
+  type: user
+  description: Vendor-emitted field 'Details › systemDataUserInfoUsername'. Leaf of
+    the 'details' composite. Account name as the vendor reports it — login name, UPN,
+    or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jsmith
+- name: details.targetCommandLine
+  type: string
+  description: Vendor-emitted field 'Details › targetCommandLine'. Leaf of the 'details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_targetcommandlin
+- name: details.targetPath
+  type: file_path
+  description: Vendor-emitted field 'Details › targetPath'. Leaf of the 'details'
+    composite. Absolute filesystem path; vendor-native separator (forward slash on
+    POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: details.targetSha256
+  type: hash_sha256
+  description: Vendor-emitted field 'Details › targetSha256'. Leaf of the 'details'
+    composite. 64-character lowercase hex SHA-256 digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: details.targetSignatureSignerName
+  type: string
+  description: Vendor-emitted field 'Details › targetSignatureSignerName'. Leaf of
+    the 'details' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_targetsignatures
+- name: details.url
+  type: url
+  description: Full URL with scheme — as WithSecure captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: details.userName
+  type: user
+  description: Account name (login name or UPN) of the user. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: details.websiteUrl
+  type: url
+  description: Vendor-emitted field 'Details › websiteUrl'. Leaf of the 'details'
+    composite. Full URL with scheme (http/https/ftp); percent-encoded if it contains
+    non-ASCII characters.
+  example: https://example.com/path
+- name: device.agentId
+  type: string
+  description: Vendor-emitted field 'Device › agentId'. Leaf of the 'device' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: dev-82eeaff4
+- name: device.id
+  type: string_short
+  description: Opaque identifier emitted by WithSecure. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: wit-7f575dbc
+- name: device.name
+  type: host
+  description: Human-readable name as displayed by WithSecure. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+use_cases:
+- EDR
+- AV
+how_to_use: |
+  ## WithSecure WithSecure → Cortex XSIAM (dataset `withsecure_endpoint_protection_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `withsecure_endpoint_protection_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `withsecure_endpoint_protection`. The marketplace pack's display name `WithSecure` / `WithSecure` normalizes to `withsecure_withsecure_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `withsecure_endpoint_protection` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.systemDataLevel`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~45 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.original_alert_id`, `xdm.alert.original_threat_name`, `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.event.description`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|WithSecure|WithSecure|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = withsecure_endpoint_protection_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

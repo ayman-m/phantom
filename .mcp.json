@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "phantom-codebase-search": {
+      "command": "python3",
+      "args": [
+        "tooling/mcp/codebase_search.py"
+      ]
+    }
+  }
+}

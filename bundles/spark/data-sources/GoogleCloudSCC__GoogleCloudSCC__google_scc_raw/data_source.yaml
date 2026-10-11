@@ -1,0 +1,291 @@
+schema_version: 1
+id: GoogleCloudSCC
+pack_name: GoogleCloudSCC
+rule_name: GoogleCloudSCC
+dataset_name: google_scc_raw
+vendor: Google
+product: GoogleCloudSCC
+description: This pack leverages the features of Google Cloud Security to provide
+  an organization-wide framework for detection and response.
+categories:
+- Cloud Service Provider
+version: 2.1.30
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjE2OHB4IiB2aWV3Qm94PSIwIDAgNTEyIDE2OCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCI+Cgk8Zz4KCQk8cGF0aCBkPSJNNDk2LjA1MjQ1NSwxMDIuNjcyMDU1IEw1MTAuMjU1NzM3LDExMi4xNDA5MDkgQzUwNS42NDU5LDExOC45MzEwNzUgNDk0LjYxOTY2OCwxMzAuNTgwMjU4IDQ3NS41NTczNjgsMTMwLjU4MDI1OCBDNDUxLjg4NTIzMSwxMzAuNTgwMjU4IDQzNC4yNTU3MTksMTEyLjI2NTUgNDM0LjI1NTcxOSw4OC45NjcxMzMgQzQzNC4yNTU3MTksNjQuMTczNjg0MSA0NTIuMDcyMTE2LDQ3LjM1NDAwNzggNDczLjU2MzkyNSw0Ny4zNTQwMDc4IEM0OTUuMTgwMzIzLDQ3LjM1NDAwNzggNTA1Ljc3MDQ5LDY0LjU0NzQ1NDYgNTA5LjE5NjcyLDczLjgyOTQyNDIgTDUxMS4wNjU1NzQsNzguNTYzODUxNiBMNDU1LjM3Mzc1NiwxMDEuNjEzMDM4IEM0NTkuNjA5ODIzLDEwOS45NjA1ODEgNDY2LjIxMzEwMywxMTQuMTk2NjQ4IDQ3NS41NTczNjgsMTE0LjE5NjY0OCBDNDg0LjkwMTYzMywxMTQuMTk2NjQ4IDQ5MS4zODAzMjMsMTA5LjU4NjgxMSA0OTYuMDUyNDU1LDEwMi42NzIwNTUgTDQ5Ni4wNTI0NTUsMTAyLjY3MjA1NSBaIE00NTIuMzgzNTkyLDg3LjY1ODkzNTkgTDQ4OS41NzM3NjUsNzIuMjA5NzUxNyBDNDg3LjUxODAyNiw2Ny4wMzkyNTg2IDQ4MS40MTMxMDcsNjMuMzYzODQ3OCA0NzQuMTI0NTgxLDYzLjM2Mzg0NzggQzQ2NC44NDI2MTIsNjMuMzYzODQ3OCA0NTEuOTQ3NTI2LDcxLjU4NjgwMDcgNDUyLjM4MzU5Miw4Ny42NTg5MzU5IEw0NTIuMzgzNTkyLDg3LjY1ODkzNTkgWiIgZmlsbD0iI0ZGMzAyRiI+PC9wYXRoPgoJCTxwYXRoIGQ9Ik00MDcuNDA2NTMxLDQuOTMxMDQ2MzIgTDQyNS4zNDc1MTksNC45MzEwNDYzMiBMNDI1LjM0NzUxOSwxMjYuNzgwMjU3IEw0MDcuNDA2NTMxLDEyNi43ODAyNTcgTDQwNy40MDY1MzEsNC45MzEwNDYzMiBMNDA3LjQwNjUzMSw0LjkzMTA0NjMyIFoiIGZpbGw9IiMyMEIxNUEiPjwvcGF0aD4KCQk8cGF0aCBkPSJNMzc5LjEyNDU1Nyw1MC41OTMzNTI4IEwzOTYuNDQyNTk0LDUwLjU5MzM1MjggTDM5Ni40NDI1OTQsMTI0LjU5OTkyOSBDMzk2LjQ0MjU5NCwxNTUuMzExNDEyIDM3OC4zMTQ3MjEsMTY3Ljk1NzMxNiAzNTYuODg1MjA3LDE2Ny45NTczMTYgQzMzNi43MDE1OTYsMTY3Ljk1NzMxNiAzMjQuNTU0MDUxLDE1NC4zNzY5ODYgMzIwLjAwNjUxLDE0My4zNTA3NTMgTDMzNS44OTE3NTksMTM2Ljc0NzQ3MyBDMzM4Ljc1NzMzNCwxNDMuNTM3NjM5IDM0NS42NzIwOSwxNTEuNTczNzA2IDM1Ni44ODUyMDcsMTUxLjU3MzcwNiBDMzcwLjY1MjQyNCwxNTEuNTczNzA2IDM3OS4xMjQ1NTcsMTQzLjAzOTI3OCAzNzkuMTI0NTU3LDEyNy4wOTE3MzIgTDM3OS4xMjQ1NTcsMTIxLjExMTQwNCBMMzc4LjUwMTYwNiwxMjEuMTExNDA0IEMzNzQuMzkwMTMsMTI2LjA5NTAxMSAzNjYuNTQwOTQ3LDEzMC41ODAyNTggMzU2LjU3MzczMSwxMzAuNTgwMjU4IEMzMzUuNzY3MTY5LDEzMC41ODAyNTggMzE2LjcwNDg2OSwxMTIuNDUyMzg1IDMxNi43MDQ4NjksODkuMDkxNzIzMSBDMzE2LjcwNDg2OSw2NS42MDY0NzEzIDMzNS43NjcxNjksNDcuMjkxNzEyNiAzNTYuNTczNzMxLDQ3LjI5MTcxMjYgQzM2Ni40Nzg2NTIsNDcuMjkxNzEyNiAzNzQuMzkwMTMsNTEuNzE0NjY0NiAzNzguNTAxNjA2LDU2LjU3MzY4MjIgTDM3OS4xMjQ1NTcsNTYuNTczNjgyMiBMMzc5LjEyNDU1Nyw1MC41OTMzNTI4IEwzNzkuMTI0NTU3LDUwLjU5MzM1MjggWiBNMzgwLjM3MDQ1OSw4OS4wOTE3MjMxIEMzODAuMzcwNDU5LDc0LjM5MDA4MDEgMzcwLjU5MDEyOCw2My42NzUzMjMzIDM1OC4xMzExMDksNjMuNjc1MzIzMyBDMzQ1LjU0NzQ5OSw2My42NzUzMjMzIDMzNC45NTczMzMsNzQuMzkwMDgwMSAzMzQuOTU3MzMzLDg5LjA5MTcyMzEgQzMzNC45NTczMzMsMTAzLjYwNjQ4MSAzNDUuNTQ3NDk5LDExNC4xMzQzNTIgMzU4LjEzMTEwOSwxMTQuMTM0MzUyIEMzNzAuNTkwMTI4LDExNC4xOTY2NDggMzgwLjM3MDQ1OSwxMDMuNjA2NDgxIDM4MC4zNzA0NTksODkuMDkxNzIzMSBMMzgwLjM3MDQ1OSw4OS4wOTE3MjMxIFoiIGZpbGw9IiMzNjg2RjciPjwvcGF0aD4KCQk8cGF0aCBkPSJNMjE4LjIxNjMyLDg4Ljc4MDI0NzYgQzIxOC4yMTYzMiwxMTIuNzYzODYxIDE5OS41Mjc3OTEsMTMwLjM5MzM3MyAxNzYuNjAzMTk1LDEzMC4zOTMzNzMgQzE1My42Nzg1OTksMTMwLjM5MzM3MyAxMzQuOTkwMDY5LDExMi43MDE1NjUgMTM0Ljk5MDA2OSw4OC43ODAyNDc2IEMxMzQuOTkwMDY5LDY0LjY3MjA0NDggMTUzLjY3ODU5OSw0Ny4xMDQ4Mjc0IDE3Ni42MDMxOTUsNDcuMTA0ODI3NCBDMTk5LjUyNzc5MSw0Ny4xMDQ4Mjc0IDIxOC4yMTYzMiw2NC42NzIwNDQ4IDIxOC4yMTYzMiw4OC43ODAyNDc2IEwyMTguMjE2MzIsODguNzgwMjQ3NiBaIE0yMDAuMDI2MTUxLDg4Ljc4MDI0NzYgQzIwMC4wMjYxNTEsNzMuODI5NDI0MiAxODkuMTg2ODA0LDYzLjU1MDczMzEgMTc2LjYwMzE5NSw2My41NTA3MzMxIEMxNjQuMDE5NTg1LDYzLjU1MDczMzEgMTUzLjE4MDIzOCw3My44Mjk0MjQyIDE1My4xODAyMzgsODguNzgwMjQ3NiBDMTUzLjE4MDIzOCwxMDMuNjA2NDgxIDE2NC4wMTk1ODUsMTE0LjAwOTc2MyAxNzYuNjAzMTk1LDExNC4wMDk3NjMgQzE4OS4xODY4MDQsMTE0LjAwOTc2MyAyMDAuMDI2MTUxLDEwMy42MDY0ODEgMjAwLjAyNjE1MSw4OC43ODAyNDc2IEwyMDAuMDI2MTUxLDg4Ljc4MDI0NzYgWiIgZmlsbD0iI0ZGMzAyRiI+PC9wYXRoPgoJCTxwYXRoIGQ9Ik0zMDkuMTA0ODY3LDg4Ljk2NzEzMyBDMzA5LjEwNDg2NywxMTIuOTUwNzQ2IDI5MC40MTYzMzgsMTMwLjU4MDI1OCAyNjcuNDkxNzQyLDEzMC41ODAyNTggQzI0NC41NjcxNDYsMTMwLjU4MDI1OCAyMjUuODc4NjE3LDExMi45NTA3NDYgMjI1Ljg3ODYxNyw4OC45NjcxMzMgQzIyNS44Nzg2MTcsNjQuODU4OTMwMiAyNDQuNTY3MTQ2LDQ3LjM1NDAwNzggMjY3LjQ5MTc0Miw0Ny4zNTQwMDc4IEMyOTAuNDE2MzM4LDQ3LjM1NDAwNzggMzA5LjEwNDg2Nyw2NC43OTY2MzUgMzA5LjEwNDg2Nyw4OC45NjcxMzMgTDMwOS4xMDQ4NjcsODguOTY3MTMzIFogTTI5MC44NTI0MDQsODguOTY3MTMzIEMyOTAuODUyNDA0LDc0LjAxNjMwOTUgMjgwLjAxMzA1Nyw2My43Mzc2MTg0IDI2Ny40Mjk0NDcsNjMuNzM3NjE4NCBDMjU0Ljg0NTgzNyw2My43Mzc2MTg0IDI0NC4wMDY0OSw3NC4wMTYzMDk1IDI0NC4wMDY0OSw4OC45NjcxMzMgQzI0NC4wMDY0OSwxMDMuNzkzMzY2IDI1NC44NDU4MzcsMTE0LjE5NjY0OCAyNjcuNDI5NDQ3LDExNC4xOTY2NDggQzI4MC4wNzUzNTIsMTE0LjE5NjY0OCAyOTAuODUyNDA0LDEwMy43MzEwNzEgMjkwLjg1MjQwNCw4OC45NjcxMzMgTDI5MC44NTI0MDQsODguOTY3MTMzIFoiIGZpbGw9IiNGRkJBNDAiPjwvcGF0aD4KCQk8cGF0aCBkPSJNNjYuNTkwMDUyNSwxMTIuMzI3Nzk0IEM0MC40ODg0MDY2LDExMi4zMjc3OTQgMjAuMDU1NjE0Niw5MS4yNzIwNTE1IDIwLjA1NTYxNDYsNjUuMTcwNDA1NiBDMjAuMDU1NjE0NiwzOS4wNjg3NTk4IDQwLjQ4ODQwNjYsMTguMDEzMDE2OCA2Ni41OTAwNTI1LDE4LjAxMzAxNjggQzgwLjY2ODc0NDYsMTguMDEzMDE2OCA5MC45NDc0MzU3LDIzLjU1NzI4MDUgOTguNTQ3NDM3MywzMC42NTg5MjE2IEwxMTEuMDY4NzUyLDE4LjEzNzYwNyBDMTAwLjQ3ODU4NSw3Ljk4MzUwNjEzIDg2LjMzNzU5ODQsMC4yNTg5MTM5OTcgNjYuNTkwMDUyNSwwLjI1ODkxMzk5NyBDMzAuODMyNjY2NiwwLjI1ODkxMzk5NyAwLjc0NDEzNDQwOCwyOS40MTMwMTk2IDAuNzQ0MTM0NDA4LDY1LjE3MDQwNTYgQzAuNzQ0MTM0NDA4LDEwMC45Mjc3OTIgMzAuODMyNjY2NiwxMzAuMDgxODk3IDY2LjU5MDA1MjUsMTMwLjA4MTg5NyBDODUuOTAxNTMyOCwxMzAuMDgxODk3IDEwMC40Nzg1ODUsMTIzLjcyNzc5NyAxMTEuODc4NTg4LDExMS44OTE3MjkgQzEyMy41OTAwNjcsMTAwLjE4MDI1MSAxMjcuMjAzMTgzLDgzLjczNDM0NDcgMTI3LjIwMzE4Myw3MC40MDMxOTM5IEMxMjcuMjAzMTgzLDY2LjIyOTQyMjMgMTI2LjcwNDgyMiw2MS45MzEwNjA2IDEyNi4xNDQxNjYsNTguNzU0MDEwNiBMNjYuNTkwMDUyNSw1OC43NTQwMTA2IEw2Ni41OTAwNTI1LDc2LjA3MjA0NzcgTDEwOS4wMTMwMTQsNzYuMDcyMDQ3NyBDMTA3Ljc2NzExMiw4Ni45MTEzOTQ3IDEwNC4zNDA4ODIsOTQuMzI0NTExMyA5OS4yOTQ5Nzg1LDk5LjM3MDQxNDIgQzkzLjE5MDA1OTIsMTA1LjUzNzYyOSA4My41MzQzMTksMTEyLjMyNzc5NCA2Ni41OTAwNTI1LDExMi4zMjc3OTQgTDY2LjU5MDA1MjUsMTEyLjMyNzc5NCBMNjYuNTkwMDUyNSwxMTIuMzI3Nzk0IFoiIGZpbGw9IiMzNjg2RjciPjwvcGF0aD4KCTwvZz4KPC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: finding
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: category,
+    description, findingClass, parentDisplayName, severity, sourceProperties, state
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: resource
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: cloudProvider,
+    displayName, location, parent, project, projectDisplayName, resourcePathString,
+    service, type (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: finding.category
+  type: string_short
+  description: Google's category classifier for the event. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: access_control
+- name: finding.description
+  type: string_long
+  description: Free-form human-readable description from Google. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Event recorded by Google.
+- name: finding.findingClass
+  type: string
+  description: Vendor-emitted field 'Finding › findingClass'. Leaf of the 'finding'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_findingclass
+- name: finding.parentDisplayName
+  type: string
+  description: Vendor-emitted field 'Finding › parentDisplayName'. Leaf of the 'finding'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: John Doe
+- name: finding.severity
+  type: string_short
+  description: Event severity as classified by Google. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: INFO
+- name: finding.sourceProperties
+  type: string
+  description: Vendor-emitted field 'Finding › sourceProperties'. Leaf of the 'finding'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_sourceproperties
+- name: finding.sourceProperties.ExceptionInstructions
+  type: string
+  description: Vendor-emitted field 'Finding › sourceProperties › ExceptionInstructions'.
+    Leaf of the 'finding' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_exceptioninstruc
+- name: finding.sourceProperties.ExposedService
+  type: string
+  description: Vendor-emitted field 'Finding › sourceProperties › ExposedService'.
+    Leaf of the 'finding' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_exposedservice
+- name: finding.sourceProperties.OpenPorts
+  type: integer
+  description: Vendor-emitted field 'Finding › sourceProperties › OpenPorts'. Leaf
+    of the 'finding' composite. Free-form text; may contain whitespace and punctuation.
+  example: '443'
+- name: finding.sourceProperties.Recommendation
+  type: string
+  description: Vendor-emitted field 'Finding › sourceProperties › Recommendation'.
+    Leaf of the 'finding' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_recommendation
+- name: finding.sourceProperties.ScannerName
+  type: string
+  description: Vendor-emitted field 'Finding › sourceProperties › ScannerName'. Leaf
+    of the 'finding' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_scannername
+- name: finding.sourceProperties.VulnerableNetworkInterfaceNames
+  type: string
+  description: Vendor-emitted field 'Finding › sourceProperties › VulnerableNetworkInterfaceNames'.
+    Leaf of the 'finding' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_vulnerablenetwor
+- name: finding.sourceProperties.gcloud_remediation
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Finding › sourceProperties › gcloud remediation'.
+    Leaf of the 'finding' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_remediation
+- name: finding.state
+  type: string
+  description: Vendor-emitted field 'Finding › state'. Leaf of the 'finding' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: CA
+- name: resource.cloudProvider
+  type: string
+  description: Vendor-emitted field 'Resource › cloudProvider'. Leaf of the 'resource'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_cloudprovider
+- name: resource.displayName
+  type: string
+  description: Vendor-emitted field 'Resource › displayName'. Leaf of the 'resource'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: John Doe
+- name: resource.location
+  type: string
+  description: Location label (region/site/zone) emitted by Google. Free-form text;
+    may contain whitespace and punctuation.
+  example: us-east
+- name: resource.parent
+  type: string
+  description: Vendor-emitted field 'Resource › parent'. Leaf of the 'resource' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: systemd
+- name: resource.project
+  type: string
+  description: Vendor-emitted field 'Resource › project'. Leaf of the 'resource' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: proj-6121328c
+- name: resource.projectDisplayName
+  type: host
+  description: Vendor-emitted field 'Resource › projectDisplayName'. Leaf of the 'resource'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: resource.resourcePathString
+  type: file_path
+  description: Vendor-emitted field 'Resource › resourcePathString'. Leaf of the 'resource'
+    composite. Absolute filesystem path; vendor-native separator (forward slash on
+    POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: resource.service
+  type: string
+  description: Vendor-emitted field 'Resource › service'. Leaf of the 'resource' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sshd
+- name: resource.type
+  type: string_short
+  description: Type/category classifier emitted by Google. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: finding_class
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: access_control
+- name: finding_description
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Google.
+- name: finding_parent_display_name
+  type: string
+  description: Observer product. Free-form text; may contain whitespace and punctuation.
+  example: John Doe
+- name: finding_severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: finding_sp_command_line
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_line
+- name: finding_sp_description
+  type: string
+  description: Alert description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Google.
+- name: finding_sp_resource_path
+  type: string
+  description: Destination cloud project hierarchy. Free-form text; may contain whitespace
+    and punctuation.
+  example: /var/log/app.log
+- name: finding_sp_risks
+  type: string
+  description: Alert risks. Free-form text; may contain whitespace and punctuation.
+  example: sample_risks
+- name: finding_sp_scanner_name
+  type: string
+  description: Observer name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: finding_state
+  type: string
+  description: Event is completed. Free-form text; may contain whitespace and punctuation.
+  example: CA
+- name: resource_cloud_provider
+  type: string
+  description: Destination cloud provider. Free-form text; may contain whitespace
+    and punctuation.
+  example: aws
+- name: resource_display_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: John Doe
+- name: resource_location
+  type: string
+  description: Destination cloud zone. Free-form text; may contain whitespace and
+    punctuation.
+  example: us-east
+- name: resource_parent_id
+  type: string_short
+  description: Destination resource parent ID. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: resource_project_id
+  type: string_short
+  description: Destination cloud project ID. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: resource_project_name
+  type: string
+  description: Destination cloud project. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: resource_resource_path_string
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: sample_string
+- name: resource_service
+  type: string
+  description: Destination resource sub type. Free-form text; may contain whitespace
+    and punctuation.
+  example: sshd
+- name: resource_type
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: tmp_remove_chars
+  type: string
+  description: Destination user groups. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_chars
+use_cases:
+- Cloud
+- SaaS
+validated: true
+how_to_use: |
+  ## Google SCC → Cortex XSIAM (dataset `google_scc_raw`)
+
+  **Validated** — maps **21 xdm fields** end-to-end
+  via CEF-over-syslog on a tenant with the **Google Cloud SCC** content pack installed
+  (the pack binds the modeling rule + parsing rule to the dataset).
+
+  Required CEF header — the broker derives the dataset from it (lowercased):
+  - vendor: `Google`
+  - product: `SCC`
+  Broker derives -> `google_scc_raw`.
+  Modeling rule: unconditional (no gate field).
+
+  JSON-native MR: it reads nested JSON via `json_extract_scalar(...)`/`->`. The
+  worker emits composite schema fields as JSON strings on the CEF wire, which the
+  rule parses — so CEF-over-syslog populates these fields (no HTTP collector).
+
+  Verify (wide >=7d window):
+      config timeframe = 30d | datamodel dataset = google_scc_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

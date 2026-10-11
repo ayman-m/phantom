@@ -1,0 +1,571 @@
+schema_version: 1
+id: AzureFirewall
+pack_name: AzureFirewall
+rule_name: AzureFirewall
+dataset_name: msft_azure_firewall_raw
+vendor: Microsoft
+product: AzureFirewall
+description: Azure Firewall is a cloud-native and intelligent network firewall security
+  service that provides breed threat protection for cloud workloads running in Azure.
+  It's a fully stateful firewall as a service, with built-in high availability and
+  unrestricted cloud scalability. This pack contains an integration with a main goal
+  to manage Azure Firewall security service, and normalization rules for ingesting
+  and modeling Azure Firewall Resource logs.
+categories:
+- Network Security
+version: 1.1.58
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTEwcHgiIHZpZXdCb3g9IjAgMCA1MTIgMTEwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQiPgogICAgPHRpdGxlPk1pY3Jvc29mdDwvdGl0bGU+CiAgICA8Zz4KICAgICAgICA8cGF0aCBkPSJNNTEyLDQ5LjQ0ODY0MjggTDUxMiw0MC40NDQzMzc2IEw1MDAuODE4MjY3LDQwLjQ0NDMzNzYgTDUwMC44MTgyNjcsMjYuNDQ1Njg5IEw1MDAuNDQxODk5LDI2LjU2MTQ2MjIgTDQ4OS45MzkzMjgsMjkuNzc0NjMyMiBMNDg5LjczMjU0NiwyOS44Mzc3ODExIEw0ODkuNzMyNTQ2LDQwLjQ0NDMzNzYgTDQ3My4xNTU5MzIsNDAuNDQ0MzM3NiBMNDczLjE1NTkzMiwzNC41MzYxOTA5IEM0NzMuMTU1OTMyLDMxLjc4NDg3NTQgNDczLjc3MTMyNiwyOS42NzkyODk1IDQ3NC45ODM1MzksMjguMjc1MTUyOCBDNDc2LjE4NzcwMywyNi44ODc3MzIgNDc3LjkxMDA2MSwyNi4xODI1NjgxIDQ4MC4xMDYwMzcsMjYuMTgyNTY4MSBDNDgxLjY4NTM4MiwyNi4xODI1NjgxIDQ4My4zMjA0NDUsMjYuNTU0NjUyIDQ4NC45NjU0MTUsMjcuMjg4Mjk0OCBMNDg1LjM3Nzc0MSwyNy40NzIxNjk4IEw0ODUuMzc3NzQxLDE3Ljk4OTI5NDIgTDQ4NS4xODM5NjEsMTcuOTE4MDk2OSBDNDgzLjY0OTE5MiwxNy4zNjY0NzE3IDQ4MS41NjA5NDEsMTcuMDg4NDkyMyA0NzguOTczNjg5LDE3LjA4ODQ5MjMgQzQ3NS43MTIyMjgsMTcuMDg4NDkyMyA0NzIuNzQ4NTU5LDE3Ljc5Nzk4OTkgNDcwLjE2NDQwMywxOS4yMDQ2MDMgQzQ2Ny41NzgzODksMjAuNjEzMDczNSA0NjUuNTQ0MDAxLDIyLjYyMzkzNTkgNDY0LjExOTQzMywyNS4xODA4NTE2IEM0NjIuNjk5MiwyNy43MzQ2NzE3IDQ2MS45Nzg1NTgsMzAuNjg0MTAxNiA0NjEuOTc4NTU4LDMzLjk0ODAzODUgTDQ2MS45Nzg1NTgsNDAuNDQ0MzM3NiBMNDU0LjE5MjY1OCw0MC40NDQzMzc2IEw0NTQuMTkyNjU4LDQ5LjQ0ODY0MjggTDQ2MS45Nzg1NTgsNDkuNDQ4NjQyOCBMNDYxLjk3ODU1OCw4Ny4zODIwMDI2IEw0NzMuMTU1OTMyLDg3LjM4MjAwMjYgTDQ3My4xNTU5MzIsNDkuNDQ4NjQyOCBMNDg5LjczMjU0Niw0OS40NDg2NDI4IEw0ODkuNzMyNTQ2LDczLjU1NDg0NjggQzQ4OS43MzI1NDYsODMuNDgyODYxIDQ5NC40MTU0NzgsODguNTE0MzUwOSA1MDMuNjUwNzExLDg4LjUxNDM1MDkgQzUwNS4xNjg3NjQsODguNTE0MzUwOSA1MDYuNzY1NDY4LDg4LjMzNjA0NzggNTA4LjM5Njc5Miw4Ny45ODc0OTAxIEM1MTAuMDU2NjQ1LDg3LjYzMDI2NDggNTExLjE4NzEzNiw4Ny4yNzMwMzk2IDUxMS44NTI2NTIsODYuODkxNjY5MSBMNTEyLDg2LjgwNDk5NCBMNTEyLDc3LjcxNzEwOTMgTDUxMS41NDU1NzQsNzguMDE3OTk1NiBDNTEwLjkzODg0OSw3OC40MjI4OTIyIDUxMC4xODM1MzcsNzguNzUyODc2NyA1MDkuMjk3NjE5LDc4Ljk5ODA0MzUgQzUwOC40MDc5MzYsNzkuMjQ4MTYzIDUwNy42NjUwMDYsNzkuMzczODQyIDUwNy4wODk4NzksNzkuMzczODQyIEM1MDQuOTI2MDczLDc5LjM3Mzg0MiA1MDMuMzI1NzA0LDc4Ljc5MDY0MjMgNTAyLjMzMjAxLDc3LjY0MDMzOTkgQzUwMS4zMjc4MTgsNzYuNDc5NTEyNiA1MDAuODE4MzE3LDc0LjQ0ODgzODcgNTAwLjgxODMxNyw3MS42MDg5OTA4IEw1MDAuODE4MzE3LDQ5LjQ0ODY0MjggTDUxMiw0OS40NDg2NDI4IEw1MTIsNDkuNDQ4NjQyOCBaIE00MjkuMjMxODM3LDc5LjM3NDcwODcgQzQyNS4xNzQ4MjMsNzkuMzc0NzA4NyA0MjEuOTc2NTExLDc4LjAyOTM4NzIgNDE5LjcyMjM0LDc1LjM3OTYwNTQgQzQxNy40NTQ1NDcsNzIuNzE2MjAzMyA0MTYuMzA1NDgzLDY4LjkxOTIxNDYgNDE2LjMwNTQ4Myw2NC4wOTUxMjU5IEM0MTYuMzA1NDgzLDU5LjExODExNzUgNDE3LjQ1NDU0Nyw1NS4yMjI2OTA2IDQxOS43MjM1NzgsNTIuNTEyMjM2MyBDNDIxLjk3ODk4OCw0OS44MTk3MzYxIDQyNS4xNDY5NjMsNDguNDUzMzY1IDQyOS4xNDA4MjgsNDguNDUzMzY1IEM0MzMuMDE2NDQ0LDQ4LjQ1MzM2NSA0MzYuMTAxNDU4LDQ5Ljc1ODQ0NDQgNDM4LjMxMTA1NCw1Mi4zMzQ1NTIzIEM0NDAuNTMyNDE0LDU0LjkyMzY2MTUgNDQxLjY1OTE5LDU4Ljc4ODEzMyA0NDEuNjU5MTksNjMuODIzMzM3NSBDNDQxLjY1OTE5LDY4LjkyMDQ1MjkgNDQwLjU5OTI3Nyw3Mi44MzU2OTExIDQzOC41MDkxNjksNzUuNDU0NTE3NSBDNDM2LjQzMzkxOSw3OC4wNTQxNTE1IDQzMy4zMTI5OTYsNzkuMzc0NzA4NyA0MjkuMjMxODM3LDc5LjM3NDcwODcgTDQyOS4yMzE4MzcsNzkuMzc0NzA4NyBaIE00MjkuNzI5NiwzOS4zMTM0NzUxIEM0MjEuOTg5NTEzLDM5LjMxMzQ3NTEgNDE1Ljg0MTc3MSw0MS41ODEyNjczIDQxMS40NTkxMDcsNDYuMDU0MzIxOSBDNDA3LjA3ODkxOCw1MC41Mjc5OTU1IDQwNC44NTc1NTksNTYuNzE4NDU1NCA0MDQuODU3NTU5LDY0LjQ1NjA2NTggQzQwNC44NTc1NTksNzEuODA0ODc2NSA0MDcuMDI1Njc1LDc3LjcxNjExODYgNDExLjMwMTg1Myw4Mi4wMjI2MzMyIEM0MTUuNTc4MDMyLDg2LjMzMTAwNSA0MjEuMzk3NjQ1LDg4LjUxMzM2MDQgNDI4LjU5NzI1MSw4OC41MTMzNjA0IEM0MzYuMTAwMjIsODguNTEzMzYwNCA0NDIuMTI1Mzc4LDg2LjIxMzk5MzYgNDQ2LjUwNjgwNCw4MS42NzkwMjgzIEM0NTAuODg3NjExLDc3LjE0ODM5NjcgNDUzLjEwNzExNCw3MS4wMTY3NTIxIDQ1My4xMDcxMTQsNjMuNDU5OTIxMSBDNDUzLjEwNzExNCw1NS45OTU5NTY0IDQ1MS4wMjQ0MzUsNTAuMDQwNzU3NiA0NDYuOTE0Nzk3LDQ1Ljc2MjcyMiBDNDQyLjgwMzMwMSw0MS40ODI4MjkyIDQzNy4wMjAyMTQsMzkuMzEzNDc1MSA0MjkuNzI5NiwzOS4zMTM0NzUxIEw0MjkuNzI5NiwzOS4zMTM0NzUxIFogTTM4Ni44MzYyNTQsMzkuMzEzMjI3NSBDMzgxLjU3MTM2LDM5LjMxMzIyNzUgMzc3LjIxNjU1Niw0MC42NTk3ODcxIDM3My44ODk0Nyw0My4zMTUxNDA5IEMzNzAuNTQyNTczLDQ1Ljk4NTk3MjQgMzY4Ljg0NDk3OSw0OS40ODk1MDM5IDM2OC44NDQ5NzksNTMuNzI4NTM1NyBDMzY4Ljg0NDk3OSw1NS45MzE5NDA3IDM2OS4yMTE0OSw1Ny44ODk1NTk4IDM2OS45MzI3NTIsNTkuNTQ5Mzg4IEMzNzAuNjU4MzQ2LDYxLjIxNTQwNzQgMzcxLjc4MTQwOCw2Mi42ODE0NTQ5IDM3My4yNzI4MzksNjMuOTEyMjQxNCBDMzc0Ljc1Mzc0NCw2NS4xMzMxMjIyIDM3Ny4wMzgyNTMsNjYuNDEyMTk5MSAzODAuMDY2OTI4LDY3LjcxMjk0NDcgQzM4Mi42MTIwODIsNjguNzYwNDc1NCAzODQuNTEwODg1LDY5LjY0NzAzNzkgMzg1LjcxNjkwNyw3MC4zNDUzOTE2IEMzODYuODk1Njg5LDcxLjAyOTUwNTggMzg3LjczMjcyMyw3MS43MTc5NTM3IDM4OC4yMDUxMDIsNzIuMzg3ODI4NSBDMzg4LjY2Mzg2MSw3My4wNDM0NjM4IDM4OC44OTcyNjUsNzMuOTQwNTUxMSAzODguODk3MjY1LDc1LjA0ODc1NDIgQzM4OC44OTcyNjUsNzguMjAxODcwNyAzODYuNTM1OTg3LDc5LjczNjAyMDEgMzgxLjY3NjYwOSw3OS43MzYwMjAxIEMzNzkuODc0Mzg2LDc5LjczNjAyMDEgMzc3LjgxODMyOSw3OS4zNjAyMjE2IDM3NS41NjYwMTQsNzguNjE3OTExMiBDMzczLjMxMjQ2Miw3Ny44NzY4MzkxIDM3MS4yMDY4NzUsNzYuODExMzU0MyAzNjkuMzA4NjksNzUuNDQ0OTgzMiBMMzY4Ljg0NDk3OSw3NS4xMTI1MjIzIEwzNjguODQ0OTc5LDg1Ljg3MzIzNjcgTDM2OS4wMTUyMzQsODUuOTUyNDgyNSBDMzcwLjU5NzA1NCw4Ni42ODI0MTA2IDM3Mi41OTA1ODIsODcuMjk3ODAzOSAzNzQuOTQwNzE1LDg3Ljc4MjU2NTQgQzM3Ny4yODY1MTUsODguMjY3MzI2OCAzNzkuNDE3NDg0LDg4LjUxNDM1MDkgMzgxLjI2OTIzNiw4OC41MTQzNTA5IEMzODYuOTgyMzY0LDg4LjUxNDM1MDkgMzkxLjU4Mjk1NSw4Ny4xNjA5ODEgMzk0LjkzOTc1OCw4NC40OTAxNDk2IEMzOTguMzE4MjI5LDgxLjgwMDc0NDkgNDAwLjAzMDY4Miw3OC4yMTQ4NzIgNDAwLjAzMDY4Miw3My44Mjg0OTI2IEM0MDAuMDMwNjgyLDcwLjY2NDg1MTIgMzk5LjEwODgzLDY3Ljk1MTMwMTMgMzk3LjI5MTc0OSw2NS43NjMzNzQgQzM5NS40ODc2NjgsNjMuNTkyNzgxNyAzOTIuMzU2MjIsNjEuNjAwNDkyNiAzODcuOTg3Nzk1LDU5LjgzOTEzMDYgQzM4NC41MDc3ODksNTguNDQyNDIzMiAzODIuMjc4MzgzLDU3LjI4MjgzNDEgMzgxLjM1OTAwNyw1Ni4zOTMxNzYgQzM4MC40NzI0NDQsNTUuNTMzMjM1MSAzODAuMDIyMzUzLDU0LjMxNzMwNzMgMzgwLjAyMjM1Myw1Mi43Nzc1ODU5IEMzODAuMDIyMzUzLDUxLjQxMjQ1MyAzODAuNTc3NjkzLDUwLjMxOTEwODUgMzgxLjcxODcwOSw0OS40MzMxNjUxIEMzODIuODY4MzkyLDQ4LjU0Mjg4NzkgMzg0LjQ2ODE2Niw0OC4wOTAzMjAxIDM4Ni40NzUzMTUsNDguMDkwMzIwMSBDMzg4LjMzNzU5MSw0OC4wOTAzMjAxIDM5MC4yNDMyMDUsNDguMzg0Mzk2MyAzOTIuMTM3Njc1LDQ4Ljk2MDc4NTggQzM5NC4wMzE1MjYsNDkuNTM3MTc1MiAzOTUuNjk0NDUsNTAuMzA5MjAyNyAzOTcuMDgzMTA5LDUxLjI1Mzk2MTQgTDM5Ny41MzkzOTIsNTEuNTY1OTkxOCBMMzk3LjUzOTM5Miw0MS4zNTgxNDA4IEwzOTcuMzY0MTg1LDQxLjI4MjYwOTYgQzM5Ni4wODMyNSw0MC43MzM0NjEgMzk0LjM5NDMyNCw0MC4yNjM1NTgxIDM5Mi4zNDMyMTksMzkuODgyMTg3NiBDMzkwLjMwMDE2MywzOS41MDQ1MzE4IDM4OC40NDcxNzMsMzkuMzEzMjI3NSAzODYuODM2MjU0LDM5LjMxMzIyNzUgTDM4Ni44MzYyNTQsMzkuMzEzMjI3NSBaIE0zMzkuNzA2MDQ3LDc5LjM3NDcwODcgQzMzNS42NTAyNzEsNzkuMzc0NzA4NyAzMzIuNDUwNzIxLDc4LjAyOTM4NzIgMzMwLjE5NzE2OSw3NS4zNzk2MDU0IEMzMjcuOTI4NzU3LDcyLjcxNjIwMzMgMzI2Ljc4MTU1LDY4LjkyMDQ1MjkgMzI2Ljc4MTU1LDY0LjA5NTEyNTkgQzMyNi43ODE1NSw1OS4xMTgxMTc1IDMyNy45Mjk5OTYsNTUuMjIyNjkwNiAzMzAuMTk5NjQ1LDUyLjUxMjIzNjMgQzMzMi40NTMxOTgsNDkuODE5NzM2MSAzMzUuNjIwNTU0LDQ4LjQ1MzM2NSAzMzkuNjE2Mjc2LDQ4LjQ1MzM2NSBDMzQzLjQ5MDY1NCw0OC40NTMzNjUgMzQ2LjU3NTY2OCw0OS43NTg0NDQ0IDM0OC43ODU4ODMsNTIuMzM0NTUyMyBDMzUxLjAwNzI0Myw1NC45MjM2NjE1IDM1Mi4xMzQwMTksNTguNzg4MTMzIDM1Mi4xMzQwMTksNjMuODIzMzM3NSBDMzUyLjEzNDAxOSw2OC45MjA0NTI5IDM1MS4wNzM0ODcsNzIuODM1NjkxMSAzNDguOTgzMzc5LDc1LjQ1NDUxNzUgQzM0Ni45MDgxMjksNzguMDU0MTUxNSAzNDMuNzg4NDQ0LDc5LjM3NDcwODcgMzM5LjcwNjA0Nyw3OS4zNzQ3MDg3IEwzMzkuNzA2MDQ3LDc5LjM3NDcwODcgWiBNMzQwLjIwNTA0OCwzOS4zMTM0NzUxIEMzMzIuNDYzMTAzLDM5LjMxMzQ3NTEgMzI2LjMxNTM2Miw0MS41ODEyNjczIDMyMS45MzQ1NTUsNDYuMDU0MzIxOSBDMzE3LjU1NDM2Niw1MC41Mjc5OTU1IDMxNS4zMzE3NjksNTYuNzE4NDU1NCAzMTUuMzMxNzY5LDY0LjQ1NjA2NTggQzMxNS4zMzE3NjksNzEuODA3OTcyMSAzMTcuNTAxMTIzLDc3LjcxNjExODYgMzIxLjc3NzMwMSw4Mi4wMjI2MzMyIEMzMjYuMDUzNDgsODYuMzMxMDA1IDMzMS44NzI0NzUsODguNTEzMzYwNCAzMzkuMDcyNjk5LDg4LjUxMzM2MDQgQzM0Ni41NzM4MTEsODguNTEzMzYwNCAzNTIuNjAwODI2LDg2LjIxMzk5MzYgMzU2Ljk4MjI1Miw4MS42NzkwMjgzIEMzNjEuMzYxODIyLDc3LjE0ODM5NjcgMzYzLjU4MjU2Miw3MS4wMTY3NTIxIDM2My41ODI1NjIsNjMuNDU5OTIxMSBDMzYzLjU4MjU2Miw1NS45OTU5NTY0IDM2MS40OTkyNjQsNTAuMDQwNzU3NiAzNTcuMzg5MDA2LDQ1Ljc2MjcyMiBDMzUzLjI3NjI3Myw0MS40ODI4MjkyIDM0Ny40OTQ0MjQsMzkuMzEzNDc1MSAzNDAuMjA1MDQ4LDM5LjMxMzQ3NTEgTDM0MC4yMDUwNDgsMzkuMzEzNDc1MSBaIE0yOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQwLjQ0NDMzNzYgTDI4Ny4zMjM2OTksNDAuNDQ0MzM3NiBMMjg3LjMyMzY5OSw4Ny4zODA3NjQ0IEwyOTguMzY0ODcsODcuMzgwNzY0NCBMMjk4LjM2NDg3LDYzLjM3MTE0MTEgQzI5OC4zNjQ4Nyw1OS4yODgxMjQ1IDI5OS4yOTA0MzYsNTUuOTM0NDE3MSAzMDEuMTE2ODA0LDUzLjQwMTAyNzUgQzMwMi45MjAyNjUsNTAuODk3OTc0NCAzMDUuMzIzNjQzLDQ5LjYyOTQyMjMgMzA4LjI1NzU5NSw0OS42Mjk0MjIzIEMzMDkuMjUxODgxLDQ5LjYyOTQyMjMgMzEwLjM2ODEzMyw0OS43OTM0ODU5IDMxMS41NzcyNTEsNTAuMTE3ODk4NSBDMzEyLjc3Mzk4Niw1MC40NDA0NTM3IDMxMy42NDA3MzgsNTAuNzkwMjQ5NSAzMTQuMTUyMTIxLDUxLjE1ODYxODggTDMxNC42MTU4MzMsNTEuNDk0Nzk0NCBMMzE0LjYxNTgzMyw0MC4zNjM4NTM2IEwzMTQuNDM2OTExLDQwLjI4NzA4NDIgQzMxMy40MDg1NzMsMzkuODQ5OTk0IDMxMS45NTQyODgsMzkuNjI5NTkxNiAzMTAuMTEzNjgsMzkuNjI5NTkxNiBDMzA3LjMzOTQ1OCwzOS42Mjk1OTE2IDMwNC44NTYyMTYsNDAuNTIxMTA3IDMwMi43Mjk1OCw0Mi4yNzYyNzc4IEMzMDAuODYyOTcsNDMuODE5MDk0NyAyOTkuNTEzMzE0LDQ1LjkzNDU4NjQgMjk4LjQ4MTg4MSw0OC41NzI2MDUxIEwyOTguMzY0ODcsNDguNTcyNjA1MSBMMjk4LjM2NDg3LDQ4LjU3MjYwNTEgWiBNMjY3LjU1MTU2MywzOS4zMTMyMjc1IEMyNjIuNDg2NjQxLDM5LjMxMzIyNzUgMjU3Ljk2ODM5MSw0MC4zOTk3NjE4IDI1NC4xMjQ5Nyw0Mi41NDA2MzY5IEMyNTAuMjc0MTE4LDQ0LjY4NjQ2NDkgMjQ3LjI5NjIwOSw0Ny43NTA0Mjk5IDI0NS4yNjk4NjksNTEuNjQ2NDc1OCBDMjQzLjI1MjgxNiw1NS41MzMyMzUxIDI0Mi4yMjg4MTEsNjAuMDczMTUzNCAyNDIuMjI4ODExLDY1LjEzNTU5ODYgQzI0Mi4yMjg4MTEsNjkuNTcwMjY4NSAyNDMuMjIxODYsNzMuNjQwMjgzNyAyNDUuMTg0NDMyLDc3LjIyNjc3NTggQzI0Ny4xNDgyNDMsODAuODE5NDU4OSAyNDkuOTI4MDM3LDgzLjYzMDIwODggMjUzLjQ0NjQyNyw4NS41Nzk3Nzk1IEMyNTYuOTU5ODY1LDg3LjUyNjg3MzkgMjYxLjAyMDU5Myw4OC41MTQzNTA5IDI2NS41MTY1NTUsODguNTE0MzUwOSBDMjcwLjc2MzQ5NCw4OC41MTQzNTA5IDI3NS4yNDMzNTksODcuNDY0OTYzIDI3OC44MzU0MjMsODUuMzk2NTIzNSBMMjc4Ljk4MDI5NSw4NS4zMTI5NDM5IEwyNzguOTgwMjk1LDc1LjE5Nzk1OTIgTDI3OC41MTY1ODMsNzUuNTM2NjExMiBDMjc2Ljg4OTU2Nyw3Ni43MjE1ODM3IDI3NS4wNzEyNDgsNzcuNjY3NTgwNiAyNzMuMTE0ODY2LDc4LjM0OTIxODQgQzI3MS4xNjM0MzgsNzkuMDMwMjM3MSAyNjkuMzg0MTIyLDc5LjM3NDQ2MTEgMjY3LjgyNDU4OSw3OS4zNzQ0NjExIEMyNjMuNDkyMDczLDc5LjM3NDQ2MTEgMjYwLjAxNDU0Myw3OC4wMTg2MTQ4IDI1Ny40ODk4MjEsNzUuMzQ2NTQ1MSBDMjU0Ljk1OTUyNyw3Mi42NzAxNDE3IDI1My42NzY3MzYsNjguOTEyNzc1OSAyNTMuNjc2NzM2LDY0LjE4NDAyOTggQzI1My42NzY3MzYsNTkuNDI1NTY2NSAyNTUuMDE0NjI4LDU1LjU3MTYxOTkgMjU3LjY1MTQwOCw1Mi43Mjc0MzgxIEMyNjAuMjc5NTIxLDQ5Ljg5MTkyNCAyNjMuNzYzODYsNDguNDUzNzM2NCAyNjguMDA2NjA3LDQ4LjQ1MzczNjQgQzI3MS42MzU4MTcsNDguNDUzNzM2NCAyNzUuMTcyMTYxLDQ5LjY4MjY2NTUgMjc4LjUxNzgyMSw1Mi4xMDk1Njg1IEwyNzguOTgwMjk1LDUyLjQ0NTc0NDEgTDI3OC45ODAyOTUsNDEuNzg3ODAxNyBMMjc4LjgzMTA4OSw0MS43MDM2MDMgQzI3Ny41NzE4MjQsNDAuOTk5MDU4MiAyNzUuODU1MDM3LDQwLjQxNzA5NjggMjczLjcyMjgzLDM5Ljk3NTY3MjkgQzI3MS42MDA1MjgsMzkuNTM1NDg3MiAyNjkuNTI0NjU5LDM5LjMxMzIyNzUgMjY3LjU1MTU2MywzOS4zMTMyMjc1IEwyNjcuNTUxNTYzLDM5LjMxMzIyNzUgWiBNMjM0LjYyNDU1Nyw0MC40NDQ0NjE0IEwyMjMuNTgzMzg3LDQwLjQ0NDQ2MTQgTDIyMy41ODMzODcsODcuMzgwODg4MSBMMjM0LjYyNDU1Nyw4Ny4zODA4ODgxIEwyMzQuNjI0NTU3LDQwLjQ0NDQ2MTQgTDIzNC42MjQ1NTcsNDAuNDQ0NDYxNCBaIE0yMjkuMjE2NjQ5LDIwLjQ0OTEzMzggQzIyNy4zOTk1NjgsMjAuNDQ5MTMzOCAyMjUuODE0NjUyLDIxLjA2NzYyMjUgMjI0LjUxMjY2NywyMi4yOTM0NTYyIEMyMjMuMjA1MTEyLDIzLjUyMzAwNDQgMjIyLjU0MTQyOCwyNS4wNzA3NzQyIDIyMi41NDE0MjgsMjYuODk3MTQyNCBDMjIyLjU0MTQyOCwyOC42OTUwMzE4IDIyMy4xOTcwNjQsMzAuMjE0MzIyNiAyMjQuNDkxNjE4LDMxLjQxMTA1ODEgQzIyNS43NzgxMjQsMzIuNjA0MDc5MSAyMjcuMzY3OTkzLDMzLjIwODk0NzQgMjI5LjIxNjY0OSwzMy4yMDg5NDc0IEMyMzEuMDY0Njg2LDMzLjIwODk0NzQgMjMyLjY2MDc0NywzMi42MDQwNzkxIDIzMy45NjI3MywzMS40MTI5MTU1IEMyMzUuMjczMzgyLDMwLjIxNDMyMjYgMjM1LjkzNzY4NSwyOC42OTUwMzE4IDIzNS45Mzc2ODUsMjYuODk3MTQyNCBDMjM1LjkzNzY4NSwyNS4xMzQ1NDIzIDIzNS4yOTEzMzYsMjMuNjAyMjUwMiAyMzQuMDE2NTkzLDIyLjM0Mjk4NDggQzIzMi43NDM3MDcsMjEuMDg2MTk1OCAyMzEuMTI4NDU1LDIwLjQ0OTEzMzggMjI5LjIxNjY0OSwyMC40NDkxMzM4IEwyMjkuMjE2NjQ5LDIwLjQ0OTEzMzggWiBNMjAxLjY2ODg4NCwzNi45ODE1NDMzIEwyMDEuNjY4ODg0LDg3LjM4MDY0MDYgTDIxMi45MzY2NDcsODcuMzgwNjQwNiBMMjEyLjkzNjY0NywyMS44ODY0NTQ2IEwxOTcuMzQxOTM5LDIxLjg4NjQ1NDYgTDE3Ny41MTkzNDIsNzAuNTMzNDc2NiBMMTU4LjI4MzA0MSwyMS44ODY0NTQ2IEwxNDIuMDUzMTI4LDIxLjg4NjQ1NDYgTDE0Mi4wNTMxMjgsODcuMzgwNjQwNiBMMTUyLjY0MTczLDg3LjM4MDY0MDYgTDE1Mi42NDE3MywzNi45NzY1OTA1IEwxNTMuMDA1NzY1LDM2Ljk3NjU5MDUgTDE3My4zMTg2OTUsODcuMzgwNjQwNiBMMTgxLjMwOTUyMSw4Ny4zODA2NDA2IEwyMDEuMzA1NDY3LDM2Ljk4MTU0MzMgTDIwMS42Njg4ODQsMzYuOTgxNTQzMyBMMjAxLjY2ODg4NCwzNi45ODE1NDMzIFoiIGZpbGw9IiM3MDZENkUiPjwvcGF0aD4KICAgICAgICA8Zz4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0YxNTExQiIgcG9pbnRzPSI1MS45Mzk0Mzc3IDUxLjkzOTQzNzcgMCA1MS45Mzk0Mzc3IDAgMCA1MS45Mzk0Mzc3IDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzgwQ0MyOCIgcG9pbnRzPSIxMDkuMjg2NzgzIDUxLjkzOTQzNzcgNTcuMzQ3OTY0MiA1MS45Mzk0Mzc3IDU3LjM0Nzk2NDIgMCAxMDkuMjg2NzgzIDAiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iIzAwQURFRiIgcG9pbnRzPSI1MS45MzgxOTk1IDEwOS4zMDcyMTMgMCAxMDkuMzA3MjEzIDAgNTcuMzY3Nzc1NyA1MS45MzgxOTk1IDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBvbHlnb24gZmlsbD0iI0ZCQkMwOSIgcG9pbnRzPSIxMDkuMjg2NzgzIDEwOS4zMDcyMTMgNTcuMzQ3OTY0MiAxMDkuMzA3MjEzIDU3LjM0Nzk2NDIgNTcuMzY3Nzc1NyAxMDkuMjg2NzgzIDU3LjM2Nzc3NTciPjwvcG9seWdvbj4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPgo=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: category
+  is_gate: true
+  type: string_short
+  description: Microsoft's category classifier for the event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: AZFWApplicationRule
+- name: properties
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: Action,
+    ActionReason, Category, Description, DestinationIp, DestinationPort, Error, ErrorMessage,
+    Flag, Fqdn, IsExplicitProxyRequest, Policy, Protocol, QueryClass, QueryId, QueryName,
+    QueryType, RequestDurationSecs, RequestSize, ResponseCode, ResponseFlags, ResponseSize,
+    Rule, RuleCollection, RuleCollectionGroup, ServerIp, ServerPort, Severity, SignatureId,
+    SourceIp, SourcePort, TargetUrl, ThreatDescription, TranslatedIp, TranslatedPort,
+    WebCategory (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: resourceId
+  type: string
+  description: Vendor-emitted field 'ResourceId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: res-9ff7e23a
+- name: properties.Action
+  type: string_short
+  description: Action taken by Microsoft's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: properties.ActionReason
+  type: string
+  description: Vendor-emitted field 'Properties › ActionReason'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_actionreason
+- name: properties.Category
+  type: string_short
+  description: Microsoft's category classifier for the event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: AZFWApplicationRule
+- name: properties.Description
+  type: string_long
+  description: Free-form human-readable description from Microsoft. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Microsoft.
+- name: properties.DestinationIp
+  type: ipv4
+  description: Destination IPv4/IPv6 address of the target. Free-form text; may contain
+    whitespace and punctuation.
+  example: 198.51.100.7
+- name: properties.DestinationPort
+  type: integer_port
+  description: TCP/UDP destination port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: properties.Error
+  type: string
+  description: Vendor-emitted field 'Properties › Error'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_error
+- name: properties.ErrorMessage
+  type: string
+  description: Vendor-emitted field 'Properties › ErrorMessage'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_errormessage
+- name: properties.Flag
+  type: string
+  description: Vendor-emitted field 'Properties › Flag'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_flag
+- name: properties.Fqdn
+  type: host
+  description: Fully-qualified domain name (dotted labels per RFC 1035). Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: properties.IsExplicitProxyRequest
+  type: string
+  description: Vendor-emitted field 'Properties › IsExplicitProxyRequest'. Leaf of
+    the 'properties' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_isexplicitproxyr
+- name: properties.Policy
+  type: string
+  description: Vendor-emitted field 'Properties › Policy'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Default-Policy
+- name: properties.Protocol
+  type: string
+  description: Vendor-emitted field 'Properties › Protocol'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: properties.QueryClass
+  type: string
+  description: Vendor-emitted field 'Properties › QueryClass'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_queryclass
+- name: properties.QueryId
+  type: string
+  description: Vendor-emitted field 'Properties › QueryId'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_queryid
+- name: properties.QueryName
+  type: string
+  description: Vendor-emitted field 'Properties › QueryName'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_queryname
+- name: properties.QueryType
+  type: string
+  description: Vendor-emitted field 'Properties › QueryType'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_querytype
+- name: properties.RequestDurationSecs
+  type: string
+  description: Vendor-emitted field 'Properties › RequestDurationSecs'. Leaf of the
+    'properties' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_requestdurations
+- name: properties.RequestSize
+  type: integer_byte_count
+  description: Vendor-emitted field 'Properties › RequestSize'. Leaf of the 'properties'
+    composite. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: properties.ResponseCode
+  type: string
+  description: Vendor-emitted field 'Properties › ResponseCode'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_responsecode
+- name: properties.ResponseFlags
+  type: string
+  description: Vendor-emitted field 'Properties › ResponseFlags'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_responseflags
+- name: properties.ResponseSize
+  type: integer_byte_count
+  description: Vendor-emitted field 'Properties › ResponseSize'. Leaf of the 'properties'
+    composite. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: properties.Rule
+  type: string
+  description: Vendor-emitted field 'Properties › Rule'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Allow-Internal
+- name: properties.RuleCollection
+  type: string
+  description: Vendor-emitted field 'Properties › RuleCollection'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_rulecollection
+- name: properties.RuleCollectionGroup
+  type: string
+  description: Vendor-emitted field 'Properties › RuleCollectionGroup'. Leaf of the
+    'properties' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_rulecollectiongr
+- name: properties.ServerIp
+  type: ipv6
+  description: Vendor-emitted field 'Properties › ServerIp'. Leaf of the 'properties'
+    composite. Colon-separated hexadecimal IPv6 literal (RFC 4291); no zone suffix,
+    no surrounding brackets.
+  example: 2001:db8::1
+- name: properties.ServerPort
+  type: integer_port
+  description: Vendor-emitted field 'Properties › ServerPort'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '443'
+- name: properties.Severity
+  type: string_short
+  description: Event severity as classified by Microsoft. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: INFO
+- name: properties.SignatureId
+  type: string
+  description: Vendor-emitted field 'Properties › SignatureId'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: pol-50dd0e67
+- name: properties.SourceIp
+  type: ipv4
+  description: Source IPv4/IPv6 address of the initiator. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: properties.SourcePort
+  type: integer_port
+  description: TCP/UDP source port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: properties.TargetUrl
+  type: url
+  description: Vendor-emitted field 'Properties › TargetUrl'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: https://example.com/path?q=1
+- name: properties.ThreatDescription
+  type: string
+  description: Vendor-emitted field 'Properties › ThreatDescription'. Leaf of the
+    'properties' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_threatdescriptio
+- name: properties.TranslatedIp
+  type: string
+  description: Vendor-emitted field 'Properties › TranslatedIp'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_translatedip
+- name: properties.TranslatedPort
+  type: integer_port
+  description: Vendor-emitted field 'Properties › TranslatedPort'. Leaf of the 'properties'
+    composite. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes.
+  example: '443'
+- name: properties.WebCategory
+  type: string
+  description: Vendor-emitted field 'Properties › WebCategory'. Leaf of the 'properties'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_webcategory
+- name: ActionReason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: Allow
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: Category
+  type: string
+  description: Alert subcategory. Free-form text; may contain whitespace and punctuation.
+  example: access_control
+- name: Description
+  type: string
+  description: Alert original threat name. Free-form text; may contain whitespace
+    and punctuation.
+  example: Event recorded by Microsoft.
+- name: DestinationPort
+  type: integer_port
+  description: Intermediate port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: Error
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: Fqdn
+  type: domain
+  description: Destination host FQDN. Bare DNS domain name; no scheme, no path, no
+    port.
+  example: example.com
+- name: Microsoft
+  type: string
+  description: Observer type. Free-form text; may contain whitespace and punctuation.
+  example: sample_microsoft
+- name: Network
+  type: string
+  description: Observer type. Free-form text; may contain whitespace and punctuation.
+  example: sample_network
+- name: QueryId
+  type: string
+  description: Event ID. Free-form text; may contain whitespace and punctuation.
+  example: sample_queryid
+- name: QueryName
+  type: host
+  description: DNS query name (FQDN being resolved) as recorded by Azure Firewall.
+    Hostname or fully-qualified domain name (RFC 1035 dotted labels); no protocol
+    prefix.
+  example: sample_queryname
+- name: RequestDurationSecs
+  type: string
+  description: Event duration. Free-form text; may contain whitespace and punctuation.
+  example: sample_requestdurations
+- name: RequestSize
+  type: string
+  description: Source sent bytes. Free-form text; may contain whitespace and punctuation.
+  example: sample_requestsize
+- name: ResponseSize
+  type: string
+  description: Destination sent bytes. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_responsesize
+- name: ServerIp
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: ServerPort
+  type: integer_port
+  description: Intermediate port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: Severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: SignatureId
+  type: string
+  description: Alert original threat ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: pol-a0b230ea
+- name: SourcePort
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: ThreatDescription
+  type: string
+  description: Alert original threat name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_threatdescriptio
+- name: TranslatedPort
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: action
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: application_protocol
+  type: string_short
+  description: Application protocol of the connection (HTTPS, FTP, etc.) as classified
+    by Azure Firewall. Short opaque token, typically without whitespace; max ~64 chars.
+  example: tcp
+- name: azureFirewalls
+  type: string
+  description: Observer type. Free-form text; may contain whitespace and punctuation.
+  example: sample_azurefirewalls
+- name: destination_ipv4
+  type: ipv4
+  description: Intermediate host IPv4 public addresses. Dotted-quad IPv4 literal (e.g.,
+    192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: destination_ipv6
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: dns_query_class
+  type: string_short
+  description: 'DNS query class — typically `IN` for Internet. One of: IN, CH, HS,
+    NONE, ANY. Short opaque token, typically without whitespace; max ~64 chars.'
+  example: access_control
+- name: dns_query_type
+  type: string
+  description: Network DNS question type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: dns_response_code
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: dns_response_flags
+  type: string
+  description: Network DNS authoritative. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_flags
+- name: dns_server_ipv4
+  type: ipv4
+  description: Intermediate host IPv4 public addresses. Dotted-quad IPv4 literal (e.g.,
+    192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: error_msg
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: flag
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: ip_protocol
+  type: string
+  description: Network icmp type. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: is_explicit_proxy_request
+  type: string
+  description: Intermediate is proxy. Free-form text; may contain whitespace and punctuation.
+  example: sample_request
+- name: source_ipv4
+  type: ipv4
+  description: Source host IPv4 public addresses. Dotted-quad IPv4 literal (e.g.,
+    192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: target_fqdn
+  type: string
+  description: Target fqdn. Free-form text; may contain whitespace and punctuation.
+  example: host01.example.com
+- name: target_ipv4
+  type: ipv4
+  description: Destination host FQDN. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_ipv6
+  type: ipv6
+  description: Destination host FQDN. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: target_url
+  type: url
+  description: Network HTTP URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: translated_destination_ipv4
+  type: ipv4
+  description: Destination host IPv4 public addresses. Dotted-quad IPv4 literal (e.g.,
+    192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: translated_destination_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: web_category
+  type: url
+  description: Network HTTP URL category. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+use_cases:
+- Cloud
+- SaaS
+- Identity
+validated: true
+how_to_use: |
+  ## msft Azure Firewall → Cortex XSIAM (dataset `msft_azure_firewall_raw`)
+
+  **Validated** — maps **20 xdm fields** end-to-end
+  via CEF-over-syslog on a tenant with the **Azure Firewall** content pack installed
+  (the pack binds the modeling rule + parsing rule to the dataset).
+
+  Required CEF header — the broker derives the dataset from it (lowercased):
+  - vendor: `msft`
+  - product: `Azure_Firewall`
+  Broker derives -> `msft_azure_firewall_raw`.
+  Modeling-rule gate: seed `category in ("AZFWApplicationRule", "AZFWNetworkRule", "AZFWDnsQuery", ...)` (the AZFWApplicationRule branch is verified).
+
+  JSON-native MR: it reads nested JSON via `json_extract_scalar(...)`/`->`. The
+  worker emits composite schema fields as JSON strings on the CEF wire, which the
+  rule parses — so CEF-over-syslog populates these fields (no HTTP collector).
+
+  Verify (wide >=7d window):
+      config timeframe = 30d | datamodel dataset = msft_azure_firewall_raw | sort desc _time | fields xdm.* | limit 20
+
+  **Simulation recipe — reverse-engineered from this pack's parsing + modeling rules.**
+
+  Routing: vendor `msft` / product `azure`.
+  Discriminator: category — must start with the literal prefix `AZFW` (recipe pins `AZFWApplicationRule`)
+  (Taken VERBATIM from the pack's parsing rule: `[INGEST:vendor="msft", product="azure", target_dataset="msft_azure_firewall_raw", no_hit = drop]` in scripts/maintainer/parsing_rules/AzureFirewall__AzureFirewall.xif. NOT derived — note that broker derivation of msft/azure would yield `msft_azure_raw`, so the INGEST block's explicit target_dataset is doing the routing here, and the `category = "AZFW*"` filter is what selects THIS dataset out of the four packs sharing this vendor/product pair. IMPORTANT ALTERNATIVE: the schema's own how_to_use records an empirically validated (20 xdm fields) route using vendor=`msft`, product=`Azure_Firewall`, which no INGEST block claims and which therefore lands by pure broker derivation (msft + azure_firewall -> msft_azure_firewall_raw), bypassing the parsing rule entirely. Both reach the same dataset and the same modeling rule (modeling rules bind on dataset NAME only). See notes for the trade-off between the two.)
+
+  Gate: `category` must be one of `AZFWApplicationRule`, `AZFWApplicationRuleAggregation`, `AZFWNetworkRule`, `AZFWNetworkRuleAggregation`, `AZFWNatRule`, `AZFWNatRuleAggregation`, `AZFWDnsQuery`, `AZFWIdpsSignature`, `AZFWThreatIntel`, `AZFWFatFlow`, `AZFWFlowTrace`, `AZFWFqdnResolveFailure`, `AZFWInternalFqdnResolutionFailure`.
+  no_hit: drop — the parsing rule's INGEST block is `no_hit = drop`, so on the msft/azure route any event whose `category` does not match `AZFW*` is discarded at ingest with NO raw row and no error anywhere. On the derived msft/Azure_Firewall route no parsing rule applies, so a wrong category still lands raw but simply maps zero xdm fields (no MODEL branch matches).
+
+  Composite: `properties` must be a JSON OBJECT on the wire. Leaves read: `properties.Action`, `properties.ActionReason`, `properties.Protocol`, `properties.IsExplicitProxyRequest`, `properties.Fqdn`, `properties.TargetUrl`, `properties.WebCategory`, `properties.SourceIp`, `properties.SourcePort`, `properties.DestinationPort`, `properties.Policy`, `properties.RuleCollectionGroup`
+
+  Pass this verbatim as `observables_dict` (keys are schema field names; values are LISTS):
+
+  ```json
+  {
+    "category": [
+      "AZFWApplicationRule"
+    ],
+    "resourceId": [
+      "/SUBSCRIPTIONS/8A5B7D2C-1F3E-4A9B-9C0D-2E4F6A8B1C3D/RESOURCEGROUPS/RG-NETWORK-PROD/PROVIDERS/MICROSOFT.NETWORK/AZUREFIREWALLS/AZFW-HUB-EASTUS"
+    ],
+    "properties.Action": [
+      "Allow"
+    ],
+    "properties.ActionReason": [
+      "ApplicationRule"
+    ],
+    "properties.Protocol": [
+      "HTTPS"
+    ],
+    "properties.IsExplicitProxyRequest": [
+      "true"
+    ],
+    "properties.Fqdn": [
+      "www.contoso.com"
+    ],
+    "properties.TargetUrl": [
+      "https://www.contoso.com/index.html"
+    ],
+    "properties.WebCategory": [
+      "NEWS"
+    ],
+    "properties.SourceIp": [
+      "203.0.113.45"
+    ],
+    "properties.SourcePort": [
+      "51514"
+    ],
+    "properties.DestinationIp": [
+      "203.0.113.200"
+    ],
+    "properties.DestinationPort": [
+      "443"
+    ],
+    "properties.Policy": [
+      "AzFwPolicy-Prod"
+    ],
+    "properties.RuleCollectionGroup": [
+      "DefaultApplicationRuleCollectionGroup"
+    ],
+    "properties.RuleCollection": [
+      "AllowWebTraffic"
+    ],
+    "properties.Rule": [
+      "Allow-Contoso-HTTPS"
+    ]
+  }
+  ```
+
+  Populates: `xdm.event.original_event_type`, `xdm.event.type`, `xdm.event.outcome`, `xdm.event.outcome_reason`, `xdm.observer.action`, `xdm.observer.name`, `xdm.observer.type`, `xdm.observer.unique_identifier`, `xdm.source.cloud.provider`, `xdm.target.resource.id`, `xdm.network.rule`, `xdm.source.ipv4`, `xdm.source.host.ipv4_public_addresses`, `xdm.source.port`, `xdm.intermediate.is_proxy`, `xdm.network.application_protocol`, `xdm.network.http.url`, `xdm.network.http.url_category`, `xdm.target.host.fqdn`, `xdm.target.port`, `xdm.target.url`
+
+  - COMPOSITE, not flat. Every mapped value except `category` and `resourceId` is read as `properties -> X`, i.e. inside a JSON OBJECT. `properties` must arrive as nested JSON; the dotted-leaf field names (`properties.Action`, ...) are what the generator folds into that object. A CEF extension literally named `properties.Action` would produce a flat column of that name and the rule would read nothing. The schema declares `properties` (type json) plus 36 dotted leaves, so the shape is already correct — just do NOT put the bare key `properties` in observables_dict, or it will clobber the folded object with the literal string `{}`.
+  - ROUTING TRADE-OFF, read before choosing. The msft/azure INGEST route (used above) is the pack's canonical path: it applies `filter category = "AZFW*"` with `no_hit = drop`, and it also parses `_time` from a `time` column. The msft/Azure_Firewall derived route recorded in the schema's how_to_use (and empirically validated at 20 xdm fields) is claimed by no INGEST block, so it lands by broker derivation, no parsing rule runs, nothing can be dropped, and `_time` falls back to `_insert_time`. Both reach msft_azure_firewall_raw and the same modeling rule. Prefer msft/azure when the AzureFirewall content pack is definitely installed (it must be, or there is no modeling rule at all); the derived pair is the more forgiving of the two because a mis-cased category cannot silently vanish.
+  - SHARED VENDOR/PRODUCT PAIR — four packs claim msft/azure and are separated only by their INGEST filters: AzureFirewall (`category = "AZFW*"`), AzureKubernetesServices -> msft_azure_aks_raw (`category in ("cloud-controller-manager", "cluster-autoscaler", "kube-audit", ...)`), AzureDevOps -> msft_azure_devops_raw (`Type = "AzureDevOpsAuditing"` AND an RFC3339 `TimeGenerated`), and MicrosoftEntraID -> msft_azure_raw, whose filter is `category not in("AZFW*", ...)`. The Entra block's explicit AZFW* exclusion confirms `category` starting with AZFW is the intended discriminator. A category outside AZFW* on this pair therefore does not merely fail to map — it silently routes into a SIBLING dataset (msft_azure_raw) instead.
+  - CASE SENSITIVITY IS SPLIT. `properties.Action` is compared raw against "Allow"/"Deny"/"Drop" — case-sensitive, and the schema's own example (`allow`) fails it, nulling xdm.event.outcome. By contrast `properties.Protocol` and `properties.WebCategory` are wrapped in uppercase() before comparison, so lowercase input is safe for those two. `category` is compared raw and is case-sensitive.
+  - PUBLIC-IP GUARD. Every `*.host.ipv4_public_addresses` assignment is wrapped in six `not incidr(...)` tests (10/8, 172.16/12, 192.168/16, 127/8, 169.254/16, 100.64/10). Seed SourceIp / DestinationIp / ServerIp / TranslatedIp from documentation-public ranges (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24) or those array fields stay null while the plain xdm.source.ipv4 / xdm.target.ipv4 still populate. All the IP regextracts are anchored `^...$`, so no port suffix, brackets, or surrounding whitespace.
+  - BRANCH SWAPS — one event can satisfy exactly one branch, since every branch leads with a `category` filter. To retarget the recipe, change `category` and add these leaves: AZFWNetworkRule -> properties.Protocol="TCP" (drives xdm.network.ip_protocol via map_ip_protocol), properties.DestinationIp public, properties.DestinationPort; AZFWDnsQuery -> properties.QueryName="www.contoso.com", properties.QueryType="A", properties.QueryClass="IN" (only IN/CS/CH/HS map, to 1/2/3/4), properties.ResponseCode="NOERROR" (fixed vocabulary NOERROR/FORMERR/SERVFAIL/NXDOMAIN/... else the raw string passes through), properties.ResponseFlags="AA,RD,RA" (uppercased then split on comma; array_any looks for "AA" and "TC"), properties.QueryId="34921", properties.RequestSize="76", properties.ResponseSize="92", properties.RequestDurationSecs="0.05" (to_number then multiply by 1000 — MUST be numeric; the schema example `sample_requestdurations` nulls xdm.event.duration), properties.ErrorMessage=""; AZFWIdpsSignature -> properties.SignatureId="2032871", properties.Description="ET MALWARE Observed DNS Query to .biz TLD", properties.Severity="2", properties.Category="Malware Command and Control"; AZFWThreatIntel -> properties.ThreatDescription + properties.TargetUrl + properties.Fqdn; AZFWNatRule -> properties.TranslatedIp="10.0.1.4" and properties.TranslatedPort="8080"; AZFWFlowTrace -> properties.Flag="SYN-ACK" (the rule tests `flag ~= "\-ACK"` for OUTCOME_SUCCESS and `flag = "INVALID"` for OUTCOME_FAILED — the hyphen is load-bearing); AZFWFqdnResolveFailure / AZFWInternalFqdnResolutionFailure -> properties.Error non-empty, properties.ServerIp public IPv4, properties.ServerPort="53", properties.Fqdn.
+  - SCHEMA NOISE — do not seed. Roughly 40 of the flat fields[] entries (`action`, `Allow`, `Microsoft`, `Network`, `azureFirewalls`, `source_ipv4`, `source_ipv6`, `destination_ipv4`, `destination_ipv6`, `dns_server_ipv4`, `dns_query_class`, `dns_query_type`, `dns_response_code`, `dns_response_flags`, `error_msg`, `flag`, `ip_protocol`, `is_explicit_proxy_request`, `target_fqdn`, `target_url`, `target_ipv4`, `target_ipv6`, `translated_destination_ipv4`, `translated_destination_ipv6`, `web_category`, `application_protocol`, `ActionReason`, `Category`, `Description`, `DestinationPort`, `Error`, `Fqdn`, `QueryId`, `QueryName`, `RequestDurationSecs`, `RequestSize`, `ResponseSize`, `ServerIp`, `ServerPort`, `Severity`, `SignatureId`, `SourcePort`, `ThreatDescription`, `TranslatedPort`) are NOT wire fields. They are the modeling rule's intermediate `alter` variables plus tokens split out of the XDM constant string "Microsoft.Network/azureFirewalls" and the literals "Allow"/"Microsoft", hoovered up by the schema extractor. Every one of them is unconditionally reassigned by an `alter` before it is read, so seeding them changes no xdm output and only adds junk columns to the raw row.
+  - `properties.ServerIp` is declared type ipv6 in the schema while the rule regextracts BOTH an IPv4 and an IPv6 form from it. Left to the type synthesizer it produces an IPv6, so the FqdnResolveFailure branch would populate xdm.intermediate.ipv6 but leave dns_server_ipv4, xdm.intermediate.ipv4 and xdm.intermediate.host.ipv4_public_addresses null. Pass an IPv4 explicitly if you want the v4 side.
+  - `xdm.observer.type` ("Microsoft.Network/azureFirewalls") and `xdm.source.cloud.provider` (XDM_CONST.CLOUD_PROVIDER_AZURE) are hard-coded constants in [RULE: map_common_event_fields] — they populate for every branch with no input required.
+  - The Application Rule branch calls map_source_peer_common_fields but NOT map_target_peer_common_fields and NOT map_ip_protocol, so on this recipe xdm.target.ipv4/ipv6 and xdm.network.ip_protocol stay null by design; xdm.target.port comes straight from properties.DestinationPort.
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

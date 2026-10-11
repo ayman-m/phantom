@@ -1,0 +1,312 @@
+schema_version: 1
+id: GoogleChrome
+pack_name: GoogleChrome
+rule_name: GoogleChrome
+dataset_name: google_workspace_chrome_raw
+vendor: Google
+product: GoogleChrome
+description: The official browser from Google. Chrome is a cross-platform web browser
+  which brings you the best of Google.
+categories:
+- Analytics & SIEM
+version: 1.0.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+Cjxzdmcgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjE2OHB4IiB2aWV3Qm94PSIwIDAgNTEyIDE2OCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCI+Cgk8Zz4KCQk8cGF0aCBkPSJNNDk2LjA1MjQ1NSwxMDIuNjcyMDU1IEw1MTAuMjU1NzM3LDExMi4xNDA5MDkgQzUwNS42NDU5LDExOC45MzEwNzUgNDk0LjYxOTY2OCwxMzAuNTgwMjU4IDQ3NS41NTczNjgsMTMwLjU4MDI1OCBDNDUxLjg4NTIzMSwxMzAuNTgwMjU4IDQzNC4yNTU3MTksMTEyLjI2NTUgNDM0LjI1NTcxOSw4OC45NjcxMzMgQzQzNC4yNTU3MTksNjQuMTczNjg0MSA0NTIuMDcyMTE2LDQ3LjM1NDAwNzggNDczLjU2MzkyNSw0Ny4zNTQwMDc4IEM0OTUuMTgwMzIzLDQ3LjM1NDAwNzggNTA1Ljc3MDQ5LDY0LjU0NzQ1NDYgNTA5LjE5NjcyLDczLjgyOTQyNDIgTDUxMS4wNjU1NzQsNzguNTYzODUxNiBMNDU1LjM3Mzc1NiwxMDEuNjEzMDM4IEM0NTkuNjA5ODIzLDEwOS45NjA1ODEgNDY2LjIxMzEwMywxMTQuMTk2NjQ4IDQ3NS41NTczNjgsMTE0LjE5NjY0OCBDNDg0LjkwMTYzMywxMTQuMTk2NjQ4IDQ5MS4zODAzMjMsMTA5LjU4NjgxMSA0OTYuMDUyNDU1LDEwMi42NzIwNTUgTDQ5Ni4wNTI0NTUsMTAyLjY3MjA1NSBaIE00NTIuMzgzNTkyLDg3LjY1ODkzNTkgTDQ4OS41NzM3NjUsNzIuMjA5NzUxNyBDNDg3LjUxODAyNiw2Ny4wMzkyNTg2IDQ4MS40MTMxMDcsNjMuMzYzODQ3OCA0NzQuMTI0NTgxLDYzLjM2Mzg0NzggQzQ2NC44NDI2MTIsNjMuMzYzODQ3OCA0NTEuOTQ3NTI2LDcxLjU4NjgwMDcgNDUyLjM4MzU5Miw4Ny42NTg5MzU5IEw0NTIuMzgzNTkyLDg3LjY1ODkzNTkgWiIgZmlsbD0iI0ZGMzAyRiI+PC9wYXRoPgoJCTxwYXRoIGQ9Ik00MDcuNDA2NTMxLDQuOTMxMDQ2MzIgTDQyNS4zNDc1MTksNC45MzEwNDYzMiBMNDI1LjM0NzUxOSwxMjYuNzgwMjU3IEw0MDcuNDA2NTMxLDEyNi43ODAyNTcgTDQwNy40MDY1MzEsNC45MzEwNDYzMiBMNDA3LjQwNjUzMSw0LjkzMTA0NjMyIFoiIGZpbGw9IiMyMEIxNUEiPjwvcGF0aD4KCQk8cGF0aCBkPSJNMzc5LjEyNDU1Nyw1MC41OTMzNTI4IEwzOTYuNDQyNTk0LDUwLjU5MzM1MjggTDM5Ni40NDI1OTQsMTI0LjU5OTkyOSBDMzk2LjQ0MjU5NCwxNTUuMzExNDEyIDM3OC4zMTQ3MjEsMTY3Ljk1NzMxNiAzNTYuODg1MjA3LDE2Ny45NTczMTYgQzMzNi43MDE1OTYsMTY3Ljk1NzMxNiAzMjQuNTU0MDUxLDE1NC4zNzY5ODYgMzIwLjAwNjUxLDE0My4zNTA3NTMgTDMzNS44OTE3NTksMTM2Ljc0NzQ3MyBDMzM4Ljc1NzMzNCwxNDMuNTM3NjM5IDM0NS42NzIwOSwxNTEuNTczNzA2IDM1Ni44ODUyMDcsMTUxLjU3MzcwNiBDMzcwLjY1MjQyNCwxNTEuNTczNzA2IDM3OS4xMjQ1NTcsMTQzLjAzOTI3OCAzNzkuMTI0NTU3LDEyNy4wOTE3MzIgTDM3OS4xMjQ1NTcsMTIxLjExMTQwNCBMMzc4LjUwMTYwNiwxMjEuMTExNDA0IEMzNzQuMzkwMTMsMTI2LjA5NTAxMSAzNjYuNTQwOTQ3LDEzMC41ODAyNTggMzU2LjU3MzczMSwxMzAuNTgwMjU4IEMzMzUuNzY3MTY5LDEzMC41ODAyNTggMzE2LjcwNDg2OSwxMTIuNDUyMzg1IDMxNi43MDQ4NjksODkuMDkxNzIzMSBDMzE2LjcwNDg2OSw2NS42MDY0NzEzIDMzNS43NjcxNjksNDcuMjkxNzEyNiAzNTYuNTczNzMxLDQ3LjI5MTcxMjYgQzM2Ni40Nzg2NTIsNDcuMjkxNzEyNiAzNzQuMzkwMTMsNTEuNzE0NjY0NiAzNzguNTAxNjA2LDU2LjU3MzY4MjIgTDM3OS4xMjQ1NTcsNTYuNTczNjgyMiBMMzc5LjEyNDU1Nyw1MC41OTMzNTI4IEwzNzkuMTI0NTU3LDUwLjU5MzM1MjggWiBNMzgwLjM3MDQ1OSw4OS4wOTE3MjMxIEMzODAuMzcwNDU5LDc0LjM5MDA4MDEgMzcwLjU5MDEyOCw2My42NzUzMjMzIDM1OC4xMzExMDksNjMuNjc1MzIzMyBDMzQ1LjU0NzQ5OSw2My42NzUzMjMzIDMzNC45NTczMzMsNzQuMzkwMDgwMSAzMzQuOTU3MzMzLDg5LjA5MTcyMzEgQzMzNC45NTczMzMsMTAzLjYwNjQ4MSAzNDUuNTQ3NDk5LDExNC4xMzQzNTIgMzU4LjEzMTEwOSwxMTQuMTM0MzUyIEMzNzAuNTkwMTI4LDExNC4xOTY2NDggMzgwLjM3MDQ1OSwxMDMuNjA2NDgxIDM4MC4zNzA0NTksODkuMDkxNzIzMSBMMzgwLjM3MDQ1OSw4OS4wOTE3MjMxIFoiIGZpbGw9IiMzNjg2RjciPjwvcGF0aD4KCQk8cGF0aCBkPSJNMjE4LjIxNjMyLDg4Ljc4MDI0NzYgQzIxOC4yMTYzMiwxMTIuNzYzODYxIDE5OS41Mjc3OTEsMTMwLjM5MzM3MyAxNzYuNjAzMTk1LDEzMC4zOTMzNzMgQzE1My42Nzg1OTksMTMwLjM5MzM3MyAxMzQuOTkwMDY5LDExMi43MDE1NjUgMTM0Ljk5MDA2OSw4OC43ODAyNDc2IEMxMzQuOTkwMDY5LDY0LjY3MjA0NDggMTUzLjY3ODU5OSw0Ny4xMDQ4Mjc0IDE3Ni42MDMxOTUsNDcuMTA0ODI3NCBDMTk5LjUyNzc5MSw0Ny4xMDQ4Mjc0IDIxOC4yMTYzMiw2NC42NzIwNDQ4IDIxOC4yMTYzMiw4OC43ODAyNDc2IEwyMTguMjE2MzIsODguNzgwMjQ3NiBaIE0yMDAuMDI2MTUxLDg4Ljc4MDI0NzYgQzIwMC4wMjYxNTEsNzMuODI5NDI0MiAxODkuMTg2ODA0LDYzLjU1MDczMzEgMTc2LjYwMzE5NSw2My41NTA3MzMxIEMxNjQuMDE5NTg1LDYzLjU1MDczMzEgMTUzLjE4MDIzOCw3My44Mjk0MjQyIDE1My4xODAyMzgsODguNzgwMjQ3NiBDMTUzLjE4MDIzOCwxMDMuNjA2NDgxIDE2NC4wMTk1ODUsMTE0LjAwOTc2MyAxNzYuNjAzMTk1LDExNC4wMDk3NjMgQzE4OS4xODY4MDQsMTE0LjAwOTc2MyAyMDAuMDI2MTUxLDEwMy42MDY0ODEgMjAwLjAyNjE1MSw4OC43ODAyNDc2IEwyMDAuMDI2MTUxLDg4Ljc4MDI0NzYgWiIgZmlsbD0iI0ZGMzAyRiI+PC9wYXRoPgoJCTxwYXRoIGQ9Ik0zMDkuMTA0ODY3LDg4Ljk2NzEzMyBDMzA5LjEwNDg2NywxMTIuOTUwNzQ2IDI5MC40MTYzMzgsMTMwLjU4MDI1OCAyNjcuNDkxNzQyLDEzMC41ODAyNTggQzI0NC41NjcxNDYsMTMwLjU4MDI1OCAyMjUuODc4NjE3LDExMi45NTA3NDYgMjI1Ljg3ODYxNyw4OC45NjcxMzMgQzIyNS44Nzg2MTcsNjQuODU4OTMwMiAyNDQuNTY3MTQ2LDQ3LjM1NDAwNzggMjY3LjQ5MTc0Miw0Ny4zNTQwMDc4IEMyOTAuNDE2MzM4LDQ3LjM1NDAwNzggMzA5LjEwNDg2Nyw2NC43OTY2MzUgMzA5LjEwNDg2Nyw4OC45NjcxMzMgTDMwOS4xMDQ4NjcsODguOTY3MTMzIFogTTI5MC44NTI0MDQsODguOTY3MTMzIEMyOTAuODUyNDA0LDc0LjAxNjMwOTUgMjgwLjAxMzA1Nyw2My43Mzc2MTg0IDI2Ny40Mjk0NDcsNjMuNzM3NjE4NCBDMjU0Ljg0NTgzNyw2My43Mzc2MTg0IDI0NC4wMDY0OSw3NC4wMTYzMDk1IDI0NC4wMDY0OSw4OC45NjcxMzMgQzI0NC4wMDY0OSwxMDMuNzkzMzY2IDI1NC44NDU4MzcsMTE0LjE5NjY0OCAyNjcuNDI5NDQ3LDExNC4xOTY2NDggQzI4MC4wNzUzNTIsMTE0LjE5NjY0OCAyOTAuODUyNDA0LDEwMy43MzEwNzEgMjkwLjg1MjQwNCw4OC45NjcxMzMgTDI5MC44NTI0MDQsODguOTY3MTMzIFoiIGZpbGw9IiNGRkJBNDAiPjwvcGF0aD4KCQk8cGF0aCBkPSJNNjYuNTkwMDUyNSwxMTIuMzI3Nzk0IEM0MC40ODg0MDY2LDExMi4zMjc3OTQgMjAuMDU1NjE0Niw5MS4yNzIwNTE1IDIwLjA1NTYxNDYsNjUuMTcwNDA1NiBDMjAuMDU1NjE0NiwzOS4wNjg3NTk4IDQwLjQ4ODQwNjYsMTguMDEzMDE2OCA2Ni41OTAwNTI1LDE4LjAxMzAxNjggQzgwLjY2ODc0NDYsMTguMDEzMDE2OCA5MC45NDc0MzU3LDIzLjU1NzI4MDUgOTguNTQ3NDM3MywzMC42NTg5MjE2IEwxMTEuMDY4NzUyLDE4LjEzNzYwNyBDMTAwLjQ3ODU4NSw3Ljk4MzUwNjEzIDg2LjMzNzU5ODQsMC4yNTg5MTM5OTcgNjYuNTkwMDUyNSwwLjI1ODkxMzk5NyBDMzAuODMyNjY2NiwwLjI1ODkxMzk5NyAwLjc0NDEzNDQwOCwyOS40MTMwMTk2IDAuNzQ0MTM0NDA4LDY1LjE3MDQwNTYgQzAuNzQ0MTM0NDA4LDEwMC45Mjc3OTIgMzAuODMyNjY2NiwxMzAuMDgxODk3IDY2LjU5MDA1MjUsMTMwLjA4MTg5NyBDODUuOTAxNTMyOCwxMzAuMDgxODk3IDEwMC40Nzg1ODUsMTIzLjcyNzc5NyAxMTEuODc4NTg4LDExMS44OTE3MjkgQzEyMy41OTAwNjcsMTAwLjE4MDI1MSAxMjcuMjAzMTgzLDgzLjczNDM0NDcgMTI3LjIwMzE4Myw3MC40MDMxOTM5IEMxMjcuMjAzMTgzLDY2LjIyOTQyMjMgMTI2LjcwNDgyMiw2MS45MzEwNjA2IDEyNi4xNDQxNjYsNTguNzU0MDEwNiBMNjYuNTkwMDUyNSw1OC43NTQwMTA2IEw2Ni41OTAwNTI1LDc2LjA3MjA0NzcgTDEwOS4wMTMwMTQsNzYuMDcyMDQ3NyBDMTA3Ljc2NzExMiw4Ni45MTEzOTQ3IDEwNC4zNDA4ODIsOTQuMzI0NTExMyA5OS4yOTQ5Nzg1LDk5LjM3MDQxNDIgQzkzLjE5MDA1OTIsMTA1LjUzNzYyOSA4My41MzQzMTksMTEyLjMyNzc5NCA2Ni41OTAwNTI1LDExMi4zMjc3OTQgTDY2LjU5MDA1MjUsMTEyLjMyNzc5NCBMNjYuNTkwMDUyNSwxMTIuMzI3Nzk0IFoiIGZpbGw9IiMzNjg2RjciPjwvcGF0aD4KCTwvZz4KPC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: event
+  type: string
+  description: Vendor-emitted field 'Event'. Free-form text; may contain whitespace
+    and punctuation.
+  example: login
+- name: events
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: parameters
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: app_id,
+    app_name, browser_version, client_type, content_hash, content_name, content_size,
+    device_id, device_name, device_platform, device_user, event, event_reason, event_result,
+    localized_url_category, os_platform, os_version, profile_user, profile_user_name,
+    reason, result, trigger_type, trigger_user, url, url_category, user_agent (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: parameters.app_id
+  type: string_short
+  description: Opaque identifier emitted by Google. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: goo-0453d8d4
+- name: parameters.app_name
+  type: string
+  description: Human-readable name as displayed by Google. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: parameters.browser_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: parameters.client_type
+  type: string_short
+  description: Type/category classifier emitted by Google. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: parameters.content_hash
+  type: hash_sha256
+  description: Vendor-emitted field 'Parameters › content hash'. Leaf of the 'parameters'
+    composite. 64-character lowercase hex SHA-256 digest.
+  example: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+- name: parameters.content_name
+  type: file_path
+  description: Human-readable name as displayed by Google. Absolute filesystem path;
+    vendor-native separator.
+  example: /var/log/example.log
+- name: parameters.content_size
+  type: integer_byte_count
+  description: Size in bytes of the payload/object. Unsigned decimal byte count; bare
+    digits, no unit suffix.
+  example: '1024'
+- name: parameters.device_id
+  type: string_short
+  description: Opaque identifier emitted by Google. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: goo-708b7c6c
+- name: parameters.device_name
+  type: host
+  description: Human-readable name as displayed by Google. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: parameters.device_platform
+  type: string
+  description: Vendor-emitted field 'Parameters › device platform'. Leaf of the 'parameters'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: linux
+- name: parameters.device_user
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: parameters.event
+  type: string
+  description: Vendor-emitted field 'Parameters › event'. Leaf of the 'parameters'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: parameters.event_reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: parameters.event_result
+  type: string_short
+  description: Result string emitted by Google. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: parameters.localized_url_category
+  type: string_short
+  description: Google's category classifier for the event. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: access_control
+- name: parameters.os_platform
+  type: string
+  description: Vendor-emitted field 'Parameters › os platform'. Leaf of the 'parameters'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: linux
+- name: parameters.os_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: parameters.profile_user
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jdoe
+- name: parameters.profile_user_name
+  type: string
+  description: Human-readable name as displayed by Google. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: parameters.reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: parameters.result
+  type: string_short
+  description: Result string emitted by Google. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: parameters.trigger_type
+  type: string_short
+  description: Type/category classifier emitted by Google. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: parameters.trigger_user
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jdoe
+- name: parameters.url
+  type: url
+  description: Full URL with scheme — as Google captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: parameters.url_category
+  type: string_short
+  description: Google's category classifier for the event. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: access_control
+- name: parameters.user_agent
+  type: string
+  description: Vendor-emitted field 'Parameters › user agent'. Leaf of the 'parameters'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: app_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: app_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: client_type
+  type: string
+  description: Network HTTP browser. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: content_hash
+  type: hash_sha256
+  description: Destination file SHA256. 64-character lowercase hex SHA-256 digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: content_name
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: content_size
+  type: integer_byte_count
+  description: Destination file size. Free-form text; may contain whitespace and punctuation.
+  example: '1024'
+- name: device_id
+  type: string_short
+  description: Source host device ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: device_name
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: device_platform
+  type: string
+  description: Source host OS. Free-form text; may contain whitespace and punctuation.
+  example: linux
+- name: device_user
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: event_name
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: trigger_type
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: trigger_user
+  type: user
+  description: Source user domain. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jdoe
+- name: url
+  type: url
+  description: Network HTTP URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: url_category
+  type: url
+  description: Network HTTP URL category. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: user_agent
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: windows
+  type: string
+  description: Source host OS family. Free-form text; may contain whitespace and punctuation.
+  example: sample_windows
+use_cases:
+- Cloud
+- SaaS
+how_to_use: |
+  ## Google Workspace Chrome → Cortex XSIAM (dataset `google_workspace_chrome_raw`)
+
+  Routing — broker-derived from the CEF/syslog header (lowercased):
+  - vendor: `Google`
+  - product: `Workspace_Chrome`
+  Broker derives -> `google_workspace_chrome_raw`.
+
+  Ingestion shape: **JSON-native.** This modeling rule reads **nested JSON**
+  (e.g. `parameters -> os_platform`) and maps to the unified XDM (`xdm.*`). Google's native path is
+  its HTTP/API collector emitting JSON, not flat CEF. A synthetic flat-CEF
+  event routes in and the broker extracts top-level columns, but the MR's
+  nested-JSON reads resolve to null — so XDM does not populate from CEF.
+  (Derived from the pack rules; routing/landing verified Phantom-side.
+  NOT XDM-validated on a stock tenant — see prerequisite(s) below.)
+
+  Maps to ~20 fields including: xdm.event.description, xdm.event.outcome_reason, xdm.event.type, xdm.intermediate.user.username, xdm.network.http.browser, xdm.network.http.url.
+  Modeling rule: unconditional (no gate field).
+
+  To populate XDM, **two** tenant-side prerequisites (neither is a Phantom change
+  — same class as the Netskope marketplace-MR finding):
+  1. Onboard the Google content pack so `google_workspace_chrome_raw` is XDM-enabled — the
+     marketplace modeling rule binds to the dataset. Broker-auto-created
+     datasets stay raw-only and the rule never applies (datamodel returns 0).
+  2. Ingest as JSON through an XSIAM HTTP Collector (dataset target + API key),
+     not the syslog broker — the nested-JSON MR needs JSON payloads. Phantom's
+     synthetic worker emits flat CEF/syslog today.
+
+  Verify (once prerequisite(s) met, wide >=7d window):
+      config timeframe = 30d | datamodel dataset = google_workspace_chrome_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

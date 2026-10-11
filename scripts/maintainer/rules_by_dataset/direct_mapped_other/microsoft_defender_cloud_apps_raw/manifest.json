@@ -1,0 +1,18 @@
+{
+  "category": "direct_mapped_other",
+  "cef_dict_hits": 1,
+  "dataset": "microsoft_defender_cloud_apps_raw",
+  "modeling_rule_present": true,
+  "modeling_rule_source_filenames": [
+    "MicrosoftCloudAppSecurity__MicrosoftCloudAppSecurity.xif"
+  ],
+  "operator_setup_notes": "This data source has typed-column data that doesn't look like CEF (columns are camelCase API fields, JSON sub-objects, etc.). Most likely arrives via the XSIAM HTTP Collector with a source tag mapped to vendor=`Microsoft`, product=`defender_cloud_apps`, or via a vendor-specific XDR connector pull. Phantom can POST JSON to the HTTP collector; the operator must configure the collector's source tag to land events in this dataset.",
+  "operator_setup_required": true,
+  "pack_name": "MicrosoftCloudAppSecurity",
+  "parsing_rule_present": true,
+  "parsing_rule_source_filename": "MicrosoftCloudAppSecurity__MicrosoftCloudAppSecurity.xif",
+  "product": "defender_cloud_apps",
+  "uses_raw_json": false,
+  "uses_raw_log": false,
+  "vendor": "Microsoft"
+}

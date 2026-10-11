@@ -1,0 +1,1016 @@
+schema_version: 1
+id: VMwareVCenter
+pack_name: VMwareVCenter
+rule_name: VMwareVcenter
+dataset_name: vmware_vcenter_raw
+vendor: VMware
+product: VMwareVCenter
+description: Modeling Rules for the VMware vCenter logs collector
+categories:
+- Analytics & SIEM
+version: 1.0.19
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iODJweCIgdmlld0JveD0iMCAwIDUxMiA4MiIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDx0aXRsZT53bXdhcmU8L3RpdGxlPgogICAgPGcgZmlsbD0iIzcxNzA3NCI+CiAgICAgICAgPHBhdGggZD0iTTM1MS4yODIyNzQsMS42MzM0Nzc0MSBDMzYxLjkyMDc5OSwxLjYzMzQ3NzQxIDM3MC4yNzk2NDEsNC4yOTMxMDg4MSAzNzUuOTc4ODUxLDkuOTkyMzE4OTcgQzM4MS4yOTgxMTQsMTUuMzExNTgxOCAzODMuOTU3NzQ1LDIyLjkxMDUyODcgMzgzLjk1Nzc0NSwzMi40MDkyMTIzIEwzODMuOTU3NzQ1LDc0LjU4MzM2NzQgQzM4My45NTc3NDUsNzcuNjIyOTQ2MiAzODEuNjc4MDYxLDgwLjI4MjU3NzYgMzc4LjI1ODUzNSw4MC4yODI1Nzc2IEMzNzUuMjE4OTU2LDgwLjI4MjU3NzYgMzcyLjU1OTMyNSw3OC4wMDI4OTM1IDM3Mi41NTkzMjUsNzQuOTYzMzE0OCBMMzcyLjU1OTMyNSw2Ny4zNjQzNjc5IEMzNjcuMjQwMDYyLDc0LjU4MzM2NzQgMzU4LjEyMTMyNiw4MC42NjI1MjQ5IDM0NC44MjMxNjksODAuNjYyNTI0OSBDMzMxLjI4MTg0NSw4MS4wMzg2NzI4IDMxNi45OTU3NDksNzMuMjIyMzIwMSAzMTYuNzExMzgxLDU3Ljk1MDc5MTcgTDMxNi43MDcwNjUsNTcuNDg1NzM3IEMzMTYuNzA3MDY1LDQxLjE0ODAwMTIgMzMwLjAwNTIyMiwzMi40MDkyMTIzIDM0OS4zODI1MzcsMzIuNDA5MjEyMyBDMzU5LjI2MTE2OCwzMi40MDkyMTIzIDM2Ni4xMDAyMiwzMy41NDkwNTQzIDM3Mi45MzkyNzIsMzUuNDQ4NzkxIEwzNzIuOTM5MjcyLDMyLjc4OTE1OTYgQzM3Mi45MzkyNzIsMTguNzMxMTA3OSAzNjQuNTgwNDMxLDEyLjI3MjAwMyAzNTAuMTQyNDMyLDEyLjI3MjAwMyBDMzQyLjc2MDU5NywxMi4yNzIwMDMgMzM4LjI0NzEzMywxMi45ODkwOTU1IDMzMi43NzA3MTYsMTUuNDY4MTg2NiBMMzMyLjI4NDkwNiwxNS42OTE1MjkxIEMzMzEuNTI1MDEyLDE2LjA3MTQ3NjUgMzMwLjc2NTExNywxNi4wNzE0NzY1IDMzMC4zODUxNywxNi4wNzE0NzY1IEMzMjcuNzI1NTM4LDE2LjA3MTQ3NjUgMzI1LjA2NTkwNywxMy43OTE3OTI0IDMyNS4wNjU5MDcsMTEuMTMyMTYxIEMzMjUuMDY1OTA3LDguNDcyNTI5NiAzMjYuMjA1NzQ5LDcuMzMyNjg3NTYgMzI4LjEwNTQ4Niw2LjE5Mjg0NTUzIEwzMjkuMjA0NjcxLDUuNzU4ODc4MzEgQzMzNi4yNzAzOTgsMy4wMDg2MTEwNCAzNDEuODg1NTI3LDEuNjMzNDc3NDEgMzUxLjI4MjI3NCwxLjYzMzQ3NzQxIFogTTI2MS4yMzQ3NTMsMS4yNTM1MzAwNiBDMjY0LjI3NDMzMiwxLjI1MzUzMDA2IDI2Ni41NTQwMTYsMy4xNTMyNjY3OCAyNjcuMzEzOTExLDYuMTkyODQ1NTMgTDI4Ni4zMTEyNzgsNjIuNDI1MDUyNCBMMzA1LjY4ODU5Miw2LjE5Mjg0NTUzIEMzMDYuNDQ4NDg3LDMuOTEzMTYxNDcgMzA3Ljk2ODI3NiwxLjYzMzQ3NzQxIDMxMS4zODc4MDIsMS42MzM0Nzc0MSBDMzE0LjgwNzMyOSwxLjYzMzQ3NzQxIDMxNy4wODcwMTMsMy45MTMxNjE0NyAzMTcuMDg3MDEzLDYuOTUyNzQwMjIgQzMxNy4wODcwMTMsOC4wOTI1ODIyNSAzMTYuNzA3MDY1LDkuMjMyNDI0MjggMzE2LjMyNzExOCw5Ljk5MjMxODk3IEwyOTIuNzcwMzgzLDc0Ljk2MzMxNDggQzI5MS42MzA1NDEsNzguMzgyODQwOSAyODkuMzUwODU2LDgwLjI4MjU3NzYgMjg2LjMxMTI3OCw4MC4yODI1Nzc2IEwyODUuOTMxMzMsODAuMjgyNTc3NiBDMjgzLjI3MTY5OSw4MC4yODI1Nzc2IDI4MC42MTIwNjgsNzguNzYyNzg4MiAyNzkuNDcyMjI2LDc0Ljk2MzMxNDggTDI2MC40NzQ4NTgsMTkuODcwOTQ5OSBMMjQxLjQ3NzQ5MSw3NC45NjMzMTQ4IEMyNDAuMzM3NjQ5LDc4LjM4Mjg0MDkgMjM4LjQzNzkxMiw4MC4yODI1Nzc2IDIzNS4wMTgzODYsODAuMjgyNTc3NiBMMjM0LjYzODQzOSw4MC4yODI1Nzc2IEMyMzEuNTk4ODYsODAuNjYyNTI0OSAyMjkuMzE5MTc2LDc4LjM4Mjg0MDkgMjI4LjE3OTMzNCw3NS4zNDMyNjIxIEwyMDUuMDAyNTQ2LDEwLjM3MjI2NjMgQzIwNC42MjI1OTksOS42MTIzNzE2MyAyMDQuMjQyNjUxLDguNDcyNTI5NiAyMDQuMjQyNjUxLDcuMzMyNjg3NTYgQzIwNC4yNDI2NTEsNC42NzMwNTYxNiAyMDYuNTIyMzM2LDEuNjMzNDc3NDEgMjEwLjMyMTgwOSwxLjYzMzQ3NzQxIEMyMTIuOTgxNDQsMS42MzM0Nzc0MSAyMTUuMjYxMTI0LDMuNTMzMjE0MTMgMjE2LjQwMDk2Niw2LjU3Mjc5Mjg4IEwyMzUuMzk4MzM0LDYyLjQyNTA1MjQgTDI1NC43NzU2NDgsNi4xOTI4NDU1MyBDMjU1LjUzNTU0MywzLjUzMzIxNDEzIDI1Ny40MzUyOCwxLjI1MzUzMDA2IDI2MC40NzQ4NTgsMS4yNTM1MzAwNiBMMjYxLjIzNDc1MywxLjI1MzUzMDA2IFogTTM1MC4xNDI0MzIsNDAuNzY4MDUzOCBDMzM1LjcwNDQzMiw0MC43NjgwNTM4IDMyNy43MjU1MzgsNDcuMjI3MTU4NyAzMjcuNzI1NTM4LDU2LjcyNTg0MjMgTDMyNy43MjU1MzgsNTcuMTA1Nzg5NiBDMzI3LjcyNTUzOCw2Ni42MDQ0NzMyIDMzNi40NjQzMjcsNzIuMzAzNjgzNCAzNDYuNzIyOTA1LDcyLjMwMzY4MzQgQzM2MS41NDA4NTIsNzIuMzAzNjgzNCAzNzIuOTM5MjcyLDYzLjU2NDg5NDUgMzcyLjkzOTI3Miw1MS40MDY1Nzk1IEwzNzIuOTM5MjcyLDQzLjgwNzYzMjYgQzM2Ny4yNDAwNjIsNDIuMjg3ODQzMiAzNTkuNjQxMTE1LDQwLjc2ODA1MzggMzUwLjE0MjQzMiw0MC43NjgwNTM4IFogTTQwMy4zMzUwNiwxLjYzMzQ3NzQxIEM0MDYuMzc0NjM4LDEuNjMzNDc3NDEgNDA5LjQxNDIxNywzLjkxMzE2MTQ3IDQwOS40MTQyMTcsNy43MTI2MzQ5MSBMNDA5LjQxNDIxNywyMS4wMTA3OTE5IEM0MTUuMTEzNDI3LDguMDkyNTgyMjUgNDI3LjY1MTY5LDIuMzkzMzcyMDkgNDM1LjYzMDU4NCwyLjM5MzM3MjA5IEM0MzkuMDUwMTEsMi4zOTMzNzIwOSA0NDEuMzI5Nzk0LDQuNjczMDU2MTYgNDQxLjMyOTc5NCw4LjQ3MjUyOTYgQzQ0MS4zMjk3OTQsMTEuNTEyMTA4MyA0MzkuNDMwMDU3LDEzLjc5MTc5MjQgNDM2LjAxMDUzMSwxNC41NTE2ODcxIEM0MjEuMTkyNTg1LDE2LjA3MTQ3NjUgNDA5LjAzNDI3LDI3LjQ2OTg5NjggNDA5LjAzNDI3LDQ5LjUwNjg0MjcgTDQwOS4wMzQyNyw3NS4zNDMyNjIxIEM0MDkuMDM0MjcsNzguMzgyODQwOSA0MDYuNzU0NTg2LDgxLjQyMjQxOTYgNDAzLjMzNTA2LDgxLjQyMjQxOTYgQzQwMC4yOTU0ODEsODEuNDIyNDE5NiAzOTcuMjU1OTAyLDc5LjE0MjczNTYgMzk3LjI1NTkwMiw3NS4zNDMyNjIxIEwzOTcuMjU1OTAyLDcuNzEyNjM0OTEgTDM5Ny42MzU4NDksNy43MTI2MzQ5MSBDMzk3LjYzNTg0OSw0LjY3MzA1NjE2IDM5OS45MTU1MzQsMS42MzM0Nzc0MSA0MDMuMzM1MDYsMS42MzM0Nzc0MSBaIE00NzcuMDQ0ODQ0LDEuNjMzNDc3NDEgQzQ5OS40NjE3MzgsMS42MzM0Nzc0MSA1MTIsMTkuODcwOTQ5OSA1MTIsNDAuMzg4MTA2NSBDNTEyLDQzLjQyNzY4NTIgNTA5LjcyMDMxNiw0NS43MDczNjkzIDUwNi42ODA3MzcsNDUuNzA3MzY5MyBMNDUxLjk2ODMyLDQ1LjcwNzM2OTMgQzQ1My40ODgxMDksNjIuMDQ1MTA1MSA0NjUuMjY2NDc3LDcxLjU0Mzc4ODcgNDc4LjU2NDYzNCw3MS41NDM3ODg3IEM0ODcuNjgzMzcsNzEuNTQzNzg4NyA0OTQuOTAyMzcsNjguMTI0MjYyNiA1MDAuMjIxNjMyLDYyLjgwNDk5OTggQzUwMC45ODE1MjcsNjIuMDQ1MTA1MSA1MDIuMTIxMzY5LDYxLjY2NTE1NzcgNTAzLjI2MTIxMSw2MS42NjUxNTc3IEM1MDUuOTIwODQyLDYxLjY2NTE1NzcgNTA4LjIwMDUyNyw2My45NDQ4NDE4IDUwOC4yMDA1MjcsNjYuNjA0NDczMiBDNTA4LjIwMDUyNyw2Ny43NDQzMTUyIDUwNy44MjA1NzksNjkuMjY0MTA0NiA1MDYuNjgwNzM3LDcwLjAyMzk5OTMgQzQ5OS40NjE3MzgsNzYuNDgzMTA0MiA0OTEuMTAyODk2LDgxLjA0MjQ3MjMgNDc4LjE4NDY4Niw4MS4wNDI0NzIzIEM0NTcuODcyNzAxLDgxLjA0MjQ3MjMgNDQxLjI4NDU4LDY1LjQwMjI0MzggNDQwLjk1NDg0OSw0Mi4yMzIzNjI1IEw0NDAuOTQ5ODQ3LDQxLjE0ODAwMTIgQzQ0MC45NDk4NDcsMTkuMTExMDU1MiA0NTYuMTQ3NzQsMS42MzM0Nzc0MSA0NzcuMDQ0ODQ0LDEuNjMzNDc3NDEgWiBNNDc2LjY2NDg5NywxMS4xMzIxNjEgQzQ2My4zNjY3NCwxMS4xMzIxNjEgNDUzLjQ4ODEwOSwyMi4xNTA2MzQgNDUyLjM0ODI2NywzNi45Njg1ODA0IEw1MDAuNjAxNTgsMzYuOTY4NTgwNCBDNDk5LjQ2MTczOCwyMi45MTA1Mjg3IDQ5MS40ODI4NDMsMTEuMTMyMTYxIDQ3Ni42NjQ4OTcsMTEuMTMyMTYxIFoiPjwvcGF0aD4KICAgICAgICA8cGF0aCBkPSJNMjAuNzI4MDg0NCw2LjU3Mjc5Mjg4IEMxOC40NDg0MDAzLDAuODczNTgyNzE4IDExLjk4OTI5NTQsLTEuNDA2MTAxMzUgNi4yOTAwODUyOSwwLjg3MzU4MjcxOCBDMC41OTA4NzUxMjcsMy4xNTMyNjY3OCAtMS42ODg4MDg5NCw5Ljk5MjMxODk3IDEuMzUwNzY5ODEsMTUuMzExNTgxOCBMMjUuNjY3Mzk5OCw2OC4xMjQyNjI2IEMyOS40NjY4NzMzLDc2LjQ4MzEwNDIgMzMuNjQ2Mjk0LDgxLjA0MjQ3MjMgNDEuMjQ1MjQwOSw4MS4wNDI0NzIzIEM0OS4yMjQxMzUxLDgxLjA0MjQ3MjMgNTIuNjQzNjYxMiw3Ni4xMDMxNTY4IDU2LjgyMzA4Miw2OC4xMjQyNjI2IEM1Ni44MjMwODIsNjguMTI0MjYyNiA3OC4xMDAxMzMzLDIxLjc3MDY4NjYgNzguNDgwMDgwNiwyMS4zOTA3MzkzIEM3OC44NjAwMjgsMjEuMDEwNzkxOSA3OS4yMzk5NzUzLDE5LjQ5MTAwMjYgODEuNTE5NjU5NCwxOS40OTEwMDI2IEM4My40MTkzOTYxLDE5LjQ5MTAwMjYgODQuNTU5MjM4MSwyMS4wMTA3OTE5IDg0LjU1OTIzODEsMjIuOTEwNTI4NyBMODQuNTU5MjM4MSw2Ny43NDQzMTUyIEM4NC41NTkyMzgxLDc0LjU4MzM2NzQgODguMzU4NzExNiw4MC42NjI1MjQ5IDk1LjU3NzcxMTEsODAuNjYyNTI0OSBDMTAzLjE3NjY1OCw4MC42NjI1MjQ5IDEwNi45NzYxMzEsNzQuOTYzMzE0OCAxMDYuOTc2MTMxLDY3Ljc0NDMxNTIgTDEwNi45NzYxMzEsMzEuMjY5MzcwMiBDMTA2Ljk3NjEzMSwyNC4wNTAzNzA3IDExMi4yOTUzOTQsMTkuNDkxMDAyNiAxMTguNzU0NDk5LDE5LjQ5MTAwMjYgQzEyNS41OTM1NTEsMTkuNDkxMDAyNiAxMzAuMTUyOTE5LDI0LjQzMDMxOCAxMzAuMTUyOTE5LDMxLjI2OTM3MDIgTDEzMC4xNTI5MTksNjguMTI0MjYyNiBDMTMwLjE1MjkxOSw3NC45NjMzMTQ4IDEzMy45NTIzOTMsODEuMDQyNDcyMyAxNDEuMTcxMzkyLDgxLjA0MjQ3MjMgQzE0OC43NzAzMzksODEuMDQyNDcyMyAxNTIuNTY5ODEzLDc1LjM0MzI2MjEgMTUyLjU2OTgxMyw2OC4xMjQyNjI2IEwxNTIuNTY5ODEzLDMxLjI2OTM3MDIgQzE1Mi41Njk4MTMsMjQuMDUwMzcwNyAxNTcuODg5MDc1LDE5LjQ5MTAwMjYgMTY0LjM0ODE4LDE5LjQ5MTAwMjYgQzE3MS4xODcyMzMsMTkuNDkxMDAyNiAxNzUuNzQ2NjAxLDI0LjQzMDMxOCAxNzUuNzQ2NjAxLDMxLjI2OTM3MDIgTDE3NS43NDY2MDEsNjguMTI0MjYyNiBDMTc1Ljc0NjYwMSw3NC45NjMzMTQ4IDE3OS41NDYwNzQsODEuMDQyNDcyMyAxODYuNzY1MDc0LDgxLjA0MjQ3MjMgQzE5NC4zNjQwMjEsODEuMDQyNDcyMyAxOTguMTYzNDk0LDc1LjM0MzI2MjEgMTk4LjE2MzQ5NCw2OC4xMjQyNjI2IEwxOTguMTYzNDk0LDI2LjMzMDA1NDggQzE5OC4xNjM0OTQsMTAuNzUyMjEzNyAxODYuMDA1MTc5LDAuMTEzNjg4MDMgMTcwLjgwNzI4NSwwLjExMzY4ODAzIEMxNTUuNjA5MzkxLDAuMTEzNjg4MDMgMTQ2LjQ5MDY1NSwxMC4zNzIyNjYzIDE0Ni40OTA2NTUsMTAuMzcyMjY2MyBDMTQxLjE3MTM5MiwzLjkxMzE2MTQ3IDEzNC43MTIyODgsMC4xMTM2ODgwMyAxMjIuOTMzOTIsMC4xMTM2ODgwMyBDMTEwLjc3NTYwNSwwLjExMzY4ODAzIDk5Ljc1NzEzMTksMTAuMzcyMjY2MyA5OS43NTcxMzE5LDEwLjM3MjI2NjMgQzk0LjgxNzgxNjQsMy45MTMxNjE0NyA4Ni4wNzkwMjc1LDAuMTEzNjg4MDMgNzkuNjE5OTIyNywwLjExMzY4ODAzIEM2OC45ODEzOTcsMC4xMTM2ODgwMyA2MC4yNDI2MDgxLDUuMDUzMDAzNSA1NC45MjMzNDUzLDE2LjgzMTM3MTIgTDM5LjM0NTUwNDIsNTMuMzA2MzE2MiBMMjAuNzI4MDg0NCw2LjU3Mjc5Mjg4Ij48L3BhdGg+CiAgICA8L2c+Cjwvc3ZnPgo=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: json_payload.path
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.path.
+  example: sample value
+- name: json_payload.status
+  type: string_short
+  description: Nested leaf of `json_payload` — the modeling rule reads it at $.status.
+  example: sample value
+- name: _raw_log
+  type: string
+  description: 'Native vmware_vcenter log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: The rule ships THREE [MODEL: dataset="VMware_vCenter_raw"] blocks (Audit / Auth / Network), each gated by a `contains` filter over an unrelated vCenter log family: Audit on Java-service noise ("INFO","DEBUG","pool","vlsi'
+  example: '{{now:%Y-%m-%dT%H:%M:%S}}.123Z info vpxd[07216] [Originator@6876 sub=Vmomi opID=hs-1234-9a2b] [VpxdMoSessionManager] "POST /sdk/vimService HTTP/1.1" 200 4523 (VMware vim-java 1.0), 1024 bytes, from <TCP ''10.11.12.13:52344''> to localhost 8085, user <VSPHERE.LOCAL\Administrator>'
+- name: parsed_fields
+  type: json
+  description: 'Destination process command line. JSON object with keys: comm, exe,
+    exit, msg, pid, ppid, res, ses, success, syscall, type, uid (each key defined
+    as a dotted-path leaf below).'
+  example: '{}'
+- name: parsed_fields.comm
+  type: string
+  description: Vendor-emitted field 'Parsed fields › comm'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_comm
+- name: parsed_fields.exe
+  type: string
+  description: Vendor-emitted field 'Parsed fields › exe'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_exe
+- name: parsed_fields.exit
+  type: string
+  description: Vendor-emitted field 'Parsed fields › exit'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_exit
+- name: parsed_fields.msg
+  type: string
+  description: Vendor-emitted field 'Parsed fields › msg'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_msg
+- name: parsed_fields.pid
+  type: integer
+  description: Vendor-emitted field 'Parsed fields › pid'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: '4242'
+- name: parsed_fields.ppid
+  type: string
+  description: Vendor-emitted field 'Parsed fields › ppid'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_ppid
+- name: parsed_fields.res
+  type: string
+  description: Vendor-emitted field 'Parsed fields › res'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_res
+- name: parsed_fields.ses
+  type: string
+  description: Vendor-emitted field 'Parsed fields › ses'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_ses
+- name: parsed_fields.success
+  type: string
+  description: Vendor-emitted field 'Parsed fields › success'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_success
+- name: parsed_fields.syscall
+  type: string
+  description: Vendor-emitted field 'Parsed fields › syscall'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_syscall
+- name: parsed_fields.type
+  type: string_short
+  description: Type/category classifier emitted by VMware. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: parsed_fields.uid
+  type: string
+  description: Vendor-emitted field 'Parsed fields › uid'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_uid
+- name: Account
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: acct-d4c8a796
+- name: AccountCreatedEvent
+  type: string
+  description: Event operation. Free-form text; may contain whitespace and punctuation.
+  example: sample_accountcreatedev
+- name: CNAME
+  type: string
+  description: Network DNS resource record type. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cname
+- name: Datastore
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_datastore
+- name: Event
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: Events
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_events
+- name: Fail
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: File
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_file
+- name: Host
+  type: host
+  description: Event type. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: Login
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_login
+- name: OPERATION_TYPE_AUDIT
+  type: string
+  description: Event operation. Free-form text; may contain whitespace and punctuation.
+  example: sample_audit
+- name: Operations
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_operations
+- name: Requesting
+  type: string
+  description: Network LDAP operation. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_requesting
+- name: Scheduled
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_scheduled
+- name: Success
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: Successfully
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: Task
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_task
+- name: 'True'
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: VIRTUALIZATION
+  type: string
+  description: Event tags. Free-form text; may contain whitespace and punctuation.
+  example: sample_virtualization
+- name: VM
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_vm
+- name: VmCreatedEvent
+  type: string
+  description: Event operation. Free-form text; may contain whitespace and punctuation.
+  example: sample_vmcreatedevent
+- name: action
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: allow
+- name: api_endpoint_path
+  type: string
+  description: Api endpoint path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: app_class_component
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: auth-service
+- name: app_component
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: auth-service
+- name: application_component
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: auth-service
+- name: application_component_class
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: access_control
+- name: auth_method
+  type: string
+  description: Auth method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: bytes
+  type: integer_byte_count
+  description: Source sent bytes. Unsigned decimal byte count; bare digits, no unit
+    suffix.
+  example: '1024'
+- name: bytes_received
+  type: string
+  description: Destination sent bytes. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_received
+- name: bytes_sent
+  type: string
+  description: Source sent bytes. Free-form text; may contain whitespace and punctuation.
+  example: sample_sent
+- name: client2_ip
+  type: ipv4
+  description: Client2 ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: client_ip
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: client_port
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: client_remote_machine
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: code
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: collectorID
+  type: string
+  description: Observer name. Free-form text; may contain whitespace and punctuation.
+  example: sample_collectorid
+- name: collectorInstanceID
+  type: string
+  description: Observer unique identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_collectorinstanc
+- name: comm
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_comm
+- name: command
+  type: string
+  description: Source process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: connection
+  type: string
+  description: Network LDAP operation. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_connection
+- name: datastore
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_datastore
+- name: datastore_name
+  type: string
+  description: Destination virtualization data store name. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: datastore_uuid
+  type: string
+  description: Destination virtualization data store UUID. Free-form text; may contain
+    whitespace and punctuation.
+  example: 7bb8733b-981b-52a4-bc7a-316aa185b1fd
+- name: description
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: dns_client_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: dns_client_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: dns_direction_context
+  type: string
+  description: Network DNS resource record value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_context
+- name: dns_event_fields
+  type: string
+  description: Dns event fields. Free-form text; may contain whitespace and punctuation.
+  example: sample_fields
+- name: dns_forwarder_ipv4
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: dns_forwarder_ipv6
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: dns_operation
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: create
+- name: dns_query_type
+  type: string
+  description: Network DNS question type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: dns_record_name
+  type: string
+  description: Network DNS resource record name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: dns_record_value
+  type: string
+  description: Network DNS resource record type. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_value
+- name: duration_ms
+  type: integer
+  description: Event duration. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: event
+  type: string
+  description: Event operation. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_id
+  type: string_short
+  description: Event id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: event_name_clean
+  type: string
+  description: Alert name. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_payload
+  type: string
+  description: Network application protocol. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_payload
+- name: event_type
+  is_gate: true
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: 'sps'
+- name: event_type_name
+  type: string
+  description: Event original event type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: exe
+  type: string
+  description: Destination process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_exe
+- name: exit
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: fail
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: failure
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: file
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_file
+- name: file_path
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: group
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: grp-dfc80d0e
+- name: groups
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: sample_groups
+- name: host_id
+  type: host
+  description: Source host device ID. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: http_method
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: http_protocol
+  type: string
+  description: Network application protocol. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: http_request_line
+  type: string
+  description: Http request line. Free-form text; may contain whitespace and punctuation.
+  example: sample_line
+- name: http_response_code
+  type: integer
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: '200'
+- name: http_version
+  type: string
+  description: Network application protocol. Free-form text; may contain whitespace
+    and punctuation.
+  example: 1.0.0
+- name: in
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_in
+- name: initiator_str
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: sample_str
+- name: internal_header_fields
+  type: string
+  description: Internal header fields. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_fields
+- name: ip
+  type: ipv4
+  description: Ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no
+    surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: is
+  type: string
+  description: Network DNS resource record value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_is
+- name: is_account_operation_event
+  type: string
+  description: Is account operation event. Free-form text; may contain whitespace
+    and punctuation.
+  example: login
+- name: is_authorized
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: is_file_or_datastore_event
+  type: string
+  description: Is file or datastore event. Free-form text; may contain whitespace
+    and punctuation.
+  example: login
+- name: is_host_event
+  type: host
+  description: Is host event. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: is_login_event
+  type: string
+  description: Is login event. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: is_scheduled_task_event
+  type: string
+  description: Is scheduled task event. Free-form text; may contain whitespace and
+    punctuation.
+  example: login
+- name: is_session
+  type: string
+  description: Is session. Free-form text; may contain whitespace and punctuation.
+  example: sample_session
+- name: is_sso_login
+  type: string
+  description: Is sso login. Free-form text; may contain whitespace and punctuation.
+  example: sample_login
+- name: is_vcsa_audit
+  type: string
+  description: Is vcsa audit. Free-form text; may contain whitespace and punctuation.
+  example: sample_audit
+- name: is_virtualization
+  type: string
+  description: Is virtualization. Free-form text; may contain whitespace and punctuation.
+  example: sample_virtualization
+- name: is_vm_operations_event
+  type: string
+  description: Is vm operations event. Free-form text; may contain whitespace and
+    punctuation.
+  example: login
+- name: is_vsphere_task_event
+  type: string
+  description: Is vsphere task event. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: json_payload
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: sample_payload
+- name: module
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: audit
+- name: module_id
+  type: string_short
+  description: Source process identifier. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: module_identifier
+  type: string
+  description: Source process identifier. Free-form text; may contain whitespace and
+    punctuation.
+  example: ext-83515ec0-26f
+- name: ms
+  type: integer
+  description: Event duration. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: new_vm_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: old_vm_name
+  type: string
+  description: Destination resource before name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: op
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: create
+- name: operation
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: create
+- name: operation_id
+  type: string_short
+  description: Session context id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: original_esxi_name
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: outcome
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: outcome_str
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: pid
+  type: integer
+  description: Destination process PID. Free-form text; may contain whitespace and
+    punctuation.
+  example: '4242'
+- name: port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: ppid
+  type: string
+  description: Destination process parent ID. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_ppid
+- name: privileges
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: sample_privileges
+- name: process
+  type: string
+  description: Source process name. Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: process_duration_ms
+  type: integer
+  description: Event duration. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: process_id
+  type: string_short
+  description: Destination process identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: process_identifier
+  type: string
+  description: Source process identifier. Free-form text; may contain whitespace and
+    punctuation.
+  example: ext-4110964b-b98
+- name: process_name
+  type: string
+  description: Destination process name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: process_time_ms
+  type: datetime
+  description: Event duration. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: proxy_ip
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: proxy_port
+  type: integer_port
+  description: Intermediate port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: reason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: res
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: resource_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: resource_value
+  type: string
+  description: Destination resource value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_value
+- name: responding
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: response
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: response_code
+  type: integer
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: '200'
+- name: server_ip
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: server_local_address
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: server_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: service
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sshd
+- name: service_id
+  type: string_short
+  description: Intermediate process identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: ses
+  type: string
+  description: Session context id. Free-form text; may contain whitespace and punctuation.
+  example: sample_ses
+- name: session_id
+  type: string_short
+  description: Network session ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: source_hostname
+  type: host
+  description: Source virtualization data center name. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: source_ip4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_ip6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: source_username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: state
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: status
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: sub_module
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: audit
+- name: success
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: syscall_id
+  type: string_short
+  description: Event type. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: syslog_hostname
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: syslog_msg
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: syslog_priority
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: INFO
+- name: target_datacenter
+  type: string
+  description: Destination virtualization data center name. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_datacenter
+- name: target_datastore_name
+  type: string
+  description: Destination virtualization data store name. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: target_hostname
+  type: host
+  description: Destination virtualization vm hostname. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: target_hosts
+  type: ipv4
+  description: Destination host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_hypervisor_hostname
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: target_ip
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: target_service
+  type: string
+  description: Destination resource value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sshd
+- name: target_task_name
+  type: string
+  description: Destination virtualization task name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: target_url
+  type: url
+  description: Network HTTP URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: target_username
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: target_vm_name
+  type: host
+  description: Destination virtualization vm hostname. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: thread_id
+  type: string_short
+  description: Source process thread ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: thread_identifier
+  type: string
+  description: Source process identifier. Free-form text; may contain whitespace and
+    punctuation.
+  example: ext-8501bb42-42e
+- name: trust_store_path
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: /var/log/app.log
+- name: uid
+  type: string
+  description: Destination user identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uid
+- name: uri
+  type: url
+  description: Network HTTP URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: url
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: user
+  type: string
+  description: User. Free-form text; may contain whitespace and punctuation.
+  example: jdoe
+- name: user_agent
+  type: string
+  description: Source user agent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: user_domain
+  type: domain
+  description: Source user domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: user_domain_from_user
+  type: domain
+  description: User domain from user. Bare DNS domain name; no scheme, no path, no
+    port.
+  example: example.com
+- name: user_domain_from_username
+  type: domain
+  description: User domain from username. Bare DNS domain name; no scheme, no path,
+    no port.
+  example: example.com
+- name: user_name
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: user_role
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: Admin
+- name: username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: vSphere
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_vsphere
+- name: vim
+  type: string
+  description: Event operation. Free-form text; may contain whitespace and punctuation.
+  example: sample_vim
+- name: vm_name
+  type: host
+  description: Source virtualization vm hostname. Hostname or fully-qualified domain
+    name (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: working_directory
+  type: string
+  description: Source process executable directory. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_directory
+- name: wsdl_name
+  type: string
+  description: Wsdl name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: 'yes'
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+use_cases:
+- Virtualization
+- Container
+how_to_use: |
+  ## vmware vcenter → Cortex XSIAM (dataset `vmware_vcenter_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `vmware` / product `vcenter`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `vmware_vcenter_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `vmware`
+    - **product**: `vcenter`
+
+    These normalize → `vmware_vcenter_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `json_payload -> status`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `_raw_log contains "| vlsi |" or _raw_log contains "| vim" or _raw_log contains "jointool" or _raw_log contains "heard-" or _raw_log contains "Stats"  or _raw_lo` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~103 fields mapped to the unified data model (`xdm.*`), including: `XDM.Audit.TriggeredBy.identity.uuid`, `XDM.Audit.audited_resource.id`, `XDM.Audit.event_timestamp`, `XDM.Audit.identity.name`, `XDM.Audit.identity.sub_type`, `XDM.Audit.original_event_description`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `vmware`, Product = `vcenter`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = vmware_vcenter_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

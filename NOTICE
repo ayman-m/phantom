@@ -1,0 +1,43 @@
+Phantom
+Copyright (c) 2023 Ayman Mahmoud. Licensed under the MIT License (see LICENSE).
+
+Third-party material included in this repository
+------------------------------------------------
+
+1. Cortex content packs and rules (bundles/spark/connectors/cortex-content/baked,
+   scripts/maintainer/modeling_rules, scripts/maintainer/parsing_rules,
+   scripts/maintainer/rules_by_dataset, docs/reference/cortex-content-rules,
+   bundles/spark/data-sources derived metadata)
+   Source: the public demisto/content repository (https://github.com/demisto/content),
+   MIT License. Pack names, descriptions and rule excerpts belong to their authors.
+
+2. Palo Alto Networks documentation excerpts and product names
+   (data/knowledge/external/paloaltonetworks, bundles/spark/kbs,
+   bundles/spark/mcp/resources)
+   Excerpts are reproduced from publicly available Palo Alto Networks documentation
+   for interoperability and education. Palo Alto Networks, Cortex, XSIAM and XDR are
+   trademarks of Palo Alto Networks, Inc. This project is not affiliated with or
+   endorsed by Palo Alto Networks.
+
+   XQL examples (bundles/spark/kbs/xql-examples, bundles/spark/mcp/resources/xql_examples.md):
+   XQL examples, some derived from Palo Alto Networks documentation.
+
+   The Cortex XDR endpoint reference pages under
+   data/knowledge/external/paloaltonetworks/cortex-xdr/action were generated from the
+   MIT-licensed ebarti/cortex-xdr-client (https://github.com/ebarti/cortex-xdr-client).
+
+3. Vendor logos (docs/assets/vendor-logos, bundles/spark/connectors/cortex-content/baked,
+   and the `logo` block of each bundles/spark/data-sources/*/data_source.yaml)
+   Logos and brand marks are trademarks of their respective owners and are included
+   for identification only. A few files were sourced from Wikimedia Commons under
+   CC BY-SA 3.0 / 4.0 (see docs/assets/vendor-logos/manifest.yaml and the `source` and
+   `license` fields of each data-source `logo` block); those files keep their original
+   licence and attribution. Where a `license` field says MIT or CC0 it names the licence of
+   the repository the file was taken from, not a grant over the brand mark itself.
+
+4. MITRE Caldera (third_party/caldera, a git submodule) is Apache-2.0
+   (https://github.com/mitre/caldera). MITRE ATT&CK is a registered trademark of
+   The MITRE Corporation.
+
+5. npm and Python dependencies keep their own licences (see package-lock.json and
+   the requirements files).

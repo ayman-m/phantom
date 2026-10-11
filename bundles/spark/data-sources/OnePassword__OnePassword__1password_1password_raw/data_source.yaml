@@ -1,0 +1,241 @@
+schema_version: 1
+id: OnePassword
+pack_name: OnePassword
+rule_name: OnePassword
+dataset_name: 1password_1password_raw
+vendor: 1Password
+product: OnePassword
+description: 1Password is a password manager used for storing and managing your account
+  credentials, financial information, documents, and other sensitive data. It provides
+  secure password generation, quick form filling, and cross-device synchronization.
+  It also offers features like secure password sharing and monitoring for compromised
+  accounts.
+categories:
+- Analytics & SIEM
+version: 1.0.10
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+MVBhc3N3b3JkPC90aXRsZT48cGF0aCBkPSJNMTIgMGM2LjYyNyAwIDEyIDUuMzczIDEyIDEyIDAgNi42MjgtNS4zNzMgMTItMTIgMTJTMCAxOC42MjggMCAxMkMwIDUuMzczIDUuMzczIDAgMTIgMG0tLjg5MyA0Ljg2Yy0uNDg1IDAtLjcyNy4wMDEtLjkxMy4wOTVhLjg3Ljg3IDAgMCAwLS4zNzguMzc5Yy0uMDk0LjE4NS0uMDk1LjQyOC0uMDk1LjkxMnYyLjc0N2MwIC4xMiAwIC4xODIuMDE2LjIzOHEuMDIuMDc1LjA2NS4xMzhhMSAxIDAgMCAwIC4xNzUuMTYybC42OTUuNTY0Yy4xMTMuMDkyLjE3LjEzOS4xOS4xOTRhLjIyLjIyIDAgMCAxIDAgLjE1Yy0uMDIuMDU2LS4wNzcuMTAyLS4xOS4xOTRsLS42OTUuNTY0YTEgMSAwIDAgMC0uMTc1LjE2Mi40LjQgMCAwIDAtLjA2NS4xMzggMSAxIDAgMCAwLS4wMTYuMjM4djYuMDE5YzAgLjQ4NSAwIC43MjguMDk1LjkxM2EuODcuODcgMCAwIDAgLjM3OC4zNzhjLjE4Ni4wOTQuNDI4LjA5NC45MTMuMDk0aDEuNzg2Yy40ODUgMCAuNzI3IDAgLjkxMy0uMDk0YS44Ny44NyAwIDAgMCAuMzc4LS4zNzhjLjA5NS0uMTg1LjA5NS0uNDI4LjA5NS0uOTEzdi0yLjc0N2MwLS4xMiAwLS4xODItLjAxNi0uMjM4YS40LjQgMCAwIDAtLjA2NS0uMTM4IDEgMSAwIDAgMC0uMTc1LS4xNjJsLS42OTUtLjU2NGMtLjExMy0uMDkyLS4xNy0uMTM4LS4xOTEtLjE5M2EuMjIuMjIgMCAwIDEgMC0uMTUyYy4wMi0uMDU1LjA3OC0uMS4xOS0uMTkzbC42OTYtLjU2NGExIDEgMCAwIDAgLjE3NS0uMTYyLjQuNCAwIDAgMCAuMDY1LS4xMzggMSAxIDAgMCAwIC4wMTYtLjIzOFY2LjI0NmMwLS40ODQgMC0uNzI3LS4wOTUtLjkxMmEuODcuODcgMCAwIDAtLjM3OC0uMzc5Yy0uMTg2LS4wOTQtLjQyOC0uMDk0LS45MTMtLjA5NFoiLz48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: client.app_name
+  type: string_short
+  description: Nested leaf of `client` — the modeling rule reads it at $.app_name.
+  example: sample value
+- name: client.app_version
+  type: string_short
+  description: Nested leaf of `client` — the modeling rule reads it at $.app_version.
+  example: sample value
+- name: client.ip_address
+  type: string_short
+  description: Nested leaf of `client` — the modeling rule reads it at $.ip_address.
+  example: sample value
+- name: client.os_name
+  type: string_short
+  description: Nested leaf of `client` — the modeling rule reads it at $.os_name.
+  example: sample value
+- name: client.os_version
+  type: string_short
+  description: Nested leaf of `client` — the modeling rule reads it at $.os_version.
+  example: sample value
+- name: location.city
+  type: string_short
+  description: Nested leaf of `location` — the modeling rule reads it at $.city.
+  example: sample value
+- name: location.country
+  type: string_short
+  description: Nested leaf of `location` — the modeling rule reads it at $.country.
+  example: sample value
+- name: location.latitude
+  type: string_short
+  description: Nested leaf of `location` — the modeling rule reads it at $.latitude.
+  example: sample value
+- name: location.longitude
+  type: string_short
+  description: Nested leaf of `location` — the modeling rule reads it at $.longitude.
+  example: sample value
+- name: location.region
+  type: string_short
+  description: Nested leaf of `location` — the modeling rule reads it at $.region.
+  example: sample value
+- name: SOURCE_LOG_TYPE
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: action
+  type: string
+  description: Action taken by the vendor's enforcement engine. Free-form text; may
+    contain whitespace and punctuation.
+  example: allow
+- name: actor_details
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: email,
+    name, uuid (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: category
+  type: string_short
+  description: 1Password's category classifier for the event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: access_control
+- name: client
+  type: string
+  description: Destination application version. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_client
+- name: item_uuid
+  type: string_short
+  description: Unique identifier — assigned by 1Password per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: 4b9aa2ac-3d79-56b0-bd95-41e6f427d0fe
+- name: location
+  type: string
+  description: Location label (region/site/zone) emitted by 1Password. Free-form text;
+    may contain whitespace and punctuation.
+  example: us-east
+- name: session
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: ip (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: target_user
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: email,
+    name, uuid (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by 1Password. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: user
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: email,
+    name, uuid (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: vault_uuid
+  type: string
+  description: Destination resource parent ID. Free-form text; may contain whitespace
+    and punctuation.
+  example: 19f91e1b-cfe5-5dd1-90e9-4b2c5dc3e63d
+- name: actor_details.email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: actor_details.name
+  type: user
+  description: Human-readable name as displayed by 1Password. Account name as the
+    vendor reports it — login name, UPN, or sAMAccountName; no domain prefix unless
+    vendor emits one.
+  example: jsmith
+- name: actor_details.uuid
+  type: string
+  description: Vendor-emitted field 'Actor details › uuid'. Leaf of the 'actor_details'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: f212532e-daa9-5f4d-8100-040badfee356
+- name: session.ip
+  type: ipv4
+  description: Vendor-emitted field 'Session › ip'. Leaf of the 'session' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: target_user.email
+  type: email
+  description: Destination/target user account name. Leaf of the 'target_user' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: user@example.com
+- name: target_user.name
+  type: user
+  description: Destination/target user account name. Leaf of the 'target_user' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending
+    on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: target_user.uuid
+  type: string
+  description: Destination/target user account name. Leaf of the 'target_user' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 42a7c994-e8df-5d08-8e2a-52b93a99af59
+- name: user.email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: user.name
+  type: user
+  description: Human-readable name as displayed by 1Password. Account name as the
+    vendor reports it — login name, UPN, or sAMAccountName; no domain prefix unless
+    vendor emits one.
+  example: jsmith
+- name: user.uuid
+  type: string
+  description: Vendor-emitted field 'User › uuid'. Leaf of the 'user' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: 202d4244-c41a-5059-9f4a-081e3d446212
+- name: event_type
+  is_gate: true
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: 'Audit events'
+use_cases:
+- MFA
+- Identity
+how_to_use: |
+  ## 1Password OnePassword → Cortex XSIAM (dataset `1password_1password_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `1password_1password_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `1password_1password`. The marketplace pack's display name `1Password` / `OnePassword` normalizes to `1password_onepassword_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `1password_1password` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `location -> country`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `event_type = "Sign in attempts"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~23 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.operation`, `xdm.event.outcome`, `xdm.event.outcome_reason`, `xdm.event.type`, `xdm.source.ipv4`, `xdm.source.ipv6`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = 1password_1password_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

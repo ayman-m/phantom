@@ -1,0 +1,1241 @@
+schema_version: 1
+description: Standalone vendor-logo library extracted from bundles/spark/data-sources/*/data_source.yaml. Maintainer artifact
+  — runtime does not consume this. For docs / brand-mark reuse / future UI surfaces.
+vendor_count_with_logo: 137
+vendor_count_without_logo: 0
+vendors_without_logo: []
+logos:
+- vendor_key: 1password
+  vendor_display: 1Password
+  file: 1password.svg
+  mime_type: image/svg+xml
+  bytes: 959
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: OnePassword__OnePassword__1password_1password_raw
+- vendor_key: abnormal-security
+  vendor_display: Abnormal Security
+  file: abnormal-security.svg
+  mime_type: image/svg+xml
+  bytes: 331
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: AbnormalSecurity__AbnormalSecurityEventCollector_1_3__abnormal_security_email_protection_raw
+- vendor_key: absolute-software
+  vendor_display: Absolute Software
+  file: absolute-software.svg
+  mime_type: image/svg+xml
+  bytes: 331
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Absolute__Absolute__absolute_secure_endpoint_raw
+- vendor_key: admin-by-request
+  vendor_display: Admin By Request
+  file: admin-by-request.svg
+  mime_type: image/svg+xml
+  bytes: 330
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: AdminByRequest__AdminByRequest__admin_by_request_raw
+- vendor_key: akamai
+  vendor_display: Akamai
+  file: akamai.svg
+  mime_type: image/svg+xml
+  bytes: 5790
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Akamai_SIEM__Akamai_WAF__akamai_waf_raw
+- vendor_key: alibaba
+  vendor_display: Alibaba
+  file: alibaba.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: AlibabaActionTrail__AlibabaModelingRules_1_3__alibaba_action_trail_raw
+- vendor_key: amazon
+  vendor_display: Amazon
+  file: amazon.svg
+  mime_type: image/svg+xml
+  bytes: 3156
+  source: simpleicons:amazonaws
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: AWS_ELB__AWS_ELB__aws_elb_raw
+- vendor_key: amazon-web-services
+  vendor_display: Amazon Web Services
+  file: amazon-web-services.svg
+  mime_type: image/svg+xml
+  bytes: 8235
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: AWS-CloudTrail__AWSCloudTrail__amazon_aws_raw
+- vendor_key: apache
+  vendor_display: Apache
+  file: apache.svg
+  mime_type: image/svg+xml
+  bytes: 3153
+  source: simpleicons:apachetomcat
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: ApacheTomcat__ApacheTomcatModelingRules_1_3__apache_tomcat_raw
+- vendor_key: apple
+  vendor_display: Apple
+  file: apple.svg
+  mime_type: image/svg+xml
+  bytes: 650
+  source: simpleicons:apple
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: MacOS__MacOS__apple_macos_raw
+- vendor_key: arista
+  vendor_display: Arista
+  file: arista.svg
+  mime_type: image/svg+xml
+  bytes: 2250
+  source: wikipedia:File:Arista-networks-logo.svg
+  license: Wikimedia Commons / vendor trademark
+  fidelity: branded
+  extracted_from: AristaSwitch__AristaSwitch__arista_switch_raw
+- vendor_key: armis
+  vendor_display: Armis
+  file: armis.svg
+  mime_type: image/svg+xml
+  bytes: 319
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Armis__ArmisModelingRules__armis_security_activities_raw
+- vendor_key: atlassian
+  vendor_display: Atlassian
+  file: atlassian.svg
+  mime_type: image/svg+xml
+  bytes: 1485
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: AtlassianConfluenceCloud__AtlassianConfluenceCloud__atlassian_confluence_raw
+- vendor_key: avaya
+  vendor_display: Avaya
+  file: avaya.svg
+  mime_type: image/svg+xml
+  bytes: 1259
+  source: wikipedia:File:Avaya_Logo.svg
+  license: Wikimedia Commons / vendor trademark
+  fidelity: branded
+  extracted_from: AvayaAuraCommunicationManager__AvayaAuraCommunicationManager__avaya_communication_manager_raw
+- vendor_key: barracuda
+  vendor_display: Barracuda
+  file: barracuda.svg
+  mime_type: image/svg+xml
+  bytes: 323
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Barracuda_Cloudgen_Firewall__Barracuda_CGFWModelingRules_1_3__barracuda_cgfw_raw
+- vendor_key: beyondtrust
+  vendor_display: BeyondTrust
+  file: beyondtrust.png
+  mime_type: image/png
+  bytes: 3705
+  source: baked/Packs/BeyondTrust_Password_Safe/Integrations/BeyondTrust_Password_Safe/BeyondTrust_Password_Safe_image.png
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: BeyondTrust_Password_Safe__BeyondTrust_Password_Safe__beyondtrust_passwordsafe_raw
+- vendor_key: bitbucket
+  vendor_display: Bitbucket
+  file: bitbucket.svg
+  mime_type: image/svg+xml
+  bytes: 1696
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Bitbucket__Bitbucket__atlassian_bitbucket_raw
+- vendor_key: bitsight
+  vendor_display: Bitsight
+  file: bitsight.svg
+  mime_type: image/svg+xml
+  bytes: 322
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: BitSight__BitSight__bitsight_bitsight_raw
+- vendor_key: bitwarden
+  vendor_display: Bitwarden
+  file: bitwarden.svg
+  mime_type: image/svg+xml
+  bytes: 712
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: BitwardenPasswordManager__BitwardenPasswordManager__bitwarden_password_manager_raw
+- vendor_key: bluecat
+  vendor_display: Bluecat
+  file: bluecat.png
+  mime_type: image/png
+  bytes: 3975
+  source: baked/Packs/BluecatAddressManager/Integrations/BluecatAddressManager/BluecatAddressManager_image.png
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: BluecatAddressManager__BluecatAddressManager_1_3__bluecat_address_manager_raw
+- vendor_key: box
+  vendor_display: Box
+  file: box.svg
+  mime_type: image/svg+xml
+  bytes: 2282
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Box__BoxEventsCollector_1_3__box_box_raw
+- vendor_key: brocade
+  vendor_display: Brocade
+  file: brocade.svg
+  mime_type: image/svg+xml
+  bytes: 8190
+  source: wikipedia:File:Brocade_Communications_Systems_logo.svg
+  license: Wikimedia Commons / vendor trademark
+  fidelity: branded
+  extracted_from: BrocadeSwitch__BrocadeSwitch_1_3__brocade_switch_raw
+- vendor_key: carbon-black
+  vendor_display: Carbon Black
+  file: carbon-black.svg
+  mime_type: image/svg+xml
+  bytes: 326
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: CarbonBlackDefense__CarbonBlackDefense__vmware_carbon_black_cloud_raw
+- vendor_key: celonis
+  vendor_display: Celonis
+  file: celonis.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Celonis__Celonis__celonis_celonis_raw
+- vendor_key: check-point
+  vendor_display: Check Point
+  file: check-point.svg
+  mime_type: image/svg+xml
+  bytes: 325
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: CheckpointFirewall__CheckpointFirewall_1_3__check_point_application_control_raw
+- vendor_key: cisco
+  vendor_display: Cisco
+  file: cisco.svg
+  mime_type: image/svg+xml
+  bytes: 2596
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: AMP__AMP__cisco_secure_endpoint_raw
+- vendor_key: citrix
+  vendor_display: Citrix
+  file: citrix.svg
+  mime_type: image/svg+xml
+  bytes: 654
+  source: simpleicons:citrix
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: CitrixADC__CitrixADC_1_3__citrix_adc_raw
+- vendor_key: claroty
+  vendor_display: Claroty
+  file: claroty.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Claroty__Claroty__claroty_ctd_raw
+- vendor_key: clearswift
+  vendor_display: Clearswift
+  file: clearswift.png
+  mime_type: image/png
+  bytes: 11569
+  source: wikipedia:File:Clearswift_-_A_HelpSystems_Logo.png
+  license: Wikipedia / vendor trademark (Clearswift is a Fortra brand)
+  fidelity: branded
+  extracted_from: ClearswiftDLP__ClearswiftDLP__clearswift_dlp_raw
+- vendor_key: cloudflare
+  vendor_display: Cloudflare
+  file: cloudflare.svg
+  mime_type: image/svg+xml
+  bytes: 6916
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: CloudflareWAF__CloudflareWAF__cloudflare_waf_raw
+- vendor_key: code42
+  vendor_display: Code42
+  file: code42.svg
+  mime_type: image/svg+xml
+  bytes: 320
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Code42__Code42__code42_code42_raw
+- vendor_key: cohesity
+  vendor_display: Cohesity
+  file: cohesity.svg
+  mime_type: image/svg+xml
+  bytes: 322
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: CohesityHelios__CohesityHelios__cohesity_helios_raw
+- vendor_key: corelight
+  vendor_display: Corelight
+  file: corelight.svg
+  mime_type: image/svg+xml
+  bytes: 323
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: CorelightZeek__CorelightZeek__corelight_zeek_raw
+- vendor_key: cybelangel
+  vendor_display: CybelAngel
+  file: cybelangel.svg
+  mime_type: image/svg+xml
+  bytes: 324
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: CybelAngel__CybelAngel__cybelangel_platform_raw
+- vendor_key: cyberark
+  vendor_display: CyberArk
+  file: cyberark.svg
+  mime_type: image/svg+xml
+  bytes: 322
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: CyberArkEPM__CyberArkEPM__cyberark_epm_raw
+- vendor_key: cyfirma-decyfir
+  vendor_display: CYFIRMA DeCYFIR
+  file: cyfirma-decyfir.svg
+  mime_type: image/svg+xml
+  bytes: 329
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: DeCYFIR__DeCYFIR__cyfirma_decyfir_raw
+- vendor_key: darktrace
+  vendor_display: Darktrace
+  file: darktrace.svg
+  mime_type: image/svg+xml
+  bytes: 323
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Darktrace__DarktraceEventCollector__darktrace_darktrace_raw
+- vendor_key: delinea
+  vendor_display: Delinea
+  file: delinea.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: DelineaALM__DelineaALM__thycotic_alm_raw
+- vendor_key: dell-emc
+  vendor_display: Dell EMC
+  file: dell-emc.svg
+  mime_type: image/svg+xml
+  bytes: 1450
+  source: simpleicons:dell
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: DellEMCUnity__DellEMCUnity__dell_emc_unity_raw
+- vendor_key: digital-guardian
+  vendor_display: Digital Guardian
+  file: digital-guardian.svg
+  mime_type: image/svg+xml
+  bytes: 330
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: DigitalGuardian__DigitalGuardianModelingRules_1_3__digital_guardian_arc_raw
+- vendor_key: docusign
+  vendor_display: DocuSign
+  file: docusign.svg
+  mime_type: image/svg+xml
+  bytes: 201
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Docusign__Docusign__docusign_docusign_raw
+- vendor_key: dragos
+  vendor_display: Dragos
+  file: dragos.svg
+  mime_type: image/svg+xml
+  bytes: 320
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Dragos_Platform__Dragos_Platform__dragos_platform_raw
+- vendor_key: dropbox
+  vendor_display: Dropbox
+  file: dropbox.svg
+  mime_type: image/svg+xml
+  bytes: 752
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Dropbox__DropboxEventCollector_1_3__dropbox_dropbox_raw
+- vendor_key: druva
+  vendor_display: Druva
+  file: druva.svg
+  mime_type: image/svg+xml
+  bytes: 319
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Druva__Druva__druva_druva_raw
+- vendor_key: duo-security
+  vendor_display: Duo Security
+  file: duo-security.svg
+  mime_type: image/svg+xml
+  bytes: 326
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: DuoAdminApi__DuoModelingRule_1_3__duo_duo_raw
+- vendor_key: exabeam
+  vendor_display: Exabeam
+  file: exabeam.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Exabeam__Exabeam__exabeam_threat_center_raw
+- vendor_key: extrahop
+  vendor_display: ExtraHop
+  file: extrahop.svg
+  mime_type: image/svg+xml
+  bytes: 322
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: ExtraHop__ExtraHop__extrahop_revealx_raw
+- vendor_key: f5
+  vendor_display: F5
+  file: f5.svg
+  mime_type: image/svg+xml
+  bytes: 2576
+  source: simpleicons:f5
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: F5APM__F5APM__f5_apm_raw
+- vendor_key: fireeye
+  vendor_display: FireEye
+  file: fireeye.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: FireEyeHX__FireEyeHXModelingRules__fireeye_hx_audit_raw
+- vendor_key: forcepoint
+  vendor_display: Forcepoint
+  file: forcepoint.svg
+  mime_type: image/svg+xml
+  bytes: 324
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: ForcepointDLP__ForcepointDLP_1_4__forcepoint_forcepoint_dlp_raw
+- vendor_key: forescout
+  vendor_display: Forescout
+  file: forescout.svg
+  mime_type: image/svg+xml
+  bytes: 323
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: ForeScoutCounterACT__ForeScoutCounterACT__forescout_technologies_counteract_raw
+- vendor_key: fortinet
+  vendor_display: Fortinet
+  file: fortinet.svg
+  mime_type: image/svg+xml
+  bytes: 474
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: FortiGate__FortiGate_1_3__fortinet_fortigate_raw
+- vendor_key: genesys
+  vendor_display: Genesys
+  file: genesys.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: GenesysCloud__GenesysCloud__genesys_cloud_raw
+- vendor_key: genetec
+  vendor_display: Genetec
+  file: genetec.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: GenetecSecurityCenter__GenetecSecurityCenter__genetec_security_center_raw
+- vendor_key: gitguardian
+  vendor_display: GitGuardian
+  file: gitguardian.svg
+  mime_type: image/svg+xml
+  bytes: 325
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: GitGuardian__GitGuardian__gitguardian_enterprise_raw
+- vendor_key: github
+  vendor_display: GitHub
+  file: github.svg
+  mime_type: image/svg+xml
+  bytes: 6111
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: GitHub__GithubModelingRules_1_3__github_github_audit_raw
+- vendor_key: gitlab
+  vendor_display: GitLab
+  file: gitlab.svg
+  mime_type: image/svg+xml
+  bytes: 6799
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: GitLab__GitlabModelingRules_1_3__gitlab_gitlab_raw
+- vendor_key: google
+  vendor_display: Google
+  file: google.svg
+  mime_type: image/svg+xml
+  bytes: 4527
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: GoogleApigee__GoogleApigee__google_apigee_raw
+- vendor_key: hashicorp
+  vendor_display: HashiCorp
+  file: hashicorp.svg
+  mime_type: image/svg+xml
+  bytes: 6202
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: CommvaultBackupSolutions__CommvaultBackupSolutions__commvault_backupsolution_raw
+- vendor_key: hello-world-demo
+  vendor_display: Hello World (Demo)
+  file: hello-world-demo.svg
+  mime_type: image/svg+xml
+  bytes: 332
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: HelloWorld__HelloWorldModelingRules__hello_world_raw
+- vendor_key: hpe
+  vendor_display: HPE
+  file: hpe.svg
+  mime_type: image/svg+xml
+  bytes: 317
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: HPEArubaCentral__HPEArubaCentral__aruba_central_raw
+- vendor_key: huawei
+  vendor_display: Huawei
+  file: huawei.svg
+  mime_type: image/svg+xml
+  bytes: 1323
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: HuaweiFW__HuaweiFW__huawei_fw_raw
+- vendor_key: ibm
+  vendor_display: IBM
+  file: ibm.svg
+  mime_type: image/svg+xml
+  bytes: 4776
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: IBMDirectoryServer__IBMDirectoryServer__ibm_ldap_raw
+- vendor_key: illusive-networks
+  vendor_display: Illusive Networks
+  file: illusive-networks.svg
+  mime_type: image/svg+xml
+  bytes: 331
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: IllusiveNetworks__IllusiveNetworks_1_3__illusive_illusive_raw
+- vendor_key: imperva
+  vendor_display: Imperva
+  file: imperva.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Imperva_WAF__Imperva_WAF__imperva_inc__securesphere_raw
+- vendor_key: infoblox
+  vendor_display: Infoblox
+  file: infoblox.svg
+  mime_type: image/svg+xml
+  bytes: 322
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: InfobloxBloxOne__InfobloxBloxOneThreatDefense__infoblox_bloxone_threat_defense_raw
+- vendor_key: ironscales
+  vendor_display: Ironscales
+  file: ironscales.svg
+  mime_type: image/svg+xml
+  bytes: 324
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: IronscalesEventCollector__IronscalesModelingRules__ironscales_ironscales_raw
+- vendor_key: ivanti
+  vendor_display: Ivanti
+  file: ivanti.svg
+  mime_type: image/svg+xml
+  bytes: 1916
+  source: wikipedia:File:Ivanti_Logo_RGB_red.svg
+  license: Wikimedia Commons CC BY-SA 4.0
+  fidelity: branded
+  extracted_from: IvantiConnectSecure__IvantiConnectSecure__ivanti_connect_secure_raw
+- vendor_key: jamf
+  vendor_display: Jamf
+  file: jamf.svg
+  mime_type: image/svg+xml
+  bytes: 318
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: JamfProtect__JamfProtect__jamf_protect_raw
+- vendor_key: juniper
+  vendor_display: Juniper
+  file: juniper.svg
+  mime_type: image/svg+xml
+  bytes: 3211
+  source: simpleicons:junipernetworks
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: JuniperSRX__JuniperSRXModelingRules__Juniper_SRX_raw
+- vendor_key: keeper-security
+  vendor_display: Keeper Security
+  file: keeper-security.svg
+  mime_type: image/svg+xml
+  bytes: 329
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: KeeperSecurity__KeeperSecurity__keeper_security_raw
+- vendor_key: kiteworks
+  vendor_display: Kiteworks
+  file: kiteworks.svg
+  mime_type: image/svg+xml
+  bytes: 2431
+  source: wikipedia:File:Kiteworks_logo.svg
+  license: Wikimedia Commons CC BY-SA 3.0
+  fidelity: branded
+  extracted_from: Kiteworks__Kiteworks__kiteworks_kiteworks_raw
+- vendor_key: knowbe4
+  vendor_display: KnowBe4
+  file: knowbe4.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: KnowBe4_KMSAT__KnowBe4KMSATEventCollector_1_3__knowbe4_kmsat_raw
+- vendor_key: kubernetes
+  vendor_display: Kubernetes
+  file: kubernetes.svg
+  mime_type: image/svg+xml
+  bytes: 3565
+  source: simpleicons:kubernetes
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: Kubernetes__Kubernetes__kubernetes_kubernetes_raw
+- vendor_key: lenels2
+  vendor_display: LenelS2
+  file: lenels2.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: LenelS2NetBox__LenelS2NetBox__lenels2_netbox_raw
+- vendor_key: linux
+  vendor_display: Linux
+  file: linux.svg
+  mime_type: image/svg+xml
+  bytes: 5463
+  source: simpleicons:linux
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: Auditd__Auditd_1_3__unix_auditd_raw
+- vendor_key: lookout
+  vendor_display: Lookout
+  file: lookout.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: LookoutMobileEndpointSecurity__LookoutMobileEndpointSecurity__lookout_mobile_endpoint_security_raw
+- vendor_key: manageengine
+  vendor_display: ManageEngine
+  file: manageengine.svg
+  mime_type: image/svg+xml
+  bytes: 326
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: ManageEngine-ADAudit__ManageEngine-ADAudit_1_3__manageengine_adauditplus_raw
+- vendor_key: mcafee
+  vendor_display: McAfee
+  file: mcafee.svg
+  mime_type: image/svg+xml
+  bytes: 238
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: FireEyeETP__FireEyeETPEventCollectorModelingRules__fireeye_etp_raw
+- vendor_key: microsoft
+  vendor_display: Microsoft
+  file: microsoft.svg
+  mime_type: image/svg+xml
+  bytes: 9560
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: AppSentinelsAi__AppSentinelsAi__appsentinels_appsentinels_raw
+- vendor_key: mimecast
+  vendor_display: Mimecast
+  file: mimecast.svg
+  mime_type: image/svg+xml
+  bytes: 322
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Mimecast__MimecastModelingRules_1_3__mimecast_mimecast_raw
+- vendor_key: monday-com
+  vendor_display: monday.com
+  file: monday-com.svg
+  mime_type: image/svg+xml
+  bytes: 7973
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Monday__Monday__monday_monday_raw
+- vendor_key: mongodb
+  vendor_display: MongoDB
+  file: mongodb.svg
+  mime_type: image/svg+xml
+  bytes: 14185
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: MongoDBAtlas__MongoDBAtlas__mongodb_atlas_raw
+- vendor_key: mysql
+  vendor_display: MySQL
+  file: mysql.svg
+  mime_type: image/svg+xml
+  bytes: 3625
+  source: simpleicons:mysql
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: MySQLEnterprise__MySQLEnterpriseEventCollector__mysql_enterprise_raw
+- vendor_key: nasuni
+  vendor_display: Nasuni
+  file: nasuni.svg
+  mime_type: image/svg+xml
+  bytes: 320
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: NasuniFileServices__NasuniFileServices__nasuni_file_services_raw
+- vendor_key: netbox
+  vendor_display: NetBox
+  file: netbox.svg
+  mime_type: image/svg+xml
+  bytes: 320
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: NetBox__NetBoxModelingRules_1_3__netbox_irm_raw
+- vendor_key: netmotion
+  vendor_display: Netmotion
+  file: netmotion.svg
+  mime_type: image/svg+xml
+  bytes: 323
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: NetmotionVPN__NetmotionVPN__netmotion_vpn_raw
+- vendor_key: netskope
+  vendor_display: Netskope
+  file: netskope.svg
+  mime_type: image/svg+xml
+  bytes: 322
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Netskope__NetskopeEventCollector_1_3__netskope_netskope_raw
+- vendor_key: nginx
+  vendor_display: NGINX
+  file: nginx.svg
+  mime_type: image/svg+xml
+  bytes: 413
+  source: simpleicons:nginx
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: NGINXWebServer__NGINXWebServerModelingRules_1_3__nginx_nginx_raw
+- vendor_key: nvidia
+  vendor_display: NVIDIA
+  file: nvidia.svg
+  mime_type: image/svg+xml
+  bytes: 4031
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: NVIDIA_DOCA_Argus__NVIDIA_DOCA_Argus__nvidia_doca_argus_raw
+- vendor_key: okta
+  vendor_display: Okta
+  file: okta.svg
+  mime_type: image/svg+xml
+  bytes: 10488
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: OktaASA__OktaASA__okta_asa_raw
+- vendor_key: onelogin
+  vendor_display: OneLogin
+  file: onelogin.svg
+  mime_type: image/svg+xml
+  bytes: 322
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: OneLogin__OneLoginModelingRules_1_3__onelogin_iam_raw
+- vendor_key: oracle
+  vendor_display: Oracle
+  file: oracle.svg
+  mime_type: image/svg+xml
+  bytes: 3255
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: OracleCloudInfrastructure__OracleCloudInfrastructureModelingRules__oracle_cloud_infrastructure_raw
+- vendor_key: orca-security
+  vendor_display: Orca Security
+  file: orca-security.svg
+  mime_type: image/svg+xml
+  bytes: 327
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Orca__OrcaModelingRules_1_3__orca_security_raw
+- vendor_key: palo-alto-networks
+  vendor_display: Palo Alto Networks
+  file: palo-alto-networks.svg
+  mime_type: image/svg+xml
+  bytes: 332
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: PrismaCloudCompute__PrismaCloudCompute__prisma_cloud_compute_raw
+- vendor_key: portnox
+  vendor_display: Portnox
+  file: portnox.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Portnox__Portnox_1_3__portnox_portnox_raw
+- vendor_key: proofpoint
+  vendor_display: Proofpoint
+  file: proofpoint.svg
+  mime_type: image/svg+xml
+  bytes: 324
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: ProofpointCasb__ProofpointCasb__proofpoint_casb_raw
+- vendor_key: qualys
+  vendor_display: Qualys
+  file: qualys.svg
+  mime_type: image/svg+xml
+  bytes: 785
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: qualys__QualysModelingRules__qualys_assets_raw
+- vendor_key: radware
+  vendor_display: Radware
+  file: radware.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: RadwareCloudDDoSProtectionServices__RadwareCloudDDoSProtectionServices__radware_cloud_ddos_raw
+- vendor_key: reblaze
+  vendor_display: Reblaze
+  file: reblaze.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: ReblazeWAF__ReblazeWAF__reblaze_waf_raw
+- vendor_key: recorded-future
+  vendor_display: Recorded Future
+  file: recorded-future.svg
+  mime_type: image/svg+xml
+  bytes: 329
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: RecordedFuture__RecordedFutureModelingRules_1_4__recorded_future_intelligence_cloud_raw
+- vendor_key: reliaquest
+  vendor_display: ReliaQuest
+  file: reliaquest.svg
+  mime_type: image/svg+xml
+  bytes: 324
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: DigitalShadows__DigitalShadows__reliaquest_greymatter_drp_raw
+- vendor_key: retarus
+  vendor_display: Retarus
+  file: retarus.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: RetarusSecureEmailGateway__RetarusSecureEmailGateway__retarus_secure_email_gateway_raw
+- vendor_key: rsa
+  vendor_display: RSA
+  file: rsa.svg
+  mime_type: image/svg+xml
+  bytes: 713
+  source: direct:https://www.vectorlogo.zone/logos/rsa/rsa-icon.svg
+  license: VectorLogoZone / vendor trademark
+  fidelity: branded
+  extracted_from: RSASecureID__RSASecureID__rsa_securid_raw
+- vendor_key: runzero
+  vendor_display: runZero
+  file: runzero.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: RunZero__RunZeroModelingRules__runzero_runzero_raw
+- vendor_key: sailpoint
+  vendor_display: SailPoint
+  file: sailpoint.svg
+  mime_type: image/svg+xml
+  bytes: 323
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: SailPointIdentityNow__SailPointIdentityNow__sailpoint_identitynow_raw
+- vendor_key: salesforce
+  vendor_display: Salesforce
+  file: salesforce.svg
+  mime_type: image/svg+xml
+  bytes: 18292
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Salesforce__SalesforceModelingRule__salesforce_event_audit_raw
+- vendor_key: saviynt
+  vendor_display: Saviynt
+  file: saviynt.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: SaviyntEIC__SaviyntEIC__saviynt_eic_raw
+- vendor_key: secureauth
+  vendor_display: SecureAuth
+  file: secureauth.svg
+  mime_type: image/svg+xml
+  bytes: 5091
+  source: secureauth.com/assets/secureauth-logo-white-JQccCguH.svg (recolored white→#1A2238 for visibility on near-white card
+    panel)
+  license: Vendor trademark; recoloration is a derivative for in-product display
+  fidelity: branded-recolored
+  extracted_from: SecureAuthIdentityPlatform__SecureAuthIdentityPlatform__secureauth_idp_raw
+- vendor_key: semperis
+  vendor_display: Semperis
+  file: semperis.svg
+  mime_type: image/svg+xml
+  bytes: 1115
+  source: 'hand-crafted by phantom-maintainer — wordmark in Semperis brand navy #0F1934'
+  license: Phantom maintainer-authored; Semperis name is the vendor's trademark
+  fidelity: approximation
+  extracted_from: SemperisDSP__SemperisDSP__semperis_dsp_raw
+- vendor_key: servicenow
+  vendor_display: ServiceNow
+  file: servicenow.svg
+  mime_type: image/svg+xml
+  bytes: 324
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: ServiceNow__ServiceNow__servicenow_servicenow_raw
+- vendor_key: shodan
+  vendor_display: Shodan
+  file: shodan.svg
+  mime_type: image/svg+xml
+  bytes: 320
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Shodan__Shodan__shodan_banner_raw
+- vendor_key: siemens
+  vendor_display: Siemens
+  file: siemens.svg
+  mime_type: image/svg+xml
+  bytes: 1427
+  source: simpleicons:siemens
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: Siemens_SiPass__Siemens_SiPass__siemens_sipass_raw
+- vendor_key: silverfort
+  vendor_display: Silverfort
+  file: silverfort.svg
+  mime_type: image/svg+xml
+  bytes: 324
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Silverfort__Silverfort__silverfort_admin_console_raw
+- vendor_key: slack
+  vendor_display: Slack
+  file: slack.svg
+  mime_type: image/svg+xml
+  bytes: 5269
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Slack__SlackModelingRules_1_3__slack_slack_raw
+- vendor_key: sonicwall
+  vendor_display: SonicWall
+  file: sonicwall.svg
+  mime_type: image/svg+xml
+  bytes: 2524
+  source: simpleicons:sonicwall
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: SonicWallNSv__SonicWallNSv_1_3__sonicwall_ns_raw
+- vendor_key: specterops-bloodhound
+  vendor_display: SpecterOps BloodHound
+  file: specterops-bloodhound.svg
+  mime_type: image/svg+xml
+  bytes: 335
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: BloodHoundEnterprise__BloodHoundEnterprise__bloodhound_enterprise_raw
+- vendor_key: squid
+  vendor_display: Squid
+  file: squid.png
+  mime_type: image/png
+  bytes: 12716
+  source: direct-png:https://upload.wikimedia.org/wikipedia/commons/0/0b/Squid_Now.png
+  license: Wikimedia Commons / project logo
+  fidelity: branded
+  extracted_from: Squid__Squid__squid_squid_raw
+- vendor_key: symantec
+  vendor_display: Symantec
+  file: symantec.svg
+  mime_type: image/svg+xml
+  bytes: 1004
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: SymantecBlueCoatProxySG__SymantecBlueCoatProxySG__symantec_bluecoatproxysg_raw
+- vendor_key: synopsys
+  vendor_display: Synopsys
+  file: synopsys.svg
+  mime_type: image/svg+xml
+  bytes: 322
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: SynopsysCoverity__SynopsysCoverity__synopsys_coverity_raw
+- vendor_key: tableau
+  vendor_display: Tableau
+  file: tableau.svg
+  mime_type: image/svg+xml
+  bytes: 914
+  source: simpleicons:tableau
+  license: CC0-1.0
+  fidelity: monochrome-brand
+  extracted_from: Tableau__Tableau_1_3__tableau_log_raw
+- vendor_key: tanium
+  vendor_display: Tanium
+  file: tanium.svg
+  mime_type: image/svg+xml
+  bytes: 2138
+  source: wikipedia:Tanium_logo (white→#1A2238 recolored for visibility on near-white panel)
+  license: Wikimedia Commons / vendor trademark; recoloration is a derivative for in-product display
+  fidelity: branded-recolored
+  extracted_from: TaniumThreatResponse__TaniumThreatResponse__tanium_threat_response_raw
+- vendor_key: teamviewer
+  vendor_display: TeamViewer
+  file: teamviewer.svg
+  mime_type: image/svg+xml
+  bytes: 481
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: TeamViewer__TeamViewer__teamviewer_tensor_raw
+- vendor_key: tenable
+  vendor_display: Tenable
+  file: tenable.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Tenable_io__Tenable_io__tenable_io_raw
+- vendor_key: thales
+  vendor_display: Thales
+  file: thales.svg
+  mime_type: image/svg+xml
+  bytes: 320
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: SafeNet_Trusted_Access__SafeNetTrustedAccessModelingRules_1_3__safenet_trusted_access_raw
+- vendor_key: thinkst
+  vendor_display: Thinkst
+  file: thinkst.svg
+  mime_type: image/svg+xml
+  bytes: 5207
+  source: 'wikipedia:Thinkst_logo (white text recolored to #1A2238)'
+  license: Wikimedia Commons / vendor trademark; recoloration is a derivative for in-product display
+  fidelity: branded-recolored
+  extracted_from: ThinkstCanary__ThinkstCanary_1_3__thinkst_canary_raw
+- vendor_key: tigera
+  vendor_display: Tigera
+  file: tigera.svg
+  mime_type: image/svg+xml
+  bytes: 2884
+  source: direct:https://www.tigera.io/app/uploads/2026/01/Tigera-logo-2026-black-text.svg
+  license: tigera.io / vendor trademark
+  fidelity: branded
+  extracted_from: TigeraCalico__TigeraCalico__tigera_calico_raw
+- vendor_key: trend-micro
+  vendor_display: Trend Micro
+  file: trend-micro.svg
+  mime_type: image/svg+xml
+  bytes: 856
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: TrendMicroDeepSecurity__TrendMicroDeepSecurity__trend_micro_deep_security_agent_raw
+- vendor_key: ubiquiti
+  vendor_display: Ubiquiti
+  file: ubiquiti.svg
+  mime_type: image/svg+xml
+  bytes: 1321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: UbiquitiUnifi__UbiquitiUnifi__ubiquiti_unifi_raw
+- vendor_key: vectra-ai
+  vendor_display: Vectra AI
+  file: vectra-ai.svg
+  mime_type: image/svg+xml
+  bytes: 323
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Vectra_AI__Vectra_AIEventCollector_1_3__vectra_vectra_raw
+- vendor_key: vmware
+  vendor_display: VMware
+  file: vmware.svg
+  mime_type: image/svg+xml
+  bytes: 6098
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: VMWareNSX__VMWareNSX__vmware_nsx_raw
+- vendor_key: watchguard
+  vendor_display: WatchGuard
+  file: watchguard.svg
+  mime_type: image/svg+xml
+  bytes: 324
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: WatchguardFirebox__WatchguardFirebox_1_3__watchguard_xtm_raw
+- vendor_key: withsecure
+  vendor_display: WithSecure
+  file: withsecure.svg
+  mime_type: image/svg+xml
+  bytes: 324
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: WithSecure__WithSecure__withsecure_endpoint_protection_raw
+- vendor_key: workday
+  vendor_display: Workday
+  file: workday.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Workday__WorkdayEventCollector__workday_activity_raw
+- vendor_key: zero-networks
+  vendor_display: Zero Networks
+  file: zero-networks.svg
+  mime_type: image/svg+xml
+  bytes: 327
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: ZeroNetworksSegment__ZeroNetworksSegment__zeronetworks_segment_raw
+- vendor_key: zoom
+  vendor_display: Zoom
+  file: zoom.svg
+  mime_type: image/svg+xml
+  bytes: 2824
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: Zoom__Zoom__zoom_zoom_raw
+- vendor_key: zscaler
+  vendor_display: Zscaler
+  file: zscaler.svg
+  mime_type: image/svg+xml
+  bytes: 321
+  source: phantom-bundle
+  license: vendor trademark, used for identification only
+  fidelity: branded
+  extracted_from: ZscalerZPA__ZscalerZPA_1_3__zscaler_zpa_raw

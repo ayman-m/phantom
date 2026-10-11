@@ -1,0 +1,57 @@
+schema_version: 1
+id: xsiam_http
+name: XSIAM HTTP Collector
+description: >
+  Forward records to a Palo Alto XSIAM HTTP Collector endpoint.
+  Auth uses ONLY the collector's authentication key + the URL
+  (no separate authentication ID — that header was a leftover from
+  the PAPI envelope and gets rejected by the HTTP Collector).
+  Records ALWAYS land in the XSIAM dataset 'phantom_logs_raw' (the
+  collector wraps each batch as one outer row with an 'events' JSON
+  column holding the original records).
+category: Cloud SIEM
+icon: shield
+iconColor: '#fc7676'
+iconBg: rgba(252, 118, 118, 0.15)
+handler: bundles.spark.destinations.xsiam_http.handler
+probe:
+  send_test_message: true
+fields:
+  - name: url
+    display: Collector URL
+    type: url
+    required: true
+    description: >
+      Full HTTPS URL the XSIAM HTTP Collector exposes for ingestion.
+      e.g. https://<tenant>.xdr.us.paloaltonetworks.com/logs/v1/<source-id>
+      — the path varies per tenant; copy it verbatim from the XSIAM
+      Data Sources page when you provision the HTTP Collector.
+  - name: auth_key
+    display: Authentication key
+    type: secret
+    required: true
+    description: >
+      The auth key shown by XSIAM when you provisioned the HTTP
+      Collector. Sent verbatim in the Authorization header.
+  - name: source
+    display: Source tag (optional)
+    type: text
+    description: >
+      Optional XSIAM source tag forwarded as the x-xdr-source header.
+      Free-form identifier the operator picks (e.g. 'phantom-edr-sim',
+      'phantom-firewall'). Used in XSIAM to filter ingested datasets.
+      Leave blank if the collector URL already encodes the source.
+  - name: vendor
+    display: Vendor tag (optional)
+    type: text
+    description: >
+      Optional. Forwarded as the x-xdr-vendor header. Operator's
+      choice — usually a real vendor name when simulating a
+      specific product (e.g. 'fortinet', 'palo-alto-networks').
+  - name: product
+    display: Product tag (optional)
+    type: text
+    description: >
+      Optional. Forwarded as the x-xdr-product header. Pairs with
+      vendor to identify the simulated product (e.g. 'fortigate',
+      'ngfw').

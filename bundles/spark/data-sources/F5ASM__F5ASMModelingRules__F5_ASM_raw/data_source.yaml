@@ -1,0 +1,315 @@
+schema_version: 1
+id: F5ASM
+pack_name: F5ASM
+rule_name: F5ASMModelingRules
+dataset_name: F5_ASM_raw
+vendor: F5
+product: F5ASM
+description: Modeling Rules for the F5 ASM logs collector
+categories:
+- Analytics & SIEM
+version: 1.0.10
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+RjU8L3RpdGxlPjxwYXRoIGQ9Ik0xMiAwQzUuMzczIDAgMCA1LjM3MyAwIDEyYTExLjk0MyAxMS45NDMgMCAwMDIuMzM2IDcuMTExM2MuNTA5LjAwNC44NTk0LS4xMTEuODk4NC0uMzMuMDQ2LS4yMjkuMDA2OC0uNTgyNS0uMDMzMi0uOTM5NWE1NS4wNjcgNTUuMDY3IDAgMDEtLjIzNDQtNy40NDczYy0uNjA5LjAyNy0xLjE1NDcuMDU1LTEuNjc3Ny4wODYuMDItLjQ3MS4wNDYtLjkxODguMDg0LTEuMzgyOC41MTctLjA1IDEuMDY0LS4wOTM2IDEuNjY2LS4xNDQ2LjAyNi0uNDA2LjA1NjgtLjc5ODMuMDkxOC0xLjE5NTMuMjctMi40MyAyLjgyOC0zLjkxNjIgNC45NTktNC40OTAyLjk0Ni0uMjMgMS41MjQ1LS4zMDIyIDEuOTc4NS0uMzI2Mi4xNjQtLjAwNS4zNDA1LS4wMTE3LjUxNzUtLjAxMTcuNDQyIDAgLjg4OTkuMDQxNCAxLjE3MzkuMjM0NC40Ni4zNDUuOTEzNS42ODczIDEuMzk2NSAxLjA2ODMuMDQ4LjA2NS4xMDI0LjE2NzgtLjAxNzYuMzQzOC0uMjIyLjI2LS40MzcxLjUwODQtLjY2MjEuNzc1NC0uMTMuMTU3LS4zNDU0LjExNjQtLjUyNzQuMDY2NC0uMzgtLjE5NC0uNzQ2Mi0uMzcyOC0xLjExNzItLjU1MjgtLjY3Mi0uMjk5LTEuMzY2Ni0uNjA2MS0yLjE0MDYtLjU3NjEtLjQ4My4wMzktLjk1MS41MzItMSAxLjIwOWExMDEuNDEgMTAxLjQxIDAgMDAtLjE1MDQgMy4yMjg1YzEuMzQzLS4wMzggMi42ODM3LS4wNjI0IDQuMDk1Ny0uMDY4NGwtLjAwMi45NDUzYy0uNDYuMjA2LS44OTU0LjQxMy0xLjM1NzQuNjIzLS45NTMuMDExLTEuODU5NS4wMjAyLTIuNzcxNS4wMzUyYTEyNS4xMyAxMjUuMTMgMCAwMC4xMTkyIDcuOTMxN2MuMDI0LjM3OC4wNDI0Ljc2MDUuMTUwNCAxLjAxNzUuMTMuMzIyLjg3OTguNTcwMSAyLjUwOTguNjYyMS4wMDcuMjg0LjAxNTMuNTUzMi4wMjUzLjgyODItMi42NTUtLjA3Ny01LjIwNS0uMzMwMi03LjI0OC0uNjk5MkExMS45NjIgMTEuOTYyIDAgMDAxMiAyNGM2LjYyOCAwIDEyLTUuMzczIDEyLTEyYTExLjk0MiAxMS45NDIgMCAwMC0yLjA5NTctNi43NzU0Yy0uMTQ3LjYwNy0uMjI1MiAxLjIzNzgtLjM2NzIgMS44ODI4LTEuOC0uMjM0LTMuOTEzMS0uNDA1My02LjI4NzEtLjQ4ODMtLjE5MS42MDItLjM3MTEgMS4xOTItLjU3ODEgMS44MzYgMy45NzMuMjQ1IDUuOTA0OCAxLjI5MjQgNy4wNTA4IDIuNTI1NCAxLjExMyAxLjI0OCAxLjM1MDEgMi42MjYyIDEuMjg1MSAzLjkwNjItLjE0MyAyLjA4MS0xLjA2MTMgMy4zOTcxLTIuMzIwMyA0LjM3MTEtMS4yNzQuOTYtMi44MTM5IDEuNDM2LTQuMDQ2OSAxLjUzOS0xLjgxOS4xMzctNC4yNTE1LS4yOTYyLTQuNzY5NS0uNjEzMmExNzguMDMgMTc4LjAzIDAgMDEtLjk0OTItMi4yMDEyYy0uMDgtLjE2Ni0uMTI5NC0uMzM3MS4wOTc2LS41MzUxLjM1NC0uMzM5LjY5MjgtLjY2NjcgMS4wNTA4LTEuMDEzNy4xNTgtLjE1NS4zMzM4LS4yOTkxLjQ2NjgtLjA3ODEuNDg5Ljc1NS45NDczIDEuNDQ3NyAxLjQwNjMgMi4xMzY3LjUyMi43NyAxLjMxNjcgMS40Njk1IDMuMDUyNyAxLjM1MzUgMS40NTktLjEzIDIuNTY3NS0xLjIzMzMgMi42ODU1LTIuNDQ3My4xMjgtMi4yNDYtMi4xNDQ2LTMuODM5Ni04LjA1NDYtNC4zNDk2YTI1NzEuMjcgMjU3MS4yNyAwIDAxMy4xMjMtOS4zNzFjMS40MDQuMDY1IDIuNzA0My4xNzk4IDMuOTQ1My4zMzk4LjkxOS4xMTYgMS43NzIuMzI4NyAyLjYyNy40Mjc3QTExLjk3MyAxMS45NzMgMCAwMDEyIDB6bTEwLjAxOTUgMjEuMTExM2MtLjUwMDYgMC0uOTA4Mi40MDc2LS45MDgyLjkwODIgMCAuNTAwNy40MDc2LjkwODIuOTA4Mi45MDgyLjUwMDcgMCAuOTA4Mi0uNDA3NS45MDgyLS45MDgyIDAtLjUwMDYtLjQwNzUtLjkwODItLjkwODItLjkwODJ6bTAgLjEyN2MuNDMxOCAwIC43NzkzLjM0OTUuNzc5My43ODEyYS43Nzc2Ljc3NzYgMCAwMS0uNzc5My43NzkzYy0uNDMxNyAwLS43ODEyLS4zNDc1LS43ODEyLS43NzkzYS43ODA5Ljc4MDkgMCAwMS43ODEyLS43ODEyem0tLjM2NTIuMjc3M3YuOTk2MWguMTczOHYtLjM5MjZoLjEzODdjLjA5MiAwIC4xNTgzLjAxMTIuMTk1My4wMzMyLjA2Mi4wMzcuMDkzOC4xMTQ2LjA5MzguMjI4NnYuMDhsLjAwMi4wMjkzYS4wNy4wNyAwIDAxLjAwMzkuMDExOGMwIC4wMDUtLjAwMDEuMDA2OC4wMDM5LjAwOThoLjE2MmwtLjAwNTgtLjAxMzdhLjEwNi4xMDYgMCAwMS0uMDA3OC0uMDQ4OC42ODQ2LjY4NDYgMCAwMS0uMDA0LS4wNzQzdi0uMDc0MmEuMjc2LjI3NiAwIDAwLS4wNTI3LS4xNTQzYy0uMDM3LS4wNTMtLjA5NDgtLjA4NDYtLjE3MTgtLjA5NzZBLjQwOC40MDggMCAwMDIyLjMyOCAyMmMuMDY2LS4wNDIuMDk3Ny0uMTEwMy4wOTc3LS4xOTczIDAtLjEyNC0uMDUwMy0uMjEtLjE1NDMtLjI1MmEuNzUyLjc1MiAwIDAwLS4yNjk1LS4wMzV6bS4xNzM4LjEyM2guMTUwNGEuNDUuNDUgMCAwMS4yMTEuMDM3MmMuMDQyLjAyNC4wNjY0LjA3MzUuMDY2NC4xNDQ1YS4xNTMuMTUzIDAgMDEtLjEwMzYuMTU2My40NTEuNDUxIDAgMDEtLjE2Ni4wMjE0aC0uMTU4MnoiLz48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: act
+  type: string_short
+  description: CEF action — what F5 did with the event (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: app
+  type: string_short
+  description: Application name emitted by F5. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token_value
+- name: c6a2
+  type: string
+  description: Vendor-emitted field 'C6a2'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_c6a2
+- name: c6a3
+  type: string
+  description: Vendor-emitted field 'C6a3'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_c6a3
+- name: cefName
+  type: string_short
+  description: CEF event name — short human-readable label for the event class. Short
+    opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefseverity
+  type: integer
+  description: CEF severity score (0-10) as classified by F5. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: cn1
+  type: integer
+  description: Vendor-emitted field 'Cn1'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: cs1
+  type: string
+  description: Vendor-emitted field 'Cs1'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs3
+  type: string
+  description: Vendor-emitted field 'Cs3'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs4
+  type: string
+  description: Vendor-emitted field 'Cs4'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs5
+  type: string
+  description: Vendor-emitted field 'Cs5'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: deviceExternalId
+  type: string
+  description: Vendor-emitted field 'DeviceExternalId'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_deviceexternalid
+- name: dpt
+  type: integer_port
+  description: CEF destination port — TCP/UDP port on the target side. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '42'
+- name: dst
+  type: ipv4
+  description: CEF destination IP — IPv4/IPv6 address of the target endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 198.51.100.7
+- name: dvc
+  type: string
+  description: Vendor-emitted field 'Dvc'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dvc
+- name: dvchost
+  type: string
+  description: Vendor-emitted field 'Dvchost'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dvchost
+- name: externalID
+  type: integer
+  description: Vendor-emitted field 'ExternalID'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: request
+  type: url
+  description: First 1KB of the HTTP request. Free-form text; may span multiple lines
+    or contain large payloads.
+  example: https://example.com/path
+- name: requestMethod
+  type: string_short
+  description: HTTP request method (GET/POST/PUT/DELETE/etc.). Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: token_value
+- name: spt
+  type: integer_port
+  description: CEF source port — TCP/UDP port on the source side. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '42'
+- name: src
+  type: ipv4
+  description: CEF source IP — IPv4/IPv6 address of the source endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: suid
+  type: string
+  description: Vendor-emitted field 'Suid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_suid
+- name: attack_type
+  type: string
+  description: Attack type classification. Free-form text; may contain whitespace
+    and punctuation.
+  example: authentication
+- name: date_time
+  type: datetime
+  description: Request timestamp. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: geo_location
+  type: country_code
+  description: Client geo location. ISO 3166-1 alpha-2 uppercase country code.
+  example: US
+- name: ip_address_intelligence
+  type: ipv4
+  description: IP intelligence categorization. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: ip_client
+  type: ipv4
+  description: Client IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: management_ip_address
+  type: ipv4
+  description: F5 device management IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: method
+  type: string_short
+  description: HTTP method. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: policy_apply_date
+  type: datetime
+  description: When the policy was last applied. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: policy_name
+  type: string
+  description: ASM policy name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: protocol
+  type: string_short
+  description: Protocol (HTTPS/HTTP). Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: query_string
+  type: string_long
+  description: Query string. Free-form text; may span multiple lines or contain large
+    payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: request_status
+  type: enum
+  description: 'Request status. One of: blocked, alerted, passed (case-sensitive).'
+  enum_values:
+  - blocked
+  - alerted
+  - passed
+  example: blocked
+- name: response_code
+  type: integer
+  description: HTTP response code. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: route_domain
+  type: string_short
+  description: F5 route domain. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: session_id
+  type: string_short
+  description: Session id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: severity
+  type: enum
+  description: 'Violation severity. One of: informational, low, medium, high, critical,
+    error (case-sensitive).'
+  enum_values:
+  - informational
+  - low
+  - medium
+  - high
+  - critical
+  - error
+  example: informational
+- name: sig_ids
+  type: string
+  is_array: true
+  description: Triggered signature IDs. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_ids
+- name: sig_names
+  type: string
+  is_array: true
+  description: Triggered signature names. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_names
+- name: support_id
+  type: string_short
+  description: F5 support id for the transaction. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: unit_hostname
+  type: host
+  description: F5 device hostname. Hostname or fully-qualified domain name (RFC 1035
+    dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: uri
+  type: string
+  description: Request URI. Free-form text; may contain whitespace and punctuation.
+  example: /api/v1/path?q=1
+- name: username
+  type: user
+  description: Authenticated user. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jdoe
+- name: violations
+  type: string
+  is_array: true
+  description: Violations detected. Free-form text; may contain whitespace and punctuation.
+  example: sample_violations
+- name: virus_name
+  type: string
+  description: Detected virus/malware name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: x_forwarded_for_header_value
+  type: string
+  description: X-Forwarded-For header. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_value
+use_cases:
+- WAF
+- LoadBalancer
+how_to_use: |
+  ## F5 F5ASM → Cortex XSIAM (dataset `F5_ASM_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `F5_ASM_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `F5_ASM`. The marketplace pack's display name `F5` / `F5ASM` normalizes to `f5_f5asm_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `F5_ASM` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~51 fields mapped to the unified data model (`xdm.*`), including: `XDM.Network.Destination.host.hostname`, `XDM.Network.Destination.host.ipv4_addresses`, `XDM.Network.Destination.ipv4`, `XDM.Network.Destination.port`, `XDM.Network.Destination.process.executable.path`, `XDM.Network.Observer.unique_identifier`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `F5`, Product = `F5ASM`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = F5_ASM_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

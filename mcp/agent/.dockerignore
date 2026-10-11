@@ -1,0 +1,24 @@
+# Files NOT bundled into the phantom-agent docker image.
+#
+# Keeps the original (pre-re-encode) myrobo.webp backups at
+# mcp/agent/.image-backups/ out of the image: without a .dockerignore,
+# the `COPY mcp/agent/ .` line in the Dockerfile would still bundle
+# them and defeat the image-size optimization.
+
+# Local-only image backups (operator-rollback artifacts)
+.image-backups/
+
+# Node modules — installed inside the container, not copied from host
+node_modules/
+
+# Next.js build output — rebuilt inside the container
+.next/
+
+# Local environment files
+.env*.local
+
+# IDE + macOS noise
+.DS_Store
+.vscode/
+.idea/
+*.swp

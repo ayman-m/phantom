@@ -1,0 +1,177 @@
+schema_version: 1
+id: Monday
+pack_name: Monday
+rule_name: Monday
+dataset_name: monday_monday_raw
+vendor: monday.com
+product: Monday
+description: Integrates with Monday.com to collect activity logs and audit logs.
+categories:
+- Analytics & SIEM
+version: 1.0.6
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iOTVweCIgdmlld0JveD0iMCAwIDUxMiA5NSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCI+CiAgICA8Zz4KICAgICAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwLjAwMDAwMCwgMjIuNDkzOTM4KSI+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0xMC42MTQ5MjQ4LDUxLjE2MTE0ODMgQzYuNzc0NTgyNDIsNTEuMTY5NDQ1NCAzLjIyNjgwMiw0OS4xMTA3NDIxIDEuMzI4NTM4NTgsNDUuNzcyMzQ0OSBDLTAuNTQyMzYxNjc2LDQyLjQ1NDQ5MTcgLTAuNDMwMTcxNDE5LDM4LjM3NTEyOTMgMS42MjAyNTc1MiwzNS4xNjUxMjAyIEwyMC43NDQwNTQ1LDUuMTM0Mjc2MjcgQzIyLjczNjc1MTgsMS44NDgzOTc2NCAyNi4zNDMyNjIxLC0wLjExMTE5MTIwOCAzMC4xODQ0MDM1LDAuMDA0ODg0OTQ5ODYgQzM0LjAyMjc0ODksMC4wOTY4NjcyMDQ2IDM3LjUxNDA2NDEsMi4yNDg5NDE3NyAzOS4zMjA4Nzg1LDUuNjM2NjgxMSBDNDEuMTAzNjA1NCw5LjAwNzY1NTQ5IDQwLjg4MDc2NDUsMTMuMDYzMzU5IDM4Ljc0NTU0MzksMTYuMjI3Njk5MiBMMTkuNjMzOTAxOSw0Ni4yNTg1NDMxIEMxNy42NjQxNjMzLDQ5LjMyNzk0MTEgMTQuMjYxOTUyMyw1MS4xNzczMDExIDEwLjYxNDkyNDgsNTEuMTYxMTQ4MyBMMTAuNjE0OTI0OCw1MS4xNjExNDgzIFoiIGZpbGw9IiNGNjJCNTQiPjwvcGF0aD4KICAgICAgICAgICAgPHBhdGggZD0iTTQzLjQxNzA5ODYsNTEuMTYxMDc4MyBDMzkuNTU5OTI2LDUxLjE2MTA3ODMgMzYuMDEwNjc4OSw0OS4wOTg3NTExIDM0LjE0NjkxOSw0NS43ODQ0OTk5IEMzMi4yODAxNjc4LDQyLjQ3NTY0NDggMzIuMzkyMzc0NywzOC40MDY1ODc5IDM0LjQzODYzOCwzNS4yMDU2MzY3IEw1My41MjU5NzAxLDUuMjQzNjcwODcgQzU1LjQ4OTg5ODksMS45MTA2Mzc5NSA1OS4xMDcxMDM0LC0wLjA5NDk1NjEzMTIgNjIuOTc0NDIyNCwwLjAwNDg4NDk0OTg2IEM2Ni44NjQwMDgyLDAuMDg5OTY5NjM5OSA3MC4zODg5NDUzLDIuMjY1NzA2NzEgNzIuMTcxNjcyMiw1LjY2OTA5NDMyIEM3My45NDIyNDQxLDkuMDcyNDgxOTIgNzMuNjgyOTM4MywxMy4xNTI0OTU0IDcxLjQ4Mjg5MTQsMTYuMzA4NzMyMiBMNTIuMzk5NjEwOSw0Ni4yNzA2OTgxIEM1MC40MzYxMDQsNDkuMzI2ODAyNSA0Ny4wNDk1OTY5LDUxLjE3MDUxNjUgNDMuNDE3MDk4Niw1MS4xNjEwNzgzIFoiIGZpbGw9IiNGRkNDMDAiPjwvcGF0aD4KICAgICAgICAgICAgPGVsbGlwc2UgZmlsbD0iIzAwQ0E3MiIgY3g9Ijc1LjQ4NTkyNzUiIGN5PSI0MS43NzMzNjQ1IiByeD0iOS44NDU1MTQ1NCIgcnk9IjkuNjM4ODc5NDgiPjwvZWxsaXBzZT4KICAgICAgICA8L2c+CiAgICAgICAgPHBhdGggZD0iTTUwMy4yMDI2MDksNTUuMTg3NTUwNiBDNTA2LjE3NjUyMSw1NS4xODc1NTA2IDUwNy45NTUxOTYsNTcuMzAyNTEyOSA1MDcuOTU1MTk2LDYwLjc2NjY3NTMgTDUwNy45NTUxOTYsNzIuNjM4MDE1NCBMNTExLjk5NDY5Myw3Mi42MzgwMTU0IEw1MTEuOTk0NjkzLDYwLjQ5NTIxNDYgQzUxMS45OTQ2OTMsNTQuNjA0MTEyOCA1MDkuMjE5MzEyLDUxLjE4ODU3MDIgNTA0LjAwMDc4NCw1MS4xODg1NzAyIEM1MDEuOTU4NzUyLDUxLjE4ODU3MDIgNDk4LjcxNzQzLDUxLjc0NzY5ODIgNDk2Ljc4NDc5Miw1NS41MDM1Nzk1IEM0OTUuODY5ODkzLDUzLjI0NjQ3OTEgNDkzLjc4ODk1OCw1MS42NzQ0OTM3IDQ5MS4zNjc3MzQsNTEuNDExNDExMSBDNDkwLjYxOTcxNCw1MS4yNzQ0MzIzIDQ4OS44NTc3MzksNTEuMjI5NTMwMiA0ODkuMDk4ODA4LDUxLjI3NzcwNjUgQzQ4Ny40Mzc2MzEsNTEuNDExNDExMSA0ODQuNDc5OTI1LDUyLjQ0NDU4MjMgNDgzLjM3MzgyNCw1NC43ODY0MzcxIEw0ODMuMzczODI0LDUxLjYzODMwMzYgTDQ3OS4zMzAyNzYsNTEuNjM4MzAzNiBMNDc5LjMzMDI3Niw3Mi42MzgwMTU0IEw0ODMuMzczODI0LDcyLjYzODAxNTQgTDQ4My4zNzM4MjQsNjEuMzA1NTQ1IEM0ODMuMzczODI0LDU2Ljg5NzM0NzcgNDg2LjI1ODYsNTUuMTg3NTUwNiA0ODkuMTQ3NDI4LDU1LjE4NzU1MDYgQzQ5MS44NTM5MzIsNTUuMTg3NTUwNiA0OTMuNjMyNjA3LDU3LjI1Nzk0NDggNDkzLjYzMjYwNyw2MC43MjIxMDcxIEw0OTMuNjMyNjA3LDcyLjYzODAxNTQgTDQ5Ny42NTE4NDYsNzIuNjM4MDE1NCBMNDk3LjY1MTg0Niw2MS4zMDU1NDUgQzQ5Ny42NTE4NDYsNTcuNzk2ODE0NSA0OTkuNzU4NzA1LDU1LjE0NzAzNDEgNTAzLjIwMjYwOSw1NS4xODc1NTA2IEw1MDMuMjAyNjA5LDU1LjE4NzU1MDYgWiBNNDY0LjQ4OTA3NSw2OS4xMjkyODQ5IEM0NjYuMzM2NjI4LDY5LjE2OTgwMTQgNDY4LjExOTM1NSw2OC40MzI0MDA3IDQ2OS40MTE4MzIsNjcuMDk1MzU1NiBDNDcwLjcwODM2LDY1Ljc1ODMxMDUgNDcxLjM5NzE0MSw2My45MzkxMTg4IDQ3MS4zMjgyNjMsNjIuMDcxMzA3MiBDNDcxLjMyODI2Myw1Ny44NDEzODI2IDQ2OC4yMTY1OTUsNTUuMTg3NTUwNiA0NjQuNDg5MDc1LDU1LjE4NzU1MDYgQzQ2MC43NTc1MDMsNTUuMTg3NTUwNiA0NTcuNjQ5ODg2LDU3Ljg0MTM4MjYgNDU3LjY0OTg4Niw2Mi4wNzEzMDcyIEM0NTcuNTc2OTU3LDYzLjkzNTA2NzEgNDU4LjI2NTczNyw2NS43NTAyMDcyIDQ1OS41NTQxNjMsNjcuMDgzMjAwNiBDNDYwLjg0MjU4OCw2OC40MjAyNDU4IDQ2Mi42MTcyMTIsNjkuMTYxNjk4MSA0NjQuNDU2NjYyLDY5LjEyOTI4NDkgTDQ2NC40ODkwNzUsNjkuMTI5Mjg0OSBaIE00NjQuNDg5MDc1LDczLjA2NzQ5MDUgQzQ1OC41ODE3NjYsNzMuMDY3NDkwNSA0NTMuNjUwOTA2LDY4LjcwMzg2MTQgNDUzLjY1MDkwNiw2Mi4wNDY5OTczIEM0NTMuNjUwOTA2LDU1LjM5MDEzMzIgNDU4LjU4MTc2Niw1MS4xNjQyNjAzIDQ2NC40ODkwNzUsNTEuMTY0MjYwMyBDNDcwLjM5NjM4Myw1MS4xNjQyNjAzIDQ3NS4zNjc3Niw1NS4zOTAxMzMyIDQ3NS4zNjc3Niw2Mi4wNDY5OTczIEM0NzUuMzY3NzYsNjguNzAzODYxNCA0NzAuMzY4MDIyLDczLjA4Nzc0ODggNDY0LjQ2MDcxMyw3My4wODc3NDg4IEw0NjQuNDg5MDc1LDczLjA2NzQ5MDUgWiBNNDMyLjg0NTY3Myw2Mi4wNDY5OTczIEw0MzIuODA1MTU3LDYyLjA3MTMwNzIgQzQzMi44MDUxNTcsNTUuNDE0NDQzMSA0MzcuODY1NjcsNTEuMTg4NTcwMiA0NDMuODEzNDk1LDUxLjE2NDI2MDMgQzQ0Ni44MzUxNTIsNTEuMTA1Nzk4NCA0NDkuNzQwMDEzLDUyLjMzMDc1NzYgNDUxLjgwNzQwNCw1NC41MzUyMzQ3IEw0NDguNzQ0MzU1LDU3LjE0NDQ5ODUgQzQ0Ny40MzAyNDcsNTUuODU0MTMxNiA0NDUuNjU1MDQ0LDU1LjE0MjMwMDIgNDQzLjgxMzQ5NSw1NS4xNjcyOTI0IEM0NDAuMDg1OTc1LDU1LjE2NzI5MjQgNDM2Ljg0NDY1NCw1Ny44MjExMjQ0IDQzNi44NDQ2NTQsNjIuMDQ2OTk3MyBDNDM2Ljg0NDY1NCw2NC45MDM0MTE5IDQzOC41NDIyOTYsNjcuNDc2MjEwOSA0NDEuMTQ3NTA4LDY4LjU3MDE1NjkgQzQ0My43NTI3Miw2OS42NjQxMDI5IDQ0Ni43NTA5NDMsNjkuMDU2MzU1MSA0NDguNzQ0MzU1LDY3LjAzODYzMjUgTDQ1MS44NTE5NzIsNjkuNjQ3ODk2MyBDNDQ5Ljc3Nzk0Myw3MS44NzUxMDggNDQ2Ljg1NjQ0Miw3My4xMTc5MjM3IDQ0My44MTM0OTUsNzMuMDY3NDkwNSBDNDM3LjkxMDIzOCw3My4wNjc0OTA1IDQzMi44NDU2NzMsNjguNzAzODYxNCA0MzIuODQ1NjczLDYyLjA0Njk5NzMgTDQzMi44NDU2NzMsNjIuMDQ2OTk3MyBaIE00MTkuOTA4NzQ5LDY4LjYwNjYyMTggQzQxOS45MDAxMDIsNjcuODY1MTU3MyA0MjAuMTg2MzgxLDY3LjE1MDYzMTYgNDIwLjcwNDU5Nyw2Ni42MjAyNTc5IEM0MjEuMjIyODE0LDY2LjA4OTg4NDEgNDIxLjkzMDUxLDY1Ljc4NzExNTYgNDIyLjY3MTk3NSw2NS43Nzg1Njg3IEM0MjMuNDEzNDQxLDY1Ljc4NzExNTYgNDI0LjEyMTEzNyw2Ni4wODk4ODQxIDQyNC42MzkzNTMsNjYuNjIwMjU3OSBDNDI1LjE1NzU3LDY3LjE1MDYzMTYgNDI1LjQ0Mzg0OSw2Ny44NjUxNTczIDQyNS40MzUyMDIsNjguNjA2NjIxOCBDNDI1LjM2MDMyLDcwLjA4MjUyNDYgNDI0LjE0OTY5OCw3MS4yNDUyMTgyIDQyMi42NzE5NzUsNzEuMjYwNDUzOCBDNDIxLjE5NDI1Myw3MS4yNDUyMTgyIDQxOS45ODM2MzEsNzAuMDgyNTI0NiA0MTkuOTA4NzQ5LDY4LjYwNjYyMTggTDQxOS45MDg3NDksNjguNjA2NjIxOCBaIiBmaWxsPSIjMzMzMzMzIj48L3BhdGg+CiAgICAgICAgPHBhdGggZD0iTTQzMC45NjE2NTUsMjQuOTQxOTY5MSBMNDE2LjU3NDIzOSwyNC45NDE5NjkxIEw0MDYuNDg5Njc4LDUwLjk0MTQxOTQgTDM5Ni40NTc3ODgsMjQuOTQxOTY5MSBMMzgyLjA3MDM3MiwyNC45NDE5NjkxIEwzOTkuNTYxMzUzLDY2LjAyNTcxOTUgTDM4OC42ODI2NjgsOTMuMTg3OTkzOSBMNDAyLjk2NDc0MSw5My4xODc5OTM5IEw0MzAuOTYxNjU1LDI0Ljk0MTk2OTEgWiBNMzQzLjQ2MjE4MSw0Ny43OTMyODU5IEMzNDMuNDYyMTgxLDU0LjM1Njk2MiAzNDkuMTk5MzIsNTguNjc2MDIyOSAzNTQuODM1MTY4LDU4LjY3NjAyMjkgQzM2MC4zNzM3NzYsNTguNjc2MDIyOSAzNjUuODE1MTQ0LDU0LjY1Njc4NDIgMzY1LjgxNTE0NCw0Ny43ODkyMzQzIEMzNjUuODE1MTQ0LDQwLjkyMTY4NDMgMzYwLjM3Mzc3NiwzNi44OTgzOTM5IDM1NC44MzUxNjgsMzYuODk4MzkzOSBDMzQ5LjE5OTMyLDM2Ljg5ODM5MzkgMzQzLjQ2MjE4MSw0MS4yMjE1MDY1IDM0My40NjIxODEsNDcuNzg5MjM0MyBMMzQzLjQ2MjE4MSw0Ny43OTMyODU5IFogTTM2NS44MTUxNDQsNzAuNzMzNzM5IEwzNjUuODE1MTQ0LDY1LjUzNTQ2OTYgQzM2Mi44OTc5NTUsNjkuOTUxNzcwMiAzNTYuMDkxMTgsNzEuNjIxMDUwOCAzNTIuNTk4NjU2LDcxLjYyMTA1MDggQzM0MS4wMzUyNDEsNzEuNjIxMDUwOCAzMjkuNDY3Nzc1LDYyLjUwNDgzNCAzMjkuNDY3Nzc1LDQ3Ljc4OTIzNDMgQzMyOS40Njc3NzUsMzMuMDc3Njg2MiAzNDEuMDMxMTg5LDIzLjk2MTQ2OTQgMzUyLjU5ODY1NiwyMy45NjE0Njk0IEMzNTUuNTExNzkzLDIzLjk2MTQ2OTQgMzYyLjMxODU2OSwyNC45MzM4NjU4IDM2NS44MTUxNDQsMzAuMDM4OTQ3MiBMMzY1LjgxNTE0NCwyNC45NTgxNzU4IEwzNzkuMjI2MTEyLDI0Ljk1ODE3NTggTDM3OS4yMjYxMTIsNzAuNzQxODQyMyBMMzY1LjgxNTE0NCw3MC43Mzc3OTA3IEwzNjUuODE1MTQ0LDcwLjczMzczOSBaIE0zMjUuNjUxMTE5LDcwLjczMzczOSBMMzEyLjI0MDE1MSw3MC43MzM3MzkgTDMxMi4yNDAxNTEsNjUuMDQ1MjE5NyBDMzA5Ljk5OTU4OCw2OS4yNTg5Mzc3IDMwNC41NjYzMjIsNzEuNzE0MjM4OCAyOTguOTI2NDIzLDcxLjcxNDIzODggQzI4Ny4yNjE3MTcsNzEuNzE0MjM4OCAyNzYuOTU4MzY2LDYyLjM5OTQ5MSAyNzYuOTU4MzY2LDQ3Ljk3NTYxMDIgQzI3Ni45NTgzNjYsMzMuMjgwMjY4OCAyODcuMjYxNzE3LDIzLjk1MzM2NjEgMjk4LjkyNjQyMywyMy45NTMzNjYxIEMzMDQuNTU4MjE5LDIzLjk1MzM2NjEgMzEwLjAwNzY5MSwyNi4zMDMzMjQyIDMxMi4yNDAxNTEsMzAuNTIxMDkzOCBMMzEyLjI0MDE1MSwwIEwzMjUuNjUxMTE5LDAgTDMyNS42NTExMTksNzAuNzMzNzM5IFogTTMxMS45NDg0MzIsNDcuNjg3OTQzIEMzMTEuOTQ4NDMyLDQwLjgyNDQ0NDYgMzA2Ljk5MzI2MiwzNi44MDExNTQzIDMwMS40NTQ2NTQsMzYuODAxMTU0MyBDMjk1LjcxNzUxNSwzNi44MDExNTQzIDI5MC45NTI3NzIsNDEuMTE2MTYzNiAyOTAuOTUyNzcyLDQ3LjY4Nzk0MyBDMjkwLjk1Mjc3Miw1NC40NzA0MDgyIDI5NS43MTc1MTUsNTguNzY1MTcwMiAzMDEuNDUwNjAyLDU4Ljc2NTE3MDIgQzMwNy4wOTQ1NTMsNTguNzczMjYyNiAzMTEuOTQ4NDMyLDU0LjI1OTcyMjMgMzExLjk0ODQzMiw0Ny42ODc5NDMgTDMxMS45NDg0MzIsNDcuNjg3OTQzIFogTTI0My43OTk2NDcsNDYuNTA0ODYwNiBDMjQzLjc5OTY0NywzOS41NDQxMjI2IDI0Ny4zOTc1MTQsMzcuMTkwMTEyOSAyNTIuMTU4MjA1LDM3LjE5MDExMjkgQzI1Ni43MjQ0MTcsMzcuMTkwMTEyOSAyNjAuMDMwNTY1LDQwLjIyODg1MTggMjYwLjAzMDU2NSw0Ni4zMDYzMjk3IEwyNjAuMDMwNTY1LDcwLjcyNTYzNTcgTDI3My41Mzg3NzIsNzAuNzI1NjM1NyBMMjczLjUzODc3Miw0My4zNjg4ODIgQzI3My41Mzg3NzIsMzAuMzMwNjY2MiAyNjcuMTIwOTU1LDIzLjk1MzM2NjEgMjU2LjkxNDg0NCwyMy45NTMzNjYxIEMyNTEuNTcwNzE1LDIzLjk1MzM2NjEgMjQ2LjIyNjU4NiwyNi45OTIxMDUgMjQzLjc5NTU5NSwzMS42MDI4ODQ5IEwyNDMuNzk1NTk1LDI0Ljk0MTk2OTEgTDIzMC4yOTU0OTEsMjQuOTQxOTY5MSBMMjMwLjI5NTQ5MSw3MC43MjU2MzU3IEwyNDMuNzk5NjQ3LDcwLjcyNTYzNTcgTDI0My43OTk2NDcsNDYuNTA0ODYwNiBaIE0yMDIuODY1ODA4LDcxLjUxMTY1NjIgQzE5MC4wMzgyNzgsNzEuNTExNjU2MiAxNzkuMzM3ODY1LDYyLjA5OTY2ODggMTc5LjMzNzg2NSw0Ny42ODM4OTEzIEMxNzkuMzM3ODY1LDMzLjI2MDAxMDUgMTkwLjAyNjEyMywyMy45NDEyMTExIDIwMi44NjU4MDgsMjMuOTQxMjExMSBDMjE1LjcwNTQ5MywyMy45NDEyMTExIDIyNi40ODY5MzgsMzMuMjYwMDEwNSAyMjYuNDg2OTM4LDQ3LjY4Mzg5MTMgQzIyNi40ODY5MzgsNjIuMTA3NzcyMSAyMTUuNjkzMzM4LDcxLjUxNTcwNzggMjAyLjg2NTgwOCw3MS41MTU3MDc4IEwyMDIuODY1ODA4LDcxLjUxMTY1NjIgWiBNMjAyLjg2NTgwOCw1OC4xODE3MjE0IEMyMDguNDk3NjA0LDU4LjE4MTcyMTQgMjEzLjE2OTE1OSw1NC4wNTcxMzk4IDIxMy4xNjkxNTksNDcuNjg3OTQzIEMyMTMuMTY5MTU5LDQxLjUwOTE3MzggMjA4LjUwMTY1NiwzNy4yOTE0MDQyIDIwMi44NjU4MDgsMzcuMjkxNDA0MiBDMjAwLjEyMzM2LDM3LjI0ODQ5MzUgMTk3LjQ4MzY3NywzOC4zMzM5NTY3IDE5NS41NjQ3MzEsNDAuMjkzNjc4MiBDMTkzLjYzNTA5LDQyLjI2MzM4NDggMTkyLjU4Njg0OCw0NC45MzE1MDQ5IDE5Mi42NTk2OTcsNDcuNjg3OTQzIEMxOTIuNjYzNzQ4LDU0LjA2NTI0MzEgMTk3LjMyNzIsNTguMTgxNzIxNCAyMDIuODY1ODA4LDU4LjE4MTcyMTQgTDIwMi44NjU4MDgsNTguMTgxNzIxNCBaIE0xNTUuMTIxMTQyLDM3LjE5NDE2NDUgQzE1OS4xMDM5MTYsMzcuMTk0MTY0NSAxNjIuNjA0NTQzLDQwLjMzNDE5NDcgMTYyLjYwNDU0Myw0Ni4zMTAzODEzIEwxNjIuNjA0NTQzLDcwLjczMzczOSBMMTc2LjAxNTUxMSw3MC43MzM3MzkgTDE3Ni4wMTU1MTEsNDQuNzMwMjM3MSBDMTc2LjAxNTUxMSwzMC45MDYwMDA4IDE2OS4yOTM4MiwyMy45NDUyNjI4IDE1OC41MjA0NzgsMjMuOTQ1MjYyOCBDMTU1LjMxOTY3MywyMy45NDUyNjI4IDE0OS4yOTA4MTUsMjQuOTE3NjU5MiAxNDQuOTE1MDMxLDMyLjA4MDk3OTggQzE0Mi4zODY4LDI2Ljc4NTQ3MDggMTM3LjUyODg2OSwyNC4wMzg0NTA4IDEzMC4zNDkzNDIsMjQuMDM4NDUwOCBDMTI1LjI1ODM0MiwyNC4wMTI1NTQ3IDEyMC42MjI0NCwyNi45NjU4NDI3IDExOC40OTQyMDgsMzEuNTkwNzI5OSBMMTE4LjQ5NDIwOCwyNC45NDYwMjA4IEwxMDQuOTc3ODk4LDI0Ljk0NjAyMDggTDEwNC45Nzc4OTgsNzAuNzI5Njg3NCBMMTE4LjQ4MjA1Myw3MC43Mjk2ODc0IEwxMTguNDgyMDUzLDQ2LjUwNDg2MDYgQzExOC40ODIwNTMsMzkuNTQ0MTIyNiAxMjIuMjc0NCwzNy4xOTAxMTI5IDEyNi4zNTQ0MTMsMzcuMTkwMTEyOSBDMTMwLjI0Mzk5OSwzNy4xOTAxMTI5IDEzMy43MzY1MjMsNDAuMjI4ODUxOCAxMzMuODM3ODE0LDQ2LjAxNDYxMDcgTDEzMy44Mzc4MTQsNzAuNzI5Njg3NCBMMTQ3LjM0NjAyMiw3MC43Mjk2ODc0IEwxNDcuMzQ2MDIyLDQ2LjUwNDg2MDYgQzE0Ny4zNDYwMjIsMzkuODQ3OTk2NSAxNTAuODQ2NjQ5LDM3LjE5ODIxNjIgMTU1LjEyMTE0MiwzNy4xOTgyMTYyIEwxNTUuMTIxMTQyLDM3LjE5NDE2NDUgWiIgZmlsbD0iIzMzMzMzMyI+PC9wYXRoPgogICAgPC9nPgo8L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: activity_metadata
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: asset_file_name,
+    asset_holder_id, asset_id, board_id, board_name (each key defined as a dotted-path
+    leaf below).'
+  example: '{}'
+- name: data
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: column_title,
+    group_title, previous_value, pulse_name, value (each key defined as a dotted-path
+    leaf below).'
+  example: '{}'
+- name: event
+  type: string
+  description: Vendor-emitted field 'Event'. Free-form text; may contain whitespace
+    and punctuation.
+  example: login
+- name: event_type
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: ip_address
+  type: ipv4
+  description: IPv4/IPv6 address — vendor-emitted, no version split. Free-form text;
+    may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: os_name
+  type: string
+  description: Human-readable name as displayed by monday.com. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: os_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: user_agent
+  type: string_long
+  description: Client User-Agent header value as received by monday.com. Free-form
+    text; may span multiple lines or contain large payloads.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: user_id
+  type: integer
+  description: User account associated with the event. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: activity_metadata.asset_file_name
+  type: file_path
+  description: File or process name reported by the vendor. Leaf of the 'activity_metadata'
+    composite. Absolute filesystem path; vendor-native separator (forward slash on
+    POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: activity_metadata.asset_holder_id
+  type: string_short
+  description: Opaque identifier emitted by monday.com. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: mon-7f4dc9d6
+- name: activity_metadata.asset_id
+  type: string_short
+  description: Opaque identifier emitted by monday.com. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: mon-83567e16
+- name: activity_metadata.board_id
+  type: string_short
+  description: Opaque identifier emitted by monday.com. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: mon-5bf3cd7f
+- name: activity_metadata.board_name
+  type: string
+  description: Human-readable name as displayed by monday.com. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: data.column_title
+  type: string
+  description: Title/headline of the event or item. Free-form text; may contain whitespace
+    and punctuation.
+  example: Sample subject line
+- name: data.group_title
+  type: string
+  description: Title/headline of the event or item. Free-form text; may contain whitespace
+    and punctuation.
+  example: Sample subject line
+- name: data.previous_value
+  type: string
+  description: Vendor-emitted field 'Data › previous value'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_value
+- name: data.pulse_name
+  type: string
+  description: Human-readable name as displayed by monday.com. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: data.value
+  type: string
+  description: Vendor-emitted field 'Data › value'. Leaf of the 'data' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_value
+use_cases:
+- SaaS
+- Collab
+how_to_use: |
+  ## monday.com Monday → Cortex XSIAM (dataset `monday_monday_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `monday_monday_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `monday_monday`. The marketplace pack's display name `monday.com` / `Monday` normalizes to `monday_com_monday_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `monday_monday` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `activity_metadata -> board_name`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~14 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.operation`, `xdm.event.original_event_type`, `xdm.event.type`, `xdm.source.host.os`, `xdm.source.host.os_family`, `xdm.source.ipv4`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = monday_monday_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,210 @@
+schema_version: 1
+id: PingFederate__PingFederate__ping_identity_pingfederate_raw
+pack_name: PingFederate
+rule_name: PingFederate
+dataset_name: ping_identity_pingfederate_raw
+vendor: Ping Identity
+product: PingFederate
+description: Ping Identity PingFederate is an enterprise federation server providing single sign-on (SSO), federated identity, and API access security across SAML, OIDC, OAuth 2.0, and WS-Federation. Its security audit log records every authentication, SSO/SLO, and token-grant event with the subject, client IP, target application, connection, protocol, and IdP/SP role.
+categories:
+- Identity
+- SSO
+version: 1.0.0
+origin: bundle
+validated: false
+author: phantom-maintainer
+uploaded_by: null
+created_at: '2026-06-07T00:00:00Z'
+updated_at: '2026-06-07T00:00:00Z'
+formats:
+- SYSLOG
+- CEF
+is_rawlog_only: false
+how_to_use: |
+  ## Ping Identity PingFederate → Cortex XSIAM (dataset `ping_identity_pingfederate_raw`)
+
+    **Routing — native CEF collector (INGEST, no content-pack modeling rule).** There is **no
+    demisto/content PingFederate ModelingRules/ParsingRules pack**. PingFederate is onboarded as a
+    Broker VM syslog/CEF data source: configure PingFederate's security audit log to write CEF
+    (`log4j2.xml` `SecurityAuditToFile`/syslog appender with the CEF pattern layout) and forward it
+    over syslog (UDP/TCP/filestream) to the Cortex Broker VM. The broker's built-in CEF parser
+    auto-extracts the CEF `k=v` extensions into typed columns and routes by the CEF header
+    `deviceVendor`/`deviceProduct`: it lowercases each, replaces non-alphanumerics with `_`, and
+    appends `_raw`. PingFederate's header is `CEF:0|Ping Identity|PingFederate|<ver>|...`, so events
+    land in **`ping_identity_pingfederate_raw`** (vendor `ping_identity` + product `pingfederate`).
+    The hint's `pingfederate_raw` is the un-prefixed guess — the broker prepends the normalized
+    vendor, so the real dataset carries the `ping_identity_` prefix. Confirm the landed dataset name
+    in the tenant after the first batch.
+
+    **Gate / discriminator** — none. The native CEF parser maps every routed row; there is no
+    modeling-rule WHERE filter to satisfy.
+
+    **Field names are CEF wire keys, not human labels.** PingFederate's default CEF audit pattern is:
+    `CEF:0|Ping Identity|PingFederate|%X{pfversion}|%X{event}|%X{event}|0|rt=%d{MMM dd yyyy HH:mm:ss.SSS}
+    duid=%X{subject} src=%X{ip} msg=%X{status} cs1Label=Target Application URL cs1=%X{app}
+    cs2Label=Connection ID cs2=%X{connectionid} cs3Label=Protocol cs3=%X{protocol} dvchost=%X{host}
+    cs4Label=Role cs4=%X{role} externalId=%X{trackingid} cs5Label=SP Local User ID cs5=%X{localuserid}
+    cs6Label=Attributes cs6=%X{attributes}`. So: `duid`=subject (user), `src`=client IP, `msg`=SSO
+    status, `cs1`=Target Application URL, `cs2`=Connection ID, `cs3`=Protocol, `cs4`=Role (IdP/SP),
+    `cs5`=SP Local User ID, `cs6`=Attributes, `externalId`=tracking ID, `dvchost`=host, `rt`=event
+    time. The schema fields below are those wire keys (plus the CEF header fields and the
+    `csNLabel` companions) so they match what the broker actually extracts. Example event:
+    `CEF:0|Ping Identity|PingFederate|6.4|AUTHN_SESSION_DELETED|AUTHN_SESSION_DELETED|0|rt=May 18 2012 11:41:48.452 duid=joe src=192.168.6.130 msg=failure cs1Label=Target Application URL cs1=http://app.example cs2Label=Connection ID cs2=sp:cloud:saml2 cs3Label=Protocol cs3=SAML20 dvchost=idp01 cs4Label=Role cs4=IdP externalId=tid:ae14b5ce8 cs5Label=SP Local User ID cs5=idlocal cs6Label=Attributes cs6={SAML_SUBJECT=joe}`
+
+    **Status / validation** — `validated: false`. Field names are grounded in PingFederate's
+    documented default CEF audit pattern and a real CEF audit sample (cross-checked against the
+    Elastic PingFederate integration), but **XDM saturation has NOT been proven on a live Cortex
+    tenant**. Because this is a native collector with no shipped modeling rule, `xdm.*` normalization
+    depends on the tenant having a Ping/PingFederate Auth content pack or a custom modeling rule that
+    binds `ping_identity_pingfederate_raw` to `XDM.Auth.*`. Prerequisite to validate: install the
+    relevant Ping Identity / PingFederate Cortex content pack (or author a modeling rule mapping the
+    CEF columns to `XDM.Auth.*`), stream a CEF batch, and confirm a rich `xdm.*` count over a wide
+    (≥7d) window before promoting to `validated`.
+
+    **Verify** (wide ≥7d window, once a modeling rule binds the dataset):
+
+        config timeframe = 30d | datamodel dataset = ping_identity_pingfederate_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+fields:
+- name: _raw_log
+  type: string
+  description: Raw CEF audit line as PingFederate emits it before any parsing or normalization. Free-form text; includes the full CEF header and extension key=value pairs.
+  example: CEF:0|Ping Identity|PingFederate|6.4|AUTHN_ATTEMPT|AUTHN_ATTEMPT|0|rt=May 18 2012 11:41:48.452 duid=joe src=192.168.6.130 msg=success cs1=http://app.example cs2=sp:cloud:saml2 cs3=SAML20 cs4=IdP
+- name: cefVersion
+  type: integer
+  description: CEF format version from the header (the integer after `CEF:`). Always 0 for PingFederate's CEF audit appender.
+  example: '0'
+- name: deviceVendor
+  type: string_short
+  description: CEF header device vendor. The broker lowercases and normalizes this to form the dataset vendor segment. PingFederate emits the literal `Ping Identity`.
+  example: Ping Identity
+- name: deviceProduct
+  type: string_short
+  description: CEF header device product. Combined with the vendor to choose the dataset (`ping_identity_pingfederate_raw`). PingFederate emits the literal `PingFederate`.
+  example: PingFederate
+- name: deviceVersion
+  type: string_short
+  description: CEF header device version — the PingFederate server version emitting the event (CEF pattern `%X{pfversion}`).
+  example: '6.4'
+- name: cefDeviceEventClassId
+  type: string_short
+  description: CEF Signature ID (DeviceEventClassID) — PingFederate's audit event code identifying the event type (CEF pattern `%X{event}`). Short opaque token without whitespace.
+  example: AUTHN_ATTEMPT
+- name: cefName
+  type: string_short
+  description: CEF Name — human-readable event class label. PingFederate sets this to the same audit event code as the signature ID (CEF pattern `%X{event}`).
+  example: AUTHN_ATTEMPT
+- name: cefSeverity
+  type: integer
+  description: CEF severity (0-10). PingFederate's CEF audit pattern emits a fixed 0. Bare digits.
+  example: '0'
+- name: rt
+  type: datetime
+  description: CEF `rt` (deviceReceiptTime) — the audit event timestamp (CEF pattern `rt=%d{MMM dd yyyy HH:mm:ss.SSS}`), in the CEF `MMM dd yyyy HH:mm:ss.SSS` format.
+  example: May 18 2012 11:41:48.452
+- name: duid
+  type: user
+  description: CEF `duid` (destinationUserId) — the authenticating subject / username for the SSO or token event (CEF pattern `%X{subject}`). Primary identity for XDM.Auth actor mapping.
+  example: jdoe
+- name: src
+  type: ipv4
+  description: CEF `src` (sourceAddress) — the client source IP address that initiated the authentication or SSO request (CEF pattern `%X{ip}`).
+  example: 192.168.6.130
+- name: msg
+  type: enum
+  description: CEF `msg` (message) — the SSO/authentication request outcome (CEF pattern `%X{status}`). Drives XDM auth outcome.
+  example: success
+  enum_values:
+  - success
+  - failure
+- name: cs1
+  type: url
+  description: CEF `cs1` (deviceCustomString1) — the target application URL the SSO is destined for (CEF pattern `%X{app}`). Labeled by cs1Label `Target Application URL`.
+  example: http://app.example/landing
+- name: cs1Label
+  type: string_short
+  description: CEF label for cs1. PingFederate sets this to the literal `Target Application URL`.
+  example: Target Application URL
+- name: cs2
+  type: string
+  description: CEF `cs2` (deviceCustomString2) — the federation connection/partner ID involved in the SSO (CEF pattern `%X{connectionid}`). Labeled by cs2Label `Connection ID`.
+  example: sp:cloud:saml2
+- name: cs2Label
+  type: string_short
+  description: CEF label for cs2. PingFederate sets this to the literal `Connection ID`.
+  example: Connection ID
+- name: cs3
+  type: enum
+  description: CEF `cs3` (deviceCustomString3) — the federation protocol used (CEF pattern `%X{protocol}`), e.g. SAML20, OIDC, WSFED. Labeled by cs3Label `Protocol`.
+  example: SAML20
+  enum_values:
+  - SAML20
+  - SAML11
+  - OIDC
+  - WSFED
+  - WSTRUST
+- name: cs3Label
+  type: string_short
+  description: CEF label for cs3. PingFederate sets this to the literal `Protocol`.
+  example: Protocol
+- name: cs4
+  type: enum
+  description: CEF `cs4` (deviceCustomString4) — PingFederate's federation role for this event (CEF pattern `%X{role}`) — identity provider or service provider. Labeled by cs4Label `Role`.
+  example: IdP
+  enum_values:
+  - IdP
+  - SP
+- name: cs4Label
+  type: string_short
+  description: CEF label for cs4. PingFederate sets this to the literal `Role`.
+  example: Role
+- name: cs5
+  type: user
+  description: CEF `cs5` (deviceCustomString5) — the SP-side local user ID the federated identity resolves to (CEF pattern `%X{localuserid}`). Labeled by cs5Label `SP Local User ID`.
+  example: idlocal
+- name: cs5Label
+  type: string_short
+  description: CEF label for cs5. PingFederate sets this to the literal `SP Local User ID`.
+  example: SP Local User ID
+- name: cs6
+  type: string_long
+  description: CEF `cs6` (deviceCustomString6) — the list of all attributes released in the SSO assertion (CEF pattern `%X{attributes}`), as a brace-delimited key=value list. Labeled by cs6Label.
+  example: '{SAML_SUBJECT=joe, ognl=tom}'
+- name: cs6Label
+  type: string_short
+  description: CEF label for cs6. PingFederate sets this to the literal `Attributes`.
+  example: Attributes
+- name: externalId
+  type: string_short
+  description: CEF `externalId` — the PingFederate tracking ID, a unique per-session identifier used to correlate all audit records of one SSO/login flow (CEF pattern `%X{trackingid}`).
+  example: tid:ae14b5ce8
+- name: dvchost
+  type: host
+  description: CEF `dvchost` (deviceHostName) — the PingFederate engine host that processed the event (CEF pattern `%X{host}`).
+  example: idp01.example.com
+- name: deviceReceiptTime
+  type: datetime
+  description: CEF deviceReceiptTime — long-name synonym path the broker may populate from the `rt` extension; the event timestamp normalized to the parser's time zone.
+  example: '2012-05-19T00:41:48.452+13:00'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPCEtLSBDcmVhdGVkIHdpdGggSW5rc2NhcGUgYnkgVnVsY2FuU3BoZXJlIChodHRwOi8vd3d3Lmlua3NjYXBlLm9yZy8gYW5kIGh0dHA6Ly92dWxjYW5zcGhlcmUuY29tKSAtLT4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCAxMjYgMjIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiA8dGl0bGU+UGluZyBJZGVudGl0eTwvdGl0bGU+CiA8ZGVzYz5BbWVyaWNhbiBzb2Z0d2FyZSBjb21wYW55PC9kZXNjPgogPGcgaWQ9InZsY25hIiBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogIDxnIGlkPSJ2bGNuYiIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoLTEyMCAtMTApIj4KICAgPGcgaWQ9InZsY25jIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgwIC0xKSI+CiAgICA8ZyBpZD0idmxjbmQiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDEyMCA4KSI+CiAgICAgPGcgaWQ9InZsY25lIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMCAzKSI+CiAgICAgIDxwb2x5Z29uIHBvaW50cz0iMCAyMC4yNjMgMjAuMjYzIDIwLjI2MyAyMC4yNjMgMCAwIDAiIGZpbGw9IiNCODIzMkYiLz4KICAgICAgPHBhdGggZD0ibTEwMy4zOSA2LjA1ODkgMS42OTcxLTAuMjgzOTF2MTEuNTY3aC0xLjY5NzF2LTExLjI4M3ptNi42NTcgMS4zMDY1djcuMjk0YzAgMS4yNTAyIDAuMzE0OSAxLjY4MjQgMS4zNDE3IDEuNjgyNCAwLjQ2MTg1IDAgMC4zNDAwMSAwLjAwNTI1NzUgMC42MzQyOS0wLjE1NDM1bDAuMjMxMyAxLjEzNjdjLTAuNTI1NTggMC4yOTQwNC0wLjcxOTAxIDAuMzc5MjktMS40NTMgMC4zNzkyOS0wLjU0NTA3IDAtMC45NjM4LTAuMTEyMjktMS4zNjMtMC4zMTY5NS0wLjczMjg4LTAuMzg2MDUtMS4wMDU0LTEuMTEzMS0xLjAwNTQtMi4yNTAydi03Ljc3MWgtMS4zNjN2LTEuMzQwM2gxLjM2M3YtNC4yODgyaDEuNjc3OXY0LjI4ODJoMi42MjExbC0wLjUwMzA4IDEuMzQwM2gtMi4xODE4em0xMy40NDQgOS42Mzc0Yy0wLjY1MTkxIDAtMS4xNzg2LTAuNTU5MTctMS4xNzg2LTEuMzMyNCAwLTAuNzczOTggMC41MjY3LTEuMzMyNCAxLjE3ODYtMS4zMzI0IDAuNjUyMjggMCAxLjE3OTQgMC41NTg0MiAxLjE3OTQgMS4zMzI0IDAgMC43NzMyMy0wLjUyNzA4IDEuMzMyNC0xLjE3OTQgMS4zMzI0em0wLTIuOTg2M2MtMC44NTg0NiAwLTEuNTU5MSAwLjc0MjQzLTEuNTU5MSAxLjY1MzkgMCAwLjkxMDY3IDAuNzAwNjQgMS42NTI0IDEuNTU5MSAxLjY1MjQgMC44NTk5NiAwIDEuNTU5MS0wLjc0MTY4IDEuNTU5MS0xLjY1MjQgMC0wLjkxMTQzLTAuNjk5MTQtMS42NTM5LTEuNTU5MS0xLjY1Mzl6bS0wLjI3MTQxIDEuNTExOXYtMC41MzYyN2gwLjI5Mjc4YzAuMTY5MDcgMCAwLjM1OTEzIDAuMDM2MDUxIDAuMzU5MTMgMC4yNTYxMiAwIDAuMjUxOTgtMC4xNjgzMiAwLjI4MDE1LTAuMzYyODggMC4yODAxNWgtMC4yODkwM3ptMC45ODAzLTAuMjUxNjFjMC0wLjM5NDMxLTAuMjI5NDItMC41NTAxNi0wLjY1MzAzLTAuNTUwMTZoLTAuNjU1NjZ2MS44NzQzaDAuMzI4Mzl2LTAuODA3MDNoMC4xOTc5M2wwLjQ1NzcyIDAuODA3MDNoMC4zMzcwMWwtMC40NzQyMi0wLjgyMDE3YzAuMjg5MDMtMC4wMjg5MTYgMC40NjE4NS0wLjE4NDAxIDAuNDYxODUtMC41MDM5N3ptLTEuNDEyMi05LjI1MTctMy41ODUzIDExLjcyNGMtMC43MTMwMSAyLjI3MzktMS41NTI0IDMuNzczLTMuMzc1OCA0LjI1MDdsLTAuNDgyNDYtMS4yMDQzYzEuMDIwOC0wLjM0NjYyIDEuNTU2MS0wLjg1MDU5IDIuMDAxOC0yLjA4Mi0wLjE2NzU3LTAuODkzMDItMC4yNjI0MS0xLjI4MTMtMC4yNjI0MS0xLjI4MTMtMC4xMjQ4My0wLjcyNzA0LTAuNjkxNjQtMi45MzI2LTEuMDQ3OC00LjA2NzhsLTIuMjQ1MS03LjA4OTQgMS42MTY1LTAuNTkyMjIgMi4xMzkgNy4zMzk4YzAuMzEzNzcgMS4wNjk1IDAuNjI3OTIgMi44MTggMC42Mjc5MiAyLjgxOGgwLjA0MjczNXMwLjM5NzM3LTEuNDUzNyAwLjY1MDAzLTIuMzg1bDIuMDUzOS03LjQzMDdoMS44NjY5em0tNTAuNDk3IDguNDNzLTAuMTg5MzEgMC40NzczMS0wLjYyOTQyIDAuODE4NjdjLTAuNjcxNzggMC41MjE2Mi0xLjE1NDIgMC43MjY2Ni0yLjAxMiAwLjcyNjY2LTAuOTY0OTMgMC0xLjYxNTctMC4zODYwNS0yLjA5NzQtMS4zMTgxLTAuMzM2MjYtMC42NTgzMS0wLjQxOTQ5LTEuNjM2Mi0wLjQxOTQ5LTIuOTU0MyAwLTEuNTkwNCAwLjE2NjgyLTIuNDA3OSAwLjY3MDY1LTMuMjcxNyAwLjQ0MDQ4LTAuNzcyNDggMS4xMzIxLTEuMTgxNCAxLjk1MTItMS4xODE0IDEuMjM1MiAwIDIuMDEyNyAwLjM4NzE4IDIuNTM2NCAxLjE4MTR2NS45OTg4em0xLjY1NjYtMTIuNzE4aC0xLjYzNnYzLjc2NjZjMCAwLjgxNjc5IDAuMDIwNjE4IDEuNzQ4OSAwLjAyMDYxOCAxLjc0ODktMC42Mjc5Mi0wLjkwODgtMS42NTY5LTEuNDMxMi0yLjgyOTYtMS40MzEyLTAuNzU1NzUgMC0xLjM0MjQgMC4yMDM5Mi0yLjAxMzggMC43MDQxMy0xLjQyNiAxLjA2NjktMi4xNTg5IDIuODM5OC0yLjE1ODkgNS4yNDgxIDAgMy42MTIzIDEuNTUxNiA1LjcyNTggNC4yNTQ4IDUuNzI1OCAxLjIxNjggMCAyLjAxNDYtMC4zODQ5MiAyLjc2ODUtMS4zMTYzIDAuMDIwNjE4IDAuNTg4ODQgMC4yMzA5MiAxLjE1ODkgMC4yMzA5MiAxLjE1ODloMS42Nzc5Yy0wLjIzMjA1LTAuNjYwMTktMC4zMTQ1Mi0xLjcwNTMtMC4zMTQ1Mi0zLjY1Nzd2LTExLjk0N3ptMjQuOTY1IDQuMzExMmgyLjY5NzJsLTAuNTAyMzMgMS4zNDAzaC0yLjI1Nzl2Ny4yOTRjMCAxLjI1MDUgMC4zMTQxNSAxLjY4MzIgMS4zNDE3IDEuNjgzMiAwLjQ2MTg1IDAgMC4zNDAwMSAwLjAwNTI1NzUgMC42MzQyOS0wLjE1NTFsMC4yMzEzIDEuMTM3MWMtMC41MjU1OCAwLjI5NDQyLTAuNzE5MDEgMC4zNzk2Ny0xLjQ1MzQgMC4zNzk2Ny0wLjU0NDY5IDAtMC45NjM0My0wLjExMjY2LTEuMzYyNy0wLjMxNjk1LTAuNzMyODgtMC4zODY0My0xLjAwNjItMS4xMTM4LTEuMDA2Mi0yLjI1MDZ2LTcuNzcxM2gtMS4zNjIzdi0xLjM0MDNoMS4zNjIzdi00LjI4NzVoMS42Nzc5djQuMjg3NXptLTQuNzYwMiAxLjM4NTdjMC4xNjc1NyAwLjQwOTMzIDAuMjUxOTIgMC44NjI5OCAwLjI1MTkyIDEuMzE4NXY4LjU5MDRoLTEuNjU3M3YtNy42NTkxYzAtMS4yMDUxLTAuMDgzOTcyLTEuNDk5MS0wLjM3NzUtMS44ODYzLTAuMjI5OC0wLjI5NDgtMC42NzE0LTAuNDc3MzEtMS4xNTMxLTAuNDc3MzEtMC44NDAxIDAtMi4xMzgzIDAuNzI4OTEtMi44OTMzIDEuNTkxMXY4LjQzMTVoLTEuNTkzNnYtOC43MjYzYzAtMS42MTQxLTAuMzk3MzctMi4zODY1LTAuMzk3MzctMi4zODY1bDEuNTkyMS0wLjQ3NzY4czAuMzc5IDAuODM5MzIgMC4zNzkgMS43NzI5YzEuMDg4My0xLjE4MTQgMi4xNzgtMS43NSAzLjI5MDctMS43NSAxLjEzMjUgMCAyLjEzOTQgMC42NTk4MiAyLjU1ODUgMS42NTg3em0tMTYuMTkzIDMuMjAzM2MwLjA4MjQ3My0yLjM0MTEgMC45MjE4Mi0zLjUyMTggMi40MTAxLTMuNTIxOCAwLjc5NzczIDAgMS41MzA2IDAuMzg3MTggMS44ODY3IDAuOTk5NjggMC4zMTQ5IDAuNTQ1MjggMC40NjE4NSAxLjI5NTYgMC40ODI0NiAyLjUyMjFoLTQuNzc5M3ptMi40OTQtNC45MDgzYy0xLjI1ODggMC0yLjI4NTYgMC41MDA5Ni0zLjEyNDIgMS41NjgyLTAuODgwMjEgMS4xMzgyLTEuMjU3IDIuMzYzNi0xLjI1NyA0LjI3MjggMCAzLjc1MDEgMS43Mzg3IDYuMDIxMyA0LjYzMzEgNi4wMjEzIDEuMzQyNCAwIDIuNjAwOS0wLjQ5OTQ2IDMuNTIyLTEuNDA4M2wtMC42Mjk0Mi0xLjEzNzljLTAuNzMyODggMC43MjgxNi0xLjU1MDEgMS4wNjgtMi41NTc4IDEuMDY4LTEuMDQ4OSAwLTIuMDEzMS0wLjQwODIxLTIuNTk5OC0xLjM4NTQtMC4zNTY4OC0wLjU4OTIyLTAuNDgwOTctMS40MDg2LTAuNDgwOTctMi40NzU5di0wLjI3Mzc3aDYuNTE5MXYtMC4yNTAxMWMtMC4wNDA0ODctMi43MDI3LTAuMjkzOS0zLjc3MTEtMS4xOTMyLTQuNzcyMy0wLjcxNDE0LTAuNzkzODgtMS42OTk3LTEuMjI2OS0yLjgzMTgtMS4yMjY5em0tMTkuMDg3IDExLjYxM2gxLjY3Nzl2LTE1LjU4OWgtMS42Nzc5djE1LjU4OXoiIGZpbGw9IiMyNjM3NDYiLz4KICAgICAgPHBhdGggZD0ibTU5LjYwNyA1LjUxODEgMS4xODIyIDEuOTAxMWMtMC42MTMxOCAwLjYwMzY5LTEuMjAzMyAwLjg1MDAyLTEuOTg0MyAwLjg1MDAyLTAuMjc0NzIgMC0wLjU3MTQ0LTAuMDQzNzM5LTAuNzQwMzctMC4wNjYwNjQgMC40MjI0IDAuNTM0ODkgMC42MzUzNCAxLjExNjkgMC42MzUzNCAxLjg3NzMgMCAxLjk2NzMtMS42OTA3IDMuMzk5OS0zLjk5MjIgMy4zOTk5LTAuMTI3MTkgMC0wLjIxMTczIDAtMC40MjIyNS0wLjAyMjkzMi0wLjcxNzMgMC4zNTg3Mi0xLjExODUgMC42MjY3Ny0xLjExODUgMC45MzkxNyAwIDAuMTU2NTggMC4xNjgwMiAwLjI2ODk2IDAuNDY0MTQgMC4yNjg5NmwxLjUyMTEgMC4wMjIzMjVjMS42NDYgMC4wMjIwMjEgMi41MTE1IDAuMjkwMDcgMy4yNzIzIDEuMDI5MSAwLjYzMjc2IDAuNjI1NzEgMC45Mjk0OSAxLjQwODQgMC45Mjk0OSAyLjQzNzggMCAwLjk2MTQ5LTAuMjc1MDIgMS42OTktMC44NjcxMSAyLjM2OTMtMC45NDkyMiAxLjA3NDMtMi41NzY2IDEuNDc1OS00LjI2NTQgMS40NzU5LTEuNTQwMSAwLTMuMTI0NS0wLjI2Nzc1LTQuMDk1My0xLjIyOTgtMC41OTE0OC0wLjU4MDc1LTAuODg2NjktMS4yNTMxLTAuODg2NjktMi4wMzQgMC0wLjYyNjMxIDAuMTQ2OTItMC45NDA1MyAwLjI1MzAxLTEuMTYzM2gyLjYxODZjLTAuMTA2MjQgMC4yNjg2Ni0wLjEyNzk1IDAuNDI0MDItMC4xMjc5NSAwLjczNjcyIDAgMC45MTc3NSAwLjcxOTU4IDEuNDA4NiAyLjAyODcgMS40MDg2IDAuNzE3NDYgMCAxLjMzMDMtMC4wODc3ODEgMS43NzMxLTAuMzc5NTIgMC40MjIxLTAuMjY4MDUgMC42OTYyMS0wLjY5MjM4IDAuNjk2MjEtMS4xNjI0IDAtMS4wMjc5LTAuODY0ODMtMS4zNDE4LTEuOTg1My0xLjM2NDFsLTEuMjAzMS0wLjAyMjYyOWMtMS4yNjY0LTAuMDIzMjM2LTIuMDg5NC0wLjEzMzQ5LTIuNTk2OS0wLjM1ODExLTAuNTA3NTUtMC4yMDA2Mi0wLjgyMzI0LTAuNzE0NC0wLjgyMzI0LTEuNDk3NCAwLTAuNzM3NDggMC4yMTAyMS0xLjQzMjEgMS45ODQ3LTEuOTIzLTEuNTYyOS0wLjQyNTU0LTIuMzIyNS0xLjQ3NjYtMi4zMjI1LTMuMTc1NiAwLTIuMzQ4MiAxLjc5NTItMy44Njg2IDQuNTYwNS0zLjg2ODYgMC42MTI0MiAwIDEuMTYxMyAwLjA4OTMgMS45NDMyIDAuMjg5NzcgMC41ODk5NiAwLjE1NTk3IDAuOTcwNzcgMC4yNDY2NCAxLjMzIDAuMjQ2NjQgMC43ODEwNSAwIDEuNTgzNS0wLjM1NzgxIDIuMjM4Ni0wLjk4NTAzem0tMTcuOTUxIDAuMzU4ODdjMC4yNTQyMyAwLjQ3MDA0IDAuNDAxOTEgMC45NjExOSAwLjQwMTkxIDEuNDMwNiAwLjQyMTk0LTAuMzEzNzYgMC43ODEyLTAuNTgyMTIgMS4yNDYxLTAuODQ5ODcgMC41Njk3OC0wLjMxMjQgMS4zMDk1LTAuNDkxIDEuOTQyMi0wLjQ5MSAxLjIwMzkgMCAyLjI1OTcgMC42Njk3NSAyLjU5NzIgMS42NTQ4IDAuMTQ3NjggMC40MjQ0OCAwLjIxMTQzIDAuOTE2MDggMC4yMTE0MyAxLjYzMTh2OC4zNjQxaC0yLjc4ODJ2LTcuNDQ3M2MwLTEuMjk2NS0wLjIxMDM2LTEuNjc2My0wLjk0OTgzLTEuNjc2My0wLjU2ODg2IDAtMS4zMDc3IDAuNDAyNzYtMS45NjIyIDEuMDI3NnY4LjA5NjFoLTIuODMwOHYtOC4yOTc0YzAtMC45ODM5Ny0wLjEyNjg5LTEuOTIzMS0wLjM3OTYtMi42ODM2bDIuNTExOC0wLjc1OTV6bS00LjQzNDcgMC4wMjA4MDZ2MTEuNzJoLTIuODI4N3YtMTEuMjVsMi44Mjg3LTAuNDY5NzR6bS0xMC4yLTMuODIyN2MyLjQ5MTMgMCAzLjI1MTggMC4yNjc3NSA0LjA3NjUgMC43NjAxMSAxLjM3MDkgMC44MDUzNyAyLjEwOTEgMi4yMzYxIDIuMTA5MSA0LjAyNjIgMCAyLjA1NjYtMC45Mjc5NyAzLjcxMTctMi41MzIzIDQuNTE2NS0wLjY3NTg3IDAuMzM1NDgtMS4zMSAwLjUxNDY5LTIuOTM1MiAwLjUxNDY5aC0xLjYyNTJ2NS43MjQ5aC0yLjk1NjN2LTE1LjU0MnptMjcuMDUzIDYuMDgyM2MtMS4wNzY0IDAtMS42ODkxIDAuNjI3MjMtMS42ODkxIDEuNyAwIDEuMTYzMiAwLjY3NTg3IDEuNjMyIDEuNjY4MyAxLjYzMiAxLjExOTcgMCAxLjczMTktMC41ODA5IDEuNzMxOS0xLjYzMiAwLTEuMDcyOC0wLjYzMjc2LTEuNy0xLjcxMTEtMS43em0tMjYuMDgyLTMuNTU2aC0xLjg3NzZ2NC43NDE2aDEuNTQxMmMxLjIwMzMgMCAxLjU2MjctMC4xNTY3MyAxLjk2MjYtMC44MDUyMiAwLjI1NDg0LTAuNDIzNzIgMC4zNTkxMS0wLjg3MTc0IDAuMzU5MTEtMS42MTA0IDAtMS40NTM0LTAuNzM4NTUtMi4zMjU5LTEuOTg1My0yLjMyNTl6bTcuODU3NC0zLjQ0MzRjMC45NTAyOCAwIDEuNzExMSAwLjgyNzY5IDEuNzExMSAxLjg1NTkgMCAxLjAyODUtMC43ODIyNiAxLjg1NjgtMS43NTM2IDEuODU2OC0wLjk0OTM3IDAtMS43MzEtMC44MjgzLTEuNzMxLTEuODU2OCAwLTEuMDI4MiAwLjgwMjYtMS44NTU5IDEuNzczNS0xLjg1NTl6IiBmaWxsPSIjMjYzNzQ2Ii8+CiAgICAgPC9nPgogICAgPC9nPgogICA8L2c+CiAgPC9nPgogPC9nPgo8L3N2Zz4K
+  source: wikipedia:File:Ping_Identity_logo.svg
+  license: Wikimedia PD/below-TOO; trademark
+  fidelity: branded

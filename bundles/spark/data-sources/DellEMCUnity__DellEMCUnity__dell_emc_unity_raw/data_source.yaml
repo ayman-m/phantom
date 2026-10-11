@@ -1,0 +1,279 @@
+schema_version: 1
+id: DellEMCUnity
+pack_name: DellEMCUnity
+rule_name: DellEMCUnity
+dataset_name: dell_emc_unity_raw
+vendor: Dell EMC
+product: DellEMCUnity
+description: Dell EMC Unity is a mid-range storage array product line that offers
+  both hybrid and all-flash models, designed for affordable all-flash performance
+  solutions or cost-effective hybrid solutions, supporting various protocols and use
+  cases.
+categories:
+- Analytics & SIEM
+version: 1.0.6
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+RGVsbDwvdGl0bGU+PHBhdGggZD0iTTE3Ljk2MyAxNC42VjkuMzI0aDEuMjIydjQuMjA0aDIuMTR2MS4wN2gtMy4zNjJ6bS05Ljc4NC0zLjI4OGwyLjk4LTIuMjkyYy4yODEuMjI4LjU2LjQ1OC44NDEuNjg3bC0yLjgyNyAyLjE0LjYxMS41MzUgMi44MjctMi4yMTZjLjI4MS4yMjguNTYuNDU4Ljg0MS42ODhhMjk1LjgzIDI5NS44MyAwIDAgMS0yLjgyNyAyLjIxNmwuNjEuNTM2IDIuODMtMi4yOTUtLjAwMS0xLjk4NmgxLjIyM3Y0LjIwNGgyLjIxNnYxLjA3aC0zLjM2MnYtMS45ODdjLS45OTUuNzYzLTEuOTg3IDEuNTI5LTIuOTgxIDIuMjkybC0yLjk4MS0yLjI5MmMtLjE0NC43MjktLjY1MyAxLjM2LTEuMzEyIDEuNjk0LS4yODUuMTQ3LS41OTcuMjQtLjkxNS4yNzYtLjE4My4wMjItLjM2Ny4wMTctLjU1MS4wMTdIMy41MTZWOS4zMjVINS42OWEyLjU0NCAyLjU0NCAwIDAgMSAxLjU2My41NTdjLjQ1NC4zNi43NzguODcyLjkyNyAxLjQzbS0zLjUxNi0uOTE3djMuMjFsLjk1My0uMDAxYTEuMzc3IDEuMzc3IDAgMCAwIDEuMDM2LS41MjMgMS43NCAxLjc0IDAgMCAwIC4xODItMS44ODkgMS40OTQgMS40OTQgMCAwIDAtLjk3Ni0uNzY2Yy0uMTY2LS4wNC0uMzM4LS4wMy0uNTA3LS4wMzJoLS42ODh6TTExLjgyIDBoLjMzN2ExMS45NCAxMS45NCAwIDAgMSA1LjQwNSAxLjM3MyAxMi4xMDEgMTIuMTAxIDAgMCAxIDQuMTI2IDMuNTU3QTExLjkzIDExLjkzIDAgMCAxIDI0IDExLjgydi4zNmExMS45NjMgMTEuOTYzIDAgMCAxLTMuMjM2IDguMDMzQTExLjk2NyAxMS45NjcgMCAwIDEgMTIuMTgyIDI0aC0uMzYxYTExLjk5MyAxMS45OTMgMCAwIDEtNC4xNDUtLjgwNiAxMi4wNCAxMi4wNCAwIDAgMS00LjI3NC0yLjgzNkExMi4wNTcgMTIuMDU3IDAgMCAxIC41NzYgMTUuNjcgMTIuMDA2IDEyLjAwNiAwIDAgMSAwIDEyLjE4MXYtLjM2MWExMS45MjQgMTEuOTI0IDAgMCAxIDEuOTkyLTYuMzk2IDEyLjIxMSAxMi4yMTEgMCAwIDEgNC43MS00LjE3MkExMS44NzUgMTEuODc1IDAgMCAxIDExLjgyIDBtLS4xNTMgMS4yM2ExMC43MjQgMTAuNzI0IDAgMCAwLTYuNDMgMi4zNzUgMTAuNzggMTAuNzggMCAwIDAtMy4zMTkgNC41NzMgMTAuODU4IDEwLjg1OCAwIDAgMCAuMTkzIDguMTIgMTAuNzg4IDEwLjc4OCAwIDAgMCAzLjU0NiA0LjQyMSAxMC42OTggMTAuNjk4IDAgMCAwIDQuNzg2IDEuOTQ2YzEuNDU2LjIwOSAyLjk1NS4xMjQgNC4zNzYtLjI2YTEwLjc1NiAxMC43NTYgMCAwIDAgNS4wNzUtMy4wNjIgMTAuNzQyIDEwLjc0MiAwIDAgMCAyLjY4Ni01LjI4IDEwLjkxNSAxMC45MTUgMCAwIDAtLjEyMi00LjY4MiAxMC43NyAxMC43NyAwIDAgMC03LjA5OC03LjYyNiAxMC43OCAxMC43OCAwIDAgMC0zLjY5My0uNTI1eiIvPjwvc3ZnPg==
+  source: simpleicons:dell
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'dellemc: dellemcunity=DellEMCUnity action=allow user=jdoe'
+- name: EMERGENCY
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: sample_emergency
+- name: account
+  type: string
+  description: Source user OU. Free-form text; may contain whitespace and punctuation.
+  example: acct-35f8add8
+- name: category
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: access_control
+- name: client_ip
+  type: ipv4
+  description: Client ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: client_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: client_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: component
+  type: string
+  description: Observer type. Free-form text; may contain whitespace and punctuation.
+  example: auth-service
+- name: connection_step
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_step
+- name: created
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: dns_connection_failure_reason
+  type: string
+  description: Dns connection failure reason. Free-form text; may contain whitespace
+    and punctuation.
+  example: normal_operation
+- name: dns_server_name
+  type: string
+  description: Network dhcp DNS server. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: domain_controller
+  type: domain
+  description: Domain controller. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: event_headers
+  type: string
+  description: Event headers. Free-form text; may contain whitespace and punctuation.
+  example: 'Content-Type: application/json'
+- name: header_fields
+  type: string
+  description: Header fields. Free-form text; may contain whitespace and punctuation.
+  example: sample_fields
+- name: message_id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: nas_server
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: normally
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: process_id
+  type: string_short
+  description: Source process PID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: process_name
+  type: string
+  description: Source process name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: properly
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: replication_host
+  type: host
+  description: Replication host. Hostname or fully-qualified domain name (RFC 1035
+    dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: server_domain
+  type: domain
+  description: Destination domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: server_status
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: session_id
+  type: string_short
+  description: Network session ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: snapshot_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: snapshot_resource_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: snapshot_resource_type
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: sp_hostname
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: succeeded
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: successful
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: target_server
+  type: string
+  description: Target server. Free-form text; may contain whitespace and punctuation.
+  example: sample_server
+- name: target_server_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_server_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: target_server_name
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: user
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: user_domain
+  type: domain
+  description: Source user domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+use_cases:
+- Storage
+how_to_use: |
+  ## dell_emc unity → Cortex XSIAM (dataset `dell_emc_unity_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `dell_emc` / product `unity`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `dell_emc_unity_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `dell_emc`
+    - **product**: `unity`
+
+    These normalize → `dell_emc_unity_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~27 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.event.description`, `xdm.event.id`, `xdm.event.log_level`, `xdm.event.operation_sub_type`, `xdm.event.outcome`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `dell_emc`, Product = `unity`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = dell_emc_unity_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

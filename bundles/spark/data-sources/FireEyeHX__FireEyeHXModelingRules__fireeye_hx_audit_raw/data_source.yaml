@@ -1,0 +1,594 @@
+schema_version: 1
+id: FireEyeHX
+pack_name: FireEyeHX
+rule_name: FireEyeHXModelingRules
+dataset_name: fireeye_hx_audit_raw
+vendor: FireEye
+product: FireEyeHX
+description: FireEye Endpoint Security is an integrated solution that detects and
+  protects endpoints against known and unknown threats. The FireEye HX Cortex XSOAR
+  integration provides access to information about endpoints, acquisitions, alerts,
+  indicators, and containment. Customers can extract critical data and effectively
+  operate the security operations automated playbooks.
+categories:
+- Endpoint
+version: 2.4.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNFMTFBMkIiPkZpcmVFeWU8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: appliance._id
+  type: string_short
+  description: Nested leaf of `appliance` — the modeling rule reads it at $._id.
+  example: sample value
+- name: indicator.category
+  type: string_short
+  description: Nested leaf of `indicator` — the modeling rule reads it at $.category.
+  example: sample value
+- name: indicator.display_name
+  type: string_short
+  description: Nested leaf of `indicator` — the modeling rule reads it at $.display_name.
+  example: sample value
+- name: indicator.name
+  type: string_short
+  description: Nested leaf of `indicator` — the modeling rule reads it at $.name.
+  example: sample value
+- name: _raw_log
+  type: string
+  description: 'Native fireeye_hx_audit log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: The MODEL block has FIVE independent `filter _raw_log contains ...` branches, all regex-only over _raw_log: (1) "Action ID" = action-audit -> 16 xdm assignments; (2) ": User log" = auth-audit -> 11; (3) "[cli.NOTICE]: AU'
+  example: '{{now:%b %d %H:%M:%S}} hx-cms01 audit[2911]: [audit.NOTICE]: AUDIT: Action ID 24193 requested by: user admin from: IP address: 10.100.20.15, source interface name: mgmt0, domain name: corp.example.com, session ID 4821, descr: POST /hx/api/v3/hosts/containment, status: SUCCESS'
+- name: Alert_Correlation_ID
+  type: string_short
+  description: Alert original alert ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: Alert_Types
+  type: string
+  description: Alert subcategory. Free-form text; may contain whitespace and punctuation.
+  example: sample_types
+- name: FireEye_Agent_Version
+  type: string
+  description: Source agent version. Free-form text; may contain whitespace and punctuation.
+  example: 1.0.0
+- name: IOC_Name
+  type: string
+  description: Alert name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: MD5_hash
+  type: hash_md5
+  description: Source process executable MD5. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: Process_Name
+  type: string
+  description: Source process name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: Target_OS
+  type: string
+  description: Source host OS. Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: actions
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_actions
+- name: addressNotificationEvent_address
+  type: ipv4
+  description: Intermediate host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: appliance
+  type: string
+  description: Observer unique identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_appliance
+- name: audit
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_audit
+- name: auth_auth_method
+  type: string
+  description: Auth method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: auth_remote_address
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: auth_session_id
+  type: string_short
+  description: Network session ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: auth_userName
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: categoryOutcome
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: cefName
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_cefname
+- name: cefSeverity
+  type: string_short
+  description: Event log level. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: changes
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_changes
+- name: cli
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_cli
+- name: containment_action
+  type: string
+  description: Containment action. Free-form text; may contain whitespace and punctuation.
+  example: allow
+- name: dhost
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: dmac
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: dnsLookupEvent_hostname
+  type: host
+  description: Network DNS question name. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: dnsLookupEvent_pid
+  type: integer
+  description: Source process PID. Free-form text; may contain whitespace and punctuation.
+  example: '4242'
+- name: dnsLookupEvent_ppath
+  type: string
+  description: Source process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_ppath
+- name: dnsLookupEvent_process
+  type: string
+  description: Source process name. Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: dnsLookupEvent_processPath
+  type: string
+  description: Source process executable directory. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_processpath
+- name: dnsLookupEvent_username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: dntdom
+  type: string
+  description: Destination domain. Free-form text; may contain whitespace and punctuation.
+  example: sample_dntdom
+- name: dst
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: dvchost
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: event_id
+  type: string_short
+  description: Alert original alert ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: event_type
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: eventtype
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: externalId
+  type: string
+  description: Event ID. Free-form text; may contain whitespace and punctuation.
+  example: ext-99d43ecc-7b1
+- name: filePath
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: fileWriteEvent_devicePath
+  type: domain
+  description: Destination host FQDN. Bare DNS domain name; no scheme, no path, no
+    port.
+  example: example.com
+- name: fileWriteEvent_eventReason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: fileWriteEvent_fileExtension
+  type: string
+  description: Destination file extension. Free-form text; may contain whitespace
+    and punctuation.
+  example: pdf
+- name: fileWriteEvent_fileName
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: document.pdf
+- name: fileWriteEvent_filePath
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: fileWriteEvent_md5
+  type: hash_md5
+  description: Filewriteevent md5. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: fileWriteEvent_parentPid
+  type: string
+  description: Destination process parent ID. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_parentpid
+- name: fileWriteEvent_pid
+  type: integer
+  description: Filewriteevent pid. Free-form text; may contain whitespace and punctuation.
+  example: '4242'
+- name: fileWriteEvent_ppath
+  type: string
+  description: Destination process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_ppath
+- name: fileWriteEvent_process
+  type: string
+  description: Destination process name. Free-form text; may contain whitespace and
+    punctuation.
+  example: explorer.exe
+- name: fileWriteEvent_processPath
+  type: string
+  description: Destination process executable directory. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_processpath
+- name: fileWriteEvent_size
+  type: integer_byte_count
+  description: Destination process executable size. Free-form text; may contain whitespace
+    and punctuation.
+  example: '1024'
+- name: fileWriteEvent_username
+  type: string
+  description: Filewriteevent username. Free-form text; may contain whitespace and
+    punctuation.
+  example: jdoe
+- name: fname
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_fname
+- name: http_request_method
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: http_status
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: imageLoadEvent_devicePath
+  type: string
+  description: Imageloadevent devicePath. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_devicepath
+- name: imageLoadEvent_fileExtension
+  type: string
+  description: Destination module extension. Free-form text; may contain whitespace
+    and punctuation.
+  example: pdf
+- name: imageLoadEvent_filePath
+  type: string
+  description: Destination module path. Free-form text; may contain whitespace and
+    punctuation.
+  example: /var/log/app.log
+- name: imageLoadEvent_filename
+  type: string
+  description: Destination module filename. Free-form text; may contain whitespace
+    and punctuation.
+  example: document.pdf
+- name: imageLoadEvent_fullPath
+  type: string
+  description: Destination module directory. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_fullpath
+- name: imageLoadEvent_pid
+  type: integer
+  description: Imageloadevent pid. Free-form text; may contain whitespace and punctuation.
+  example: '4242'
+- name: imageLoadEvent_ppath
+  type: string
+  description: Imageloadevent ppath. Free-form text; may contain whitespace and punctuation.
+  example: sample_ppath
+- name: imageLoadEvent_process
+  type: string
+  description: Imageloadevent process. Free-form text; may contain whitespace and
+    punctuation.
+  example: explorer.exe
+- name: imageLoadEvent_processPath
+  type: string
+  description: Imageloadevent processPath. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_processpath
+- name: imageLoadEvent_username
+  type: string
+  description: Imageloadevent username. Free-form text; may contain whitespace and
+    punctuation.
+  example: jdoe
+- name: indicator
+  type: string
+  description: Alert name. Free-form text; may contain whitespace and punctuation.
+  example: sample_indicator
+- name: info
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: see message
+- name: ip_address
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: log_level
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: info
+- name: md5values
+  type: hash_md5
+  description: Destination file MD5. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: networkEvent_localIP
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: networkEvent_localPort
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: networkEvent_pid
+  type: integer
+  description: Destination process PID. Free-form text; may contain whitespace and
+    punctuation.
+  example: '4242'
+- name: networkEvent_ppath
+  type: string
+  description: Networkevent ppath. Free-form text; may contain whitespace and punctuation.
+  example: sample_ppath
+- name: networkEvent_process
+  type: string
+  description: Networkevent process. Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: networkEvent_processPath
+  type: string
+  description: Networkevent processPath. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_processpath
+- name: networkEvent_protocol
+  type: string
+  description: Network IP protocol. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: networkEvent_remoteIP
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: networkEvent_remotePort
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: processEvent_pid
+  type: integer
+  description: Processevent pid. Free-form text; may contain whitespace and punctuation.
+  example: '4242'
+- name: processEvent_ppath
+  type: string
+  description: Processevent ppath. Free-form text; may contain whitespace and punctuation.
+  example: sample_ppath
+- name: processEvent_process
+  type: string
+  description: Processevent process. Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: registryEvent_pid
+  type: integer
+  description: Registryevent pid. Free-form text; may contain whitespace and punctuation.
+  example: '4242'
+- name: registryEvent_ppath
+  type: string
+  description: Registryevent ppath. Free-form text; may contain whitespace and punctuation.
+  example: sample_ppath
+- name: registryEvent_process
+  type: string
+  description: Registryevent process. Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: registryEvent_processPath
+  type: string
+  description: Registryevent processPath. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_processpath
+- name: request
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: resolution
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: resolution_cs
+  type: string
+  description: Observer action. Free-form text; may contain whitespace and punctuation.
+  example: sample_cs
+- name: session
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_session
+- name: source
+  type: ipv4
+  description: Observer name. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: subtype
+  type: string
+  description: Observer type. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: success
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: suser
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: urlMonitorEvent_localPort
+  type: integer_port
+  description: Urlmonitorevent localPort. Unsigned integer 0-65535 representing a
+    TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: urlMonitorEvent_pid
+  type: url
+  description: Urlmonitorevent pid. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: urlMonitorEvent_ppath
+  type: url
+  description: Urlmonitorevent ppath. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: urlMonitorEvent_process
+  type: url
+  description: Urlmonitorevent process. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: urlMonitorEvent_processPath
+  type: url
+  description: Urlmonitorevent processPath. Full URL with scheme (http/https/ftp);
+    percent-encoded if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: urlMonitorEvent_remotePort
+  type: integer_port
+  description: Urlmonitorevent remotePort. Unsigned integer 0-65535 representing a
+    TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: urlMonitorEvent_requestUrl
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: urlMonitorEvent_urlMethod
+  type: url
+  description: Network HTTP method. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: urlMonitorEvent_userAgent
+  type: url
+  description: Source user agent. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: urlMonitorEvent_username
+  type: url
+  description: Urlmonitorevent username. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: user
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: jdoe
+- name: web
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_web
+- name: windows
+  type: string
+  description: Source host OS family. Free-form text; may contain whitespace and punctuation.
+  example: sample_windows
+use_cases:
+- EDR
+- Email
+how_to_use: |
+  ## FireEye FireEyeHX → Cortex XSIAM (dataset `fireeye_hx_audit_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `FireEye` / product `HX`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `fireeye_hx_audit_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `fireeye_hx_audit`. The marketplace pack's display name `FireEye` / `FireEyeHX` normalizes to `fireeye_fireeyehx_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `fireeye_hx_audit` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$['addressNotificationEvent/address']`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `_raw_log contains "Action ID"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~59 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.subcategory`, `xdm.auth.auth_method`, `xdm.event.description`, `xdm.event.id`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `FireEye`, Product = `FireEyeHX`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = fireeye_hx_audit_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

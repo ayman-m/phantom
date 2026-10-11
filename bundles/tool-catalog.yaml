@@ -1,0 +1,78 @@
+apiVersion: phantom.agentic/v1alpha1
+kind: ToolCatalog
+metadata:
+  agentId: phantom-soc-simulation-agent
+  source: curated
+  description: MCP tool surface exported with the Phantom agent bundle.
+policy:
+  default: allow
+  deny: []
+groups:
+  phantom:
+    description: Synthetic telemetry, simulations, validation, and reporting.
+    tools:
+      - name: phantom_create_data_worker
+        capability: Start a synthetic log generation worker.
+      - name: phantom_create_scenario_worker
+        capability: Run a multi-step simulation scenario.
+      - name: phantom_list_workers
+        capability: List active workers.
+      - name: phantom_get_field_info
+        capability: Discover supported log fields and observables.
+      - name: phantom_generate_observables
+        capability: Generate threat observables for telemetry.
+      - name: phantom_run_detection_validation
+        capability: Persist detection validation results.
+      - name: phantom_get_simulation_result
+        capability: Fetch persisted simulation output and validation state.
+      - name: phantom_generate_coverage_report
+        capability: Generate SOC coverage summary.
+  caldera:
+    description: Caldera adversary emulation and operation management.
+    tools:
+      - name: caldera_get_all_abilities
+        capability: List Caldera abilities and ATT&CK mappings.
+      - name: caldera_get_abilities_by_tactic
+        capability: Filter Caldera abilities by tactic.
+      - name: caldera_create_adversary
+        capability: Create an adversary profile.
+      - name: caldera_create_operation
+        capability: Create an operation.
+      - name: caldera_update_operation
+        capability: Change operation state or metadata.
+      - name: caldera_get_operation_by_id
+        capability: Fetch operation details.
+      - name: caldera_get_operation_report
+        capability: Export operation report.
+      - name: caldera_get_operation_event_logs
+        capability: Fetch operation timeline events.
+  xsiam:
+    description: Cortex XSIAM validation, investigation, and enrichment.
+    tools:
+      - name: xsiam_run_xql_query
+        capability: Run XQL detection validation and hunting queries.
+      - name: xsiam_get_cases
+        capability: Retrieve XSIAM cases.
+      - name: xsiam_send_webhook_log
+        capability: Send a custom webhook event.
+      - name: xsiam_get_datasets
+        capability: List XSIAM datasets.
+      - name: xsiam_get_dataset_fields
+        capability: Inspect dataset fields.
+      - name: xsiam_find_xql_examples_rag
+        capability: Retrieve relevant XQL examples.
+  skills:
+    description: Phantom skill library CRUD and loading.
+    tools:
+      - name: load_simulation_skills
+        capability: Load markdown playbooks for simulation workflows.
+      - name: skills_list_all
+        capability: List skills.
+      - name: skills_read
+        capability: Read a skill.
+      - name: skills_create
+        capability: Create a skill.
+      - name: skills_update
+        capability: Update a skill.
+      - name: skills_delete
+        capability: Delete a skill.

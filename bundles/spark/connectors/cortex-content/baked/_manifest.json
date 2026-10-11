@@ -1,0 +1,16 @@
+{
+  "started_at": "2026-05-24T16:45:05Z",
+  "branch": "master",
+  "include_rawlog": true,
+  "packs_total": 1328,
+  "packs_xsiam": 1112,
+  "packs_baked": 259,
+  "schemas_total": 313,
+  "schemas_baked": 313,
+  "schemas_rawlog_only": 81,
+  "logos_baked": 162,
+  "metadata_baked": 259,
+  "upstream_sha": "56748dac0cee",
+  "finished_at": "2026-05-24T16:50:14Z",
+  "elapsed_seconds": 309.2
+}

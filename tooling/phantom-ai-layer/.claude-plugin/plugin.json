@@ -1,0 +1,16 @@
+{
+  "name": "phantom-ai-layer",
+  "version": "1.0.0",
+  "description": "Portable Phantom AI Layer: the scoped-tests skill, the self-improving CLAUDE.md review hook, the read-only explorer subagent, and the codebase-search MCP server. Install this and any repo gets the Phantom Platform Team's baseline Claude Code setup on day one.",
+  "author": {
+    "name": "Phantom Platform Team"
+  },
+  "mcpServers": {
+    "codebase-search": {
+      "command": "python3",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/mcp/codebase_search.py"
+      ]
+    }
+  }
+}

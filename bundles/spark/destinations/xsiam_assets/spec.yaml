@@ -1,0 +1,59 @@
+schema_version: 1
+id: xsiam_assets
+name: XSIAM Asset Inventory (BYOS)
+description: >
+  Create ASSET records in the Cortex XSIAM Asset Inventory via the
+  Vulnerability Ingest / "Bring Your Own Scanner" API. This is the only
+  path by which an EXTERNAL system can create asset_inventory rows —
+  log ingestion (syslog/CEF, HTTP Collector) can never create an asset,
+  and the Asset Inventory REST API is read-only. Assets always land as
+  provider OTHER / type GENERIC_DEVICE_IP; see the handler docstring.
+category: Cloud SIEM
+icon: dns
+iconColor: '#a78bfa'
+iconBg: rgba(167, 139, 250, 0.15)
+handler: bundles.spark.destinations.xsiam_assets.handler
+probe:
+  send_test_message: false
+fields:
+  - name: url
+    display: Cortex API base URL
+    type: url
+    required: true
+    description: >
+      Tenant API base, WITHOUT a path — e.g.
+      https://api-<tenant>.xdr.<region>.paloaltonetworks.com
+      (the same host as the public API, not the HTTP Collector URL).
+  - name: api_key
+    display: API key
+    type: secret
+    required: true
+    description: >
+      A Cortex API key sent verbatim in the Authorization header. It MUST
+      carry the manage_vulnerabilities_action RBAC action and the tenant
+      must hold an Exposure Management entitlement, or every call returns
+      403 "URL Forbidden".
+  - name: auth_id
+    display: API key ID
+    type: text
+    required: true
+    description: >
+      The numeric key ID sent as x-xdr-auth-id. Use a STANDARD key —
+      this endpoint takes plain Authorization + x-xdr-auth-id, NOT the
+      advanced nonce+SHA256 signature scheme.
+  - name: default_severity
+    display: Default finding severity
+    type: select
+    defaultValue: medium
+    options:
+      - low
+      - medium
+      - high
+      - critical
+    description: >
+      Severity applied to a generated vulnerability when a record carries
+      vulnerabilities without one.
+  - name: verify_ssl
+    display: Verify SSL
+    type: boolean
+    defaultValue: 'true'

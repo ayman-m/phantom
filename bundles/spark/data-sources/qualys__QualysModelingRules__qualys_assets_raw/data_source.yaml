@@ -1,0 +1,268 @@
+schema_version: 1
+id: qualys
+pack_name: qualys
+rule_name: QualysModelingRules
+dataset_name: qualys_assets_raw
+vendor: Qualys
+product: qualys
+description: Qualys Vulnerability Management let's you create, run, fetch and manage
+  reports, launch and manage vulnerability and compliance scans, and manage the host
+  assets you want to scan for vulnerabilities and compliance
+categories:
+- Vulnerability Management
+version: 3.3.22
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+UXVhbHlzPC90aXRsZT48cGF0aCBkPSJNMTEuOTk4NiAwQzUuNDM1MyAwIDIuMTM4MiAzLjUxMTcgMi4xMzgyIDMuNTExN3MtLjM3NzUgMi41OTkzLS4xMzY2IDcuODMzMkMyLjM2NTQgMTkuMjUxMyAxMS45OTkgMjQuMDAwNSAxMS45OTk5IDI0Yy4wMDEtLjAwMDUgOS42MzQ3LTQuNzQ4OCA5Ljk5ODUtMTIuNjU1MS4yNDA4LTUuMjMzOS0uMTM2NC03LjgzMzItLjEzNjQtNy44MzMyUzE4LjU2MiAwIDExLjk5ODYgMHptLS42NzgyIDIuOTE5NGE3LjM2NTcgNy4zNjU3IDAgMCAxIDguMDQ1NCA3LjMzNDMgNy4xMTU4IDcuMTE1OCAwIDAgMS0yLjc3MTIgNS42MzQyYy0xLjE3ODgtLjEwOC0yLjQwOTgtLjQ0MjMtMi45Njc2LS43NjA1IDEuNDM3OS0uOTE3NyAzLjMwMzYtMi43MDMzIDMuMzAzNi00Ljg3MzdhNC45MzYxIDQuOTM2MSAwIDAgMC00LjkzMDUtNC45MzA1Yy0yLjcxNjUgMC00LjkyNjYgMi4yNzQzLTQuOTI2NiA1LjA2OTggMCAyLjMzMiAxLjIzNTUgNC4xNjI0IDMuNjcxOCA1LjQ0MDQgMS41OTQzLjgzNjMgMy45NzI0IDEuNDQ5IDYuNDg1MiAxLjc3MjMtLjQxOC42MjI1LTEuNTMzIDEuNjg2LTIuMTg0NyAyLjA0NjItMy4wMDg3LS40OTM0LTUuNjUxMy0xLjUzNTQtNy40NTc4LTMuMDk2NC0xLjkzMjMtMS42Njk5LTIuOTUzNi0zLjg0ODgtMi45NTM2LTYuMzAxOGE3LjM2NTcgNy4zNjU3IDAgMCAxIDYuNjg2LTcuMzM0M1oiLz48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: ASSET_ID
+  type: string_short
+  description: Opaque identifier emitted by Qualys. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: qua-5b1659c5
+- name: CLOUD_PROVIDER
+  type: string
+  description: Vendor-emitted field 'CLOUD PROVIDER'. Free-form text; may contain
+    whitespace and punctuation.
+  example: aws
+- name: CLOUD_PROVIDER_TAGS
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: NAME (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: CLOUD_RESOURCE_ID
+  type: string_short
+  description: Opaque identifier emitted by Qualys. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: qua-670eb680
+- name: CLOUD_SERVICE
+  type: string
+  description: Vendor-emitted field 'CLOUD SERVICE'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sshd
+- name: DETECTION
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: FQDN,
+    INSTANCE, PORT, PROTOCOL, QID, RESULTS, SERVICE, SEVERITY, STATUS, TYPE (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: DNS_DATA
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: FQDN,
+    HOSTNAME (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: EC2_INSTANCE_ID
+  type: string_short
+  description: Opaque identifier emitted by Qualys. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: qua-c5250cfe
+- name: ID
+  type: string_short
+  description: Opaque identifier emitted by Qualys. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: qua-5853122d
+- name: IP
+  type: ipv4
+  description: IPv4/IPv6 address — vendor-emitted, no version split. Free-form text;
+    may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: IPV6
+  type: string
+  description: Vendor-emitted field 'IPV6'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_ipv6
+- name: METADATA
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: AZURE,
+    EC2, GOOGLE (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: NETBIOS
+  type: string
+  description: Vendor-emitted field 'NETBIOS'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_netbios
+- name: NETWORK_ID
+  type: string_short
+  description: Opaque identifier emitted by Qualys. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: qua-53cd2abf
+- name: OS
+  type: string
+  description: Vendor-emitted field 'OS'. Free-form text; may contain whitespace and
+    punctuation.
+  example: Linux
+- name: OS_CPE
+  type: string
+  description: Vendor-emitted field 'OS CPE'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cpe
+- name: QG_HOSTID
+  type: string
+  description: Vendor-emitted field 'QG HOSTID'. Free-form text; may contain whitespace
+    and punctuation.
+  example: dev-2aaafbd1
+- name: TAG
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: NAME (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: TRACKING_METHOD
+  type: string
+  description: Vendor-emitted field 'TRACKING METHOD'. Free-form text; may contain
+    whitespace and punctuation.
+  example: GET
+- name: event_type
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'host_list_detection'
+- name: CLOUD_PROVIDER_TAGS.NAME
+  type: string
+  description: Human-readable name as displayed by Qualys. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: DETECTION.FQDN
+  type: host
+  description: Fully-qualified domain name (dotted labels per RFC 1035). Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: DETECTION.INSTANCE
+  type: host
+  description: Vendor-emitted field 'DETECTION › INSTANCE'. Leaf of the 'DETECTION'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: DETECTION.PORT
+  type: integer_port
+  description: TCP/UDP port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: DETECTION.PROTOCOL
+  type: string
+  description: Vendor-emitted field 'DETECTION › PROTOCOL'. Leaf of the 'DETECTION'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: DETECTION.QID
+  type: string
+  description: Vendor-emitted field 'DETECTION › QID'. Leaf of the 'DETECTION' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_qid
+- name: DETECTION.RESULTS
+  type: string
+  description: Vendor-emitted field 'DETECTION › RESULTS'. Leaf of the 'DETECTION'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_results
+- name: DETECTION.SERVICE
+  type: string
+  description: Vendor-emitted field 'DETECTION › SERVICE'. Leaf of the 'DETECTION'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sshd
+- name: DETECTION.SEVERITY
+  type: string_short
+  description: Event severity as classified by Qualys. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: INFO
+- name: DETECTION.STATUS
+  type: string_short
+  description: Status code returned by Qualys. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: DETECTION.TYPE
+  type: string_short
+  description: Type/category classifier emitted by Qualys. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: DNS_DATA.FQDN
+  type: host
+  description: Fully-qualified domain name (dotted labels per RFC 1035). Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: DNS_DATA.HOSTNAME
+  type: host
+  description: Hostname or FQDN as reported by Qualys. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: METADATA.AZURE.NAME
+  type: string
+  description: Human-readable name as displayed by Qualys. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: METADATA.EC2.NAME
+  type: string
+  description: Human-readable name as displayed by Qualys. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: METADATA.GOOGLE.NAME
+  type: string
+  description: Human-readable name as displayed by Qualys. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: TAG.NAME
+  type: string
+  description: Human-readable name as displayed by Qualys. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+use_cases:
+- Vuln
+how_to_use: |
+  ## Qualys qualys → Cortex XSIAM (dataset `qualys_assets_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `qualys_assets_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `qualys_assets`. The marketplace pack's display name `Qualys` / `qualys` normalizes to `qualys_qualys_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `qualys_assets` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.SEVERITY`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `event_type in ("activity_log")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~40 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.original_threat_id`, `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.auth.privilege_level`, `xdm.event.description`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = qualys_assets_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

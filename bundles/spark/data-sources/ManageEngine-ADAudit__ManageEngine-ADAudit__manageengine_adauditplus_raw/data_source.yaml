@@ -1,0 +1,218 @@
+schema_version: 1
+id: ManageEngine-ADAudit
+pack_name: ManageEngine-ADAudit
+rule_name: ManageEngine-ADAudit
+dataset_name: manageengine_adauditplus_raw
+vendor: ManageEngine
+product: ManageEngine-ADAudit
+description: ADAudit Plus helps keep your Windows Server ecosystem secure and compliant
+  by providing full visibility into all activities.
+categories:
+- IT Services
+version: 1.0.5
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMTYgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNCNTRDMTkiPk1hbmFnZUVuZ2luZTwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: cat
+  type: string
+  description: Vendor-emitted field 'Cat'. Free-form text; may contain whitespace
+    and punctuation.
+  example: access_control
+- name: cefDeviceEventClassId
+  type: string_short
+  description: CEF device-event class ID — vendor-specific event-type identifier.
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceProduct
+  type: string_short
+  description: CEF device-product field — product name as registered by ManageEngine.
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceVendor
+  type: string_short
+  description: CEF device-vendor field — vendor name. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceVersion
+  type: string_short
+  description: CEF device-version field — version of the ManageEngine product emitting
+    this event. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefName
+  type: string_short
+  description: CEF event name — short human-readable label for the event class. Short
+    opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefSeverity
+  type: integer
+  description: CEF severity score (0-10) as classified by ManageEngine. Signed decimal
+    integer; bare digits, optional leading minus.
+  example: '42'
+- name: cn1
+  type: integer
+  description: Vendor-emitted field 'Cn1'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '42'
+- name: cn2
+  type: integer
+  description: Vendor-emitted field 'Cn2'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '42'
+- name: cn3
+  type: integer
+  description: Device custom number 3 (see cn3Label). Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: cs1
+  type: string
+  description: Vendor-emitted field 'Cs1'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs2
+  type: string
+  description: Vendor-emitted field 'Cs2'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs3
+  type: host
+  description: Vendor-emitted field 'Cs3'. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: cs4
+  type: string
+  description: Vendor-emitted field 'Cs4'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: cs5
+  type: string
+  description: Vendor-emitted field 'Cs5'. Free-form text; may contain whitespace
+    and punctuation.
+  example: custom_value
+- name: duid
+  type: string
+  description: Vendor-emitted field 'Duid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_duid
+- name: duser
+  type: user
+  description: CEF destination user — username of the target/recipient. Account name
+    as the vendor reports it — login name, UPN, or sAMAccountName; no domain prefix
+    unless vendor emits one.
+  example: jsmith
+- name: fileLocation
+  type: string
+  description: Vendor-emitted field 'FileLocation'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_filelocation
+- name: fileName
+  type: file_path
+  description: File or process name reported by the vendor. Absolute filesystem path;
+    vendor-native separator (forward slash on POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: filePath
+  type: file_path
+  description: Filesystem path reported by the vendor. Absolute filesystem path; vendor-native
+    separator (forward slash on POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: msg
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: Operation completed successfully.
+- name: outcome
+  type: string
+  description: Event outcome reported by the vendor. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: shost
+  type: host
+  description: CEF source host — hostname or FQDN of the source endpoint. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: sntdom
+  type: string
+  description: Vendor-emitted field 'Sntdom'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sntdom
+- name: sproc
+  type: string
+  description: Vendor-emitted field 'Sproc'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_sproc
+- name: suid
+  type: string
+  description: Vendor-emitted field 'Suid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_suid
+- name: suser
+  type: user
+  description: CEF source user — username of the actor initiating the event. Account
+    name as the vendor reports it — login name, UPN, or sAMAccountName; no domain
+    prefix unless vendor emits one.
+  example: jsmith
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by ManageEngine. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+use_cases:
+- Identity
+- Endpoint
+how_to_use: |
+  ## ManageEngine ManageEngine-ADAudit → Cortex XSIAM (dataset `manageengine_adauditplus_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `manageengine_adauditplus_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `manageengine_adauditplus`. The marketplace pack's display name `ManageEngine` / `ManageEngine-ADAudit` normalizes to `manageengine_manageengine_adaudit_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `manageengine_adauditplus` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~25 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.category`, `xdm.alert.description`, `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.event.id`, `xdm.event.outcome`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|ManageEngine|ManageEngine-ADAudit|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = manageengine_adauditplus_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

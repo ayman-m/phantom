@@ -1,0 +1,223 @@
+schema_version: 1
+id: NGINXWebServer
+pack_name: NGINXWebServer
+rule_name: NGINXWebServerModelingRules
+dataset_name: nginx_nginx_raw
+vendor: NGINX
+product: NGINXWebServer
+description: Modeling Rules for the NGINX Web Server logs collector
+categories:
+- Analytics & SIEM
+version: 1.0.13
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TkdJTlg8L3RpdGxlPjxwYXRoIGQ9Ik0xMiAwTDEuNjA1IDZ2MTJMMTIgMjRsMTAuMzk1LTZWNkwxMiAwem02IDE2LjU5YzAgLjcwNS0uNjQ2IDEuMjktMS41MjkgMS4yOS0uNjMxIDAtMS4zNTEtLjI1NS0xLjgwMS0uODFsLTYtNy4xNDF2Ni42NmMwIC43MjEtLjU3IDEuMjktMS4yNzQgMS4yOUg3LjMyYy0uNzIxIDAtMS4yOS0uNi0xLjI5LTEuMjlWNy40MWMwLS43MDUuNjMtMS4yOSAxLjUtMS4yOS42NDYgMCAxLjM4LjI1NSAxLjgzLjgxbDUuOTcgNy4xNDFWNy40MWMwLS43MjEuNi0xLjI5IDEuMjktMS4yOWguMDc1Yy43MiAwIDEuMjkuNiAxLjI5IDEuMjl2OS4xOEgxOHoiLz48L3N2Zz4=
+  source: simpleicons:nginx
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'nginx: nginxwebserver=NGINXWebServer action=allow user=jdoe'
+- name: Host
+  type: host
+  description: Host. Hostname or fully-qualified domain name (RFC 1035 dotted labels);
+    no protocol prefix.
+  example: host01.example.com
+- name: Referrer
+  type: url
+  description: Referrer. Free-form text; may contain whitespace and punctuation.
+  example: https://example.com/
+- name: Request
+  type: string
+  description: Request. Free-form text; may contain whitespace and punctuation.
+  example: sample_request
+- name: Server
+  type: string
+  description: Server. Free-form text; may contain whitespace and punctuation.
+  example: sample_server
+- name: Source_Ip
+  type: ipv4
+  description: Source Ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: Tid
+  type: integer
+  description: Tid. Free-form text; may contain whitespace and punctuation.
+  example: '1024'
+- name: User_agent
+  type: string
+  description: User agent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: Username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: bytes_size
+  type: integer_byte_count
+  description: Destination sent bytes. Free-form text; may contain whitespace and
+    punctuation.
+  example: '1024'
+- name: cid
+  type: string
+  description: Cid. Free-form text; may contain whitespace and punctuation.
+  example: sample_cid
+- name: client_address
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: client_address_ipv4
+  type: ipv4
+  description: Client address ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: client_address_ipv6
+  type: ipv6
+  description: Client address ipv6. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: destination_port
+  type: integer_port
+  description: Destination resource value. Unsigned integer 0-65535 representing a
+    TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: error_message
+  type: string
+  description: Alert description. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: httpmethod
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: sample_httpmethod
+- name: log_level
+  type: string
+  description: Alert severity. Free-form text; may contain whitespace and punctuation.
+  example: info
+- name: referrer
+  type: url
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: https://example.com/
+- name: requested_line
+  type: url
+  description: Network HTTP URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: server
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: source_ip
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: sourceipv4
+  type: ipv4
+  description: Sourceipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: sourceipv6
+  type: ipv6
+  description: Sourceipv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: statuscode
+  type: string
+  description: Network HTTP response code. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_statuscode
+- name: tid
+  type: integer
+  description: Destination user identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: '1024'
+- name: uri
+  type: string
+  description: Source user identifier. Free-form text; may contain whitespace and
+    punctuation.
+  example: /api/v1/path?q=1
+use_cases:
+- WebServer
+how_to_use: |
+  ## nginx nginx → Cortex XSIAM (dataset `nginx_nginx_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `nginx` / product `nginx`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `nginx_nginx_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `nginx`
+    - **product**: `nginx`
+
+    These normalize → `nginx_nginx_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log contains "GET" or _raw_log contains "HEAD" or _raw_log contains "POST" or _raw_log contains "DELETE" or _raw_log contains "CONNECT" or _raw_log contain` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~30 fields mapped to the unified data model (`xdm.*`), including: `XDM.Audit.TriggeredBy.identity.uuid`, `XDM.Audit.TriggeredBy.ipv4`, `XDM.Audit.audited_resource.value`, `XDM.Audit.event_timestamp`, `XDM.Audit.identity.name`, `XDM.Audit.identity.uuid`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `nginx`, Product = `nginx`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = nginx_nginx_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

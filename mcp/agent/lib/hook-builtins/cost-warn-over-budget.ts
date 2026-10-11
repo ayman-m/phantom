@@ -1,0 +1,181 @@
+/**
+ * Cost warn over budget.
+ *
+ * A builtin hook that watches RunEnd, reads cumulative
+ * `chat_turn_cost` audit rows for the day, and fires a notification
+ * when the daily total crosses an operator-set threshold. It is a
+ * budget alarm only; per-skill / per-job / per-instance attribution
+ * is not tracked (the /observability/cost page groups by provider).
+ *
+ * Cost data source: the existing `chat_turn_cost` audit rows recorded
+ * by the chat route on every turn. There is no dedicated cost table —
+ * the hook reads the audit surface.
+ *
+ * Config:
+ *   threshold_usd      — daily cost threshold (default $10.00). When
+ *                        the cumulative cost since UTC midnight
+ *                        exceeds this, a notification fires.
+ *   suppress_repeat_hours — re-warn cadence after a threshold crossing
+ *                        (default 1 hour). Prevents the same daily
+ *                        crossing from spamming every chat turn.
+ *   notify_category    — operator-filterable category tag (default
+ *                        "cost-warning").
+ */
+
+import type { BuiltinHookSpec } from "./types";
+import { callMcpServer } from "@/lib/mcp-proxy";
+
+const LAST_WARNED_AT_BY_DAY = new Map<string, number>();
+
+interface AuditRow {
+  action?: string;
+  metadata?: { cost_usd?: number };
+}
+
+interface AuditResponse {
+  rows?: AuditRow[];
+}
+
+export const costWarnOverBudgetBuiltin: BuiltinHookSpec = {
+  name: "cost-warn-over-budget",
+  displayName: "Cost warn over budget",
+  description:
+    "Fires a notification when the cumulative daily chat-turn cost " +
+    "(across all sessions) crosses a threshold. Reads existing " +
+    "chat_turn_cost audit rows; no schema change needed.",
+  icon: "monetization_on",
+  compatibleEvents: ["RunEnd"] as const,
+  configFields: [
+    {
+      key: "threshold_usd",
+      label: "Daily cost threshold (USD)",
+      type: "number",
+      min: 0,
+      defaultValue: 10,
+      helper:
+        "Fire when cumulative cost since UTC midnight exceeds this. " +
+        "Set to 0 to disable threshold (notification still fires once " +
+        "per suppress_repeat_hours regardless — useful for visibility).",
+      required: false,
+    },
+    {
+      key: "suppress_repeat_hours",
+      label: "Suppress repeat warnings within (hours)",
+      type: "number",
+      min: 0,
+      max: 24,
+      defaultValue: 1,
+      helper:
+        "Don't re-warn within this window even if the threshold is " +
+        "still crossed. Prevents per-turn spam on a busy day. Set 0 " +
+        "to warn on every turn over threshold.",
+      required: false,
+    },
+    {
+      key: "notify_category",
+      label: "Notification category tag",
+      type: "string",
+      defaultValue: "cost-warning",
+      helper:
+        "Stamped on the notification so operators can filter their " +
+        "/notifications page by it.",
+      required: false,
+    },
+  ] as const,
+  validateConfig(raw) {
+    if (raw && typeof raw !== "object") {
+      return { ok: false, error: "config must be an object" };
+    }
+    const cfg = (raw ?? {}) as Record<string, unknown>;
+    const out: Record<string, unknown> = {};
+
+    const threshold = cfg.threshold_usd;
+    if (threshold === undefined) out.threshold_usd = 10;
+    else if (typeof threshold !== "number" || threshold < 0) {
+      return { ok: false, error: "threshold_usd must be a non-negative number" };
+    } else out.threshold_usd = threshold;
+
+    const suppress = cfg.suppress_repeat_hours;
+    if (suppress === undefined) out.suppress_repeat_hours = 1;
+    else if (typeof suppress !== "number" || suppress < 0 || suppress > 24) {
+      return { ok: false, error: "suppress_repeat_hours must be a number in [0, 24]" };
+    } else out.suppress_repeat_hours = suppress;
+
+    const cat = cfg.notify_category;
+    if (cat === undefined) out.notify_category = "cost-warning";
+    else if (typeof cat !== "string" || !cat.trim()) {
+      return { ok: false, error: "notify_category must be a non-empty string" };
+    } else out.notify_category = cat.trim();
+
+    return { ok: true, config: out };
+  },
+  async handle(_payload, config) {
+    const threshold = config.threshold_usd as number;
+    const suppressHrs = config.suppress_repeat_hours as number;
+    const category = config.notify_category as string;
+
+    // UTC-midnight day key. Suppression is per-day so a new day's
+    // first crossing fires even if yesterday's already warned.
+    const dayKey = new Date().toISOString().slice(0, 10);
+
+    // Read today's chat_turn_cost audit rows. Best-effort — a failed
+    // read shouldn't crash the chat loop.
+    let totalUsd = 0;
+    try {
+      const sinceIso = `${dayKey}T00:00:00Z`;
+      const resp = await callMcpServer<AuditResponse>(
+        `/api/v1/audit?action=chat_turn_cost&since=${encodeURIComponent(sinceIso)}&limit=10000`,
+        { method: "GET" },
+      );
+      for (const row of resp.rows ?? []) {
+        const cost = row.metadata?.cost_usd;
+        if (typeof cost === "number" && cost > 0) totalUsd += cost;
+      }
+    } catch (err) {
+      console.warn(
+        "cost-warn-over-budget: failed to read audit log:",
+        err instanceof Error ? err.message : err,
+      );
+      return null;
+    }
+
+    // Not over yet → no-op.
+    if (threshold > 0 && totalUsd <= threshold) return null;
+
+    // Suppression check.
+    const nowMs = Date.now();
+    const lastWarn = LAST_WARNED_AT_BY_DAY.get(dayKey);
+    if (lastWarn !== undefined && suppressHrs > 0 && nowMs - lastWarn < suppressHrs * 3_600_000) {
+      return null;
+    }
+
+    // Fire notification (best-effort).
+    try {
+      await callMcpServer("/api/v1/notifications", {
+        method: "POST",
+        body: {
+          topic: category,
+          payload: {
+            severity: "warn",
+            title: `Daily chat cost crossed threshold — $${totalUsd.toFixed(2)} so far`,
+            body:
+              `Cumulative chat_turn_cost since UTC ${dayKey}T00:00:00Z is ` +
+              `$${totalUsd.toFixed(2)}, above your threshold of ` +
+              `$${threshold.toFixed(2)}. Open /observability/cost for the ` +
+              `per-session breakdown. Suppressed for ${suppressHrs}h after this.`,
+            day: dayKey,
+            total_usd: totalUsd,
+            threshold_usd: threshold,
+          },
+        },
+      });
+      LAST_WARNED_AT_BY_DAY.set(dayKey, nowMs);
+    } catch (err) {
+      console.warn(
+        "cost-warn-over-budget: failed to publish notification:",
+        err instanceof Error ? err.message : err,
+      );
+    }
+    return null; // non-decisional
+  },
+};

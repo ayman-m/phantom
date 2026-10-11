@@ -1,0 +1,19 @@
+# Canonical list of RAW-VALIDATED data sources (two-tier validation label).
+# A data source is 'raw_validated' iff its vendor content pack is NOT installed on the
+# tenant — so parsing/modeling cannot be exercised — but a raw-dataset query
+# (dataset = X | fields <rule columns> | limit 10) confirmed the synthetic data lands
+# the EXACT field names the rule would read: proven-correct shape, ready-to-map on install.
+# This is the WEAKER tier; the MAPPING tier (validated_data_sources.txt) means xdm.* actually
+# populates live. The two are MUTUALLY EXCLUSIVE — a source is in at most one list.
+# The bundled data_source.yaml files flagged 'raw_validated: true' MUST equal this list exactly —
+# check_raw_validated_data_sources_manifest fails the build on any drift OR any tier overlap.
+# One data-source id per line (the bundles/spark/data-sources/<id> directory name).
+#
+# Source of truth: the operator's raw-field-shape validation method. Only
+# NAMED-COLUMN / JSON-composite rules qualify here — the rule reads the
+# columns our data lands. _raw_log-regex rules are deliberately EXCLUDED: their named columns
+# land but the rule reads _raw_log content, so columns-present is not proof the rule would map.
+
+AzureAppService__AzureAppService__msft_azure_app_service_raw
+AzureSecurityCenter__MicrosoftDefenderForCloudModelingRules__microsoft_defender_for_cloud_raw
+ProofpointCasb__ProofpointCasb__proofpoint_casb_raw

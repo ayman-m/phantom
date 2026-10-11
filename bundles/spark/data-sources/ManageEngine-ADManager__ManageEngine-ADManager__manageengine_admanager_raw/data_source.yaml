@@ -1,0 +1,168 @@
+schema_version: 1
+id: ManageEngine-ADManager
+pack_name: ManageEngine-ADManager
+rule_name: ManageEngine-ADManager
+dataset_name: manageengine_admanager_raw
+vendor: ManageEngine
+product: ManageEngine-ADManager
+description: An Active Directory (AD) management and reporting solution that allows
+  IT administrators and technicians to manage AD objects easily and generate instant
+  reports at the click of a button.
+categories:
+- IT Services
+version: 1.0.6
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+Wm9obzwvdGl0bGU+PHBhdGggZD0iTTguNjYgNi44OTdhMS4yOTkgMS4yOTkgMCAwIDAtMS4yMDUuNzY1bC0uNjQyIDEuNDQtLjA2Mi0uMzg1QTEuMjkxIDEuMjkxIDAgMCAwIDUuMjcgNy42NDhsLTQuMTg1LjY3OEExLjI5MSAxLjI5MSAwIDAgMCAuMDE2IDkuODA3bC42NzggNC4xOGExLjI5MyAxLjI5MyAwIDAgMCAxLjI3IDEuMDg3Yy4wNzQgMCAuMTQzLS4wMS4yMTYtLjAxN2w0LjE4LS42NzhjLjQzNi0uMDcuNzg0LS4zNTEuOTYtLjcyM2wyLjkzMyAxLjMwN2ExLjMwNCAxLjMwNCAwIDAgMCAuOTg4LjAyNmMuMzIxLS4xMi41NzUtLjM2NS43MTYtLjY3OGwuMjgtLjYyOS4wMzguMjc2YTEuMjk3IDEuMjk3IDAgMCAwIDEuNDU1IDEuMTAzbDMuNzEyLS41MDFhMS4yOSAxLjI5IDAgMCAwIDEuMDMuNTE0aDQuMjM2Yy43MTMgMCAxLjI5LS41OCAxLjI5MS0xLjI5MVY5LjU0NWMwLS43MTItLjU4LTEuMjkxLTEuMjkxLTEuMjkxaC00LjIzNmMtLjA3OSAwLS4xNTUuMDA4LS4yMy4wMjJhMS4zMDkgMS4zMDkgMCAwIDAtLjI3NS0uMjg4Yy0uMjc1LS4yMS0uNjE0LS4zLS45NTgtLjI1M2wtNC4xOTcuNTcxYy0uMTU1LjAyMS0uMy4wNy0uNDMyLjE0TDkuMTU5IDcuMDFhMS4yNyAxLjI3IDAgMCAwLS40OTktLjExM3ptLS4wMjUuNzA1Yy4wNzcgMCAuMTU5LjAxMy4yNC4wNTJsMi45NzEgMS4zMjRjLS4xMjguMjM4LS4xOC41MDgtLjE0Mi43ODJsLjM1NyAyLjU5NmguMDAybC0uNzQ1IDEuNjcyYS41OS41OSAwIDAgMS0uNzc3LjI5NmwtMy4xMDctMS4zODUtLjAwNC0uMDQxLS40MS0yLjUyNkw4LjEgNy45NWEuNTg5LjU4OSAwIDAgMSAuNTM2LS4zNDh6bS0zLjE1OS43MzNjLjEyNSAwIC4yNDUuMDM5LjM0My4xMTIuMTMuMDkuMjEuMjI3LjIzNy4zODJsLjIzNCAxLjQ0Ni0uNTYgMS4yNTlhMS4yNyAxLjI3IDAgMCAwLS4wMjYuOTg3Yy4xMi4zMjIuMzY0LjU3NS42NzguNzE3bC4yOTUuMTMxYS41ODUuNTg1IDAgMCAxLS40MjguMzE0bC00LjE4NS42NzhhLjU5LjU5IDAgMCAxLS42NzQtLjQ4NWwtLjY3OC00LjE4YS41ODguNTg4IDAgMCAxIC40ODUtLjY3NGw0LjE4NS0uNjc4Yy4wMy0uMDA0LjA2NC0uMDEuMDk0LS4wMXptMTEuNzA1LjA5YS41OS41OSAwIDAgMSAuNDE1LjE3MyAxLjI4NyAxLjI4NyAwIDAgMC0uNDE2Ljk0N3Y0LjIzN2MwIC4wMzMuMDAzLjA2NS4wMDUuMDk3bC0zLjU1LjQ4MmEuNTg2LjU4NiAwIDAgMS0uNjYtLjUwMmwtLjE5MS0xLjQwMy44OTktMi4wMTdhMS4yOSAxLjI5IDAgMCAwLS4zMzMtMS41bDMuNzU0LS41MWMuMDI2LS4wMDQuMDUxLS4wMDQuMDc3LS4wMDR6bTEuMy41MzJoNC4yMjdjLjMyNiAwIC41ODguMjY2LjU4OC41ODh2NC4yMzdhLjU4OS41ODkgMCAwIDEtLjU4OC41ODhoLTQuMjM3YS41NjQuNTY0IDAgMCAxLS4xMi0uMDEzYy40Ny0uMjQ2Ljc1OC0uNzY1LjY4NC0xLjMxOHptLTUuOTg4LjMwOS4yNTQuMTEzYy4yOTYuMTMzLjQzLjQ4LjI5Ni43NzdsLS40MzIuOTctLjIwNy0xLjQ2NWEuNTguNTggMCAwIDEgLjA5LS4zOTV6bTUuMzkuNTM4LjQ1MyAzLjMyNWEuNTgzLjU4MyAwIDAgMS0uNDUzLjY1ek02LjQ5NiAxMS41NDVsLjE3IDEuMDUyYS41ODguNTg4IDAgMCAxLS4yOTMtLjc3NnptMy45ODUgNC4zNDRhLjU4OC41ODggMCAwIDAtLjYxMi42MDNjMCAuMzU4LjI0NC42MS42MDEuNjFhLjU4Mi41ODIgMCAwIDAgLjYwNy0uNjA4YzAtLjM1LS4yNDItLjYwNS0uNTk2LS42MDV6bTUuNTQ1IDBhLjU4OC41ODggMCAwIDAtLjYxMi42MDNjMCAuMzU4LjI0NS42MS42MDIuNjFhLjU4Mi41ODIgMCAwIDAgLjYwNi0uNjA4YzAtLjM1LS4yNC0uNjA1LS41OTYtLjYwNXptLTguNTM3LjAxOGEuMDQ3LjA0NyAwIDAgMC0uMDQ4LjA0N3YuMDg1YzAgLjAyNi4wMjEuMDQ3LjA0OC4wNDdoLjUybC0uNjIzLjlhLjA1Mi4wNTIgMCAwIDAtLjAwOS4wMjd2LjAyN2MwIC4wMjYuMDIxLjA0Ny4wNDguMDQ3aC44MTVhLjA0Ny4wNDcgMCAwIDAgLjA0Ny0uMDQ3di0uMDg1YS4wNDcuMDQ3IDAgMCAwLS4wNDctLjA0N2gtLjU1bC42MDYtLjlhLjA1LjA1IDAgMCAwIC4wMDgtLjAyNnYtLjAyOGEuMDQ3LjA0NyAwIDAgMC0uMDQ3LS4wNDd6bTUuMzAzIDBhLjA0Ny4wNDcgMCAwIDAtLjA0Ny4wNDd2MS4wODZjMCAuMDI2LjAyLjA0Ny4wNDcuMDQ3aC4xMzVhLjA0Ny4wNDcgMCAwIDAgLjA0Ny0uMDQ3di0uNDU0aC41NDV2LjQ1NGMwIC4wMjYuMDIuMDQ3LjA0Ny4wNDdoLjEzNGEuMDQ3LjA0NyAwIDAgMCAuMDQ3LS4wNDd2LTEuMDg2YS4wNDcuMDQ3IDAgMCAwLS4wNDctLjA0N2gtLjEzNGEuMDQ3LjA0NyAwIDAgMC0uMDQ3LjA0N3YuNDUzaC0uNTQ1di0uNDUzYS4wNDcuMDQ3IDAgMCAwLS4wNDctLjA0N3ptLTIuMzI0LjE2NGMuMjUgMCAuMzcyLjE5NC4zNzIuNDI1IDAgLjIxOS0uMTA5LjQyNS0uMzU4LjQyNi0uMjQyIDAtLjM3NS0uMTk3LS4zNzUtLjQxOSAwLS4yMzUuMTA4LS40MzIuMzYtLjQzMnptNS41NDUgMGMuMjUgMCAuMzcyLjE5NC4zNzIuNDI1IDAgLjIxOS0uMTA4LjQyNS0uMzU4LjQyNi0uMjQyIDAtLjM3NC0uMTk3LS4zNzQtLjQxOSAwLS4yMzUuMTA4LS40MzIuMzYtLjQzMnoiLz48L3N2Zz4=
+  source: simpleicons:zoho
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _product
+  type: string
+  description: Vendor-emitted field ' product'. Free-form text; may contain whitespace
+    and punctuation.
+  example: ManageEngine-ADManager
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'manageengine: manageengine-admanager=ManageEngine-ADManager action=allow user=jdoe'
+- name: _vendor
+  type: string
+  description: Vendor-emitted field ' vendor'. Free-form text; may contain whitespace
+    and punctuation.
+  example: ManageEngine
+- name: action
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: allow
+- name: city
+  type: string
+  description: Destination location city. Free-form text; may contain whitespace and
+    punctuation.
+  example: San Francisco
+- name: country
+  type: country_code
+  description: Destination location country. ISO 3166-1 alpha-2 uppercase country
+    code (e.g., US, DE, JP).
+  example: US
+- name: description
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by ManageEngine.
+- name: domainName
+  type: domain
+  description: Destination domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: objectName
+  type: string
+  description: Objectname. Free-form text; may contain whitespace and punctuation.
+  example: sample_objectname
+- name: observername
+  type: string
+  description: Observer name. Free-form text; may contain whitespace and punctuation.
+  example: sample_observername
+- name: operation
+  type: string
+  description: Event operation. Free-form text; may contain whitespace and punctuation.
+  example: create
+- name: sourceUserFirstName
+  type: string
+  description: Source user first name. Free-form text; may contain whitespace and
+    punctuation.
+  example: John
+- name: sourceUserLastName
+  type: string
+  description: Source user last name. Free-form text; may contain whitespace and punctuation.
+  example: Doe
+- name: status
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: targetUserName
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+use_cases:
+- Identity
+- Endpoint
+how_to_use: |
+  ## manageengine admanager → Cortex XSIAM (dataset `manageengine_admanager_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `manageengine` / product `admanager`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `manageengine_admanager_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `manageengine`
+    - **product**: `admanager`
+
+    These normalize → `manageengine_admanager_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log ~= "\<\d+\>"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~13 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.description`, `xdm.event.operation`, `xdm.event.outcome`, `xdm.event.type`, `xdm.observer.name`, `xdm.observer.product`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `manageengine`, Product = `admanager`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = manageengine_admanager_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

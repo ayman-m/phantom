@@ -1,0 +1,262 @@
+schema_version: 1
+id: Darktrace
+pack_name: Darktrace
+rule_name: DarktraceEventCollector
+dataset_name: darktrace_darktrace_raw
+vendor: Darktrace
+product: Darktrace
+description: Populates Darktrace Model Breaches and AI Analyst Events in Cortex XSOAR,
+  allowing for cross-platform automated investigation and response.
+categories:
+- Network Security
+version: 4.0.6
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjIgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMyRjJGMkYiPkRhcmt0cmFjZTwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: device
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: did, hostname,
+    ip, ips, macaddress, sid, typelabel, vendor (each key defined as a dotted-path
+    leaf below).'
+  example: '{}'
+- name: model
+  type: json
+  description: 'Destination resource parent ID. JSON object with keys: then (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: pbid
+  type: string
+  description: Vendor-emitted field 'Pbid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_pbid
+- name: score
+  type: integer
+  description: Vendor-emitted field 'Score'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '85'
+- name: triggeredComponents
+  type: json
+  description: 'Detection components triggered. JSON object with keys: device (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: device.did
+  type: string
+  description: Vendor-emitted field 'Device › did'. Leaf of the 'device' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_did
+- name: device.hostname
+  type: host
+  description: Hostname or FQDN as reported by Darktrace. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: device.ip
+  type: ipv4
+  description: Vendor-emitted field 'Device › ip'. Leaf of the 'device' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: device.ips
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Device › ips'. Leaf of the 'device' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_ips
+- name: device.macaddress
+  type: ipv4
+  description: Vendor-emitted field 'Device › macaddress'. Leaf of the 'device' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: device.sid
+  type: string
+  description: Vendor-emitted field 'Device › sid'. Leaf of the 'device' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_sid
+- name: device.typelabel
+  type: string
+  description: Vendor-emitted field 'Device › typelabel'. Leaf of the 'device' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_typelabel
+- name: device.vendor
+  type: string
+  description: Vendor-emitted field 'Device › vendor'. Leaf of the 'device' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_vendor
+- name: model.then.actions.antigena.action
+  type: string_short
+  description: Action taken by Darktrace's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: model.then.created.by
+  type: string
+  description: Vendor-emitted field 'Model › then › created › by'. Leaf of the 'model'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_by
+- name: model.then.description
+  type: string_long
+  description: Free-form human-readable description from Darktrace. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Darktrace.
+- name: model.then.edited.by
+  type: string
+  description: Vendor-emitted field 'Model › then › edited › by'. Leaf of the 'model'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_by
+- name: model.then.edited.userID
+  type: string
+  description: Vendor-emitted field 'Model › then › edited › userID'. Leaf of the
+    'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: usr-307f70c9
+- name: model.then.mitre.tactics
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Model › then › mitre › tactics'. Leaf of the
+    'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_tactics
+- name: model.then.mitre.techniques
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Model › then › mitre › techniques'. Leaf of the
+    'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_techniques
+- name: model.then.name
+  type: string
+  description: Human-readable name as displayed by Darktrace. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: model.then.phid
+  type: string
+  description: Vendor-emitted field 'Model › then › phid'. Leaf of the 'model' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_phid
+- name: model.then.pid
+  type: integer
+  description: Vendor-emitted field 'Model › then › pid'. Leaf of the 'model' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: '4242'
+- name: model.then.priority
+  type: string_short
+  description: Priority level as classified by Darktrace. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: INFO
+- name: model.then.tags
+  type: string
+  is_array: true
+  description: Vendor-emitted field 'Model › then › tags'. Leaf of the 'model' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_tags
+- name: model.then.uuid
+  type: string
+  description: Vendor-emitted field 'Model › then › uuid'. Leaf of the 'model' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 083a6c67-8064-53f8-95ad-d0ca5facaae1
+- name: triggeredComponents.device.did
+  type: string
+  description: Vendor-emitted field 'TriggeredComponents › device › did'. Leaf of
+    the 'triggeredComponents' composite. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_did
+- name: all_associated_ip_addresses
+  type: ipv4
+  description: Source host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: currently_associated_ip_address
+  type: ipv4
+  description: Currently associated ip address. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: fA
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: historically_associated_ip_addresses
+  type: ipv4
+  description: Historically associated ip addresses. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: historically_associated_ip_records
+  type: string
+  description: Historically associated ip records. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_records
+- name: ip_address
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: mac_address
+  type: mac
+  description: Source interface. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: priority
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: INFO
+use_cases:
+- XDR
+how_to_use: |
+  ## Darktrace Darktrace → Cortex XSIAM (dataset `darktrace_darktrace_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `darktrace_darktrace_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `Darktrace`
+    - **product**: `Darktrace`
+
+    These normalize → `darktrace_darktrace_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.then.description`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~31 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.mitre_tactics`, `xdm.alert.mitre_techniques`, `xdm.alert.original_alert_id`, `xdm.alert.original_threat_id`, `xdm.alert.original_threat_name`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = darktrace_darktrace_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

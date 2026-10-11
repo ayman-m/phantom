@@ -1,0 +1,210 @@
+schema_version: 1
+id: RetarusSecureEmailGateway
+pack_name: RetarusSecureEmailGateway
+rule_name: RetarusSecureEmailGateway
+dataset_name: retarus_secure_email_gateway_raw
+vendor: Retarus
+product: RetarusSecureEmailGateway
+description: The Retarus Secure Email Platform provides comprehensive security and
+  advanced email routing. It offers features such as Advanced Threat Protection and
+  Email Archiving.
+categories:
+- Email
+- Analytics & SIEM
+version: 1.0.7
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiM0ODc0OTgiPlJldGFydXM8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: class
+  type: string
+  description: Vendor-emitted field 'Class'. Free-form text; may contain whitespace
+    and punctuation.
+  example: access_control
+- name: direction
+  type: string
+  description: Vendor-emitted field 'Direction'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_direction
+- name: host
+  type: host
+  description: Hostname or FQDN as reported by Retarus. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: metaData
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: authentication,
+    checksum, details, hashFunction, header, mimeType, threatType, transportEncryption,
+    uniformResourceLocator (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: mimeId
+  type: string
+  description: Vendor-emitted field 'MimeId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mimeid
+- name: recipient
+  type: string
+  description: Vendor-emitted field 'Recipient'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_recipient
+- name: rmxId
+  type: string
+  description: Vendor-emitted field 'RmxId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_rmxid
+- name: sender
+  type: email
+  description: Vendor-emitted field 'Sender'. RFC 5322 'local@domain' address; one
+    address only — use an array field for multiple addresses.
+  example: user@example.com
+- name: sourceIp
+  type: ipv4
+  description: Source address of the connection initiator. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: status
+  type: string
+  description: Status code returned by the vendor. Free-form text; may contain whitespace
+    and punctuation.
+  example: success
+- name: ts
+  type: datetime
+  description: Timestamp emitted by Retarus. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: type
+  is_gate: true
+  type: string_short
+  description: Type/category classifier emitted by Retarus. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 'CxO'
+- name: version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: metaData.authentication.dkim.details
+  type: string_long
+  description: Additional details payload emitted by Retarus. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by Retarus for this record.
+- name: metaData.authentication.dkim.status
+  type: string_short
+  description: Status code returned by Retarus. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: metaData.checksum
+  type: hash_md5
+  description: Vendor-emitted field 'MetaData › checksum'. Leaf of the 'metaData'
+    composite. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: metaData.details
+  type: string_long
+  description: Additional details payload emitted by Retarus. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by Retarus for this record.
+- name: metaData.hashFunction
+  type: hash_md5
+  description: Vendor-emitted field 'MetaData › hashFunction'. Leaf of the 'metaData'
+    composite. 32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: metaData.header.from
+  type: string
+  description: Vendor-emitted field 'MetaData › header › from'. Leaf of the 'metaData'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_from
+- name: metaData.header.subject
+  type: string
+  description: Subject line — typically email subject or event summary. Free-form
+    text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: metaData.mimeType
+  type: string
+  description: Vendor-emitted field 'MetaData › mimeType'. Leaf of the 'metaData'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_mimetype
+- name: metaData.threatType
+  type: url
+  description: Vendor-emitted field 'MetaData › threatType'. Leaf of the 'metaData'
+    composite. Full URL with scheme (http/https/ftp); percent-encoded if it contains
+    non-ASCII characters.
+  example: https://example.com/path
+- name: metaData.transportEncryption.cipherSuite
+  type: integer
+  description: Vendor-emitted field 'MetaData › transportEncryption › cipherSuite'.
+    Leaf of the 'metaData' composite. Free-form text; may contain whitespace and punctuation.
+  example: '443'
+- name: metaData.transportEncryption.protocol
+  type: integer
+  description: Vendor-emitted field 'MetaData › transportEncryption › protocol'. Leaf
+    of the 'metaData' composite. Free-form text; may contain whitespace and punctuation.
+  example: '443'
+- name: metaData.uniformResourceLocator
+  type: url
+  description: Vendor-emitted field 'MetaData › uniformResourceLocator'. Leaf of the
+    'metaData' composite. Full URL with scheme (http/https/ftp); percent-encoded if
+    it contains non-ASCII characters.
+  example: https://example.com/path
+use_cases:
+- Email
+how_to_use: |
+  ## Retarus RetarusSecureEmailGateway → Cortex XSIAM (dataset `retarus_secure_email_gateway_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `retarus_secure_email_gateway_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `retarus_secure_email_gateway`. The marketplace pack's display name `Retarus` / `RetarusSecureEmailGateway` normalizes to `retarus_retarussecureemailgateway_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `retarus_secure_email_gateway` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `metaData -> threatType`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `type = "CxO"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~24 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.original_threat_name`, `xdm.email.attachment.file_type`, `xdm.email.attachment.md5`, `xdm.email.attachment.sha256`, `xdm.email.message_id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = retarus_secure_email_gateway_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,243 @@
+schema_version: 1
+id: Dropbox
+pack_name: Dropbox
+rule_name: DropboxEventCollector
+dataset_name: dropbox_dropbox_raw
+vendor: Dropbox
+product: Dropbox
+description: Use the Dropbox integration to fetch events
+categories:
+- Analytics & SIEM
+- Cloud Services
+version: 1.1.13
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMjU2cHgiIGhlaWdodD0iMjE4cHgiIHZpZXdCb3g9IjAgMCAyNTYgMjE4IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KCQk8ZyBmaWxsPSIjMDA2MUZGIj4KCQkJCTxwb2x5Z29uIHBvaW50cz0iNjMuOTk0NTYzOCAwIDAgNDAuNzcxMjU2MyA2My45OTQ1NjM4IDgxLjU0MjUxMjUgMTI4IDQwLjc3MTI1NjMiPjwvcG9seWdvbj4KCQkJCTxwb2x5Z29uIHBvaW50cz0iMTkyLjAwMDQ0MiAwIDEyOCA0MC43NzUwMDE1IDE5Mi4wMDA0NDIgODEuNTUwMDAzMSAyNTYuMDAwODg1IDQwLjc3NTAwMTUiPjwvcG9seWdvbj4KCQkJCTxwb2x5Z29uIHBvaW50cz0iMCAxMjIuMzIxMjU5IDYzLjk5NDU2MzggMTYzLjA5MjUxNiAxMjggMTIyLjMyMTI1OSA2My45OTQ1NjM4IDgxLjU1MDAwMzEiPjwvcG9seWdvbj4KCQkJCTxwb2x5Z29uIHBvaW50cz0iMTkyIDgxLjU1MDAwMzEgMTI4IDEyMi4zMjQ3MjMgMTkyIDE2My4wOTk0NDIgMjU2IDEyMi4zMjQ3MjMiPjwvcG9seWdvbj4KCQkJCTxwb2x5Z29uIHBvaW50cz0iNjQgMTc2Ljc3MTI1NiAxMjguMDA1NDM2IDIxNy41NDI1MTMgMTkyIDE3Ni43NzEyNTYgMTI4LjAwNTQzNiAxMzYiPjwvcG9seWdvbj4KCQk8L2c+Cjwvc3ZnPgo=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: context.account_id
+  type: string_short
+  description: Nested leaf of `context` — the modeling rule reads it at $.account_id.
+  example: sample value
+- name: context.display_name
+  type: string_short
+  description: Nested leaf of `context` — the modeling rule reads it at $.display_name.
+  example: sample value
+- name: context.email
+  type: string_short
+  description: Nested leaf of `context` — the modeling rule reads it at $.email.
+  example: sample value
+- name: context.team.display_name
+  type: string_short
+  description: Nested leaf of `context` — the modeling rule reads it at $.team.display_name.
+  example: sample value
+- name: details.app_info.app_id
+  type: string_short
+  description: Nested leaf of `details` — the modeling rule reads it at $.app_info.app_id.
+  example: sample value
+- name: details.app_info.display_name
+  type: string_short
+  description: Nested leaf of `details` — the modeling rule reads it at $.app_info.display_name.
+  example: sample value
+- name: details.certificate_details.sha1_fingerprint
+  type: string_short
+  description: Nested leaf of `details` — the modeling rule reads it at $.certificate_details.sha1_fingerprint.
+  example: sample value
+- name: details.new_certificate_details.sha1_fingerprint
+  type: string_short
+  description: Nested leaf of `details` — the modeling rule reads it at $.new_certificate_details.sha1_fingerprint.
+  example: sample value
+- name: details.new_value['.tag']
+  type: string_short
+  description: Nested leaf of `details` — the modeling rule reads it at $.new_value['.tag'].
+  example: sample value
+- name: details.previous_value['.tag']
+  type: string_short
+  description: Nested leaf of `details` — the modeling rule reads it at $.previous_value['.tag'].
+  example: sample value
+- name: details.shared_content_link
+  type: string_short
+  description: Nested leaf of `details` — the modeling rule reads it at $.shared_content_link.
+  example: sample value
+- name: details.user_agent
+  type: string_short
+  description: Nested leaf of `details` — the modeling rule reads it at $.user_agent.
+  example: sample value
+- name: actor
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: admin,
+    reseller, user (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: assets
+  type: string
+  description: Vendor-emitted field 'Assets'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_assets
+- name: context
+  type: string
+  description: Vendor-emitted field 'Context'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_context
+- name: details
+  type: string_long
+  description: Additional details payload emitted by Dropbox. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by Dropbox for this record.
+- name: event_category
+  type: string_short
+  description: Dropbox's category classifier for the event. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: access_control
+- name: event_type
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: description
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: origin
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: access_method,
+    geo_location (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: timestamp
+  type: datetime
+  description: Timestamp emitted by Dropbox. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: actor.admin.account_id
+  type: string_short
+  description: Opaque identifier emitted by Dropbox. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: dro-7be2a2b3
+- name: actor.admin.display_name
+  type: string
+  description: Human-readable name as displayed by Dropbox. Free-form text; may contain
+    whitespace and punctuation.
+  example: John Doe
+- name: actor.admin.email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: actor.reseller.reseller_email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: actor.reseller.reseller_name
+  type: string
+  description: Human-readable name as displayed by Dropbox. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: actor.user.account_id
+  type: string_short
+  description: Opaque identifier emitted by Dropbox. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: dro-8df0f415
+- name: actor.user.display_name
+  type: string
+  description: Human-readable name as displayed by Dropbox. Free-form text; may contain
+    whitespace and punctuation.
+  example: John Doe
+- name: actor.user.email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: event_type.description
+  type: string_long
+  description: Free-form human-readable description from Dropbox. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Dropbox.
+- name: origin.access_method.end_user.session_id
+  type: string_short
+  description: Opaque identifier emitted by Dropbox. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: sess-955836d9-3ac
+- name: origin.geo_location.city
+  type: string
+  description: Vendor-emitted field 'Origin › geo location › city'. Leaf of the 'origin'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: San Francisco
+- name: origin.geo_location.country
+  type: country_code
+  description: Country (ISO 3166-1 alpha-2 code or descriptive label). ISO 3166-1
+    alpha-2 uppercase country code (e.g., US, DE, JP).
+  example: US
+- name: origin.geo_location.ip_address
+  type: ipv4
+  description: Vendor-emitted field 'Origin › geo location › ip address'. Leaf of
+    the 'origin' composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: origin.geo_location.region
+  type: string_short
+  description: Cloud region or geographic region label. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: us-east-1
+use_cases:
+- Storage
+- Collab
+how_to_use: |
+  ## Dropbox Dropbox → Cortex XSIAM (dataset `dropbox_dropbox_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `dropbox_dropbox_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `Dropbox`
+    - **product**: `Dropbox`
+
+    These normalize → `dropbox_dropbox_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$['.tag']`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `json_extract_scalar(event_type, "$['.tag']") in ("file_copy", "file_move", "file_rename", "file_save_copy_reference")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~59 fields mapped to the unified data model (`xdm.*`), including: `XDM.Audit.TriggeredBy.agent.identifier`, `XDM.Audit.TriggeredBy.identity.name`, `XDM.Audit.TriggeredBy.identity.type`, `XDM.Audit.TriggeredBy.identity.uuid`, `XDM.Audit.TriggeredBy.ipv4`, `XDM.Audit.TriggeredBy.location.city`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = dropbox_dropbox_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

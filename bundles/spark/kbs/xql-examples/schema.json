@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "XQL Example Knowledge Entry",
+  "description": "One curated XQL (Cortex XSIAM Query Language) example, indexed for natural-language retrieval. Entries are derived from the legacy bundles/spark/mcp/resources/xql_examples.md corpus and are searched via the runtime's knowledge_search built-in tool.",
+  "type": "object",
+  "required": ["id", "title", "category"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable, deterministic identifier (e.g. 'XQL-042-7c1ab9f3'). Used as the doc_id in <data_root>/kb.db so re-running the corpus generator is idempotent."
+    },
+    "title": {
+      "type": "string",
+      "description": "Human-readable example name. The KB embedder includes this in the searchable content, so titles should describe the analyst intent ('Possible Attacks against AP/Security Cameras')."
+    },
+    "category": {
+      "type": "string",
+      "description": "Operational use-case bucket. Operators can filter knowledge_search by category to narrow noisy results.",
+      "enum": ["alert-mapping", "detection", "investigation", "general"]
+    },
+    "dataset": {
+      "type": "string",
+      "description": "XSIAM dataset the query targets, e.g. 'panw_ngfw_traffic_raw'. Extracted from the leading 'dataset = X' clause when present."
+    },
+    "tags": {
+      "type": "array",
+      "description": "Pipeline stages used in the query (filter, alter, comp, dedup, ...). Surfaces in the UI as filter chips.",
+      "items": {"type": "string"}
+    }
+  },
+  "additionalProperties": true
+}

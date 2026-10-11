@@ -1,0 +1,112 @@
+schema_version: 1
+id: Siemens_SiPass
+pack_name: Siemens_SiPass
+rule_name: Siemens_SiPass
+dataset_name: siemens_sipass_raw
+vendor: Siemens
+product: Siemens_SiPass
+description: Siemens SiPass is an access control system that enables you to manage
+  physical access such as doors, gates, barriers, and elevators at multiple sites.
+categories:
+- Analytics & SIEM
+version: 1.0.4
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+U2llbWVuczwvdGl0bGU+PHBhdGggZD0iTTEuNDc4IDEwLjAxNmMuMjQgMCAuNTkuMDQ2IDEuMDQ2LjE0di43MjZhMi40NjUgMi40NjUgMCAwIDAtLjk0Ni0uMjEzYy0uNDEgMC0uNjE1LjExOC0uNjE1LjM1NCAwIC4wODguMDQxLjE2LjEyNC4yMTYuMDY5LjA0NS4yNTguMTQuNTY4LjI4Ni40NDYuMjA4Ljc0My4zODguODkuNTQxLjE3Ni4xODIuMjY0LjQxNy4yNjQuNzA1IDAgLjQxNS0uMTcyLjczLS41MTYuOTQ5LS4yNzkuMTc2LS42NC4yNjQtMS4wODUuMjY0LS4zNzUgMC0uNzUzLS4wNDYtMS4xMzMtLjEzOXYtLjc1NWMuNDEuMTM1Ljc3NC4yMDMgMS4wOS4yMDMuNDM3IDAgLjY1NS0uMTIxLjY1NS0uMzYyYS4zMDIuMzAyIDAgMCAwLS4wOTUtLjIyN2MtLjA2NS0uMDY1LS4yMzItLjE1NS0uNS0uMjctLjQ4MS0uMjA4LS43OTUtLjM4NC0uOTQtLjUzYS45OTkuOTk5IDAgMCAxLS4yODQtLjczYzAtLjM3Ny4xMzctLjY2Ni40MTMtLjg2NC4yNzItLjE5Ni42MjYtLjI5NCAxLjA2NC0uMjk0em0yMS4xOSAwYy4yNDYgMCAuNTY1LjA0Ljk1Ni4xMjNsLjA5LjAxNnYuNzI3YTIuNDcxIDIuNDcxIDAgMCAwLS45NDgtLjIxM2MtLjQwOSAwLS42MTIuMTE4LS42MTIuMzU0IDAgLjA4OC4wNC4xNi4xMjMuMjE2LjA2Ni4wNDMuMjU2LjEzOS41Ny4yODYuNDQzLjIwOC43NC4zODguODg5LjU0MS4xNzYuMTgyLjI2NC40MTcuMjY0LjcwNSAwIC40MTUtLjE3Mi43My0uNTE0Ljk0OS0uMjguMTc2LS42NDMuMjY0LTEuMDg3LjI2NC0uMzc2IDAtLjc1NC0uMDQ2LTEuMTM0LS4xMzl2LS43NTVjLjQwNy4xMzUuNzcuMjAzIDEuMDkuMjAzLjQzNyAwIC42NTUtLjEyMS42NTUtLjM2MiAwLS4wOS0uMDMtLjE2Ni0uMDkyLS4yMjctLjA2Ni0uMDY1LS4yMzMtLjE1NS0uNTAzLS4yNy0uNDgtLjIwNi0uNzkzLS4zODItLjk0LS41M2EuOTk3Ljk5NyAwIDAgMS0uMjg0LS43MzJjMC0uMzc2LjEzNy0uNjY0LjQxMy0uODYyLjI3Mi0uMTk2LjYyNy0uMjk0IDEuMDY0LS4yOTR6bS0xMi42NzQuMDY2bC45MiAyLjQ0NC45NDItMi40NDRoMS4yNTd2My44MjVoLS45Njh2LTIuNzA4bC0xLjA3MiAyLjc0N2gtLjYzMmwtMS4wNTItMi43NDd2Mi43MDhIOC42N3YtMy44MjV6bS01LjU4NyAwdjMuODI1SDMuMzg2di0zLjgyNXptMy41NTQgMHYuNjkySDYuMzI3di44NjRINy43NXYuNjNINi4zMjd2LjkwOGgxLjY3N3YuNzNoLTIuNjZ2LTMuODI0em04LjcwNyAwdi42OTJoLTEuNjM0di44NjRoMS40MjJ2LjYzaC0xLjQyMnYuOTA4aDEuNjc3di43M0gxNC4wNXYtMy44MjR6bTEuODk4IDBsMS4yNTUgMi41NnYtMi41NmguNzE5djMuODI1aC0xLjE1bC0xLjI4OC0yLjU5NXYyLjU5NWgtLjcydi0zLjgyNXoiLz48L3N2Zz4=
+  source: simpleicons:siemens
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'siemens: siemens_sipass=Siemens_SiPass action=allow user=jdoe'
+- name: id_num
+  type: integer
+  description: Event ID. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: log_array
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+use_cases:
+- PhysSec
+- ICS
+how_to_use: |
+  ## siemens sipass → Cortex XSIAM (dataset `siemens_sipass_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `siemens` / product `sipass`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `siemens_sipass_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `siemens`
+    - **product**: `sipass`
+
+    These normalize → `siemens_sipass_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~11 fields mapped to the unified data model (`xdm.*`), including: `xdm.database.name`, `xdm.event.description`, `xdm.event.id`, `xdm.source.host.device_id`, `xdm.source.host.device_model`, `xdm.source.user.badge_id`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `siemens`, Product = `sipass`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = siemens_sipass_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

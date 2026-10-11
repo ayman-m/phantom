@@ -1,0 +1,466 @@
+schema_version: 1
+id: AWS-CloudTrail
+pack_name: AWS-CloudTrail
+rule_name: AWSCloudTrail
+dataset_name: amazon_aws_raw
+vendor: Amazon Web Services
+product: AWS-CloudTrail
+description: AWS CloudTrail is the authoritative audit log of every API call made within an AWS account
+  — management-plane writes, data-plane reads, console sessions, automated SDK calls, all of it. Each
+  event records `eventName`, `eventSource`, the IAM principal, the source IP, the user-agent, request
+  and response parameters, and any error codes. Simulate CloudTrail to validate detections for IAM privilege
+  escalation, S3 data exposure, root account usage, or AWS-API-driven lateral movement.
+how_to_use: |
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `amazon`
+  - **product**: `aws`
+
+  Broker derives → `amazon_aws_raw`.
+
+  **Important**: use `amazon` / `aws` — NOT the marketing names `Amazon Web Services` / `AWS-CloudTrail`. The display names would auto-derive to `amazon_web_services_aws_cloudtrail_raw` (a different dataset that may also exist in your tenant but doesn't carry the upstream CloudTrail PR/MR rules).
+
+  **MR pattern**: Mixed. Flat-field MR reads `eventName`, `eventSource`, `awsRegion`, `recipientAccountId` directly; nested `userIdentity.userName` extracted via `json_extract_scalar`.
+
+  **Composite (nested-JSON) fields**: Pack `userIdentity` as JSON-string CEF extension; the MR walks `userIdentity.userName` and `userIdentity.principalId`. L15 + batch-4 validate this pattern.
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: Set `eventName` to a known CloudTrail event ID (e.g. `ConsoleLogin`, `AssumeRole`); `eventTime` must be ISO-8601 with `Z` suffix.
+
+  **Saturation strategy**: Mixed-MR ceiling ~11 XDM per L19. Single event of ~800-1000 bytes covers most XDM.
+
+  **Single-event XDM ceiling**: ~11 XDM single-event (mixed flat + 1 nested).
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = amazon_aws_raw
+  | filter xdm.event.id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  ### Make it map to XDM
+
+  `amazon_aws_raw`'s modeling rule gates on the META field `_log_type = "Cloud Audit Log"`. `_log_type` is stamped by the XSIAM ingestion layer (the Broker VM applet / HTTP Collector binds `vendor=amazon`,`product=aws` ingestion to this log type) — it is NOT carried in the event body, so no `observables_dict` field can set it. To get XDM here, the operator must onboard an AWS CloudTrail source in XSIAM (Broker applet or HTTP Collector) so ingested events are stamped `_log_type="Cloud Audit Log"`; then the simulated payload's fields (`eventName`, `sourceIPAddress`, `userIdentity`, ...) map to XDM. Raw landing in `amazon_aws_raw` works without this; XDM does not. (For reference, once the gate is satisfied the rule populates core XDM such as `xdm.event.operation_sub_type`/`xdm.event.type` <- `eventName`, `xdm.source.ipv4` <- `sourceIPAddress`, `xdm.source.user.username` <- `userIdentity.userName`, `xdm.observer.name` <- `eventSource`, and `xdm.target.cloud.region` <- `awsRegion`.)
+
+  **Simulation recipe — reverse-engineered from this pack's parsing + modeling rules.**
+
+  Routing: vendor `amazon` / product `aws`.
+  Discriminator: _log_type = "Cloud Audit Log" — selects the CloudTrail branch over the sibling 'Cloud Flow Log' (VPC Flow Logs) branch that lives in the SAME INGEST block and targets the SAME dataset. It is an underscore-prefixed META field stamped at ingestion and CANNOT be set from the event body.
+  (Taken VERBATIM from the pack's parsing rule, not derived. scripts/maintainer/parsing_rules/AWS-CloudTrail__AWSCloudTrail.xif line 1: [INGEST:vendor="amazon", product="aws", target_dataset="amazon_aws_raw", no_hit = keep]. Derivation would have agreed anyway (lower(amazon)_lower(aws)_raw = amazon_aws_raw), but the INGEST literals are authoritative. Do NOT use the YAML's display labels 'Amazon Web Services'/'AWS-CloudTrail' — those derive amazon_web_services_aws_cloudtrail_raw, a different dataset with no PR/MR bound. Grepped the whole parsing_rules corpus: this is the ONLY INGEST block claiming amazon/aws and the ONLY [MODEL:] block on amazon_aws_raw, so there is no sibling-pack collision.)
+
+  Gate: `_log_type` must be one of `Cloud Audit Log`.
+  no_hit: Parsing rule declares no_hit = keep, so an event that misses the PR filter STILL lands raw in amazon_aws_raw (only _time is left unparsed). The MODELING rule's leading `filter _log_type = "Cloud Audit Log"` has no no_hit clause — it simply yields zero XDM rows. Net effect over CEF/syslog: raw always lands, XDM is always 0.
+  **This gate is a META field stamped at ingestion — it CANNOT be set from the
+  event body. No observables_dict entry can satisfy it.**
+
+  Composite: `userIdentity` must be a JSON OBJECT on the wire. Leaves read: `userIdentity.type`, `userIdentity.principalId`, `userIdentity.userName`, `userIdentity.arn`, `userIdentity.accountId`, `userIdentity.sessionContext.sessionIssuer.userName`, `userIdentity.onBehalfOf.userId`
+
+  Composite: `tlsDetails` must be a JSON OBJECT on the wire. Leaves read: `tlsDetails.tlsVersion`, `tlsDetails.cipherSuite`, `tlsDetails.clientProvidedHostHeader`
+
+  Composite: `requestParameters` must be a JSON OBJECT on the wire. Leaves read: `requestParameters.Host`
+
+  Composite: `resources` must be a JSON OBJECT on the wire. Leaves read: `resources[].ARN`, `resources[].accountId`, `resources[].type`
+
+  Pass this verbatim as `observables_dict` (keys are schema field names; values are LISTS):
+
+  ```json
+  {
+    "eventTime": [
+      "2026-09-02T14:23:01Z"
+    ],
+    "eventName": [
+      "AssumeRole"
+    ],
+    "eventType": [
+      "AwsApiCall"
+    ],
+    "eventVersion": [
+      "1.11"
+    ],
+    "eventCategory": [
+      "Management"
+    ],
+    "eventSource": [
+      "sts.amazonaws.com"
+    ],
+    "awsRegion": [
+      "us-east-1"
+    ],
+    "requestID": [
+      "b7a1c2d3-4e5f-6789-abcd-ef0123456789"
+    ],
+    "sharedEventID": [
+      "9f8e7d6c-5b4a-3210-fedc-ba9876543210"
+    ],
+    "sourceIPAddress": [
+      "203.0.113.45"
+    ],
+    "userAgent": [
+      "aws-cli/2.13.25 Python/3.11.6 Linux/6.1.0 botocore/2.13.25"
+    ],
+    "recipientAccountId": [
+      "123456789012"
+    ],
+    "vpcEndpointId": [
+      "vpce-0a1b2c3d4e5f67890"
+    ],
+    "vpcEndpointAccountId": [
+      "123456789012"
+    ],
+    "errorCode": [
+      "AccessDenied"
+    ],
+    "errorMessage": [
+      "User: arn:aws:sts::123456789012:assumed-role/AdminRole/alice is not authorized to perform: sts:AssumeRole on resource: arn:aws:iam::123456789012:role/PrivilegedRole"
+    ],
+    "userIdentity.type": [
+      "AssumedRole"
+    ],
+    "userIdentity.principalId": [
+      "AROAEXAMPLE12345:alice"
+    ],
+    "userIdentity.userName": [
+      "alice"
+    ],
+    "userIdentity.arn": [
+      "arn:aws:sts::123456789012:assumed-role/AdminRole/alice"
+    ],
+    "userIdentity.accountId": [
+      "123456789012"
+    ],
+    "userIdentity.sessionContext.sessionIssuer.userName": [
+      "AdminRole"
+    ],
+    "userIdentity.sessionContext.sessionIssuer.arn": [
+      "arn:aws:iam::123456789012:role/AdminRole"
+    ],
+    "userIdentity.onBehalfOf.userId": [
+      "user-onbehalf-001"
+    ],
+    "tlsDetails.tlsVersion": [
+      "TLSv1.2"
+    ],
+    "tlsDetails.cipherSuite": [
+      "ECDHE-RSA-AES128-GCM-SHA256"
+    ],
+    "tlsDetails.clientProvidedHostHeader": [
+      "sts.us-east-1.amazonaws.com"
+    ],
+    "requestParameters.Host": [
+      "sts.us-east-1.amazonaws.com"
+    ],
+    "resources[].ARN": [
+      "arn:aws:iam::123456789012:role/PrivilegedRole"
+    ],
+    "resources[].accountId": [
+      "123456789012"
+    ],
+    "resources[].type": [
+      "AWS::IAM::Role"
+    ]
+  }
+  ```
+
+  Populates: `xdm.event.description`, `xdm.event.operation_sub_type`, `xdm.event.original_event_type`, `xdm.event.outcome`, `xdm.event.outcome_reason`, `xdm.event.type`, `xdm.network.session_id`, `xdm.network.tls.cipher`, `xdm.network.tls.protocol_version`, `xdm.observer.content_version`, `xdm.observer.name`, `xdm.observer.type`, `xdm.session_context_id`, `xdm.source.cloud.project_id`, `xdm.source.cloud.provider`, `xdm.source.host.device_id`, `xdm.source.host.ipv4_public_addresses`, `xdm.source.ipv4`, `xdm.source.user_agent`, `xdm.source.user.groups`, `xdm.source.user.identifier`, `xdm.source.user.username`, `xdm.source.user.user_type`, `xdm.target.cloud.project_id`, `xdm.target.cloud.provider`, `xdm.target.cloud.region`, `xdm.target.host.fqdn`, `xdm.target.host.hostname`, `xdm.target.resource.id`, `xdm.target.resource.name`, `xdm.target.resource.type`
+
+  - THE HEADLINE: this source cannot map ANY XDM over Phantom's CEF-over-syslog path. The modeling rule's leading filter is `_log_type = "Cloud Audit Log"`, a meta field the broker stamps at ingestion based on how the source was onboarded. No event body can set it, and seeding it as a CEF extension is shadowed (proven twice in this repo — see the _log_type schema gap). The entire 31-field recipe above is therefore CONDITIONAL: it is the correct shape, and it will map the moment the gate is satisfied, but over the syslog path it will produce a raw row in amazon_aws_raw with xdm = 0.
+  - No bypass exists for this one. The usual escape hatch — route via an unclaimed vendor/product pair whose derived name equals the target dataset, so the parsing rule is never consulted — does NOT work here, because the blocking filter is in the MODELING rule, and modeling rules bind by dataset NAME only. Any route that reaches amazon_aws_raw hits the same gate; any route that avoids it lands in a different dataset with no CloudTrail modeling rule at all. The only real unblock is operator-side: onboard an AWS CloudTrail source in XSIAM (Broker VM applet or HTTP Collector) so ingested events get stamped _log_type="Cloud Audit Log".
+  - Raw landing is nonetheless guaranteed, and that is worth stating precisely because the two gates behave differently. The parsing rule declares `no_hit = keep`, so an event that fails the PR filter still lands in amazon_aws_raw — it just never runs the `alter _time = parse_timestamp(...)`, so _time falls back to ingestion time rather than eventTime. The modeling gate has no no_hit at all; it silently yields zero XDM rows. So the failure signature here is 'raw > 0, xdm = 0', NOT the usual silent drop.
+  - Because of the `_log_type` gate, the mapping is conditional: over syslog/CEF this source lands raw rows with zero XDM fields, regardless of how complete the recipe above is.
+  - errorCode is tested against NULL, not against empty string: `if(errorCode = null, OUTCOME_SUCCESS, OUTCOME_FAILED)`. An empty string is not null and yields OUTCOME_FAILED. Because the generator emits a random token for every unpinned field, errorCode is present on every event regardless, so OUTCOME_SUCCESS is only reachable by omitting the field from the event entirely. The recipe therefore pins a real error code and a matching message, which makes both xdm.event.outcome and xdm.event.outcome_reason deterministic and yields one more populated field than the success path would.
+  - xdm.source.host.fqdn and xdm.source.ipv4 are mutually exclusive by construction: fqdn is only assigned `if(source_ipv4 = null and source_ipv6 = null and sourceIPAddress !~= "AWS Internal")`. A single event cannot populate both. The recipe takes the IPv4 branch (which also unlocks xdm.source.host.ipv4_public_addresses, worth 2 fields against fqdn's 1). To exercise the fqdn branch instead, set sourceIPAddress to a service DNS name such as cloudtrail.amazonaws.com — but note the literal string 'AWS Internal' is explicitly excluded and produces no field at all.
+  - xdm.source.user.groups is the one field with a hard prerequisite: it only assigns when userIdentity.type is exactly "Role" or "AssumedRole", case-sensitive. The YAML's example value for that field is `Root`, which populates xdm.source.user.user_type but leaves groups null — a silent one-field loss if anyone builds a recipe from the examples rather than from the rule. Note also that a real AWS AssumedRole identity has no userName; the recipe pins one anyway because xdm.source.user.username coalesces userName ahead of sessionIssuer.userName and that field should be deterministic rather than dependent on the session-issuer nesting surviving the fold.
+  - CEF wire-shape constraint for the four JSON composites (userIdentity, tlsDetails, requestParameters, resources): the parent must arrive as a real JSON object — resources specifically as a JSON ARRAY of objects, since the rule does `arraymap(resources -> [], ...)`. A CEF extension literally keyed 'userIdentity.userName' produces a flat column of that name and every `->` walk reads nothing, which is the classic raw-lands-xdm-zero signature. Additionally, the recipe strips all whitespace from the serialized JSON (`json.dumps(...).replace(" ", "")`) because CEF extension parsing splits on spaces — an unstripped JSON blob truncates at its first space. Nested JSON itself survives CEF-over-syslog intact.
+  - xdm.target.cloud.project_id has a three-arm priority that is easy to get backwards: resources[].accountId wins outright when non-null and non-empty, and only then does it fall through to coalesce(recipientAccountId, vpcEndpointAccountId). Since the generator will populate resources[].accountId with a random token if unpinned, that random token would win over a carefully-set recipientAccountId. All three are pinned to the same 12-digit account in the recipe so the outcome is stable whichever arm fires.
+  - xdm.target.resource.name depends on ARN punctuation, not on any dedicated field: `regextract(ARN, "/([^\/]+)$")` takes the last path segment after the final forward slash, and falls back to the full ARN when there is none. The harness used arn:aws:s3:::saturation-bucket-<marker>, which has no slash, so resource.name silently duplicated resource.id. I used an IAM role ARN (…:role/PrivilegedRole) so the two fields carry distinct values.
+  - The `start` field in the schema belongs to the OTHER branch of this parsing rule, not to CloudTrail. The second PR filter is `_log_type = "Cloud Flow Log" and len(to_string(start)) = 10` — VPC Flow Logs, keyed on a 10-character Unix-seconds string. It shares the amazon/aws header and the amazon_aws_raw dataset but has no [MODEL:] block of its own in this pack, so it is irrelevant to XDM here. Leave `start` unpinned for CloudTrail events; pinning it cannot help and a 10-char value risks confusing the branch attribution.
+  - Three fields the rule reads only as whole objects, never walked into: requestParameters, additionalEventData and responseElements are members of `object_create(...)` feeding xdm.event.description. Their internal shape is irrelevant to mapping (requestParameters is the exception — its Host leaf IS walked, see composite_fields), but all three must be valid JSON objects or the object_create output will be malformed.
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+
+categories:
+- Cloud Service Provider
+version: 1.1.15
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMjU2cHgiIGhlaWdodD0iMTUzcHgiIHZpZXdCb3g9IjAgMCAyNTYgMTUzIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KCQk8Zz4KCQkJCTxwYXRoIGQ9Ik03Mi4zOTIwNTMsNTUuNDM4NDEwNiBDNzIuMzkyMDUzLDU4LjU3NDgzNDQgNzIuNzMxMTI1OCw2MS4xMTc4ODA4IDczLjMyNDUwMzMsNjIuOTgyNzgxNSBDNzQuMDAyNjQ5LDY0Ljg0NzY4MjEgNzQuODUwMzMxMSw2Ni44ODIxMTkyIDc2LjAzNzA4NjEsNjkuMDg2MDkyNyBDNzYuNDYwOTI3Miw2OS43NjQyMzg0IDc2LjYzMDQ2MzYsNzAuNDQyMzg0MSA3Ni42MzA0NjM2LDcxLjAzNTc2MTYgQzc2LjYzMDQ2MzYsNzEuODgzNDQzNyA3Ni4xMjE4NTQzLDcyLjczMTEyNTggNzUuMDE5ODY3NSw3My41Nzg4MDc5IEw2OS42Nzk0NzAyLDc3LjEzOTA3MjggQzY4LjkxNjU1NjMsNzcuNjQ3NjgyMSA2OC4xNTM2NDI0LDc3LjkwMTk4NjggNjcuNDc1NDk2Nyw3Ny45MDE5ODY4IEM2Ni42Mjc4MTQ2LDc3LjkwMTk4NjggNjUuNzgwMTMyNSw3Ny40NzgxNDU3IDY0LjkzMjQ1MDMsNzYuNzE1MjMxOCBDNjMuNzQ1Njk1NCw3NS40NDM3MDg2IDYyLjcyODQ3NjgsNzQuMDg3NDE3MiA2MS44ODA3OTQ3LDcyLjczMTEyNTggQzYxLjAzMzExMjYsNzEuMjkwMDY2MiA2MC4xODU0MzA1LDY5LjY3OTQ3MDIgNTkuMjUyOTgwMSw2Ny43Mjk4MDEzIEM1Mi42NDEwNTk2LDc1LjUyODQ3NjggNDQuMzMzNzc0OCw3OS40Mjc4MTQ2IDM0LjMzMTEyNTgsNzkuNDI3ODE0NiBDMjcuMjEwNTk2LDc5LjQyNzgxNDYgMjEuNTMxMTI1OCw3Ny4zOTMzNzc1IDE3LjM3NzQ4MzQsNzMuMzI0NTAzMyBDMTMuMjIzODQxMSw2OS4yNTU2MjkxIDExLjEwNDYzNTgsNjMuODMwNDYzNiAxMS4xMDQ2MzU4LDU3LjA0OTAwNjYgQzExLjEwNDYzNTgsNDkuODQzNzA4NiAxMy42NDc2ODIxLDQzLjk5NDcwMiAxOC44MTg1NDMsMzkuNTg2NzU1IEMyMy45ODk0MDQsMzUuMTc4ODA3OSAzMC44NTU2MjkxLDMyLjk3NDgzNDQgMzkuNTg2NzU1LDMyLjk3NDgzNDQgQzQyLjQ2ODg3NDIsMzIuOTc0ODM0NCA0NS40MzU3NjE2LDMzLjIyOTEzOTEgNDguNTcyMTg1NCwzMy42NTI5ODAxIEM1MS43MDg2MDkzLDM0LjA3NjgyMTIgNTQuOTI5ODAxMywzNC43NTQ5NjY5IDU4LjMyMDUyOTgsMzUuNTE3ODgwOCBMNTguMzIwNTI5OCwyOS4zMjk4MDEzIEM1OC4zMjA1Mjk4LDIyLjg4NzQxNzIgNTYuOTY0MjM4NCwxOC4zOTQ3MDIgNTQuMzM2NDIzOCwxNS43NjY4ODc0IEM1MS42MjM4NDExLDEzLjEzOTA3MjggNDcuMDQ2MzU3NiwxMS44Njc1NDk3IDQwLjUxOTIwNTMsMTEuODY3NTQ5NyBDMzcuNTUyMzE3OSwxMS44Njc1NDk3IDM0LjUwMDY2MjMsMTIuMjA2NjIyNSAzMS4zNjQyMzg0LDEyLjk2OTUzNjQgQzI4LjIyNzgxNDYsMTMuNzMyNDUwMyAyNS4xNzYxNTg5LDE0LjY2NDkwMDcgMjIuMjA5MjcxNSwxNS44NTE2NTU2IEMyMC44NTI5ODAxLDE2LjQ0NTAzMzEgMTkuODM1NzYxNiwxNi43ODQxMDYgMTkuMjQyMzg0MSwxNi45NTM2NDI0IEMxOC42NDkwMDY2LDE3LjEyMzE3ODggMTguMjI1MTY1NiwxNy4yMDc5NDcgMTcuODg2MDkyNywxNy4yMDc5NDcgQzE2LjY5OTMzNzcsMTcuMjA3OTQ3IDE2LjEwNTk2MDMsMTYuMzYwMjY0OSAxNi4xMDU5NjAzLDE0LjU4MDEzMjUgTDE2LjEwNTk2MDMsMTAuNDI2NDkwMSBDMTYuMTA1OTYwMyw5LjA3MDE5ODY4IDE2LjI3NTQ5NjcsOC4wNTI5ODAxMyAxNi42OTkzMzc3LDcuNDU5NjAyNjUgQzE3LjEyMzE3ODgsNi44NjYyMjUxNyAxNy44ODYwOTI3LDYuMjcyODQ3NjggMTkuMDcyODQ3Nyw1LjY3OTQ3MDIgQzIyLjAzOTczNTEsNC4xNTM2NDIzOCAyNS42LDIuODgyMTE5MjEgMjkuNzUzNjQyNCwxLjg2NDkwMDY2IEMzMy45MDcyODQ4LDAuNzYyOTEzOTA3IDM4LjMxNTIzMTgsMC4yNTQzMDQ2MzYgNDIuOTc3NDgzNCwwLjI1NDMwNDYzNiBDNTMuMDY0OTAwNywwLjI1NDMwNDYzNiA2MC40Mzk3MzUxLDIuNTQzMDQ2MzYgNjUuMTg2NzU1LDcuMTIwNTI5OCBDNjkuODQ5MDA2NiwxMS42OTgwMTMyIDcyLjIyMjUxNjYsMTguNjQ5MDA2NiA3Mi4yMjI1MTY2LDI3Ljk3MzUwOTkgTDcyLjIyMjUxNjYsNTUuNDM4NDEwNiBMNzIuMzkyMDUzLDU1LjQzODQxMDYgWiBNMzcuOTc2MTU4OSw2OC4zMjMxNzg4IEM0MC43NzM1MDk5LDY4LjMyMzE3ODggNDMuNjU1NjI5MSw2Ny44MTQ1Njk1IDQ2LjcwNzI4NDgsNjYuNzk3MzUxIEM0OS43NTg5NDA0LDY1Ljc4MDEzMjUgNTIuNDcxNTIzMiw2My45MTUyMzE4IDU0Ljc2MDI2NDksNjEuMzcyMTg1NCBDNTYuMTE2NTU2Myw1OS43NjE1ODk0IDU3LjEzMzc3NDgsNTcuOTgxNDU3IDU3LjY0MjM4NDEsNTUuOTQ3MDE5OSBDNTguMTUwOTkzNCw1My45MTI1ODI4IDU4LjQ5MDA2NjIsNTEuNDU0MzA0NiA1OC40OTAwNjYyLDQ4LjU3MjE4NTQgTDU4LjQ5MDA2NjIsNDUuMDExOTIwNSBDNTYuMDMxNzg4MSw0NC40MTg1NDMgNTMuNDAzOTczNSw0My45MDk5MzM4IDUwLjY5MTM5MDcsNDMuNTcwODYwOSBDNDcuOTc4ODA3OSw0My4yMzE3ODgxIDQ1LjM1MDk5MzQsNDMuMDYyMjUxNyA0Mi43MjMxNzg4LDQzLjA2MjI1MTcgQzM3LjA0MzcwODYsNDMuMDYyMjUxNyAzMi44OTAwNjYyLDQ0LjE2NDIzODQgMzAuMDkyNzE1Miw0Ni40NTI5ODAxIEMyNy4yOTUzNjQyLDQ4Ljc0MTcyMTkgMjUuOTM5MDcyOCw1MS45NjI5MTM5IDI1LjkzOTA3MjgsNTYuMjAxMzI0NSBDMjUuOTM5MDcyOCw2MC4xODU0MzA1IDI2Ljk1NjI5MTQsNjMuMTUyMzE3OSAyOS4wNzU0OTY3LDY1LjE4Njc1NSBDMzEuMTA5OTMzOCw2Ny4zMDU5NjAzIDM0LjA3NjgyMTIsNjguMzIzMTc4OCAzNy45NzYxNTg5LDY4LjMyMzE3ODggWiBNMTA2LjA0NTAzMyw3Ny40NzgxNDU3IEMxMDQuNTE5MjA1LDc3LjQ3ODE0NTcgMTAzLjUwMTk4Nyw3Ny4yMjM4NDExIDEwMi44MjM4NDEsNzYuNjMwNDYzNiBDMTAyLjE0NTY5NSw3Ni4xMjE4NTQzIDEwMS41NTIzMTgsNzQuOTM1MDk5MyAxMDEuMDQzNzA5LDczLjMyNDUwMzMgTDgxLjEyMzE3ODgsNy43OTg2NzU1IEM4MC42MTQ1Njk1LDYuMTAzMzExMjYgODAuMzYwMjY0OSw1LjAwMTMyNDUgODAuMzYwMjY0OSw0LjQwNzk0NzAyIEM4MC4zNjAyNjQ5LDMuMDUxNjU1NjMgODEuMDM4NDEwNiwyLjI4ODc0MTcyIDgyLjM5NDcwMiwyLjI4ODc0MTcyIEw5MC43MDE5ODY4LDIuMjg4NzQxNzIgQzkyLjMxMjU4MjgsMi4yODg3NDE3MiA5My40MTQ1Njk1LDIuNTQzMDQ2MzYgOTQuMDA3OTQ3LDMuMTM2NDIzODQgQzk0LjY4NjA5MjcsMy42NDUwMzMxMSA5NS4xOTQ3MDIsNC44MzE3ODgwOCA5NS43MDMzMTEzLDYuNDQyMzg0MTEgTDEwOS45NDQzNzEsNjIuNTU4OTQwNCBMMTIzLjE2ODIxMiw2LjQ0MjM4NDExIEMxMjMuNTkyMDUzLDQuNzQ3MDE5ODcgMTI0LjEwMDY2MiwzLjY0NTAzMzExIDEyNC43Nzg4MDgsMy4xMzY0MjM4NCBDMTI1LjQ1Njk1NCwyLjYyNzgxNDU3IDEyNi42NDM3MDksMi4yODg3NDE3MiAxMjguMTY5NTM2LDIuMjg4NzQxNzIgTDEzNC45NTA5OTMsMi4yODg3NDE3MiBDMTM2LjU2MTU4OSwyLjI4ODc0MTcyIDEzNy42NjM1NzYsMi41NDMwNDYzNiAxMzguMzQxNzIyLDMuMTM2NDIzODQgQzEzOS4wMTk4NjgsMy42NDUwMzMxMSAxMzkuNjEzMjQ1LDQuODMxNzg4MDggMTM5Ljk1MjMxOCw2LjQ0MjM4NDExIEwxNTMuMzQ1Njk1LDYzLjIzNzA4NjEgTDE2OC4wMTA1OTYsNi40NDIzODQxMSBDMTY4LjUxOTIwNSw0Ljc0NzAxOTg3IDE2OS4xMTI1ODMsMy42NDUwMzMxMSAxNjkuNzA1OTYsMy4xMzY0MjM4NCBDMTcwLjM4NDEwNiwyLjYyNzgxNDU3IDE3MS40ODYwOTMsMi4yODg3NDE3MiAxNzMuMDExOTIxLDIuMjg4NzQxNzIgTDE4MC44OTUzNjQsMi4yODg3NDE3MiBDMTgyLjI1MTY1NiwyLjI4ODc0MTcyIDE4My4wMTQ1NywyLjk2Njg4NzQyIDE4My4wMTQ1Nyw0LjQwNzk0NzAyIEMxODMuMDE0NTcsNC44MzE3ODgwOCAxODIuOTI5ODAxLDUuMjU1NjI5MTQgMTgyLjg0NTAzMyw1Ljc2NDIzODQxIEMxODIuNzYwMjY1LDYuMjcyODQ3NjggMTgyLjU5MDcyOCw2Ljk1MDk5MzM4IDE4Mi4yNTE2NTYsNy44ODM0NDM3MSBMMTYxLjgyMjUxNyw3My40MDkyNzE1IEMxNjEuMzEzOTA3LDc1LjEwNDYzNTggMTYwLjcyMDUzLDc2LjIwNjYyMjUgMTYwLjA0MjM4NCw3Ni43MTUyMzE4IEMxNTkuMzY0MjM4LDc3LjIyMzg0MTEgMTU4LjI2MjI1Miw3Ny41NjI5MTM5IDE1Ni44MjExOTIsNzcuNTYyOTEzOSBMMTQ5LjUzMTEyNiw3Ny41NjI5MTM5IEMxNDcuOTIwNTMsNzcuNTYyOTEzOSAxNDYuODE4NTQzLDc3LjMwODYwOTMgMTQ2LjE0MDM5Nyw3Ni43MTUyMzE4IEMxNDUuNDYyMjUyLDc2LjEyMTg1NDMgMTQ0Ljg2ODg3NCw3NS4wMTk4Njc1IDE0NC41Mjk4MDEsNzMuMzI0NTAzMyBMMTMxLjM5MDcyOCwxOC42NDkwMDY2IEwxMTguMzM2NDI0LDczLjIzOTczNTEgQzExNy45MTI1ODMsNzQuOTM1MDk5MyAxMTcuNDAzOTc0LDc2LjAzNzA4NjEgMTE2LjcyNTgyOCw3Ni42MzA0NjM2IEMxMTYuMDQ3NjgyLDc3LjIyMzg0MTEgMTE0Ljg2MDkyNyw3Ny40NzgxNDU3IDExMy4zMzUwOTksNzcuNDc4MTQ1NyBMMTA2LjA0NTAzMyw3Ny40NzgxNDU3IFogTTIxNC45NzIxODUsNzkuNzY2ODg3NCBDMjEwLjU2NDIzOCw3OS43NjY4ODc0IDIwNi4xNTYyOTEsNzkuMjU4Mjc4MSAyMDEuOTE3ODgxLDc4LjI0MTA1OTYgQzE5Ny42Nzk0Nyw3Ny4yMjM4NDExIDE5NC4zNzM1MSw3Ni4xMjE4NTQzIDE5Mi4xNjk1MzYsNzQuODUwMzMxMSBDMTkwLjgxMzI0NSw3NC4wODc0MTcyIDE4OS44ODA3OTUsNzMuMjM5NzM1MSAxODkuNTQxNzIyLDcyLjQ3NjgyMTIgQzE4OS4yMDI2NDksNzEuNzEzOTA3MyAxODkuMDMzMTEzLDcwLjg2NjIyNTIgMTg5LjAzMzExMyw3MC4xMDMzMTEzIEwxODkuMDMzMTEzLDY1Ljc4MDEzMjUgQzE4OS4wMzMxMTMsNjQgMTg5LjcxMTI1OCw2My4xNTIzMTc5IDE5MC45ODI3ODEsNjMuMTUyMzE3OSBDMTkxLjQ5MTM5MSw2My4xNTIzMTc5IDE5Miw2My4yMzcwODYxIDE5Mi41MDg2MDksNjMuNDA2NjIyNSBDMTkzLjAxNzIxOSw2My41NzYxNTg5IDE5My43ODAxMzIsNjMuOTE1MjMxOCAxOTQuNjI3ODE1LDY0LjI1NDMwNDYgQzE5Ny41MDk5MzQsNjUuNTI1ODI3OCAyMDAuNjQ2MzU4LDY2LjU0MzA0NjQgMjAzLjk1MjMxOCw2Ny4yMjExOTIxIEMyMDcuMzQzMDQ2LDY3Ljg5OTMzNzcgMjEwLjY0OTAwNyw2OC4yMzg0MTA2IDIxNC4wMzk3MzUsNjguMjM4NDEwNiBDMjE5LjM4MDEzMiw2OC4yMzg0MTA2IDIyMy41MzM3NzUsNjcuMzA1OTYwMyAyMjYuNDE1ODk0LDY1LjQ0MTA1OTYgQzIyOS4yOTgwMTMsNjMuNTc2MTU4OSAyMzAuODIzODQxLDYwLjg2MzU3NjIgMjMwLjgyMzg0MSw1Ny4zODgwNzk1IEMyMzAuODIzODQxLDU1LjAxNDU2OTUgMjMwLjA2MDkyNyw1My4wNjQ5MDA3IDIyOC41MzUwOTksNTEuNDU0MzA0NiBDMjI3LjAwOTI3Miw0OS44NDM3MDg2IDIyNC4xMjcxNTIsNDguNDAyNjQ5IDIxOS45NzM1MSw0Ny4wNDYzNTc2IEwyMDcuNjgyMTE5LDQzLjIzMTc4ODEgQzIwMS40OTQwNCw0MS4yODIxMTkyIDE5Ni45MTY1NTYsMzguNCAxOTQuMTE5MjA1LDM0LjU4NTQzMDUgQzE5MS4zMjE4NTQsMzAuODU1NjI5MSAxODkuODgwNzk1LDI2LjcwMTk4NjggMTg5Ljg4MDc5NSwyMi4yOTQwMzk3IEMxODkuODgwNzk1LDE4LjczMzc3NDggMTkwLjY0MzcwOSwxNS41OTczNTEgMTkyLjE2OTUzNiwxMi44ODQ3NjgyIEMxOTMuNjk1MzY0LDEwLjE3MjE4NTQgMTk1LjcyOTgwMSw3Ljc5ODY3NTUgMTk4LjI3Mjg0OCw1LjkzMzc3NDgzIEMyMDAuODE1ODk0LDMuOTg0MTA1OTYgMjAzLjY5ODAxMywyLjU0MzA0NjM2IDIwNy4wODg3NDIsMS41MjU4Mjc4MSBDMjEwLjQ3OTQ3LDAuNTA4NjA5MjcyIDIxNC4wMzk3MzUsMC4wODQ3NjgyMTE5IDIxNy43Njk1MzYsMC4wODQ3NjgyMTE5IEMyMTkuNjM0NDM3LDAuMDg0NzY4MjExOSAyMjEuNTg0MTA2LDAuMTY5NTM2NDI0IDIyMy40NDkwMDcsMC40MjM4NDEwNiBDMjI1LjM5ODY3NSwwLjY3ODE0NTY5NSAyMjcuMTc4ODA4LDEuMDE3MjE4NTQgMjI4Ljk1ODk0LDEuMzU2MjkxMzkgQzIzMC42NTQzMDUsMS43ODAxMzI0NSAyMzIuMjY0OTAxLDIuMjAzOTczNTEgMjMzLjc5MDcyOCwyLjcxMjU4Mjc4IEMyMzUuMzE2NTU2LDMuMjIxMTkyMDUgMjM2LjUwMzMxMSwzLjcyOTgwMTMyIDIzNy4zNTA5OTMsNC4yMzg0MTA2IEMyMzguNTM3NzQ4LDQuOTE2NTU2MjkgMjM5LjM4NTQzLDUuNTk0NzAxOTkgMjM5Ljg5NDA0LDYuMzU3NjE1ODkgQzI0MC40MDI2NDksNy4wMzU3NjE1OSAyNDAuNjU2OTU0LDcuOTY4MjExOTIgMjQwLjY1Njk1NCw5LjE1NDk2Njg5IEwyNDAuNjU2OTU0LDEzLjEzOTA3MjggQzI0MC42NTY5NTQsMTQuOTE5MjA1MyAyMzkuOTc4ODA4LDE1Ljg1MTY1NTYgMjM4LjcwNzI4NSwxNS44NTE2NTU2IEMyMzguMDI5MTM5LDE1Ljg1MTY1NTYgMjM2LjkyNzE1MiwxNS41MTI1ODI4IDIzNS40ODYwOTMsMTQuODM0NDM3MSBDMjMwLjY1NDMwNSwxMi42MzA0NjM2IDIyNS4yMjkxMzksMTEuNTI4NDc2OCAyMTkuMjEwNTk2LDExLjUyODQ3NjggQzIxNC4zNzg4MDgsMTEuNTI4NDc2OCAyMTAuNTY0MjM4LDEyLjI5MTM5MDcgMjA3LjkzNjQyNCwxMy45MDE5ODY4IEMyMDUuMzA4NjA5LDE1LjUxMjU4MjggMjAzLjk1MjMxOCwxNy45NzA4NjA5IDIwMy45NTIzMTgsMjEuNDQ2MzU3NiBDMjAzLjk1MjMxOCwyMy44MTk4Njc1IDIwNC44LDI1Ljg1NDMwNDYgMjA2LjQ5NTM2NCwyNy40NjQ5MDA3IEMyMDguMTkwNzI4LDI5LjA3NTQ5NjcgMjExLjMyNzE1MiwzMC42ODYwOTI3IDIxNS44MTk4NjgsMzIuMTI3MTUyMyBMMjI3Ljg1Njk1NCwzNS45NDE3MjE5IEMyMzMuOTYwMjY1LDM3Ljg5MTM5MDcgMjM4LjM2ODIxMiw0MC42MDM5NzM1IDI0MC45OTYwMjYsNDQuMDc5NDcwMiBDMjQzLjYyMzg0MSw0Ny41NTQ5NjY5IDI0NC44OTUzNjQsNTEuNTM5MDcyOCAyNDQuODk1MzY0LDU1Ljk0NzAxOTkgQzI0NC44OTUzNjQsNTkuNTkyMDUzIDI0NC4xMzI0NSw2Mi44OTgwMTMyIDI0Mi42OTEzOTEsNjUuNzgwMTMyNSBDMjQxLjE2NTU2Myw2OC42NjIyNTE3IDIzOS4xMzExMjYsNzEuMjA1Mjk4IDIzNi41MDMzMTEsNzMuMjM5NzM1MSBDMjMzLjg3NTQ5Nyw3NS4zNTg5NDA0IDIzMC43MzkwNzMsNzYuODg0NzY4MiAyMjcuMDk0MDQsNzcuOTg2NzU1IEMyMjMuMjc5NDcsNzkuMTczNTA5OSAyMTkuMjk1MzY0LDc5Ljc2Njg4NzQgMjE0Ljk3MjE4NSw3OS43NjY4ODc0IFoiIGZpbGw9IiMyNTJGM0UiIGZpbGwtcnVsZT0ibm9uemVybyI+PC9wYXRoPgoJCQkJPHBhdGggZD0iTTIzMC45OTMzNzcsMTIwLjk2NDIzOCBDMjAzLjEwNDYzNiwxNDEuNTYyOTE0IDE2Mi41ODU0MywxNTIuNDk4MDEzIDEyNy43NDU2OTUsMTUyLjQ5ODAxMyBDNzguOTE5MjA1MywxNTIuNDk4MDEzIDM0LjkyNDUwMzMsMTM0LjQ0MjM4NCAxLjY5NTM2NDI0LDEwNC40MzQ0MzcgQy0wLjkzMjQ1MDMzMSwxMDIuMDYwOTI3IDEuNDQxMDU5Niw5OC44Mzk3MzUxIDQuNTc3NDgzNDQsMTAwLjcwNDYzNiBDNDAuNTE5MjA1MywxMjEuNTU3NjE2IDg0Ljg1Mjk4MDEsMTM0LjE4ODA3OSAxMzAuNzEyNTgzLDEzNC4xODgwNzkgQzE2MS42NTI5OCwxMzQuMTg4MDc5IDE5NS42NDUwMzMsMTI3Ljc0NTY5NSAyMjYuOTI0NTAzLDExNC41MjE4NTQgQzIzMS41ODY3NTUsMTEyLjQwMjY0OSAyMzUuNTcwODYxLDExNy41NzM1MSAyMzAuOTkzMzc3LDEyMC45NjQyMzggWiBNMjQyLjYwNjYyMywxMDcuNzQwMzk3IEMyMzkuMDQ2MzU4LDEwMy4xNjI5MTQgMjE5LjA0MTA2LDEwNS41MzY0MjQgMjA5Ljk3MDg2MSwxMDYuNjM4NDExIEMyMDcuMjU4Mjc4LDEwNi45Nzc0ODMgMjA2LjgzNDQzNywxMDQuNjAzOTc0IDIwOS4yOTI3MTUsMTAyLjgyMzg0MSBDMjI1LjIyOTEzOSw5MS42MzQ0MzcxIDI1MS40MjI1MTcsOTQuODU1NjI5MSAyNTQuNDc0MTcyLDk4LjU4NTQzMDUgQzI1Ny41MjU4MjgsMTAyLjQgMjUzLjYyNjQ5LDEyOC41OTMzNzcgMjM4LjcwNzI4NSwxNDEuMTM5MDczIEMyMzYuNDE4NTQzLDE0My4wODg3NDIgMjM0LjIxNDU3LDE0Mi4wNzE1MjMgMjM1LjIzMTc4OCwxMzkuNTI4NDc3IEMyMzguNjIyNTE3LDEzMS4xMzY0MjQgMjQ2LjE2Njg4NywxMTIuMjMzMTEzIDI0Mi42MDY2MjMsMTA3Ljc0MDM5NyBaIiBmaWxsPSIjRkY5OTAwIj48L3BhdGg+CgkJPC9nPgo8L3N2Zz4K
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _log_type
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text; may contain whitespace
+    and punctuation.
+  example: audit
+- name: additionalEventData
+  type: json
+  description: Per-service additional context. JSON object or array; structured payload — see dotted-path
+    leaves below.
+  example: '{"key":"value"}'
+- name: awsRegion
+  type: string_short
+  description: Region the action took place in. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: us-east-1
+- name: errorCode
+  type: string_short
+  description: Error code when the request failed. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: AccessDenied
+- name: errorMessage
+  type: string_long
+  description: Human-readable error message. Free-form text; may span multiple lines or contain large
+    payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: eventCategory
+  type: string
+  description: Vendor-emitted field 'EventCategory'. Free-form text; may contain whitespace and punctuation.
+  example: audit
+- name: eventID
+  type: string_short
+  description: Unique CloudTrail event id. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: eventName
+  type: string_short
+  description: API call name. Short opaque token, typically without whitespace; max ~64 chars.
+  example: RunInstances
+- name: eventSource
+  type: string_short
+  description: AWS service emitting the event. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: ec2.amazonaws.com
+- name: eventTime
+  type: datetime
+  description: When the request was made (ISO-8601). ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: eventType
+  type: enum
+  description: 'Top-level event type. One of: AwsApiCall, AwsServiceEvent, AwsConsoleAction, AwsCloudTrailInsight,
+    AwsConsoleSignIn (case-sensitive).'
+  example: AwsApiCall
+  enum_values:
+  - AwsApiCall
+  - AwsServiceEvent
+  - AwsConsoleAction
+  - AwsCloudTrailInsight
+  - AwsConsoleSignIn
+- name: eventVersion
+  type: string_short
+  description: CloudTrail event schema version. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: recipientAccountId
+  type: string_short
+  description: Account that owns the resource the call touched. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: requestID
+  type: string_short
+  description: AWS request id (correlation). Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: requestParameters
+  type: json
+  description: Parameters of the API call (per service shape). JSON object or array; structured payload
+    — see dotted-path leaves below.
+  example: '{"key":"value"}'
+- name: resources
+  type: json
+  is_array: true
+  description: List of resources affected by the request. JSON object or array; structured payload — see
+    dotted-path leaves below.
+  example: '{"id":"res-abc123","type":"S3Object","displayName":"reports.csv"}'
+- name: responseElements
+  type: json
+  description: Response elements of the API call. JSON object or array; structured payload — see dotted-path
+    leaves below.
+  example: '{"key":"value"}'
+- name: sharedEventID
+  type: string_short
+  description: Shared event id (cross-account events). Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: sourceIPAddress
+  type: ipv4
+  description: IP address the request was made from (or AWS service name). Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: start
+  type: string
+  description: Vendor-emitted field 'Start'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: tlsDetails
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: cipherSuite, clientProvidedHostHeader,
+    tlsVersion (each key defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: userAgent
+  type: string_long
+  description: User-Agent of the request. Free-form text; may span multiple lines or contain large payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: userIdentity
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: accountId, arn, onBehalfOf,
+    principalId, sessionContext, type, userName, accessKeyId, invokedBy (each key defined as a dotted-path
+    leaf below).'
+  example: '{"key":"value"}'
+- name: vpcEndpointAccountId
+  type: string
+  description: Vendor-emitted field 'VpcEndpointAccountId'. Free-form text; may contain whitespace and
+    punctuation.
+  example: tenant-acme-prod
+- name: vpcEndpointId
+  type: string_short
+  description: VPC endpoint id (when called from a VPC endpoint). Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: requestParameters.Host
+  type: host
+  description: Vendor-emitted field 'RequestParameters › Host'. Leaf of the 'requestParameters' composite.
+    Hostname or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: resources[].ARN
+  type: string
+  description: Vendor-emitted field 'Resources[] › ARN'. Free-form text; may contain whitespace and punctuation.
+  example: arn:aws:iam::123456789012:user/jdoe
+- name: resources[].accountId
+  type: string
+  description: Vendor-emitted field 'Resources[] › accountId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: acct-46fb3739
+- name: resources[].type
+  type: string_short
+  description: Type/category classifier emitted by Amazon Web Services. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: tlsDetails.cipherSuite
+  type: string_short
+  description: Negotiated TLS cipher suite. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: tlsDetails.clientProvidedHostHeader
+  type: host
+  description: Host header the client sent. Hostname or fully-qualified domain name (RFC 1035 dotted labels);
+    no protocol prefix.
+  example: host.example.com
+- name: tlsDetails.tlsVersion
+  type: string_short
+  description: TLS version used for the request. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: userIdentity.accountId
+  type: string_short
+  description: AWS account the caller belongs to. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: userIdentity.arn
+  type: string
+  description: Caller ARN. Free-form text; may contain whitespace and punctuation.
+  example: arn:aws:iam::123456789012:user/jdoe
+- name: userIdentity.onBehalfOf.userId
+  type: string
+  description: Vendor-emitted field 'UserIdentity › onBehalfOf › userId'. Leaf of the 'userIdentity' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: usr-60baad76
+- name: userIdentity.principalId
+  type: string
+  description: Unique caller principal id. Free-form text; may contain whitespace and punctuation.
+  example: AIDAJDPLRKLG7UEXAMPLE
+- name: userIdentity.sessionContext.sessionIssuer.userName
+  type: user
+  description: Role name the session was issued from. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jsmith
+- name: userIdentity.type
+  type: enum
+  description: 'Caller identity type. One of: Root, IAMUser, AssumedRole, FederatedUser, AWSService, AWSAccount,
+    WebIdentityUser, SAMLUser, Unknown (case-sensitive).'
+  example: Root
+  enum_values:
+  - Root
+  - IAMUser
+  - AssumedRole
+  - FederatedUser
+  - AWSService
+  - AWSAccount
+  - WebIdentityUser
+  - SAMLUser
+  - Unknown
+- name: userIdentity.userName
+  type: user
+  description: IAM user name (when type=IAMUser). Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jsmith
+- name: apiVersion
+  type: string_short
+  description: API version of the call. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: managementEvent
+  type: boolean
+  description: True for management-plane events; false for data-plane. Literal 'true' or 'false' (case-insensitive);
+    not '1'/'0'.
+  example: 'true'
+- name: readOnly
+  type: boolean
+  description: True if the API call is a read-only operation. Literal 'true' or 'false' (case-insensitive);
+    not '1'/'0'.
+  example: 'true'
+- name: userIdentity.accessKeyId
+  type: string_short
+  description: Access-key id used (when applicable). Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: userIdentity.invokedBy
+  type: string
+  description: Service that invoked the call (when on behalf of). Free-form text; may contain whitespace
+    and punctuation.
+  example: AIDAJDPLRKLG7UEXAMPLE
+- name: userIdentity.sessionContext.sessionIssuer.arn
+  type: string
+  description: Issuer ARN of an assumed-role session. Free-form text; may contain whitespace and punctuation.
+  example: arn:aws:iam::123456789012:user/jdoe
+use_cases:
+- Cloud
+validated: true

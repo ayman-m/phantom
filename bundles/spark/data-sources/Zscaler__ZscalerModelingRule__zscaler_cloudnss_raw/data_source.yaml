@@ -1,0 +1,673 @@
+schema_version: 1
+id: Zscaler
+pack_name: Zscaler
+rule_name: ZscalerModelingRule
+dataset_name: zscaler_cloudnss_raw
+vendor: Zscaler
+product: cloudnss
+description: Zscaler is a cloud security solution built for performance and flexible scalability.
+categories:
+- Network Security
+version: 1.5.8
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDdBQUMiPlpzY2FsZXI8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: json
+  description: 'Native zscaler_cloudnss log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: BRANCH: sourcetype="zscalernss-web" (Cloud NSS Web Logs). The cloudnss MODEL block has four mutually-exclusive `filter sourcetype = ...` branches; web assigns 53 xdm.* fields vs fw 25, dns 24, audit 13, and it matches th'
+  example: '[{"sourcetype":"zscalernss-web","event":{"datetime":"{{now:%Y-%m-%d %H:%M:%S}}","tz":"GMT","recordid":"4152897361","user":"jdoe@example.com","department":"Corporate%20IT","location":"Seattle%20Branch","devicehostname":"LT-SEA-4417","deviceostype":"Windows","deviceosversion":"10.0.22631","external_devid":"8f3c2b71-4a19-4e0d-9c2a-77f1d6b0e5a3","protocol":"HTTPS","action":"Blocked","reason":"Blocked - Malware detected","ClientIP":"10.42.18.77","clientpublicIP":"198.51.100.23","clt_sport":"53194","serverip":"203.0.113.42","fwd_gw_ip":"165.225.60.14","clienttlsversion":"TLSv1.3","srvtlsversion":"TLSv1.2","hostname":"badsite.example.net","url":"badsite.example.net/downloads/invoice_2024.exe","refererURL":"www.example.com/search?q=invoice","requestmethod":"GET","status":"403","requestsize":"512","responsesize":"1638","contenttype":"application/octet-stream","useragent":"Mozilla/5.0%20(Windows%20NT%2010.0;%20Win64;%20x64)%20AppleWebKit/537.36%20(KHTML,%20like%20Gecko)%20Chrome/126.0.0.0%20Safari/537.36","appname":"General Browsing","urlcategory":"MALWARE_SITE","urlsupercategory":"SECURITY","threatcategory":"Sandbox Malware","threatname":"Win32.Trojan.Emotet","threatseverity":"Critical","filetype":"EXE","unscannabletype":"None","bamd5":"9e107d9d372bb6826bd81d3542a419d6","sha256":"3fdba35f04dc8c462986c992bcf875546257113072a909c162f7e470e581e278","rulelabel":"Block Malware Downloads","urlfilterrulelabel":"Security Categories Block","apprulelabel":"None","rdr_rulename":"None","dlpidentifier":"0","dlprulename":"None"}}]'
+- name: dest_ipv4
+  type: ipv4
+  description: Destination address of the connection target. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: dest_ipv6
+  type: ipv6
+  description: Destination address of the connection target. Colon-separated hexadecimal IPv6 literal
+    (RFC 4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: os
+  type: string
+  description: Vendor-emitted field 'Os'. Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: proto
+  type: string
+  description: Network protocol name or numeric IANA assignment. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: sourcetype
+  is_gate: true
+  type: string
+  description: Modeling-rule GATE — the NSS feed type the parsing rule extracts from _raw_log. Must equal
+    one of zscalernss-web | zscalernss-dns | zscalernss-fw | zscalernss-audit for the modeling rule to
+    fire and populate xdm.* (seed it via observables_dict on the bare leaf name `sourcetype`).
+  example: zscalernss-web
+- name: src_ipv4
+  type: ipv4
+  description: Source address of the connection initiator. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: src_ipv6
+  type: ipv6
+  description: Source address of the connection initiator. Colon-separated hexadecimal IPv6 literal (RFC
+    4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: url_category
+  type: string_short
+  description: Zscaler's category classifier for the event. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: access_control
+- name: user
+  type: user
+  description: User account associated with the event. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName depending on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: _raw_log.ClientIP
+  type: string
+  description: Vendor-emitted field ' raw log › ClientIP'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.action
+  type: string_short
+  description: Action taken by Zscaler's enforcement engine (allow/block/quarantine/etc.). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: _raw_log.adminid
+  type: user
+  description: Vendor-emitted field ' raw log › adminid'. Leaf of the '_raw_log' composite. Account name
+    as the vendor reports it — login name, UPN, or sAMAccountName depending on the source; no domain prefix
+    unless the vendor emits one.
+  example: jsmith
+- name: _raw_log.appname
+  type: string
+  description: Vendor-emitted field ' raw log › appname'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.apprulelabel
+  type: string
+  description: Vendor-emitted field ' raw log › apprulelabel'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.auditlogtype
+  type: string
+  description: Event type or category as the vendor classifies it. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.bamd5
+  type: hash_md5
+  description: Vendor-emitted field ' raw log › bamd5'. Leaf of the '_raw_log' composite. 32-character
+    lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: _raw_log.category
+  type: string_short
+  description: Zscaler's category classifier for the event. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: raw_value
+- name: _raw_log.cdfqdn
+  type: host
+  description: Vendor-emitted field ' raw log › cdfqdn'. Leaf of the '_raw_log' composite. Hostname or
+    fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: _raw_log.cdip
+  type: string
+  description: Vendor-emitted field ' raw log › cdip'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.cdport
+  type: integer_port
+  description: Vendor-emitted field ' raw log › cdport'. Leaf of the '_raw_log' composite. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: _raw_log.cip
+  type: string
+  description: Vendor-emitted field ' raw log › cip'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.clientip
+  type: string
+  description: Vendor-emitted field ' raw log › clientip'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.clientpublicIP
+  type: string
+  description: Vendor-emitted field ' raw log › clientpublicIP'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.clienttlsversion
+  type: string
+  description: Vendor-emitted field ' raw log › clienttlsversion'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.clt_sip
+  type: string
+  description: Vendor-emitted field ' raw log › clt sip'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.clt_sport
+  type: integer_port
+  description: Vendor-emitted field ' raw log › clt sport'. Leaf of the '_raw_log' composite. Unsigned
+    integer 0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: _raw_log.contenttype
+  type: string
+  description: Vendor-emitted field ' raw log › contenttype'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.cpubip
+  type: string
+  description: Vendor-emitted field ' raw log › cpubip'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.csip
+  type: string
+  description: Vendor-emitted field ' raw log › csip'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.csport
+  type: integer_port
+  description: Vendor-emitted field ' raw log › csport'. Leaf of the '_raw_log' composite. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: _raw_log.department
+  type: string
+  description: Vendor-emitted field ' raw log › department'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.dept
+  type: string
+  description: Vendor-emitted field ' raw log › dept'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.destcountry
+  type: country_code
+  description: Vendor-emitted field ' raw log › destcountry'. Leaf of the '_raw_log' composite. ISO 3166-1
+    alpha-2 uppercase country code (e.g., US, DE, JP).
+  example: US
+- name: _raw_log.deviceappversion
+  type: string
+  description: Vendor-emitted field ' raw log › deviceappversion'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.devicehostname
+  type: host
+  description: Vendor-emitted field ' raw log › devicehostname'. Leaf of the '_raw_log' composite. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: _raw_log.devicename
+  type: host
+  description: Vendor-emitted field ' raw log › devicename'. Leaf of the '_raw_log' composite. Hostname
+    or fully-qualified domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: _raw_log.deviceostype
+  type: string
+  description: Vendor-emitted field ' raw log › deviceostype'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.deviceosversion
+  type: string
+  description: Vendor-emitted field ' raw log › deviceosversion'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.deviceowner
+  type: user
+  description: Vendor-emitted field ' raw log › deviceowner'. Leaf of the '_raw_log' composite. Account
+    name as the vendor reports it — login name, UPN, or sAMAccountName depending on the source; no domain
+    prefix unless the vendor emits one.
+  example: jsmith
+- name: _raw_log.dlpidentifier
+  type: string
+  description: Vendor-emitted field ' raw log › dlpidentifier'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.dlprulename
+  type: string
+  description: Vendor-emitted field ' raw log › dlprulename'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.dns_req
+  type: string
+  description: Vendor-emitted field ' raw log › dns req'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.dns_reqtype
+  type: string
+  description: Vendor-emitted field ' raw log › dns reqtype'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.dns_resp
+  type: string
+  description: Vendor-emitted field ' raw log › dns resp'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.domcat
+  type: string
+  description: Vendor-emitted field ' raw log › domcat'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.durationms
+  type: integer
+  description: Duration (typically milliseconds) of the operation. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: _raw_log.errorcode
+  type: string
+  description: Vendor-emitted field ' raw log › errorcode'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.event_id
+  type: string
+  description: Unique identifier for this event as assigned by the vendor. Leaf of the '_raw_log' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.external_devid
+  type: string
+  description: Vendor-emitted field ' raw log › external devid'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.filetype
+  type: string
+  description: Vendor-emitted field ' raw log › filetype'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.fwd_gw_ip
+  type: string
+  description: Vendor-emitted field ' raw log › fwd gw ip'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.host
+  type: string
+  description: Vendor-emitted field ' raw log › host'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.hostname
+  type: host
+  description: Hostname or FQDN as reported by Zscaler. Hostname or fully-qualified domain name (RFC 1035
+    dotted labels); no protocol prefix.
+  example: host.example.com
+- name: _raw_log.inbytes
+  type: integer_byte_count
+  description: Vendor-emitted field ' raw log › inbytes'. Leaf of the '_raw_log' composite. Unsigned decimal
+    byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: _raw_log.ipcat
+  type: string
+  description: Vendor-emitted field ' raw log › ipcat'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.location
+  type: string
+  description: Location label (region/site/zone) emitted by Zscaler. Free-form text; may contain whitespace
+    and punctuation.
+  example: raw_value
+- name: _raw_log.login
+  type: string
+  description: Vendor-emitted field ' raw log › login'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.malwarecat
+  type: string
+  description: Vendor-emitted field ' raw log › malwarecat'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.nwapp
+  type: string
+  description: Vendor-emitted field ' raw log › nwapp'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.nwsvc
+  type: string
+  description: Vendor-emitted field ' raw log › nwsvc'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.outbytes
+  type: integer_byte_count
+  description: Vendor-emitted field ' raw log › outbytes'. Leaf of the '_raw_log' composite. Unsigned
+    decimal byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: _raw_log.postaction
+  type: string
+  description: Vendor-emitted field ' raw log › postaction'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: allow
+- name: _raw_log.preaction
+  type: string
+  description: Vendor-emitted field ' raw log › preaction'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: allow
+- name: _raw_log.proto
+  type: string
+  description: Vendor-emitted field ' raw log › proto'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.protocol
+  type: string
+  description: Vendor-emitted field ' raw log › protocol'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: tcp
+- name: _raw_log.rdr_rulename
+  type: string
+  description: Vendor-emitted field ' raw log › rdr rulename'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text; may contain whitespace
+    and punctuation.
+  example: raw_value
+- name: _raw_log.recordid
+  type: string
+  description: Vendor-emitted field ' raw log › recordid'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.referer
+  type: url
+  description: HTTP Referer header value. Full URL with scheme (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path?q=1
+- name: _raw_log.refererURL
+  type: string
+  description: Vendor-emitted field ' raw log › refererURL'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.reqaction
+  type: string
+  description: Vendor-emitted field ' raw log › reqaction'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: allow
+- name: _raw_log.reqdatasize
+  type: string
+  description: Vendor-emitted field ' raw log › reqdatasize'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.reqmethod
+  type: string
+  description: Vendor-emitted field ' raw log › reqmethod'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.reqrulelabel
+  type: string
+  description: Vendor-emitted field ' raw log › reqrulelabel'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.requestmethod
+  type: string
+  description: Vendor-emitted field ' raw log › requestmethod'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.requestsize
+  type: string
+  description: Vendor-emitted field ' raw log › requestsize'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.resaction
+  type: string
+  description: Vendor-emitted field ' raw log › resaction'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: allow
+- name: _raw_log.resource
+  type: string
+  description: Vendor-emitted field ' raw log › resource'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.respcode
+  type: string
+  description: Vendor-emitted field ' raw log › respcode'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.respdatasize
+  type: string
+  description: Vendor-emitted field ' raw log › respdatasize'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.respipcategory
+  type: string
+  description: Vendor-emitted field ' raw log › respipcategory'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.responsesize
+  type: string
+  description: Vendor-emitted field ' raw log › responsesize'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.resrulelabel
+  type: string
+  description: Vendor-emitted field ' raw log › resrulelabel'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.result
+  type: string_short
+  description: Result string emitted by Zscaler. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: raw_value
+- name: _raw_log.rulelabel
+  type: string
+  description: Vendor-emitted field ' raw log › rulelabel'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.serverip
+  type: string
+  description: Vendor-emitted field ' raw log › serverip'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.sip
+  type: string
+  description: Vendor-emitted field ' raw log › sip'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.srcip_country
+  type: country_code
+  description: Country (ISO 3166-1 alpha-2 code or descriptive label). ISO 3166-1 alpha-2 uppercase country
+    code (e.g., US, DE, JP).
+  example: US
+- name: _raw_log.srv_dip
+  type: string
+  description: Vendor-emitted field ' raw log › srv dip'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.srv_dport
+  type: integer_port
+  description: Vendor-emitted field ' raw log › srv dport'. Leaf of the '_raw_log' composite. Unsigned
+    integer 0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: _raw_log.srvtlsversion
+  type: string
+  description: Vendor-emitted field ' raw log › srvtlsversion'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.status
+  type: string_short
+  description: Status code returned by Zscaler. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: raw_value
+- name: _raw_log.threat_severity
+  type: string_short
+  description: Event severity as classified by Zscaler. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: raw_value
+- name: _raw_log.threatcat
+  type: string
+  description: Vendor-emitted field ' raw log › threatcat'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.threatcategory
+  type: string
+  description: Vendor-emitted field ' raw log › threatcategory'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.threatname
+  type: string
+  description: Vendor-emitted field ' raw log › threatname'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.threatseverity
+  type: string
+  description: Vendor-emitted field ' raw log › threatseverity'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.ua
+  type: string
+  description: Vendor-emitted field ' raw log › ua'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.unscannabletype
+  type: string
+  description: Vendor-emitted field ' raw log › unscannabletype'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.url
+  type: url
+  description: Full URL with scheme — as Zscaler captured it. Full URL with scheme (http/https/ftp); percent-encoded
+    if non-ASCII.
+  example: https://example.com/path
+- name: _raw_log.urlcat
+  type: string
+  description: Vendor-emitted field ' raw log › urlcat'. Leaf of the '_raw_log' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.urlcategory
+  type: string
+  description: Vendor-emitted field ' raw log › urlcategory'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.urlfilterrulelabel
+  type: string
+  description: Vendor-emitted field ' raw log › urlfilterrulelabel'. Leaf of the '_raw_log' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.urlsupercat
+  type: string
+  description: Vendor-emitted field ' raw log › urlsupercat'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.urlsupercategory
+  type: string
+  description: Vendor-emitted field ' raw log › urlsupercategory'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.user
+  type: user
+  description: User account associated with the event. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jdoe
+- name: _raw_log.useragent
+  type: string
+  description: Vendor-emitted field ' raw log › useragent'. Leaf of the '_raw_log' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.sourcetype
+  type: string_short
+  example: zscalernss-web
+  description: NSS feed type. The modeling rule gates on _raw_log -> sourcetype (zscalernss-web | -dns
+    | -fw | -audit).
+- name: _raw_log.epochtime
+  type: integer
+  example: '1748263381'
+  description: Event time in epoch SECONDS (10 digits). The parsing rule derives _time from _raw_log ->
+    epochtime.
+use_cases:
+- Proxy
+- CASB
+how_to_use: |
+  ## Sending these logs to Cortex XSIAM
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `zscaler` / product `cloudnss`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+  Phantom emits Zscaler Internet Access cloud-NSS records as a JSON log line. This
+  is a **raw-log** source: the modeling rule reads the whole JSON object out of
+  `_raw_log` (`_raw_log -> sourcetype`, `_raw_log -> epochtime`, etc.), so the
+  vendor's fields must be packed **inside** the `_raw_log` JSON, not as top-level
+  columns.
+
+  **Required broker routing for XSIAM**:
+
+  - **vendor**: `zscaler`
+  - **product**: `cloudnss`
+
+  Broker derives → `zscaler_cloudnss_raw`.
+
+  > **Operator setup (raw-log source):** because the parsing rule reads
+  > `_raw_log`, this source needs a **Broker VM Syslog Applet** configured with
+  > vendor `zscaler` + product `cloudnss` on a dedicated source port. Without it,
+  > the JSON lands in `unknown_unknown_raw` and the modeling rule never fires.
+
+  **MR pattern**: Raw-log JSON. The parsing rule flattens `_raw_log` and the
+  modeling rule branches on `_raw_log -> sourcetype`.
+
+  **PR filter quirks**: `_time` is derived from `_raw_log -> epochtime`
+  (10-digit epoch seconds). Events without it still land (`no_hit=keep`) but get
+  ingest-time `_time`.
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = zscaler_cloudnss_raw
+  | filter xdm.event.type = "zscalernss-web"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  ### Make it map to XDM
+
+  The `zscaler_cloudnss_raw` modeling rule only runs when `_raw_log -> sourcetype`
+  is one of `"zscalernss-web"`, `"zscalernss-dns"`, `"zscalernss-fw"`,
+  `"zscalernss-audit"` — each is a separate feed-type mapping branch. The
+  connector's `sourcetype` field defaults to `zscalernss-web` (richest: the
+  web-proxy branch), so default generation clears the gate; to exercise another
+  branch pass `observables_dict={"sourcetype": "zscalernss-dns"}` — seed the bare
+  leaf name `sourcetype`, NOT the dotted `_raw_log.sourcetype`, because the
+  generator keys observable overrides on the leaf basename.
+  The web branch populates core XDM: `xdm.event.type` <- `sourcetype`,
+  `xdm.network.http.url`/`xdm.network.http.url_category` <- the URL fields,
+  `xdm.source.ipv4`/`xdm.target.ipv4` <- client/server IPs,
+  `xdm.observer.action` <- `action`, `xdm.source.user.username` <- `user`, and
+  `xdm.event.outcome` from the request/response action.
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+validated: true

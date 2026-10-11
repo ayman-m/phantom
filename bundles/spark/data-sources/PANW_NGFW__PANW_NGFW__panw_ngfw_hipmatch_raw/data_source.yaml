@@ -1,0 +1,129 @@
+schema_version: 1
+id: panw_ngfw_hipmatch_raw
+pack_name: PANW_NGFW
+rule_name: PANW_NGFW
+dataset_name: panw_ngfw_hipmatch_raw
+vendor: Palo Alto Networks
+product: NGFW HIP Match
+description: Palo Alto Networks NGFW — Host Information Profile (HIP) match events. HIP profiles assert
+  client posture (AV running, disk encrypted, etc.) and these events fire when a session's client posture
+  matches a HIP profile.
+categories:
+- Network Security
+- Endpoint Posture
+- Compliance
+version: 1.0.0
+origin: bundle
+author: phantom-maintainer (PANW NGFW hand-curated)
+formats:
+- CEF
+- SYSLOG
+is_rawlog_only: false
+fields:
+- name: config_version
+  type: string
+  description: HIP profile configuration version on the client. Maps to `xdm.source.application.version`.
+  example: 1.5.2
+- name: endpoint_device_name
+  type: string
+  description: Hostname of the endpoint with the HIP profile evaluated.
+  example: bob-thinkpad.corp.example.com
+- name: endpoint_os_type
+  type: string
+  description: 'Endpoint OS — space-separated; first token becomes the os_family discriminator (case-insensitive).
+    Recognized: windows, macos/mac, ios/iOS, chromeos, linux, android. Other values pass through.'
+  example: Windows 11 Pro
+- name: endpoint_serial_number
+  type: string
+  description: Hardware serial number of the endpoint. Maps to `xdm.source.host.hardware_uuid`.
+  example: MJ04ABCDEF12
+- name: hip_match_name
+  type: string
+  description: Name of the matched HIP profile. Maps to `xdm.event.type`.
+  example: Corp-AV-Encrypted-Disk
+- name: host_id
+  type: string
+  description: Unique host identifier (preferred — used over source_device_mac if present). Maps to `xdm.source.host.device_id`.
+  example: hip-host-abcdef123456
+- name: log_source
+  type: string
+  description: Log source type. Maps to `xdm.observer.type`.
+  example: panw-hip
+- name: log_source_id
+  type: string
+  description: Unique log source instance identifier.
+  example: 001801000003
+- name: log_source_name
+  type: string
+  description: Friendly log source name. Maps to `xdm.observer.name`.
+  example: pa-fw-hq-01
+- name: rt
+  type: string
+  example: '1788700000000'
+  description: Event time as a CEF epoch integer (10/13/16/19 digits). The broker honours the CEF `rt`
+    extension as `_time` during generic extraction, with NO parsing rule involved — so this is the back-dating
+    handle for this source even on the derived route. Omit it and `_time` falls back to ingestion time.
+- name: sequence_no
+  type: integer
+  description: Monotonic event sequence number. Cast to string for `xdm.event.id`.
+  example: '111222333'
+- name: source_device_mac
+  type: mac
+  description: MAC address — fallback when host_id is null. Routes through both device_id AND mac_addresses
+    if it contains ':'.
+  example: 00:50:56:aa:bb:03
+- name: source_ip
+  type: ipv4
+  description: Source IPv4 address. Maps to `xdm.source.ipv4` directly (no sentinel check in this MR).
+  example: 10.5.5.50
+- name: source_ip_v6
+  type: string
+  description: Source IPv6 address — populates `xdm.source.ipv6` only when contains ':'.
+  example: 2001:db8:hip::5
+- name: source_user
+  type: string
+  description: 'Source username (often empty for HIP events — HIP is endpoint-keyed). Note: MR doesn''t
+    read this field; the user fields come from `source_user_info_name` below.'
+  example: ''
+- name: source_user_info_domain
+  type: string
+  description: User's AD domain (when User-ID mapping was made). Maps to both `xdm.source.user.domain`
+    AND `xdm.source.identity.domain`.
+  example: corp.example.com
+- name: source_user_info_name
+  type: string
+  description: Username. Maps to BOTH `xdm.source.user.username` AND `xdm.source.identity.username`.
+  example: bob
+- name: sub_type
+  type: string
+  description: HIP event subtype. Maps to `xdm.target.application.name` (unusual mapping — HIP profile
+    types are treated as 'applications' for downstream querying).
+  example: hip-match
+validated: false
+use_cases:
+- Firewall traffic & threat analysis
+- Network security monitoring
+- Threat hunting
+how_to_use: "Palo Alto Networks NGFW HIP Match logs. Simulate with type=CEF to your XSIAM Broker (UDP\
+  \ syslog).\n\nRouting: Cortex ingests PAN-OS NGFW logs NATIVELY — the parsing and modeling for\nthe\
+  \ `panw_ngfw_*_raw` datasets are built into the platform, NOT shipped by an\ninstallable content pack.\
+  \ The Cortex Marketplace \"PAN-OS by Palo Alto Networks\"\npack is an XSOAR automation pack (integration,\
+  \ classifier, mapper, playbooks) that\nmanages firewalls over the API; it ships no parsing or modeling\
+  \ rules, and\ninstalling it does NOT create these datasets.\n\nRequired CEF header for XSIAM:\n- vendor:\
+  \ `panw`\n- product: `ngfw_hipmatch`\n\nThat pair derives the target dataset directly (`<lower(vendor)>_<lower(product)>_raw`\n\
+  = `panw_ngfw_hipmatch_raw`), which is the dataset this modeling rule binds to. Modeling rules\nbind\
+  \ by dataset NAME only, so the derived route reaches the rule without any\nparsing rule being consulted\
+  \ — the same mechanism documented for `microsoft`/`adfs`.\n\nDo NOT send `product=ngfw_cef`. That pair\
+  \ is claimed by an INGEST block targeting\nthe catch-all `panw_ngfw_cef_raw` with `no_hit=drop`: no\
+  \ modeling rule binds there,\nand non-matching events are silently DISCARDED. There is no mechanism\
+  \ that reads the\n`log_type` extension to fan one CEF stream out into the six per-log-type datasets\
+  \ —\nINGEST blocks route, MODEL blocks only bind to a dataset that already exists.\n\nNot yet XDM-validated end to end (validated: false). The routing\nliteral above is derived from the broker's naming rule and the microsoft/adfs\nprecedent. Confirm events land in the intended dataset before\ntrusting the mapping.\n\n**How simulation\
+  \ works — read this before generating.** `phantom_create_data_worker`\nresolves each field's value in\
+  \ this order:\n\n  1. `observables_dict[field]` — explicit; always wins. Values are LISTS.\n  2. `is_gate`\
+  \ + `example` — gate fields are auto-pinned to their example.\n  3. declared `type` — ipv4/user/url/datetime\
+  \ are synthesized plausibly.\n  4. field-name heuristic.\n  5. random token.\n\n**A field's `example`\
+  \ below is DOCUMENTATION ONLY unless that field is marked\n`is_gate`.** So every field the modeling\
+  \ rule reads expecting a specific SHAPE --\nan enum, an HTTP method, a status code, a resource path,\
+  \ a numeric type code, an\nXML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled\n\
+  exactly as `fields[]` spells them (dotted leaves included, e.g.\n`event_data.param2`). Anything you\
+  \ leave out is randomly generated, and the rule\nwill map it to garbage or drop the event."

@@ -1,0 +1,176 @@
+schema_version: 1
+id: GitLab
+pack_name: GitLab
+rule_name: GitlabModelingRules
+dataset_name: gitlab_gitlab_raw
+vendor: GitLab
+product: GitLab
+description: Pack for handling gitlab operations
+categories:
+- Code Repositories
+- CI/CD
+version: 2.2.39
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTExcHgiIHZpZXdCb3g9IjAgMCA1MTIgMTExIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDx0aXRsZT5HaXRMYWI8L3RpdGxlPgogICAgPGc+CiAgICAgICAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTQzLjQxMTYsIDcuMDg1NCkiIGZpbGw9IiMxNzEzMjEiPgogICAgICAgICAgICA8cGF0aCBkPSJNNjMuMzI1NzU5OSwzNC42MTUxMjk4IEw4MC4xNTM1ODQzLDM0LjYxNTEyOTggQzc3LjM0ODk0NjksMTYuNzU0MDE4MSA2MS44NDk2MzUsNC4yODA3NjIzMyA0MS43MDA1Mjk2LDQuMjgwNzYyMzMgQzIxLjU1MTQyNDEsNC4yODA3NjIzMyAtNC4xOTUzOTk0MWUtMTQsMjEuNzcyODQyOSAtNC4xOTUzOTk0MWUtMTQsNTEuMTQ3NzI5MiBDLTQuMTk1Mzk5NDFlLTE0LDgwLjUyMjYxNTUgMTcuMDQ5MjQzMSw5Ny44NjcwODM1IDQyLjIxNzE3MzMsOTcuODY3MDgzNSBDNjcuMzg1MTAzNSw5Ny44NjcwODM1IDgwLjg5MTY0NjcsODMuNDAxMDU5MSA4MC44OTE2NDY3LDU5Ljg1Njg2NjMgTDgwLjg5MTY0NjcsNDguOTMzNTQxOCBMNDMuOTE0NzE3LDQ4LjkzMzU0MTggTDQzLjkxNDcxNyw2MS44NDk2MzUgTDY0Ljg3NTY5MTEsNjEuODQ5NjM1IEM2NC41ODA0NjYxLDc0LjgzOTUzNDUgNTUuOTQ1MTM1Miw4My4wMzIwMjc5IDQyLjIxNzE3MzMsODMuMDMyMDI3OSBDMjguNDg5MjExMyw4My4wMzIwMjc5IDE2LjUzMjU5OTMsNzEuNTkyMDU5NiAxNi41MzI1OTkzLDUxLjAwMDExNjcgQzE2LjUzMjU5OTMsMzAuNDA4MTczOCAyNy4xNjA2OTg5LDE5LjExNTgxOCA0MS44NDgxNDIxLDE5LjExNTgxOCBDNTYuNTM1NTg1MiwxOS4xMTU4MTggNjAuMjk5NzAzOCwyNS4wMjAzMTc3IDYzLjI1MTk1MzcsMzQuNjE1MTI5OCBMNjMuMzI1NzU5OSwzNC42MTUxMjk4IEw2My4zMjU3NTk5LDM0LjYxNTEyOTggWiI+PC9wYXRoPgogICAgICAgICAgICA8cGF0aCBkPSJNOTIuMDM2MzksOTYuNjEyMzc3MyBMMTA4LjEyNjE1Miw5Ni42MTIzNzczIEwxMDguMTI2MTUyLDI4LjM0MTU5ODkgTDkyLjAzNjM5LDI4LjM0MTU5ODkgTDkyLjAzNjM5LDk2LjYxMjM3NzMgWiBNMTAwLjA4MTI3MSwxNy40OTIwODA1IEMxMDUuMTczOTAyLDE3LjQ5MjA4MDUgMTA5LjM4MDg1OCwxMy41ODAzNDk1IDEwOS4zODA4NTgsOC43ODI5NDMzOSBDMTA5LjM4MDg1OCwzLjk4NTUzNzM0IDEwNS4xNzM5MDIsMCAxMDAuMDgxMjcxLDAgQzk0Ljk4ODYzOTksMCA5MC43MDc4Nzc2LDMuOTExNzMxMDkgOTAuNzA3ODc3Niw4Ljc4Mjk0MzM5IEM5MC43MDc4Nzc2LDEzLjY1NDE1NTcgOTQuOTE0ODMzNywxNy40OTIwODA1IDEwMC4wODEyNzEsMTcuNDkyMDgwNSBaIj48L3BhdGg+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0xNTYuMzIxNjMxLDI4LjM0MTU5ODkgTDE0Mi44MTUwODgsMjguMzQxNTk4OSBMMTQyLjgxNTA4OCwxMS45NTY2MTIgTDEyNi43MjUzMjYsMTEuOTU2NjEyIEwxMjYuNzI1MzI2LDI4LjM0MTU5ODkgTDExNy4wNTY3MDgsMjguMzQxNTk4OSBMMTE3LjA1NjcwOCw0MC44MTQ4NTQ2IEwxMjYuNzI1MzI2LDQwLjgxNDg1NDYgTDEyNi43MjUzMjYsNzguODI1MDcxOCBDMTI2LjcyNTMyNiw5MS42NjczNTg4IDEzNS45NTExMDcsOTguMDE0Njk2IDE0OC4wNTUzMzIsOTcuNjQ1NjY0OCBDMTUyLjYzMTMxOSw5Ny40OTgwNTIzIDE1NS44MDQ5ODcsOTYuNjEyMzc3MyAxNTcuNTAyNTMxLDk2LjAyMTkyNzQgTDE1NC43NzE3LDgzLjQwMTA1OTEgQzE1My44ODYwMjUsODMuNjIyNDc3OSAxNTIuMDQwODY5LDgzLjk5MTUwOTEgMTUwLjA0ODEsODMuOTkxNTA5MSBDMTQ1Ljk4ODc1Nyw4My45OTE1MDkxIDE0Mi43NDEyODIsODIuNTg5MTkwNCAxNDIuNzQxMjgyLDc2LjA5NDI0MDcgTDE0Mi43NDEyODIsNDAuODE0ODU0NiBMMTU2LjI0NzgyNSw0MC44MTQ4NTQ2IEwxNTYuMjQ3ODI1LDI4LjM0MTU5ODkgTDE1Ni4zMjE2MzEsMjguMzQxNTk4OSBMMTU2LjMyMTYzMSwyOC4zNDE1OTg5IFoiPjwvcGF0aD4KICAgICAgICAgICAgPHBvbHlnb24gcG9pbnRzPSIxNjguNzk0ODg3IDk2LjYxMjM3NzMgMjI1LjQwNDI3OCA5Ni42MTIzNzczIDIyNS40MDQyNzggODIuODEwNjA5MSAxODUuMzI3NDg2IDgyLjgxMDYwOTEgMTg1LjMyNzQ4NiA1LjUzNTQ2ODUzIDE2OC43OTQ4ODcgNS41MzU0Njg1MyAxNjguNzk0ODg3IDk2LjYxMjM3NzMiPjwvcG9seWdvbj4KICAgICAgICAgICAgPHBhdGggZD0iTTI1Ni4yNTUyOSw5OC4wMTQ2OTYgQzI2Ni45NTcxOTUsOTguMDE0Njk2IDI3My4zNzgzMzksOTIuOTk1ODcxMiAyNzYuMzMwNTg5LDg3LjIzODk4NCBMMjc2Ljg0NzIzMyw4Ny4yMzg5ODQgTDI3Ni44NDcyMzMsOTYuNjEyMzc3MyBMMjkyLjM0NjU0NCw5Ni42MTIzNzczIEwyOTIuMzQ2NTQ0LDUwLjkyNjMxMDQgQzI5Mi4zNDY1NDQsMzIuODQzNzc5OSAyNzcuNjU5MTAxLDI3LjQ1NTkyMzkgMjY0LjU5NTM5NiwyNy40NTU5MjM5IEMyNTEuNTMxNjksMjcuNDU1OTIzOSAyMzkuMjA2MDQ3LDMzLjg3NzA2NzQgMjM1LjY2MzM0Nyw0Ni4yNzY1MTY5IEwyNTAuNzE5ODIxLDQ4LjQxNjg5OCBDMjUyLjM0MzU1OSw0My43NjcxMDQ1IDI1Ni44NDU3NCwzOS43ODE1NjcxIDI2NC43NDMwMDgsMzkuNzgxNTY3MSBDMjcyLjY0MDI3NiwzOS43ODE1NjcxIDI3Ni4zMzA1ODksNDMuNjE5NDkyIDI3Ni4zMzA1ODksNTAuMzM1ODYwNSBMMjc2LjMzMDU4OSw1MC42MzEwODU0IEMyNzYuMzMwNTg5LDU1LjI4MDg3OSAyNzEuNDU5Mzc3LDU1LjUwMjI5NzggMjU5LjQyODk1OCw1Ni43NTcwMDQgQzI0Ni4xNDM4MzQsNTguMTU5MzIyNiAyMzMuNTIyOTY2LDYyLjE0NDg2IDIzMy41MjI5NjYsNzcuNDk2NTU5NCBDMjMzLjUyMjk2Niw5Mi44NDgyNTg3IDI0My4zMzkxOTYsOTguMDE0Njk2IDI1Ni40MDI5MDIsOTguMDE0Njk2IEwyNTYuMjU1MjksOTguMDE0Njk2IFogTTI2MS40OTU1MzMsODYuMTMxODkwMyBDMjU0Ljc3OTE2NSw4Ni4xMzE4OTAzIDI0OS45ODE3NTksODMuMDMyMDI3OSAyNDkuOTgxNzU5LDc3LjEyNzUyODEgQzI0OS45ODE3NTksNzEuMjIzMDI4NCAyNTUuMzY5NjE1LDY4LjM0NDU4NDcgMjYyLjYwMjYyNyw2Ny4zMTEyOTczIEMyNjYuODA5NTgzLDY2LjcyMDg0NzMgMjc1LjI5NzMwMSw2NS42ODc1NTk4IDI3Ny4zNjM4NzYsNjMuOTkwMDE2MiBMMjc3LjM2Mzg3Niw3Mi4wMzQ4OTcxIEMyNzcuMzYzODc2LDc5LjYzNjk0MDUgMjcxLjIzNzk1OCw4Ni4wNTgwODQgMjYxLjQ5NTUzMyw4Ni4wNTgwODQgTDI2MS40OTU1MzMsODYuMDU4MDg0IEwyNjEuNDk1NTMzLDg2LjEzMTg5MDMgWiI+PC9wYXRoPgogICAgICAgICAgICA8cGF0aCBkPSJNMzA0LjE1NTU0NCw5Ni42MTIzNzczIEwzMTkuOTUwMDgxLDk2LjYxMjM3NzMgTDMxOS45NTAwODEsODUuODM2NjY1MyBMMzIwLjkwOTU2Miw4NS44MzY2NjUzIEMzMjMuNDE4OTc0LDkwLjc4MTY4MzggMzI4LjczMzAyNCw5Ny43OTMyNzczIDM0MC40NjgyMTcsOTcuNzkzMjc3MyBDMzUyLjIwMzQxMSw5Ny43OTMyNzczIDM2OC41ODgzOTgsODUuMDI0Nzk2NiAzNjguNTg4Mzk4LDYyLjUxMzg5MTIgQzM2OC41ODgzOTgsNDAuMDAyOTg1OSAzNTYuMTg4OTQ4LDI3LjM4MjExNzYgMzQwLjM5NDQxMSwyNy4zODIxMTc2IEMzMjQuNTk5ODc0LDI3LjM4MjExNzYgMzIzLjM0NTE2OCwzNC42MTUxMjk4IDMyMC44MzU3NTYsMzkuNTYwMTQ4NCBMMzIwLjE3MTUsMzkuNTYwMTQ4NCBMMzIwLjE3MTUsNS40NjE2NjIyOCBMMzA0LjA4MTczOCw1LjQ2MTY2MjI4IEwzMDQuMDgxNzM4LDk2LjUzODU3MTEgTDMwNC4xNTU1NDQsOTYuNTM4NTcxMSBMMzA0LjE1NTU0NCw5Ni42MTIzNzczIFogTTMxOS45NTAwODEsNjIuNDQwMDg1IEMzMTkuOTUwMDgxLDQ5LjE1NDk2MDUgMzI1LjYzMzE2Miw0MC41OTM0MzU5IDMzNi4wMzk4NDMsNDAuNTkzNDM1OSBDMzQ2LjQ0NjUyMyw0MC41OTM0MzU5IDM1Mi4yNzcyMTcsNDkuNzQ1NDEwNSAzNTIuMjc3MjE3LDYyLjQ0MDA4NSBDMzUyLjI3NzIxNyw3NS4xMzQ3NTk1IDM0Ni42Njc5NDIsODQuNTgxOTU5MSAzMzYuMDM5ODQzLDg0LjU4MTk1OTEgQzMyNS40MTE3NDMsODQuNTgxOTU5MSAzMTkuOTUwMDgxLDc1LjY1MTQwMzIgMzE5Ljk1MDA4MSw2Mi40NDAwODUgWiI+PC9wYXRoPgogICAgICAgIDwvZz4KICAgICAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMCwgMCkiPgogICAgICAgICAgICA8cGF0aCBkPSJNMTEzLjA3NzIzNSw0My44NDA5MTA3IEwxMTIuOTI5NjIyLDQzLjM5ODA3MzIgTDk3LjI4MjY5OCwyLjU4MzIxODY1IEM5Ni45ODc0NzMxLDEuNzcxMzQ5OTMgOTYuMzk3MDIzMSwxLjEwNzA5MzcxIDk1LjY1ODk2MDYsMC42NjQyNTYyMjMgQzk0LjkyMDg5ODEsMC4yMjE0MTg3NDEgOTQuMTA5MDI5NCwwIDkzLjIyMzM1NDUsMCBDOTIuMzM3Njc5NSwwIDkxLjUyNTgxMDgsMC4zNjkwMzEyMzUgOTAuODYxNTU0NiwwLjg4NTY3NDk2NCBDOTAuMTk3Mjk4MywxLjQwMjMxODY5IDg5LjY4MDY1NDYsMi4xNDAzODExNiA4OS40NTkyMzU5LDMuMDI2MDU2MTMgTDc4LjkwNDk0MjUsMzUuMzUzMTkyMyBMMzYuMTcxMTI1NSwzNS4zNTMxOTIzIEwyNS42MTY4MzIyLDMuMDI2MDU2MTMgQzI1LjM5NTQxMzUsMi4yMTQxODc0MSAyNC44Nzg3Njk3LDEuNDc2MTI0OTQgMjQuMjE0NTEzNSwwLjg4NTY3NDk2NCBDMjMuNTUwMjU3MywwLjM2OTAzMTIzNSAyMi43MzgzODg2LDAgMjEuODUyNzEzNiwwIEMyMC45NjcwMzg2LDAgMjAuMTU1MTY5OSwwLjE0NzYxMjQ5NCAxOS40MTcxMDc0LDAuNjY0MjU2MjIzIEMxOC42NzkwNDUsMS4xMDcwOTM3MSAxOC4wODg1OTUsMS43NzEzNDk5MyAxNy43OTMzNywyLjU4MzIxODY1IEwyLjE0NjQ0NTY0LDQzLjM5ODA3MzIgTDEuOTk4ODMzMTUsNDMuODQwOTEwNyBDLTIuNjUwOTYwNDEsNTUuOTQ1MTM1MiAxLjMzNDU3NjkzLDY5LjU5OTI5MDkgMTEuNjY3NDUxNSw3Ny40MjI3NTMxIEwxMS44MTUwNjQsNzcuNDIyNzUzMSBDMTEuODE1MDY0LDc3LjQ5NjU1OTQgMzUuNjU0NDgxOCw5NS4zNTc2NzExIDM1LjY1NDQ4MTgsOTUuMzU3NjcxMSBMNDcuNDYzNDgxMywxMDQuMjg4MjI3IEw1NC42MjI2ODczLDEwOS42NzYwODMgQzU2LjMyMDIzMSwxMTEuMDA0NTk2IDU4Ljc1NTgzNzEsMTExLjAwNDU5NiA2MC40NTMzODA4LDEwOS42NzYwODMgTDY3LjYxMjU4NjcsMTA0LjI4ODIyNyBMNzkuNDIxNTg2Myw5NS4zNTc2NzExIEwxMDMuNDA4NjE3LDc3LjQyMjc1MzEgTDEwMy40MDg2MTcsNzcuNDIyNzUzMSBDMTEzLjc0MTQ5MSw2OS41OTkyOTA5IDExNy42NTMyMjIsNTUuOTQ1MTM1MiAxMTMuMDAzNDI5LDQzLjg0MDkxMDcgTDExMy4wNzcyMzUsNDMuODQwOTEwNyBaIiBmaWxsPSIjRTI0MzI5Ij48L3BhdGg+CiAgICAgICAgICAgIDxwYXRoIGQ9Ik0xMTMuMDc3MjM1LDQzLjg0MDkxMDcgTDExMi45Mjk2MjIsNDMuMzk4MDczMiBDMTA1LjE3OTk2Niw0NS4wMjE4MTA3IDk4LjAyMDc2MDUsNDguMjY5Mjg1NSA5MS44OTQ4NDIsNTIuODQ1MjcyOSBDOTEuODIxMDM1OCw1Mi44NDUyNzI5IDczLjI5NTY2NzgsNjYuOTQyMjY2IDU3LjUwMTEzMDksNzguODI1MDcxOCBDNjkuMTYyNTE3OSw4Ny42ODE4MjE0IDc5LjM0Nzc4LDk1LjM1NzY3MTEgNzkuMzQ3NzgsOTUuMzU3NjcxMSBMMTAzLjMzNDgxLDc3LjQyMjc1MzEgTDEwMy4zMzQ4MSw3Ny40MjI3NTMxIEMxMTMuNjY3Njg1LDY5LjU5OTI5MDkgMTE3LjU3OTQxNiw1NS45NDUxMzUyIDExMi45Mjk2MjIsNDMuODQwOTEwNyBMMTEzLjA3NzIzNSw0My44NDA5MTA3IFoiIGZpbGw9IiNGQzZEMjYiPjwvcGF0aD4KICAgICAgICAgICAgPHBhdGggZD0iTTM1LjU4MDY3NTUsOTUuMzU3NjcxMSBMNDcuMzg5Njc1MSwxMDQuMjg4MjI3IEw1NC41NDg4ODEsMTA5LjY3NjA4MyBDNTYuMjQ2NDI0NywxMTEuMDA0NTk2IDU4LjY4MjAzMDksMTExLjAwNDU5NiA2MC4zNzk1NzQ1LDEwOS42NzYwODMgTDY3LjUzODc4MDUsMTA0LjI4ODIyNyBMNzkuMzQ3NzgsOTUuMzU3NjcxMSBDNzkuMzQ3NzgsOTUuMzU3NjcxMSA2OS4xNjI1MTc5LDg3LjY4MTgyMTQgNTcuNTAxMTMwOSw3OC44MjUwNzE4IEM0NS43NjU5Mzc2LDg3LjY4MTgyMTQgMzUuNTgwNjc1NSw5NS4zNTc2NzExIDM1LjU4MDY3NTUsOTUuMzU3NjcxMSBMMzUuNTgwNjc1NSw5NS4zNTc2NzExIEwzNS41ODA2NzU1LDk1LjM1NzY3MTEgWiIgZmlsbD0iI0ZDQTMyNiI+PC9wYXRoPgogICAgICAgICAgICA8cGF0aCBkPSJNMjMuMTA3NDE5OCw1Mi44NDUyNzI5IEMxNi45ODE1MDEzLDQ4LjI2OTI4NTUgOS44MjIyOTUzMyw0NC45NDgwMDQ0IDIuMDcyNjM5NCw0My4zOTgwNzMyIEwxLjkyNTAyNjksNDMuODQwOTEwNyBDLTIuNzI0NzY2NjYsNTUuOTQ1MTM1MiAxLjI2MDc3MDY4LDY5LjU5OTI5MDkgMTEuNTkzNjQ1Myw3Ny40MjI3NTMxIEwxMS43NDEyNTc4LDc3LjQyMjc1MzEgQzExLjc0MTI1NzgsNzcuNDk2NTU5NCAzNS41ODA2NzU1LDk1LjM1NzY3MTEgMzUuNTgwNjc1NSw5NS4zNTc2NzExIEMzNS41ODA2NzU1LDk1LjM1NzY3MTEgNDUuNzY1OTM3Niw4Ny42ODE4MjE0IDU3LjUwMTEzMDksNzguODI1MDcxOCBDNDEuNzgwNDAwMyw2Ni45NDIyNjYgMjMuMjU1MDMyMyw1Mi45MTkwNzkxIDIzLjEwNzQxOTgsNTIuODQ1MjcyOSBMMjMuMTA3NDE5OCw1Mi44NDUyNzI5IEwyMy4xMDc0MTk4LDUyLjg0NTI3MjkgWiIgZmlsbD0iI0ZDNkQyNiI+PC9wYXRoPgogICAgICAgIDwvZz4KICAgIDwvZz4KPC9zdmc+Cg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _product
+  type: string
+  description: Vendor-emitted field ' product'. Free-form text; may contain whitespace
+    and punctuation.
+  example: GitLab
+- name: _vendor
+  type: string
+  description: Vendor-emitted field ' vendor'. Free-form text; may contain whitespace
+    and punctuation.
+  example: GitLab
+- name: author_id
+  type: string_short
+  description: Opaque identifier emitted by GitLab. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: git-27536c6e
+- name: created_at
+  type: datetime
+  description: ISO-8601 timestamp marking when this state was recorded. ISO-8601 timestamp
+    with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: details
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: action,
+    action_category, action_type, author_name, custom_message, from, ip_address, target_details,
+    target_type, to (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: entity_id
+  type: string_short
+  description: Opaque identifier emitted by GitLab. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: git-0d67373a
+- name: entity_type
+  type: string_short
+  description: Type/category classifier emitted by GitLab. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by GitLab. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: git-259bf730
+- name: details.action
+  type: string_short
+  description: Action taken by GitLab's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: details.action_category
+  type: string_short
+  description: GitLab's category classifier for the event. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: access_control
+- name: details.action_type
+  type: string_short
+  description: Type/category classifier emitted by GitLab. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: details.author_name
+  type: user
+  description: Human-readable name as displayed by GitLab. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: details.custom_message
+  type: string_long
+  description: Human-readable event message. Free-form text; may span multiple lines
+    or contain large payloads.
+  example: Operation completed successfully.
+- name: details.from
+  type: string
+  description: Vendor-emitted field 'Details › from'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_from
+- name: details.ip_address
+  type: ipv4
+  description: Vendor-emitted field 'Details › ip address'. Leaf of the 'details'
+    composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding
+    brackets or quotes.
+  example: 203.0.113.42
+- name: details.target_details
+  type: string_long
+  description: Additional details payload emitted by GitLab. Free-form text; may span
+    multiple lines or contain large payloads.
+  example: Detailed event payload emitted by GitLab for this record.
+- name: details.target_type
+  type: string_short
+  description: Type/category classifier emitted by GitLab. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: details.to
+  type: string
+  description: Vendor-emitted field 'Details › to'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_to
+use_cases:
+- DevOps
+how_to_use: |
+  ## gitlab gitlab → Cortex XSIAM (dataset `gitlab_gitlab_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `gitlab_gitlab_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `gitlab`
+    - **product**: `gitlab`
+
+    These normalize → `gitlab_gitlab_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.author_name`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~16 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.description`, `xdm.event.id`, `xdm.event.operation`, `xdm.event.operation_sub_type`, `xdm.event.type`, `xdm.observer.product`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = gitlab_gitlab_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,239 @@
+schema_version: 1
+id: Workday
+pack_name: Workday
+rule_name: WorkdayEventCollector
+dataset_name: workday_signon_raw
+vendor: Workday
+product: Workday
+description: Workday offers enterprise-level software solutions for financial management,
+  human resources, and planning.
+categories:
+- IT Services
+version: 1.5.13
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwNzZGRDUiPldvcmtkYXk8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: Account_Disabled_or_Expired
+  type: string
+  description: Whether account was disabled or expired. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_expired
+- name: Device_is_Trusted
+  type: string
+  description: Vendor-emitted field 'Device is Trusted'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_trusted
+- name: Failed_Signon
+  type: string
+  description: Vendor-emitted field 'Failed Signon'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_signon
+- name: Forgotten_Password_Reset_Request
+  type: string
+  description: Whether this is a forgotten-password reset request. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_request
+- name: Has_Grace_Period_for_MFA
+  type: string
+  description: Whether MFA grace period applies. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mfa
+- name: Invalid_Credentials
+  type: string
+  description: Whether credentials were invalid. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_credentials
+- name: Invalid_for_Authentication_Channel
+  type: string
+  description: Whether signon was invalid for channel. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_channel
+- name: Invalid_for_Authentication_Policy
+  type: string
+  description: Whether signon was invalid per policy. Free-form text; may contain
+    whitespace and punctuation.
+  example: Default-Policy
+- name: MFA_Authentication_Exempt
+  type: string
+  description: Vendor-emitted field 'MFA Authentication Exempt'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_exempt
+- name: MFA_Enrollment
+  type: string
+  description: Vendor-emitted field 'MFA Enrollment'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_enrollment
+- name: Password_Changed
+  type: string
+  description: Whether password was changed during signon. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_changed
+- name: Required_Password_Change
+  type: string
+  description: Whether a password change is required. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_change
+- name: Requires_MFA
+  type: string
+  description: Vendor-emitted field 'Requires MFA'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_mfa
+- name: Successful
+  type: string
+  description: Vendor-emitted field 'Successful'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_successful
+- name: Tenant_Access_Read_Only
+  type: string
+  description: Whether tenant access was read-only. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_only
+- name: access_restriction_reference
+  type: string
+  description: Workday access restriction reference. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_reference
+- name: api_client_id
+  type: string
+  description: API client id used for request. Free-form text; may contain whitespace
+    and punctuation.
+  example: wor-dbcd4bde
+- name: authentication_channel
+  type: string
+  description: Authentication channel (Web/API/Mobile). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_channel
+- name: authentication_failure_message
+  type: string_long
+  description: Human-readable event message. Free-form text; may span multiple lines
+    or contain large payloads.
+  example: Operation completed successfully.
+- name: authentication_type
+  type: string
+  description: Authentication type (Password/SAML/MFA). Free-form text; may contain
+    whitespace and punctuation.
+  example: authentication
+- name: browser_type
+  type: string_short
+  description: Type/category classifier emitted by Workday. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: device_type_reference
+  type: string
+  description: Vendor-emitted field 'Device type reference'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_reference
+- name: location
+  type: string
+  description: Location label (region/site/zone) emitted by Workday. Free-form text;
+    may contain whitespace and punctuation.
+  example: us-east
+- name: multi_factor_authentication_type_reference
+  type: string
+  description: Vendor-emitted field 'Multi factor authentication type reference'.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_reference
+- name: operating_system
+  type: string
+  description: Vendor-emitted field 'Operating system'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_system
+- name: saml_identity_provider_reference
+  type: string
+  description: SAML identity provider reference. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_reference
+- name: short_session_id
+  type: string_short
+  description: Unique identifier — assigned by Workday per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: sess-48b40215-57c
+- name: signoff_datetime
+  type: datetime
+  description: Vendor-emitted field 'Signoff datetime'. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: signon_datetime
+  type: datetime
+  description: Vendor-emitted field 'Signon datetime'. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: signon_ip_address
+  type: ipv4
+  description: Vendor-emitted field 'Signon ip address'. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: tls_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: user_name
+  type: string
+  description: Human-readable name as displayed by Workday. Free-form text; may contain
+    whitespace and punctuation.
+  example: jdoe
+use_cases:
+- Identity
+how_to_use: |
+  ## Workday Workday → Cortex XSIAM (dataset `workday_signon_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `workday_signon_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `workday_signon`. The marketplace pack's display name `Workday` / `Workday` normalizes to `workday_workday_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `workday_signon` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.id`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~30 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.auth_method`, `xdm.auth.is_mfa_needed`, `xdm.auth.mfa.method`, `xdm.event.description`, `xdm.event.id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = workday_signon_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

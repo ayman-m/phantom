@@ -1,0 +1,282 @@
+schema_version: 1
+id: ZeroNetworksSegment
+pack_name: ZeroNetworksSegment
+rule_name: ZeroNetworksSegment
+dataset_name: zeronetworks_segment_raw
+vendor: Zero Networks
+product: ZeroNetworksSegment
+description: Integrates with Zero Networks Segment API to fetch and process audit
+  and network events.
+categories:
+- Network Security
+version: 1.0.10
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMzQgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNCRjQ1MDAiPlplcm8gTmV0d29ya3M8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: auditType
+  type: integer
+  description: Vendor-emitted field 'AuditType'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: callerIpAddress
+  type: integer
+  description: Vendor-emitted field 'CallerIpAddress'. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: destinationEntitiesList
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: details
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: publicIp
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: dst
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: assetId,
+    assetType, fqdn, ip, port, processId, processName, processPath, userId, userName
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: enforcementSource
+  type: integer
+  description: Vendor-emitted field 'EnforcementSource'. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: inboundRuleMatches
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: outboundRuleMatches
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: parentObjectId
+  type: string
+  description: Destination resource parent ID. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_parentobjectid
+- name: performedBy
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: id, name
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: protocol
+  type: integer
+  description: Network protocol name or numeric IANA assignment. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: reportedObjectId
+  type: integer
+  description: Vendor-emitted field 'ReportedObjectId'. Free-form text; may contain
+    whitespace and punctuation.
+  example: '443'
+- name: source_log_type
+  is_gate: true
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: 'audit'
+- name: src
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: assetId,
+    assetType, fqdn, ip, port, processId, processName, processPath, userId, userName
+    (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: state
+  type: integer
+  description: Vendor-emitted field 'State'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: userRole
+  type: integer
+  description: Vendor-emitted field 'UserRole'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: details.publicIp
+  type: string
+  description: Vendor-emitted field 'Details › publicIp'. Leaf of the 'details' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_publicip
+- name: dst.assetId
+  type: string
+  description: Vendor-emitted field 'Dst › assetId'. Leaf of the 'dst' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_assetid
+- name: dst.assetType
+  type: string
+  description: Vendor-emitted field 'Dst › assetType'. Leaf of the 'dst' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_assettype
+- name: dst.fqdn
+  type: host
+  description: Destination hostname or FQDN reported by the vendor. Leaf of the 'dst'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: dst.ip
+  type: ipv4
+  description: Destination address of the connection target. Leaf of the 'dst' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: dst.port
+  type: integer_port
+  description: Destination TCP/UDP port. Leaf of the 'dst' composite. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: dst.processId
+  type: integer
+  description: Operating-system process identifier. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: dst.processName
+  type: string
+  description: File or process name reported by the vendor. Leaf of the 'dst' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: dst.processPath
+  type: string
+  description: Filesystem path reported by the vendor. Leaf of the 'dst' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_processpath
+- name: dst.userId
+  type: string
+  description: Destination/target user account name. Leaf of the 'dst' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: usr-1f08af79
+- name: dst.userName
+  type: user
+  description: Destination/target user account name. Leaf of the 'dst' composite.
+    Account name as the vendor reports it — login name, UPN, or sAMAccountName depending
+    on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: performedBy.id
+  type: string_short
+  description: Opaque identifier emitted by Zero Networks. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: zer-191e125b
+- name: performedBy.name
+  type: user
+  description: Human-readable name as displayed by Zero Networks. Account name as
+    the vendor reports it — login name, UPN, or sAMAccountName; no domain prefix unless
+    vendor emits one.
+  example: jsmith
+- name: src.assetId
+  type: string
+  description: Vendor-emitted field 'Src › assetId'. Leaf of the 'src' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_assetid
+- name: src.assetType
+  type: string
+  description: Vendor-emitted field 'Src › assetType'. Leaf of the 'src' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_assettype
+- name: src.fqdn
+  type: host
+  description: Source hostname or FQDN reported by the vendor. Leaf of the 'src' composite.
+    Hostname or fully-qualified domain name (RFC 1035 dotted labels); no protocol
+    prefix.
+  example: host.example.com
+- name: src.ip
+  type: ipv4
+  description: Source address of the connection initiator. Leaf of the 'src' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: src.port
+  type: integer_port
+  description: Source TCP/UDP port. Leaf of the 'src' composite. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: src.processId
+  type: integer
+  description: Operating-system process identifier. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: src.processName
+  type: string
+  description: File or process name reported by the vendor. Leaf of the 'src' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: src.processPath
+  type: string
+  description: Filesystem path reported by the vendor. Leaf of the 'src' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_processpath
+- name: src.userId
+  type: string
+  description: Source/initiating user account name. Leaf of the 'src' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: usr-df8926a7
+- name: src.userName
+  type: user
+  description: Source/initiating user account name. Leaf of the 'src' composite. Account
+    name as the vendor reports it — login name, UPN, or sAMAccountName depending on
+    the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+use_cases:
+- Network
+- Identity
+how_to_use: |
+  ## Zero Networks ZeroNetworksSegment → Cortex XSIAM (dataset `zeronetworks_segment_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `zeronetworks_segment_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `zeronetworks_segment`. The marketplace pack's display name `Zero Networks` / `ZeroNetworksSegment` normalizes to `zero_networks_zeronetworkssegment_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `zeronetworks_segment` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.id`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `source_log_type = "audit"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~35 fields mapped to the unified data model (`xdm.*`), including: `xdm.auth.privilege_level`, `xdm.event.operation_sub_type`, `xdm.event.original_event_type`, `xdm.event.outcome_reason`, `xdm.event.type`, `xdm.network.ip_protocol`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|Zero Networks|ZeroNetworksSegment|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = zeronetworks_segment_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,182 @@
+schema_version: 1
+id: CommvaultBackupSolutions
+pack_name: CommvaultBackupSolutions
+rule_name: CommvaultBackupSolutions
+dataset_name: commvault_backupsolution_raw
+vendor: HashiCorp
+product: CommvaultBackupSolutions
+description: This pack contains Modeling and Parsing Rules for normalizing Commvault
+  Backup API logs
+categories:
+- Analytics & SIEM
+- Cloud Service Provider
+- Database
+version: 1.0.4
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iMTIwcHgiIHZpZXdCb3g9IjAgMCA1MTIgMTIwIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQiPgogICAgPHRpdGxlPkhhc2hpQ29ycDwvdGl0bGU+CiAgICA8ZyBmaWxsPSIjMDAwMDAwIj4KICAgICAgICA8cGF0aCBkPSJNMTc0LjEzODQyNCw5Mi44NDk5OTY0IEwxNzQuMTM4NDI0LDY1LjMyNjU2MDYgTDE0OS45MzA2MTksNjUuMzI2NTYwNiBMMTQ5LjkzMDYxOSw5Mi44NDk5OTY0IEwxMzcuNjA0ODUzLDkyLjg0OTk5NjQgTDEzNy42MDQ4NTMsMjcuNTg1MDY0NiBMMTQ5LjkzMDYxOSwyNy41ODUwNjQ2IEwxNDkuOTMwNjE5LDU0LjQzMDU4MzMgTDE3NC4xMzg0MjQsNTQuNDMwNTgzMyBMMTc0LjEzODQyNCwyNy41ODUwNjQ2IEwxODYuNDY0MTksMjcuNTg1MDY0NiBMMTg2LjQ2NDE5LDkyLjg0OTk5NjQgTDE3NC4xMzg0MjQsOTIuODQ5OTk2NCBaIE0yMzEuNjUwNDQ5LDkyLjg0OTk5NjQgTDIyMS44NjM3OTEsOTIuODQ5OTk2NCBMMjIwLjk3NjMzNSw4OS42MjA2NDU3IEMyMTYuNzQ2MjYzLDkyLjM3MDExNjIgMjExLjgwOTgzNCw5My44MzQzNDc0IDIwNi43NjQ3MjcsOTMuODM2MDU3NyBDMTk4LjAzODA4NSw5My44MzYwNTc3IDE5NC4zMTU3MDMsODcuODU4MDYxMSAxOTQuMzE1NzAzLDc5LjYyNDQ0OTMgQzE5NC4zMTU3MDMsNjkuOTI0MDcxNCAxOTguNTMxMTE1LDY2LjIwMTY5IDIwOC4yMzE0OTMsNjYuMjAxNjkgTDIxOS42OTQ0NTYsNjYuMjAxNjkgTDIxOS42OTQ0NTYsNjEuMTk3NDI4OSBMMjE5LjY4ODgzNSw2MC42NTM0MTE1IEMyMTkuNTgzOTIyLDU1Ljc4MTM1NjggMjE3Ljk1OTU1LDU0LjA0ODQ4NDYgMjEwLjU4NTcxNSw1NC4wNDg0ODQ2IEMyMDYuMTQwOTk0LDU0LjA3OTMzMzIgMjAxLjcxMDQ3NSw1NC41NTQxNzkxIDE5Ny4zNjAxNjgsNTUuNDY1OTQ3NyBMMTk1Ljg5MzQwMSw0Ni4zNTcyMDY1IEMyMDEuMjI1MTU1LDQ0Ljg4MTQxMjIgMjA2LjcyOTgzLDQ0LjEyMjg2MTQgMjEyLjI2MjAxOSw0NC4xMDE1OTEzIEMyMjcuMjUwMTUsNDQuMTAxNTkxMyAyMzEuNjYyNzc1LDQ5LjM4OTM0NSAyMzEuNjYyNzc1LDYxLjM1NzY2MzkgTDIzMS42NTA0NDksOTIuODQ5OTk2NCBaIE0yMTkuNzA2NzgyLDgxLjg2NzczODggTDIxOS42OTQ0NTYsNzQuODE3NDAwNSBMMjEwLjg4MTUzMyw3NC44MTc0MDA1IEMyMDYuOTYxOTM5LDc0LjgxNzQwMDUgMjA1Ljg4OTU5OCw3NS44ODk3NDIyIDIwNS44ODk1OTgsNzkuNTI1ODQzMiBDMjA1Ljg4OTU5OCw4Mi44NTM4IDIwNi45NjE5MzksODQuMzMyODkyIDIxMC42OTY2NDcsODQuMzMyODkyIEMyMTMuODU5NTM1LDg0LjI4MTkwNTYgMjE2Ljk1ODQ4LDgzLjQzNDA0MSAyMTkuNzA2NzgyLDgxLjg2NzczODggWiBNMjU0Ljc4NTkxMiw5My44MjM3MzE5IEMyNDkuMTkwNjYyLDkzLjczMTg0NTMgMjQzLjY0MDQ1NCw5Mi44MDU0MjU5IDIzOC4zMTg2ODgsOTEuMDc1MDg2MSBMMjM5Ljk4MjY2Nyw4MS45NjYzNDQ5IEMyNDQuNjA1NjM5LDgzLjI4ODk2MjUgMjQ5LjM4NjAyMSw4My45ODEzNTA5IDI1NC4xOTQyNzUsODQuMDI0NzQ3OCBMMjU0Ljg1ODc3NCw4NC4wMTc2NjY2IEMyNTkuNTQ5MTMzLDgzLjkxMzE0MDIgMjYwLjI3MDg3OCw4Mi42MzY3NTk0IDI2MC4yNzA4NzgsNzkuMjE3Njk5IEwyNjAuMjY0NTMzLDc4Ljc1MDM1MDIgQzI2MC4xODgxMjMsNzYuMjIyNzc3MyAyNTkuMzI3MTYsNzQuODE0NDMyMSAyNTIuNzU1MDQzLDczLjE0NTQ5NTYgTDI1MS45Mzg2Niw3Mi45NDM4ODQxIEMyNDAuNDMxOTA5LDcwLjEzNDA5NTkgMjM4Ljk0ODExMSw2Ny4yNDAyODMgMjM4LjkxMTA1Niw1OC4zMTU5NTU5IEwyMzguOTEwMzI1LDU3Ljk1NTc1MjQgQzIzOC45MTAzMjUsNDguMzUzOTgwNiAyNDMuMTI1NzM3LDQ0LjEzODU2ODYgMjU2Ljc0NTcwOSw0NC4xMzg1Njg2IEMyNjEuNTYzNzg2LDQ0LjE0Mjk4NDQgMjY2LjM2NTM4Myw0NC43MDEzMDk2IDI3MS4wNTU5MjMsNDUuODAyNTQ3IEwyNjkuODIzMzQ3LDU1LjMwNTcxMjcgQzI2NS40OTAzNDcsNTQuNTA2MTM0MSAyNjEuMTAxMTYsNTQuMDQ4NjY5NSAyNTYuNjk2NDA2LDUzLjkzNzU1MjcgQzI1MS41MDcyNTgsNTMuOTM3NTUyNyAyNTAuNjE5ODAzLDU1LjE3MDEyOTMgMjUwLjYxOTgwMyw1OC4wNTQzNTg2IEwyNTAuNjIzNzEzLDU4LjY3MDIwOTEgQzI1MC42NjkxMjgsNjEuNjUzNzc3OCAyNTEuMTg4MDc0LDYyLjE5MDUwOSAyNTYuMDI0NTA1LDYzLjQ3OTY2ODUgTDI1Ny4zODY2NDksNjMuODM1MTQyOSBDMjcwLjc0Nzc3OSw2Ny4zNzI2Mzc4IDI3Mi4wMjk2NTksNjkuMTM1MjIyMyAyNzIuMDI5NjU5LDc4Ljg4NDkwMzMgTDI3Mi4wMjUwMzksNzkuNTE3NjAwNCBDMjcxLjg5MjY0Nyw4OC4zOTk4MDA0IDI2OC44NTE0NTMsOTMuODIzNzMxOSAyNTQuNzg1OTEyLDkzLjgyMzczMTkgWiBNMzA3LjYwMTgyLDkyLjg0OTk5NjQgTDMwNy42MDE4Miw1OS41NzA0Mjc4IEMzMDcuNjAxODIsNTcuMDE4OTk0MiAzMDYuNTI5NDc4LDU1Ljc0OTQ0MDMgMzAzLjc4MDgzMiw1NS43NDk0NDAzIEMzMDAuODQ3Myw1NS43NDk0NDAzIDI5NS42NDU4MjcsNTcuNTEyMDI0OCAyOTEuMzMxODA5LDU5Ljc2NzY0IEwyOTEuMzMxODA5LDkyLjg0OTk5NjQgTDI3OS4zNzU4MTUsOTIuODQ5OTk2NCBMMjc5LjM3NTgxNSwyNS42MjUyNjc4IEwyOTEuMzMxODA5LDIzLjk2MTI4OTQgTDI5MS4zMzE4MDksNDguNzQ4NDA1MSBDMjk2Ljc0NDI3Nyw0NS45NzAxNDM5IDMwMi42OTQ0MDIsNDQuMzk3NDYwNSAzMDguNzcyNzY4LDQ0LjEzODU2ODYgQzMxNi43MTA1NjEsNDQuMTM4NTY4NiAzMTkuNTQ1NDg3LDQ5LjcyMjE0MDYgMzE5LjU0NTQ4Nyw1OC4yNTE1NzA4IEwzMTkuNTQ1NDg3LDkyLjg0OTk5NjQgTDMwNy42MDE4Miw5Mi44NDk5OTY0IFogTTMyOC4zNzA3MzYsMzguMzcwMTEgTDMyOC4zNzA3MzYsMjQuNTUyOTI2MiBMMzQwLjMyNjcyOSwyNC41NTI5MjYyIEwzNDAuMzI2NzI5LDM4LjM3MDExIEwzMjguMzcwNzM2LDM4LjM3MDExIFogTTMyOC4zNzA3MzYsOTIuODQ5OTk2NCBMMzI4LjM3MDczNiw0NS4xMjQ2Mjk5IEwzNDAuMzI2NzI5LDQ1LjEyNDYyOTkgTDM0MC4zMjY3MjksOTIuODQ5OTk2NCBMMzI4LjM3MDczNiw5Mi44NDk5OTY0IFogTTM0OC42NTg5NDcsNDUuNTE5MDU0NCBDMzQ4LjY1ODk0NywzMy41NjMwNjEyIDM1NS42MTA2NzksMjYuNjExMzI1NSAzNzEuODgwNjksMjYuNjExMzI1NSBDMzc3Ljg1ODQ0OCwyNi42MTAwMTM1IDM4My44MTQyNjUsMjcuMzM0MzEzNyAzODkuNjE3NDY4LDI4Ljc2ODMzODIgTDM4OC4yNjE2MzQsMzkuNDQyNDUxNyBDMzgyLjk3NjM1OSwzOC40NDA5NDkyIDM3Ny42MTY0MjEsMzcuODg0MzQwMiAzNzIuMjM4MTM4LDM3Ljc3ODQ3MzIgQzM2My44NTA4NjUsMzcuNzc4NDczMiAzNjEuMDY1MjA3LDQwLjYyNjk1NDQgMzYwLjk3NDY4Miw0Ny4yOTY2NTExIEwzNjAuOTcyMzg3LDcyLjcyMjAyMDMgQzM2MC45NzIzODcsNzkuNjczNzUyNCAzNjMuNzIxMDMzLDgyLjU4MjYzMzIgMzcyLjIzODEzOCw4Mi41ODI2MzMyIEMzNzcuNjE2NDIxLDgyLjQ3Njc2NjIgMzgyLjk3NjM1OSw4MS45MjAxNTcyIDM4OC4yNjE2MzQsODAuOTE4NjU0OCBMMzg5LjYyOTc5NCw5MS42MDUwOTQgQzM4My44MjY1OTEsOTMuMDM5MTE4NSAzNzcuODcwNzc0LDkzLjc2MzQxODcgMzcxLjg5MzAxNiw5My43NjIxMDY3IEMzNTUuNjIzMDA1LDkzLjc2MjEwNjcgMzQ4LjY3MTI3Myw4Ni44MTAzNzEgMzQ4LjY3MTI3Myw3NC44NTQzNzc4IEwzNDguNjU4OTQ3LDQ1LjUxOTA1NDQgWiBNNDE0LjE0NTc0Myw5My44MjM3MzE5IEMzOTcuNzc3MTI1LDkzLjgyMzczMTkgMzkzLjM3NjgyNyw4NC44MTM1OTY5IDM5My4zNzY4MjcsNzUuMDE0NjEyOCBMMzkzLjM3NjgyNyw2Mi45NjAwMTM1IEMzOTMuMzc2ODI3LDUzLjE2MTAyOTQgMzk3Ljc4OTQ1MSw0NC4xNTA4OTQzIDQxNC4xNDU3NDMsNDQuMTUwODk0MyBDNDMwLjUwMjAzNCw0NC4xNTA4OTQzIDQzNC45MTQ2NTksNTMuMTYxMDI5NCA0MzQuOTE0NjU5LDYyLjk2MDAxMzUgTDQzNC45MTQ2NTksNzUuMDE0NjEyOCBMNDM0LjkwNjMsNzUuNjM4OTI5MyBDNDM0LjY4NTAzMyw4NS4xOTI5MjggNDMwLjEyOTkwMSw5My44MjM3MzE5IDQxNC4xNDU3NDMsOTMuODIzNzMxOSBaIE00MTQuMTQ1NzQzLDU0LjM4MTI4MDIgQzQwNy43NzMzMjEsNTQuMzgxMjgwMiA0MDUuMzMyODIsNTcuMjI4NTMyMiA0MDUuMzMyODIsNjIuNjE0ODkyIEw0MDUuMzMyODIsNzUuNDA5MDM3MyBDNDA1LjMzMjgyLDgwLjc5NTM5NzEgNDA3Ljc5Nzk3Myw4My42NDI2NDkxIDQxNC4xNDU3NDMsODMuNjQyNjQ5MSBDNDIwLjQ5MzUxMiw4My42NDI2NDkxIDQyMi45NTg2NjUsODAuNzk1Mzk3MSA0MjIuOTU4NjY1LDc1LjQwOTAzNzMgTDQyMi45NTg2NjUsNjIuNTY1NTg5IEM0MjIuOTM0MDE0LDU3LjE3OTIyOTIgNDIwLjQ4MTE4Niw1NC4zMzE5NzcyIDQxNC4xNDU3NDMsNTQuMzMxOTc3MiBMNDE0LjE0NTc0Myw1NC4zODEyODAyIFogTTQ2Ni42Mjg4NTUsNTUuMTIwODI2MiBDNDYyLjI0MDc4NCw1Ny4xMDkwOTEzIDQ1OC4wMTI4MDMsNTkuNDMzMjQ0NiA0NTMuOTgyNjE5LDYyLjA3MjU1ODMgTDQ1My45ODI2MTksOTIuODg2OTczNyBMNDQyLjAyNjYyNiw5Mi44ODY5NzM3IEw0NDIuMDI2NjI2LDQ1LjEyNDYyOTkgTDQ1Mi4xMjE0MjgsNDUuMTI0NjI5OSBMNDUyLjkxMDI3Nyw1MC40MTIzODM1IEM0NTYuNzk5MTM2LDQ3Ljc3OTEyMDYgNDYxLjAxNzk4Miw0NS42Njk2OTc2IDQ2NS40NTc5MDcsNDQuMTM4NTY4NiBMNDY2LjYyODg1NSw1NS4xMjA4MjYyIFogTTUxMS45NjMwMjMsNzYuOTc0NDA5NiBDNTExLjk2MzAyMyw4Ny41NjIyNDI3IDUwNy4yNTQ1OCw5My44MjM3MzE5IDQ5Ni4xODYwNDIsOTMuODIzNzMxOSBDNDkxLjkwMyw5My43Nzg3MzQ1IDQ4Ny42MzQ1NCw5My4zMTYzODY4IDQ4My40NDEyLDkyLjQ0MzI0NjEgTDQ4My40NDEyLDExMi4xNjQ0NzIgTDQ3MS40ODUyMDcsMTEzLjgyODQ1IEw0NzEuNDg1MjA3LDQ1LjEyNDYyOTkgTDQ4MC45ODgzNzIsNDUuMTI0NjI5OSBMNDgyLjIyMDk0OSw0OS4xNDI4Mjk2IEM0ODYuNTc3MTY3LDQ1Ljg5MDEwNjcgNDkxLjg3MTA4MSw0NC4xMzg0NDQgNDk3LjMwNzY4Nyw0NC4xNTA3NjMyIEM1MDYuOTA5NDU5LDQ0LjE1MDc2MzIgNTEyLDQ5LjgzMzA3MjUgNTEyLDYwLjcxNjcyNCBMNTExLjk2MzAyMyw3Ni45NzQ0MDk2IFogTTQ4My40NTM1MjYsODIuMzYwNzY5NCBDNDg2LjkzMjQxNiw4My4xMjYzODQxIDQ5MC40Nzk2MjgsODMuNTM5MzMwOSA0OTQuMDQxMzU5LDgzLjU5MzM0NiBDNDk4LjM1NTM3Nyw4My41OTMzNDYgNTAwLjAxOTM1NSw4MS41MzQ5NDMxIDUwMC4wMTkzNTUsNzcuMjIwOTI0OSBMNTAwLjAxOTM1NSw2MC4zOTYyNTQxIEM1MDAuMDE5MzU1LDU2LjQ3NjY2MDUgNDk4LjU1MjU4OSw1NC4zMTk2NTE0IDQ5NC4xMzk5NjUsNTQuMzE5NjUxNCBDNDkwLjE4MjU5Myw1NC40NjIxMTUxIDQ4Ni40MDA3MSw1NS45ODg4MjcyIDQ4My40NTM1MjYsNTguNjMzNjY5NiBMNDgzLjQ1MzUyNiw4Mi4zNjA3Njk0IFoiPjwvcGF0aD4KICAgICAgICA8cGF0aCBkPSJNOTUuMzE1MTQ5NiwxNi45OTcyMzE1IEwxMTMuMDE0OTUsMjcuMjE1MjkxNyBMMTEzLjAxNDk1LDkyLjQ4MDIyMzQgTDY1LjkwNTg3MTYsMTE5LjY1ODUzOCBMNjUuOTA1ODcxNiw5OS4yNDcwNjkgTDk1LjMxNTE0OTYsODIuMjYyMTYzMyBMOTUuMzE1MTQ5NiwxNi45OTcyMzE1IFogTTY1LjkwNTg3MTYsMCBMODMuNjA1NjcxOCwxMC4yMTgwNjAxIEw4My42MDU2NzE4LDc2Ljg2MzQ3NzcgTDY1LjkwNTg3MTYsODcuMDY5MjEyMSBMNjUuOTA1ODcxNiw2Ny44MDQwMzk2IEw0Ny4xMDkwNzgyLDY3LjgwNDAzOTYgTDQ3LjEwOTA3ODIsMTE5LjYzMzg4NiBMMjkuNDA5Mjc4LDEwOS4zOTExNzUgTDI5LjQwOTI3OCw0Mi43OTUwNjAxIEw0Ny4xMDkwNzgyLDMyLjU3Njk5OTkgTDQ3LjEwOTA3ODIsNTEuOTc3NzU1OCBMNjUuOTA1ODcxNiw1MS45Nzc3NTU4IEw2NS45MDU4NzE2LDAgWiBNNDcuMTA5MDc4MiwwIEw0Ny4xMDkwNzgyLDIwLjQxMTQ2ODcgTDE3LjY5OTgwMDIsMzcuMzk2Mzc0NSBMMTcuNjk5ODAwMiwxMDIuNjYxMzA2IEwwLDkyLjQ0MzI0NjEgTDAsMjcuMTc4MzE0NCBMNDcuMTA5MDc4MiwwIFoiPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+Cg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: alert
+  type: string
+  description: Vendor-emitted field 'Alert'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_alert
+- name: alert_id
+  type: string_short
+  description: Unique identifier — assigned by HashiCorp per event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: has-8505f244
+- name: alert_name
+  type: string
+  description: Human-readable name as displayed by HashiCorp. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: alert_rule_name
+  type: string
+  description: Human-readable name as displayed by HashiCorp. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_name
+- name: alertdescription
+  type: string
+  description: Vendor-emitted field 'Alertdescription'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_alertdescription
+- name: client
+  type: string
+  description: Vendor-emitted field 'Client'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_client
+- name: commcell
+  type: string
+  description: Vendor-emitted field 'Commcell'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_commcell
+- name: commcellname
+  type: string
+  description: Vendor-emitted field 'Commcellname'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_commcellname
+- name: computer
+  type: string
+  description: Vendor-emitted field 'Computer'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_computer
+- name: description
+  type: string_long
+  description: Free-form human-readable description from HashiCorp. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by HashiCorp.
+- name: details
+  type: string_long
+  description: Additional details payload emitted by HashiCorp. Free-form text; may
+    span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by HashiCorp for this record.
+- name: detected_criteria
+  type: string
+  description: Vendor-emitted field 'Detected criteria'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_criteria
+- name: event_code
+  type: integer
+  description: Vendor-emitted field 'Event code'. Free-form text; may contain whitespace
+    and punctuation.
+  example: '200'
+- name: event_id
+  type: integer
+  description: Unique identifier for this event as assigned by the vendor. Signed
+    decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: operation
+  type: string
+  description: Vendor-emitted field 'Operation'. Free-form text; may contain whitespace
+    and punctuation.
+  example: create
+- name: opid
+  type: integer
+  description: Vendor-emitted field 'Opid'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: program
+  type: string
+  description: Vendor-emitted field 'Program'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_program
+- name: severity
+  type: string
+  description: Event severity as classified by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: INFO
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by HashiCorp. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: user
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName depending on the source; no domain
+    prefix unless the vendor emits one.
+  example: jsmith
+use_cases:
+- DevOps
+how_to_use: |
+  ## HashiCorp CommvaultBackupSolutions → Cortex XSIAM (dataset `commvault_backupsolution_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `commvault_backupsolution_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `commvault_backupsolution`. The marketplace pack's display name `HashiCorp` / `CommvaultBackupSolutions` normalizes to `hashicorp_commvaultbackupsolutions_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `commvault_backupsolution` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~14 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.severity`, `xdm.event.description`, `xdm.event.id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = commvault_backupsolution_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

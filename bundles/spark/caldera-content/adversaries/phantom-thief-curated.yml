@@ -1,0 +1,26 @@
+- id: 7d3e1f8a-5b62-4c79-9036-e8a47b1d0fc5
+  name: "Phantom: Thief (curated)"
+  description: >
+    Phantom-curated variant of stockpile Thief (1a98b8e6). Stock Thief is the
+    Ransack staging+exfil sub-chain (Create staging dir → Find files → Stage
+    sensitive files → Compress → Exfil) — same 5 abilities as Ransack's tail end
+    without the recon+discovery prefix. Same environmental gap: T1005 finds nothing
+    on a clean lab → Stage skips → Compress fails → Exfil never dispatches. This
+    curated variant prepends the Phantom decoy-files ability for end-to-end
+    validation. Faster than curated Ransack (5 steps vs 18), useful as a focused
+    ransomware-staging detection test.
+
+    Phantom-bundled: ships in the caldera image.
+  atomic_ordering:
+    - 7e88a8b1-1c4f-4dcb-9c92-aef82a7c5d11  # Phantom decoy pre-condition
+    - 6469befa-748a-4b9c-a96d-f191fde47d89  # T1074.001 Create staging dir
+    - 90c2efaa-8205-480d-8bb6-61d90dbaf81b  # T1005 Find files
+    - 4e97e699-93d7-4040-b5a3-2e906a58199e  # T1074.001 Stage sensitive files
+    - 300157e5-f4ad-4569-b533-9d1fa0e74d74  # T1560.001 Compress staged dir
+    - ea713bc4-63f0-491c-9a6f-0b01d560b87e  # T1041 Exfil staged dir
+  objective: 495a9828-cc81-44fe-a4b5-d3b41882a6b5
+  has_repeatable_abilities: true
+  tags:
+    - phantom-curated
+    - thief
+    - ransomware-staging

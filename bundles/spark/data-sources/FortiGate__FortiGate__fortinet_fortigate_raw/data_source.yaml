@@ -1,0 +1,1991 @@
+schema_version: 1
+id: FortiGate
+pack_name: FortiGate
+rule_name: FortiGate
+dataset_name: fortinet_fortigate_raw
+vendor: Fortinet
+product: FortiGate
+description: 'Fortinet FortiGate firewall logs across six subsystems — traffic sessions, DNS, web filtering,
+  IPS, antivirus and SSL-VPN. Delivered to Cortex XSIAM as CEF over syslog with header vendor=Fortinet
+  product=Fortigate. The rule defines 127 xdm fields, a traffic-only feed reaches
+  39, and generating all six log types reaches 73. The parsing rule ends in a FIELD WHITELIST that discards
+  the bare FortiOS names (srcip/dstip/action/devname) — only the FTNTFGT-prefixed CEF forms survive. FTNTFGTeventtime
+  is both the parse gate and the back-dating handle. This is the tenant''s proven analytics surface: all
+  23 third-party-firewall detectors are ungated and two have already fired from synthetic data.'
+categories:
+- Network Security
+version: 2.0.16
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+Rm9ydGluZXQ8L3RpdGxlPjxwYXRoIGQ9Ik0wIDkuNzg1aDYuNzg4djQuNDU0SDB6bTguNjY2LTYuMzNoNi42Njh2NC40NTNIOC42NjZ6bTAgMTIuNjM3aDYuNjY4djQuNDU0SDguNjY2em04LjUyMi02LjMwN0gyNHY0LjQ1NGgtNi44MTJ6TTIuNzkyIDMuNDU1QzEuMzcyIDMuODE0LjI2NSA1LjQwNCAwIDcuNDI1di41MDZoNi43ODhWMy40NTR6TTAgMTYuMDkxdi41NTRjLjI0IDEuOTI2IDEuMjc2IDMuNDY2IDIuNjI0IDMuOWg0LjE4OHYtNC40NTR6bTI0LTguMTg0di0uNTA2Yy0uMjY1LTEuOTk4LTEuMzcyLTMuNTg3LTIuNzkyLTMuOTcyaC00LjAydjQuNDU0SDI0ek0yMS4zNzYgMjAuNTdjMS4zMjQtLjQ1OCAyLjM2LTEuOTc0IDIuNjI0LTMuOXYtLjU1NGgtNi44MTJ2NC40NTRaIi8+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: FTNTFGTCRlevel
+  type: enum
+  enum_values:
+  - critical
+  - high
+  - medium
+  - low
+  description: Vendor-emitted field 'FTNTFGTCRlevel'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.severity.
+  example: medium
+- name: FTNTFGTadgroup
+  type: string
+  description: Vendor-emitted field 'FTNTFGTadgroup'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.user.groups.
+  example: VPN-Users-AD
+- name: FTNTFGTap
+  type: string
+  description: Vendor-emitted field 'FTNTFGTap'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.host.hostname.
+  example: notice
+- name: FTNTFGTapp
+  type: string
+  description: Application name -> xdm.target.application.name (concatenated with FTNTFGTappid).
+  example: BitTorrent
+- name: FTNTFGTappcat
+  type: enum
+  enum_values:
+  - Network.Service
+  - Remote.Access
+  - File.Sharing
+  - Email
+  - Web.Client
+  - P2P
+  - Storage.Backup
+  description: Application category -> xdm.network.application_protocol_category. The literal 'unknown'
+    is discarded by the rule.
+  example: Remote.Access
+- name: FTNTFGTappid
+  type: string
+  description: Application id -> xdm.target.application.name.
+  example: '40399'
+- name: FTNTFGTapplist
+  type: string
+  description: Vendor-emitted field 'FTNTFGTapplist'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.rule.
+  example: default-appctrl
+- name: FTNTFGTapprisk
+  type: enum
+  enum_values:
+  - critical
+  - high
+  - medium
+  - elevated
+  - low
+  description: Vendor-emitted field 'FTNTFGTapprisk'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.severity.
+  example: medium
+- name: FTNTFGTapsn
+  type: string
+  description: Vendor-emitted field 'FTNTFGTapsn'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.host.hardware_uuid.
+  example: notice
+- name: FTNTFGTassigned
+  type: string
+  description: Vendor-emitted field 'FTNTFGTassigned'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.icmp.code, xdm.source.host.ipv4_addresses, xdm.source.host.ipv6_addresses, xdm.source.ipv4.
+  example: notice
+- name: FTNTFGTassignip
+  type: string
+  description: VPN-assigned client address. Joins the src_ipv4_addresses array, which filters on an IPv4
+    regex. Feeds xdm.intermediate.host.ipv4_addresses, xdm.intermediate.host.ipv4_public_addresses, xdm.intermediate.host.ipv6_addresses,
+    xdm.intermediate.ipv4.
+  example: 10.212.134.6
+- name: FTNTFGTattack
+  type: string
+  description: Vendor-emitted field 'FTNTFGTattack'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.original_threat_name, xdm.observer.type.
+  example: MS.MSHTML.Remote.Code.Execution
+- name: FTNTFGTattackid
+  type: string
+  description: Vendor-emitted field 'FTNTFGTattackid'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.original_threat_id, xdm.observer.type.
+  example: '50721'
+- name: FTNTFGTauditreporttype
+  type: integer
+  description: Vendor-emitted field 'FTNTFGTauditreporttype'. Free-form text; may contain whitespace and
+    punctuation. Feeds xdm.target.resource.type.
+  example: '443'
+- name: FTNTFGTbanned_src
+  type: ipv4
+  description: Vendor-emitted field 'FTNTFGTbanned src'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.icmp.code, xdm.source.host.ipv4_addresses, xdm.source.host.ipv6_addresses, xdm.source.ipv4.
+  example: 10.30.7.14
+- name: FTNTFGTbssid
+  type: string
+  description: Vendor-emitted field 'FTNTFGTbssid'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.host.mac_addresses.
+  example: '12'
+- name: FTNTFGTcat
+  type: string
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Vendor-emitted field ''''FTNTFGTcat''''. Free-form text; may
+    contain whitespace and punctuation.'
+  example: Web.Client
+- name: FTNTFGTcatdesc
+  type: string
+  description: Vendor-emitted field 'FTNTFGTcatdesc'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.http.url_category.
+  example: Malicious Websites
+- name: FTNTFGTccertissuer
+  type: string
+  description: Vendor-emitted field 'FTNTFGTccertissuer'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.tls.client_certificate.issuer.
+  example: notice
+- name: FTNTFGTcfgattr
+  type: string
+  description: Vendor-emitted field 'FTNTFGTcfgattr'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.resource.name.
+  example: notice
+- name: FTNTFGTcfgobj
+  type: string
+  description: Vendor-emitted field 'FTNTFGTcfgobj'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.resource.value.
+  example: notice
+- name: FTNTFGTcfgpath
+  type: enum
+  enum_values:
+  - firewall.policy
+  - system.interface
+  - vpn.ipsec.phase1
+  - user.local
+  - firewall.address
+  - system.admin
+  description: Vendor-emitted field 'FTNTFGTcfgpath'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.resource.type.
+  example: firewall.policy
+- name: FTNTFGTcipher
+  type: string
+  description: Vendor-emitted field 'FTNTFGTcipher'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.tls.cipher.
+  example: TLS_AES_256_GCM_SHA384
+- name: FTNTFGTcommand
+  type: string
+  description: Vendor-emitted field 'FTNTFGTcommand'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.process.command_line.
+  example: notice
+- name: FTNTFGTcveid
+  type: string
+  description: Vendor-emitted field 'FTNTFGTcveid'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.original_threat_id, xdm.observer.type.
+  example: CVE-2021-40444
+- name: FTNTFGTdaddr
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdaddr'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.risks, xdm.target.host.ipv6_addresses, xdm.target.ipv6.
+  example: 10.30.7.14
+- name: FTNTFGTdevintfname
+  type: string
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Vendor-emitted field ''''FTNTFGTdevintfname''''. Free-form text;
+    may contain whitespace and punctuation.'
+  example: default
+- name: FTNTFGTdevtype
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdevtype'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.host.device_category, xdm.target.host.device_category.
+  example: Windows PC
+- name: FTNTFGTdhcp_msg
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdhcp msg'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.dhcp.message_type.
+  example: Operation completed successfully.
+- name: FTNTFGTdst_host
+  type: host
+  description: Destination hostname or FQDN. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix. Feeds xdm.target.host.hostname.
+  example: updates.microsoft.com
+- name: FTNTFGTdstauthserver
+  type: host
+  description: Vendor-emitted field 'FTNTFGTdstauthserver'. Free-form text; may contain whitespace and
+    punctuation. Feeds xdm.target.host.hostname.
+  example: auth-01.corp.example.com
+- name: FTNTFGTdstcity
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdstcity'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.location.city.
+  example: Ashburn
+- name: FTNTFGTdstcountry
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdstcountry'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.location.country.
+  example: US
+- name: FTNTFGTdstdevtype
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdstdevtype'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.host.device_category.
+  example: traffic
+- name: FTNTFGTdstfamily
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdstfamily'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.host.device_category.
+  example: notice
+- name: FTNTFGTdsthwvendor
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdsthwvendor'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.host.manufacturer.
+  example: notice
+- name: FTNTFGTdsthwversion
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdsthwversion'. Free-form text; may contain whitespace and
+    punctuation. Feeds xdm.target.host.device_model.
+  example: v7.4.4
+- name: FTNTFGTdstmac
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdstmac'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.host.mac_addresses, xdm.target.interface.
+  example: 00:50:56:9c:7d:e2
+- name: FTNTFGTdstosname
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdstosname'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.host.os, xdm.target.host.os_family.
+  example: default
+- name: FTNTFGTdstregion
+  type: string
+  description: Vendor-emitted field 'FTNTFGTdstregion'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.location.region.
+  example: Virginia
+- name: FTNTFGTdstunauthuser
+  type: user
+  description: Vendor-emitted field 'FTNTFGTdstunauthuser'. Free-form text; may contain whitespace and
+    punctuation. Feeds xdm.target.user.username.
+  example: asmith
+- name: FTNTFGTdstuser
+  type: user
+  description: Destination/target user — recipient or affected account. Account name as the vendor reports
+    it — login name, UPN, or sAMAccountName; no domain prefix unless vendor emits one. Feeds xdm.target.user.username.
+  example: jdoe
+- name: FTNTFGTduration
+  type: string
+  description: Session duration in seconds. SUBTRACTED from the stripped eventtime to produce _time, so
+    an unpinned value shifts every row backwards by up to its random range. Pin it in the same change
+    as FTNTFGTeventtime or the two fight.
+  example: '180'
+- name: FTNTFGTerror
+  type: string
+  description: Vendor-emitted field 'FTNTFGTerror'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.event.outcome_reason.
+  example: notice
+- name: FTNTFGTerror_num
+  type: integer
+  description: Unsigned count of items as recorded by Fortinet. Signed decimal integer; bare digits, optional
+    leading minus. Feeds xdm.event.outcome_reason.
+  example: '42'
+- name: FTNTFGTeventtime
+  type: string
+  description: 'THE PARSING GATE AND THE TIME SOURCE. The rule filters `to_string(FTNTFGTeventtime) ~=
+    "\\d{9}$"` — the value must END in 9 digits (nanoseconds) — then computes `_time = (value with its
+    last 9 chars stripped) - FTNTFGTduration`. BACK-DATING FORMULA: to land a row at epoch T while carrying
+    duration D, send str(T + D) + "000000000". Because the parsing rule is no_hit=keep, an event that
+    FAILS this filter still LANDS with no error and silently takes ingest time — always verify the span
+    rather than assuming. Declared `type: integer` historically, which the generator randomises to 4 digits;
+    it must be pinned or gated.'
+  example: '1788791201000000000'
+  is_gate: true
+- name: FTNTFGTeventtype
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text; may contain whitespace
+    and punctuation. Feeds xdm.network.dns.is_response.
+  example: dns-response
+- name: FTNTFGTfctuid
+  type: string
+  description: Vendor-emitted field 'FTNTFGTfctuid'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.user.identifier.
+  example: C8D2A3F45E6B4791A0B2C3D4E5F60718
+- name: FTNTFGTfilehash
+  type: string
+  description: File hash. Populates xdm.target.file.md5 when 32 chars, xdm.target.file.sha256 when 64
+    chars, and NEITHER at any other length.
+  example: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08
+- name: FTNTFGTfiletype
+  type: string
+  description: Vendor-emitted field 'FTNTFGTfiletype'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.file.file_type.
+  example: msoffice
+- name: FTNTFGTforwardedfor
+  type: string
+  description: Vendor-emitted field 'FTNTFGTforwardedfor'. Free-form text; may contain whitespace and
+    punctuation. Feeds xdm.network.http.http_header.header, xdm.network.http.http_header.value, xdm.network.icmp.code,
+    xdm.source.host.ipv4_addresses.
+  example: 203.0.113.9
+- name: FTNTFGTgateway
+  type: string
+  description: Vendor-emitted field 'FTNTFGTgateway'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.host.ipv4_addresses, xdm.intermediate.host.ipv4_public_addresses, xdm.intermediate.host.ipv6_addresses,
+    xdm.intermediate.ipv4.
+  example: notice
+- name: FTNTFGTgroup
+  type: string
+  description: Vendor-emitted field 'FTNTFGTgroup'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.user.groups.
+  example: Corp_Users
+- name: FTNTFGThttpcode
+  type: string
+  description: Vendor-emitted field 'FTNTFGThttpcode'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.http.response_code.
+  example: '403'
+- name: FTNTFGThttpmethod
+  type: enum
+  enum_values:
+  - GET
+  - POST
+  - PUT
+  - DELETE
+  - HEAD
+  - OPTIONS
+  - PATCH
+  description: Vendor-emitted field 'FTNTFGThttpmethod'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.http.method.
+  example: GET
+- name: FTNTFGTicmpcode
+  type: string
+  description: Vendor-emitted field 'FTNTFGTicmpcode'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.host.ipv6_addresses, xdm.network.icmp.type.
+  example: notice
+- name: FTNTFGTicmptype
+  type: string
+  description: Vendor-emitted field 'FTNTFGTicmptype'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.host.ipv6_addresses, xdm.network.icmp.code, xdm.network.icmp.type.
+  example: traffic
+- name: FTNTFGTincidentserialno
+  type: string
+  description: Vendor-emitted field 'FTNTFGTincidentserialno'. Free-form text; may contain whitespace
+    and punctuation. Feeds xdm.alert.original_alert_id.
+  example: '1234567890'
+- name: FTNTFGTinitiator
+  type: string
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Vendor-emitted field ''''FTNTFGTinitiator''''. Free-form text;
+    may contain whitespace and punctuation.'
+  example: notice
+- name: FTNTFGTinvalidmac
+  type: string
+  description: Vendor-emitted field 'FTNTFGTinvalidmac'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.host.mac_addresses, xdm.target.interface.
+  example: 00:0c:29:3a:b4:11
+- name: FTNTFGTipaddr
+  type: string
+  description: Vendor-emitted field 'FTNTFGTipaddr'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.dns.dns_resource_record.value.
+  example: 185.234.219.14
+- name: FTNTFGTlease
+  type: integer
+  description: Vendor-emitted field 'FTNTFGTlease'. Signed decimal integer; bare digits, optional leading
+    minus. Feeds xdm.network.dhcp.lease.
+  example: '42'
+- name: FTNTFGTlevel
+  type: enum
+  description: Syslog severity, lowercased by the rule -> xdm.event.log_level.
+  example: notice
+  enum_values:
+  - emergency
+  - alert
+  - critical
+  - error
+  - warning
+  - notification
+  - notice
+  - information
+  - debug
+- name: FTNTFGTlocal
+  type: string
+  description: Vendor-emitted field 'FTNTFGTlocal'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.icmp.code, xdm.source.host.ipv4_addresses, xdm.source.host.ipv6_addresses, xdm.source.ipv4.
+  example: notice
+- name: FTNTFGTlogdesc
+  type: string
+  description: Vendor-emitted field 'FTNTFGTlogdesc'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.subcategory.
+  example: Virus detected
+- name: FTNTFGTlogid
+  type: integer
+  description: Unique identifier for this event as assigned by the vendor. Free-form text; may contain
+    whitespace and punctuation. Feeds xdm.event.id.
+  example: 16790530
+- name: FTNTFGTlogin
+  type: user
+  description: Vendor-emitted field 'FTNTFGTlogin'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.user.username.
+  example: jdoe
+- name: FTNTFGTmanuf
+  type: string
+  description: Vendor-emitted field 'FTNTFGTmanuf'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.host.manufacturer.
+  example: Dell Inc.
+- name: FTNTFGTmasterdstmac
+  type: string
+  description: Vendor-emitted field 'FTNTFGTmasterdstmac'. Free-form text; may contain whitespace and
+    punctuation. Feeds xdm.target.host.mac_addresses, xdm.target.interface.
+  example: 00:50:56:9c:7d:e2
+- name: FTNTFGTmastersrcmac
+  type: string
+  description: Vendor-emitted field 'FTNTFGTmastersrcmac'. Free-form text; may contain whitespace and
+    punctuation. Feeds xdm.source.host.mac_addresses, xdm.source.interface.
+  example: 00:0c:29:3a:b4:11
+- name: FTNTFGTmethod
+  type: string
+  description: Vendor-emitted field 'FTNTFGTmethod'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.application_protocol.
+  example: ike
+- name: FTNTFGTnat
+  type: string
+  description: Vendor-emitted field 'FTNTFGTnat'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.icmp.code, xdm.source.host.ipv4_addresses, xdm.source.host.ipv6_addresses, xdm.source.ipv4.
+  example: notice
+- name: FTNTFGTnew_status
+  type: string_short
+  description: Status code returned by Fortinet. Short opaque token, typically without whitespace; max
+    ~64 chars. Feeds xdm.target.resource.value.
+  example: success
+- name: FTNTFGTnew_value
+  type: string
+  description: Vendor-emitted field 'FTNTFGTnew value'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.resource.value.
+  example: notice
+- name: FTNTFGTnewvalue
+  type: string
+  description: Vendor-emitted field 'FTNTFGTnewvalue'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.resource.value.
+  example: notice
+- name: FTNTFGTold_status
+  type: string_short
+  description: Status code returned by Fortinet. Short opaque token, typically without whitespace; max
+    ~64 chars. Feeds xdm.target.resource_before.value.
+  example: success
+- name: FTNTFGTold_value
+  type: string
+  description: Vendor-emitted field 'FTNTFGTold value'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.resource_before.value.
+  example: notice
+- name: FTNTFGToldvalue
+  type: string
+  description: Vendor-emitted field 'FTNTFGToldvalue'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.resource_before.value.
+  example: notice
+- name: FTNTFGToldwprof
+  type: string
+  description: Vendor-emitted field 'FTNTFGToldwprof'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.resource_before.value.
+  example: notice
+- name: FTNTFGTopercountry
+  type: string
+  description: Vendor-emitted field 'FTNTFGTopercountry'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.location.country.
+  example: US
+- name: FTNTFGTosname
+  type: string
+  description: Vendor-emitted field 'FTNTFGTosname'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.host.os, xdm.source.host.os_family.
+  example: Windows 11
+- name: FTNTFGTpdstport
+  type: integer_port
+  description: TCP/UDP destination port. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes. Feeds xdm.target.port.
+  example: '42'
+- name: FTNTFGTpolicy_id
+  type: string_short
+  description: Opaque identifier emitted by Fortinet. Short opaque token, typically without whitespace;
+    max ~64 chars. Feeds xdm.network.rule.
+  example: for-06c0632c
+- name: FTNTFGTpolicyid
+  type: string
+  description: Vendor-emitted field 'FTNTFGTpolicyid'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.rule.
+  example: '12'
+- name: FTNTFGTpolicyname
+  type: string
+  description: Policy name -> xdm.network.rule.
+  example: Internal_to_Internet
+- name: FTNTFGTpoolname
+  type: string
+  description: Vendor-emitted field 'FTNTFGTpoolname'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.resource.name.
+  example: default
+- name: FTNTFGTprofile
+  type: string
+  description: Vendor-emitted field 'FTNTFGTprofile'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.rule.
+  example: default-dnsfilter
+- name: FTNTFGTpsrcport
+  type: integer_port
+  description: TCP/UDP source port. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes. Feeds xdm.source.port.
+  example: '42'
+- name: FTNTFGTqclass
+  type: string
+  description: Vendor-emitted field 'FTNTFGTqclass'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.dns.dns_question.class, xdm.network.dns.dns_resource_record.class.
+  example: IN
+- name: FTNTFGTqname
+  type: string
+  description: DNS query name -> xdm.network.dns.dns_question.name. Rare/dynamic-DNS domain detectors
+    read this.
+  example: c2-beacon.dyndns-lab.net
+- name: FTNTFGTqtype
+  type: enum
+  enum_values:
+  - A
+  - AAAA
+  - TXT
+  - CNAME
+  - MX
+  - NS
+  - PTR
+  - SRV
+  description: DNS query type. Must be a token the rule's ~50-branch ladder recognises, or xdm.network.dns.dns_question.type
+    stays null.
+  example: A
+- name: FTNTFGTrcvdpkt
+  type: integer
+  description: Vendor-emitted field 'FTNTFGTrcvdpkt'. Signed decimal integer; bare digits, optional leading
+    minus. Feeds xdm.target.sent_packets.
+  example: '42'
+- name: FTNTFGTref
+  type: string
+  description: Vendor-emitted field 'FTNTFGTref'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.description.
+  example: https://www.fortiguard.com/encyclopedia/virus/2415919105
+- name: FTNTFGTreferralurl
+  type: url
+  description: Vendor-emitted field 'FTNTFGTreferralurl'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.http.referrer.
+  example: https://example.com/path?q=1
+- name: FTNTFGTremote
+  type: string
+  description: Vendor-emitted field 'FTNTFGTremote'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.risks, xdm.target.host.ipv6_addresses, xdm.target.ipv6.
+  example: notice
+- name: FTNTFGTreporttype
+  type: integer
+  description: Vendor-emitted field 'FTNTFGTreporttype'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.resource.type.
+  example: '443'
+- name: FTNTFGTresult
+  type: enum
+  description: 'Drives xdm.event.outcome. The modeling rule tests it against a CLOSED set: OK/DONE ->
+    OUTCOME_SUCCESS, ERROR -> OUTCOME_FAILED, N/A -> OUTCOME_UNKNOWN. The placeholder example it used
+    to carry (sample_ftntfgtresult) matched no branch, so outcome fell through to a coalesce and every
+    event modelled with a NULL outcome. CRITICAL: `act` does NOT set the outcome -- act only feeds xdm.observer.action.
+    A denied connection therefore needs act=deny AND FTNTFGTresult=ERROR together, or outcome-based detectors
+    (failed-connections and the whole ''Failed'' variation family) can never fire.'
+  example: OK
+  enum_values:
+  - OK
+  - DONE
+  - ERROR
+  - N/A
+- name: FTNTFGTsaddr
+  type: string
+  description: Vendor-emitted field 'FTNTFGTsaddr'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.icmp.code, xdm.source.host.ipv4_addresses, xdm.source.host.ipv6_addresses, xdm.source.ipv4.
+  example: 10.30.7.14
+- name: FTNTFGTscertcname
+  type: string
+  description: TLS server certificate CN -> xdm.network.tls.server_name (SNI). Rare-domain and C2 detectors
+    read this.
+  example: cdn.example-files.net
+- name: FTNTFGTscertissuer
+  type: string
+  description: Vendor-emitted field 'FTNTFGTscertissuer'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.tls.server_certificate.issuer.
+  example: Let's Encrypt R3
+- name: FTNTFGTsentpkt
+  type: integer
+  description: Vendor-emitted field 'FTNTFGTsentpkt'. Signed decimal integer; bare digits, optional leading
+    minus. Feeds xdm.source.sent_packets.
+  example: '42'
+- name: FTNTFGTserialno
+  type: string
+  description: Vendor-emitted field 'FTNTFGTserialno'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.host.hardware_uuid.
+  example: notice
+- name: FTNTFGTserver
+  type: string
+  description: Vendor-emitted field 'FTNTFGTserver'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.risks, xdm.target.host.ipv6_addresses, xdm.target.ipv6.
+  example: v7.4.4
+- name: FTNTFGTseverity
+  type: enum
+  enum_values:
+  - emergency
+  - alert
+  - critical
+  - error
+  - warning
+  - notification
+  - information
+  - debug
+  description: Vendor-emitted field 'FTNTFGTseverity'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.severity.
+  example: warning
+- name: FTNTFGTshapingpolicyid
+  type: string
+  description: Vendor-emitted field 'FTNTFGTshapingpolicyid'. Free-form text; may contain whitespace and
+    punctuation. Feeds xdm.network.rule.
+  example: '0'
+- name: FTNTFGTsn
+  type: string
+  description: Vendor-emitted field 'FTNTFGTsn'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.target.host.hardware_uuid.
+  example: notice
+- name: FTNTFGTsnclosest
+  type: string
+  description: Vendor-emitted field 'FTNTFGTsnclosest'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.host.hardware_uuid.
+  example: notice
+- name: FTNTFGTsrccity
+  type: string
+  description: Vendor-emitted field 'FTNTFGTsrccity'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.location.city.
+  example: Munich
+- name: FTNTFGTsrccountry
+  type: string
+  description: Vendor-emitted field 'FTNTFGTsrccountry'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.location.country.
+  example: US
+- name: FTNTFGTsrcfamily
+  type: string
+  description: Vendor-emitted field 'FTNTFGTsrcfamily'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.host.device_category.
+  example: Windows
+- name: FTNTFGTsrchwvendor
+  type: string
+  description: Vendor-emitted field 'FTNTFGTsrchwvendor'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.host.manufacturer.
+  example: Dell Inc.
+- name: FTNTFGTsrchwversion
+  type: string
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Vendor-emitted field ''''FTNTFGTsrchwversion''''. Free-form text;
+    may contain whitespace and punctuation.'
+  example: v7.4.4
+- name: FTNTFGTsrcmac
+  type: string
+  description: Vendor-emitted field 'FTNTFGTsrcmac'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.host.mac_addresses, xdm.source.interface.
+  example: 00:0c:29:3a:b4:11
+- name: FTNTFGTsrcregion
+  type: string
+  description: Vendor-emitted field 'FTNTFGTsrcregion'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.location.region.
+  example: Bavaria
+- name: FTNTFGTsrcuuid
+  type: string
+  description: Vendor-emitted field 'FTNTFGTsrcuuid'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.host.device_id.
+  example: 0b2b9f8c-1a5c-51ef-8e3f-9a1c4d2e77b0
+- name: FTNTFGTsslaction
+  type: enum
+  enum_values:
+  - blocked
+  - passthrough
+  - inspected
+  - bypassed
+  description: Vendor-emitted field 'FTNTFGTsslaction'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.observer.action.
+  example: inspected
+- name: FTNTFGTstamac
+  type: string
+  description: Vendor-emitted field 'FTNTFGTstamac'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.host.mac_addresses.
+  example: 00:0c:29:3a:b4:11
+- name: FTNTFGTsubtype
+  type: enum
+  enum_values:
+  - forward
+  - local
+  - dns-response
+  - webfilter
+  - ips
+  - virus
+  - vpn
+  - dhcp
+  - ssl
+  description: FortiGate log subtype -> xdm.event.type. THIS is what carries the event type, NOT FTNTFGTtype
+    (which has no xdm target at all). Each subtype unlocks a different xdm subsystem — see how_to_use
+    section 4.
+  example: forward
+- name: FTNTFGTtamac
+  type: string
+  description: Vendor-emitted field 'FTNTFGTtamac'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.host.mac_addresses, xdm.source.interface.
+  example: 00:0c:29:3a:b4:11
+- name: FTNTFGTthreattype
+  type: string
+  description: Vendor-emitted field 'FTNTFGTthreattype'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.original_threat_name, xdm.observer.type.
+  example: botnet_c&c
+- name: FTNTFGTtlsver
+  type: string
+  description: Vendor-emitted field 'FTNTFGTtlsver'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.tls.protocol_version.
+  example: TLSv1.3
+- name: FTNTFGTtrueclntip
+  type: string
+  description: Vendor-emitted field 'FTNTFGTtrueclntip'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.icmp.code, xdm.source.host.ipv4_addresses, xdm.source.host.ipv6_addresses, xdm.source.ipv4.
+  example: 10.30.7.14
+- name: FTNTFGTtunnelid
+  type: string
+  description: Vendor-emitted field 'FTNTFGTtunnelid'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.host.device_id.
+  example: '1587992013'
+- name: FTNTFGTtunnelip
+  type: string
+  description: VPN tunnel address. Regex-gated to a dotted quad before it reaches xdm.network.vpn.allocated_ipv4;
+    a placeholder fails the gate.
+  example: 10.212.134.5
+- name: FTNTFGTunauthuser
+  type: user
+  description: Vendor-emitted field 'FTNTFGTunauthuser'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.user.username.
+  example: jdoe
+- name: FTNTFGTutmaction
+  type: enum
+  enum_values:
+  - blocked
+  - passthrough
+  - monitored
+  - allowed
+  - dropped
+  - reset
+  description: Vendor-emitted field 'FTNTFGTutmaction'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.observer.action.
+  example: blocked
+- name: FTNTFGTvd
+  type: enum
+  enum_values:
+  - root
+  - vdom1
+  - vdom2
+  description: Vendor-emitted field 'FTNTFGTvd'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.user.domain.
+  example: root
+- name: FTNTFGTvirus
+  type: string
+  description: Vendor-emitted field 'FTNTFGTvirus'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.original_threat_name, xdm.observer.type.
+  example: W32/Emotet.AB!tr
+- name: FTNTFGTviruscat
+  type: string
+  description: Vendor-emitted field 'FTNTFGTviruscat'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.category, xdm.observer.type.
+  example: Malware
+- name: FTNTFGTvirusid
+  type: string
+  description: Vendor-emitted field 'FTNTFGTvirusid'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.original_threat_id, xdm.observer.type.
+  example: '2415919105'
+- name: FTNTFGTvoip_proto
+  type: string
+  description: Vendor-emitted field 'FTNTFGTvoip proto'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.network.application_protocol.
+  example: tcp
+- name: FTNTFGTvpntunnel
+  type: string
+  description: Vendor-emitted field 'FTNTFGTvpntunnel'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.host.hostname.
+  example: HQ-Dialup-P1
+- name: FTNTFGTvulncat
+  type: string
+  description: Vendor-emitted field 'FTNTFGTvulncat'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.observer.type.
+  example: Web.Client
+- name: FTNTFGTvulnid
+  type: string
+  description: Vendor-emitted field 'FTNTFGTvulnid'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.original_threat_id, xdm.observer.type.
+  example: '12'
+- name: FTNTFGTvulnname
+  type: string
+  description: Vendor-emitted field 'FTNTFGTvulnname'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.alert.original_threat_name, xdm.observer.type.
+  example: default
+- name: FTNTFGTxauthgroup
+  type: string
+  description: Vendor-emitted field 'FTNTFGTxauthgroup'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.intermediate.user.groups.
+  example: IPsec_Remote
+- name: FTNTFGTxauthuser
+  type: string
+  description: SSL-VPN authenticated user on `subtype=vpn` events. Feeds xdm.source.user.username on the
+    VPN path.
+  example: ahmed.alharbi
+- name: FTNTFGinitiator
+  type: user
+  description: Vendor-emitted field 'FTNTFGinitiator'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.source.user.username.
+  example: jdoe
+- name: _id
+  type: string_short
+  description: Opaque identifier emitted by Fortinet. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: 3088e069-b86d-5d98-b545-8de5df448c4f
+- name: _product
+  type: string
+  description: Vendor-emitted field ' product'. Free-form text; may contain whitespace and punctuation.
+  example: FortiGate
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization. Free-form text;
+    may contain whitespace and punctuation.
+  example: '<14>2024-01-15T14:23:01+0000 fortinet: fortigate=FortiGate action=allow user=jdoe'
+- name: _vendor
+  type: string
+  description: Vendor-emitted field ' vendor'. Free-form text; may contain whitespace and punctuation.
+  example: Fortinet
+- name: act
+  type: enum
+  enum_values:
+  - accept
+  - deny
+  - close
+  - timeout
+  - client-rst
+  - server-rst
+  - start
+  - dns
+  description: FortiGate session action. Feeds xdm.observer.action via coalesce(act, FTNTFGTsslaction,
+    FTNTFGTutmaction); a random token here populates the field with a meaningless value, which reads as
+    working.
+  example: deny
+- name: action
+  type: enum
+  enum_values:
+  - accept
+  - deny
+  - drop
+  - reject
+  - blocked
+  - monitor
+  - ipsec
+  - tunnel
+  - client-rst
+  - server-rst
+  - timeout
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `act` instead.] Firewall action taken. One of: accept, deny, drop, reject, blocked, monitor, ipsec,
+    tunnel, client-rst, server-rst, timeout (case-sensitive). DROPPED AT PARSE TIME. The parsing rule''s
+    final stage is a field whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and
+    this column is not on it, so it never reaches the modeling rule and can never map. This is the BARE
+    FortiOS log name; the CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field
+    is wasted.'
+  example: accept
+- name: app
+  type: enum
+  enum_values:
+  - SMB
+  - RDP
+  - SSH
+  - FTP
+  - SMTP
+  - SMTPS
+  - HTTPS
+  - HTTP
+  - DNS
+  - LDAP
+  - BitTorrent
+  - Kerberos
+  - NTP
+  description: Application name -> xdm.network.application_protocol (coalesce, app wins). Several analytics
+    detectors key on this to tell an SMB/RDP/SSH/torrent session from generic traffic.
+  example: SMB
+- name: appcat
+  type: string_short
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTappcat` instead.] Application category. Short opaque token, typically without whitespace;
+    max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields
+    FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches
+    the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule
+    reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: apprisk
+  type: enum
+  enum_values:
+  - unknown
+  - low
+  - elevated
+  - medium
+  - high
+  - critical
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTapprisk` instead.] Application risk level. One of: unknown, low, elevated, medium, high,
+    critical (case-sensitive). DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist
+    (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it
+    never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire
+    form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: unknown
+- name: attack
+  type: string_short
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTattack` instead.] IPS attack signature. Short opaque token, typically without whitespace;
+    max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields
+    FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches
+    the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule
+    reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: attackid
+  type: integer
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTattackid` instead.] IPS attack signature id. Signed decimal integer; bare digits, optional
+    leading minus. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields
+    FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches
+    the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule
+    reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '42'
+- name: c6a2
+  type: string
+  description: Vendor-emitted field 'C6a2'. Free-form text; may contain whitespace and punctuation. Feeds
+    xdm.network.icmp.code, xdm.source.host.ipv4_addresses, xdm.source.host.ipv6_addresses, xdm.source.ipv4.
+  example: notice
+- name: c6a3
+  type: string
+  description: Vendor-emitted field 'C6a3'. Free-form text; may contain whitespace and punctuation. Feeds
+    xdm.alert.risks, xdm.target.host.ipv6_addresses, xdm.target.ipv6.
+  example: notice
+- name: cat
+  type: enum
+  enum_values:
+  - '26'
+  - '61'
+  - '90'
+  - '98'
+  - '52'
+  - '0'
+  description: Numeric FortiGuard category code (0-101) driving xdm.observer.type. 26=Malicious Websites,
+    61=Phishing, 90=Newly Observed Domain, 98=Crypto Mining.
+  example: '26'
+- name: cefDeviceVersion
+  type: string_short
+  description: CEF device-version field — version of the Fortinet product emitting this event. Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: v7.4.4
+- name: cefSeverity
+  type: string
+  description: CEF header slot 7. Co-lever for xdm.event.log_level alongside FTNTFGTlevel; the rule's
+    ladder matches "1".."8". The historical example "42" matches no branch, so this lever was dead.
+  example: '3'
+- name: date
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Log date in the FortiGate device''''s local timezone. ISO-style
+    `YYYY-MM-DD` (10 chars exactly); zero-padded month and day. DROPPED AT PARSE TIME. The parsing rule''s
+    final stage is a field whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and
+    this column is not on it, so it never reaches the modeling rule and can never map. This is the BARE
+    FortiOS log name; the CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field
+    is wasted.'
+  example: '2024-01-15'
+- name: deviceExternalId
+  type: string
+  description: Vendor-emitted field 'DeviceExternalId'. Free-form text; may contain whitespace and punctuation.
+  example: FGT60FT19015830
+- name: deviceInboundInterface
+  type: string
+  description: Vendor-emitted field 'DeviceInboundInterface'. Free-form text; may contain whitespace and
+    punctuation.
+  example: port1
+- name: deviceOutboundInterface
+  type: string
+  description: Vendor-emitted field 'DeviceOutboundInterface'. Free-form text; may contain whitespace
+    and punctuation.
+  example: port1
+- name: devid
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] FortiGate device serial number — vendor-emitted hardware identity
+    of the originating appliance. Alphanumeric uppercase token (12-16 chars typical); e.g. `FGT60FT19015830`.
+    DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*, act,
+    app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling
+    rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the
+    FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: FGT60FT19015830
+- name: devname
+  type: host
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTdevname` instead.] FortiGate device name. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix. DROPPED AT PARSE TIME. The parsing rule''s final stage is
+    a field whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is
+    not on it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name;
+    the CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: default
+- name: dhost
+  type: string
+  description: 'Destination hostname. Feeds xdm.target.host.hostname and xdm.target.host.fqdn unconditionally.
+    CAUTION: declared `type: host`, and left unpinned the generator draws from a five-value placeholder
+    pool (host-a/host-b/host-c/server-1/endpoint-7), which contaminates the feed and is the direct cause of
+    xdm.target.host.fqdn = "host-a". PIN
+    IT, from a pool DISJOINT from shost.'
+  example: updates.microsoft.com
+- name: dpt
+  type: integer_port
+  description: CEF destination port — TCP/UDP port on the target side. Unsigned integer 0-65535 representing.
+    Feeds xdm.network.http.url, xdm.target.port, xdm.target.url.
+  example: '443'
+- name: dst
+  type: ipv4
+  description: CEF destination IP — IPv4/IPv6 address of the target endpoint. Free-form text; may contain
+    whitespace and punctuation. Feeds xdm.alert.risks, xdm.network.http.url, xdm.target.host.ipv6_addresses,
+    xdm.target.ipv6.
+  example: 198.51.100.7
+- name: dstcountry
+  type: country_code
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTdstcountry` instead.] Destination country. ISO 3166-1 alpha-2 uppercase country code.
+    DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*, act,
+    app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling
+    rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the
+    FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: US
+- name: dstintf
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Destination interface name. Short opaque token, typically without
+    whitespace; max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist
+    (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it
+    never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire
+    form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: dstintfrole
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Destination interface role. Short opaque token, typically without
+    whitespace; max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist
+    (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it
+    never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire
+    form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: dstip
+  type: ipv4
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `dst` instead.] Destination IP address. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field
+    whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on
+    it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the
+    CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: 10.30.7.14
+- name: dstport
+  type: integer_port
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `dpt` instead.] Destination port. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields
+    FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches
+    the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule
+    reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '443'
+- name: duration
+  type: integer
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTduration` instead.] Session duration (seconds). Signed decimal integer; bare digits, optional
+    leading minus. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields
+    FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches
+    the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule
+    reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '42'
+- name: duser
+  type: user
+  description: CEF destination user — username of the target/recipient. Account name as the vendor reports
+    it — login name, UPN, or sAMAccountName; no domain prefix unless vendor emits one. Feeds xdm.target.user.username.
+  example: jdoe
+- name: dvchost
+  type: host
+  description: Vendor-emitted field 'Dvchost'. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.observer.name.
+  example: fgt-edge-01.corp.example.com
+- name: eventtime
+  type: integer
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTeventtime` instead.] Epoch NANOseconds at which the event occurred — FortiOS 6.0+ emits
+    nanosecond resolution, not milliseconds. Unsigned 19-digit integer; bare digits, no quotes. Divide
+    by 1_000_000_000 to convert to seconds. DROPPED AT PARSE TIME. The parsing rule''s final stage is
+    a field whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is
+    not on it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name;
+    the CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '1748263381000000000'
+- name: externalID
+  type: string
+  description: Vendor-emitted field 'ExternalID'. Free-form text; may contain whitespace and punctuation.
+  example: ext-d44a7c4f-2b3
+- name: externalId
+  type: string
+  description: FortiGate session id -> xdm.network.session_id. Pin from a SMALL pool so a traffic row
+    and its UTM rows share a session and correlate; a random per-event value means no two rows ever join.
+  example: '1877289'
+- name: filehash
+  type: hash_sha256
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTfilehash` instead.] SHA-256 of the file. 64-character lowercase hex SHA-256 digest. DROPPED
+    AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*, act, app,
+    dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling rule
+    and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the FTNTFGT-prefixed
+    one. Declaring this field is wasted.'
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: filehashsrc
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Hash source (av-engine, sandbox, etc.). Short opaque token, typically
+    without whitespace; max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field
+    whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on
+    it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the
+    CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: filename
+  type: file_path
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `fname` instead.] Filename in transfer / attached. Absolute filesystem path; vendor-native separator.
+    DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*, act,
+    app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling
+    rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the
+    FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: /var/log/app.log
+- name: fname
+  type: file_path
+  description: Vendor-emitted field 'Fname'. Absolute filesystem path; vendor-native separator (forward
+    slash on POSIX, backslash on Windows). Feeds xdm.source.process.executable.filename, xdm.target.file.filename.
+  example: /var/log/example.log
+- name: fsize
+  type: integer
+  description: Vendor-emitted field 'Fsize'. Signed decimal integer; bare digits, optional leading minus.
+    Feeds xdm.target.file.size.
+  example: '42'
+- name: group
+  type: string_short
+  description: User group. Short opaque token, typically without whitespace; max ~64 chars. DROPPED AT
+    PARSE TIME. The parsing rule's final stage is a field whitelist (`| fields FTNTFG*, act, app, dst,
+    dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling rule and
+    can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the FTNTFGT-prefixed
+    one. Declaring this field is wasted.
+  example: token
+- name: hostname
+  type: host
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `shost / dhost` instead.] Destination hostname (HTTP/SSL SNI). Hostname or fully-qualified domain
+    name (RFC 1035 dotted labels); no protocol prefix. DROPPED AT PARSE TIME. The parsing rule''s final
+    stage is a field whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this
+    column is not on it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS
+    log name; the CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: default
+- name: in
+  type: integer
+  description: Bytes received by the source. Feeds xdm.target.sent_bytes.
+  example: '8192'
+- name: level
+  type: enum
+  enum_values:
+  - emergency
+  - alert
+  - critical
+  - error
+  - warning
+  - notice
+  - information
+  - debug
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTlevel` instead.] Log severity. One of: emergency, alert, critical, error, warning, notice,
+    information, debug (case-sensitive). DROPPED AT PARSE TIME. The parsing rule''s final stage is a field
+    whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on
+    it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the
+    CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: emergency
+- name: logid
+  type: string_short
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTlogid` instead.] Log message id. Short opaque token, typically without whitespace; max
+    ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields
+    FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches
+    the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule
+    reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '0000000013'
+- name: method
+  type: string_short
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGThttpmethod` instead.] HTTP method (when applicable). Short opaque token, typically without
+    whitespace; max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist
+    (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it
+    never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire
+    form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: msg
+  type: string_long
+  description: Free-text log message. Free-form text; may span multiple lines or contain large payloads.
+    Feeds xdm.event.description.
+  example: Free-form vendor-emitted message describing the event.
+- name: out
+  type: integer
+  description: Bytes sent by the source. Feeds xdm.source.sent_bytes — the numerator every volumetric
+    exfiltration rule needs.
+  example: '1048576'
+- name: outcome
+  type: string
+  description: Event outcome reported by the vendor. Free-form text; may contain whitespace and punctuation.
+    Feeds xdm.event.outcome.
+  example: success
+- name: policyid
+  type: integer
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTpolicyid` instead.] Policy ID matched. Signed decimal integer; bare digits, optional leading
+    minus. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*,
+    act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling
+    rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the
+    FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '42'
+- name: policytype
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Policy type (policy, dnat, etc.). Short opaque token, typically
+    without whitespace; max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field
+    whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on
+    it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the
+    CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: poluuid
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Policy UUID matched. Short opaque token, typically without whitespace;
+    max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields
+    FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches
+    the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule
+    reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: proto
+  type: enum
+  enum_values:
+  - '6'
+  - '17'
+  - '1'
+  - '47'
+  - '50'
+  description: IP protocol NUMBER as a string. The modeling rule matches literal codes 0-137; a name like
+    TCP falls through unmapped. Feeds xdm.network.ip_protocol.
+  example: '6'
+- name: rcvdbyte
+  type: integer_byte_count
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `in` instead.] Bytes received. Unsigned decimal byte count; bare digits, no unit suffix. DROPPED
+    AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*, act, app,
+    dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling rule
+    and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the FTNTFGT-prefixed
+    one. Declaring this field is wasted.'
+  example: '1024'
+- name: rcvdpkt
+  type: integer
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTrcvdpkt` instead.] Packets received. Signed decimal integer; bare digits, optional leading
+    minus. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*,
+    act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling
+    rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the
+    FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '42'
+- name: reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text; may contain whitespace
+    and punctuation. Feeds xdm.event.outcome_reason.
+  example: normal_operation
+- name: ref
+  type: url
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Reference URL (CVE, vendor advisory). Full URL with scheme (http/https/ftp);
+    percent-encoded if it contains non-ASCII characters. DROPPED AT PARSE TIME. The parsing rule''s final
+    stage is a field whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this
+    column is not on it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS
+    log name; the CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: https://example.com/path?q=1
+- name: request
+  type: string
+  description: Full request URL -> xdm.network.http.url and xdm.target.url.
+  example: https://cdn.example-files.net/download/setup.bin
+- name: requestClientApplication
+  type: enum
+  enum_values:
+  - Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0.0.0 Safari/537.36
+  - Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15
+  - curl/8.4.0
+  description: Vendor-emitted field 'RequestClientApplication'. Free-form text; may contain whitespace
+    and punctuation.
+  example: curl/8.4.0
+- name: requestContext
+  type: string
+  description: Vendor-emitted field 'RequestContext'. Free-form text; may contain whitespace and punctuation.
+  example: notice
+- name: sentbyte
+  type: integer_byte_count
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `out` instead.] Bytes sent. Unsigned decimal byte count; bare digits, no unit suffix. DROPPED
+    AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*, act, app,
+    dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling rule
+    and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the FTNTFGT-prefixed
+    one. Declaring this field is wasted.'
+  example: '1024'
+- name: sentpkt
+  type: integer
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTsentpkt` instead.] Packets sent. Signed decimal integer; bare digits, optional leading
+    minus. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*,
+    act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling
+    rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the
+    FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '42'
+- name: service
+  type: string_short
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `app` instead.] Service name matched. Short opaque token, typically without whitespace; max ~64
+    chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*,
+    act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling
+    rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the
+    FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: HTTPS
+- name: sessionid
+  type: integer
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `externalId` instead.] Session id. Signed decimal integer; bare digits, optional leading minus.
+    DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*, act,
+    app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling
+    rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the
+    FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '42'
+- name: shost
+  type: string
+  description: Source hostname -> xdm.source.host.hostname. Same placeholder-pool defect as dhost. Keep
+    the source and destination pools DISJOINT, or an alert reads "ws-014 connected to ws-014".
+  example: WS-2101
+- name: sourceTranslatedAddress
+  type: ipv4
+  description: Vendor-emitted field 'SourceTranslatedAddress'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 198.51.100.10
+- name: sourceTranslatedPort
+  type: integer
+  description: Vendor-emitted field 'SourceTranslatedPort'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: sproc
+  type: enum
+  enum_values:
+  - sshd
+  - httpd
+  - nginx
+  - cron
+  - sslvpnd
+  - ipsengine
+  - scanunitd
+  description: Vendor-emitted field 'Sproc'. Free-form text; may contain whitespace and punctuation. Feeds
+    xdm.source.process.name.
+  example: sshd
+- name: spt
+  type: integer_port
+  description: CEF source port — TCP/UDP port on the source side. Unsigned integer 0-65535 representing.
+    Feeds xdm.source.port.
+  example: '49871'
+- name: src
+  type: ipv4
+  description: CEF source IP — IPv4/IPv6 address of the source endpoint. Free-form text; may contain whitespace
+    and punctuation. Feeds xdm.network.icmp.code, xdm.source.host.ipv4_addresses, xdm.source.host.ipv6_addresses,
+    xdm.source.ipv4.
+  example: 10.10.30.117
+- name: srccountry
+  type: country_code
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTsrccountry` instead.] Source country. ISO 3166-1 alpha-2 uppercase country code. DROPPED
+    AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*, act, app,
+    dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling rule
+    and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the FTNTFGT-prefixed
+    one. Declaring this field is wasted.'
+  example: US
+- name: srcintf
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Source interface name. Short opaque token, typically without
+    whitespace; max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist
+    (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it
+    never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire
+    form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: srcintfrole
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Source interface role (wan/lan/dmz). Short opaque token, typically
+    without whitespace; max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field
+    whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on
+    it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the
+    CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: srcip
+  type: ipv4
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `src` instead.] Source IP address. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field
+    whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on
+    it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the
+    CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: 10.30.7.14
+- name: srcport
+  type: integer_port
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `spt` instead.] Source port. Unsigned integer 0-65535 representing a TCP/UDP port; bare digits,
+    no quotes. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields
+    FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches
+    the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule
+    reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '443'
+- name: status
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] HTTP status / detection status. Short opaque token, typically
+    without whitespace; max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field
+    whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on
+    it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the
+    CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: token
+- name: subtype
+  type: string_short
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `FTNTFGTsubtype` instead.] Log subtype (per log type). Short opaque token, typically without whitespace;
+    max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields
+    FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches
+    the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule
+    reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: forward
+- name: suser
+  type: user
+  description: CEF source user — username of the actor initiating the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor emits one. Feeds xdm.source.user.username.
+  example: jdoe
+- name: time
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Log time-of-day in the FortiGate device''''s local timezone —
+    pair with `tz` for absolute timestamp. Format `HH:MM:SS` (24-hour, 8 chars exactly); zero-padded.
+    DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields FTNTFG*, act,
+    app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches the modeling
+    rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule reads is the
+    FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '14:23:01'
+- name: type
+  type: enum
+  description: 'Log type. One of: traffic, utm, event, anomaly, voip, dns, ssh, ssl, app-ctrl, webfilter,
+    ips, virus, dlp, spam (case-sensitive). DROPPED AT PARSE TIME. The parsing rule''s final stage is
+    a field whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is
+    not on it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name;
+    the CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  enum_values:
+  - traffic
+  - utm
+  - event
+  - anomaly
+  - voip
+  - dns
+  - ssh
+  - ssl
+  - app-ctrl
+  - webfilter
+  - ips
+  - virus
+  - dlp
+  - spam
+  example: traffic
+- name: tz
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Timezone of the `date` + `time` fields as an RFC 822 numeric
+    offset from UTC. Signed 4 or 5 chars — `+HHMM` / `-HHMM` (e.g., `+0300`, `-0500`). Note FortiOS does
+    NOT emit IANA names. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`|
+    fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never
+    reaches the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form
+    the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: '+0300'
+- name: url
+  type: url
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `request` instead.] URL (when applicable). Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field
+    whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on
+    it, so it never reaches the modeling rule and can never map. This is the BARE FortiOS log name; the
+    CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: https://example.com/path?q=1
+- name: user
+  type: user
+  description: '[INERT - native FortiOS syslog name; neither the parsing nor the modeling rule reads it.
+    Use `suser` instead.] Source user (when known). Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName; no domain prefix unless vendor emits one. DROPPED AT PARSE TIME. The parsing
+    rule''s final stage is a field whitelist (`| fields FTNTFG*, act, app, dst, dpt, src, spt, suser,
+    ...`) and this column is not on it, so it never reaches the modeling rule and can never map. This
+    is the BARE FortiOS log name; the CEF wire form the rule reads is the FTNTFGT-prefixed one. Declaring
+    this field is wasted.'
+  example: jdoe
+- name: vd
+  type: string_short
+  description: '[INERT - neither the parsing nor the modeling rule reads this field; it lands as a raw
+    column and maps to no xdm.* target.] Virtual domain. Short opaque token, typically without whitespace;
+    max ~64 chars. DROPPED AT PARSE TIME. The parsing rule''s final stage is a field whitelist (`| fields
+    FTNTFG*, act, app, dst, dpt, src, spt, suser, ...`) and this column is not on it, so it never reaches
+    the modeling rule and can never map. This is the BARE FortiOS log name; the CEF wire form the rule
+    reads is the FTNTFGT-prefixed one. Declaring this field is wasted.'
+  example: root
+use_cases:
+- Firewall
+- Network
+- WAF
+how_to_use: |
+  ## FortiGate -> `fortinet_fortigate_raw` (validated end to end)
+
+  The rule defines **127 xdm fields**. A
+  traffic-only feed reaches **39**. Generating all six log types below reaches **73** — the jump is
+  not more volume, it is the OTHER subtypes.
+
+  ### 1. Routing, and a spelling divergence worth knowing
+
+  ```
+  [INGEST:vendor="Fortinet", product="Fortigate", target_dataset="fortinet_fortigate_raw", no_hit=keep]
+  ```
+
+  The pack spells the product **`Fortigate`, lowercase g**. This YAML's display fields say
+  `FortiGate`. Both derive `fortinet_fortigate_raw` so events land either way, but send the pack's
+  spelling: if the INGEST match is case-sensitive the parsing rule never runs, and then neither the
+  `_time` computation nor the field whitelist applies.
+
+  ### 2. The time gate — and the silent failure behind it
+
+  ```
+  filter to_string(FTNTFGTeventtime) ~= "\d{9}$"
+  | alter _time = to_timestamp( (eventtime minus its last 9 chars) - FTNTFGTduration )
+  ```
+
+  `FTNTFGTeventtime` must END in 9 digits (nanoseconds). **Back-dating formula: to land at epoch T
+  carrying duration D, send `str(T + D) + "000000000"`.** Verified: `1788791201000000000` with
+  `FTNTFGTduration=180` yields `_time = 1788791021`.
+
+  The parsing rule is `no_hit=keep`, so **an event that fails this filter still lands, with no
+  error, and silently takes ingest time.** Always verify the span:
+  `dataset = fortinet_fortigate_raw | comp min(_time), max(_time)`.
+
+  ### 3. The parsing whitelist — 50 declared fields can never map
+
+  The parsing rule's final stage keeps only:
+
+  ```
+  FTNTFG*, act, _scope, app, c6a2, c6a3, cat, cefDevice*, cnt, destinationTranslated*,
+  device*, dhost, dpt, dst, duser, dvchost, external*, fname, fsize, in, msg, out,
+  outcome, proto, reason, request*, shost, sourceServiceName, sourceTranslated*,
+  sproc, spt, src, suser
+  ```
+
+  Everything else is DISCARDED before the modeling rule sees it. **The bare FortiOS names —
+  `srcip`, `dstip`, `action`, `devname`, `appcat`, `sessionid`, `policyid`, `srcintf` — are all in
+  the discarded set.** 46 fields in this schema are tagged accordingly; sending them is wasted.
+  The CEF wire form the rule reads is the `FTNTFGT`-prefixed one.
+
+  ### 4. The six log types
+
+  `FTNTFGTsubtype` selects the subsystem and feeds `xdm.event.type`. Note it is **`FTNTFGTsubtype`,
+  not `FTNTFGTtype`** — the latter has no xdm target anywhere in the rule.
+
+  #### type=traffic subtype=forward — the session log
+
+  The bread-and-butter log. Populates the source/target address+port surface, bytes, policy and app control.
+
+  ```
+  vendor  = Fortinet
+  product = Fortigate
+  FTNTFGTapp                   = HTTPS.BROWSER
+  FTNTFGTappcat                = Web.Client
+  FTNTFGTappid                 = 41540
+  FTNTFGTapplist               = default-appctrl
+  FTNTFGTapprisk               = elevated
+  FTNTFGTdevtype               = Windows PC
+  FTNTFGTdstcity               = Redmond
+  FTNTFGTdstcountry            = United States
+  FTNTFGTdstregion             = Washington
+  FTNTFGTduration              = 180
+  FTNTFGTeventtime             = 1788683251000000000
+  FTNTFGTgroup                 = Corp_Users
+  FTNTFGTlevel                 = notice
+  FTNTFGTlogid                 = 0000000013
+  FTNTFGTmastersrcmac          = 00:0c:29:00:b4:11
+  FTNTFGTosname                = Windows 11
+  FTNTFGTpolicyid              = 12
+  FTNTFGTpolicyname            = Internal_to_Internet
+  FTNTFGTrcvdpkt               = 611
+  FTNTFGTsentpkt               = 942
+  FTNTFGTsrccountry            = Reserved
+  FTNTFGTsrcfamily             = Windows
+  FTNTFGTsrchwvendor           = Dell Inc.
+  FTNTFGTsrcmac                = 00:0c:29:00:b4:11
+  FTNTFGTsrcuuid               = 0b2b9f8c-1a5c-51ef-8e3f-9a1c4d2e0000
+  FTNTFGTsubtype               = forward
+  FTNTFGTvd                    = root
+  act                          = accept
+  app                          = HTTPS
+  cefSeverity                  = 3
+  deviceExternalId             = FGT60FT19015830
+  dhost                        = updates.microsoft.com
+  dpt                          = 443
+  dst                          = 20.190.160.14
+  dvchost                      = FGT-EDGE-01.corp.acme.local
+  externalId                   = 3530829
+  in                           = 175638
+  out                          = 1706009
+  proto                        = 6
+  shost                        = WS-2100
+  sourceTranslatedAddress      = 198.51.100.10
+  spt                          = 40611
+  src                          = 10.30.7.10
+  suser                        = ahmed.alharbi
+  ```
+
+  #### type=utm subtype=dns-response — the DNS subsystem
+
+  Contributed ZERO xdm fields before this pass. Unlocks the whole xdm.network.dns.* subtree — question and resource-record name/type/class.
+
+  ```
+  vendor  = Fortinet
+  product = Fortigate
+  FTNTFGTdevtype               = Windows PC
+  FTNTFGTdstcity               = Redmond
+  FTNTFGTdstcountry            = United States
+  FTNTFGTdstregion             = Washington
+  FTNTFGTduration              = 0
+  FTNTFGTeventtime             = 1788683071000000000
+  FTNTFGTgroup                 = Corp_Users
+  FTNTFGTipaddr                = 20.190.160.14
+  FTNTFGTlevel                 = notice
+  FTNTFGTlogid                 = 1501054600
+  FTNTFGTmastersrcmac          = 00:0c:29:00:b4:11
+  FTNTFGTosname                = Windows 11
+  FTNTFGTqclass                = IN
+  FTNTFGTqname                 = updates.microsoft.com
+  FTNTFGTqtype                 = TXT
+  FTNTFGTqtypeval              = 1
+  FTNTFGTsrccountry            = Reserved
+  FTNTFGTsrcfamily             = Windows
+  FTNTFGTsrchwvendor           = Dell Inc.
+  FTNTFGTsrcmac                = 00:0c:29:00:b4:11
+  FTNTFGTsrcuuid               = 0b2b9f8c-1a5c-51ef-8e3f-9a1c4d2e0000
+  FTNTFGTsubtype               = dns-response
+  FTNTFGTvd                    = root
+  FTNTFGTxid                   = 39193
+  act                          = pass
+  app                          = DNS
+  cefSeverity                  = 3
+  deviceExternalId             = FGT60FT19015830
+  dhost                        = updates.microsoft.com
+  dpt                          = 53
+  dst                          = 20.190.160.14
+  dvchost                      = FGT-EDGE-01.corp.acme.local
+  externalId                   = 2215279
+  proto                        = 17
+  shost                        = WS-2100
+  spt                          = 31582
+  src                          = 10.30.7.10
+  suser                        = ahmed.alharbi
+  ```
+
+  #### type=utm subtype=webfilter — URL filtering
+
+  Category + blocked-site telemetry. Feeds xdm.network.http.* and the category fields.
+
+  ```
+  vendor  = Fortinet
+  product = Fortigate
+  FTNTFGTcat                   = 26
+  FTNTFGTcatdesc               = Malicious Websites
+  FTNTFGTdevtype               = Windows PC
+  FTNTFGTdstcity               = Redmond
+  FTNTFGTdstcountry            = United States
+  FTNTFGTdstregion             = Washington
+  FTNTFGTduration              = 0
+  FTNTFGTeventtime             = 1788683071000000000
+  FTNTFGTeventtype             = ftgd_blk
+  FTNTFGTgroup                 = Corp_Users
+  FTNTFGThostname              = updates.microsoft.com
+  FTNTFGTlevel                 = warning
+  FTNTFGTlogid                 = 0316013056
+  FTNTFGTmastersrcmac          = 00:0c:29:00:b4:11
+  FTNTFGTmethod                = domain
+  FTNTFGTosname                = Windows 11
+  FTNTFGTreqtype               = direct
+  FTNTFGTsrccountry            = Reserved
+  FTNTFGTsrcfamily             = Windows
+  FTNTFGTsrchwvendor           = Dell Inc.
+  FTNTFGTsrcmac                = 00:0c:29:00:b4:11
+  FTNTFGTsrcuuid               = 0b2b9f8c-1a5c-51ef-8e3f-9a1c4d2e0000
+  FTNTFGTsubtype               = webfilter
+  FTNTFGTurlfilteridx          = 3
+  FTNTFGTurlfilterlist         = default
+  FTNTFGTvd                    = root
+  act                          = blocked
+  app                          = HTTPS
+  cefSeverity                  = 4
+  deviceExternalId             = FGT60FT19015830
+  dhost                        = updates.microsoft.com
+  dpt                          = 443
+  dst                          = 20.190.160.14
+  dvchost                      = FGT-EDGE-01.corp.acme.local
+  externalId                   = 9513358
+  proto                        = 6
+  request                      = https://updates.microsoft.com/payload.bin
+  requestClientApplication     = Mozilla/5.0 (Windows NT 10.0; Win64; x64)
+  shost                        = WS-2100
+  spt                          = 31900
+  src                          = 10.30.7.10
+  suser                        = ahmed.alharbi
+  ```
+
+  #### type=utm subtype=ips — intrusion signatures
+
+  Feeds xdm.alert.original_threat_name / .original_threat_id / .severity. FTNTFGTattack and FTNTFGTattackid are the pair that matter.
+
+  ```
+  vendor  = Fortinet
+  product = Fortigate
+  FTNTFGTattack                = Apache.Log4j.Error.Log.Remote.Code.Execution
+  FTNTFGTattackid              = 51006
+  FTNTFGTcrlevel               = critical
+  FTNTFGTcrscore               = 50
+  FTNTFGTdevtype               = Windows PC
+  FTNTFGTdstcity               = Redmond
+  FTNTFGTdstcountry            = United States
+  FTNTFGTdstregion             = Washington
+  FTNTFGTduration              = 0
+  FTNTFGTeventtime             = 1788683071000000000
+  FTNTFGTeventtype             = signature
+  FTNTFGTgroup                 = Corp_Users
+  FTNTFGTincidentserialno      = 565623510
+  FTNTFGTlevel                 = alert
+  FTNTFGTlogid                 = 0419016384
+  FTNTFGTmastersrcmac          = 00:0c:29:00:b4:11
+  FTNTFGTosname                = Windows 11
+  FTNTFGTprofile               = default-ips
+  FTNTFGTref                   = http://www.fortinet.com/ids/VID51006
+  FTNTFGTseverity              = critical
+  FTNTFGTsrccountry            = Reserved
+  FTNTFGTsrcfamily             = Windows
+  FTNTFGTsrchwvendor           = Dell Inc.
+  FTNTFGTsrcmac                = 00:0c:29:00:b4:11
+  FTNTFGTsrcuuid               = 0b2b9f8c-1a5c-51ef-8e3f-9a1c4d2e0000
+  FTNTFGTsubtype               = ips
+  FTNTFGTvd                    = root
+  act                          = dropped
+  cefSeverity                  = 6
+  deviceExternalId             = FGT60FT19015830
+  dhost                        = updates.microsoft.com
+  dpt                          = 443
+  dst                          = 20.190.160.14
+  dvchost                      = FGT-EDGE-01.corp.acme.local
+  externalId                   = 1629072
+  msg                          = Apache.Log4j.Error.Log.Remote.Code.Execution: detected and dropped
+  proto                        = 6
+  shost                        = WS-2100
+  spt                          = 37035
+  src                          = 10.30.7.10
+  suser                        = ahmed.alharbi
+  ```
+
+  #### type=utm subtype=virus — antivirus detection
+
+  The only path to the xdm.target.file.* subtree. NOTE the hash length switch: the rule computes len(FTNTFGTfilehash) and assigns md5 at 32 chars, sha256 at 64 — send a real 64-char hash or neither populates.
+
+  ```
+  vendor  = Fortinet
+  product = Fortigate
+  FTNTFGTanalyticscksum        = 275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f
+  FTNTFGTdevtype               = Windows PC
+  FTNTFGTdstcity               = Redmond
+  FTNTFGTdstcountry            = United States
+  FTNTFGTdstregion             = Washington
+  FTNTFGTduration              = 0
+  FTNTFGTeventtime             = 1788683071000000000
+  FTNTFGTeventtype             = infected
+  FTNTFGTfilehash              = 275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f
+  FTNTFGTfiletype              = msoffice
+  FTNTFGTgroup                 = Corp_Users
+  FTNTFGTlevel                 = warning
+  FTNTFGTlogid                 = 0211008192
+  FTNTFGTmastersrcmac          = 00:0c:29:00:b4:11
+  FTNTFGTosname                = Windows 11
+  FTNTFGTprofile               = default-av
+  FTNTFGTquarskip              = File-was-not-quarantined
+  FTNTFGTsrccountry            = Reserved
+  FTNTFGTsrcfamily             = Windows
+  FTNTFGTsrchwvendor           = Dell Inc.
+  FTNTFGTsrcmac                = 00:0c:29:00:b4:11
+  FTNTFGTsrcuuid               = 0b2b9f8c-1a5c-51ef-8e3f-9a1c4d2e0000
+  FTNTFGTsubtype               = virus
+  FTNTFGTvd                    = root
+  FTNTFGTvirus                 = EICAR_TEST_FILE
+  FTNTFGTvirusid               = 2172
+  act                          = blocked
+  cefSeverity                  = 4
+  deviceExternalId             = FGT60FT19015830
+  dhost                        = updates.microsoft.com
+  dpt                          = 443
+  dst                          = 20.190.160.14
+  dvchost                      = FGT-EDGE-01.corp.acme.local
+  externalId                   = 2171979
+  fname                        = invoice_2026.docm
+  fsize                        = 48213
+  msg                          = File is infected.
+  proto                        = 6
+  request                      = https://updates.microsoft.com/invoice_2026.docm
+  shost                        = WS-2100
+  spt                          = 43702
+  src                          = 10.30.7.10
+  suser                        = ahmed.alharbi
+  ```
+
+  #### type=event subtype=vpn — SSL-VPN tunnel + auth
+
+  Tunnel up/down and authentication. FTNTFGTresult drives xdm.event.outcome here, which traffic logs cannot reach.
+
+  ```
+  vendor  = Fortinet
+  product = Fortigate
+  FTNTFGTdevtype               = Windows PC
+  FTNTFGTdstcity               = Redmond
+  FTNTFGTdstcountry            = United States
+  FTNTFGTdstregion             = Washington
+  FTNTFGTduration              = 0
+  FTNTFGTeventtime             = 1788683071000000000
+  FTNTFGTeventtype             = SSL VPN Authentication
+  FTNTFGTgroup                 = Corp_Users
+  FTNTFGTlevel                 = notice
+  FTNTFGTlogid                 = 0101039424
+  FTNTFGTmastersrcmac          = 00:0c:29:00:b4:11
+  FTNTFGTosname                = Windows 11
+  FTNTFGTreason                = login successfully
+  FTNTFGTremip                 = 20.190.160.14
+  FTNTFGTresult                = OK
+  FTNTFGTsrccountry            = Reserved
+  FTNTFGTsrcfamily             = Windows
+  FTNTFGTsrchwvendor           = Dell Inc.
+  FTNTFGTsrcmac                = 00:0c:29:00:b4:11
+  FTNTFGTsrcuuid               = 0b2b9f8c-1a5c-51ef-8e3f-9a1c4d2e0000
+  FTNTFGTsubtype               = vpn
+  FTNTFGTtunnelid              = 36114
+  FTNTFGTtunneltype            = ssl-web
+  FTNTFGTvd                    = root
+  FTNTFGTxauthgroup            = SSLVPN_Users
+  FTNTFGTxauthuser             = ahmed.alharbi
+  act                          = tunnel-up
+  cefSeverity                  = 3
+  deviceExternalId             = FGT60FT19015830
+  dhost                        = updates.microsoft.com
+  dpt                          = 443
+  dst                          = 20.190.160.14
+  dvchost                      = FGT-EDGE-01.corp.acme.local
+  externalId                   = 2521911
+  msg                          = SSL user ahmed.alharbi authenticated
+  outcome                      = success
+  proto                        = 6
+  shost                        = WS-2100
+  spt                          = 37886
+  src                          = 10.30.7.10
+  suser                        = ahmed.alharbi
+  ```
+
+  ### 5. The placeholder-pool defect
+
+  `dhost` and `shost` are declared `type: host`. Left unpinned the generator draws from a five-value
+  pool, and on the live feed **host-a / host-b / host-c / server-1 / endpoint-7 account for ~3.37M
+  rows against ~38k real hostnames** — a 50:1 contamination, and the direct cause of
+  `xdm.target.host.fqdn = "host-a"`. Pin both, from DISJOINT pools, or an alert reads
+  "ws-014 connected to ws-014".
+
+  Same class: `externalId` feeds `xdm.network.session_id`. Random per event means no traffic row
+  ever correlates with its UTM rows — pin from a small pool so they join.
+
+  ### 6. Verifying — sample PER SUBTYPE, not across them
+
+  A 40-row sample spread over six subtypes will miss the sparse ones and read as a mapping failure.
+  `xdm.target.file.*` and `xdm.alert.original_threat_name` can look absent in a mixed
+  sample and appear as soon as the query filters to `virus` and `ips`.
+
+  ```
+  datamodel dataset = fortinet_fortigate_raw
+  | filter xdm.observer.name = "<your firewall>" and xdm.event.type = "<subtype>"
+  | fields xdm.* | limit 12
+  ```
+
+  Take the UNION across subtypes.
+
+  ### 7. Why this source matters most for analytics
+
+  All **23 of 23** third-party-firewall detectors are UNGATED — they run on the base analytics
+  engine with no Detection Modules row, no Identity Analytics pairing, no ITDR licence. By
+  contrast Windows has 8 reachable of 57 and Duo 1 of 21.
+
+  This is not theoretical: XDR_ANALYTICS alerts carrying
+  `original_tags: ['DS:Fortinet/FortiGate']` — "Suspicious port scan" and "Suspicious SMB
+  connection from domain controller" — both fire from synthetic CEF. **FortiGate is the proven
+  analytics surface.**
+
+  ### 8. Third confirmed detector — Spam Bot Traffic, and re-fire behaviour for all three
+
+  A single internal source host connecting to **15+ distinct external IPs**
+  on `dpt=25` or `dpt=587` with `app=SMTP`, `proto=6` fires **Spam Bot Traffic**
+  (`XDR_ANALYTICS`, description reads "connected to N SMTP servers in the last 3 days").
+  Unlike Suspicious port scan, this one does **not** fire from a single well-shaped one-shot
+  burst — a verification burst landing 27 distinct SMTP destinations (well over threshold)
+  produced no alert after ~9 minutes of observation. Budget real wall-clock time, not just
+  volume, when trying to re-arm it.
+
+  Re-fire behaviour:
+
+  - **Suspicious port scan**: fires repeatedly from different source hosts.
+  The alert arrives 3.5-12 minutes after the burst, and the same host is deduplicated for
+  1 day. The exact call is in the `trigger_port_scan_analytics` skill.
+  - **Spam Bot Traffic** — fires eventually from a correctly-shaped feed, but not instantly;
+  needs a fresh source host to re-arm and does not appear to be volume-triggerable on demand.
+  - **Suspicious SMB connection from domain controller**: the Cortex doc sets a 7-day
+  deduplication period per source, so the same source does not fire again within that window.
+  The DC role comes from the tenant's asset classification of a real domain controller,
+  not from a host name, so a synthetic host named
+  `DC02` is not a domain controller to the detector.
+
+  Full recipes, field shapes, and oversampling gotchas for `observables_dict` are in the
+  `trigger_network_analytics_alerts` skill — read that before trying to trigger any of these
+  three on demand.
+
+  ### 9. The keys the volumetric and failed-connection detectors read
+
+  **A feed whose senders omit the subtype leaves `xdm.event.type` empty or meaningless.** Two causes
+  produce that: a field declared `type: string` with `enum_values` becomes a random 8-character token,
+  because the generator only draws from `enum_values` for `type: enum` (the schema declares
+  `FTNTFGTsubtype` and `FTNTFGTlevel` as enums for this reason); and a sender that never sends the field at all. **Always pin `FTNTFGTsubtype` in
+  `observables_dict`** (`["forward"]` for traffic) — a pinned value always wins over the schema.
+
+  What the modeling rule reads, and what a row needs to carry it:
+
+  | xdm field | CEF key | note |
+  |---|---|---|
+  | `xdm.event.type`, `xdm.event.operation_sub_type` | `FTNTFGTsubtype` | `forward` for a traffic session; the other values are in section 4 |
+  | `xdm.event.outcome` | `outcome` | Only these literals map: `success`/`succeeded`/`update` -> SUCCESS, `failure`/`failed`/`negotiate_error` -> FAILED, `database-check`/`authentication-required` -> PARTIAL, `unregistered`/`new` -> UNKNOWN. `FTNTFGTresult` (`OK`/`DONE` / `ERROR` / `N/A`) is the alternative. **`act=deny` alone does NOT set an outcome** (it only feeds `xdm.observer.action`): for a denied connection send `act=deny` AND `outcome=failure`. |
+  | `xdm.event.duration` | `FTNTFGTduration` | seconds, multiplied by 1000. Also subtracted from `FTNTFGTeventtime` to compute `_time` (section 2) |
+  | `xdm.source.sent_bytes` / `xdm.target.sent_bytes` | `out` / `in` | the numerators of any volume detector; send integers |
+  | `xdm.source.sent_packets` / `xdm.target.sent_packets` | `FTNTFGTsentpkt` / `FTNTFGTrcvdpkt` | |
+  | `xdm.network.session_id`, `xdm.session_context_id` | `externalId` | pin from a small pool if rows must join |
+  | `xdm.network.ip_protocol` | `proto` | numeric string (`6`, `17`), never a name |
+
+  On valid `forward` rows expect: duration 100%, both byte counters 99.8%,
+  session id 98.8%, ip protocol 99.8%, **outcome only on rows whose sender passed `outcome`**.
+
+  **Sender hygiene.** A sender that sends only a handful of keys (no subtype, bytes, duration, outcome or
+  event time) and the capitalised product `FortiGate` instead of the pack's `Fortigate` (section 1) produces
+  hollow rows that never reach the detectors. Send the full key set and the pack's spelling.
+
+  **Host history.** Palo Alto detectors fire only from hosts with real calendar history; whether
+  Analytics measures a host by first-seen span or by active days is not established — plan on 14 real days
+  of history per source host.
+validated: true

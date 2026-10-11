@@ -1,0 +1,565 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Phantom Agent — themed token surface.
+ *
+ * Two themes share the same token names:
+ *   :root                 — dark "Ocean Navy" (default)
+ *   [data-theme="light"]  — light variant for operators on white BGs
+ *
+ * The toggle in the sidebar footer writes `data-theme="light"` on
+ * <html> via lib/use-theme.ts; that activates the override block
+ * below. Tailwind tokens (see tailwind.config.ts) all resolve through
+ * these vars — `bg-surface`, `text-on-surface`, `border-outline`, etc.
+ * — so the entire app reflows when the attribute flips.
+ *
+ * Design rules for adding a new token:
+ *   1. Pick a semantic name (`--m3-foo` for Material-style, plain
+ *      `--bar` for one-offs).
+ *   2. Define values in BOTH :root (dark) AND [data-theme="light"].
+ *      Skipping the light value means the token "leaks" the dark
+ *      value into light mode — visible immediately on toggle.
+ *   3. Reference via `var(--name)` from CSS or alias in
+ *      tailwind.config.ts so JSX classes pick it up.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* ── Ocean Navy palette (dark) ─────────────────────────────── */
+  --bg: #050914;
+  --bg-elevated: #09162a;
+  --bg-soft: #0e2240;
+  --card-bg: #0a1a33;
+  --text-primary: #e2eeff;
+  --text-muted: #a9c3ee;
+  --accent-blue: #1f7bff;
+  --accent-cyan: #00f5ff;
+  --accent-mint: #45ffd6;
+  --accent-indigo: #6a7cff;
+  --accent-pink: #ff4fcb;
+  --accent-coral: #ff5f8a;
+  --accent-amber: #ffc05f;
+
+  /* Gradients */
+  --grad-bg-main: linear-gradient(135deg, #050914 0%, #09162a 55%, #0e2240 100%);
+  --grad-primary: linear-gradient(135deg, #0b1f4a 0%, #1f7bff 45%, #00f5ff 100%);
+  --grad-sidebar: linear-gradient(180deg, #07132a 0%, #0a2f66 50%, #126dff 100%);
+  --grad-hero: linear-gradient(135deg, #00e7ff 0%, #1f7bff 50%, #6a7cff 100%);
+  --grad-accent: linear-gradient(90deg, #ff4fcb 0%, #ff5f8a 55%, #ffc05f 100%);
+  --grad-success: linear-gradient(90deg, #45ffd6 0%, #00e7ff 100%);
+
+  --border-subtle: color-mix(in srgb, var(--accent-blue) 30%, #1e293b);
+  --ring-soft: color-mix(in srgb, var(--accent-cyan) 35%, transparent);
+  --shadow-soft: 0 12px 48px color-mix(in srgb, var(--accent-blue) 18%, transparent);
+
+  /* shadcn HSL tokens — Ocean Navy palette */
+  --background: 222 60% 4%;
+  --foreground: 218 80% 94%;
+  --card: 216 55% 10%;
+  --card-foreground: 218 80% 94%;
+  --popover: 216 55% 10%;
+  --popover-foreground: 218 80% 94%;
+  --primary: 220 100% 56%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 187 100% 50%;
+  --secondary-foreground: 187 100% 8%;
+  --muted: 218 30% 14%;
+  --muted-foreground: 218 40% 72%;
+  --accent: 220 100% 56%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 350 100% 68%;
+  --destructive-foreground: 0 100% 100%;
+  --border: 218 30% 18%;
+  --input: 218 30% 18%;
+  --ring: 195 100% 50%;
+  --radius: 0.75rem;
+
+  /* Material 3 dark token surface */
+  --m3-surface-dim: #12121e;
+  --m3-on-tertiary-fixed-variant: #5d4200;
+  --m3-on-secondary-fixed: #002204;
+  --m3-on-surface-variant: #c2c6d3;
+  --m3-surface-container-low: #1b1a26;
+  --m3-on-error: #690005;
+  --m3-outline-variant: #424751;
+  --m3-surface-container-highest: #343340;
+  --m3-secondary-fixed-dim: #7bdc7b;
+  --m3-on-tertiary: #412d00;
+  --m3-surface: #12121e;
+  --m3-tertiary: #fbbc30;
+  --m3-on-background: #e3e0f1;
+  --m3-secondary-container: #037321;
+  --m3-inverse-primary: #0f5eae;
+  --m3-on-primary: #003060;
+  --m3-on-error-container: #ffdad6;
+  --m3-on-primary-fixed: #001c3b;
+  --m3-surface-container-lowest: #0d0d18;
+  --m3-secondary-fixed: #97f995;
+  --m3-outline: #8c919d;
+  --m3-surface-bright: #383845;
+  --m3-inverse-on-surface: #302f3c;
+  --m3-on-tertiary-fixed: #271900;
+  --m3-surface-container: #1f1e2a;
+  --m3-primary-fixed: #d5e3ff;
+  --m3-tertiary-container: #815c00;
+  --m3-on-secondary: #00390c;
+  --m3-surface-variant: #343340;
+  --m3-tertiary-fixed: #ffdea5;
+  --m3-tertiary-fixed-dim: #fbbc30;
+  --m3-surface-container-high: #292935;
+  --m3-on-primary-container: #d0e0ff;
+  --m3-primary-fixed-dim: #a7c8ff;
+  --m3-inverse-surface: #e3e0f1;
+  --m3-surface-tint: #a7c8ff;
+  --m3-on-secondary-container: #94f693;
+  --m3-on-tertiary-container: #ffda99;
+  --m3-on-surface: #e3e0f1;
+  --m3-on-secondary-fixed-variant: #005315;
+  --m3-error-container: #93000a;
+  --m3-on-primary-fixed-variant: #004788;
+  --m3-primary-container: #1963b3;
+  --m3-error: #ffb4ab;
+
+  /* Glass morphism — values used by inline `style={{...}}` consumers
+     across the app. Pages that hardcode rgba(31,30,42,0.4) etc. should
+     migrate to `className="glass"` over time; for now the var captures
+     the "what color is the glass tint" decision in one place. */
+  --glass-bg: rgba(31, 30, 42, 0.4);
+  --glass-bg-strong: rgba(20, 20, 45, 0.4);
+  --glass-bg-elev: rgba(31, 30, 42, 0.7);
+  --glass-border: rgba(140, 145, 157, 0.15);
+  --glass-blur: 12px;
+  /* Subtle inset glow + soft shadow gives the dark theme that
+     "modern slightly-glowing" depth. Light theme override below
+     reads bluer to match the pale azure family. */
+  --glass-shadow: 0 1px 0 rgba(167, 200, 255, 0.06) inset, 0 8px 28px rgba(0, 0, 0, 0.25);
+
+  /* Sidebar — theme-aware. These vars flip the whole left rail with
+     the rest of the app. The `--sidebar-text` var resolves to text-on-surface
+     equivalents for each theme; `--sidebar-text-muted` is the dim
+     state for unselected items. */
+  --sidebar-bg: linear-gradient(
+    180deg,
+    rgba(7, 19, 42, 0.95) 0%,
+    rgba(9, 22, 42, 0.88) 60%,
+    rgba(5, 9, 20, 0.95) 100%
+  );
+  --sidebar-border: rgba(0, 245, 255, 0.2);
+  --sidebar-text: #ffffff;
+  --sidebar-text-muted: rgba(255, 255, 255, 0.5);
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+  --sidebar-section-label: rgba(255, 255, 255, 0.4);
+  --sidebar-shadow:
+    inset 0 1px 0 rgba(186, 230, 253, 0.2),
+    0 0 40px rgba(56, 189, 248, 0.08);
+
+  /* Graph rendering (pipeline page SVG, future trace timelines).
+     Edge color: the default (inactive) line. Active uses a status
+     accent (cyan) and is the same in both themes. Text on nodes +
+     edge labels need to read against the page bg, so they flip. */
+  --graph-edge: #a9c3ee;
+  --graph-edge-active: #00f5ff;
+  --graph-text-primary: #e2eeff;
+  --graph-text-muted: #a9c3ee;
+  --graph-node-bg: rgba(10, 26, 51, 0.85);
+  --graph-arrow: #a9c3ee;
+
+  /* Status palette (pipeline page nodes, status pills, summary tiles).
+     Theme-aware: dark uses the original luminous accents (great
+     contrast on navy), light flips to deeper saturation that reads
+     against pale-azure. The "soft" variants are for tinted backgrounds
+     (chip bg, summary tile bg) at low opacity. */
+  --status-ok: #45ffd6;
+  --status-ok-soft: rgba(69, 255, 214, 0.18);
+  --status-degraded: #ffc05f;
+  --status-degraded-soft: rgba(255, 192, 95, 0.18);
+  --status-failed: #ff5f8a;
+  --status-failed-soft: rgba(255, 95, 138, 0.18);
+  --status-checking: #a9c3ee;
+  --status-checking-soft: rgba(169, 195, 238, 0.18);
+
+  /* Stitch M3 aliases used by ported components */
+  --color-on-surface: var(--text-primary);
+  --color-on-surface-variant: var(--text-muted);
+  --color-surface: var(--bg);
+  --color-surface-container: var(--bg-elevated);
+  --color-surface-container-highest: var(--bg-soft);
+  --color-primary: var(--accent-blue);
+  --color-primary-container: color-mix(in srgb, var(--accent-blue) 20%, var(--bg));
+  --color-secondary: var(--accent-cyan);
+  --color-secondary-container: color-mix(in srgb, var(--accent-cyan) 15%, var(--bg));
+  --color-tertiary: var(--accent-indigo);
+  --color-outline: color-mix(in srgb, var(--text-muted) 50%, var(--bg));
+  --color-outline-variant: var(--border-subtle);
+  --color-error: var(--accent-coral);
+}
+
+/*
+ * ─── Light theme overrides ────────────────────────────────────
+ *
+ * Every override below MUST have a counterpart in :root above; if
+ * a token is in :root but missing here, it leaks the dark value
+ * into light mode. The light palette mirrors Material Design 3's
+ * light reference but tuned to keep the same hue families as the
+ * Ocean Navy dark theme — primary stays blue, secondary stays
+ * green-cyan, tertiary stays amber, error stays red. The eye gets
+ * the same operational color signals; only the surfaces flip from
+ * navy → off-white.
+ */
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Pale-azure (operator-specified) light palette. Earlier passes
+     tried cool lavender (felt clinical) then warm beige (wrong
+     family for the navy dark theme); this lands on the operator's
+     chosen tones — `#FAFDFF` page bg, `#F5F9FF` sidebar bg —
+     which read as "very light cool white with a hint of blue."
+     Same hue family as the dark Ocean Navy theme's blues, just
+     dialed all the way up in lightness. Adds subtle glow shadows
+     on cards so the light theme has some depth (was flat). */
+  --bg: #FAFDFF;
+  --bg-elevated: #ffffff;
+  --bg-soft: #e8f4fa;
+  --card-bg: #ffffff;
+  --text-primary: #0f172a;
+  --text-muted: #475569;
+  --accent-blue: #1f6fde;
+  --accent-cyan: #057a3a;
+  --accent-mint: #057a55;
+  --accent-indigo: #5a4f8c;
+  --accent-pink: #b3267e;
+  --accent-coral: #b91c1c;
+  --accent-amber: #b45309;
+
+  /* Gradients — pale azure main bg, ice-blue sidebar, primary
+     stays blue. */
+  --grad-bg-main: linear-gradient(135deg, #FAFDFF 0%, #e8f4fa 100%);
+  --grad-primary: linear-gradient(135deg, #1f6fde 0%, #2d8df0 100%);
+  --grad-sidebar: linear-gradient(180deg, #F5F9FF 0%, #e8f0fa 60%, #f0f7ff 100%);
+  --grad-hero: linear-gradient(135deg, #057a3a 0%, #1f6fde 50%, #5a4f8c 100%);
+  --grad-accent: linear-gradient(90deg, #b3267e 0%, #b91c1c 55%, #b45309 100%);
+  --grad-success: linear-gradient(90deg, #057a55 0%, #1f6fde 100%);
+
+  --border-subtle: rgba(31, 111, 222, 0.18);
+  --ring-soft: rgba(31, 111, 222, 0.35);
+  /* Glow / glossy shadows for cards — softer than dark-mode equivalents
+     since the surface is bright; using a pale azure hue keeps the
+     glow feeling part of the same theme family rather than a generic
+     drop-shadow. Used by .glass-panel, summary cards, etc. */
+  --shadow-soft: 0 8px 28px rgba(31, 111, 222, 0.10), 0 1px 3px rgba(15, 23, 42, 0.06);
+
+  /* shadcn HSL tokens — Pale-Azure palette. Backgrounds anchored
+     on a 210° hue (cyan-blue) at very high lightness, so the app
+     reads as "blue-tinted ice white." Bumped from 98% → 99%
+     lightness when the operator dialed page bg from #F5FEFF →
+     #FAFDFF (slightly whiter, slightly cooler blue tint). */
+  --background: 210 100% 99%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 215 76% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 144 92% 25%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 210 40% 94%;
+  --muted-foreground: 215 16% 35%;
+  --accent: 215 76% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 75% 42%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 215 20% 88%;
+  --input: 215 20% 88%;
+  --ring: 215 76% 50%;
+
+  /* Material 3 light token surface — pale-azure variant. The
+     surface family steps from white → ice-blue → soft-azure
+     instead of the cream/stone of the warm-beige attempt. */
+  --m3-surface-dim: #c8dde9;
+  --m3-on-tertiary-fixed-variant: #5d4200;
+  --m3-on-secondary-fixed: #00210a;
+  --m3-on-surface-variant: #475569;
+  --m3-surface-container-low: #f0f7fc;
+  --m3-on-error: #ffffff;
+  --m3-outline-variant: #cbd5e1;
+  --m3-surface-container-highest: #cce0ed;
+  --m3-secondary-fixed-dim: #7bdc7b;
+  --m3-on-tertiary: #ffffff;
+  --m3-surface: #FAFDFF;
+  --m3-tertiary: #b45309;
+  --m3-on-background: #0f172a;
+  --m3-secondary-container: #b8e8b8;
+  --m3-inverse-primary: #a7c8ff;
+  --m3-on-primary: #ffffff;
+  --m3-on-error-container: #410002;
+  --m3-on-primary-fixed: #001b3d;
+  --m3-surface-container-lowest: #ffffff;
+  --m3-secondary-fixed: #b8e8b8;
+  --m3-outline: #94a3b8;
+  --m3-surface-bright: #FAFDFF;
+  --m3-inverse-on-surface: #f0f9fc;
+  --m3-on-tertiary-fixed: #281800;
+  --m3-surface-container: #e8f4fa;
+  --m3-primary-fixed: #d5e3ff;
+  --m3-tertiary-container: #ffdea5;
+  --m3-on-secondary: #ffffff;
+  --m3-surface-variant: #dbeafe;
+  --m3-tertiary-fixed: #ffdea5;
+  --m3-tertiary-fixed-dim: #fbbc30;
+  --m3-surface-container-high: #d6e9f4;
+  --m3-on-primary-container: #001b3d;
+  --m3-primary-fixed-dim: #a7c8ff;
+  --m3-inverse-surface: #313033;
+  --m3-surface-tint: #1f6fde;
+  --m3-on-secondary-container: #00210a;
+  --m3-on-tertiary-container: #281800;
+  --m3-on-surface: #0f172a;
+  --m3-on-secondary-fixed-variant: #005315;
+  --m3-error-container: #ffdad6;
+  --m3-on-primary-fixed-variant: #004788;
+  --m3-primary-container: #d3e3ff;
+  --m3-error: #b91c1c;
+
+  /* Glass — frosted-white over the pale azure bg. Border picks up
+     the same azure family at low opacity so it reads as a clean
+     accent line, not a heavy rule. The added box-shadow on the
+     glass-panel/glass utility provides the operator-requested
+     "glow / glossy" depth that a bare rgba bg lacked. */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-strong: rgba(255, 255, 255, 0.86);
+  --glass-bg-elev: rgba(255, 255, 255, 0.94);
+  --glass-border: rgba(31, 111, 222, 0.14);
+  --glass-blur: 12px;
+  --glass-shadow: 0 8px 28px rgba(31, 111, 222, 0.08), 0 1px 3px rgba(15, 23, 42, 0.05);
+
+  /* Sidebar — pale azure (operator-specified #F5F9FF) with a
+     subtle gradient so it reads as a distinct chrome layer rather
+     than blending into the page bg. Same hue family as the dark
+     navy theme; just at very high lightness. */
+  --sidebar-bg: linear-gradient(
+    180deg,
+    #F5F9FF 0%,
+    #e8f0fa 60%,
+    #f0f7ff 100%
+  );
+  --sidebar-border: rgba(31, 111, 222, 0.12);
+  --sidebar-text: #0f172a;
+  --sidebar-text-muted: rgba(15, 23, 42, 0.55);
+  --sidebar-hover-bg: rgba(31, 111, 222, 0.07);
+  --sidebar-section-label: rgba(15, 23, 42, 0.5);
+  --sidebar-shadow: 0 0 24px rgba(31, 111, 222, 0.06);
+
+  /* Graph (pipeline page) — slate edges + labels readable on the
+     pale azure bg; primary blue for active edges. */
+  --graph-edge: #475569;
+  --graph-edge-active: #1f6fde;
+  --graph-text-primary: #0f172a;
+  --graph-text-muted: #475569;
+  --graph-node-bg: rgba(255, 255, 255, 0.96);
+  --graph-arrow: #475569;
+
+  /* Light-theme status palette. The dark-theme accents (#45ffd6 cyan,
+     #ffc05f amber, #ff5f8a rose, #a9c3ee pale-blue) all desaturate
+     against pale-azure white — operator: "status text not clear."
+     These swap in deeper, higher-contrast tones (~AA on white) while
+     keeping the same hue family so the cross-theme identity reads
+     "same status, two different surfaces." */
+  --status-ok: #047857;          /* emerald-700 */
+  --status-ok-soft: rgba(4, 120, 87, 0.12);
+  --status-degraded: #b45309;    /* amber-700 */
+  --status-degraded-soft: rgba(180, 83, 9, 0.12);
+  --status-failed: #b91c1c;      /* red-700 */
+  --status-failed-soft: rgba(185, 28, 28, 0.12);
+  --status-checking: #475569;    /* slate-600 */
+  --status-checking-soft: rgba(71, 85, 105, 0.12);
+}
+
+.dark { color-scheme: dark; }
+
+@layer base {
+  * { @apply border-border; }
+  html {
+    color-scheme: dark;
+  }
+  /* Note on color-scheme: it controls native form-control rendering
+     (scrollbars, date pickers, etc.). The :root and [data-theme=light]
+     blocks set this dynamically; this @layer base rule is a fallback. */
+  body {
+    background: var(--grad-bg-main);
+    color: var(--text-primary);
+    @apply min-h-screen antialiased;
+  }
+}
+
+/* ── Glass morphism cards ──────────────────────────────────────
+   All `.glass-*` classes use CSS vars so they inherit the active
+   theme. Inline `style={{ background: "rgba(...)", ... }}` consumers
+   should migrate to one of these classes over time. */
+.glass-node {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+.glass-panel {
+  background: var(--glass-bg-elev);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+/* Drop-in replacement for inline `style={{ background:
+   "rgba(31,30,42,0.4)", backdropFilter: "blur(12px)", border: ... }}`.
+   Replace `style={glassStyle}` with `className="glass"` to pick up
+   theme switching + the glow shadow. */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.primary-gradient { background: var(--grad-primary); }
+.ghost-border { border: 0.5px solid var(--border-subtle); }
+.btn-gradient { background: linear-gradient(135deg, #0b1f4a 0%, #1f7bff 100%); }
+
+/* Data sources page — shimmer skeleton + ambient glow + atmospheric shadow
+   Theme-aware via the existing m3 tokens. */
+.skeleton-shimmer {
+  background: linear-gradient(
+    to right,
+    var(--m3-surface-container) 4%,
+    var(--m3-surface-bright) 25%,
+    var(--m3-surface-container) 36%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2.5s infinite linear;
+}
+@keyframes shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position:  1000px 0; }
+}
+
+.atmospheric-shadow {
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.18), 0 0 80px rgba(122, 175, 255, 0.04);
+}
+
+/* The mockup's `glass-pane` is the same thing as our existing
+   `.glass-panel`. Alias so generated HTML lifts over cleanly. */
+.glass-pane {
+  background: var(--glass-bg-elev);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 0.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+/* Animations */
+.status-pulse { animation: status-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+@keyframes status-pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+
+.step-pulse {
+  box-shadow: 0 0 0 0 rgba(0, 245, 255, 0.4);
+  animation: step-pulse-anim 2s infinite;
+}
+@keyframes step-pulse-anim {
+  0% { box-shadow: 0 0 0 0 rgba(0, 245, 255, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(0, 245, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 245, 255, 0); }
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 4px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(31, 123, 255, 0.2);
+  border-radius: 10px;
+}
+
+/* Login page background pattern */
+.bg-grid-pattern {
+  background-image: radial-gradient(rgba(31, 123, 255, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+.celestial-glow {
+  background: radial-gradient(circle, rgba(31, 123, 255, 0.08) 0%, rgba(5, 9, 20, 0) 70%);
+}
+.radial-glow {
+  background: radial-gradient(circle at center, rgba(31, 123, 255, 0.15) 0%, rgba(5, 9, 20, 0) 70%);
+}
+
+/* ── Sidebar utility classes ───────────────────────────────────
+   Used by components/sidebar.tsx so the left rail picks up the
+   theme switch without sprinkling inline `style={{...}}` everywhere.
+   `.sidebar-shell` styles the outer <aside>; `.sidebar-text` is the
+   default item color; `.sidebar-text-muted` is the dim variant. */
+.sidebar-shell {
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--sidebar-border);
+  box-shadow: var(--sidebar-shadow);
+}
+.sidebar-text { color: var(--sidebar-text); }
+.sidebar-text-muted { color: var(--sidebar-text-muted); }
+.sidebar-section-label { color: var(--sidebar-section-label); }
+.sidebar-hover:hover { background: var(--sidebar-hover-bg); }
+
+/* Dashboard glow effects */
+.glow-blue { box-shadow: 0 0 15px rgba(31, 123, 255, 0.25); }
+.glow-green { box-shadow: 0 0 10px rgba(69, 255, 214, 0.25); }
+.glow-amber { box-shadow: 0 0 10px rgba(255, 192, 95, 0.25); }
+.glow-error { box-shadow: 0 0 15px rgba(255, 95, 138, 0.3); border-color: rgba(255, 95, 138, 0.4); }
+.glow-primary { box-shadow: 0 0 15px rgba(31, 123, 255, 0.3); }
+
+/* Theme-aware Job CTA button — Create Job, Apply Schedule, etc.
+   The blue gradient stays the same in both modes; only the text colour
+   flips so contrast is correct against the lighter light-mode footer
+   shading. Avoids the previous bug where text-on-surface resolved to
+   a near-black colour token in dark mode and the button text was hard
+   to read against the dark blue gradient. */
+:root        { --job-cta-text: #ffffff; --job-cta-bg: linear-gradient(135deg, #1963B3 0%, #2D8DF0 100%); }
+[data-theme="light"] { --job-cta-text: #0f172a; --job-cta-bg: linear-gradient(135deg, #5da9ff 0%, #88c0ff 100%); }
+.job-cta { color: var(--job-cta-text); background: var(--job-cta-bg); }
+
+/* Standard input/textarea/select style. Used by /agents editor,
+   /settings/hooks, and any other form that needs a base text-input
+   look. Without it inputs render with browser-default styles, which
+   are transparent against the dark theme's panel background.
+   Theme-aware: bg + border + text colors all flip on dark↔light. */
+.input-base {
+  width: 100%;
+  background: var(--m3-surface-container-low, rgba(255, 255, 255, 0.04));
+  border: 0.5px solid var(--glass-border, rgba(255, 255, 255, 0.12));
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  color: var(--on-surface, #edf5ff);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: border-color 120ms, box-shadow 120ms;
+}
+.input-base:focus {
+  outline: none;
+  border-color: var(--m3-primary, #2d8df0);
+  box-shadow: 0 0 0 1px var(--m3-primary, #2d8df0);
+}
+.input-base:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.input-base::placeholder {
+  color: var(--on-surface-variant, #b9c8da);
+  opacity: 0.55;
+}
+textarea.input-base {
+  line-height: 1.5;
+  min-height: 2.5rem;
+}

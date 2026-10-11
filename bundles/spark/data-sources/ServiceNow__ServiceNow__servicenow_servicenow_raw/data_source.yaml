@@ -1,0 +1,415 @@
+schema_version: 1
+id: ServiceNow
+pack_name: ServiceNow
+rule_name: ServiceNow
+dataset_name: servicenow_servicenow_raw
+vendor: ServiceNow
+product: ServiceNow
+description: ServiceNow ITSM is a workflow + service-management platform that captures every incident,
+  change request, problem, and CMDB mutation across an organization's IT processes. Each record carries
+  the actor (caller / assignee), the affected CI (configuration item), the workflow state, approvals,
+  and free-form work notes. Simulate ServiceNow to validate detections for unauthorized incident manipulation,
+  ticket-based social engineering, or anomalous change approvals.
+how_to_use: |
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `ServiceNow`
+  - **product**: `ServiceNow`
+
+  Broker derives → `servicenow_servicenow_raw`.
+
+  ServiceNow emits one audit `record` per incident, change-request, or CMDB mutation — the high-signal events are field edits and approvals carried in the nested `record.changes[]` array. The gotcha that silently drops events: `sys_created_on` must be ServiceNow's native space-separated `YYYY-MM-DD HH:MM:SS`, not RFC-3339.
+
+  **MR pattern**: Heavy-nested. MR consumes audit `record` objects with deeply-nested `changes[].fieldname`/`changes[].old`/`changes[].new`.
+
+  **Composite (nested-JSON) fields**: Pack `record` as JSON-string object with `sys_id`, `sys_class_name`, `assigned_to`, `changes[]`. The MR's array iteration over `changes[]` survives CEF-extension wrapping but only the first 3-4 array entries reliably populate XDM.
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: `sys_created_on` must be `YYYY-MM-DD HH:MM:SS` (NOT RFC-3339 — ServiceNow's native format).
+
+  **Saturation strategy**: Heavy-nested — ~5-8 XDM ceiling. Pack the most-important 3 audit changes only; later entries silently drop.
+
+  **Single-event XDM ceiling**: ~5-8 XDM single-event (heavy-nested).
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = servicenow_servicenow_raw
+  | filter xdm.event.id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+categories:
+- Case Management
+version: 2.9.10
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMzQTgxMkUiPlNlcnZpY2VOb3c8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: account
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: city, country, latitude, longitude,
+    name, number, website (each key defined as a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: active
+  type: integer
+  description: Vendor-emitted field 'Active'. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: additional_debug_info
+  type: string
+  description: Vendor-emitted field 'Additional debug info'. Free-form text; may contain whitespace and
+    punctuation.
+  example: operator-visible value
+- name: additional_info
+  type: string
+  description: Vendor-emitted field 'Additional info'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: app_scope
+  type: string
+  description: Vendor-emitted field 'App scope'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: approval
+  type: string
+  description: Approval state (requested/approved/rejected/...). Free-form text; may contain whitespace
+    and punctuation.
+  example: operator-visible value
+- name: assigned_to
+  type: string
+  description: Vendor-emitted field 'Assigned to'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: assignment_group
+  type: string
+  description: Vendor-emitted field 'Assignment group'. Free-form text; may contain whitespace and punctuation.
+  example: grp-0f8c2337
+- name: case_report
+  type: integer_port
+  description: Vendor-emitted field 'Case report'. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: category
+  type: string_short
+  description: ServiceNow's category classifier for the event. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: access_control
+- name: contact_type
+  type: string_short
+  description: Type/category classifier emitted by ServiceNow. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: authentication
+- name: db_category
+  type: string_short
+  description: ServiceNow's category classifier for the event. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: access_control
+- name: db_pool
+  type: string
+  description: Vendor-emitted field 'Db pool'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: description
+  type: string_long
+  description: Free-form human-readable description from ServiceNow. Free-form text; may span multiple
+    lines or contain large payloads.
+  example: Event recorded by ServiceNow.
+- name: documentkey
+  type: string
+  description: Vendor-emitted field 'Documentkey'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: escalation
+  type: integer
+  description: Escalation level (0=Normal, 1=Moderate, 2=High, 3=Overdue). Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: fieldname
+  type: string
+  description: Vendor-emitted field 'Fieldname'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: follow_the_sun
+  type: integer
+  description: Whether follow-the-sun routing applies. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: gzip
+  type: boolean
+  description: Vendor-emitted field 'Gzip'. Literal 'true' or 'false' (case-insensitive); not '1'/'0'.
+  example: 'True'
+- name: impact
+  type: integer
+  description: Impact level (1=High, 2=Medium, 3=Low). Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: interaction_id
+  type: string_short
+  description: Opaque identifier emitted by ServiceNow. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: ser-26b6fc58
+- name: knowledge
+  type: integer
+  description: Whether a knowledge article applies. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: made_sla
+  type: integer
+  description: Vendor-emitted field 'Made sla'. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: newvalue
+  type: string
+  description: Vendor-emitted field 'Newvalue'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: number
+  type: integer
+  description: Vendor-emitted field 'Number'. Free-form text; may contain whitespace and punctuation.
+  example: '7'
+- name: oldvalue
+  type: string
+  description: Destination resource before value. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: opened_by
+  type: string
+  description: Vendor-emitted field 'Opened by'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: origin_scope
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: value (each key defined as
+    a dotted-path leaf below).'
+  example: '{"key":"value"}'
+- name: output_length
+  type: string
+  description: Vendor-emitted field 'Output length'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: priority
+  type: integer
+  description: Priority (1=Critical, 2=High, 3=Moderate, 4=Low, 5=Planning). Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: protocol
+  type: string
+  description: Network protocol name or numeric IANA assignment. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text; may contain whitespace
+    and punctuation.
+  example: normal_operation
+- name: reassignment_count
+  type: integer
+  description: Unsigned count of items as recorded by ServiceNow. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: remote_ip
+  type: ipv4
+  description: Vendor-emitted field 'Remote ip'. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: resolution_code
+  type: integer
+  description: Vendor-emitted field 'Resolution code'. Free-form text; may contain whitespace and punctuation.
+  example: '200'
+- name: session
+  type: string
+  description: Vendor-emitted field 'Session'. Free-form text; may contain whitespace and punctuation.
+  example: sess-9f8c2337abc
+- name: short_description
+  type: string_long
+  description: Free-form human-readable description from ServiceNow. Free-form text; may span multiple
+    lines or contain large payloads.
+  example: Event recorded by ServiceNow.
+- name: source_log_type
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text; may contain whitespace
+    and punctuation.
+  example: authentication
+- name: sql_time
+  type: string_short
+  description: Time-of-day emitted by ServiceNow. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: '14:23:01'
+- name: state
+  type: integer
+  description: Record state (New/In Progress/Resolved/Closed). Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: subcategory
+  type: string_short
+  description: ServiceNow's subcategory classifier (refines `category`). Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: access_control
+- name: sys_class_name
+  type: string
+  description: Human-readable name as displayed by ServiceNow. Free-form text; may contain whitespace
+    and punctuation.
+  example: operator-visible value
+- name: sys_created_by
+  type: user
+  description: Vendor-emitted field 'Sys created by'. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName depending on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: sys_domain
+  type: string
+  description: ServiceNow domain (multi-tenancy). Free-form text; may contain whitespace and punctuation.
+  example: example.com
+- name: sys_domain_path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/app.log
+- name: sys_id
+  type: string_short
+  description: Opaque identifier emitted by ServiceNow. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: ser-675e5138
+- name: sys_mod_count
+  type: integer
+  description: Unsigned count of items as recorded by ServiceNow. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: system_id
+  type: string_short
+  description: Opaque identifier emitted by ServiceNow. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: ser-b4082cca
+- name: table
+  type: string
+  description: Vendor-emitted field 'Table'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: tablename
+  type: string
+  description: Vendor-emitted field 'Tablename'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: time_worked
+  type: string
+  description: Vendor-emitted field 'Time worked'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: total_wait_time
+  type: string_short
+  description: Time-of-day emitted by ServiceNow. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: '14:23:01'
+- name: transaction_number
+  type: integer
+  description: Vendor-emitted field 'Transaction number'. Free-form text; may contain whitespace and punctuation.
+  example: '7'
+- name: transaction_processing_time
+  type: integer
+  description: Transaction processing time (ms). Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by ServiceNow. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: authentication
+- name: upon_approval
+  type: string
+  description: Action upon approval (proceed/wait). Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: upon_reject
+  type: string
+  description: Action upon reject (cancel/discard). Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: urgency
+  type: integer
+  description: Urgency level (1=High, 2=Medium, 3=Low). Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: url
+  type: url
+  description: Full URL with scheme — as ServiceNow captured it. Full URL with scheme (http/https/ftp);
+    percent-encoded if non-ASCII.
+  example: https://example.com/path?q=1
+- name: user
+  type: user
+  description: User account associated with the event. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName depending on the source; no domain prefix unless the vendor emits one.
+  example: jsmith
+- name: user_agent
+  type: string_long
+  description: Client User-Agent header value as received by ServiceNow. Free-form text; may span multiple
+    lines or contain large payloads.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: account.city
+  type: string
+  description: Vendor-emitted field 'Account › city'. Leaf of the 'account' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: San Francisco
+- name: account.country
+  type: country_code
+  description: Country (ISO 3166-1 alpha-2 code or descriptive label). ISO 3166-1 alpha-2 uppercase country
+    code (e.g., US, DE, JP).
+  example: US
+- name: account.latitude
+  type: string
+  description: Vendor-emitted field 'Account › latitude'. Leaf of the 'account' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: '37.7749'
+- name: account.longitude
+  type: string
+  description: Vendor-emitted field 'Account › longitude'. Leaf of the 'account' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: '-122.4194'
+- name: account.name
+  type: user
+  description: Human-readable name as displayed by ServiceNow. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jsmith
+- name: account.number
+  type: integer
+  description: Vendor-emitted field 'Account › number'. Leaf of the 'account' composite. Free-form text;
+    may contain whitespace and punctuation.
+  example: '7'
+- name: account.website
+  type: url
+  description: Vendor-emitted field 'Account › website'. Leaf of the 'account' composite. Full URL with
+    scheme (http/https/ftp); percent-encoded if it contains non-ASCII characters.
+  example: https://example.com/path
+- name: origin_scope.value
+  type: string
+  description: Vendor-emitted field 'Origin scope › value'. Leaf of the 'origin_scope' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: operator-visible value
+use_cases:
+- SaaS
+validated: true

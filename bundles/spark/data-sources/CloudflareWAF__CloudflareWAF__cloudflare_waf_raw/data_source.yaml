@@ -1,0 +1,239 @@
+schema_version: 1
+id: CloudflareWAF
+pack_name: CloudflareWAF
+rule_name: CloudflareWAF
+dataset_name: cloudflare_waf_raw
+vendor: Cloudflare
+product: CloudflareWAF
+description: Use Cloudflare WAF to manage firewall rules, filters, and IP-lists.
+categories:
+- Network Security
+version: 1.0.37
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNTEycHgiIGhlaWdodD0iNzZweCIgdmlld0JveD0iMCAwIDUxMiA3NiIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIj4KICAgIDx0aXRsZT5DbG91ZGZsYXJlPC90aXRsZT4KICAgIDxnPgogICAgICAgIDxwYXRoIGQ9Ik0yMTQuNjMzNDEyLDQ3LjQwMDE1NjkgTDIyMi4xMzc3MjUsNDcuNDAwMTU2OSBMMjIyLjEzNzcyNSw2OC4xMDM1Mjk0IEwyMzUuMjMzODgyLDY4LjEwMzUyOTQgTDIzNS4yMzM4ODIsNzQuNzQ2OTgwNCBMMjE0LjYzMzQxMiw3NC43NDY5ODA0IEwyMTQuNjMzNDEyLDQ3LjQwMDE1NjkgWiBNMjQyLjk5NDE5Niw2MS4xNTEzNzI1IEwyNDIuOTk0MTk2LDYxLjA3MTA1ODggQzI0Mi45OTQxOTYsNTMuMjE1MzcyNSAyNDkuMjUxMTM3LDQ2Ljg1MzAxOTYgMjU3LjYwMzc2NSw0Ni44NTMwMTk2IEMyNjUuOTUzODgyLDQ2Ljg1MzAxOTYgMjcyLjEzMzAyLDUzLjE0NzYwNzggMjcyLjEzMzAyLDYwLjk5MDc0NTEgTDI3Mi4xMzMwMiw2MS4wNzEwNTg4IEMyNzIuMTMzMDIsNjguOTI0MjM1MyAyNjUuODc2MDc4LDc1LjI4OTA5OCAyNTcuNTIzNDUxLDc1LjI4OTA5OCBDMjQ5LjE3MDgyNCw3NS4yODkwOTggMjQyLjk5MTY4Niw2OS4wMDIwMzkyIDI0Mi45OTE2ODYsNjEuMTUxMzcyNSBMMjQyLjk5NDE5Niw2MS4xNTEzNzI1IFogTTI2NC40ODMxMzcsNjEuMTUxMzcyNSBMMjY0LjQ4MzEzNyw2MS4wNzEwNTg4IEMyNjQuNDgzMTM3LDU3LjEyMzEzNzMgMjYxLjY2NDYyNyw1My42ODcyMTU3IDI1Ny41MjM0NTEsNTMuNjg3MjE1NyBDMjUzLjM4MjI3NSw1My42ODcyMTU3IDI1MC42ODQyMzUsNTcuMDQyODIzNSAyNTAuNjg0MjM1LDYwLjk5MDc0NTEgTDI1MC42ODQyMzUsNjEuMDcxMDU4OCBDMjUwLjY4NDIzNSw2NS4wMTY0NzA2IDI1My41MDAyMzUsNjguNDU0OTAyIDI1Ny42MDM3NjUsNjguNDU0OTAyIEMyNjEuNzA0Nzg0LDY4LjQ1NDkwMiAyNjQuNDgzMTM3LDY1LjA5Njc4NDMgMjY0LjQ4MzEzNyw2MS4xNTEzNzI1IEwyNjQuNDgzMTM3LDYxLjE1MTM3MjUgWiBNMjgxLjMxMTM3Myw2Mi43NTI2Mjc1IEwyODEuMzExMzczLDQ3LjQxMDE5NjEgTDI4OC45MjM2MDgsNDcuNDEwMTk2MSBMMjg4LjkyMzYwOCw2Mi42MDcwNTg4IEMyODguOTIzNjA4LDY2LjU1MjQ3MDYgMjkwLjg4ODc4NCw2OC40MjIyNzQ1IDI5My45MDU1NjksNjguNDIyMjc0NSBDMjk2LjkxOTg0Myw2OC40MjIyNzQ1IDI5OC44ODc1MjksNjYuNjIyNzQ1MSAyOTguODg3NTI5LDYyLjc5NTI5NDEgTDI5OC44ODc1MjksNDcuNDAwMTU2OSBMMzA2LjQ5NzI1NSw0Ny40MDAxNTY5IEwzMDYuNDk3MjU1LDYyLjU1Njg2MjcgQzMwNi40OTcyNTUsNzEuMzg4ODYyNyAzMDEuNTE1Mjk0LDc1LjI0NjQzMTQgMjkzLjgyNTI1NSw3NS4yNDY0MzE0IEMyODYuMTM1MjE2LDc1LjI0NjQzMTQgMjgxLjMwMTMzMyw3MS4yOTg1MDk4IDI4MS4zMDEzMzMsNjIuNzQ3NjA3OCBNMzE3Ljk3NDU4OCw0Ny40MDc2ODYzIEwzMjguNDEyODYzLDQ3LjQwNzY4NjMgQzMzOC4wNzA1ODgsNDcuNDA3Njg2MyAzNDMuNjc0OTgsNTMuMDMyMTU2OSAzNDMuNjc0OTgsNjAuOTE1NDUxIEwzNDMuNjc0OTgsNjAuOTk1NzY0NyBDMzQzLjY3NDk4LDY4Ljg3NjU0OSAzMzcuOTkwMjc1LDc0Ljc0MTk2MDggMzI4LjI1NDc0NSw3NC43NDE5NjA4IEwzMTcuOTc0NTg4LDc0Ljc0MTk2MDggTDMxNy45NzQ1ODgsNDcuNDAwMTU2OSBMMzE3Ljk3NDU4OCw0Ny40MTAxOTYxIEwzMTcuOTc0NTg4LDQ3LjQwNzY4NjMgWiBNMzI4LjUyMDc4NCw2OC4wMjgyMzUzIEMzMzMuMDA4MzE0LDY4LjAyODIzNTMgMzM1Ljk3NDkwMiw2NS41MzA5ODA0IDMzNS45NzQ5MDIsNjEuMTE2MjM1MyBMMzM1Ljk3NDkwMiw2MS4wMzU5MjE2IEMzMzUuOTc0OTAyLDU2LjY1ODgyMzUgMzMzLjAwMDc4NCw1NC4xMjE0MTE4IDMyOC41MjA3ODQsNTQuMTIxNDExOCBMMzI1LjQ2NjM1Myw1NC4xMjE0MTE4IEwzMjUuNDY2MzUzLDY4LjAyODIzNTMgTDMyOC41MjA3ODQsNjguMDI4MjM1MyBaIE0zNTQuNTc1MDU5LDQ3LjQwMDE1NjkgTDM3Ni4yMTIwNzgsNDcuNDAwMTU2OSBMMzc2LjIxMjA3OCw1NC4wNDYxMTc2IEwzNjIuMDY2ODI0LDU0LjA0NjExNzYgTDM2Mi4wNjY4MjQsNTguNjg5MjU0OSBMMzc0Ljg1Njc4NCw1OC42ODkyNTQ5IEwzNzQuODU2Nzg0LDY0Ljk3NjMxMzcgTDM2Mi4wNjY4MjQsNjQuOTc2MzEzNyBMMzYyLjA2NjgyNCw3NC43NDY5ODA0IEwzNTQuNTc1MDU5LDc0Ljc0Njk4MDQgTDM1NC41NzUwNTksNDcuNDAwMTU2OSBaIE0zODYuNjQyODI0LDQ3LjQwMDE1NjkgTDM5NC4xNDQ2MjcsNDcuNDAwMTU2OSBMMzk0LjE0NDYyNyw2OC4xMDM1Mjk0IEw0MDcuMjQzMjk0LDY4LjEwMzUyOTQgTDQwNy4yNDMyOTQsNzQuNzQ2OTgwNCBMMzg2LjY0MjgyNCw3NC43NDY5ODA0IEwzODYuNjQyODI0LDQ3LjQwMDE1NjkgWiBNNDI2LjgzMjMxNCw0Ny4yMDY5MDIgTDQzNC4wNTU1MjksNDcuMjA2OTAyIEw0NDUuNTczMDIsNzQuNzQxOTYwOCBMNDM3LjUzNjYyNyw3NC43NDE5NjA4IEw0MzUuNTU4OTAyLDY5Ljg1Nzg4MjQgTDQyNS4xMjA2MjcsNjkuODU3ODgyNCBMNDIzLjE5MzA5OCw3NC43NDE5NjA4IEw0MTUuMzA0Nzg0LDc0Ljc0MTk2MDggTDQyNi44MjIyNzUsNDcuMjA2OTAyIEw0MjYuODMyMzE0LDQ3LjIwNjkwMiBMNDI2LjgzMjMxNCw0Ny4yMDY5MDIgWiBNNDMzLjQwNTQ5LDYzLjk2MjM1MjkgTDQzMC4zODg3MDYsNTYuMTg5NDkwMiBMNDI3LjMzNDI3NSw2My45NjIzNTI5IEw0MzMuNDA1NDksNjMuOTYyMzUyOSBaIE00NTUuMjMzMjU1LDQ3LjQwNzY4NjMgTDQ2OC4wMjMyMTYsNDcuNDA3Njg2MyBDNDcyLjE1Njg2Myw0Ny40MDc2ODYzIDQ3NS4wMjMwNTksNDguNTA2OTgwNCA0NzYuODMwMTE4LDUwLjM3NDI3NDUgQzQ3OC40MjM4NDMsNTEuOTMyODYyNyA0NzkuMjI0NDcxLDU0LjA1MTEzNzMgNDc5LjIyNDQ3MSw1Ni43MzkxMzczIEw0NzkuMjI0NDcxLDU2LjgxOTQ1MSBDNDc5LjIyNDQ3MSw2MC45OTU3NjQ3IDQ3Ny4wMTgzNTMsNjMuNzcxNjA3OCA0NzMuNjU3NzI1LDY1LjIxMjIzNTMgTDQ4MC4xMTI5NDEsNzQuNzQxOTYwOCBMNDcxLjQ1NDExOCw3NC43NDE5NjA4IEw0NjYuMDA3ODQzLDY2LjQ1OTYwNzggTDQ2Mi43MjUwMiw2Ni40NTk2MDc4IEw0NjIuNzI1MDIsNzQuNzQxOTYwOCBMNDU1LjIyMzIxNiw3NC43NDE5NjA4IEw0NTUuMjIzMjE2LDQ3LjQwMDE1NjkgTDQ1NS4yMzMyNTUsNDcuNDEwMTk2MSBMNDU1LjIzMzI1NSw0Ny40MDc2ODYzIFogTTQ2Ny42NzkzNzMsNjAuNTMzOTYwOCBDNDcwLjIyOTMzMyw2MC41MzM5NjA4IDQ3MS43MDAwNzgsNTkuMjg2NTg4MiA0NzEuNzAwMDc4LDU3LjI5NjMxMzcgTDQ3MS43MDAwNzgsNTcuMjE4NTA5OCBDNDcxLjcwMDA3OCw1NS4wNzAxMTc2IDQ3MC4xNTkwNTksNTMuOTgwODYyNyA0NjcuNjM5MjE2LDUzLjk4MDg2MjcgTDQ2Mi43MzUwNTksNTMuOTgwODYyNyBMNDYyLjczNTA1OSw2MC41NDY1MDk4IEw0NjcuNjg2OTAyLDYwLjU0NjUwOTggTDQ2Ny42NzkzNzMsNjAuNTM2NDcwNiBMNDY3LjY3OTM3Myw2MC41MzM5NjA4IFogTTQ5MC4wNDQyMzUsNDcuNDAwMTU2OSBMNTExLjgwMTcyNSw0Ny40MDAxNTY5IEw1MTEuODAxNzI1LDUzLjg0NTMzMzMgTDQ5Ny40NjgyMzUsNTMuODQ1MzMzMyBMNDk3LjQ2ODIzNSw1Ny45ODE0OTAyIEw1MTAuNDU2NDcxLDU3Ljk4MTQ5MDIgTDUxMC40NTY0NzEsNjMuOTY0ODYyNyBMNDk3LjQ2ODIzNSw2My45NjQ4NjI3IEw0OTcuNDY4MjM1LDY4LjMwMTgwMzkgTDUxMiw2OC4zMDE4MDM5IEw1MTIsNzQuNzQ2OTgwNCBMNDkwLjA0NDIzNSw3NC43NDY5ODA0IEw0OTAuMDQ0MjM1LDQ3LjQwMDE1NjkgWiBNMTk4LjIxMTc2NSw2NC4zNTYzOTIyIEMxOTcuMTYyNjY3LDY2Ljc1NTc2NDcgMTk0Ljk0OTAyLDY4LjQ1NDkwMiAxOTIuMDEyNTQ5LDY4LjQ1NDkwMiBDMTg3LjkyMTU2OSw2OC40NTQ5MDIgMTg1LjA5NTUyOSw2NS4wMTY0NzA2IDE4NS4wOTU1MjksNjEuMDcxMDU4OCBMMTg1LjA5NTUyOSw2MC45ODgyMzUzIEMxODUuMDk1NTI5LDU3LjA0MDMxMzcgMTg3Ljg0MTI1NSw1My42ODQ3MDU5IDE5MS45MzQ3NDUsNTMuNjg0NzA1OSBDMTk1LjAxOTI5NCw1My42ODQ3MDU5IDE5Ny4zNzA5OCw1NS42MDIxOTYxIDE5OC4zNjk4ODIsNTguMjE5OTIxNiBMMjA2LjI2ODIzNSw1OC4yMTk5MjE2IEMyMDUuMDAwNzg0LDUxLjcxNzAxOTYgMTk5LjM0ODcwNiw0Ni44NTA1MDk4IDE5Mi4wMDUwMiw0Ni44NTA1MDk4IEMxODMuNjYyNDMxLDQ2Ljg1MDUwOTggMTc3LjM5NTQ1MSw1My4yMTUzNzI1IDE3Ny4zOTU0NTEsNjEuMDY4NTQ5IEwxNzcuMzk1NDUxLDYxLjE0ODg2MjcgQzE3Ny4zOTU0NTEsNjkuMDAyMDM5MiAxODMuNTcyMDc4LDc1LjI4NjU4ODIgMTkxLjkyNzIxNiw3NS4yODY1ODgyIEMxOTkuMDYyNTg4LDc1LjI4NjU4ODIgMjA0LjY0NjkwMiw3MC42MDgzMTM3IDIwNi4xMjAxNTcsNjQuMzQzODQzMSBMMTk4LjIwMTcyNSw2NC4zNDM4NDMxIEwxOTguMjExNzY1LDY0LjM1Mzg4MjQgTDE5OC4yMTE3NjUsNjQuMzU2MzkyMiBaIiBmaWxsPSIjMDAwMDAwIj48L3BhdGg+CiAgICAgICAgPHBhdGggZD0iTTEzMi4yMzQwMzksMzIuNjk3NzI1NSBDMTMxLjY4MTg4MiwzMi42OTc3MjU1IDEzMS4xMzcyNTUsMzIuNzE3ODAzOSAxMzAuNTkyNjI3LDMyLjczNTM3MjUgQzEzMC41MDQzOTksMzIuNzQwMTIgMTMwLjQxNzcxNiwzMi43NjA1MTU4IDEzMC4zMzY2MjcsMzIuNzk1NjA3OCBDMTMwLjA0MzgwMiwzMi44OTUyNjEzIDEyOS44MjEwNCwzMy4xMzU5NTcxIDEyOS43NDQzMTQsMzMuNDM1NjA3OCBMMTI3LjQxMDE5Niw0MS41ODk5NjA4IEMxMjYuNDAzNzY1LDQ1LjA5NjE1NjkgMTI2Ljc3NzcyNSw0OC4zMzM4MDM5IDEyOC40NjkzMzMsNTAuNzEwNTg4MiBDMTMwLjAyMDM5Miw1Mi45MDkxNzY1IDEzMi42MDA0NzEsNTQuMTk5MjE1NyAxMzUuNzMyNzA2LDU0LjM0OTgwMzkgTDE0OC4zOTQ2NjcsNTUuMTE3ODAzOSBDMTQ4Ljc3MTEzNyw1NS4xMzc4ODI0IDE0OS4wOTc0MTIsNTUuMzE4NTg4MiAxNDkuMjk1Njg2LDU1LjYxNzI1NDkgQzE0OS41MDYxMDEsNTUuOTQwNDMyNiAxNDkuNTUzNDUsNTYuMzQzMzU3MiAxNDkuNDIzNjg2LDU2LjcwNjUwOTggQzE0OS4yMTU0NTMsNTcuMzAxMzc1MyAxNDguNjc4NTcyLDU3LjcxOTQ5NDkgMTQ4LjA1MDgyNCw1Ny43NzU2ODYzIEwxMzQuODk0NDMxLDU4LjU0MzY4NjMgQzEyNy43NDY1MSw1OC44NzQ5ODA0IDEyMC4wNTY0NzEsNjQuNzA3NzY0NyAxMTcuMzU4NDMxLDcxLjgyMDU0OSBMMTE2LjQwOTcyNSw3NC4zMzAzNTI5IEMxMTYuMzI2ODg3LDc0LjU0MTQ0NDEgMTE2LjM1MSw3NC43Nzk1MzYyIDExNi40NzQ0NzgsNzQuOTY5NzMyNyBDMTE2LjU5Nzk1Nyw3NS4xNTk5MjkzIDExNi44MDU2MjUsNzUuMjc4ODU0NSAxMTcuMDMyMTU3LDc1LjI4OTEwOCBMMTYyLjM0NDE1Nyw3NS4yODkxMDggQzE2Mi44ODU2NDQsNzUuMjkxMjg0NiAxNjMuMzYyMDU2LDc0LjkzMTkyMjIgMTYzLjUwODcwNiw3NC40MTA2NjY3IEMxNjQuMzEzNDc5LDcxLjUxNzg3NjMgMTY0LjcxODgwNCw2OC41Mjg2MDQxIDE2NC43MTM0NjUsNjUuNTI1OTYwOCBDMTY0LjcxMzQ2NSw0Ny40MDUxNzY1IDE1MC4xODQxNTcsMzIuNzE3ODAzOSAxMzIuMjU0MTE4LDMyLjcxNzgwMzkiIGZpbGw9IiNGQkFENDEiPjwvcGF0aD4KICAgICAgICA8cGF0aCBkPSJNMTEyLjQ1Njc4NCw3NC4yMzQ5ODA0IEwxMTMuMjk1MDU5LDcxLjI4NTk2MDggQzExNC4zMDQsNjcuNzc5NzY0NyAxMTMuOTMwMDM5LDY0LjU0MjExNzYgMTEyLjI0MDk0MSw2Mi4xNjUzMzMzIEMxMTAuNjg0ODYzLDU5Ljk2Njc0NTEgMTA4LjEwNzI5NCw1OC42NzY3MDU5IDEwNC45NzI1NDksNTguNTI2MTE3NiBMNDUuNTc4MDM5Miw1Ny43NTgxMTc2IEM0NS4yMDMyOTAzLDU3Ljc1MTI5NTQgNDQuODU0NDA1NCw1Ny41NjU2NTg4IDQ0LjYzOTM3MjUsNTcuMjU4NjY2NyBDNDQuNDI4MTE3LDU2LjkzNTg5OSA0NC4zNzk4Mzc0LDU2LjUzMjk1MDQgNDQuNTA4ODYyNyw1Ni4xNjk0MTE4IEM0NC43MTg5NDY1LDU1LjU3MDY1OSA0NS4yNjE4MjU1LDU1LjE1MTY5OCA0NS44OTQyNzQ1LDU1LjEwMDIzNTMgTDEwNS44NDM0NTEsNTQuMzMyMjM1MyBDMTEyLjk2MTI1NSw1NC4wMDM0NTEgMTIwLjY1MTI5NCw0OC4xNjgxNTY5IDEyMy4zNDkzMzMsNDEuMDU1MzcyNSBMMTI2Ljc2NzY4NiwzMi4wMjAwNzg0IEMxMjYuOTA1NjcsMzEuNjM3MDIzOCAxMjYuOTQxNTYsMzEuMjIzNzkzMyAxMjYuODY4MDc4LDMwLjgyMjkwMiBDMTIyLjk3Mjg2MywxMy4xOTkwNTg4IDEwNy4zOTIsMCA4OC43NjQyMzUzLDAgQzcxLjU5MjE1NjksMCA1Ny4wMjI3NDUxLDExLjE5ODc0NTEgNTEuNzk0ODIzNSwyNi43NjcwNTg4IEM0OC4yNzUwNzUyLDI0LjA5MDQxNjUgNDMuODY2OTExMiwyMi44NTcxIDM5LjQ2OTE3NjUsMjMuMzE4NTg4MiBDMzEuMjM3MDE5NiwyNC4xNDY4MjM1IDI0LjYxMTEzNzMsMzAuODUzMDE5NiAyMy43OTI5NDEyLDM5LjE3NTUyOTQgQzIzLjU4MTA5NTMsNDEuMjU0MTM2MiAyMy43MzM5ODE0LDQzLjM1Mzc3MjIgMjQuMjQ0NzA1OSw0NS4zNzk3NjQ3IEMxMC43OTIxNTY5LDQ1Ljc4MTMzMzMgMCw1Ni45MTk4NDMxIDAsNzAuNjA4MzEzNyBDMCw3MS44NDU2NDcxIDAuMDg3ODQzMTM3Myw3My4wNjU0MTE4IDAuMjY2MDM5MjE2LDc0LjI1NTA1ODggQzAuMzM5NDE4NDk2LDc0LjgzMjM5MjggMC44MzEwNDE3MDksNzUuMjY0ODQ5MSAxLjQxMzAxOTYxLDc1LjI2NDAwMTIgTDExMS4xMDE0OSw3NS4yNjQwMDEyIEMxMTEuNzM1OTIsNzUuMjUzNTU3MiAxMTIuMjg3NjY2LDc0LjgyNjQ2NDcgMTEyLjQ1Njc4NCw3NC4yMTQ5MDIiIGZpbGw9IiNGNjgyMUYiPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+Cg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: eventType
+  type: string_short
+  is_gate: true
+  description: Parsing/modeling-rule gate. The rule filters on this field; only the listed values are accepted.
+  example: 'HTTP_requests'
+- name: ClientASN
+  type: integer
+  description: Client autonomous system number. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: ClientCountry
+  type: string
+  description: Vendor-emitted field 'ClientCountry'. Free-form text; may contain whitespace
+    and punctuation.
+  example: US
+- name: ClientDeviceType
+  type: string
+  description: Client device type (desktop/mobile/tablet). Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientdevicetype
+- name: ClientRegionCode
+  type: string
+  description: Vendor-emitted field 'ClientRegionCode'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientregioncode
+- name: ClientRequestBytes
+  type: integer
+  description: Vendor-emitted field 'ClientRequestBytes'. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: ClientRequestHost
+  type: string
+  description: Vendor-emitted field 'ClientRequestHost'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientrequesthos
+- name: ClientRequestMethod
+  type: string
+  description: Vendor-emitted field 'ClientRequestMethod'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientrequestmet
+- name: ClientRequestReferer
+  type: string
+  description: Vendor-emitted field 'ClientRequestReferer'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientrequestref
+- name: ClientRequestScheme
+  type: string
+  description: Vendor-emitted field 'ClientRequestScheme'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientrequestsch
+- name: ClientRequestURI
+  type: string
+  description: Vendor-emitted field 'ClientRequestURI'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientrequesturi
+- name: ClientRequestUserAgent
+  type: string
+  description: Vendor-emitted field 'ClientRequestUserAgent'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_clientrequestuse
+- name: ClientSSLCipher
+  type: string
+  description: Vendor-emitted field 'ClientSSLCipher'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientsslcipher
+- name: ClientSSLProtocol
+  type: string
+  description: Vendor-emitted field 'ClientSSLProtocol'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_clientsslprotoco
+- name: ClientSrcPort
+  type: integer_port
+  description: TCP/UDP source port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '42'
+- name: Datetime
+  type: string
+  description: Vendor-emitted field 'Datetime'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_datetime
+- name: EdgePathingOp
+  type: string
+  description: Edge pathing operation (request handling stage). Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_edgepathingop
+- name: EdgeResponseBytes
+  type: integer
+  description: Bytes returned to the client by the edge. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: EdgeResponseStatus
+  type: integer
+  description: Vendor-emitted field 'EdgeResponseStatus'. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: EdgeServerIP
+  type: string
+  description: Vendor-emitted field 'EdgeServerIP'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_edgeserverip
+- name: OriginIP
+  type: string
+  description: Vendor-emitted field 'OriginIP'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_originip
+- name: OriginResponseStatus
+  type: integer
+  description: Vendor-emitted field 'OriginResponseStatus'. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: RayID
+  type: string
+  description: Cloudflare RayID (request trace id). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_rayid
+- name: RequestHeaders
+  type: string
+  description: Vendor-emitted field 'RequestHeaders'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_requestheaders
+- name: WAFAttackScore
+  type: integer
+  description: Vendor-emitted field 'WAFAttackScore'. Signed decimal integer; bare
+    digits, optional leading minus.
+  example: '42'
+- name: ZoneName
+  type: string
+  description: Vendor-emitted field 'ZoneName'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_zonename
+- name: clientip
+  type: string
+  description: Vendor-emitted field 'Clientip'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_clientip
+- name: edgeendtimestamp
+  type: datetime
+  description: Vendor-emitted field 'Edgeendtimestamp'. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: securityaction
+  type: string
+  description: Vendor-emitted field 'Securityaction'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_securityaction
+- name: securityruledescription
+  type: string
+  description: Vendor-emitted field 'Securityruledescription'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_securityruledesc
+- name: securityruleid
+  type: string
+  description: Vendor-emitted field 'Securityruleid'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_securityruleid
+use_cases:
+- WAF
+- DDoS
+- DNS
+how_to_use: |
+  ## cloudflare waf → Cortex XSIAM (dataset `cloudflare_waf_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `cloudflare_waf_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `cloudflare`
+    - **product**: `waf`
+
+    These normalize → `cloudflare_waf_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `eventType = "HTTP_requests"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~27 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.event.description`, `xdm.event.id`, `xdm.event.type`, `xdm.network.http.domain`, `xdm.network.http.http_header.value`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = cloudflare_waf_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

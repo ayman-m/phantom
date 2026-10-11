@@ -1,0 +1,157 @@
+schema_version: 1
+id: panw_ngfw_globalprotect_raw
+pack_name: PANW_NGFW
+rule_name: PANW_NGFW
+dataset_name: panw_ngfw_globalprotect_raw
+vendor: Palo Alto Networks
+product: NGFW GlobalProtect VPN
+description: Palo Alto Networks NGFW — GlobalProtect VPN client events (connect, disconnect, authentication,
+  gateway selection).
+categories:
+- Network Security
+- VPN
+- Authentication
+version: 1.0.0
+origin: bundle
+author: phantom-maintainer (PANW NGFW hand-curated)
+formats:
+- CEF
+- SYSLOG
+is_rawlog_only: false
+fields:
+- name: auth_method
+  type: string
+  description: 'Authentication method used by the VPN client. Examples: SAML, LDAP, RADIUS, CertificateBased,
+    KerberosV5. Maps to `xdm.auth.auth_method`.'
+  example: SAML
+- name: connection_error
+  type: string
+  description: Reason text when the connection failed. Maps to `xdm.event.outcome_reason`.
+  example: 'Authentication failed: invalid SAML response'
+- name: endpoint_device_name
+  type: string
+  description: Hostname of the GlobalProtect client device. Maps to `xdm.source.host.hostname`.
+  example: alice-mbp.corp.example.com
+- name: endpoint_gp_version
+  type: string
+  description: GlobalProtect agent version on the client. Cast to string. Maps to `xdm.source.application.version`.
+  example: 6.2.4
+- name: endpoint_os_type
+  type: string
+  description: 'Client OS type — drives `xdm.source.host.os_family` enum. Recognized values: Windows,
+    macOS/Mac, Linux. Other values pass through as uppercase(endpoint_os_version).'
+  example: macOS
+- name: endpoint_os_version
+  type: string
+  description: Client OS version string. Maps to `xdm.source.host.os`. Also used as os_family fallback
+    for non-canonical os_type values.
+  example: 14.0.1 (23A344)
+- name: event_id
+  type: string
+  description: VPN event identifier. Maps to `xdm.event.description` — used as a freeform description,
+    NOT a numeric ID.
+  example: GP_USER_CONNECT_SUCCESS
+- name: gateway
+  type: string
+  description: GlobalProtect gateway hostname the client connected to. Maps to `xdm.target.host.hostname`.
+  example: gp-gateway-us-west.corp.example.com
+- name: host_id
+  type: string
+  description: Unique host identifier — either UUID format OR MAC address (detected by presence of ':').
+    When MAC, also populates `xdm.source.host.mac_addresses`.
+  example: 12345678-1234-1234-1234-123456789abc
+- name: log_source
+  type: string
+  description: Log source type. Maps to `xdm.observer.type`.
+  example: panw-globalprotect
+- name: log_source_id
+  type: string
+  description: Unique log source instance identifier.
+  example: 001801000002
+- name: log_source_name
+  type: string
+  description: Friendly log source name. Maps to `xdm.observer.name`.
+  example: pa-fw-hq-01
+- name: login_duration
+  type: integer
+  description: VPN session duration in SECONDS. MR multiplies by 1000 → `xdm.event.duration` (milliseconds).
+  example: '3600'
+- name: private_ip
+  type: ipv4
+  description: VPN-assigned private IPv4. Treated as empty if equal to sentinel `00000000000000000000ffff00000000`.
+    Maps to `xdm.network.vpn.allocated_ipv4`.
+  example: 10.100.50.25
+- name: private_ipv6
+  type: string
+  description: VPN-assigned private IPv6 (sentinel `00000000000000000000ffff00000000` treated as empty).
+    Maps to `xdm.network.vpn.allocated_ipv6`.
+  example: 2001:db8:vpn::1
+- name: public_ip
+  type: ipv4
+  description: Client's public IPv4 at connection time. Sentinel-aware. Maps to `xdm.source.ipv4`.
+  example: 203.0.113.45
+- name: public_ipv6
+  type: string
+  description: Client's public IPv6 at connection time. Sentinel-aware. Maps to `xdm.source.ipv6`.
+  example: 2001:db8:client::1
+- name: rt
+  type: string
+  example: '1788700000000'
+  description: Event time as a CEF epoch integer (10/13/16/19 digits). The broker honours the CEF `rt`
+    extension as `_time` during generic extraction, with NO parsing rule involved — so this is the back-dating
+    handle for this source even on the derived route. Omit it and `_time` falls back to ingestion time.
+- name: sequence_no
+  type: integer
+  description: Monotonic event sequence number from the firewall. Cast to string for `xdm.event.id`.
+  example: '987654321'
+- name: source_region
+  type: string
+  description: Two-letter country code of the client public IP (only populates `xdm.source.location.country`
+    when len()==2).
+  example: US
+- name: source_user
+  type: email
+  description: VPN authenticated user. Maps to BOTH `xdm.source.user.username` AND `xdm.source.identity.username`.
+  example: alice@corp.example.com
+- name: source_user_info_domain
+  type: string
+  description: User's AD domain. Maps to `xdm.source.user.domain` AND `xdm.source.identity.domain`.
+  example: corp.example.com
+- name: stage
+  type: string
+  description: 'Connection stage. Examples: before-login, login, tunnel-up, pre-tunnel, tunnel-down, gateway-selected.
+    Maps to `xdm.event.operation`.'
+  example: tunnel-up
+- name: status
+  type: string
+  description: 'Connection status. Drives `xdm.event.outcome` enum: ''success'' → SUCCESS, ''failure''
+    → FAILED, anything else → UNKNOWN.'
+  example: success
+validated: false
+use_cases:
+- Firewall traffic & threat analysis
+- Network security monitoring
+- Threat hunting
+how_to_use: "Palo Alto Networks NGFW GlobalProtect VPN logs. Simulate with type=CEF to your XSIAM Broker\
+  \ (UDP syslog).\n\nRouting: Cortex ingests PAN-OS NGFW logs NATIVELY — the parsing and modeling for\n\
+  the `panw_ngfw_*_raw` datasets are built into the platform, NOT shipped by an\ninstallable content pack.\
+  \ The Cortex Marketplace \"PAN-OS by Palo Alto Networks\"\npack is an XSOAR automation pack (integration,\
+  \ classifier, mapper, playbooks) that\nmanages firewalls over the API; it ships no parsing or modeling\
+  \ rules, and\ninstalling it does NOT create these datasets.\n\nRequired CEF header for XSIAM:\n- vendor:\
+  \ `panw`\n- product: `ngfw_globalprotect`\n\nThat pair derives the target dataset directly (`<lower(vendor)>_<lower(product)>_raw`\n\
+  = `panw_ngfw_globalprotect_raw`), which is the dataset this modeling rule binds to. Modeling rules\n\
+  bind by dataset NAME only, so the derived route reaches the rule without any\nparsing rule being consulted\
+  \ — the same mechanism documented for `microsoft`/`adfs`.\n\nDo NOT send `product=ngfw_cef`. That pair\
+  \ is claimed by an INGEST block targeting\nthe catch-all `panw_ngfw_cef_raw` with `no_hit=drop`: no\
+  \ modeling rule binds there,\nand non-matching events are silently DISCARDED. There is no mechanism\
+  \ that reads the\n`log_type` extension to fan one CEF stream out into the six per-log-type datasets\
+  \ —\nINGEST blocks route, MODEL blocks only bind to a dataset that already exists.\n\nNot yet XDM-validated end to end (validated: false). The routing\nliteral above is derived from the broker's naming rule and the microsoft/adfs\nprecedent. Confirm events land in the intended dataset before\ntrusting the mapping.\n\n**How simulation\
+  \ works — read this before generating.** `phantom_create_data_worker`\nresolves each field's value in\
+  \ this order:\n\n  1. `observables_dict[field]` — explicit; always wins. Values are LISTS.\n  2. `is_gate`\
+  \ + `example` — gate fields are auto-pinned to their example.\n  3. declared `type` — ipv4/user/url/datetime\
+  \ are synthesized plausibly.\n  4. field-name heuristic.\n  5. random token.\n\n**A field's `example`\
+  \ below is DOCUMENTATION ONLY unless that field is marked\n`is_gate`.** So every field the modeling\
+  \ rule reads expecting a specific SHAPE --\nan enum, an HTTP method, a status code, a resource path,\
+  \ a numeric type code, an\nXML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled\n\
+  exactly as `fields[]` spells them (dotted leaves included, e.g.\n`event_data.param2`). Anything you\
+  \ leave out is randomly generated, and the rule\nwill map it to garbage or drop the event."

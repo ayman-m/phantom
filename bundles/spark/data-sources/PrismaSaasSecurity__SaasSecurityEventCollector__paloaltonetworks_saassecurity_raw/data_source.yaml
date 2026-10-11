@@ -1,0 +1,169 @@
+schema_version: 1
+id: PrismaSaasSecurity
+pack_name: PrismaSaasSecurity
+rule_name: SaasSecurityEventCollector
+dataset_name: paloaltonetworks_saassecurity_raw
+vendor: Palo Alto Networks
+product: PrismaSaasSecurity
+description: SaaS Security connects directly to your sanctioned SaaS applications
+  to provide data classification, sharing and permission visibility, and threat detection.
+categories:
+- Cloud Security
+version: 2.0.52
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMjQgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNDODQ2MjQiPlBhbG8gQWx0byBOZXR3b3JrczwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _reporting_device_ip
+  type: ipv4
+  description: Vendor-emitted field ' reporting device ip'. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: action
+  type: string
+  description: Action taken by the vendor's enforcement engine. Free-form text; may
+    contain whitespace and punctuation.
+  example: allow
+- name: admin_role
+  type: string
+  description: Vendor-emitted field 'Admin role'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Admin
+- name: asset_id
+  type: string_short
+  description: Opaque identifier emitted by Palo Alto Networks. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: pal-a7a4b5ab
+- name: cloud_app_instance
+  type: string
+  description: Vendor-emitted field 'Cloud app instance'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_instance
+- name: event_type
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: ip
+  type: ipv4
+  description: IPv4/IPv6 address — vendor-emitted, no version split. Free-form text;
+    may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: item_type
+  type: string_short
+  description: Type/category classifier emitted by Palo Alto Networks. Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: authentication
+- name: location
+  type: string
+  description: Location label (region/site/zone) emitted by Palo Alto Networks. Free-form
+    text; may contain whitespace and punctuation.
+  example: us-east
+- name: log_type
+  type: string
+  description: Event type or category as the vendor classifies it. Free-form text;
+    may contain whitespace and punctuation.
+  example: authentication
+- name: remoteAddress
+  type: ipv4
+  description: Vendor-emitted field 'RemoteAddress'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: resource_value_new
+  type: string
+  description: Vendor-emitted field 'Resource value new'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_new
+- name: resource_value_old
+  type: string
+  description: Destination resource before value. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_old
+- name: source_ip
+  type: ipv4
+  description: Source address of the connection initiator. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: target_name
+  type: string
+  description: Destination/target user account name. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_name
+- name: timestamp
+  type: datetime
+  description: Timestamp emitted by Palo Alto Networks. ISO-8601 timestamp with timezone
+    (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: user
+  type: string
+  description: User account associated with the event. Free-form text; may contain
+    whitespace and punctuation.
+  example: jdoe
+use_cases:
+- Firewall
+- XDR
+how_to_use: |
+  ## paloaltonetworks saassecurity → Cortex XSIAM (dataset `paloaltonetworks_saassecurity_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `paloaltonetworks_saassecurity_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `paloaltonetworks`
+    - **product**: `saassecurity`
+
+    These normalize → `paloaltonetworks_saassecurity_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~12 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.operation`, `xdm.event.operation_sub_type`, `xdm.event.type`, `xdm.source.application.name`, `xdm.source.ipv4`, `xdm.source.location.city`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = paloaltonetworks_saassecurity_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

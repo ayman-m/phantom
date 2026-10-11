@@ -1,0 +1,142 @@
+schema_version: 1
+id: CheckpointFirewall
+pack_name: CheckpointFirewall
+rule_name: CheckpointFirewall
+dataset_name: check_point_identity_awareness_raw
+vendor: Check Point
+product: CheckpointFirewall
+description: Manage Check Point firewall via API
+categories:
+- Network Security
+version: 2.3.38
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTggNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNDRTJEMzgiPkNoZWNrIFBvaW50PC90ZXh0Pjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: act
+  type: string
+  description: Action taken (allow/deny/block/...). Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_act
+- name: auth_status
+  type: string_short
+  description: Status code returned by Check Point. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: success
+- name: cefDeviceEventClassId
+  type: string_short
+  description: CEF device-event class ID — vendor-specific event-type identifier.
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceProduct
+  type: string_short
+  description: CEF device-product field — product name as registered by Check Point.
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceVendor
+  type: string_short
+  description: CEF device-vendor field — vendor name. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token_value
+- name: cs3
+  type: string
+  description: Device custom string 3 (see cs3Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: cs5
+  type: string
+  description: Device custom string 5 (see cs5Label). Free-form text; may contain
+    whitespace and punctuation.
+  example: custom_value
+- name: dst
+  type: ipv4
+  description: CEF destination IP — IPv4/IPv6 address of the target endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 198.51.100.7
+- name: duser
+  type: user
+  description: CEF destination user — username of the target/recipient. Account name
+    as the vendor reports it — login name, UPN, or sAMAccountName; no domain prefix
+    unless vendor emits one.
+  example: jsmith
+- name: loguid
+  type: string
+  description: Vendor-emitted field 'Loguid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_loguid
+- name: reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: rt
+  type: datetime
+  description: Vendor-emitted field 'Rt'. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T12:34:56Z'
+- name: src
+  type: ipv4
+  description: CEF source IP — IPv4/IPv6 address of the source endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: suser
+  type: user
+  description: CEF source user — username of the actor initiating the event. Account
+    name as the vendor reports it — login name, UPN, or sAMAccountName; no domain
+    prefix unless vendor emits one.
+  example: jsmith
+use_cases:
+- Firewall
+- Network
+how_to_use: |
+  ## Check Point CheckpointFirewall → Cortex XSIAM (dataset `check_point_identity_awareness_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `check_point_identity_awareness_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `check_point_identity_awareness`. The marketplace pack's display name `Check Point` / `CheckpointFirewall` normalizes to `check_point_checkpointfirewall_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `check_point_identity_awareness` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~86 fields mapped to the unified data model (`xdm.*`), including: `XDM.Auth.Client.ipv4`, `XDM.Auth.Client.ipv6`, `XDM.Auth.Client.user.user_type`, `XDM.Auth.Client.user.username`, `XDM.Auth.Observer.vendor`, `XDM.Auth.Target.ipv4`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|Check Point|CheckpointFirewall|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = check_point_identity_awareness_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

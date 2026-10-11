@@ -1,0 +1,61 @@
+# Files Claude Code should not load into context.
+# Generated artifacts, dependencies, caches, and bundled data — never
+# useful to read, and they bloat context / produce false matches in
+# search.
+
+# Python caches & build output
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+
+# Environments & dependencies
+.venv/
+venv/
+env/
+
+# Lockfiles — large, machine-generated, rarely worth reading
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+uv.lock
+poetry.lock
+*.lock
+
+# Bundled vendor data (cortex-content catalog: 576 files / 2.9 MB).
+# These ship inside the agent image at build time. Treat them as
+# vendor data, not source. If you need to inspect the catalog, use the
+# REST endpoint at /api/v1/data-sources/catalog or the bake script at
+# scripts/refresh_cortex_baked_catalog.py.
+bundles/spark/connectors/cortex-content/baked/
+
+# Reports + scratch
+reports/
+tmp/
+.tmp/
+*.log
+
+# OS / editor noise
+.DS_Store
+*.swp
+.idea/
+.vscode/.history/
+
+# Local-only secrets — explicit deny in .claude/settings.json too
+.env
+.env.local
+.env.vm
+.gcp/
+
+# Agent-runtime worktrees (created during multi-task sessions)
+.claude/worktrees/

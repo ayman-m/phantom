@@ -1,0 +1,296 @@
+# Web (headless browser) tool connector for the Phantom SOC simulation agent.
+#
+# Per Spark agent bundle spec v1.2 §7.4. Tool names are auto-namespaced
+# as `web/<tool_name>` by the embedded MCP. Manifest tools.allow lists
+# `web/*`. This connector lets the agent fetch web pages, extract their
+# content, and (when needed) interact with them — useful for IOC pivots,
+# CVE/advisory lookups, threat-intel portal scraping, and "go read this
+# vendor doc and summarize" requests.
+#
+# Implementation: Playwright Python in the phantom-agent process speaks
+# the Chrome DevTools Protocol over a WebSocket to a headless-shell
+# sidecar (`phantom-browser` in docker-compose.yml). This keeps the
+# ~250MB Chromium binaries OUT of the phantom-agent image while letting
+# the connector use Playwright's auto-waiting + accessibility-tree
+# helpers (which are far easier for an LLM to drive than raw CDP
+# selectors). See bundles/spark/connectors/web/src/browser.py.
+#
+# # Why a sidecar instead of inline Playwright?
+#
+#   - Image size: phantom-agent stays at ~600MB instead of ballooning
+#     to ~900MB. Sidecar is ~150MB image (chromedp/headless-shell).
+#   - Crash isolation: a wedged page or runaway JS doesn't take down
+#     the agent or MCP — only the browser sidecar restarts.
+#   - Lifecycle: scrape volume scales independently from agent CPU.
+#   - Swap-friendly: the connector talks plain CDP, so the sidecar
+#     could become browserless/chromium, lightpanda, or a remote BaaS
+#     without touching the connector code.
+#
+# # Why not the official Microsoft Playwright MCP server?
+#
+# It would also work — drop-in container, same accessibility-tree
+# snapshot. The reason this connector exists instead is per-instance
+# config + secrets management (allowed_domains, optional proxy creds),
+# audit trail attribution via the existing X-Phantom-Trigger contextvar,
+# and approval-gate composition (high-risk navigations can be wrapped
+# in gate_and_execute later without touching a third-party MCP server).
+# A future operator can disable this connector and add the Microsoft
+# Playwright MCP as an external MCP server — both options remain open.
+
+id: "web"
+version: "1.0.0"
+description: "Headless browser connector — navigate web pages, extract text/links, take screenshots, fill forms, click elements. Uses Playwright over CDP to a headless Chromium sidecar."
+displayName: "Web browser"
+tags: ["web", "browser", "playwright", "scraping", "chromium", "headless"]
+logo: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMwYTFmM2YiLz48cmVjdCB4PSIxMCIgeT0iMTQiIHdpZHRoPSI0NCIgaGVpZ2h0PSIzNiIgcng9IjMiIHN0cm9rZT0iIzYwYTVmYSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PGxpbmUgeDE9IjEwIiB5MT0iMjIiIHgyPSI1NCIgeTI9IjIyIiBzdHJva2U9IiM2MGE1ZmEiIHN0cm9rZS13aWR0aD0iMiIvPjxjaXJjbGUgY3g9IjE1IiBjeT0iMTgiIHI9IjEuNSIgZmlsbD0iIzYwYTVmYSIvPjxjaXJjbGUgY3g9IjIwIiBjeT0iMTgiIHI9IjEuNSIgZmlsbD0iIzYwYTVmYSIvPjxjaXJjbGUgY3g9IjI1IiBjeT0iMTgiIHI9IjEuNSIgZmlsbD0iIzYwYTVmYSIvPjxjaXJjbGUgY3g9IjMyIiBjeT0iMzYiIHI9IjkiIHN0cm9rZT0iIzYwYTVmYSIgc3Ryb2tlLXdpZHRoPSIyIiBmaWxsPSJub25lIi8+PGxpbmUgeDE9IjIzIiB5MT0iMzYiIHgyPSI0MSIgeTI9IjM2IiBzdHJva2U9IiM2MGE1ZmEiIHN0cm9rZS13aWR0aD0iMS41Ii8+PHBhdGggZD0iTTMyIDI3YzQgMyA0IDE1IDAgMThNMzIgMjdjLTQgMy00IDE1IDAgMTgiIHN0cm9rZT0iIzYwYTVmYSIgc3Ryb2tlLXdpZHRoPSIxLjUiIGZpbGw9Im5vbmUiLz48L3N2Zz4="
+
+source:
+  language: "python"
+  entrypoint: "src.connector"
+
+# Tool dispatch — container mode.
+#
+# Each web instance runs as its own
+# `phantom-connector-web-<instance-name>` container; the agent's
+# MCP routes web/* tool calls over MCP-over-HTTP to that container's
+# own MCP server. See docs/spec-per-instance-connector-containers.md.
+#
+# Why a container suits web:
+#   - It already has a sidecar (phantom-browser via CDP); the per-
+#     instance container model is the natural fit for the per-
+#     session BrowserContext state web maintains.
+#
+# functionPrefix is ignored when style: container — the connector
+# container exposes tools by their bare names per the runtime
+# contract (the runtime entrypoint strips `phantom_web_` to `navigate`,
+# `get_text`, etc.). The field stays here as documentation for
+# future maintainers tracing how function names became tool names.
+runtimeMapping:
+  style: "container"
+  functionPrefix: "phantom_web_"
+
+# `executionMode: persistent` matches xlog/caldera/xsiam — the connector
+# functions are imported once at process start and called many times.
+# Page state itself is held in an in-process registry inside browser.py
+# (see _PageRegistry) keyed by the agent-supplied session_id, with idle
+# auto-close after 10 min so a forgotten session can't pin a tab forever.
+executionMode: "persistent"
+
+configSchema:
+  # Keys are snake_case so they line up directly with the connector
+  # code's `getattr(config, "<name>")` lookups via the _ConfigProxy.
+  # No camel→snake conversion layer in instance_store.merged_config()
+  # — whatever the setup form stores under these names is what the
+  # connector reads.
+  type: "object"
+  required: ["cdp_url"]
+  properties:
+    cdp_url:
+      type: "string"
+      description: |
+        WebSocket or HTTP URL of the Chromium CDP endpoint. In the
+        default Phantom topology this is `http://phantom-browser:9222`
+        (the chromedp/headless-shell sidecar — see docker-compose.yml,
+        profile=`browser`). Playwright auto-discovers the WebSocket
+        URL from /json/version when given an HTTP URL.
+
+        The browser sidecar is profile-gated in compose so it doesn't
+        auto-start with `docker compose up`; bring it up explicitly via
+        `docker compose --profile browser up -d phantom-browser` before
+        creating an instance of this connector.
+      default: "http://phantom-browser:9222"
+    default_timeout_ms:
+      type: "integer"
+      description: "Default per-action timeout (navigate, click, wait_for, fill). Default 30s."
+      default: 30000
+    user_agent:
+      type: "string"
+      description: |
+        Override the User-Agent string. Leave empty to use Chromium's
+        default. Some threat-intel portals 403 on default Chromium UA;
+        operators can paste a stable UA string here to work around that.
+      default: ""
+    allowed_domains:
+      type: "array"
+      description: |
+        Hostname allow-list. When non-empty, navigate() refuses any
+        URL whose host doesn't match one of these (exact match or a
+        suffix-match for entries starting with `.`). Empty list = no
+        restriction. Recommended for SOC use cases — restrict the
+        agent to vetted threat-intel + vendor-doc domains so it can't
+        wander to arbitrary URLs that show up in pasted IOCs.
+      default: []
+      items:
+        type: "string"
+    block_resource_types:
+      type: "array"
+      description: |
+        Resource types to block at network-request time. Speeds up
+        navigation and reduces bandwidth — set ["image", "media",
+        "font"] for text-only scraping. Empty = load everything.
+      default: []
+      items:
+        type: "string"
+        enum: ["image", "media", "font", "stylesheet", "script", "websocket"]
+    extractor_mode:
+      type: "string"
+      description: |
+        Default text-extraction strategy for `get_text`. `readable`
+        (default) uses Trafilatura's main-content extractor — best for
+        articles, docs, blog posts. `body` returns document.body.innerText
+        with no filtering — better when you specifically want the full
+        page (forms, dashboards). `markdown` runs Trafilatura with
+        markdown output for cleaner LLM consumption of structured docs.
+      default: "readable"
+      enum: ["readable", "body", "markdown"]
+
+# No secrets in the schema. Possible additions, each as a new
+# secretSlots[] entry that leaves existing instances unaffected:
+#   - proxyUrl + proxyCreds  for routing through a corporate proxy
+#   - basicAuthCreds         per-domain HTTP Basic creds
+#   - cookieJar              persisted cookies for sites behind login
+secretSlots: []
+
+spec:
+  tools:
+    # ─── Navigation + retrieval ──────────────────────────────────
+    - name: "navigate"
+      method: "goto"
+      description: |
+        Open a URL in a new or existing page. Returns the final URL
+        after redirects, the HTTP status, and the page title. Auto-
+        waits for `load` (DOM + critical subresources) by default;
+        pass `wait_until="networkidle"` for SPA-heavy pages whose
+        meaningful content arrives after XHR resolution.
+
+        Reuse a `session_id` to keep cookies/localStorage between
+        tool calls (e.g. login → navigate to authed page). Omit it
+        for one-shot fetches; the page is closed at the end of the
+        call so nothing leaks between turns.
+      args:
+        - { name: "url",        type: "string",  description: "Absolute URL to navigate to.",                                              required: true  }
+        - { name: "session_id", type: "string",  description: "Optional page handle for multi-step flows. Same id reuses the same tab.", required: false }
+        - { name: "wait_until", type: "string",  description: "'load' | 'domcontentloaded' | 'networkidle' (default 'load').",            required: false }
+        - { name: "timeout_ms", type: "integer", description: "Override per-call timeout (default from instance config).",                required: false }
+      returns: { type: "object", description: "{ url, status, title, session_id, load_time_ms }." }
+
+    - name: "get_text"
+      method: "innerText + readability"
+      description: |
+        Return the page's main text content. Default mode runs
+        Trafilatura's readable-content extractor (filters chrome,
+        nav, footers — keeps the article/doc body). Pass `mode='body'`
+        for raw `document.body.innerText` if Trafilatura's heuristics
+        don't fit. `mode='markdown'` returns Trafilatura's markdown
+        output for cleaner LLM consumption.
+
+        The agent should prefer this over `get_html` for "what does
+        this page say"-shaped questions — saves 10-20x tokens vs
+        raw HTML on a typical article.
+      args:
+        - { name: "session_id", type: "string", description: "Page to read from. Required (use navigate first to create one).", required: true  }
+        - { name: "mode",       type: "string", description: "'readable' | 'body' | 'markdown' (default from instance config).",  required: false }
+        - { name: "max_chars",  type: "integer", description: "Truncate output to this many chars. Default 50000.",               required: false }
+      returns: { type: "object", description: "{ text, length, truncated, extractor }." }
+
+    - name: "get_html"
+      method: "outerHTML"
+      description: |
+        Return the page's raw HTML. Heavy — prefer `get_text` for
+        most LLM use cases. Useful when extracting structured data
+        the readable-extractor strips (table contents, hidden meta
+        tags, JSON-LD blocks).
+      args:
+        - { name: "session_id", type: "string",  description: "Page handle.",                                  required: true  }
+        - { name: "max_chars",  type: "integer", description: "Truncate output. Default 200000.",              required: false }
+      returns: { type: "object", description: "{ html, length, truncated, url }." }
+
+    - name: "screenshot"
+      method: "page.screenshot"
+      description: |
+        Take a screenshot of the current page. Returns base64 PNG.
+        Use sparingly — screenshots cost ~30-100KB even compressed,
+        which inflates the LLM context. Most retrieval should use
+        `get_text` instead. Reach for screenshots when the page's
+        meaning depends on visuals (charts, signature blocks, image-
+        only content) or when you want to verify a click landed.
+      args:
+        - { name: "session_id", type: "string",  description: "Page handle.",                                                       required: true  }
+        - { name: "full_page",  type: "boolean", description: "Capture the whole scrollable area (default true).",                  required: false }
+        - { name: "format",     type: "string",  description: "'png' (default) or 'jpeg' (smaller). 'jpeg' takes a quality field.", required: false }
+        - { name: "quality",    type: "integer", description: "JPEG quality 0-100. Ignored for png. Default 70.",                   required: false }
+      returns: { type: "object", description: "{ image_b64, format, bytes, width, height }." }
+
+    - name: "extract_links"
+      method: "querySelectorAll a[href]"
+      description: |
+        Return every link on the page with its anchor text and href.
+        Useful when the agent needs to plan multi-step navigation
+        (read a doc index → pick the right sub-page) without burning
+        tokens on full-page HTML.
+      args:
+        - { name: "session_id",      type: "string",  description: "Page handle.",                                                                               required: true  }
+        - { name: "same_domain_only",type: "boolean", description: "Filter to links whose host matches the page's host (default false).",                       required: false }
+        - { name: "max_links",       type: "integer", description: "Truncate output. Default 200.",                                                              required: false }
+      returns: { type: "array",  description: "[{ text, href, host, is_external }] ordered by document position." }
+
+    # ─── Interaction ─────────────────────────────────────────────
+    - name: "click"
+      method: "page.click"
+      description: |
+        Click an element matched by Playwright selector. Selector
+        forms supported: CSS (`.btn-submit`), text (`text=Sign in`),
+        accessibility (`role=button[name='Submit']`), or the special
+        `id=` shorthand (`id=user-menu`). Auto-waits for the element
+        to be visible + clickable before firing.
+      args:
+        - { name: "session_id", type: "string",  description: "Page handle.",                                                  required: true  }
+        - { name: "selector",   type: "string",  description: "Playwright selector (CSS, text=, role=, etc.).",                required: true  }
+        - { name: "timeout_ms", type: "integer", description: "Override timeout for this click.",                              required: false }
+      returns: { type: "object", description: "{ clicked: true, selector, navigated_to (null unless click triggered nav) }." }
+
+    - name: "fill"
+      method: "page.fill"
+      description: |
+        Type a value into an input/textarea matched by selector.
+        Clears existing content first, then types the value. For
+        contenteditable divs, use `click` + the type-text variant
+        (forthcoming).
+      args:
+        - { name: "session_id", type: "string",  description: "Page handle.",                                  required: true  }
+        - { name: "selector",   type: "string",  description: "Playwright selector for the input.",            required: true  }
+        - { name: "value",      type: "string",  description: "Text to fill in.",                              required: true  }
+        - { name: "timeout_ms", type: "integer", description: "Override timeout.",                             required: false }
+      returns: { type: "object", description: "{ filled: true, selector }." }
+
+    - name: "wait_for"
+      method: "page.wait_for_selector"
+      description: |
+        Block until an element matching the selector appears (or
+        timeout). Useful before extracting content from SPAs whose
+        meaningful DOM arrives after XHR.
+      args:
+        - { name: "session_id", type: "string",  description: "Page handle.",                                                                          required: true  }
+        - { name: "selector",   type: "string",  description: "Selector to wait for.",                                                                 required: true  }
+        - { name: "state",      type: "string",  description: "'attached' | 'detached' | 'visible' | 'hidden'. Default 'visible'.",                    required: false }
+        - { name: "timeout_ms", type: "integer", description: "Override timeout.",                                                                     required: false }
+      returns: { type: "object", description: "{ found: true, selector }." }
+
+    # ─── Lifecycle ───────────────────────────────────────────────
+    - name: "close_session"
+      method: "page.close"
+      description: |
+        Close the page handle and free its tab in the browser. Idempotent
+        — closing an unknown id is a no-op. The connector also auto-
+        closes idle pages after 10 min, but explicit close is
+        preferable so the agent doesn't pile up open tabs during a
+        long chat.
+      args:
+        - { name: "session_id", type: "string", description: "Page handle to close.", required: true }
+      returns: { type: "object", description: "{ closed: true, was_open }." }
+
+    - name: "list_sessions"
+      method: "registry"
+      description: "List all open page sessions managed by this connector instance, with their current URL + age."
+      args: []
+      returns: { type: "array", description: "[{ session_id, url, opened_at_iso, last_used_at_iso, age_seconds }]." }

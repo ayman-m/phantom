@@ -1,0 +1,57 @@
+# gitleaks configuration. Extends the default ruleset; every allowlist entry below is
+# scoped to one rule, one path and one match shape, and carries the reason it is safe.
+# A real credential added to any of these files still fails the scan, because the
+# regex only matches the exact fixture or literal shape listed.
+
+title = "Phantom gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "SHA-256 digests pinned by the profile golden-output test (hash values, not credentials)"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''bundles/spark/connectors/http-sender/tests/test_profile_golden\.py$''']
+regexes = ['''^[0-9a-f]{64}$''']
+
+[[allowlists]]
+description = "Fake collector keys used as test fixtures for the HTTP sender destinations"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''bundles/spark/connectors/http-sender/tests/test_http_sender\.py$''']
+regexes = ['''^(sekrit|other)-collector-key-[0-9]{10}$''']
+
+[[allowlists]]
+description = "Fictitious lab host names in WS-Management envelope tests"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''bundles/spark/connectors/wec-sender/tests/test_wsman_envelopes\.py$''']
+regexes = ['''(?i)^(ph)?dc01\.phantom\.lab$''']
+
+[[allowlists]]
+description = "MD5 of the literal 7, used as an id in the Kiteworks sample log line"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''bundles/spark/data-sources/Kiteworks__Kiteworks__kiteworks_kiteworks_raw/data_source\.yaml$''']
+regexes = ['''^8f14e45fceea167a5a36dedd4bea2543$''']
+
+[[allowlists]]
+description = "Skill description text (RDP/WMI/PsExec) that the generic rule mistakes for a key"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''mcp/agent/app/skills/page\.tsx$''']
+regexes = ['''^RDP/WMI/PsExec$''']
+
+[[allowlists]]
+description = "Source code that detects, normalises or rejects PEM headers; the match is a quoted string literal, never key material (key material would continue with a newline and base64)"
+condition = "AND"
+targetRules = ["private-key"]
+paths = [
+  '''bundles/spark/mcp/src/main\.py$''',
+  '''mcp/agent/lib/tls-cert\.ts$''',
+  '''mcp/agent/tls-proxy\.js$''',
+  '''mcp/agent/app/api/chat/route\.ts$''',
+  '''xlog/main\.py$''',
+]
+regexes = ['''^-----BEGIN[A-Z ]*PRIVATE KEY-----["'` )]''']

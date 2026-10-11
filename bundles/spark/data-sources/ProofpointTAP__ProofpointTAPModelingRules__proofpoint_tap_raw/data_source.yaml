@@ -1,0 +1,242 @@
+schema_version: 1
+id: ProofpointTAP
+pack_name: ProofpointTAP
+rule_name: ProofpointTAPModelingRules
+dataset_name: proofpoint_tap_raw
+vendor: Proofpoint
+product: ProofpointTAP
+description: Proofpoint Targeted Attack Protection (TAP) is a sandbox-and-URL-rewriting layer atop Proofpoint
+  email security — it detonates attachments, follows URLs, and reports verdicts. Each event records the
+  message context, the URL or attachment evaluated, the verdict (clean / threat / suspicious), and the
+  threat family. Simulate TAP to validate detections that pivot from URL-click events to downstream endpoint
+  / network telemetry — the click-through correlation chain.
+how_to_use: |
+  ## Analytics: read this before you simulate
+
+  This is the **syslog/CEF** Proofpoint TAP source. Use it to check **parsing and modeling**: events land in `proofpoint_tap_raw` and fill the `xdm.*` fields.
+
+  **Do not expect Cortex Analytics alerts from it.** Cortex collects Proofpoint TAP with its own API collector (not an HTTP collector), and Analytics reads data that arrives with that source's identity: `http-sender` can send it through the Cribl integration with the Proofpoint TAP source UUID (destination `cribl_proofpoint_tap`). This source has not been A/B-tested for Analytics; the equivalent Okta test showed identical data raising an alert only when it arrived through an HTTP-based path, never over CEF.
+
+  **To test Analytics, use the HTTP data source (`delivery: http`, product `ProofpointTAP HTTP`) with the `http-sender` connector.** Its guide has the destinations, profiles and scenarios.
+
+  ## Sending these logs to Cortex XSIAM
+
+  Phantom emits this vendor's wire format as CEF over UDP — point a data worker
+  at your XSIAM broker's syslog destination and these records flow straight in.
+  The schema below describes the vendor's fields independent of destination, so
+  the same records also work for Splunk, Elastic, or any syslog receiver.
+
+  The CEF header's **vendor** + **product** drive XSIAM's parsing-rule routing:
+  the broker normalizes them to `<lowercased-vendor>_<lowercased-product>_raw`
+  (non-alphanumerics -> `_`) and matches your installed parsing rule. The PR/MR
+  rules read NAMED COLUMNS, so the transport is invisible to them — pack the
+  vendor's field names as CEF extension `key=value` pairs.
+
+  **Required CEF header for XSIAM**:
+
+  - **vendor**: `Proofpoint`
+  - **product**: `TAP`
+
+  Broker derives → `proofpoint_tap_raw`.
+
+  Proofpoint TAP (Targeted Attack Protection) reports message-level threat verdicts and URL-click events — most of the signal is in flat fields (`threatType`, `threatStatus`, `classification`, `clickIP`), with `messageParts[]` carrying per-attachment detail. Every event needs a unique `GUID` and an RFC-3339 `threatTime`; without the `GUID` the parsing rule drops the event. (Distinct pack from `proofpoint_email_security_raw` — different rule, different dataset.)
+
+  **MR pattern**: Mixed. Reads flat `threatType`, `threatStatus`, `classification`, `clickIP`, `completelyRewritten`, `recipient` plus nested `messageParts[].md5`.
+
+  **Composite (nested-JSON) fields**: Pack `messageParts` as JSON-string array. Most TAP fields are flat.
+
+  **Sentinel values**: None.
+
+  **PR filter quirks**: `GUID` must be present; `threatTime` RFC-3339.
+
+  **Saturation strategy**: Mixed MR — ~10 XDM.
+
+  **Single-event XDM ceiling**: ~10 XDM single-event.
+
+  **Verify**:
+
+  ```xql
+  datamodel dataset = proofpoint_tap_raw
+  | filter xdm.event.id contains "<your-marker>"
+  | fields xdm.*
+  | limit 1
+  ```
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
+categories:
+- Email
+version: 1.2.27
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDc5QUEiPlByb29mcG9pbnQ8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: GUID
+  type: string_short
+  description: Unique identifier — assigned by Proofpoint per event. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: f52c3ad3-f377-5a95-89ff-fb3e212935e7
+- name: ccAddresses
+  type: email
+  description: 'Cc: addresses. RFC 5322 `local@domain`; one address only.'
+  example: user@example.com
+  is_array: true
+- name: clickIP
+  type: ipv4
+  description: Vendor-emitted field 'ClickIP'. Free-form text; may contain whitespace and punctuation.
+  example: 192.168.1.42
+- name: clickTime
+  type: string
+  description: Vendor-emitted field 'ClickTime'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: fromAddress
+  type: email
+  description: 'From: addresses. RFC 5322 `local@domain`; one address only.'
+  example: user@example.com
+  is_array: true
+- name: messageID
+  type: string
+  description: RFC 5322 Message-ID. Free-form text; may contain whitespace and punctuation.
+  example: msg-f41a90aa-953
+- name: messageParts
+  type: string
+  description: Vendor-emitted field 'MessageParts'. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: messageTime
+  type: datetime
+  description: Message receive time. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: recipient
+  type: ipv4
+  description: Vendor-emitted field 'Recipient'. Free-form text; may contain whitespace and punctuation.
+  example: 192.168.1.42
+- name: sender
+  type: email
+  description: Vendor-emitted field 'Sender'. RFC 5322 'local@domain' address; one address only — use
+    an array field for multiple addresses.
+  example: user@example.com
+- name: senderIP
+  type: ipv4
+  description: Sending mail server IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no
+    surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: subject
+  type: string_long
+  description: Message subject. Free-form text; may span multiple lines or contain large payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: threatsInfoMap
+  type: json
+  description: Per-threat detail records (url/file). JSON object or array; structured payload — see dotted-path
+    leaves below.
+  example: '{"key":"value"}'
+  is_array: true
+- name: classification
+  type: enum
+  description: 'Threat classification. One of: malware, phish, spam, impostor, unknown (case-sensitive).'
+  enum_values:
+  - malware
+  - phish
+  - spam
+  - impostor
+  - unknown
+  example: malware
+- name: completelyRewritten
+  type: boolean
+  description: Were all URLs rewritten by URL Defense. Literal 'true' or 'false' (case-insensitive); not
+    '1'/'0'.
+  example: 'true'
+- name: guid
+  type: string_short
+  description: TAP record GUID. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: headerFrom
+  type: email
+  description: Header From address. RFC 5322 `local@domain`; one address only.
+  example: user@example.com
+- name: headerReplyTo
+  type: email
+  description: Header Reply-To. RFC 5322 `local@domain`; one address only.
+  example: user@example.com
+- name: id
+  type: string_short
+  description: Message id. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token
+- name: impostorScore
+  type: integer
+  description: Impostor score 0-100. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: malwareScore
+  type: integer
+  description: Malware score 0-100. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: messagePartsCount
+  type: integer
+  description: Number of parts in the message. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: messageSize
+  type: integer_byte_count
+  description: Message size in bytes. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: modulesRun
+  type: string
+  is_array: true
+  description: Detection modules that ran. Free-form text; may contain whitespace and punctuation.
+  example: operator-visible value
+- name: phishScore
+  type: integer
+  description: Phish score 0-100. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: policyRoutes
+  type: string
+  is_array: true
+  description: Mail-flow policy routes matched. Free-form text; may contain whitespace and punctuation.
+  example: policy-default-deny
+- name: quarantineFolder
+  type: string_short
+  description: Quarantine folder (if quarantined). Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: quarantineRule
+  type: string
+  description: Quarantine rule name. Free-form text; may contain whitespace and punctuation.
+  example: rule-block-known-bad-ips
+- name: spamScore
+  type: integer
+  description: Spam score 0-100. Signed decimal integer; bare digits, optional leading minus.
+  example: '42'
+- name: toAddresses
+  type: email
+  is_array: true
+  description: 'To: addresses. RFC 5322 `local@domain`; one address only.'
+  example: user@example.com
+use_cases:
+- Email
+- DLP
+validated: true

@@ -1,0 +1,28 @@
+/* Palo Alto Networks NGFW (Next-Generation Firewall)
+   Parsing rule: catch-all no-hit drop route for `vendor="panw", product="ngfw_cef"`.
+
+   HAND-CURATED, not mirrored from demisto/content — PAN-OS parsing and modeling are
+   NATIVE to Cortex, so there is no upstream pack to fetch. This file is a local
+   reference reconstruction for reverse-engineering, not a deployed rule.
+
+   Do NOT route synthetic traffic through this INGEST block. `no_hit=drop` means an
+   event that fails its parse is silently DISCARDED, and `panw_ngfw_cef_raw` has no
+   modeling rule bound to it, so nothing that lands there can ever map to xdm.*.
+
+   There is NO mechanism that fans one CEF stream out into the six per-log-type
+   datasets by reading `log_type`: INGEST blocks route, and [MODEL: dataset=X] blocks
+   only BIND a mapping to a dataset X that data already reaches by some other path.
+   (An earlier version of this comment claimed such a fan-out existed. It does not.)
+
+   To reach a specific dataset, use the DERIVED route — an unclaimed vendor/product
+   pair whose `<lower(vendor)>_<lower(product)>_raw` equals the target:
+     panw/ngfw_traffic       -> panw_ngfw_traffic_raw
+     panw/ngfw_threat        -> panw_ngfw_threat_raw
+     panw/ngfw_url           -> panw_ngfw_url_raw
+     panw/ngfw_filedata      -> panw_ngfw_filedata_raw
+     panw/ngfw_globalprotect -> panw_ngfw_globalprotect_raw
+     panw/ngfw_hipmatch      -> panw_ngfw_hipmatch_raw
+   Only `ngfw_cef` is claimed below, so each pair above derives cleanly and the
+   native modeling rule — which binds by dataset name only — still applies. */
+
+[INGEST:vendor="panw", product="ngfw_cef", target_dataset="panw_ngfw_cef_raw", no_hit=drop]

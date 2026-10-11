@@ -1,0 +1,220 @@
+schema_version: 1
+id: ReblazeWAF
+pack_name: ReblazeWAF
+rule_name: ReblazeWAF
+dataset_name: reblaze_waf_raw
+vendor: Reblaze
+product: ReblazeWAF
+description: Reblaze WAF is a fully managed, cloud-native security solution that protects
+  web applications and APIs from modern cyber threats, bots, and DDoS attacks.
+categories:
+- Analytics & SIEM
+- Network Security
+version: 1.0.5
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNDRjMzM0YiPlJlYmxhemU8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: '<14>2024-01-15T14:23:01+0000 reblaze: reblazewaf=ReblazeWAF action=allow
+    user=jdoe'
+- name: parsed_fields
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: block_reason,
+    blocked, bytes_sent, captured_vector, domain_name, host, referer, remote_addr,
+    request, request_id, request_time, ssl_protocol, status, upstream_addr, upstream_response_time,
+    user_agent (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: parsed_fields_get_headers
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: hostname,
+    pri (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: parsed_fields.block_reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: parsed_fields.blocked
+  type: string
+  description: Vendor-emitted field 'Parsed fields › blocked'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_blocked
+- name: parsed_fields.bytes_sent
+  type: string
+  description: Vendor-emitted field 'Parsed fields › bytes sent'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_sent
+- name: parsed_fields.captured_vector
+  type: string
+  description: Vendor-emitted field 'Parsed fields › captured vector'. Leaf of the
+    'parsed_fields' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_vector
+- name: parsed_fields.domain_name
+  type: string
+  description: Human-readable name as displayed by Reblaze. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: parsed_fields.host
+  type: host
+  description: Vendor-emitted field 'Parsed fields › host'. Leaf of the 'parsed_fields'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: parsed_fields.referer
+  type: url
+  description: HTTP Referer header value. Full URL with scheme (http/https/ftp); percent-encoded
+    if non-ASCII.
+  example: https://example.com/path?q=1
+- name: parsed_fields.remote_addr
+  type: string
+  description: Vendor-emitted field 'Parsed fields › remote addr'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_addr
+- name: parsed_fields.request
+  type: string
+  description: Vendor-emitted field 'Parsed fields › request'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_request
+- name: parsed_fields.request_id
+  type: string_short
+  description: Opaque identifier emitted by Reblaze. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: req-e6b0ab15-a87
+- name: parsed_fields.request_time
+  type: datetime
+  description: Time-of-day emitted by Reblaze. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: parsed_fields.ssl_protocol
+  type: string
+  description: Vendor-emitted field 'Parsed fields › ssl protocol'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: parsed_fields.status
+  type: string_short
+  description: Status code returned by Reblaze. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: parsed_fields.upstream_addr
+  type: string
+  description: Vendor-emitted field 'Parsed fields › upstream addr'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_addr
+- name: parsed_fields.upstream_response_time
+  type: datetime
+  description: Time-of-day emitted by Reblaze. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: parsed_fields.user_agent
+  type: string
+  description: Vendor-emitted field 'Parsed fields › user agent'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+- name: parsed_fields_get_headers.hostname
+  type: host
+  description: Hostname or FQDN as reported by Reblaze. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: parsed_fields_get_headers.pri
+  type: string
+  description: Vendor-emitted field 'Parsed fields get headers › pri'. Leaf of the
+    'parsed_fields_get_headers' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_pri
+- name: acl
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: sample_acl
+- name: calculate_duration
+  type: integer
+  description: Event duration. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: extract_http_method
+  type: string
+  description: Network HTTP method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: extract_http_version
+  type: string
+  description: Network application protocol. Free-form text; may contain whitespace
+    and punctuation.
+  example: 1.0.0
+- name: extract_target_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: extract_target_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: extract_target_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+use_cases:
+- WAF
+how_to_use: |
+  ## reblaze waf → Cortex XSIAM (dataset `reblaze_waf_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `reblaze_waf_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `reblaze`
+    - **product**: `waf`
+
+    These normalize → `reblaze_waf_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `parsed_fields_get_headers  -> pri`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~23 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.event.description`, `xdm.event.duration`, `xdm.event.id`, `xdm.event.outcome`, `xdm.event.outcome_reason`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `reblaze`, Product = `waf`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = reblaze_waf_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

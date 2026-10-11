@@ -1,0 +1,129 @@
+schema_version: 1
+id: Shodan
+pack_name: Shodan
+rule_name: Shodan
+dataset_name: shodan_banner_raw
+vendor: Shodan
+product: Shodan
+description: A search engine used for searching Internet-connected devices
+categories:
+- Data Enrichment & Threat Intelligence
+version: 1.2.11
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNBMzAwMDAiPlNob2RhbjwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: created
+  type: datetime
+  description: Vendor-emitted field 'Created'. ISO-8601 timestamp with timezone (e.g.,
+    2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: expiration
+  type: string
+  description: Vendor-emitted field 'Expiration'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_expiration
+- name: expires
+  type: integer
+  description: Vendor-emitted field 'Expires'. Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: filters
+  type: string
+  description: Vendor-emitted field 'Filters'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_filters
+- name: has_triggers
+  type: boolean
+  description: Whether triggers are configured. Literal 'true' or 'false' (case-insensitive);
+    not '1'/'0'.
+  example: 'true'
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Shodan. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: sho-b3271c15
+- name: name
+  type: string
+  description: Human-readable name as displayed by Shodan. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: notifiers
+  type: string
+  description: Vendor-emitted field 'Notifiers'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_notifiers
+- name: size
+  type: integer_byte_count
+  description: Size in bytes of the payload/object. Unsigned decimal byte count; bare
+    digits, no unit suffix.
+  example: '42'
+- name: triggers
+  type: string
+  description: Vendor-emitted field 'Triggers'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_triggers
+use_cases:
+- ASM
+- ThreatIntel
+how_to_use: |
+  ## Shodan Shodan → Cortex XSIAM (dataset `shodan_banner_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `shodan_banner_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `shodan_banner`. The marketplace pack's display name `Shodan` / `Shodan` normalizes to `shodan_shodan_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `shodan_banner` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~6 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.name`, `xdm.event.description`, `xdm.event.type`, `xdm.session_context_id`, `xdm.target.host.ipv4_addresses`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = shodan_banner_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Phantom A2UI Data Model",
+  "type": "object",
+  "required": ["agent", "navigation", "messages", "composer", "workflows", "skills", "telemetry", "bundle", "reports"],
+  "properties": {
+    "agent": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "status": { "type": "string" },
+        "model": { "type": "string" }
+      }
+    },
+    "navigation": {
+      "type": "object",
+      "properties": {
+        "active": { "type": "string" },
+        "items": { "type": "array" }
+      }
+    },
+    "messages": { "type": "array" },
+    "composer": {
+      "type": "object",
+      "properties": {
+        "value": { "type": "string" }
+      }
+    },
+    "workflows": { "type": "array" },
+    "skills": { "type": "array" },
+    "telemetry": { "type": "array" },
+    "bundle": { "type": "object" },
+    "health": { "type": "object" },
+    "reports": { "type": "array" },
+    "coverage": { "type": "object" },
+    "operation": { "type": "object" },
+    "setup": { "type": "object" }
+  }
+}

@@ -1,0 +1,181 @@
+schema_version: 1
+id: Forcepoint
+pack_name: Forcepoint
+rule_name: Forcepoint
+dataset_name: forcepoint_firewall_raw
+vendor: Forcepoint
+product: Forcepoint
+description: Advanced threat protection with added local management controls.
+categories:
+- Network Security
+version: 1.1.3
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDczQjAiPkZvcmNlcG9pbnQ8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: act
+  type: string_short
+  description: CEF action — what Forcepoint did with the event (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: app
+  type: string_short
+  description: Application name emitted by Forcepoint. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceEventClassId
+  type: string_short
+  description: CEF device-event class ID — vendor-specific event-type identifier.
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefDeviceVersion
+  type: string_short
+  description: CEF device-version field — version of the Forcepoint product emitting
+    this event. Short opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefName
+  type: string_short
+  description: CEF event name — short human-readable label for the event class. Short
+    opaque token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: cefSeverity
+  type: integer
+  description: CEF severity score (0-10) as classified by Forcepoint. Signed decimal
+    integer; bare digits, optional leading minus.
+  example: '42'
+- name: cefVersion
+  type: string_short
+  description: CEF specification version — typically `0` for CEF 1.x. Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: token_value
+- name: destinationServiceName
+  type: string
+  description: Vendor-emitted field 'DestinationServiceName'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_destinationservi
+- name: deviceExternalId
+  type: string
+  description: Vendor-emitted field 'DeviceExternalId'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_deviceexternalid
+- name: deviceFacility
+  type: string
+  description: Vendor-emitted field 'DeviceFacility'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_devicefacility
+- name: dpt
+  type: integer_port
+  description: CEF destination port — TCP/UDP port on the target side. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '42'
+- name: dst
+  type: ipv4
+  description: CEF destination IP — IPv4/IPv6 address of the target endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 198.51.100.7
+- name: dvc
+  type: string
+  description: Vendor-emitted field 'Dvc'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dvc
+- name: dvchost
+  type: string
+  description: Vendor-emitted field 'Dvchost'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_dvchost
+- name: in
+  type: integer
+  description: Vendor-emitted field 'In'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: out
+  type: integer
+  description: Vendor-emitted field 'Out'. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: proto
+  type: string
+  description: Network protocol name or numeric IANA assignment. Free-form text; may
+    contain whitespace and punctuation.
+  example: tcp
+- name: request
+  type: url
+  description: HTTP request line or full request payload as captured by Forcepoint.
+    Full URL with scheme (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: requestURL
+  type: url
+  description: Vendor-emitted field 'RequestURL'. Full URL with scheme (http/https/ftp);
+    percent-encoded if it contains non-ASCII characters.
+  example: https://example.com/path
+- name: spt
+  type: integer_port
+  description: CEF source port — TCP/UDP port on the source side. Unsigned integer
+    0-65535 representing a TCP/UDP port; bare digits, no quotes.
+  example: '42'
+- name: src
+  type: ipv4
+  description: CEF source IP — IPv4/IPv6 address of the source endpoint. Free-form
+    text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: suser
+  type: user
+  description: CEF source user — username of the actor initiating the event. Account
+    name as the vendor reports it — login name, UPN, or sAMAccountName; no domain
+    prefix unless vendor emits one.
+  example: jsmith
+use_cases:
+- DLP
+- Proxy
+how_to_use: |
+  ## Forcepoint Forcepoint → Cortex XSIAM (dataset `forcepoint_firewall_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `forcepoint_firewall_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `forcepoint_firewall`. The marketplace pack's display name `Forcepoint` / `Forcepoint` normalizes to `forcepoint_forcepoint_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `forcepoint_firewall` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~25 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.event.id`, `xdm.event.outcome`, `xdm.network.application_protocol`, `xdm.network.http.url`.
+
+    **Operator setup**: This data source's modeling rule reads CEF-shaped columns (rt, src, dst, spt, dpt, cs1-6, act, etc.). Phantom emits CEF over syslog (`CEF:0|Forcepoint|Forcepoint|...|<extensions>`) — the broker auto-extracts CEF k=v pairs into typed columns matching the CEF dictionary, and the broker routes to this dataset via the CEF header's vendor/product. Usually NO operator-side broker config is required beyond standard CEF ingestion.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = forcepoint_firewall_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

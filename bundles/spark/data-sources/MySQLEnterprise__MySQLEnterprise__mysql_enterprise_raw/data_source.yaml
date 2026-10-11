@@ -1,0 +1,184 @@
+schema_version: 1
+id: MySQLEnterprise
+pack_name: MySQLEnterprise
+rule_name: MySQLEnterprise
+dataset_name: mysql_enterprise_raw
+vendor: MySQL
+product: MySQLEnterprise
+description: The modeling rules for MySQL Enterprise event collectors.
+categories:
+- Analytics & SIEM
+version: 1.0.11
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TXlTUUw8L3RpdGxlPjxwYXRoIGQ9Ik0xNi40MDUgNS41MDFjLS4xMTUgMC0uMTkzLjAxNC0uMjc0LjAzM3YuMDEzaC4wMTRjLjA1NC4xMDQuMTQ2LjE4LjIxNC4yNzMuMDU0LjEwNy4xLjIxNC4xNTQuMzJsLjAxNC0uMDE1Yy4wOTQtLjA2Ni4xNC0uMTcyLjE0LS4zMzMtLjA0LS4wNDctLjA0Ni0uMDk0LS4wOC0uMTQtLjA0LS4wNjctLjEyNi0uMS0uMTgtLjE1M3pNNS43NyAxOC42OTVoLS45MjdhNTAuODU0IDUwLjg1NCAwIDAwLS4yNy00LjQxaC0uMDA4bC0xLjQxIDQuNDFIMi40NWwtMS40LTQuNDFoLS4wMWE3Mi44OTIgNzIuODkyIDAgMDAtLjE5NSA0LjQxSDBjLjA1NS0xLjk2Ni4xOTItMy44MS40MS01LjUzaDEuMTVsMS4zMzUgNC4wNjRoLjAwOGwxLjM0Ny00LjA2NGgxLjA5NWMuMjQyIDIuMDE1LjM4NCAzLjg2LjQyOCA1LjUzem00LjAxNy00LjA4Yy0uMzc4IDIuMDQ1LS44NzYgMy41MzMtMS40OTIgNC40Ni0uNDgyLjcxNi0xLjAxIDEuMDczLTEuNTgzIDEuMDczLS4xNTMgMC0uMzQtLjA0Ni0uNTY2LS4xMzh2LS40OTRjLjExLjAxNy4yNC4wMjYuMzg2LjAyNi4yNjggMCAuNDgzLS4wNzUuNjQ3LS4yMjIuMTk3LS4xOC4yOTUtLjM4Mi4yOTUtLjYwNSAwLS4xNTUtLjA3Ny0uNDctLjIzLS45NDRMNi4yMyAxNC42MTVoLjkxbC43MjcgMi4zNmMuMTY0LjUzNi4yMzMuOTEuMjA1IDEuMTIzLjQtMS4wNjQuNjc4LTIuMjI3LjgzNS0zLjQ4M3ptMTIuMzI1IDQuMDhoLTIuNjN2LTUuNTNoLjg4NXY0Ljg1aDEuNzQ1em0tMy4zMi4xMzVsLTEuMDE2LS41Yy4wOS0uMDc2LjE3Ny0uMTU4LjI1NS0uMjUuNDMzLS41MDYuNjQ4LTEuMjU4LjY0OC0yLjI1MyAwLTEuODMtLjcxOC0yLjc0Ni0yLjE1NS0yLjc0Ni0uNzA0IDAtMS4yNTQuMjMyLTEuNjUuNjk3LS40My41MDgtLjY0NiAxLjI1Ni0uNjQ2IDIuMjQ1IDAgLjk3Mi4xOSAxLjY4Ni41NzQgMi4xNC4zNS40MS44NzcuNjE1IDEuNTgzLjYxNS4yNjQgMCAuNTA2LS4wMzMuNzI1LS4wOThsMS4zMjUuNzcyLjM2LS42MjJ6TTE1LjUgMTcuNTg4Yy0uMjI1LS4zNi0uMzM3LS45NC0uMzM3LTEuNzM2IDAtMS4zOTMuNDI0LTIuMDkgMS4yNy0yLjA5LjQ0MyAwIC43Ny4xNjcuOTc3LjUuMjI0LjM2Mi4zMzYuOTM2LjMzNiAxLjcyMyAwIDEuNDA0LS40MjQgMi4xMDgtMS4yNyAyLjEwOC0uNDQ1IDAtLjc3LS4xNjctLjk3OC0uNXptLTEuNjU4LS40MjVjMCAuNDctLjE3Mi44NTYtLjUxNiAxLjE1Ni0uMzQ0LjMtLjgwMy40NS0xLjM4NC40NS0uNTQzIDAtMS4wNjQtLjE3Mi0xLjU3My0uNTE1bC4yMzctLjQ3NmMuNDM4LjIyLjgzMy4zMjggMS4xOS4zMjguMzMyIDAgLjU5My0uMDczLjc4My0uMjJhLjc1NC43NTQgMCAwMC4zLS42MTVjMC0uMzMtLjIzLS42MS0uNjQ4LS44NDUtLjM4OC0uMjEzLTEuMTYzLS42NTctMS4xNjMtLjY1Ny0uNDIyLS4zMDctLjYzMi0uNjM2LS42MzItMS4xNzcgMC0uNDUuMTU3LS44MS40Ny0xLjA4NS4zMTUtLjI3OC43Mi0uNDE1IDEuMjItLjQxNS41MTIgMCAuOTguMTM2IDEuNC40MWwtLjIxMy40NzZhMi43MjYgMi43MjYgMCAwMC0xLjA2NC0uMjNjLS4yODMgMC0uNTAyLjA2OC0uNjU0LjIwNmEuNjg1LjY4NSAwIDAwLS4yNDguNTI0YzAgLjMyOC4yMzQuNjEuNjY2Ljg1LjM5My4yMTUgMS4xODcuNjcgMS4xODcuNjcuNDMzLjMwNS42NDguNjMuNjQ4IDEuMTY4em05LjM4Mi01Ljg1MmMtLjUzNS0uMDE0LS45NS4wNC0xLjI5Ny4xODgtLjEuMDQtLjI2LjA0LS4yNzQuMTY3LjA1NS4wNTMuMDYzLjE0LjExLjIxNC4wOC4xMzQuMjE4LjMxMy4zNDYuNDA3LjE0LjExLjI4LjIxNi40MjcuMzEuMjYuMTYuNTU1LjI1NS44MS40MTYuMTQ1LjA5NC4yOTMuMjEzLjQ0LjMxMy4wNzMuMDUuMTIuMTQuMjE0LjE3MnYtLjAyYy0uMDQ2LS4wNi0uMDYtLjE0Ny0uMTA1LS4yMTQtLjA2Ny0uMDY3LS4xMzQtLjEyNy0uMi0uMTkzYTMuMjIzIDMuMjIzIDAgMDAtLjY5NS0uNjc1Yy0uMjE0LS4xNDYtLjY4Mi0uMzUtLjc3LS41OTVsLS4wMTMtLjAxNGMuMTQ2LS4wMTMuMzItLjA2Ni40Ni0uMTA2LjIyNy0uMDYuNDM1LS4wNDcuNjctLjEwNi4xMDYtLjAyNy4yMTMtLjA2LjMyLS4wOTR2LS4wNmMtLjEyLS4xMi0uMjEtLjI4My0uMzM0LS4zOTVhOC44NjcgOC44NjcgMCAwMC0xLjEwNC0uODIzYy0uMjEtLjEzNC0uNDc2LS4yMi0uNjk3LS4zMzQtLjA4LS4wNC0uMjE0LS4wNi0uMjYtLjEyNy0uMTItLjE0Ni0uMTktLjM0LS4yNzUtLjUxNGExNy42OSAxNy42OSAwIDAxLS41NDctMS4xNjNjLS4xMi0uMjYyLS4xOTMtLjUyMy0uMzQtLjc2My0uNjktMS4xMzctMS40MzctMS44MjYtMi41ODYtMi41LS4yNDctLjE0LS41NDMtLjItLjg1Ni0uMjc0LS4xNjctLjAwOC0uMzM0LS4wMi0uNS0uMDI3LS4xMS0uMDQ3LS4yMTYtLjE3NC0uMzEtLjIzNS0uMzgtLjI0LTEuMzY0LS43Ni0xLjY0NC0uMDcyLS4xOC40MzQuMjY3Ljg2Mi40MjIgMS4wODIuMTE1LjE1My4yNi4zMjguMzQuNS4wNDcuMTE2LjA2LjIzNS4xMDcuMzU2LjEwNi4yOTQuMjA3LjYyMi4zNDcuODk3LjA3My4xNC4xNTMuMjg3LjI0Ny40MTMuMDU0LjA3My4xNDYuMTA3LjE2Ny4yMjctLjA5NC4xMzYtLjEuMzM0LS4xNTQuNS0uMjQuNzU3LS4xNDYgMS42OTMuMTk0IDIuMjUuMTA3LjE2Ni4zNjIuNTM0LjcwMy4zOTMuMy0uMTIuMjM0LS41LjMyLS44MzUuMDItLjA4LjAwNy0uMTMzLjA0OC0uMTg3di4wMTVjLjA5NC4xODguMTg4LjM2Ny4yNzQuNTU1LjIwNi4zMjguNTY2LjY2OC44NjcuODk1LjE2LjEyLjI4Ny4zMjguNDg3LjQwMnYtLjAyaC0uMDE1Yy0uMDQzLS4wNTgtLjEtLjA4Ni0uMTU0LS4xMzNhMy40NDUgMy40NDUgMCAwMS0uMzUtLjQgOC43NiA4Ljc2IDAgMDEtLjc0Ny0xLjIxOGMtLjExLS4yMS0uMjAyLS40MzYtLjI5LS42NDMtLjA0LS4wOC0uMDQtLjItLjEwNy0uMjQtLjEuMTQ2LS4yNDcuMjczLS4zMi40NTMtLjEyNy4yODgtLjE0LjY0Mi0uMTg4IDEuMDEtLjAyNy4wMDctLjAxNCAwLS4wMjcuMDE0LS4yMTQtLjA1Mi0uMjg3LS4yNzQtLjM2Ny0uNDYtLjItLjQ3NS0uMjMzLTEuMjM4LS4wNi0xLjc4NS4wNDctLjE0LjI0Ny0uNTgyLjE2Ny0uNzE2LS4wNDItLjEyNy0uMTc0LS4yLS4yNDctLjMwM2EyLjQ3OCAyLjQ3OCAwIDAxLS4yNC0uNDI3Yy0uMTYtLjM3NC0uMjQtLjc4OC0uNDE0LTEuMTYyLS4wOC0uMTczLS4yMi0uMzU0LS4zMzQtLjUxMy0uMTI3LS4xOC0uMjY3LS4zMDctLjM2OC0uNTItLjAzMy0uMDczLS4wOC0uMTk0LS4wMjctLjI3NC4wMTQtLjA1NC4wNDItLjA3NS4wOTQtLjA5LjA4OC0uMDcyLjMzNS4wMjIuNDIyLjA2Mi4yNDcuMS40NTUuMTk0LjY2Mi4zMzQuMDk0LjA2Ni4xOTUuMTkzLjMxNS4yMjZoLjE0Yy4yMTQuMDQ3LjQ1NS4wMTQuNjU1LjA3My4zNTUuMTE0LjY3NS4yOC45NjIuNDZhNS45NTMgNS45NTMgMCAwMTIuMDg1IDIuMjg2Yy4wOC4xNTQuMTE1LjI5NS4xODguNDU1LjE0LjMzLjMxMy42NjMuNDU1Ljk4Mi4xNC4zMTUuMjc1LjYzNi40NzYuODk3LjEuMTQuNTAyLjIxMy42ODIuMjg2LjEzMy4wNi4zNC4xMTUuNDYuMTg4LjIzLjE0LjQ1NC4zLjY3LjQ1NC4xMS4wNzYuNDQzLjI0My40NjMuMzc4eiIvPjwvc3ZnPg==
+  source: simpleicons:mysql
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: true
+fields:
+- name: _raw_log.event
+  type: string_short
+  description: Nested leaf of `_raw_log` — the modeling rule reads it at $.event.
+  example: sample value
+- name: _raw_log.timestamp
+  type: string_short
+  description: Nested leaf of `_raw_log` — the modeling rule reads it at $.timestamp.
+  example: sample value
+- name: _raw_log
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: account,
+    class, connection_id, login, startup_data, table_access_data (each key defined
+    as a dotted-path leaf below).'
+  example: '{}'
+- name: _raw_log.account.host
+  type: host
+  description: Vendor-emitted field ' raw log › account › host'. Leaf of the '_raw_log'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: _raw_log.account.user
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: _raw_log.class
+  type: string
+  description: Vendor-emitted field ' raw log › class'. Leaf of the '_raw_log' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.connection_id
+  type: string_short
+  description: Opaque identifier emitted by MySQL. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.login.ip
+  type: ipv4
+  description: Vendor-emitted field ' raw log › login › ip'. Leaf of the '_raw_log'
+    composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding
+    brackets or quotes.
+  example: 203.0.113.42
+- name: _raw_log.login.os
+  type: string
+  description: Vendor-emitted field ' raw log › login › os'. Leaf of the '_raw_log'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.login.user
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: _raw_log.startup_data.mysql_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.startup_data.os_version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.startup_data.server_id
+  type: string_short
+  description: Opaque identifier emitted by MySQL. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: raw_value
+- name: _raw_log.table_access_data.db
+  type: string
+  description: Vendor-emitted field ' raw log › table access data › db'. Leaf of the
+    '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.table_access_data.query
+  type: string
+  description: Vendor-emitted field ' raw log › table access data › query'. Leaf of
+    the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.table_access_data.sql_command
+  type: string
+  description: Vendor-emitted field ' raw log › table access data › sql command'.
+    Leaf of the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+- name: _raw_log.table_access_data.table
+  type: string
+  description: Vendor-emitted field ' raw log › table access data › table'. Leaf of
+    the '_raw_log' composite. Free-form text; may contain whitespace and punctuation.
+  example: raw_value
+use_cases:
+- Database
+how_to_use: |
+  ## mysql enterprise → Cortex XSIAM (dataset `mysql_enterprise_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `mysql` / product `enterprise`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `mysql_enterprise_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `mysql`
+    - **product**: `enterprise`
+
+    These normalize → `mysql_enterprise_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.class`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `json_extract_scalar(_raw_log, "$.class") = "audit"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~34 fields mapped to the unified data model (`xdm.*`), including: `XDM.Audit.audited_resource.id`, `XDM.Audit.audited_resource.sub_type`, `XDM.Audit.audited_resource.type`, `XDM.Audit.event_timestamp`, `XDM.Audit.operation_sub_type`, `XDM.Audit.operation_type`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `mysql`, Product = `enterprise`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = mysql_enterprise_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

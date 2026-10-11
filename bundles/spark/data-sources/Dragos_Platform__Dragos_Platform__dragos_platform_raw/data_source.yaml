@@ -1,0 +1,170 @@
+schema_version: 1
+id: Dragos_Platform
+pack_name: Dragos_Platform
+rule_name: Dragos_Platform
+dataset_name: dragos_platform_raw
+vendor: Dragos
+product: Dragos_Platform
+description: The Dragos Platform offers customers visibility into their ICS/OT assets,
+  vulnerabilities, threats, and response actions.
+categories:
+- Analytics & SIEM
+version: 1.0.4
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMxNTIyMzMiPkRyYWdvczwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: asset_hostname
+  type: host
+  description: Hostname or FQDN as reported by Dragos. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: asset_id
+  type: string_short
+  description: Opaque identifier emitted by Dragos. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: dra-d6f9a230
+- name: asset_ip
+  type: ipv4
+  description: Vendor-emitted field 'Asset ip'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: asset_mac
+  type: mac
+  description: MAC address (colon-separated lowercase hex). MAC address in colon-separated
+    lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: cefSeverity
+  type: integer
+  description: CEF severity score (0-10) as classified by Dragos. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: content
+  type: string
+  description: Vendor-emitted field 'Content'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_content
+- name: detection_quad
+  type: string
+  description: Vendor-emitted field 'Detection quad'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_quad
+- name: dst_asset_hostname
+  type: host
+  description: Hostname or FQDN as reported by Dragos. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: dst_asset_id
+  type: string_short
+  description: Opaque identifier emitted by Dragos. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: dra-37d6d964
+- name: dst_asset_ip
+  type: ipv4
+  description: Vendor-emitted field 'Dst asset ip'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: dst_asset_mac
+  type: json
+  is_array: true
+  description: Destination host MAC addresses. JSON object or array; structured payload
+    — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Dragos. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: dra-cd2bed58
+- name: matchedRuleId
+  type: string
+  description: Vendor-emitted field 'MatchedRuleId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_matchedruleid
+- name: src_asset_hostname
+  type: host
+  description: Hostname or FQDN as reported by Dragos. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: src_asset_id
+  type: string_short
+  description: Opaque identifier emitted by Dragos. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: dra-fa4bb4e5
+- name: src_asset_ip
+  type: ipv4
+  description: Vendor-emitted field 'Src asset ip'. Free-form text; may contain whitespace
+    and punctuation.
+  example: 192.0.2.45
+- name: src_asset_mac
+  type: mac
+  description: MAC address (colon-separated lowercase hex). MAC address in colon-separated
+    lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by Dragos. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+use_cases:
+- ICS
+how_to_use: |
+  ## Dragos Dragos Platform → Cortex XSIAM (dataset `dragos_platform_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `dragos_platform_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `dragos_platform`. The marketplace pack's display name `Dragos` / `Dragos_Platform` normalizes to `dragos_dragos_platform_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `dragos_platform` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON. CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~16 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.original_alert_id`, `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.event.id`, `xdm.event.type`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = dragos_platform_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

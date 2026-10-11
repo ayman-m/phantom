@@ -1,0 +1,1049 @@
+schema_version: 1
+id: BeyondTrustRemoteSupport
+pack_name: BeyondTrustRemoteSupport
+rule_name: BeyondTrustRemoteSupport
+dataset_name: beyondtrust_remote_support_raw
+vendor: BeyondTrust
+product: BeyondTrustRemoteSupport
+description: enables support organizations to access and support nearly any remote
+  computer or mobile device.
+categories:
+- Analytics & SIEM
+version: 1.0.4
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo: null
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: 'Native beyondtrust_remote_support log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: Branch chosen: `filter event_type in("user_added","user_changed","user_removed")` (line ~653 of the MODEL block) — 10 branch xdm fields on top of the 17 the shared [RULE: beyondtrust_rs_common_fields_modeling] yields, th'
+  example: '1 {{now:%Y-%m-%dT%H:%M:%SZ}} rs.example.com bomgar - - [meta sequenceId="8842"] 1:342:1: event=user_changed;site=support.example.com;who=Adam Admin (admin) using local;who_ip=10.10.14.22;id=1042;username=jdoe;displayname=Doe, John;account:disabled=0;two_factor_auth:required=1;provider:name=Local;external_id=CN=John Doe,OU=Support,DC=example,DC=com;license_pool:id=3;license_pool:name=Support Reps;old_username=john.doe;new_username=jdoe;old_displayname=Doe, Johnathan;new_displayname=Doe, John'
+- name: account
+  type: string
+  description: Source user is disabled. Free-form text; may contain whitespace and
+    punctuation.
+  example: acct-6cc5ca9c
+- name: account_group_id
+  type: string_short
+  description: Destination user groups. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: account_group_id1
+  type: string
+  description: Account group id1. Free-form text; may contain whitespace and punctuation.
+  example: sample_id1
+- name: account_group_id2
+  type: string
+  description: Account group id2. Free-form text; may contain whitespace and punctuation.
+  example: sample_id2
+- name: account_group_name
+  type: string
+  description: Account group name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: account_id
+  type: string_short
+  description: Destination user identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: account_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: jdoe
+- name: account_username
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: accounts_id
+  type: string_short
+  description: Destination user identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: admin
+  type: string
+  description: Auth privilege level. Free-form text; may contain whitespace and punctuation.
+  example: sample_admin
+- name: api_account_id
+  type: string_short
+  description: Destination user identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: api_account_name
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: api_ip_addresses
+  type: ipv4
+  description: Destination subnet. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: asset_id
+  type: string_short
+  description: Destination process identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: authentication_method
+  type: string
+  description: Auth method. Free-form text; may contain whitespace and punctuation.
+  example: GET
+- name: canned_category
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: access_control
+- name: canned_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: canned_message
+  type: string
+  description: Alert description. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: canned_parent_id1
+  type: string
+  description: Destination resource parent ID. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_id1
+- name: canned_parent_id2
+  type: string
+  description: Canned parent id2. Free-form text; may contain whitespace and punctuation.
+  example: sample_id2
+- name: canned_script_category
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: access_control
+- name: canned_script_commands
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_commands
+- name: canned_script_filename
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: document.pdf
+- name: canned_script_id1
+  type: string
+  description: Destination resource ID. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_id1
+- name: canned_script_id2
+  type: string
+  description: Canned script id2. Free-form text; may contain whitespace and punctuation.
+  example: sample_id2
+- name: canned_script_name1
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name1
+- name: canned_script_name2
+  type: string
+  description: Canned script name2. Free-form text; may contain whitespace and punctuation.
+  example: sample_name2
+- name: canned_script_team_id
+  type: string_short
+  description: Destination user groups. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: canned_script_team_name
+  type: string
+  description: Destination user groups. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: canned_team_id
+  type: string_short
+  description: Destination user groups. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: canned_team_name
+  type: string
+  description: Destination user groups. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: canned_title
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: Sample subject line
+- name: certificate
+  type: string
+  description: Destination resource type. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_certificate
+- name: certificate_friendly_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: change
+  type: string
+  description: Source user is password expired. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_change
+- name: computer_name
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: custom_link_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: custom_link_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: custom_link_url
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: custom_session_attribute_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: custom_session_attribute_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: custom_session_policy_code_name
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: custom_session_policy_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: custom_session_policy_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: custom_special_action_arguments
+  type: string
+  description: Custom special action arguments. Free-form text; may contain whitespace
+    and punctuation.
+  example: --config /etc/app.conf
+- name: custom_special_action_command
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: custom_special_action_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: custom_special_action_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: disabled
+  type: string
+  description: Source user is disabled. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_disabled
+- name: discovery_job_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: dns_server_ip_addresses
+  type: ipv4
+  description: Network dhcp DNS server. Free-form text; may contain whitespace and
+    punctuation.
+  example: 192.0.2.45
+- name: domain_account_id
+  type: domain
+  description: Destination user identifier. Bare DNS domain name; no scheme, no path,
+    no port.
+  example: example.com
+- name: domain_id
+  type: domain
+  description: Destination domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: email_sender
+  type: email
+  description: Email sender. RFC 5322 'local@domain' address; one address only — use
+    an array field for multiple addresses.
+  example: user@example.com
+- name: end_timestamp
+  type: datetime
+  description: End timestamp. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: endpoint_domain_id
+  type: domain
+  description: Destination domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: endpoint_fqdn
+  type: domain
+  description: Destination host FQDN. Bare DNS domain name; no scheme, no path, no
+    port.
+  example: example.com
+- name: endpoint_hostname
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: endpoint_is_domain_controller
+  type: domain
+  description: Destination host device category. Bare DNS domain name; no scheme,
+    no path, no port.
+  example: example.com
+- name: endpoint_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: endpoint_os
+  type: string
+  description: Destination host OS. Free-form text; may contain whitespace and punctuation.
+  example: Linux
+- name: endpoint_unique_id
+  type: string_short
+  description: Destination host device ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: error_type
+  type: string
+  description: Alert subcategory. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: event_description
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by BeyondTrust.
+- name: event_type
+  type: string
+  description: Event original event type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: expired
+  type: string
+  description: Source user is disabled. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_expired
+- name: exported_with_private_key
+  type: integer_port
+  description: Exported with private key. Unsigned integer 0-65535 representing a
+    TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: file_name
+  type: string
+  description: Destination file filename. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: file_size
+  type: integer_byte_count
+  description: Destination file size. Free-form text; may contain whitespace and punctuation.
+  example: '1024'
+- name: filtered_user
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: gateway_interface
+  type: string
+  description: Gateway interface. Free-form text; may contain whitespace and punctuation.
+  example: eth0
+- name: gateway_ip
+  type: ipv4
+  description: Gateway ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: group_policy
+  type: string
+  description: Group policy. Free-form text; may contain whitespace and punctuation.
+  example: Default-Policy
+- name: group_policy_id
+  type: string_short
+  description: Group policy id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: group_policy_id1
+  type: string
+  description: Group policy id1. Free-form text; may contain whitespace and punctuation.
+  example: sample_id1
+- name: group_policy_id2
+  type: string
+  description: Group policy id2. Free-form text; may contain whitespace and punctuation.
+  example: sample_id2
+- name: group_policy_name
+  type: string
+  description: Group policy name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: group_policy_name1
+  type: string
+  description: Group policy name1. Free-form text; may contain whitespace and punctuation.
+  example: sample_name1
+- name: group_policy_name2
+  type: string
+  description: Group policy name2. Free-form text; may contain whitespace and punctuation.
+  example: sample_name2
+- name: groups_and_roles
+  type: string
+  description: Destination user groups. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_roles
+- name: hostname
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: interface
+  type: string
+  description: Destination interface. Free-form text; may contain whitespace and punctuation.
+  example: eth0
+- name: ip
+  type: ipv4
+  description: Ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no
+    surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: ip_address
+  type: ipv4
+  description: Ip address. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: ip_addresses
+  type: ipv4
+  description: Ip addresses. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: ipv4_address
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: ipv4_addresses
+  type: ipv4
+  description: Destination host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: ipv6_address
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: ipv6_addresses
+  type: ipv6
+  description: Destination host IPv6 addresses. Colon-separated hexadecimal IPv6 literal
+    (RFC 4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: is_account_disabled
+  type: string
+  description: Destination user is disabled. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_disabled
+- name: is_api_account_disabled
+  type: string
+  description: Destination user is disabled. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_disabled
+- name: is_enabled
+  type: string
+  description: Is enabled. Free-form text; may contain whitespace and punctuation.
+  example: sample_enabled
+- name: is_login_code_enabled
+  type: string
+  description: Auth is mfa needed. Free-form text; may contain whitespace and punctuation.
+  example: sample_enabled
+- name: is_mfa_required
+  type: string
+  description: Auth is mfa needed. Free-form text; may contain whitespace and punctuation.
+  example: sample_required
+- name: issue_code_name
+  type: string
+  description: Issue code name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: issue_description
+  type: string
+  description: Alert description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by BeyondTrust.
+- name: issue_id
+  type: string_short
+  description: Issue id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: jump_id
+  type: string_short
+  description: Destination resource type. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: jump_item_association_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: jump_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: jumpoints
+  type: string
+  description: Jumpoints. Free-form text; may contain whitespace and punctuation.
+  example: sample_jumpoints
+- name: jumppoint_associated_user_id
+  type: string_short
+  description: Destination user identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: jumppoint_associated_username
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: jumppoint_associated_vault_domain_name
+  type: domain
+  description: Destination domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: jumppoint_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: jumppoint_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: lsid
+  type: string
+  description: Lsid. Free-form text; may contain whitespace and punctuation.
+  example: sample_lsid
+- name: lsids
+  type: string
+  description: Network session ID. Free-form text; may contain whitespace and punctuation.
+  example: sample_lsids
+- name: meta_sequence_id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: netmask
+  type: ipv4
+  description: Destination subnet. Free-form text; may contain whitespace and punctuation.
+  example: 255.255.255.0
+- name: new_account_group_id
+  type: string_short
+  description: New account group id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: notice_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: notice_message
+  type: string
+  description: Alert description. Free-form text; may contain whitespace and punctuation.
+  example: Operation completed successfully.
+- name: notice_name1
+  type: string
+  description: Notice name1. Free-form text; may contain whitespace and punctuation.
+  example: sample_name1
+- name: notice_name2
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name2
+- name: ntp_server_ip
+  type: ipv4
+  description: Ntp server ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: object_description
+  type: string
+  description: Object description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by BeyondTrust.
+- name: operation
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: create
+- name: os
+  type: string
+  description: Destination host OS family. Free-form text; may contain whitespace
+    and punctuation.
+  example: Linux
+- name: password
+  type: string
+  description: Source user is password expired. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_password
+- name: permitted_ip_addresses
+  type: ipv4
+  description: Permitted ip addresses. Free-form text; may contain whitespace and
+    punctuation.
+  example: 192.0.2.45
+- name: permitted_ipv4_addresses
+  type: ipv4
+  description: Destination host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: permitted_ipv6_addresses
+  type: ipv6
+  description: Destination host IPv6 addresses. Colon-separated hexadecimal IPv6 literal
+    (RFC 4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: policy
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: Default-Policy
+- name: policy_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: policy_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: pool_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: pool_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: pool_type
+  type: string
+  description: Destination resource value. Free-form text; may contain whitespace
+    and punctuation.
+  example: authentication
+- name: private_ip
+  type: ipv4
+  description: Private ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: private_ipv4
+  type: ipv4
+  description: Destination host IPv4 addresses. Dotted-quad IPv4 literal (e.g., 192.0.2.45);
+    no port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: private_ipv6
+  type: ipv6
+  description: Destination host IPv6 addresses. Colon-separated hexadecimal IPv6 literal
+    (RFC 4291); no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: profile_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: profile_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: properties_new_state
+  type: string
+  description: Properties new state. Free-form text; may contain whitespace and punctuation.
+  example: CA
+- name: properties_old_state
+  type: string
+  description: Destination resource before value. Free-form text; may contain whitespace
+    and punctuation.
+  example: CA
+- name: public_ip
+  type: ipv4
+  description: Public ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: public_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: public_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: reason
+  type: string
+  description: Source user is disabled. Free-form text; may contain whitespace and
+    punctuation.
+  example: normal_operation
+- name: rep_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: rep_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: security_provider
+  type: string
+  description: Auth mfa provider. Free-form text; may contain whitespace and punctuation.
+  example: aws
+- name: security_provider_id
+  type: string_short
+  description: Security provider id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: security_provider_name
+  type: string
+  description: Security provider name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: site
+  type: host
+  description: Intermediate host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: site_address
+  type: ipv4
+  description: Site address. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: site_id
+  type: string_short
+  description: Observer unique identifier. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: site_name
+  type: string
+  description: Destination interface. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: source_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: source_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: sponser_group_user
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: sponsor_group_name
+  type: string
+  description: Destination user groups. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: sponsor_id
+  type: string_short
+  description: Destination user identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: ssl_ciphers
+  type: string
+  description: Network TLS cipher. Free-form text; may contain whitespace and punctuation.
+  example: sample_ciphers
+- name: start
+  type: string
+  description: Start. Free-form text; may contain whitespace and punctuation.
+  example: sample_start
+- name: start_timestamp
+  type: datetime
+  description: Start timestamp. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: status
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: success
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: support_team_id
+  type: integer_port
+  description: Destination user groups. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: support_team_id1
+  type: integer_port
+  description: Support team id1. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: support_team_id2
+  type: integer_port
+  description: Support team id2. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: support_team_name
+  type: integer_port
+  description: Support team name. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: support_team_name1
+  type: integer_port
+  description: Support team name1. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: support_team_name2
+  type: integer_port
+  description: Support team name2. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: support_user_id
+  type: integer_port
+  description: Destination user identifier. Unsigned integer 0-65535 representing
+    a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: support_user_name
+  type: integer_port
+  description: Destination user username. Unsigned integer 0-65535 representing a
+    TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: syslog_facility
+  type: string
+  description: Syslog facility. Free-form text; may contain whitespace and punctuation.
+  example: sample_facility
+- name: syslog_hostname
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: syslog_priority
+  type: string
+  description: Syslog priority. Free-form text; may contain whitespace and punctuation.
+  example: INFO
+- name: syslog_severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: system_name
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: target_computer_name
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: target_group
+  type: string
+  description: Destination user groups. Free-form text; may contain whitespace and
+    punctuation.
+  example: grp-b2e0bc36
+- name: target_interface
+  type: string
+  description: Logon type. Free-form text; may contain whitespace and punctuation.
+  example: eth0
+- name: target_resource_id
+  type: string_short
+  description: Destination resource ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: target_resource_name
+  type: string
+  description: Destination resource name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: target_resource_owner
+  type: string
+  description: Destination resource parent ID. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_owner
+- name: target_user_id
+  type: string_short
+  description: Destination user identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: target_username
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: team_id
+  type: string_short
+  description: Team id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: team_name
+  type: string
+  description: Destination user groups. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: template_id1
+  type: string
+  description: Template id1. Free-form text; may contain whitespace and punctuation.
+  example: sample_id1
+- name: template_id2
+  type: string
+  description: Template id2. Free-form text; may contain whitespace and punctuation.
+  example: sample_id2
+- name: template_name
+  type: string
+  description: Destination process name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: url
+  type: url
+  description: Destination URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: user_displayname
+  type: string
+  description: Destination user first name. Free-form text; may contain whitespace
+    and punctuation.
+  example: John Doe
+- name: user_error_description
+  type: string
+  description: Alert description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by BeyondTrust.
+- name: user_external_id
+  type: string_short
+  description: Destination user identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: user_first_name
+  type: string
+  description: Source user first name. Free-form text; may contain whitespace and
+    punctuation.
+  example: John
+- name: user_id
+  type: string_short
+  description: Destination user identifier. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: user_last_name
+  type: string
+  description: Source user last name. Free-form text; may contain whitespace and punctuation.
+  example: Doe
+- name: user_name
+  type: user
+  description: Auth privilege level. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: user_object
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: user_session_policy_name
+  type: string
+  description: User session policy name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: username
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: vault_rotated_account
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: who
+  type: string
+  description: Who. Free-form text; may contain whitespace and punctuation.
+  example: sample_who
+- name: who_ip
+  type: ipv4
+  description: Who ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: windows
+  type: string
+  description: Destination host OS family. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_windows
+use_cases:
+- PAM
+how_to_use: |
+  ## beyondtrust remote support → Cortex XSIAM (dataset `beyondtrust_remote_support_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `beyondtrust` / product `remote_support`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `beyondtrust_remote_support_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `beyondtrust`
+    - **product**: `remote_support`
+
+    These normalize → `beyondtrust_remote_support_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `event_type in("access_sponsor_group_added", "access_sponsor_group_changed", "access_sponsor_group_removed")` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~66 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.severity`, `xdm.alert.subcategory`, `xdm.auth.auth_method`, `xdm.auth.is_mfa_needed`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `beyondtrust`, Product = `remote_support`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = beyondtrust_remote_support_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

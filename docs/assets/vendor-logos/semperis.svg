@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 50" role="img" aria-label="Semperis">
+  <title>Semperis</title>
+  <!-- Stylized "S" mark on the left — flame/wave motif that echoes
+       Semperis' identity-recovery brand language -->
+  <g fill="#0F1934">
+    <path d="M 8 10
+             C 8 6, 12 4, 18 4
+             L 30 4
+             C 36 4, 40 7, 40 12
+             C 40 15, 38 17, 34 18
+             L 18 22
+             C 14 23, 12 25, 12 28
+             C 12 32, 16 34, 22 34
+             L 38 34
+             L 38 40
+             L 18 40
+             C 10 40, 6 36, 6 30
+             C 6 26, 9 24, 14 22
+             L 28 18
+             C 32 17, 34 16, 34 14
+             C 34 12, 32 10, 28 10
+             L 10 10
+             Z"/>
+    <!-- Wordmark: SEMPERIS — clean sans-serif geometric letters -->
+    <text x="56" y="33"
+          font-family="-apple-system, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+          font-size="26"
+          font-weight="700"
+          letter-spacing="0.8"
+          fill="#0F1934">SEMPERIS</text>
+  </g>
+</svg>

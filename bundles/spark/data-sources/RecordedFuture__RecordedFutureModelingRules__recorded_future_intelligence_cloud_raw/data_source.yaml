@@ -1,0 +1,134 @@
+schema_version: 1
+id: RecordedFuture
+pack_name: RecordedFuture
+rule_name: RecordedFutureModelingRules
+dataset_name: recorded_future_intelligence_cloud_raw
+vendor: Recorded Future
+product: RecordedFuture
+description: Recorded Future App, this pack is previously known as 'RecordedFuture
+  v2'
+categories:
+- Data Enrichment & Threat Intelligence
+version: 1.8.11
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNzAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNDRjIwMkUiPlJlY29yZGVkIEZ1dHVyZTwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: ai_insights
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: text (each
+    key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: hits
+  type: string
+  description: Vendor-emitted field 'Hits'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_hits
+- name: id
+  type: string_short
+  description: Opaque identifier emitted by Recorded Future. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: rec-09ea116f
+- name: rule
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: id, name,
+    url (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: title
+  type: string
+  description: Title/headline of the event or item. Free-form text; may contain whitespace
+    and punctuation.
+  example: Sample subject line
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by Recorded Future. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: url
+  type: url
+  description: Full URL with scheme — as Recorded Future captured it. Full URL with
+    scheme (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path?q=1
+- name: ai_insights.text
+  type: string
+  description: Vendor-emitted field 'Ai insights › text'. Leaf of the 'ai_insights'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_text
+- name: rule.id
+  type: string_short
+  description: Opaque identifier emitted by Recorded Future. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: rec-846e7115
+- name: rule.name
+  type: string
+  description: Human-readable name as displayed by Recorded Future. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: rule.url.portal
+  type: string
+  description: Vendor-emitted field 'Rule › url › portal'. Leaf of the 'rule' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: '443'
+use_cases:
+- ThreatIntel
+how_to_use: |
+  ## Recorded Future RecordedFuture → Cortex XSIAM (dataset `recorded_future_intelligence_cloud_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `recorded_future_intelligence_cloud_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `recorded_future_intelligence_cloud`. The marketplace pack's display name `Recorded Future` / `RecordedFuture` normalizes to `recorded_future_recordedfuture_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `recorded_future_intelligence_cloud` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `rule -> name`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~8 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.risks`, `xdm.alert.subcategory`, `xdm.event.description`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = recorded_future_intelligence_cloud_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

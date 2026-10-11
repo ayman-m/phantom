@@ -1,0 +1,313 @@
+"""Provider CRUD HTTP endpoints — parallel to api/instances.py.
+
+Model providers have the same
+configuration lifecycle as tool connectors. This module exposes
+the same endpoints, just against `/api/v1/providers` and
+the `ProviderStore`.
+
+  GET    /api/v1/providers                  → list all provider instances
+  GET    /api/v1/providers?provider_id=X    → list instances for a provider
+  POST   /api/v1/providers                  → create one instance
+  GET    /api/v1/providers/{instance_id}    → fetch one
+  DELETE /api/v1/providers/{instance_id}    → delete one
+  GET    /api/v1/models                     → active model catalog
+                                              (union across configured providers;
+                                              what modelRequirements resolves against)
+"""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+from api.auth import require_bearer, require_loopback_for_secrets
+from usecase.audit_log import reset_current_actor, set_current_actor
+from usecase.provider_loader import list_active_models
+from usecase.provider_store import ProviderInstance, ProviderStore
+
+logger = logging.getLogger("Phantom MCP")
+
+
+def _instance_to_dict(
+    inst: ProviderInstance,
+    *,
+    redact_secrets: bool = True,
+    secret_store: Any | None = None,
+) -> dict[str, Any]:
+    """Serialize a ProviderInstance for an HTTP response.
+
+    redact_secrets=True (default): every secret slot is returned as
+        the literal "***" sentinel. Used by the list endpoint and the
+        non-cleartext detail endpoint — the wire never carries the
+        actual secret value.
+
+    redact_secrets=False, secret_store=None: returns the raw
+        secret_refs dict (SecretStore paths or inline values). NOT
+        what callers asking for cleartext want — paths look like
+        absolute filesystem paths and consumers typically interpret
+        them that way.
+
+    redact_secrets=False, secret_store=<store>: resolves each
+        secret_refs path against the SecretStore and returns the
+        cleartext values. This is the path the agent's chat-handler
+        Vertex resolver hits via ?include_secrets=true.
+
+    On the include_secrets path `secrets` must carry resolved values, not
+    secret_refs: returning the SecretStore path string (e.g.
+    /agents/phantom/providers/<id>/serviceAccountJson) would make the chat
+    handler's file-path-vs-JSON detector treat it as a file path → ENOENT
+    on every chat dispatch.
+    """
+    if redact_secrets:
+        secrets_out: dict[str, Any] = {k: "***" for k in inst.secret_refs}
+    elif secret_store is not None:
+        secrets_out = {}
+        for slot, ref_or_value in inst.secret_refs.items():
+            if isinstance(ref_or_value, str) and ref_or_value.startswith("/"):
+                try:
+                    secrets_out[slot] = secret_store.read(ref_or_value)
+                except Exception as exc:
+                    logger.warning(
+                        "ProviderInstance %s/%s: include_secrets resolve "
+                        "failed for slot %s at %s (%s)",
+                        inst.provider_id, inst.name, slot, ref_or_value, exc,
+                    )
+                    secrets_out[slot] = ""
+            else:
+                # Inline value (legacy or non-SecretStore-backed) — pass through.
+                secrets_out[slot] = ref_or_value
+    else:
+        secrets_out = dict(inst.secret_refs)
+    return {
+        "id": inst.id,
+        "provider_id": inst.provider_id,
+        "name": inst.name,
+        "config": inst.config,
+        "secrets": secrets_out,
+        "created_at": inst.created_at,
+    }
+
+
+def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
+    """Register /api/v1/providers/* + /api/v1/models routes."""
+
+    @mcp.custom_route("/api/v1/providers", methods=["GET"], include_in_schema=False)
+    async def list_provider_instances(request: Request) -> JSONResponse:
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        provider_id = request.query_params.get("provider_id")
+        if provider_id:
+            instances = store.list_for(provider_id)
+        else:
+            instances = store.list_all()
+        return JSONResponse(
+            {"instances": [_instance_to_dict(i) for i in instances]}
+        )
+
+    @mcp.custom_route("/api/v1/providers", methods=["POST"], include_in_schema=False)
+    async def create_provider_instance(request: Request) -> JSONResponse:
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        actor_token = set_current_actor("user:operator")
+        try:
+            try:
+                body = await request.json()
+            except Exception as exc:
+                return JSONResponse({"error": f"invalid JSON body: {exc}"}, status_code=400)
+            if not isinstance(body, dict):
+                return JSONResponse({"error": "body must be a JSON object"}, status_code=400)
+
+            provider_id = body.get("provider_id")
+            name = body.get("name")
+            config_in = body.get("config") or {}
+            secrets_in = body.get("secrets") or {}
+
+            if not isinstance(provider_id, str) or not provider_id:
+                return JSONResponse({"error": "provider_id is required (string)"}, status_code=400)
+            if not isinstance(name, str) or not name:
+                return JSONResponse({"error": "name is required (string)"}, status_code=400)
+            if not isinstance(config_in, dict) or not isinstance(secrets_in, dict):
+                return JSONResponse(
+                    {"error": "config and secrets must be JSON objects"}, status_code=400
+                )
+
+            try:
+                instance = store.create(provider_id, name, config_in, secrets_in)
+            except ValueError as exc:
+                return JSONResponse({"error": str(exc)}, status_code=409)
+
+            logger.info(
+                "Created provider instance via API: provider_id=%s name=%s id=%s",
+                provider_id, name, instance.id,
+            )
+            return JSONResponse(
+                {
+                    "instance": _instance_to_dict(instance),
+                    "requires_mcp_restart": True,
+                },
+                status_code=201,
+            )
+        finally:
+            reset_current_actor(actor_token)
+
+    @mcp.custom_route(
+        "/api/v1/providers/{instance_id}",
+        methods=["GET"],
+        include_in_schema=False,
+    )
+    async def get_provider_instance(request: Request) -> JSONResponse:
+        """Return one provider instance.
+
+        Query param `include_secrets=true` returns secrets in cleartext.
+        Bearer-auth gated, so only callers with MCP_TOKEN reach this
+        path; in practice that's the agent's own server-side code
+        (chat handler, runtime-config resolution). Without the param,
+        secrets are returned redacted as "***" — same shape the list
+        endpoint uses.
+
+        The include_secrets opt-in lets the agent's runtime-config
+        populate GOOGLE_APPLICATION_CREDENTIALS directly from the
+        ProviderStore on each chat dispatch (see
+        /help/architecture#setup-wiring).
+        """
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        instance_id = request.path_params["instance_id"]
+        if (resp := require_loopback_for_secrets(request)) is not None:
+            return resp
+        include_secrets = (
+            request.query_params.get("include_secrets", "").lower() == "true"
+        )
+        instance = store.get(instance_id)
+        if instance is None:
+            return JSONResponse({"error": "not found"}, status_code=404)
+        return JSONResponse(
+            {
+                "instance": _instance_to_dict(
+                    instance,
+                    redact_secrets=not include_secrets,
+                    # When the caller asked for cleartext, resolve secret_refs
+                    # to actual values via the SecretStore. Without this the
+                    # caller would receive the SecretStore PATHS (which look
+                    # like /agents/phantom/providers/<id>/<slot>) and code
+                    # paths like the chat handler's parseCredentialsInput
+                    # would treat them as file paths → ENOENT.
+                    secret_store=store._secret_store if include_secrets else None,
+                ),
+            }
+        )
+
+    @mcp.custom_route(
+        "/api/v1/providers/{instance_id}",
+        methods=["PUT"],
+        include_in_schema=False,
+    )
+    async def update_provider_instance(request: Request) -> JSONResponse:
+        """Partial update of an existing provider instance.
+
+        Body:
+          { "name"?: str, "config"?: object, "secrets"?: object }
+
+        Lets the agent's /providers page write directly to the
+        ProviderStore. Mirrors the PATCH semantics on /api/v1/instances/{id}: any
+        omitted field leaves the stored value alone, and a secret
+        slot with value "***" is treated as the redaction sentinel
+        meaning "keep the stored secret as-is."
+        """
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        actor_token = set_current_actor("user:operator")
+        try:
+            instance_id = request.path_params["instance_id"]
+            try:
+                body = await request.json()
+            except Exception as exc:
+                return JSONResponse(
+                    {"error": f"invalid JSON body: {exc}"}, status_code=400
+                )
+            if not isinstance(body, dict):
+                return JSONResponse(
+                    {"error": "body must be a JSON object"}, status_code=400
+                )
+
+            name = body.get("name")
+            config_in = body.get("config")
+            secrets_in = body.get("secrets")
+            if name is not None and not isinstance(name, str):
+                return JSONResponse({"error": "name must be a string"}, status_code=400)
+            if config_in is not None and not isinstance(config_in, dict):
+                return JSONResponse({"error": "config must be a JSON object"}, status_code=400)
+            if secrets_in is not None and not isinstance(secrets_in, dict):
+                return JSONResponse({"error": "secrets must be a JSON object"}, status_code=400)
+
+            updated = store.update(
+                instance_id,
+                name=name,
+                config=config_in,
+                secrets=secrets_in,
+            )
+            if updated is None:
+                return JSONResponse({"error": "not found"}, status_code=404)
+
+            logger.info(
+                "Updated provider instance via API: id=%s provider_id=%s",
+                updated.id, updated.provider_id,
+            )
+            return JSONResponse({"instance": _instance_to_dict(updated)})
+        finally:
+            reset_current_actor(actor_token)
+
+    @mcp.custom_route(
+        "/api/v1/providers/{instance_id}",
+        methods=["DELETE"],
+        include_in_schema=False,
+    )
+    async def delete_provider_instance(request: Request) -> JSONResponse:
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        actor_token = set_current_actor("user:operator")
+        try:
+            instance_id = request.path_params["instance_id"]
+            deleted = store.delete(instance_id)
+            if not deleted:
+                return JSONResponse({"error": "not found"}, status_code=404)
+            logger.info("Deleted provider instance via API: id=%s", instance_id)
+            return JSONResponse(
+                {"deleted": True, "id": instance_id, "requires_mcp_restart": True}
+            )
+        finally:
+            reset_current_actor(actor_token)
+
+    @mcp.custom_route("/api/v1/models", methods=["GET"], include_in_schema=False)
+    async def list_models(request: Request) -> JSONResponse:
+        """Return the active model catalog — union across configured providers.
+
+        This is what the agent's `modelRequirements:` resolver picks
+        from. Empty when no providers are configured. Used by the
+        Next.js agent's settings-page model picker (later) and by
+        anything else that needs to know which models are available.
+        """
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        models = list_active_models(store=store)
+        return JSONResponse(
+            {
+                "models": [
+                    {
+                        "provider_id": m.provider_id,
+                        "instance_name": m.instance_name,
+                        "id": m.model_id,
+                        "family": m.family,
+                        "kind": m.kind,
+                        "context_window": m.context_window,
+                        "supports": m.supports,
+                        **m.extra,
+                    }
+                    for m in models
+                ]
+            }
+        )

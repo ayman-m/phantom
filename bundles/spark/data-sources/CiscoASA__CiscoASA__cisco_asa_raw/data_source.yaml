@@ -1,0 +1,459 @@
+schema_version: 1
+id: CiscoASA
+pack_name: CiscoASA
+rule_name: CiscoASA
+dataset_name: cisco_asa_raw
+vendor: Cisco
+product: CiscoASA
+description: Cisco Adaptive Security Appliance Software is the core operating system
+  for the Cisco ASA Family. It delivers enterprise-class firewall capabilities for
+  ASA devices.
+categories:
+- Network Security
+version: 2.0.3
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+Q2lzY288L3RpdGxlPjxwYXRoIGQ9Ik0xNi4zMzEgMTguMTcxVjE3LjA2bC0uMDIyLjAxYy0uMjUuMTIxLS41MjIuMTktLjgwMS4yMDNhMS4xODYgMS4xODYgMCAwMS0uODA2LS4yMzcgMS4wMzggMS4wMzggMCAwMS0uMzUyLS40OTggMS4yMSAxLjIxIDAgMDEtLjAyMy0uNjY3Yy4wNTItLjIyNS4xNzgtLjQyNi4zNTctLjU2OS4xNi0uMTM0LjM1NS0uMjE4LjU2Mi0uMjQyYTEuODUgMS44NSAwIDAxMS4wNjEuMTk4bC4wMjQuMDEzdi0xLjExN2wtLjA1MS0uMDE0YTIuODYyIDIuODYyIDAgMDAtMS4wMTEtLjEzMiAyLjM0IDIuMzQgMCAwMC0uOTAzLjIwNmMtLjI4Ny4xMzItLjU0LjMyNy0uNzM5LjU3MWEyLjIyMSAyLjIyMSAwIDAwLS4wNCAyLjcwNWMuMjk1LjM3OC43MDkuNjQ1IDEuMTc1Ljc1Ni40OTEuMTIgMS4wMDYuMTAyIDEuNDg3LS4wNTJsLjA4Mi0uMDIzTTUuMzM2IDE4LjE3MVYxNy4wNmwtLjAyMi4wMWMtLjI1LjEyMS0uNTIyLjE5LS44MDEuMjAzYTEuMTgzIDEuMTgzIDAgMDEtLjgwNi0uMjM3IDEuMDMgMS4wMyAwIDAxLS4zNTEtLjQ5OCAxLjIwMiAxLjIwMiAwIDAxLS4wMjQtLjY2N2MuMDUyLS4yMjUuMTc3LS40MjYuMzU3LS41NjkuMTYtLjEzNC4zNTUtLjIxOC41NjItLjI0MmExLjg1IDEuODUgMCAwMTEuMDYxLjE5OGwuMDI0LjAxM3YtMS4xMTdsLS4wNTEtLjAxNGEyLjg2MiAyLjg2MiAwIDAwLTEuMDExLS4xMzIgMi4zNDQgMi4zNDQgMCAwMC0uOTAzLjIwNiAyLjA4IDIuMDggMCAwMC0uNzQuNTcxIDIuMjI0IDIuMjI0IDAgMDAtLjA0MSAyLjcwNSAyLjExIDIuMTEgMCAwMDEuMTc2Ljc1NmMuNDkxLjEyIDEuMDA1LjEwMiAxLjQ4Ny0uMDUybC4wODMtLjAyM005LjI2IDE3LjI0OWwtLjAwNC45NTcuMDcuMDEyYy4yMi4wNDEuNDQxLjA2OS42NjQuMDg1LjE5NS4wMTkuMzkxLjAyMi41ODcuMDEyLjE4Ny0uMDE0LjM3Mi0uMDQ5LjU1MS0uMTA0LjIxLS4wNi40MDUtLjE2My41NzEtLjMwNWExLjE2IDEuMTYgMCAwMC4zMzMtLjQ3OCAxLjMxIDEuMzEgMCAwMC0uMDA3LS45NiAxLjA2OCAxLjA2OCAwIDAwLS4yOTgtLjQxNCAxLjI2MSAxLjI2MSAwIDAwLS40MzgtLjI1NWwtLjcyMi0uMjY4YS4zODguMzg4IDAgMDEtLjE5Ny0uMTg4LjI0NS4yNDUgMCAwMS4wMDgtLjIxOS4zODIuMzgyIDAgMDEuMTU0LS4xNDIuNzk4Ljc5OCAwIDAxLjI1Ny0uMDc0Yy4xNTMtLjAyMi4zMDgtLjAyMS40Ni4wMDUuMTguMDIuMzU4LjA1MS41MzMuMDk2bC4wMzguMDA4di0uODgzbC0uMDY5LS4wMTVhNC43NDkgNC43NDkgMCAwMC0uNTQzLS4wOTcgMi44NDQgMi44NDQgMCAwMC0uNzE0LS4wMDNjLS4zLjAyNy0uNTg1LjE0My0uODIxLjMzLS4xNi4xMjYtLjI4MS4yOTMtLjM1MS40ODQtLjEwNC4yOS0uMTA1LjYwOCAwIC44OTkuMDU0LjE0NS4xNC4yNzQuMjUyLjM4MS4wOTcuMDkzLjIwNy4xNzMuMzI3LjIzNi4xNTcuMDg0LjMyNC4xNDkuNDk3LjE5NS4wNTcuMDE3LjExNC4wMzUuMTcuMDU0bC4wODUuMDMxLjAyNC4wMWMuMDg0LjAzLjE2Mi4wNzguMjI2LjE0LjA0NS4wNDIuMDguMDk0LjEwMS4xNTFhLjMyNS4zMjUgMCAwMS4wMDEuMTYxLjMzOS4zMzkgMCAwMS0uMTY2LjE5OC44NTYuODU2IDAgMDEtLjI3NS4wODYgMi4wMzIgMi4wMzIgMCAwMS0uNDI3LjAyMSA1LjIwOCA1LjIwOCAwIDAxLS41NTctLjA3NCA5LjE5NSA5LjE5NSAwIDAxLS4yODctLjA2N2wtLjAzMy0uMDA2em0tMi40NzUuOTk1aDEuMDV2LTQuMTY3aC0xLjA1djQuMTY3em0xMi4xNjItMi45MzZhMS4wOTUgMS4wOTUgMCAwMTEuNTQxLjE1OCAxLjA5NCAxLjA5NCAwIDAxLS4xNTcgMS41NDFsLS4wMTcuMDE0YTEuMDk2IDEuMDk2IDAgMDEtMS4zNjctMS43MTNtLTEuNTI1Ljg1NGEyLjE5MyAyLjE5MyAwIDAwMi42NjYgMi4xMDcgMi4xMzkgMi4xMzkgMCAwMC43MDEtMy45MzcgMi4yMDcgMi4yMDcgMCAwMC0zLjM2NyAxLjgzTTIyLjk2MSAxMC43MjhhLjUyLjUyIDAgMDAxLjAzOSAwVjkuNTczYS41Mi41MiAwIDAwLTEuMDM5IDB2MS4xNTVNMjAuMTE3IDEwLjcyOGEuNTIyLjUyMiAwIDAwMS4wNDEgMFY4LjEzOWEuNTIxLjUyMSAwIDAwLTEuMDQgMHYyLjU4OU0xNy4yMzEgMTEuNzcxYS41MjEuNTIxIDAgMDAxLjAzOSAwVjYuMTdhLjUyLjUyIDAgMDAtMS4wMzkgMHY1LjYwMU0xNC4zOTMgMTAuNzI4YS41MjEuNTIxIDAgMDAxLjA0IDBWOC4xMzlhLjUyLjUyIDAgMDAtMS4wMzkgMHYyLjU4OU0xMS40OTQgMTAuNzI4YS41MjIuNTIyIDAgMDAxLjAzOSAwVjkuNTczYS41Mi41MiAwIDAwLTEuMDM5IDB2MS4xNTVNOC42MjQgMTAuNzI4YS41Mi41MiAwIDAwMS4wMzkgMFY4LjEzOWEuNTIuNTIgMCAwMC0xLjAzOSAwdjIuNTg5TTUuNzM3IDExLjc3MWEuNTIuNTIgMCAwMDEuMDM5IDBWNi4xN2EuNTIuNTIgMCAwMC0xLjAzOSAwdjUuNjAxTTIuODc2IDEwLjcyOGEuNTIyLjUyMiAwIDAwMS4wNCAwVjguMTM5YS41Mi41MiAwIDAwLTEuMDM5IDB2Mi41ODlNMCAxMC43MjhhLjUyMS41MjEgMCAwMDEuMDM5IDBWOS41NzNhLjUyLjUyIDAgMDAtMS4wMzkgMHYxLjE1NSIvPjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _json
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: device,
+    generalCiscoLog, logType, severity (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: _raw_log
+  type: string
+  description: 'Native cisco_asa log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: ASA message 302013 (Built outbound TCP connection), the canonical flow event. The parsing rule runs parse_cisco(_raw_log) and reads `_json -> date`, so the ASA-format timestamp must be present -- hence the leading {{now:'
+  example: '{{now:%b %d %Y %H:%M:%S}}: %ASA-6-302013: Built outbound TCP connection 148293 for outside:203.0.113.45/443 (203.0.113.45/443) to inside:10.14.22.87/54321 (10.14.22.87/54321)'
+- name: _json.device
+  type: string
+  description: Vendor-emitted field ' json › device'. Leaf of the '_json' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_device
+- name: _json.generalCiscoLog.action
+  type: string_short
+  description: Action taken by Cisco's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: _json.generalCiscoLog.application
+  type: string_short
+  description: Application name emitted by Cisco. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token_value
+- name: _json.generalCiscoLog.application_protocol
+  type: string
+  description: Vendor-emitted field ' json › generalCiscoLog › application protocol'.
+    Leaf of the '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: _json.generalCiscoLog.command
+  type: string
+  description: Vendor-emitted field ' json › generalCiscoLog › command'. Leaf of the
+    '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: _json.generalCiscoLog.destination_hostname
+  type: host
+  description: Destination hostname or FQDN. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: _json.generalCiscoLog.directory
+  type: string
+  description: Vendor-emitted field ' json › generalCiscoLog › directory'. Leaf of
+    the '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_directory
+- name: _json.generalCiscoLog.domain
+  type: domain
+  description: DNS domain reported by Cisco — bare domain, no scheme/path/port. Bare
+    DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: _json.generalCiscoLog.dst_fwuser
+  type: user
+  description: Vendor-emitted field ' json › generalCiscoLog › dst fwuser'. Leaf of
+    the '_json' composite. Account name as the vendor reports it — login name, UPN,
+    or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jsmith
+- name: _json.generalCiscoLog.dst_interface
+  type: string
+  description: Vendor-emitted field ' json › generalCiscoLog › dst interface'. Leaf
+    of the '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: eth0
+- name: _json.generalCiscoLog.dst_ip
+  type: ipv4
+  description: Destination IPv4/IPv6 address of the target. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: _json.generalCiscoLog.dst_mac_address
+  type: mac
+  description: Vendor-emitted field ' json › generalCiscoLog › dst mac address'. Leaf
+    of the '_json' composite. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: _json.generalCiscoLog.dst_port
+  type: integer_port
+  description: TCP/UDP destination port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: _json.generalCiscoLog.duration
+  type: integer
+  description: Vendor-emitted field ' json › generalCiscoLog › duration'. Signed decimal
+    integer; bare digits, optional leading minus.
+  example: '42'
+- name: _json.generalCiscoLog.error_code
+  type: integer
+  description: Vendor-emitted field ' json › generalCiscoLog › error code'. Leaf of
+    the '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: '200'
+- name: _json.generalCiscoLog.file
+  type: file_path
+  description: Vendor-emitted field ' json › generalCiscoLog › file'. Leaf of the
+    '_json' composite. Absolute filesystem path; vendor-native separator (forward
+    slash on POSIX, backslash on Windows).
+  example: /var/log/example.log
+- name: _json.generalCiscoLog.global_ip
+  type: ipv4
+  description: Vendor-emitted field ' json › generalCiscoLog › global ip'. Leaf of
+    the '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: _json.generalCiscoLog.global_port
+  type: integer_port
+  description: TCP/UDP port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: _json.generalCiscoLog.group
+  type: string
+  description: Vendor-emitted field ' json › generalCiscoLog › group'. Leaf of the
+    '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: grp-bd41aeaf
+- name: _json.generalCiscoLog.icmp_code
+  type: integer
+  description: Vendor-emitted field ' json › generalCiscoLog › icmp code'. Leaf of
+    the '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: '200'
+- name: _json.generalCiscoLog.icmp_type
+  type: string_short
+  description: Type/category classifier emitted by Cisco. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: _json.generalCiscoLog.operation
+  type: string
+  description: Vendor-emitted field ' json › generalCiscoLog › operation'. Leaf of
+    the '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: create
+- name: _json.generalCiscoLog.outcome
+  type: string_short
+  description: Event outcome (success/failure/partial) as reported by Cisco. Short
+    opaque token, typically without whitespace; max ~64 chars.
+  example: success
+- name: _json.generalCiscoLog.policy_name
+  type: string
+  description: Human-readable name as displayed by Cisco. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: _json.generalCiscoLog.process
+  type: string
+  description: Vendor-emitted field ' json › generalCiscoLog › process'. Leaf of the
+    '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: explorer.exe
+- name: _json.generalCiscoLog.protocol
+  type: string
+  description: Vendor-emitted field ' json › generalCiscoLog › protocol'. Leaf of
+    the '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: _json.generalCiscoLog.reason
+  type: string
+  description: Reason/explanation accompanying the action or outcome. Free-form text;
+    may contain whitespace and punctuation.
+  example: normal_operation
+- name: _json.generalCiscoLog.received_bytes
+  type: integer_byte_count
+  description: Byte count. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: _json.generalCiscoLog.sent_bytes
+  type: integer_byte_count
+  description: Byte count. Unsigned decimal byte count; bare digits, no unit suffix.
+  example: '1024'
+- name: _json.generalCiscoLog.session_id
+  type: string_short
+  description: Opaque identifier emitted by Cisco. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: sess-6f5157a9-e3a
+- name: _json.generalCiscoLog.src_fwuser
+  type: user
+  description: Vendor-emitted field ' json › generalCiscoLog › src fwuser'. Leaf of
+    the '_json' composite. Account name as the vendor reports it — login name, UPN,
+    or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jsmith
+- name: _json.generalCiscoLog.src_interface
+  type: string
+  description: Vendor-emitted field ' json › generalCiscoLog › src interface'. Leaf
+    of the '_json' composite. Free-form text; may contain whitespace and punctuation.
+  example: eth0
+- name: _json.generalCiscoLog.src_ip
+  type: ipv4
+  description: Source IPv4/IPv6 address of the initiator. Free-form text; may contain
+    whitespace and punctuation.
+  example: 192.0.2.45
+- name: _json.generalCiscoLog.src_mac_address
+  type: mac
+  description: Vendor-emitted field ' json › generalCiscoLog › src mac address'. Leaf
+    of the '_json' composite. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: _json.generalCiscoLog.src_port
+  type: integer_port
+  description: TCP/UDP source port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: _json.generalCiscoLog.threat_category
+  type: string_short
+  description: Cisco's category classifier for the event. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: access_control
+- name: _json.generalCiscoLog.threat_level
+  type: string_short
+  description: Severity level (string label, e.g., info/warn/error). Short opaque
+    token, typically without whitespace; max ~64 chars.
+  example: info
+- name: _json.generalCiscoLog.url
+  type: url
+  description: Full URL with scheme — as Cisco captured it. Full URL with scheme (http/https/ftp);
+    percent-encoded if non-ASCII.
+  example: https://example.com/path
+- name: _json.generalCiscoLog.user
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: _json.generalCiscoLog.vpn_user
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName; no domain prefix unless vendor
+    emits one.
+  example: jsmith
+- name: _json.logType
+  type: string
+  description: Event type or category as the vendor classifies it. Leaf of the '_json'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_logtype
+- name: _json.severity
+  type: string_short
+  description: Event severity as classified by Cisco. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: INFO
+- name: acl_name
+  type: string_short
+  description: ACL name matched. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: action
+  type: enum
+  description: 'ACL action. One of: permitted, denied, built, teardown, dropped, deleted
+    (case-sensitive).'
+  enum_values:
+  - permitted
+  - denied
+  - built
+  - teardown
+  - dropped
+  - deleted
+  example: permitted
+- name: bytes
+  type: integer_byte_count
+  description: Bytes for the connection. Unsigned decimal byte count; bare digits,
+    no unit suffix.
+  example: '1024'
+- name: client_type
+  type: string_short
+  description: VPN client type. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: connection_id
+  type: string_short
+  description: ASA connection id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: dst_interface
+  type: string_short
+  description: Destination interface name. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: dst_ip
+  type: ipv4
+  description: Destination IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: dst_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: duration
+  type: string_short
+  description: Connection duration (HH:MM:SS). Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: token
+- name: facility
+  type: integer
+  description: Syslog facility (16=local0 typical). Signed decimal integer; bare digits,
+    optional leading minus.
+  example: '42'
+- name: group
+  type: string_short
+  description: AAA group. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: hostname
+  type: host
+  description: ASA device hostname. Hostname or fully-qualified domain name (RFC 1035
+    dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: msg
+  type: string_long
+  description: Free-text log message. Free-form text; may span multiple lines or contain
+    large payloads.
+  example: Free-form vendor-emitted message describing the event.
+- name: msg_id
+  type: integer
+  description: ASA message id. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: '302013'
+- name: natted_ip
+  type: ipv4
+  description: NAT translated IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: natted_port
+  type: integer_port
+  description: NAT translated port. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: protocol
+  type: string_short
+  description: IP protocol (TCP/UDP/ICMP). Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: severity
+  type: enum
+  description: 'Syslog severity (0-7). One of: 0, 1, 2, 3, 4, 5, 6, 7 (case-sensitive).'
+  enum_values:
+  - '0'
+  - '1'
+  - '2'
+  - '3'
+  - '4'
+  - '5'
+  - '6'
+  - '7'
+  example: '0'
+- name: src_interface
+  type: string_short
+  description: Source interface name. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: src_ip
+  type: ipv4
+  description: Source IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_port
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: timestamp
+  type: datetime
+  description: Syslog timestamp. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: user
+  type: user
+  description: AAA user (when applicable). Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jdoe
+- name: vpn_session_id
+  type: string_short
+  description: VPN session id. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+use_cases:
+- Network
+- Firewall
+- EDR
+validated: true
+how_to_use: |
+  ## cisco asa → Cortex XSIAM (dataset `cisco_asa_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `cisco` / product `asa`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `cisco_asa_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `cisco`
+    - **product**: `asa`
+
+    These normalize → `cisco_asa_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `_json -> generalCiscoLog.protocol`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~43 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.category`, `xdm.alert.severity`, `xdm.event.description`, `xdm.event.duration`, `xdm.event.log_level`, `xdm.event.operation`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `cisco`, Product = `asa`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = cisco_asa_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

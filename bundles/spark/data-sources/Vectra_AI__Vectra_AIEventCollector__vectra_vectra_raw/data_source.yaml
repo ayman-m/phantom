@@ -1,0 +1,281 @@
+schema_version: 1
+id: Vectra_AI
+pack_name: Vectra_AI
+rule_name: Vectra_AIEventCollector
+dataset_name: vectra_vectra_raw
+vendor: Vectra AI
+product: Vectra_AI
+description: This content pack allows to create incidents based on Vectra Accounts/Hosts/Detections
+  objects.
+categories:
+- Network Security
+version: 2.1.3
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNjIgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMxNjc3OTMiPlZlY3RyYSBBSTwvdGV4dD48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: category
+  type: enum
+  description: 'Detection category. One of: RECONNAISSANCE, LATERAL_MOVEMENT, COMMAND_AND_CONTROL,
+    EXFILTRATION, BOTNET_ACTIVITY, INFO (case-sensitive).'
+  example: RECONNAISSANCE
+  enum_values:
+  - RECONNAISSANCE
+  - LATERAL_MOVEMENT
+  - COMMAND_AND_CONTROL
+  - EXFILTRATION
+  - BOTNET_ACTIVITY
+  - INFO
+- name: description
+  type: string_long
+  description: Free-form human-readable description from Vectra AI. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Vectra AI.
+- name: detection_type
+  type: string
+  description: Detection type name. Free-form text; may contain whitespace and punctuation.
+  example: authentication
+- name: dvchost
+  type: host
+  description: Vendor-emitted field 'Dvchost'. Hostname or fully-qualified domain
+    name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: headend_addr
+  type: ipv4
+  description: Vendor-emitted field 'Headend addr'. Dotted-quad IPv4 literal (e.g.,
+    192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: id
+  type: string_short
+  description: Detection id. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: message
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: Operation completed successfully.
+- name: result
+  type: string_short
+  description: Result string emitted by Vectra AI. Short opaque token, typically without
+    whitespace; max ~64 chars.
+  example: success
+- name: role
+  type: string
+  description: Vendor-emitted field 'Role'. Free-form text; may contain whitespace
+    and punctuation.
+  example: Admin
+- name: source_ip
+  type: ipv4
+  description: Source address of the connection initiator. Dotted-quad IPv4 literal
+    (e.g., 192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: src_host
+  type: json
+  description: Source host (if resolved). JSON object or array; structured payload
+    — see dotted-path leaves below.
+  example: '{}'
+- name: src_ip
+  type: ipv4
+  description: Source IP. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: state
+  type: enum
+  description: 'Detection state. One of: active, inactive, ignored, ignored_for_all,
+    fixed (case-sensitive).'
+  example: active
+  enum_values:
+  - active
+  - inactive
+  - ignored
+  - ignored_for_all
+  - fixed
+- name: summary
+  type: json
+  description: Detection summary blob. JSON object or array; structured payload —
+    see dotted-path leaves below.
+  example: Event recorded by Vectra AI.
+- name: tags
+  type: string
+  description: Tags applied. Free-form text; may contain whitespace and punctuation.
+  example: sample_tags
+- name: threat
+  type: integer
+  description: Threat score 0-100. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: user
+  type: user
+  description: User account associated with the event. Account name as the vendor
+    reports it — login name, UPN, or sAMAccountName depending on the source; no domain
+    prefix unless the vendor emits one.
+  example: jsmith
+- name: version
+  type: string_short
+  description: Version string of the emitting component. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: 1.0.0
+- name: src_host.id
+  type: string
+  description: Source hostname or FQDN reported by the vendor. Leaf of the 'src_host'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: vec-d7e24c1a
+- name: src_host.name
+  type: host
+  description: Source hostname or FQDN reported by the vendor. Leaf of the 'src_host'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: summary.description
+  type: string_long
+  description: Free-form human-readable description from Vectra AI. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Event recorded by Vectra AI.
+- name: certainty
+  type: integer
+  description: Certainty score 0-100. Signed decimal integer; bare digits, optional
+    leading minus.
+  example: '42'
+- name: filtered_by_ai
+  type: boolean
+  description: Filtered by AI triage. Literal 'true' or 'false' (case-insensitive);
+    not '1'/'0'.
+  example: 'true'
+- name: filtered_by_rule
+  type: boolean
+  description: Filtered by a rule. Literal 'true' or 'false' (case-insensitive); not
+    '1'/'0'.
+  example: 'true'
+- name: filtered_by_user
+  type: boolean
+  description: Filtered by an operator rule. Literal 'true' or 'false' (case-insensitive);
+    not '1'/'0'.
+  example: 'true'
+- name: first_timestamp
+  type: datetime
+  description: First seen. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: grouped_details
+  type: json
+  is_array: true
+  description: Grouped detection details. JSON object or array; structured payload
+    — see dotted-path leaves below.
+  example: '{}'
+- name: is_marked_custom
+  type: boolean
+  description: Custom-marked. Literal 'true' or 'false' (case-insensitive); not '1'/'0'.
+  example: 'true'
+- name: is_targeting_key_asset
+  type: boolean
+  description: Targeting key asset (alias). Literal 'true' or 'false' (case-insensitive);
+    not '1'/'0'.
+  example: 'true'
+- name: last_timestamp
+  type: datetime
+  description: Last seen. ISO-8601 timestamp with timezone (e.g., 2026-05-26T14:23:01Z).
+  example: '2026-05-26T14:23:01Z'
+- name: mitre_id
+  type: string
+  is_array: true
+  description: MITRE ATT&CK technique ids. Free-form text; may contain whitespace
+    and punctuation.
+  example: vec-9a51f35c
+- name: mitre_name
+  type: string
+  is_array: true
+  description: MITRE technique names. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: name
+  type: string
+  description: Detection display name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: src_account.name
+  type: user
+  description: Source account name. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName; no domain prefix unless vendor emits one.
+  example: jdoe
+- name: src_account.type
+  type: string_short
+  description: Account type. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: src_account_uid
+  type: string_short
+  description: Source account UID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: targets_key_asset
+  type: boolean
+  description: Whether targets a key asset. Literal 'true' or 'false' (case-insensitive);
+    not '1'/'0'.
+  example: 'true'
+- name: url
+  type: url
+  description: Vectra UI URL. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+use_cases:
+- XDR
+how_to_use: |
+  ## Vectra AI Vectra AI → Cortex XSIAM (dataset `vectra_vectra_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `vectra_vectra_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `vectra_vectra`. The marketplace pack's display name `Vectra AI` / `Vectra_AI` normalizes to `vectra_ai_vectra_ai_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `vectra_vectra` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.name`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `id != null |` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~18 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.category`, `xdm.alert.mitre_tactics`, `xdm.alert.mitre_techniques`, `xdm.alert.original_alert_id`, `xdm.alert.original_threat_name`, `xdm.alert.severity`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = vectra_vectra_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

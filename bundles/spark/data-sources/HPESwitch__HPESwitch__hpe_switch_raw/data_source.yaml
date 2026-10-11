@@ -1,0 +1,337 @@
+schema_version: 1
+id: HPESwitch
+pack_name: HPESwitch
+rule_name: HPESwitch
+dataset_name: hpe_switch_raw
+vendor: HPE
+product: HPESwitch
+description: HPE (Hewlett Packard Enterprise) switches offer enterprise-grade networking
+  solutions with flexibility, scalability, and robust security features. They provide
+  essential enterprise features like VLAN support, QoS, and IPv4/IPv6 routing, ensuring
+  efficient performance and management.
+categories:
+- Network Security
+version: 1.0.4
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo: null
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'hpe: hpeswitch=HPESwitch action=allow user=jdoe'
+- name: access_mode
+  type: string
+  description: Auth method. Free-form text; may contain whitespace and punctuation.
+  example: sample_mode
+- name: client_mac_address
+  type: mac
+  description: Client mac address. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: client_mac_formatted
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: cmd
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: device_hostname
+  type: host
+  description: Observer name. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: device_ip
+  type: ipv4
+  description: Intermediate IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: device_product_id
+  type: string_short
+  description: Source host device model. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: device_serial_number
+  type: integer
+  description: Observer unique identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: '7'
+- name: dhcp_server_ip
+  type: ipv4
+  description: Network dhcp siaddr. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: event
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: event_id
+  type: string_short
+  description: Event ID. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: event_name_mnemonic
+  type: string
+  description: Event name mnemonic. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: formatted_mac_address
+  type: mac
+  description: Source host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: formatted_tgt_mac_address
+  type: mac
+  description: Destination host MAC addresses. MAC address in colon-separated lowercase
+    hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: gateway_ip
+  type: ipv4
+  description: Gateway ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: gateway_name
+  type: host
+  description: Intermediate host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: gw_ipv4
+  type: ipv4
+  description: Gw ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: gw_ipv6
+  type: ipv6
+  description: Intermediate IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: interface_port_id
+  type: integer_port
+  description: Destination interface. Unsigned integer 0-65535 representing a TCP/UDP
+    port; bare digits, no quotes.
+  example: '443'
+- name: ip_mask
+  type: string
+  description: Source subnet. Free-form text; may contain whitespace and punctuation.
+  example: sample_mask
+- name: mac_address
+  type: mac
+  description: Mac address. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: meaningful
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_meaningful
+- name: name
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: names
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_names
+- name: necessary
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_necessary
+- name: outcome_reason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: policy_name
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: process_name
+  type: string
+  description: Source process name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: rename
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_rename
+- name: sequence_number
+  type: integer
+  description: Network session ID. Free-form text; may contain whitespace and punctuation.
+  example: '7'
+- name: server_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: server_name
+  type: host
+  description: Destination host hostname. Hostname or fully-qualified domain name
+    (RFC 1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: session_id
+  type: string_short
+  description: Session context id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: severity
+  type: string_short
+  description: Alert severity. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: source_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ip
+  type: ipv4
+  description: Src ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv4
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_ipv6
+  type: ipv6
+  description: Source IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291); no
+    zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: syslog_priority
+  type: string
+  description: Syslog priority. Free-form text; may contain whitespace and punctuation.
+  example: INFO
+- name: target_ipv4
+  type: ipv4
+  description: Target ipv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: tgt_ip
+  type: ipv4
+  description: Tgt ip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: tgt_ipv4
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: tgt_ipv6
+  type: ipv6
+  description: Destination IPv6. Colon-separated hexadecimal IPv6 literal (RFC 4291);
+    no zone suffix, no surrounding brackets.
+  example: 2001:db8::1
+- name: tgt_mac_address
+  type: mac
+  description: Tgt mac address. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: aa:bb:cc:dd:ee:ff
+- name: tgt_user
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: tgt_user_domain
+  type: domain
+  description: Destination user domain. Bare DNS domain name; no scheme, no path,
+    no port.
+  example: example.com
+- name: user_domain
+  type: domain
+  description: Source user domain. Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: user_role
+  type: string
+  description: Source user groups. Free-form text; may contain whitespace and punctuation.
+  example: Admin
+- name: username
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: vague
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_vague
+- name: vlan
+  type: integer
+  description: Source vlan. Free-form text; may contain whitespace and punctuation.
+  example: '100'
+- name: vlan_id
+  type: string_short
+  description: Source vlan. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+use_cases:
+- Network
+how_to_use: |
+  ## HPE HPESwitch → Cortex XSIAM (dataset `hpe_switch_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire, and a Broker syslog collector row must
+  supply them. The local parsing-rule snapshot has no INGEST block for this
+  pack, so the literal is UNCONFIRMED -- do not assume the display
+  `vendor`/`product` fields are it (for the 75 sources where the literal IS
+  known, all 75 differ from the display values). Confirm empirically that
+  events land in `hpe_switch_raw` and that `unknown_unknown_raw` did not grow.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `hpe_switch_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `hpe_switch`. The marketplace pack's display name `HPE` / `HPESwitch` normalizes to `hpe_hpeswitch_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `hpe_switch` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log !~= "%\S+\-\d\-\S+:"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~42 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.auth.auth_method`, `xdm.event.description`, `xdm.event.id`, `xdm.event.is_completed`, `xdm.event.log_level`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `HPE`, Product = `HPESwitch`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = hpe_switch_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

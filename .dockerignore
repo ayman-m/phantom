@@ -1,0 +1,61 @@
+# Build context exclusions for `docker build .` at the repo root.
+#
+# The combined phantom-agent image (mcp/agent/Dockerfile) builds from
+# the repo root and needs BOTH `mcp/agent/` (Next.js source +
+# entrypoint) and `bundles/spark/` (the bundle's embedded MCP source +
+# manifest + connectors). Sibling services (xlog, caldera) build from
+# their own subdirectory contexts; anything excluded here only affects
+# root-context builds.
+
+# Secrets — MUST NOT land in image layers.
+.env
+.env.*
+!.env.example
+.env.vm
+
+# VCS / CI metadata.
+.git
+.gitignore
+.github
+
+# Local agent runtime mount (operator setup data, generated env).
+.phantom-agent
+
+# Docs / local artifacts that don't belong in any production image.
+README.md
+CLAUDE.md
+AGENTS.md
+LICENSE
+logos
+examples
+docs
+
+# Sibling services with their own build contexts.
+xlog
+third_party
+
+# Tmp / scratch.
+tmp
+bundles/phantom-agent.bundle.yaml.bak
+
+# Python build / cache (anywhere in the tree).
+__pycache__
+**/__pycache__
+*.pyc
+*.pyo
+*.egg-info
+build
+dist
+.venv
+venv
+
+# Node build / cache. The Dockerfile's agent-builder stage runs npm ci
+# fresh; whatever's on the host is noise.
+**/node_modules
+**/.next
+**/.next/cache
+
+# Editor / OS junk.
+.DS_Store
+.idea
+.vscode

@@ -1,0 +1,236 @@
+schema_version: 1
+id: SymantecEndpointSecurity
+pack_name: SymantecEndpointSecurity
+rule_name: SymantecEndpointSecurity
+dataset_name: symantec_endpoint_security_raw
+vendor: Symantec
+product: SymantecEndpointSecurity
+description: Use Cloud Platform Connections, a cloud-based security feature in Symantec
+  Endpoint Security to discover and protect instances of public cloud platforms, and
+  their workloads.
+categories:
+- Analytics & SIEM
+version: 1.0.12
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+U3ltYW50ZWM8L3RpdGxlPjxwYXRoIGQ9Ik0yMi44NzcgMHYuNzM4aC43MzhWMGgtLjczOHptMCAuNzM4aC0uNzM4di43MzloLjczOFYuNzM4em0wIC43Mzl2LjczOGguNzM4di0uNzM4aC0uNzM4em0tLjczOCAwaC0xLjQ3N3YuNzM4aC0uNzM4VjMuNjloLS43Mzh2Ljc0aC0xLjQ3OXYuNzI1QTEwLjU3MiAxMC41NzIgMCAwMDExIDIuNzdDNS4xMzYgMi43Ny4zODUgNy41Mi4zODUgMTMuMzg1LjM4NSAxOS4yNDggNS4xMzYgMjQgMTEgMjRzMTAuNjE1LTQuNzUyIDEwLjYxNS0xMC42MTVjMC0yLjU2LS45MDQtNC45MDYtMi40MTItNi43MzloLjcydi0uNzM4aC43NFY0LjQzaC43MzdWMy42OWguNzM5di0uNzM4SDIxLjR2LS43MzhoLjczOXYtLjczOHpNMTkuMTg2IDMuNjl2LS43MzhoLS43NHYuNzM4aC43NHpNMTEgNi4xNTRhNy4xOTMgNy4xOTMgMCAwMTQuMDMzIDEuMjNoLS4yOHYuNzM5aC0uNzM3Yy0xLjkyNyAyLjQwOS0yLjQxNCAzLjQ2Ni0zLjE4MiA1LjQxNC0uODcxLTEuNzYzLTEuOTExLTIuOTc4LTMuNzExLTMuNzgzbC0uMDItLjAwNmMtLjMyNy0uMDgzLS40OTMtLjEyNS0uNzE4LjE5LS4yMy4zMjItLjA5Mi42MTMuMTgzLjk1NWEzNS4yMTIgMzUuMjEyIDAgMDAuNTg2LjcwM2MuNTQ3LjY0NiAxLjA5NSAxLjI4OSAxLjUwOCAyLjAzNS40MDguNzM4Ljg3NyAxLjc3MiAxLjI0MiAyLjU3NC4yMjMuNDkuNDA2Ljg5NC41MSAxLjA4OC4yMi40MDYuNzUyLjU4NC45NTUuNTg0Ljk4NS0uMTE3IDEuMDgtLjU4MiAxLjI0Mi0xLjM3OWwuMDU3LS4yNjRjLjMzNi0xLjU3NC43NzEtMy4yMDMgMi44MjQtNS4xNTh2LS43MzZoLjczOFY5LjZoLjc0di0uMjk1YTcuMTkzIDcuMTkzIDAgMDExLjI2IDQuMDhjMCAzLjk5LTMuMjQgNy4yMy03LjIzIDcuMjNzLTcuMi0zLjI0LTcuMi03LjIzIDMuMjEtNy4yMyA3LjItNy4yM3oiLz48L3N2Zz4=
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: actor
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: cmd_line,
+    file, signature_issuer (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: attacks
+  type: json
+  is_array: true
+  description: — see leaf entries for per-element fields. JSON object or array; structured
+    payload — see dotted-path leaves below for full shape.
+  example: '{}'
+- name: count
+  type: integer
+  description: Unsigned count of items as recorded by Symantec. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: device_domain
+  type: domain
+  description: DNS domain reported by Symantec — bare domain, no scheme/path/port.
+    Bare DNS domain name; no scheme, no path, no port.
+  example: example.com
+- name: device_name
+  type: host
+  description: Human-readable name as displayed by Symantec. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: device_networks
+  type: string
+  description: Vendor-emitted field 'Device networks'. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_networks
+- name: device_os_name
+  type: string
+  description: Human-readable name as displayed by Symantec. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: device_uid
+  type: string
+  description: Vendor-emitted field 'Device uid'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uid
+- name: feature_name
+  type: string
+  description: Human-readable name as displayed by Symantec. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: message
+  type: string
+  description: Human-readable event message. Free-form text; may contain whitespace
+    and punctuation.
+  example: Operation completed successfully.
+- name: scan_name
+  type: string
+  description: Human-readable name as displayed by Symantec. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: threat
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: id, name,
+    risk_id (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by Symantec. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: authentication
+- name: type_id
+  type: string_short
+  description: Opaque identifier emitted by Symantec. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: sym-a8454688
+- name: url
+  type: url
+  description: Full URL with scheme — as Symantec captured it. Full URL with scheme
+    (http/https/ftp); percent-encoded if non-ASCII.
+  example: https://example.com/path?q=1
+- name: user
+  type: string
+  description: User account associated with the event. Free-form text; may contain
+    whitespace and punctuation.
+  example: jdoe
+- name: user_name
+  type: string
+  description: Human-readable name as displayed by Symantec. Free-form text; may contain
+    whitespace and punctuation.
+  example: jdoe
+- name: actor.cmd_line
+  type: string
+  description: Vendor-emitted field 'Actor › cmd line'. Leaf of the 'actor' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_line
+- name: actor.file.folder
+  type: string
+  description: Vendor-emitted field 'Actor › file › folder'. Leaf of the 'actor' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_folder
+- name: actor.file.md5
+  type: hash_md5
+  description: MD5 digest as reported by the vendor. Leaf of the 'actor' composite.
+    32-character lowercase hex MD5 digest.
+  example: 5d41402abc4b2a76b9719d911017c592
+- name: actor.file.name
+  type: file_path
+  description: File or process name reported by the vendor. Leaf of the 'actor' composite.
+    Absolute filesystem path; vendor-native separator (forward slash on POSIX, backslash
+    on Windows).
+  example: /var/log/example.log
+- name: actor.file.path
+  type: string
+  description: Filesystem path reported by the vendor. Leaf of the 'actor' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: /var/log/app.log
+- name: actor.signature_issuer
+  type: string
+  description: Vendor-emitted field 'Actor › signature issuer'. Leaf of the 'actor'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_issuer
+- name: attacks[].sub_technique_name
+  type: string
+  description: Human-readable name as displayed by Symantec. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: attacks[].sub_technique_uid
+  type: string
+  description: Vendor-emitted field 'Attacks[] › sub technique uid'. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_uid
+- name: attacks[].technique_name
+  type: string
+  description: Human-readable name as displayed by Symantec. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: attacks[].technique_uid
+  type: string
+  description: Vendor-emitted field 'Attacks[] › technique uid'. Free-form text; may
+    contain whitespace and punctuation.
+  example: sample_uid
+- name: threat.id
+  type: string_short
+  description: Opaque identifier emitted by Symantec. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: sym-551b92ae
+- name: threat.name
+  type: string
+  description: Human-readable name as displayed by Symantec. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_name
+- name: threat.risk_id
+  type: string_short
+  description: Opaque identifier emitted by Symantec. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: sym-fc46f2d7
+use_cases:
+- AV
+- EDR
+- Email
+- DLP
+- CASB
+how_to_use: |
+  ## Symantec SymantecEndpointSecurity → Cortex XSIAM (dataset `symantec_endpoint_security_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `symantec_endpoint_security_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `symantec_endpoint_security`. The marketplace pack's display name `Symantec` / `SymantecEndpointSecurity` normalizes to `symantec_symantecendpointsecurity_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `symantec_endpoint_security` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `actor -> file.folder`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~24 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.mitre_tactics`, `xdm.alert.mitre_techniques`, `xdm.alert.original_threat_id`, `xdm.alert.original_threat_name`, `xdm.alert.risks`, `xdm.alert.source_url`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = symantec_endpoint_security_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

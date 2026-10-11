@@ -1,0 +1,300 @@
+schema_version: 1
+id: ProofpointServerProtection
+pack_name: ProofpointServerProtection
+rule_name: ProofpointServerProtection
+dataset_name: proofpoint_ps_raw
+vendor: Proofpoint
+product: ProofpointServerProtection
+description: Proofpoint email security appliance.
+categories:
+- Network Security
+- Analytics & SIEM
+version: 2.2.2
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiMwMDc5QUEiPlByb29mcG9pbnQ8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'proofpoint: proofpointserverprotection=ProofpointServerProtection action=allow user=jdoe'
+- name: parsed_fields
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: action,
+    alert, cmd, duration, file, from, host, ip, mime, mod, module, oext, policy, proto,
+    rule, s, size, subject, to, type, x (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: parsed_fields.action
+  type: string_short
+  description: Action taken by Proofpoint's enforcement engine (allow/block/quarantine/etc.).
+    Short opaque token, typically without whitespace; max ~64 chars.
+  example: allow
+- name: parsed_fields.alert
+  type: string
+  description: Vendor-emitted field 'Parsed fields › alert'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_alert
+- name: parsed_fields.cmd
+  type: string
+  description: Vendor-emitted field 'Parsed fields › cmd'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: parsed_fields.duration
+  type: integer
+  description: Vendor-emitted field 'Parsed fields › duration'. Signed decimal integer;
+    bare digits, optional leading minus.
+  example: '42'
+- name: parsed_fields.file
+  type: string
+  description: Vendor-emitted field 'Parsed fields › file'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_file
+- name: parsed_fields.from
+  type: email
+  description: Vendor-emitted field 'Parsed fields › from'. Leaf of the 'parsed_fields'
+    composite. RFC 5322 'local@domain' address; one address only — use an array field
+    for multiple addresses.
+  example: user@example.com
+- name: parsed_fields.host
+  type: host
+  description: Vendor-emitted field 'Parsed fields › host'. Leaf of the 'parsed_fields'
+    composite. Hostname or fully-qualified domain name (RFC 1035 dotted labels); no
+    protocol prefix.
+  example: host.example.com
+- name: parsed_fields.ip
+  type: ipv4
+  description: Vendor-emitted field 'Parsed fields › ip'. Leaf of the 'parsed_fields'
+    composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding
+    brackets or quotes.
+  example: 203.0.113.42
+- name: parsed_fields.mime
+  type: string
+  description: Vendor-emitted field 'Parsed fields › mime'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_mime
+- name: parsed_fields.mod
+  type: string
+  description: Vendor-emitted field 'Parsed fields › mod'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_mod
+- name: parsed_fields.module
+  type: string
+  description: Vendor-emitted field 'Parsed fields › module'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: audit
+- name: parsed_fields.oext
+  type: string
+  description: Vendor-emitted field 'Parsed fields › oext'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_oext
+- name: parsed_fields.policy
+  type: string
+  description: Vendor-emitted field 'Parsed fields › policy'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Default-Policy
+- name: parsed_fields.proto
+  type: string
+  description: Vendor-emitted field 'Parsed fields › proto'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: tcp
+- name: parsed_fields.rule
+  type: string
+  description: Vendor-emitted field 'Parsed fields › rule'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Allow-Internal
+- name: parsed_fields.s
+  type: string
+  description: Vendor-emitted field 'Parsed fields › s'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_s
+- name: parsed_fields.size
+  type: integer_byte_count
+  description: Size in bytes of the payload/object. Unsigned decimal byte count; bare
+    digits, no unit suffix.
+  example: '1024'
+- name: parsed_fields.subject
+  type: string
+  description: Subject line — typically email subject or event summary. Free-form
+    text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: parsed_fields.to
+  type: email
+  description: Vendor-emitted field 'Parsed fields › to'. Leaf of the 'parsed_fields'
+    composite. RFC 5322 'local@domain' address; one address only — use an array field
+    for multiple addresses.
+  example: user@example.com
+- name: parsed_fields.type
+  type: string_short
+  description: Type/category classifier emitted by Proofpoint. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: parsed_fields.x
+  type: string
+  description: Vendor-emitted field 'Parsed fields › x'. Leaf of the 'parsed_fields'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_x
+- name: accept
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: action
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: alert
+  type: string
+  description: Alert name. Free-form text; may contain whitespace and punctuation.
+  example: sample_alert
+- name: cmd
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: continue
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: duration
+  type: integer
+  description: Event duration. Signed decimal integer; bare digits, optional leading
+    minus.
+  example: '42'
+- name: file
+  type: email
+  description: Email attachment filename. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: host
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: ip
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: mime
+  type: email
+  description: Email mime. RFC 5322 'local@domain' address; one address only — use
+    an array field for multiple addresses.
+  example: user@example.com
+- name: module
+  type: string
+  description: Observer type. Free-form text; may contain whitespace and punctuation.
+  example: audit
+- name: oext
+  type: email
+  description: Email attachment extension. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: proto
+  type: string
+  description: Network application protocol. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: rule
+  type: string
+  description: Network rule. Free-form text; may contain whitespace and punctuation.
+  example: Allow-Internal
+- name: size
+  type: email
+  description: Email attachment size. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+- name: subject
+  type: email
+  description: Email subject. RFC 5322 'local@domain' address; one address only —
+    use an array field for multiple addresses.
+  example: user@example.com
+- name: type
+  type: email
+  description: Email attachment file type. RFC 5322 'local@domain' address; one address
+    only — use an array field for multiple addresses.
+  example: user@example.com
+use_cases:
+- Email
+- DLP
+how_to_use: |
+  ## proofpoint ps → Cortex XSIAM (dataset `proofpoint_ps_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `proofpoint` / product `ps`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `proofpoint_ps_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `proofpoint`
+    - **product**: `ps`
+
+    These normalize → `proofpoint_ps_raw`.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `parsed_fields -> action`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~22 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.name`, `xdm.email.attachment.extension`, `xdm.email.attachment.file_type`, `xdm.email.attachment.filename`, `xdm.email.attachment.size`, `xdm.email.message_id`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `proofpoint`, Product = `ps`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = proofpoint_ps_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

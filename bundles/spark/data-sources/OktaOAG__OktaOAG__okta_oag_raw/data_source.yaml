@@ -1,0 +1,190 @@
+schema_version: 1
+id: OktaOAG
+pack_name: OktaOAG
+rule_name: OktaOAG
+dataset_name: okta_oag_raw
+vendor: Okta
+product: OktaOAG
+description: Okta Access Gateway is a reverse proxy based virtual application, designed
+  to secure web applications that don't natively support SAML or OIDC.
+categories:
+- IT Services
+version: 1.0.10
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-24T16:53:58Z'
+updated_at: '2026-05-24T16:53:58Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+T2t0YTwvdGl0bGU+PHBhdGggZD0iTTEyIDBDNS4zODkgMCAwIDUuMzUgMCAxMnM1LjM1IDEyIDEyIDEyIDEyLTUuMzUgMTItMTJTMTguNjExIDAgMTIgMHptMCAxOGMtMy4zMjUgMC02LTIuNjc1LTYtNnMyLjY3NS02IDYtNiA2IDIuNjc1IDYgNi0yLjY3NSA2LTYgNnoiLz48L3N2Zz4=
+  source: simpleicons:okta
+  license: CC0-1.0
+  fidelity: monochrome-brand
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _raw_log
+  type: string
+  description: Raw log line as the vendor emits it before any parsing or normalization.
+    Free-form text; may contain whitespace and punctuation.
+  example: 'okta: oktaoag=OktaOAG action=allow user=jdoe'
+- name: appHostname
+  type: host
+  description: Apphostname. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: appHostname2
+  type: host
+  description: Apphostname2. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: application
+  type: string
+  description: Application. Free-form text; may contain whitespace and punctuation.
+  example: Salesforce
+- name: auditedApp
+  type: string
+  description: Auditedapp. Free-form text; may contain whitespace and punctuation.
+  example: sample_auditedapp
+- name: clientIP
+  type: ipv4
+  description: Clientip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: component
+  type: string
+  description: Component. Free-form text; may contain whitespace and punctuation.
+  example: auth-service
+- name: description
+  type: string
+  description: Description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Okta.
+- name: event
+  type: string
+  description: Event. Free-form text; may contain whitespace and punctuation.
+  example: login
+- name: hostname
+  type: host
+  description: Hostname. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host01.example.com
+- name: logLevel
+  type: string
+  description: Loglevel. Free-form text; may contain whitespace and punctuation.
+  example: sample_loglevel
+- name: proc_id
+  type: string_short
+  description: Proc id. Short opaque token, typically without whitespace; max ~64
+    chars.
+  example: token
+- name: reason
+  type: string
+  description: Reason. Free-form text; may contain whitespace and punctuation.
+  example: normal_operation
+- name: remoteIP
+  type: ipv4
+  description: Remoteip. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: requestPayload
+  type: string
+  description: Requestpayload. Free-form text; may contain whitespace and punctuation.
+  example: sample_requestpayload
+- name: requestUrl
+  type: url
+  description: Requesturl. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path?q=1
+- name: result
+  type: string
+  description: Result. Free-form text; may contain whitespace and punctuation.
+  example: success
+- name: sessionID
+  type: string
+  description: Sessionid. Free-form text; may contain whitespace and punctuation.
+  example: sess-dff146ab-ee9
+- name: status
+  type: string
+  description: Status. Free-form text; may contain whitespace and punctuation.
+  example: success
+- name: subject
+  type: string
+  description: Subject. Free-form text; may contain whitespace and punctuation.
+  example: Sample subject line
+- name: userAgent
+  type: string
+  description: Useragent. Free-form text; may contain whitespace and punctuation.
+  example: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36
+use_cases:
+- Identity
+- MFA
+how_to_use: |
+  ## okta oag → Cortex XSIAM (dataset `okta_oag_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `okta` / product `oag`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `okta_oag_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `okta`
+    - **product**: `oag`
+
+    These normalize → `okta_oag_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_raw_log  contains "monitor"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~16 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.severity`, `xdm.event.description`, `xdm.event.operation`, `xdm.event.outcome`, `xdm.event.outcome_reason`, `xdm.network.http.method`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `okta`, Product = `oag`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = okta_oag_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

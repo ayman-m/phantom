@@ -1,0 +1,110 @@
+schema_version: 1
+id: BitwardenPasswordManager
+pack_name: BitwardenPasswordManager
+rule_name: BitwardenPasswordManager
+dataset_name: bitwarden_password_manager_raw
+vendor: Bitwarden
+product: BitwardenPasswordManager
+description: Bitwarden Password Manager is a secure, open-source tool for storing
+  and managing passwords and sensitive information across devices.
+categories:
+- Analytics & SIEM
+version: 1.0.11
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+Qml0d2FyZGVuPC90aXRsZT48cGF0aCBkPSJNMjEuNzIyLjI5NkEuOTY0Ljk2NCAwIDAgMCAyMS4wMTggMEgyLjk4MmEuOTU5Ljk1OSAwIDAgMC0uNzAzLjI5Ni45Ni45NiAwIDAgMC0uMjk3LjcwMnYxMmMwIC44OTUuMTc0IDEuNzgzLjUyMyAyLjY2NS4zNDkuODguNzgzIDEuNjYgMS4zIDIuMzQ1LjUxNy42OCAxLjEzMiAxLjM0NiAxLjg0OCAxLjk5M2EyMS44MDcgMjEuODA3IDAgMCAwIDEuOTggMS42MDljLjYwNS40MjcgMS4yMzUuODMgMS44OTMgMS4yMTIuNjU3LjM4MSAxLjEyNS42MzggMS40Ljc3Mi4yNzYuMTM0LjUuMjQxLjY2NC4zMTFhLjkxNi45MTYgMCAwIDAgLjgxNCAwYy4xNjgtLjA3My4zODktLjE3Ny42NjctLjMxMS4yNzUtLjEzNC43NDMtLjM5NCAxLjQwMS0uNzcyYTI1LjMwNSAyNS4zMDUgMCAwIDAgMS44OTQtMS4yMTJBMjEuODkxIDIxLjg5MSAwIDAgMCAxOC4zNDggMjBjLjcxNi0uNjQ3IDEuMzMtMS4zMSAxLjg0Ny0xLjk5M3MuOTQ5LTEuNDYzIDEuMy0yLjM0NWMuMzUtLjg3OS41MjQtMS43NjcuNTI0LTIuNjY1VjEuMDAxYS45NS45NSAwIDAgMC0uMjk3LS43MDV6bS0yLjMyNSAxMi44MTVjMCA0LjM0NC03LjM5NyA4LjA4Ny03LjM5NyA4LjA4N1YyLjU3aDcuMzk3djEwLjU0eiIvPjwvc3ZnPg==
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: actingUserId
+  type: string
+  description: Vendor-emitted field 'ActingUserId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: usr-19268eab
+- name: groupId
+  type: string
+  description: Vendor-emitted field 'GroupId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: grp-8da4e913
+- name: ipAddress
+  type: ipv4
+  description: IPv4/IPv6 address — vendor-emitted, no version split. Free-form text;
+    may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: itemId
+  type: string
+  description: Vendor-emitted field 'ItemId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_itemid
+- name: memberId
+  type: string
+  description: Vendor-emitted field 'MemberId'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_memberid
+- name: type
+  type: string_short
+  description: Type/category classifier emitted by Bitwarden. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+use_cases:
+- Identity
+- MFA
+how_to_use: |
+  ## Bitwarden BitwardenPasswordManager → Cortex XSIAM (dataset `bitwarden_password_manager_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `bitwarden_password_manager_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `bitwarden_password_manager`. The marketplace pack's display name `Bitwarden` / `BitwardenPasswordManager` normalizes to `bitwarden_bitwardenpasswordmanager_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `bitwarden_password_manager` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: none — the rule maps every routed row unconditionally.
+
+    **XDM mapping**: ~8 fields mapped to the unified data model (`xdm.*`), including: `xdm.event.original_event_type`, `xdm.event.type`, `xdm.source.ipv4`, `xdm.source.ipv6`, `xdm.source.user.identifier`, `xdm.target.resource.id`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = bitwarden_password_manager_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

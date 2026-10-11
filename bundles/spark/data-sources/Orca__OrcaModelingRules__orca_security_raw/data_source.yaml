@@ -1,0 +1,1052 @@
+schema_version: 1
+id: Orca
+pack_name: Orca
+rule_name: OrcaModelingRules
+dataset_name: orca_security_raw
+vendor: Orca Security
+product: Orca
+description: "Integrate with Orca security for bidirectional incident management and\
+  \ fetching of asset information. \n"
+categories:
+- Cloud Security
+version: 3.0.6
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMzQgNjAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgZm9udC1mYW1pbHk9IkludGVyLCAtYXBwbGUtc3lzdGVtLCBCbGlua01hY1N5c3RlbUZvbnQsIEhlbHZldGljYSwgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMzIiIGZvbnQtd2VpZ2h0PSI2MDAiIGZpbGw9IiNCMjRBMjUiPk9yY2EgU2VjdXJpdHk8L3RleHQ+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: account_name
+  type: user
+  description: Human-readable name as displayed by Orca Security. Account name as
+    the vendor reports it — login name, UPN, or sAMAccountName; no domain prefix unless
+    vendor emits one.
+  example: jsmith
+- name: category
+  type: string_short
+  description: Orca Security's category classifier for the event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: access_control
+- name: cloud_account_type
+  type: string_short
+  description: Type/category classifier emitted by Orca Security. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: cloud_provider
+  is_gate: true
+  type: string
+  description: Vendor-emitted field 'Cloud provider'. Free-form text; may contain
+    whitespace and punctuation.
+  example: aws
+- name: data
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: mitre_category,
+    mitre_technique, title (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: details
+  type: string_long
+  description: Additional details payload emitted by Orca Security. Free-form text;
+    may span multiple lines or contain large payloads.
+  example: Detailed event payload emitted by Orca Security for this record.
+- name: model
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: AwsEcsContainerInstance,
+    data (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: state
+  type: json
+  description: '— see leaf entries for nested paths. JSON object with keys: alert_id,
+    severity (each key defined as a dotted-path leaf below).'
+  example: '{}'
+- name: type_string
+  type: string
+  description: Vendor-emitted field 'Type string'. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_string
+- name: data.mitre_category
+  type: string_short
+  description: Orca Security's category classifier for the event. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: access_control
+- name: data.mitre_technique.0
+  type: string
+  description: Vendor-emitted field 'Data › mitre technique › 0'. Leaf of the 'data'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: Orca Security-0
+- name: data.title
+  type: string
+  description: Title/headline of the event or item. Free-form text; may contain whitespace
+    and punctuation.
+  example: Sample subject line
+- name: model.AwsEcsContainerInstance.Ec2Instance.model.data.name
+  type: host
+  description: Human-readable name as displayed by Orca Security. Hostname or fully-qualified
+    domain name (RFC 1035 dotted labels); no protocol prefix.
+  example: host.example.com
+- name: model.data.AwsApiGatewayEndpoint.ApiId
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsApiGatewayEndpoint › ApiId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_apiid
+- name: model.data.AwsApiGatewayEndpoint.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsApiGatewayV2Route.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsAsg.AvailabilityZones
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsAsg › AvailabilityZones'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_availabilityzone
+- name: model.data.AwsAsg.Ec2Instances.models.0.model.data.AwsEc2Instance.PublicIpAddress
+  type: ipv4
+  description: Vendor-emitted field 'Model › data › AwsAsg › Ec2Instances › models
+    › 0 › model › data › AwsEc2Instance › PublicIpAddress'. Leaf of the 'model' composite.
+    Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding brackets
+    or quotes.
+  example: 203.0.113.42
+- name: model.data.AwsAsg.Ec2Instances.models.0.model.data.AwsEc2Instance.Vm.ImageId
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsAsg › Ec2Instances › models
+    › 0 › model › data › AwsEc2Instance › Vm › ImageId'. Leaf of the 'model' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: ami-0abcdef1234567890
+- name: model.data.AwsAsg.Ec2Instances.models.model.0.data.AwsEc2Instance.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsBackupVault.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsCertificate.IssuerName
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsCertificate › IssuerName'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_issuername
+- name: model.data.AwsCertificate.SerialNumber
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsCertificate › SerialNumber'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_serialnumber
+- name: model.data.AwsCloudFormationStack.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsCloudFormationStack.Region
+  type: string_short
+  description: Cloud region or geographic region label. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: us-east-1
+- name: model.data.AwsCloudFormationStack.StackId
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsCloudFormationStack › StackId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_stackid
+- name: model.data.AwsCloudTrail.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsCloudTrail.S3Bucket.model.name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsDynamodbTable.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsDynamodbTable.TableId
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsDynamodbTable › TableId'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_tableid
+- name: model.data.AwsEc2EbsSnapshot.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEc2EbsVolume.AvailabilityZone
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsEc2EbsVolume › AvailabilityZone'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: us-east-1a
+- name: model.data.AwsEc2EbsVolume.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEc2ElasticIpAddress.AllocationId
+  type: ipv4
+  description: Vendor-emitted field 'Model › data › AwsEc2ElasticIpAddress › AllocationId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: model.data.AwsEc2ElasticIpAddress.Name
+  type: ipv4
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: model.data.AwsEc2ElasticIpAddress.NetworkBorderGroup
+  type: ipv4
+  description: Vendor-emitted field 'Model › data › AwsEc2ElasticIpAddress › NetworkBorderGroup'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: model.data.AwsEc2ElasticIpAddress.PublicIpAddress
+  type: ipv4
+  description: Vendor-emitted field 'Model › data › AwsEc2ElasticIpAddress › PublicIpAddress'.
+    Leaf of the 'model' composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: model.data.AwsEc2Elb.AvailabilityZones
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsEc2Elb › AvailabilityZones'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_availabilityzone
+- name: model.data.AwsEc2Elb.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEc2Elbv2.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEc2InternetGateway.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEc2NetworkAcl.Vpc.model.id
+  type: string_short
+  description: Opaque identifier emitted by Orca Security. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: orc-33949ea8
+- name: model.data.AwsEc2NetworkAcl.Vpc.model.name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEc2SecurityGroup.Vpc.model.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEc2SecurityGroup.Vpc.model.id
+  type: string_short
+  description: Opaque identifier emitted by Orca Security. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: orc-80c63c99
+- name: model.data.AwsEc2VpcEndpoint.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEc2VpcEndpoint.NetworkInterfaceIds
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsEc2VpcEndpoint › NetworkInterfaceIds'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_networkinterface
+- name: model.data.AwsEc2VpcEndpoint.VpcEndpointId
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsEc2VpcEndpoint › VpcEndpointId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_vpcendpointid
+- name: model.data.AwsEcsContainerInstance.Ec2Instance.model.data.Compute.AvailabilityZones
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsEcsContainerInstance › Ec2Instance
+    › model › data › Compute › AvailabilityZones'. Leaf of the 'model' composite.
+    Free-form text; may contain whitespace and punctuation.
+  example: sample_availabilityzone
+- name: model.data.AwsEcsContainerInstance.Ec2Instance.model.data.Compute.MacAddresses
+  type: mac
+  description: Vendor-emitted field 'Model › data › AwsEcsContainerInstance › Ec2Instance
+    › model › data › Compute › MacAddresses'. Leaf of the 'model' composite. MAC address
+    in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: model.data.AwsEcsContainerInstance.Ec2Instance.model.data.Compute.PublicIps
+  type: ipv4
+  description: Vendor-emitted field 'Model › data › AwsEcsContainerInstance › Ec2Instance
+    › model › data › Compute › PublicIps'. Leaf of the 'model' composite. Dotted-quad
+    IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: model.data.AwsEcsContainerInstance.Ec2Instance.model.data.Compute.Regions
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsEcsContainerInstance › Ec2Instance
+    › model › data › Compute › Regions'. Leaf of the 'model' composite. Free-form
+    text; may contain whitespace and punctuation.
+  example: sample_regions
+- name: model.data.AwsEcsContainerInstance.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEfsFileSystem.FileSystemId
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsEfsFileSystem › FileSystemId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_filesystemid
+- name: model.data.AwsEfsFileSystem.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEfsFileSystem.OwnerId
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsEfsFileSystem › OwnerId'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_ownerid
+- name: model.data.AwsEksCluster.Endpoint
+  type: host
+  description: Vendor-emitted field 'Model › data › AwsEksCluster › Endpoint'. Leaf
+    of the 'model' composite. Hostname or fully-qualified domain name (RFC 1035 dotted
+    labels); no protocol prefix.
+  example: host.example.com
+- name: model.data.AwsEksCluster.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsEksCluster.PublicAccessCidrs
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsEksCluster › PublicAccessCidrs'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_publicaccesscidr
+- name: model.data.AwsEventBus.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsGlueDataCatalog.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsGlueDataCatalog.Region
+  type: string_short
+  description: Cloud region or geographic region label. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: us-east-1
+- name: model.data.AwsIamGroup.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsIamGroup.Path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/app.log
+- name: model.data.AwsIamPasswordPolicy.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsIamPolicy.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsIamRole.path
+  type: file_path
+  description: Filesystem path. Absolute filesystem path; vendor-native separator.
+  example: /var/log/app.log
+- name: model.data.AwsKmsKey.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsKmsKey.Region
+  type: string_short
+  description: Cloud region or geographic region label. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: us-east-1
+- name: model.data.AwsLambdaFunction.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsRdsDbClusterSnapshot.AvailabilityZones
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsRdsDbClusterSnapshot › AvailabilityZones'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_availabilityzone
+- name: model.data.AwsRdsDbClusterSnapshot.MasterUsername
+  type: user
+  description: Vendor-emitted field 'Model › data › AwsRdsDbClusterSnapshot › MasterUsername'.
+    Leaf of the 'model' composite. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jsmith
+- name: model.data.AwsRdsDbClusterSnapshot.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsRdsDbClusterSnapshot.Port
+  type: integer_port
+  description: TCP/UDP port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: model.data.AwsRdsDbInstanceSnapshot.AvailabilityZone
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsRdsDbInstanceSnapshot › AvailabilityZone'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: us-east-1a
+- name: model.data.AwsRdsDbInstanceSnapshot.DbiResourceId
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsRdsDbInstanceSnapshot › DbiResourceId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: res-4e327d9f
+- name: model.data.AwsRdsDbInstanceSnapshot.MasterUsername
+  type: user
+  description: Vendor-emitted field 'Model › data › AwsRdsDbInstanceSnapshot › MasterUsername'.
+    Leaf of the 'model' composite. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jsmith
+- name: model.data.AwsRdsDbInstanceSnapshot.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsRdsDbInstanceSnapshot.Port
+  type: integer_port
+  description: TCP/UDP port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: model.data.AwsRdsDbInstanceSnapshot.StorageType
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsRdsDbInstanceSnapshot › StorageType'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_storagetype
+- name: model.data.AwsRoute53HostedZone.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsSecurityHub.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsSnsTopic.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsSqsQueue.MessageRetentionPeriod
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsSqsQueue › MessageRetentionPeriod'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_messageretention
+- name: model.data.AwsSqsQueue.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsSubnet.AvailabilityZone
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsSubnet › AvailabilityZone'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: us-east-1a
+- name: model.data.AwsSubnet.CidrBlock
+  type: string
+  description: Vendor-emitted field 'Model › data › AwsSubnet › CidrBlock'. Leaf of
+    the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_cidrblock
+- name: model.data.AwsSubnet.Vpc.model.id
+  type: string_short
+  description: Opaque identifier emitted by Orca Security. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: orc-908ff846
+- name: model.data.AwsSubnet.Vpc.model.name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AwsUser.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureBlobStorage.BlobId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureBlobStorage › BlobId'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_blobid
+- name: model.data.AzureBlobStorage.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureFunctionApp.FunctionId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureFunctionApp › FunctionId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_functionid
+- name: model.data.AzureFunctionApp.HostNames
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureFunctionApp › HostNames'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: host01.example.com
+- name: model.data.AzureFunctionApp.Location
+  type: string
+  description: Location label (region/site/zone) emitted by Orca Security. Free-form
+    text; may contain whitespace and punctuation.
+  example: us-east
+- name: model.data.AzureFunctionApp.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureFunctionApp.PossibleOutboundIpAddresses
+  type: ipv4
+  description: Vendor-emitted field 'Model › data › AzureFunctionApp › PossibleOutboundIpAddresses'.
+    Leaf of the 'model' composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no
+    port suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: model.data.AzureKeyVault.KeyVaultId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureKeyVault › KeyVaultId'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_keyvaultid
+- name: model.data.AzureKeyVault.Location
+  type: string
+  description: Location label (region/site/zone) emitted by Orca Security. Free-form
+    text; may contain whitespace and punctuation.
+  example: us-east
+- name: model.data.AzureKeyVault.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureKeyVault.VaultUri
+  type: url
+  description: Vendor-emitted field 'Model › data › AzureKeyVault › VaultUri'. Leaf
+    of the 'model' composite. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path
+- name: model.data.AzureNetworkInterface.ConnectedPublicIps.models.model.data.AzurePublicIp.IpAddress
+  type: ipv4
+  description: Vendor-emitted field 'Model › data › AzureNetworkInterface › ConnectedPublicIps
+    › models › model › data › AzurePublicIp › IpAddress'. Leaf of the 'model' composite.
+    Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix, no surrounding brackets
+    or quotes.
+  example: 203.0.113.42
+- name: model.data.AzureNetworkInterface.ConnectedPublicIps.models.model.data.AzurePublicIp.Location
+  type: string
+  description: Location label (region/site/zone) emitted by Orca Security. Free-form
+    text; may contain whitespace and punctuation.
+  example: us-east
+- name: model.data.AzureNetworkInterface.MacAddress
+  type: mac
+  description: Vendor-emitted field 'Model › data › AzureNetworkInterface › MacAddress'.
+    Leaf of the 'model' composite. MAC address in colon-separated lowercase hex (aa:bb:cc:dd:ee:ff).
+  example: 00:1A:2B:3C:4D:5E
+- name: model.data.AzureNetworkInterface.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureNetworkInterface.NetworkInterfaceId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureNetworkInterface › NetworkInterfaceId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_networkinterface
+- name: model.data.AzureNetworkSecurityGroup.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureNetworkSecurityGroup.Name.NetworkInterfaceIds
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureNetworkSecurityGroup › Name
+    › NetworkInterfaceIds'. Leaf of the 'model' composite. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_networkinterface
+- name: model.data.AzureNetworkSecurityGroupRule.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureNetworkSecurityGroupRule.NetworkSecurityGroup.model.name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureNetworkSecurityGroupRule.NetworkSecurityGroupRuleIpPermissions.models.model.data.AzureNetworkSecurityGroupRuleIpPermission.DestinationPortTo
+  type: integer_port
+  description: Vendor-emitted field 'Model › data › AzureNetworkSecurityGroupRule
+    › NetworkSecurityGroupRuleIpPermissions › models › model › data › AzureNetworkSecurityGroupRuleIpPermission
+    › DestinationPortTo'. Leaf of the 'model' composite. Unsigned integer 0-65535
+    representing a TCP/UDP port; bare digits, no quotes.
+  example: '443'
+- name: model.data.AzureNetworkSecurityGroupRule.NetworkSecurityGroupRuleIpPermissions.models.model.data.AzureNetworkSecurityGroupRuleIpPermission.Protocol
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureNetworkSecurityGroupRule
+    › NetworkSecurityGroupRuleIpPermissions › models › model › data › AzureNetworkSecurityGroupRuleIpPermission
+    › Protocol'. Leaf of the 'model' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: model.data.AzureNetworkSecurityGroupRule.RuleId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureNetworkSecurityGroupRule
+    › RuleId'. Leaf of the 'model' composite. Free-form text; may contain whitespace
+    and punctuation.
+  example: pol-aab28975
+- name: model.data.AzureNetworkWatcher.Location
+  type: string
+  description: Location label (region/site/zone) emitted by Orca Security. Free-form
+    text; may contain whitespace and punctuation.
+  example: us-east
+- name: model.data.AzureNetworkWatcher.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureNetworkWatcher.NetworkWatcherId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureNetworkWatcher › NetworkWatcherId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_networkwatcherid
+- name: model.data.AzurePostgresDbServer.AdministratorLogin
+  type: string
+  description: Vendor-emitted field 'Model › data › AzurePostgresDbServer › AdministratorLogin'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_administratorlog
+- name: model.data.AzurePostgresDbServer.GlobalId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzurePostgresDbServer › GlobalId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_globalid
+- name: model.data.AzurePostgresDbServer.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzurePrincipal.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzurePrincipal.PrincipalId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzurePrincipal › PrincipalId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: AIDAJDPLRKLG7UEXAMPLE
+- name: model.data.AzurePrincipal.RoleAssignments.models.model.data.AzureRoleAssignment.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzurePublicIp.Location
+  type: string
+  description: Location label (region/site/zone) emitted by Orca Security. Free-form
+    text; may contain whitespace and punctuation.
+  example: us-east
+- name: model.data.AzurePublicIp.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzurePublicIp.NetworkInterface.model.name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureRoleAssignment.AssignmentId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureRoleAssignment › AssignmentId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_assignmentid
+- name: model.data.AzureRoleAssignment.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureStorageAccount.Location
+  type: string
+  description: Location label (region/site/zone) emitted by Orca Security. Free-form
+    text; may contain whitespace and punctuation.
+  example: us-east
+- name: model.data.AzureStorageAccount.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureStorageAccount.StoragAccountId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureStorageAccount › StoragAccountId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_storagaccountid
+- name: model.data.AzureSubscriptionDiagnosticSetting.DiagnosticSettingId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureSubscriptionDiagnosticSetting
+    › DiagnosticSettingId'. Leaf of the 'model' composite. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_diagnosticsettin
+- name: model.data.AzureSubscriptionDiagnosticSetting.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureUser.AzureUserId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureUser › AzureUserId'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: usr-326e330c
+- name: model.data.AzureUser.DisplayName
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureUser › DisplayName'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: John Doe
+- name: model.data.AzureUser.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureVNet.AddressSpace
+  type: ipv4
+  description: Vendor-emitted field 'Model › data › AzureVNet › AddressSpace'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: 192.0.2.45
+- name: model.data.AzureVNet.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureWebAppService.HostNames
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureWebAppService › HostNames'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: host01.example.com
+- name: model.data.AzureWebAppService.Location
+  type: string
+  description: Location label (region/site/zone) emitted by Orca Security. Free-form
+    text; may contain whitespace and punctuation.
+  example: us-east
+- name: model.data.AzureWebAppService.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureWebAppService.ResourceGroup.model.name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.AzureWebAppService.WebAppId
+  type: string
+  description: Vendor-emitted field 'Model › data › AzureWebAppService › WebAppId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_webappid
+- name: model.data.Function.FunctionId
+  type: string
+  description: Vendor-emitted field 'Model › data › Function › FunctionId'. Leaf of
+    the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_functionid
+- name: model.data.Function.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpBigqueryDataset.DatasetId
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpBigqueryDataset › DatasetId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_datasetid
+- name: model.data.GcpBigqueryTable.Dataset.model.name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpBigqueryTable.Dataset.model.type
+  type: string_short
+  description: Type/category classifier emitted by Orca Security. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: model.data.GcpBigqueryTable.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpBigqueryTable.NumRows
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpBigqueryTable › NumRows'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_numrows
+- name: model.data.GcpBigqueryTable.TableId
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpBigqueryTable › TableId'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_tableid
+- name: model.data.GcpCertificate.IssuerName
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpCertificate › IssuerName'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_issuername
+- name: model.data.GcpCertificate.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpCertificate.SerialNumber
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpCertificate › SerialNumber'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_serialnumber
+- name: model.data.GcpGkeCluster.CurrentNodeVersion
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpGkeCluster › CurrentNodeVersion'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_currentnodeversi
+- name: model.data.GcpGkeCluster.Endpoint
+  type: ipv4
+  description: Vendor-emitted field 'Model › data › GcpGkeCluster › Endpoint'. Leaf
+    of the 'model' composite. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 203.0.113.42
+- name: model.data.GcpGkeCluster.InstanceGroupUrls
+  type: url
+  description: Vendor-emitted field 'Model › data › GcpGkeCluster › InstanceGroupUrls'.
+    Leaf of the 'model' composite. Full URL with scheme (http/https/ftp); percent-encoded
+    if it contains non-ASCII characters.
+  example: https://example.com/path
+- name: model.data.GcpGkeCluster.LabelFingerprint
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpGkeCluster › LabelFingerprint'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_labelfingerprint
+- name: model.data.GcpGkeCluster.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpGkeCluster.ServicesIpv4Cidr
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpGkeCluster › ServicesIpv4Cidr'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_servicesipv4cidr
+- name: model.data.GcpGkeCluster.zone
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpGkeCluster › zone'. Leaf of
+    the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: us-east-1a
+- name: model.data.GcpIamPolicy.PolicyBindings.models.0.model.data.GcpIamPolicyBinding.Role.model.name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpIamServiceAccount.DisplayName
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpIamServiceAccount › DisplayName'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: John Doe
+- name: model.data.GcpIamServiceAccount.UniqueId
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpIamServiceAccount › UniqueId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_uniqueid
+- name: model.data.GcpKmsKey.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpPubSubSubscription.MessageRetentionDuration
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpPubSubSubscription › MessageRetentionDuration'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_messageretention
+- name: model.data.GcpPubSubSubscription.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpPubSubTopic.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpPubSubTopic.Policy.model.id
+  type: string_short
+  description: Opaque identifier emitted by Orca Security. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: orc-8ab0660f
+- name: model.data.GcpSecretManagerSecret.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpSecretManagerSecret.Regions
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpSecretManagerSecret › Regions'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_regions
+- name: model.data.GcpSecretManagerSecret.SecretId
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpSecretManagerSecret › SecretId'.
+    Leaf of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_secretid
+- name: model.data.GcpUser.Email
+  type: email
+  description: Email address — RFC 5322 `local@domain`. RFC 5322 `local@domain`; one
+    address only.
+  example: user@example.com
+- name: model.data.GcpVmSnapshot.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpVmSnapshot.SnapshotId
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpVmSnapshot › SnapshotId'. Leaf
+    of the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_snapshotid
+- name: model.data.GcpVmSnapshot.Zone
+  type: string
+  description: Vendor-emitted field 'Model › data › GcpVmSnapshot › Zone'. Leaf of
+    the 'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: us-east-1a
+- name: model.data.GcpVpcSubnet.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.GcpVpcSubnet.Region
+  type: string_short
+  description: Cloud region or geographic region label. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: us-east-1
+- name: model.data.GcpVpcSubnet.Vpc.model.id
+  type: string_short
+  description: Opaque identifier emitted by Orca Security. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: orc-1bc3ca18
+- name: model.data.GcpVpcSubnet.Vpc.model.type
+  type: string_short
+  description: Type/category classifier emitted by Orca Security. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: authentication
+- name: model.data.Inventory.Region
+  type: string_short
+  description: Cloud region or geographic region label. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: us-east-1
+- name: model.data.Inventory.Zones
+  type: string
+  description: Vendor-emitted field 'Model › data › Inventory › Zones'. Leaf of the
+    'model' composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_zones
+- name: model.data.Storage.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.User.Name
+  type: user
+  description: Human-readable name as displayed by Orca Security. Account name as
+    the vendor reports it — login name, UPN, or sAMAccountName; no domain prefix unless
+    vendor emits one.
+  example: jsmith
+- name: model.data.User.UserId
+  type: string
+  description: Vendor-emitted field 'Model › data › User › UserId'. Leaf of the 'model'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: usr-fc399bae
+- name: model.data.Vpc.Name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: model.data.Vpc.VpcId
+  type: string
+  description: Vendor-emitted field 'Model › data › Vpc › VpcId'. Leaf of the 'model'
+    composite. Free-form text; may contain whitespace and punctuation.
+  example: sample_vpcid
+- name: model.data.name
+  type: string
+  description: Human-readable name as displayed by Orca Security. Free-form text;
+    may contain whitespace and punctuation.
+  example: sample_name
+- name: state.alert_id
+  type: string_short
+  description: Opaque identifier emitted by Orca Security. Short opaque token, typically
+    without whitespace; max ~64 chars.
+  example: orc-61e8ac0b
+- name: state.severity
+  type: string_short
+  description: Event severity as classified by Orca Security. Short opaque token,
+    typically without whitespace; max ~64 chars.
+  example: INFO
+use_cases:
+- CSPM
+- Cloud
+how_to_use: |
+  ## Orca Security Orca → Cortex XSIAM (dataset `orca_security_raw`)
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `orca_security_raw`).
+
+    **Required CEF header for XSIAM** — the header must normalize to `orca_security`. The marketplace pack's display name `Orca Security` / `Orca` normalizes to `orca_security_orca_raw`, a **different dataset** (vendor rename / legacy CEF identity), so use the vendor's actual CEF `deviceVendor`/`deviceProduct` that yields `orca_security` and confirm which dataset the events land in.
+
+    **Ingestion shape**: **JSON-native.** The modeling rule reads nested JSON (e.g. `$.title`). CEF/syslog routes + lands and the broker extracts top-level columns; the nested reads need the composite present, so Phantom's worker JSON-stringifies `type: json` composites onto the wire (keep the dotted-leaf fields).
+
+    - **Modeling-rule gate**: `cloud_provider = "gcp"` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~46 fields mapped to the unified data model (`xdm.*`), including: `xdm.alert.description`, `xdm.alert.mitre_tactics`, `xdm.alert.mitre_techniques`, `xdm.alert.name`, `xdm.alert.original_alert_id`, `xdm.alert.severity`.
+
+    **Operator setup**: This data source has typed-column data that does not look like CEF
+    (camelCase API fields, JSON sub-objects). In production the vendor is usually collected
+    over an HTTP/API path -- that is IRRELEVANT to Phantom. Parsing and modeling rules are
+    protocol-agnostic: they match on the DATA SHAPE (field names, JSON paths, value types), not
+    on how the event arrived. Phantom always delivers over syslog/CEF to the Cortex Broker and
+    never uses an HTTP collector or an API integration. For a JSON-shaped rule, declare the
+    composite's dotted-leaf fields (`parent.child.leaf`) in `fields[]` so the generator builds
+    the nested object -- nested JSON survives CEF-over-syslog intact, XML payloads included. If
+    a rule reads `json_extract_scalar(x, "$.y")` then `x` must be a JSON OBJECT on the wire,
+    not a flat column literally named `x.y`.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `xdm.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = orca_security_raw | sort desc _time | fields xdm.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.

@@ -1,0 +1,311 @@
+schema_version: 1
+id: LinuxEventsCollection
+pack_name: LinuxEventsCollection
+rule_name: LinuxEventsCollection
+dataset_name: linux_linux_raw
+vendor: Linux
+product: LinuxEventsCollection
+description: Linux is an operating system for servers, desktops, cloud, and IoTs
+categories:
+- Analytics & SIEM
+version: 1.0.23
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-05-23T09:26:17Z'
+updated_at: '2026-05-23T09:26:17Z'
+logo:
+  mime_type: image/svg+xml
+  data: PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TGludXg8L3RpdGxlPjxwYXRoIGQ9Ik0xMi41MDQgMGMtLjE1NSAwLS4zMTUuMDA4LS40OC4wMjEtNC4yMjYuMzMzLTMuMTA1IDQuODA3LTMuMTcgNi4yOTgtLjA3NiAxLjA5Mi0uMyAxLjk1My0xLjA1IDMuMDItLjg4NSAxLjA1MS0yLjEyNyAyLjc1LTIuNzE2IDQuNTIxLS4yNzguODMyLS40MSAxLjY4NC0uMjg3IDIuNDg5YS40MjQuNDI0IDAgMDAtLjExLjEzNWMtLjI2LjI2OC0uNDUuNi0uNjYzLjgzOS0uMTk5LjE5OS0uNDg1LjI2Ny0uNzk3LjQtLjMxMy4xMzYtLjY1OC4yNjktLjg2NC42OC0uMDkuMTg5LS4xMzYuMzk0LS4xMzIuNjAyIDAgLjE5OS4wMjcuNC4wNTUuNTM2LjA1OC4zOTkuMTE2LjcyOC4wNC45Ny0uMjQ5LjY4LS4yOCAxLjE0NS0uMTA2IDEuNDg0LjE3NC4zMzQuNTM1LjQ3Ljk0LjYwMS44MS4yIDEuOTEuMTM1IDIuNzc0LjYuOTI2LjQ2NiAxLjg2Ni42NyAyLjYxNi40Ny41MjYtLjExNi45Ny0uNDY0IDEuMjA4LS45NDYuNTg3LS4wMDMgMS4yMy0uMjY5IDIuMjYtLjMzNC42OTktLjA1OCAxLjU3NC4yNjcgMi41NzcuMi4wMjUuMTM0LjA2My4xOTguMTE0LjMzM2wuMDAzLjAwM2MuMzkxLjc3OCAxLjExMyAxLjEzMiAxLjg4NCAxLjA3MS43NzEtLjA2IDEuNTkyLS41MzYgMi4yNTctMS4zMDYuNjMxLS43NjUgMS42ODMtMS4wODQgMi4zNzgtMS41MDMuMzQ4LS4xOTkuNjI5LS40NjkuNjQ5LS44NTMuMDIzLS40LS4yLS44MTEtLjcxNC0xLjM3NnYtLjA5N2wtLjAwMy0uMDAzYy0uMTctLjItLjI1LS41MzUtLjMzOC0uOTI2LS4wODUtLjQwMS0uMTgyLS43ODYtLjQ5Mi0xLjA0NmgtLjAwM2MtLjA1OS0uMDU0LS4xMjMtLjA2Ny0uMTg4LS4xMzVhLjM1Ny4zNTcgMCAwMC0uMTktLjA2NGMuNDMxLTEuMjc4LjI2NC0yLjU1LS4xNzMtMy42OTQtLjUzMy0xLjQxLTEuNDY1LTIuNjM4LTIuMTc1LTMuNDgzLS43OTYtMS4wMDUtMS41NzYtMS45NTctMS41Ni0zLjM2OC4wMjYtMi4xNTIuMjM2LTYuMTMzLTMuNTQ0LTYuMTM5em0uNTI5IDMuNDA1aC4wMTNjLjIxMyAwIC4zOTYuMDYyLjU4NC4xOTguMTkuMTM1LjMzLjMzMi40MzguNTMzLjEwNS4yNTkuMTU4LjQ1OS4xNjYuNzI0IDAtLjAyLjAwNi0uMDQuMDA2LS4wNnYuMTA1YS4wODYuMDg2IDAgMDEtLjAwNC0uMDIxbC0uMDA0LS4wMjRhMS44MDcgMS44MDcgMCAwMS0uMTUuNzA2Ljk1My45NTMgMCAwMS0uMjEzLjMzNS43MS43MSAwIDAwLS4wODgtLjA0MmMtLjEwNC0uMDQ1LS4xOTgtLjA2NC0uMjg0LS4xMzNhMS4zMTIgMS4zMTIgMCAwMC0uMjItLjA2NmMuMDUtLjA2LjE0Ni0uMTMzLjE4My0uMTk4LjA1My0uMTI4LjA4Mi0uMjY0LjA4OC0uNDAydi0uMDJhMS4yMSAxLjIxIDAgMDAtLjA2MS0uNGMtLjA0NS0uMTM0LS4xMDEtLjItLjE4My0uMzMzLS4wODQtLjA2Ni0uMTY3LS4xMzItLjI2Ny0uMTMyaC0uMDE2Yy0uMDkzIDAtLjE3Ni4wMy0uMjYyLjEzMmEuOC44IDAgMDAtLjIwNS4zMzQgMS4xOCAxLjE4IDAgMDAtLjA5LjR2LjAxOWMuMDAyLjA4OS4wMDguMTc5LjAyLjI2Ny0uMTkzLS4wNjctLjQzOC0uMTM1LS42MDctLjIwMmExLjYzNSAxLjYzNSAwIDAxLS4wMTgtLjJ2LS4wMmExLjc3MiAxLjc3MiAwIDAxLjE1LS43NjhjLjA4Mi0uMjIuMjMyLS40MDYuNDMtLjUzM2EuOTg1Ljk4NSAwIDAxLjU5NC0uMnptLTIuOTYyLjA1OWguMDM2Yy4xNDIgMCAuMjcuMDQ4LjM5OS4xMzUuMTQ2LjEyOS4yNjQuMjg4LjM0NC40NjUuMDkuMTk5LjE0LjQuMTUzLjY2N3YuMDA0Yy4wMDcuMTM0LjAwNi4yLS4wMDIuMjY2di4wOGMtLjAzLjAwNy0uMDU2LjAxOC0uMDgzLjAyNC0uMTUyLjA1NS0uMjc0LjEzNS0uMzkzLjIuMDEyLS4wOS4wMTMtLjE4LjAwMy0uMjY3di0uMDE1Yy0uMDEyLS4xMzMtLjA0LS4yLS4wODItLjMzM2EuNjEzLjYxMyAwIDAwLS4xNjYtLjI2Ny4yNDguMjQ4IDAgMDAtLjE4My0uMDY0aC0uMDIxYy0uMDcxLjAwNi0uMTMuMDQtLjE4Ni4xMzJhLjU1Mi41NTIgMCAwMC0uMTIuMjcuOTQ0Ljk0NCAwIDAwLS4wMjMuMzN2LjAxNWMuMDEyLjEzNS4wMzcuMi4wOC4zMzQuMDQ2LjEzNC4wOTguMi4xNjYuMjY4LjAxLjAwOS4wMi4wMTguMDM0LjAyNC0uMDcuMDU3LS4xMTcuMDctLjE3Ni4xMzZhLjMwNC4zMDQgMCAwMS0uMTMxLjA2OCAyLjYyIDIuNjIgMCAwMS0uMjc1LS40MDIgMS43NzIgMS43NzIgMCAwMS0uMTU1LS42NjcgMS43NTkgMS43NTkgMCAwMS4wOC0uNjY4IDEuNDMgMS40MyAwIDAxLjI4My0uNTM1Yy4xMjgtLjEzMy4yNi0uMi40MTgtLjJ6bTEuMzcgMS43MDZjLjMzMiAwIC43MzMuMDY1IDEuMjE2LjM5OS4yOTMuMi41MjMuMjY5IDEuMDUyLjQ2OGguMDAzYy4yNTUuMTM2LjQwNS4yNjYuNDc4LjM5OXYtLjEzMWEuNTcxLjU3MSAwIDAxLjAxNi40N2MtLjEyMy4zMS0uNTE2LjY0My0xLjA2My44NDJ2LjAwMmMtLjI2OC4xMzUtLjUwMS4zMzMtLjc3NS40NjUtLjI3Ni4xMzUtLjU4OC4yOTItMS4wMTIuMjY3YTEuMTM5IDEuMTM5IDAgMDEtLjQ0OC0uMDY3IDMuNTY2IDMuNTY2IDAgMDEtLjMyMi0uMTk4Yy0uMTk1LS4xMzUtLjM2My0uMzMyLS42MTItLjQ2NXYtLjAwNWgtLjAwNWMtLjQtLjI0Ni0uNjE2LS41MTItLjY4Ni0uNzEtLjA3LS4yNjgtLjAwNS0uNDcuMTkzLS42LjIyNC0uMTM1LjM4LS4yNzEuNDgzLS4zMzYuMTA0LS4wNzQuMTQzLS4xMDIuMTc2LS4xMzFoLjAwMnYtLjAwM2MuMTY5LS4yMDIuNDM2LS40Ny44MzktLjYwMS4xMzktLjAzNi4yOTQtLjA2NS40NjYtLjA2NXptMi44IDIuMTQyYy4zNTggMS40MTcgMS4xOTYgMy40NzUgMS43MzUgNC40NzMuMjg2LjUzNC44NTUgMS42NTkgMS4xMDIgMy4wMjQuMTU2LS4wMDUuMzMuMDE4LjUxMy4wNjQuNjQ2LTEuNjcxLS41NDYtMy40NjctMS4wODktMy45NjYtLjIyLS4yLS4yMzItLjMzNS0uMTIzLS4zMzUuNTkuNTM0IDEuMzY1IDEuNTcyIDEuNjQ2IDIuNzU3LjEzLjUzNS4xNiAxLjEwNC4wMjEgMS42Ny4wNjcuMDI4LjEzNS4wNi4yMDUuMDY3IDEuMDMyLjUzNCAxLjQxMy45MzggMS4yMyAxLjUzN3YtLjA0M2MtLjA2LS4wMDMtLjEyIDAtLjE4IDBoLS4wMTZjLjE1MS0uNDY3LS4xODItLjgyNS0xLjA2NS0xLjIyNC0uOTE1LS40LTEuNjQ2LS4zMzYtMS43Ny40NjUtLjAwOC4wNDMtLjAxMy4wNjYtLjAxOC4xMzUtLjA2OC4wMjMtLjEzOS4wNTMtLjIwOS4wNjQtLjQzLjI2OC0uNjYyLjY2OS0uNzkzIDEuMTg3LS4xMy41MzMtLjE3IDEuMTU2LS4yMDUgMS44Njl2LjAwM2MtLjAyLjMzNC0uMTcuODM4LS4zMTkgMS4zNS0xLjUgMS4wNzItMy41OCAxLjUzOC01LjM0OC4zMzRhMi42NDUgMi42NDUgMCAwMC0uNDAyLS41MzMgMS40NSAxLjQ1IDAgMDAtLjI3NS0uMzMzYy4xODIgMCAuMzM4LS4wMy40NjUtLjA2N2EuNjE1LjYxNSAwIDAwLjMxNC0uMzM0Yy4xMDgtLjI2NyAwLS42OTctLjM0NS0xLjE2My0uMzQ1LS40NjctLjkzMS0uOTk1LTEuNzg4LTEuNTIxLS42My0uNC0uOTg2LS44Ny0xLjE1LTEuMzk2LS4xNjUtLjUzNC0uMTQzLTEuMDg1LS4wMTUtMS42NDUuMjQ1LTEuMDcuODczLTIuMTEgMS4yNzQtMi43NjMuMTA3LS4wNjUuMDM3LjEzNS0uNDA4Ljk3NC0uMzk2Ljc1MS0xLjE0IDIuNDk3LS4xMjIgMy44NTRhOC4xMjMgOC4xMjMgMCAwMS42NDctMi44NzZjLjU2NC0xLjI3OCAxLjc0My0zLjUwNCAxLjgzNi01LjI2OC4wNDguMDM2LjIxNy4xMzUuMjg5LjIwMi4yMTguMTMzLjM4LjMzMy41OS40NjUuMjEuMjAxLjQ3Ny4zMzUuODc2LjMzNS4wMzkuMDAzLjA3NS4wMDYuMTEuMDA2LjQxMiAwIC43My0uMTM0Ljk5Ny0uMjY4LjI5LS4xMzQuNTItLjMzNC43NC0uNGguMDA1Yy40NjctLjEzNS44MzUtLjQwMiAxLjA0NC0uN3ptMi4xODUgOC45NThjLjAzNy42LjM0MyAxLjI0NS44ODIgMS4zNzcuNTg4LjEzNCAxLjQzNC0uMzMzIDEuNzkxLS43NjVsLjIxMS0uMDFjLjMxNS0uMDA3LjU3Ny4wMS44NDcuMjY4bC4wMDMuMDAzYy4yMDguMTk5LjMwNS41My4zOTEuODc2LjA4NS40LjE1NC43OC40MDkgMS4wNjYuNDg2LjUyNy42NDUuOTA2LjYzNiAxLjE0bC4wMDMtLjAwN3YuMDE4bC0uMDAzLS4wMTJjLS4wMTUuMjYyLS4xODUuMzk2LS40OTguNTk1LS42My40MDEtMS43NDYuNzEyLTIuNDU3IDEuNTctLjYxOC43MzctMS4zNyAxLjE0LTIuMDM2IDEuMTkxLS42NjQuMDUzLTEuMjM3LS4yLTEuNTc0LS44OThsLS4wMDUtLjAwM2MtLjIxLS40LS4xMi0xLjAyNS4wNTYtMS42OS4xNzYtLjY2OC40MjgtMS4zNDQuNDYzLTEuODk3LjAzNy0uNzE0LjA3Ni0xLjMzNS4xOTUtMS44MTQuMTItLjQ2NS4zMDgtLjc5Ny42NDEtLjk4NGwuMDQ1LS4wMjJ6bS0xMC44MTQuMDQ5aC4wMWMuMDUzIDAgLjEwNS4wMDUuMTU3LjAxNC4zNzYuMDU1LjcwNi4zMzMgMS4wMjMuNzUybC45MSAxLjY2NC4wMDMuMDAzYy4yNDMuNTMzLjc1NCAxLjA2NCAxLjE4OSAxLjYzNy40MzQuNTk4Ljc3IDEuMTMxLjcyOSAxLjU3di4wMDZjLS4wNTcuNzQ0LS40OCAxLjE0OC0xLjEyNSAxLjI5NC0uNjQ1LjEzNS0xLjUyLjAwMi0yLjM5NS0uNDY0LS45NjgtLjUzNi0yLjExOC0uNDY5LTIuODU3LS42MDItLjM2OS0uMDY2LS42MS0uMi0uNzIzLS40LS4xMS0uMi0uMTEzLS42MDIuMTIzLTEuMjN2LS4wMDRsLjAwMi0uMDAzYy4xMTctLjMzNC4wMy0uNzUyLS4wMjctMS4xMTgtLjA1NS0uNDAxLS4wODMtLjcxLjA0My0uOTQuMTYtLjMzNC4zOTYtLjQuNjktLjUzMy4yOTQtLjEzNS42NC0uMjAyLjkxNS0uNDdoLjAwMnYtLjAwMmMuMjU2LS4yNjguNDQ1LS42MDEuNjY4LS44MzguMTktLjIwMS4zOC0uMzM2LjY2My0uMzM2em03LjE1OS05LjA3NGMtLjQzNS4yMDEtLjk0NS41MzUtMS40ODguNTM1LS41NDIgMC0uOTctLjI2Ny0xLjI4LS40NjYtLjE1NC0uMTM0LS4yOC0uMjY4LS4zNzMtLjMzNS0uMTY0LS4xMzQtLjE0NC0uMzMzLS4wNzQtLjMzMy4xMDkuMDE2LjEyOS4xMzQuMTk5LjIuMDk2LjA2Ni4yMTUuMi4zNi4zMzMuMjkyLjIuNjguNDY3IDEuMTY3LjQ2Ny40ODUgMCAxLjA1My0uMjY3IDEuMzk4LS40NjYuMTk1LS4xMzUuNDQ1LS4zMzQuNjQ4LS40NjcuMTU2LS4xMzYuMTQ5LS4yNjcuMjc5LS4yNjcuMTI4LjAxNi4wMzQuMTM0LS4xNDcuMzMyYTguMDk3IDguMDk3IDAgMDEtLjY5LjQ2OHptLTEuMDgyLTEuNTgzVjUuNjRjLS4wMDYtLjAyLjAxMy0uMDQyLjAyOS0uMDUuMDc0LS4wNDMuMTgtLjAyNy4yNi4wMDQuMDYzIDAgLjE2LjA2Ny4xNS4xMzUtLjAwNi4wNDktLjA4NS4wNjYtLjEzNS4wNjYtLjA1NSAwLS4wOTItLjA0My0uMTQxLS4wNjgtLjA1Mi0uMDE4LS4xNDYtLjAwOC0uMTYzLS4wNjV6bS0uNTUxIDBjLS4wMi4wNTgtLjExMy4wNDktLjE2Ni4wNjYtLjA0Ny4wMjUtLjA4Ni4wNjgtLjE0LjA2OC0uMDUgMC0uMTMtLjAyLS4xMzYtLjA2OC0uMDEtLjA2Ni4wODgtLjEzMy4xNS0uMTMzLjA4LS4wMzEuMTg0LS4wNDcuMjU5LS4wMDUuMDE5LjAwOS4wMzYuMDMuMDMuMDV2LjAyaC4wMDN6Ii8+PC9zdmc+
+  source: phantom-bundle
+  license: MIT
+  fidelity: branded
+formats:
+- SYSLOG
+- CEF
+- JSON
+is_rawlog_only: false
+fields:
+- name: _log_source_file_name
+  type: string
+  description: File or process name reported by the vendor. Free-form text; may contain
+    whitespace and punctuation.
+  example: /var/log/linuxeventscollection.log
+- name: _raw_log
+  type: string
+  description: 'Native linux_linux log line as the vendor emits it (no syslog frame -- the RAW sender prepends one). Branch: syslog/messages branch. The rule''s OTHER branch (auth/secure) needs facility_val in (4,10,13), derived from an ANCHORED ^\<(\d{0,2}) on the frame''s priority -- our sender emits a fixed <134>, which that pattern reads as '
+  example: '{{now:%b %e %H:%M:%S}} web01 sshd[12345]: Accepted publickey for jdoe from 10.14.22.87 port 54321 ssh2'
+- name: accepted
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: authentication_protocol
+  type: string
+  description: Network application protocol. Free-form text; may contain whitespace
+    and punctuation.
+  example: tcp
+- name: command
+  type: string
+  description: Destination process command line. Free-form text; may contain whitespace
+    and punctuation.
+  example: /usr/bin/curl https://example.com/
+- name: cwd
+  type: string
+  description: Source process executable path. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_cwd
+- name: euid
+  type: string
+  description: Euid. Free-form text; may contain whitespace and punctuation.
+  example: sample_euid
+- name: event_description
+  type: string
+  description: Event description. Free-form text; may contain whitespace and punctuation.
+  example: Event recorded by Linux.
+- name: event_type
+  type: string
+  description: Event original event type. Free-form text; may contain whitespace and
+    punctuation.
+  example: authentication
+- name: filename
+  type: string
+  description: Destination file path. Free-form text; may contain whitespace and punctuation.
+  example: document.pdf
+- name: hostname
+  type: host
+  description: Source host hostname. Hostname or fully-qualified domain name (RFC
+    1035 dotted labels); no protocol prefix.
+  example: host01.example.com
+- name: in
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: log_level
+  type: string
+  description: Event log level. Free-form text; may contain whitespace and punctuation.
+  example: info
+- name: logged_in_user
+  type: user
+  description: Logged in user. Account name as the vendor reports it — login name,
+    UPN, or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jdoe
+- name: operation
+  type: string
+  description: Event operation sub type. Free-form text; may contain whitespace and
+    punctuation.
+  example: create
+- name: outcome_reason
+  type: string_short
+  description: Event outcome reason. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: pass
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: pid
+  type: integer
+  description: Source process PID. Free-form text; may contain whitespace and punctuation.
+  example: '4242'
+- name: process_name
+  type: string
+  description: Event type. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: pwd
+  type: string
+  description: Pwd. Free-form text; may contain whitespace and punctuation.
+  example: sample_pwd
+- name: remote_user
+  type: user
+  description: Remote user. Account name as the vendor reports it — login name, UPN,
+    or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jdoe
+- name: session_id
+  type: string_short
+  description: Network session ID. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: sha256
+  type: hash_sha256
+  description: Source process executable SHA256. 64-character lowercase hex SHA-256
+    digest.
+  example: 2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824
+- name: src_ip
+  type: ipv4
+  description: Source IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port suffix,
+    no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: src_port
+  type: integer_port
+  description: Source port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: ssh
+  type: string
+  description: Network application protocol category. Free-form text; may contain
+    whitespace and punctuation.
+  example: sample_ssh
+- name: su
+  type: user
+  description: Source user username. Account name as the vendor reports it — login
+    name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: sub_process
+  type: string
+  description: Source application name. Free-form text; may contain whitespace and
+    punctuation.
+  example: explorer.exe
+- name: succeed
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: success
+  type: string_short
+  description: Event outcome. Short opaque token, typically without whitespace; max
+    ~64 chars.
+  example: token
+- name: target_directory
+  type: string
+  description: Destination file directory. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_directory
+- name: target_group
+  type: string
+  description: Destination user groups. Free-form text; may contain whitespace and
+    punctuation.
+  example: grp-80083d60
+- name: target_group_id
+  type: string_short
+  description: Target group id. Short opaque token, typically without whitespace;
+    max ~64 chars.
+  example: token
+- name: target_group_name
+  type: string
+  description: Target group name. Free-form text; may contain whitespace and punctuation.
+  example: sample_name
+- name: target_ip
+  type: ipv4
+  description: Destination IPv4. Dotted-quad IPv4 literal (e.g., 192.0.2.45); no port
+    suffix, no surrounding brackets or quotes.
+  example: 192.0.2.45
+- name: target_pid
+  type: integer
+  description: Destination process PID. Free-form text; may contain whitespace and
+    punctuation.
+  example: '4242'
+- name: target_port
+  type: integer_port
+  description: Destination port. Unsigned integer 0-65535 representing a TCP/UDP port;
+    bare digits, no quotes.
+  example: '443'
+- name: target_process_name
+  type: string
+  description: Destination process name. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_name
+- name: target_service
+  type: string
+  description: Target service. Free-form text; may contain whitespace and punctuation.
+  example: sshd
+- name: target_uid
+  type: string
+  description: Destination user identifier. Free-form text; may contain whitespace
+    and punctuation.
+  example: sample_uid
+- name: target_username
+  type: user
+  description: Destination user username. Account name as the vendor reports it —
+    login name, UPN, or sAMAccountName depending on the source; no domain prefix unless
+    the vendor emits one.
+  example: jdoe
+- name: tty
+  type: string
+  description: Source interface. Free-form text; may contain whitespace and punctuation.
+  example: sample_tty
+- name: uid
+  type: string
+  description: Source user identifier. Free-form text; may contain whitespace and
+    punctuation.
+  example: sample_uid
+- name: username
+  type: user
+  description: Username. Account name as the vendor reports it — login name, UPN,
+    or sAMAccountName depending on the source; no domain prefix unless the vendor
+    emits one.
+  example: jdoe
+use_cases:
+- OS
+how_to_use: |
+  ## linux linux → Cortex XSIAM (dataset `linux_linux_raw`)
+
+  **WIRE FORMAT -- use `type=RAW`, NOT CEF.** This source's modeling rule
+  extracts its fields from `_raw_log`, the vendor's own log line. A CEF event's
+  extensions become dataset COLUMNS and the broker leaves `_raw_log` EMPTY, so
+  over CEF this rule maps NOTHING however the schema is shaped. Create the
+  worker with `type=RAW`: the generator pins `_raw_log` to this schema's
+  `_raw_log` example (or to an `observables_dict` override) and the sender ships
+  that line syslog-framed, verbatim.
+
+  **Routing for RAW.** A raw line carries no CEF header, so the broker cannot
+  derive vendor/product from the wire. A Broker syslog collector row must map
+  this source's listener port to vendor `linux` / product `linux`, taken verbatim
+  from this pack's parsing-rule INGEST block -- that is the literal the broker
+  actually routes on. These are NOT the display `vendor`/`product` fields in
+  this schema, which differ. Without that row the event lands in
+  `unknown_unknown_raw`.
+
+  This source's PARSING rule also reads `_raw_log` -- over CEF it receives
+  nothing, so the parsing rule extracts NO columns at all and every
+  column-derived field in the modeling rule stays empty too. CEF does not
+  merely lose some fields here; it breaks the whole chain.
+
+    **Routing** — the broker lowercases the CEF/syslog header `vendor`/`product`, replaces
+    non-alphanumerics with `_`, and appends `_raw` to choose the dataset (target: `linux_linux_raw`).
+
+    **Required CEF header for XSIAM**:
+    - **vendor**: `linux`
+    - **product**: `linux`
+
+    These normalize → `linux_linux_raw`.
+
+    **Ingestion shape**: **Flat / CEF-compatible.** The modeling rule reads flat top-level columns (no nested-JSON access). A CEF event routes in and the broker auto-extracts those columns, so this source maps from Phantom's existing CEF path once the dataset is XDM-bound.
+
+    - **Modeling-rule gate**: `_log_source_file_name in("auth*", "secure") or facility_val in(4,10,13)` — seed that field with an accepted value or the rule drops the row (XDM stays 0).
+
+    **XDM mapping**: ~53 fields mapped to the **Endpoint** data model (`XDM.Endpoint.*`), including: `XDM.Auth.Client.host.hostname`, `XDM.Auth.Client.ipv4`, `XDM.Auth.Client.process.name`, `XDM.Auth.Client.process.pid`, `XDM.Auth.event_timestamp`, `XDM.Auth.original_event_description`.
+
+    **Operator setup**: This data source uses `_raw_log`-based parsing. Cortex's parsing rule reads from `_raw_log` to populate `_json` (or directly to extract XDM fields), and the modeling rule does `regextract`/`json_extract_scalar` on `_raw_log`. For simulated logs sent from Phantom to land in this dataset, **the operator must add a Broker VM Syslog Applet pre-configured with the matching vendor + product + a dedicated source port**. Without that applet, logs are tagged `unknown/unknown` and routed to `unknown_unknown_raw` — the parsing rule never fires. 
+
+  Setup: XSIAM → Settings → Configurations → Data Broker → Applets → Add Applet (Syslog) → Vendor = `linux`, Product = `linux`, Port = (operator picks an unused port, e.g. 1514, 1515, ...). Phantom must then send to that port — current default is 514, which is reserved for the ASA applet.
+
+    **Status**: Routing, gate and field inventory are derived from the parsing/modeling rules. **Not yet XDM-validated** (no `validated` pill); validate by
+    streaming a CEF batch and confirming a rich `XDM.Endpoint.*` count over a wide window.
+
+    **Verify** (once the dataset is XDM-bound, wide ≥7d window):
+
+        config timeframe = 30d | datamodel dataset = linux_linux_raw | sort desc _time | fields XDM.Endpoint.* | limit 20
+
+  **How simulation works — read this before generating.** `phantom_create_data_worker`
+  resolves each field's value in this order:
+
+    1. `observables_dict[field]` — explicit; always wins. Values are LISTS.
+    2. `is_gate` + `example` — gate fields are auto-pinned to their example.
+    3. declared `type` — ipv4/user/url/datetime are synthesized plausibly.
+    4. field-name heuristic.
+    5. random token.
+
+  **A field's `example` below is DOCUMENTATION ONLY unless that field is marked
+  `is_gate`.** So every field the modeling rule reads expecting a specific SHAPE --
+  an enum, an HTTP method, a status code, a resource path, a numeric type code, an
+  XML or JSON blob -- MUST be passed in `observables_dict`, with keys spelled
+  exactly as `fields[]` spells them (dotted leaves included, e.g.
+  `event_data.param2`). Anything you leave out is randomly generated, and the rule
+  will map it to garbage or drop the event.
