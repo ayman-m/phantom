@@ -33,6 +33,7 @@
 
 import { NextResponse } from 'next/server';
 import { resolveMcp } from '@/lib/mcp-proxy';
+import { resolveToolName, type ListedTool } from '@/lib/tool-name-resolution';
 
 export const dynamic = 'force-dynamic';
 
@@ -153,9 +154,10 @@ function parseFirstJsonRpcFrame(sseBody: string): {
 }
 
 /** Resolve a bare tool name (e.g. "get_cases_and_issues") against the
- *  MCP's registered tool list. Returns the first match — if multiple
- *  tools share the bare-name suffix, an error is returned naming the
- *  ambiguity so the operator can disambiguate. */
+ *  MCP's registered tool list. The matching rules (exact, suffix, and
+ *  treating a namespaced tool and its legacy flat alias as one) live in
+ *  lib/tool-name-resolution.ts; a real clash between different tools still
+ *  returns an error naming the candidates. */
 async function resolveBareName(
   base: string,
   token: string,
@@ -186,33 +188,8 @@ async function resolveBareName(
   if (!frame.ok || !frame.payload) {
     return { error: 'could not list tools to resolve bare name' };
   }
-  const tools =
-    (frame.payload as { tools?: Array<{ name: string }> })?.tools ?? [];
-
-  // Exact match wins.
-  const exact = tools.find((t) => t.name === bareName);
-  if (exact) return { resolved: exact.name };
-
-  // Suffix match: any tool whose name ends with ".<bare>" (connector-
-  // namespaced) or "_<bare>" (functionPrefix style).
-  const matches = tools.filter(
-    (t) => t.name === bareName ||
-      t.name.endsWith(`.${bareName}`) ||
-      t.name.endsWith(`_${bareName}`),
-  );
-  if (matches.length === 0) {
-    return {
-      error: `no tool matched "${bareName}"; try the fully-qualified name (e.g. "cortex-xdr.get_cases_and_issues" or "xdr_get_cases_and_issues")`,
-    };
-  }
-  if (matches.length > 1) {
-    return {
-      error: `ambiguous tool name "${bareName}" — matched: ${matches
-        .map((m) => m.name)
-        .join(', ')}. Use a fully-qualified name.`,
-    };
-  }
-  return { resolved: matches[0].name };
+  const tools = (frame.payload as { tools?: ListedTool[] })?.tools ?? [];
+  return resolveToolName(tools, bareName);
 }
 
 export async function POST(request: Request): Promise<NextResponse<ToolCallResponse>> {

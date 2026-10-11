@@ -95,7 +95,9 @@ class CreateDataWorkerRequest(BaseModel):
         default=1,
         ge=1,
         description=(
-            "Events per BATCH TICK — NOT a total. Combined with `interval` this "
+            "With `schema_override`: events per BATCH TICK — NOT a total. WITHOUT "
+            "`schema_override`: the TOTAL number of events the worker sends before it "
+            "stops. Combined with `interval` (schema_override path) this "
             "is a SUSTAINED RATE of count/interval events per second, and the "
             "worker runs until you stop it. count=200, interval=1 is therefore "
             "200 events/SECOND (~17 million/day), not '200 events'. "
@@ -418,18 +420,29 @@ def _bound_by_default(fn):
     @functools.wraps(fn)
     async def wrapper(*args, **kwargs):
         continuous = bool(kwargs.pop("continuous", False))
-        defaulted = not continuous and not (kwargs.get("duration_seconds") or kwargs.get("max_events"))
+        # The streaming (schema_override) sender is the one that honours a lifetime or an event cap. The generic path
+        # sends through xlog's count-bounded Rosetta sender, which ends by itself after `count` events and has no such
+        # fields (see the log-step comment in phantom_create_data_worker), so a default lifetime there would be a lie.
+        streaming = bool(kwargs.get("schema_override"))
+        explicit_bound = bool(kwargs.get("duration_seconds") or kwargs.get("max_events"))
+        defaulted = streaming and not continuous and not explicit_bound
         if defaulted:
             kwargs["duration_seconds"] = DEFAULT_WORKER_SECONDS
         result = await fn(*args, **kwargs)
         if isinstance(result, list) and result and isinstance(result[0], dict):
-            if defaulted:
+            if not streaming:
+                note = {"bounded_by": "count: without schema_override the worker stops by itself after `count` events; "
+                                      "duration_seconds, max_events and continuous apply only when schema_override is passed."}
+                if explicit_bound or continuous:
+                    note["warning"] = "duration_seconds / max_events / continuous were ignored on this path."
+                result[0] = {**result[0], **note}
+            elif defaulted:
                 result[0] = {**result[0], "bounded_by_default": {
                     "duration_seconds": DEFAULT_WORKER_SECONDS,
                     "why": "no duration_seconds or max_events was given, so the worker stops by itself after this long. "
                            "Pass duration_seconds or max_events to choose the bound, or continuous=true when the operator "
                            "asked for a worker that runs until it is stopped."}}
-            elif continuous and not (kwargs.get("duration_seconds") or kwargs.get("max_events")):
+            elif continuous and not explicit_bound:
                 result[0] = {**result[0], "warning": "This worker is continuous: it runs until it is stopped with kill_worker "
                                                     "(or the host's worker lifetime guard reaps it)."}
         return result
@@ -467,10 +480,11 @@ async def phantom_create_data_worker(
     """
     Create a data worker to continuously send fake logs to a destination.
 
-    EVERY WORKER HAS A LIFETIME. Pass `duration_seconds` (for example 120) or `max_events` to choose it. When you pass neither,
+    EVERY STREAMING WORKER HAS A LIFETIME (a worker created with `schema_override`). Pass `duration_seconds` (for example 120) or `max_events` to choose it. When you pass neither,
     the worker stops by itself after 900 seconds and the result carries `bounded_by_default`. Only when the operator
     explicitly asks for a worker that keeps running until it is stopped ("keep streaming", "continuously") pass
-    `continuous=true`; that worker runs until you stop it with kill_worker.
+    `continuous=true`; that worker runs until you stop it with kill_worker. Without `schema_override` the worker is bounded by
+    `count` instead (it stops after that many events) and `duration_seconds`, `max_events` and `continuous` do not apply.
 
     This tool creates a worker that generates and sends fake log data at regular intervals
     to a specified destination. Supports UDP Syslog, TCP Syslog  and XSIAM Webhook.
@@ -758,11 +772,11 @@ async def phantom_create_data_worker(
         "version": request.version,
         "count": request.count,
         "interval": request.interval,
-        # Forwarded so the server can price this as a bounded burst rather
-        # than as sustained generation. Omitted when unset.
-        **({"durationSeconds": request.duration_seconds}
-           if request.duration_seconds else {}),
-        **({"maxEvents": request.max_events} if request.max_events else {}),
+        # No durationSeconds / maxEvents here: this step type (xlog's
+        # WorkerFakerInput) has no such fields, and the generic path sends
+        # through the count-bounded Rosetta sender, which ends by itself and is
+        # never priced as a burst. The burst bounds belong to the
+        # schema_override path above, where the input type defines them.
         "datetimeIso": request.datetime_iso,
         "fields": fields,
         "observablesDict": observables_dict,

@@ -54,6 +54,23 @@
 
 services:
 
+  # ───────────────────────────────────────────────────────────────
+  # phantom-tls-init — one-shot. Creates the self-signed cert + key on the
+  # shared phantom_tls volume (never overwrites an existing pair) and exits.
+  # xlog and phantom-agent both wait for it to finish, so each finds the
+  # cert on disk at its own first boot. Without this step the cert
+  # was written by phantom-agent, which compose starts only after xlog is
+  # healthy: xlog gave up waiting, served plain HTTP, and stayed that way.
+  # Runs the agent image (same digest, no extra pull); it has openssl.
+  # ───────────────────────────────────────────────────────────────
+  phantom-tls-init:
+    image: ghcr.io/${PHANTOM_OWNER:-ayman-m}/phantom-agent-oss@${DIGEST_PHANTOM_AGENT:-sha256:invalid_digest_run_installer_first}
+    container_name: phantom_tls_init
+    restart: "no"
+    entrypoint: ["/app/tls-init.sh"]
+    volumes:
+      - phantom_tls:/tls
+
   # ─────────────────────────────────────────────────────────────────
   # xlog — synthetic log generator + GraphQL API.
   # The agent's xlog connector POSTs queries here. Customers don't
@@ -64,6 +81,10 @@ services:
     image: ghcr.io/${PHANTOM_OWNER:-ayman-m}/phantom-xlog-oss@${DIGEST_PHANTOM_XLOG:-sha256:invalid_digest_run_installer_first}
     container_name: xlog
     restart: unless-stopped
+    depends_on:
+      phantom-tls-init:
+        # The cert must exist before this service reads /tls at boot.
+        condition: service_completed_successfully
     environment:
       # Bearer token enforced by xlog/app/auth.py. The phantom-agent
       # service below sets XLOG_API_TOKEN to the same value (alias)
@@ -344,6 +365,8 @@ services:
     container_name: phantom_agent
     restart: unless-stopped
     depends_on:
+      phantom-tls-init:
+        condition: service_completed_successfully
       xlog:
         condition: service_healthy
       caldera:

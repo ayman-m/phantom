@@ -33,8 +33,20 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "1.0.1",
+    date: "2026-10-11",
+    title: "Fresh installs generate logs on the first try.",
+    highlights: [
+      "New installs now start xlog over HTTPS; log generation no longer fails with an SSL error.",
+      "A one-shot step creates the TLS certificate first and never replaces one you supplied.",
+      "Creating a worker without a data-source schema works again.",
+      "The Change password form now locks for a minute after five wrong current passwords.",
+      "A bare tool name in a direct tool call no longer fails as ambiguous.",
+    ],
+  },
+  {
     version: "1.0.0",
-    date: "Unreleased", // set to the ISO publish date when v1.0.0 is tagged
+    date: "2026-10-11",
     title: "First public release of Phantom.",
     highlights: [
       "Chat with an AI agent that generates logs, runs scenarios, and checks your detections.",

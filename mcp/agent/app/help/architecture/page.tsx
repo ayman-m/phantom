@@ -501,6 +501,15 @@ function Stack() {
  colour encodes the auth class.
  </p>
  <p>
+ A sixth container, <Code>phantom_tls_init</Code>, is a one-shot
+ that exits within a second of <Code>compose up</Code>: it creates
+ the shared TLS certificate before <Code>xlog</Code> and{" "}
+ <Code>phantom-agent</Code> start (see{" "}
+ <a href="#tls-proxy" className="link">TLS Proxy</a>). It is not a
+ running service and appears as <Code>Exited (0)</Code> in{" "}
+ <Code>docker compose ps -a</Code>.
+ </p>
+ <p>
  Every <Code>image:</Code> reference is{" "}
  <Term>pinned by content digest</Term> (sha256), not by version
  tag. See <a href="#image-pinning" className="link">Image Digest Pinning</a>{" "}
@@ -844,12 +853,13 @@ function TlsProxy() {
 
 PHANTOM_TLS_ENABLED = "1"
   ├─ Cert + key present at /tls/cert.pem + /tls/key.pem
-  │   → use as-is
-  ├─ Else if PHANTOM_AUTO_TLS = "1"
-  │   → generate self-signed via openssl into /tls/
-  │   → log "TLS enabled — generated self-signed cert"
-  └─ Else
-      → fail-fast: "PHANTOM_TLS_ENABLED=1 but no cert"
+  │   → use as-is (in the compose stacks this is always the case:
+  │     phantom-tls-init created them before anything else started)
+  └─ Else (the image runs without the init service)
+      → entrypoint runs /app/tls-init.sh: self-signed via openssl into /tls/,
+        PHANTOM_AUTO_TLS=1, log "no TLS cert ... generating self-signed cert"
+      → if openssl fails the script exits non-zero with openssl's message and
+        the container stops (fail-fast)
 
   → Uvicorn binds 127.0.0.1:8080 (loopback, HTTPS using same cert)
   → Next.js binds 127.0.0.1:3001 (loopback, plain HTTP)
@@ -870,16 +880,40 @@ PHANTOM_TLS_ENABLED = "1"
  <p>
  The proxy is ~80 lines of Node — it does TLS termination, then
  a streaming pipe to the inner port. No buffering, no header
- rewrites except <Code>X-Forwarded-Proto</Code>. SSE flows from
+ rewrites except <Code>X-Forwarded-Proto</Code>, <Code>X-Forwarded-Port</Code> and <Code>X-Forwarded-For</Code> (the proxy appends the real socket address to whatever the client sent, so the LAST entry is the one to trust; the auth rate limits key on it). SSE flows from
  the chat handler still stream end-to-end because the proxy
  uses Node&apos;s streams, not <Code>fetch()</Code>.
  </p>
  </SubSection>
 
+ <SubSection icon="schedule" title="Who creates the certificate, and boot order">
+ <p>
+ The shared <Code>phantom_tls</Code> volume holds one cert + key
+ pair, and <Code>/app/tls-init.sh</Code> (in the agent image) is the
+ only code that creates it. It writes nothing when a pair is already
+ there, so an operator-supplied certificate is never replaced, and it
+ renames the files into place so a reader never sees half a pair.
+ </p>
+ <p>
+ In both compose files the one-shot <Code>phantom-tls-init</Code>{" "}
+ service runs that script and exits, and <Code>xlog</Code> and{" "}
+ <Code>phantom-agent</Code> each declare{" "}
+ <Code>depends_on: phantom-tls-init: service_completed_successfully</Code>.
+ xlog reads <Code>/tls</Code> once, at process start, and serves
+ HTTPS only if the pair is there, so it has to exist before it starts. The agent&apos;s own entrypoint calls the same script as
+ a no-op safety net for deployments that run the image without the
+ init service. Nothing that writes the certificate may wait on a
+ service that reads it: the agent waits for xlog to be healthy, so
+ letting the agent create the certificate left xlog on plain HTTP on
+ every fresh install.
+ </p>
+ </SubSection>
+
  <SubSection icon="warning" title="Self-signed cert and PHANTOM_TLS_VERIFY">
  <p>
- The default <Code>PHANTOM_AUTO_TLS=1</Code> path generates a
- self-signed cert. Internal callers (phantom-updater calling
+ The auto-generated certificate is self-signed (written by{" "}
+ <Code>tls-init.sh</Code>; <Code>PHANTOM_AUTO_TLS=1</Code> marks an
+ agent boot that had to create it itself). Internal callers (phantom-updater calling
  back to the agent, the agent&apos;s own loopback healthchecks)
  then need to skip chain verification. The convention:{" "}
  <Code>PHANTOM_TLS_VERIFY</Code> with a value of <Code>0</Code>{" "}
@@ -5079,6 +5113,7 @@ Cookie: phantom_session=<32B random>; HttpOnly; Secure; SameSite=Strict;
  <ul className="list-disc pl-6 space-y-1">
  <li><Code>POST /api/auth/login</Code> validates username against the baked <Code>ADMIN_USERNAME</Code> constant. Phantom is single-user; only the admin account exists.</li>
  <li>In-memory per-source-IP rate limit: 5 failures / 60s → 60s lockout. Resets on container restart. Audited via <Code>login_failed</Code> events.</li>
+ <li><Code>POST /api/auth/change-password</Code> checks the current password, so it carries the same limit with its own counter (<Code>lib/auth-rate-limit.ts</Code>, shared with login), keyed on the source address (last <Code>X-Forwarded-For</Code> hop) AND on a hash of the session token: five wrong current passwords against either key within 60s return 429 with <Code>Retry-After</Code> for 60s, so rotating addresses with a stolen cookie does not help. Limitation: behind an additional reverse proxy that you add in front of Phantom, the last hop is that proxy for every client, so one source can then lock sign-in for everyone for a minute; keep Phantom&apos;s own TLS proxy as the first hop. The attempt is counted before the password is checked, so parallel guesses cannot all pass. Without it a stolen session cookie could guess the password through this endpoint and skip the login lockout. Validation errors and an unreachable MCP do not count; a success clears the counter.</li>
  <li>Successful verify mints a random 32-byte URL-safe token, hashes it, stores the hash in <Code>auth_sessions.db</Code>, returns the raw token in the JSON body, and the Next.js login route wraps it in the <Code>phantom_session</Code> cookie with the security attributes listed above.</li>
  <li>Audit row: <Code>login_success</Code> with the resolved <Code>credentials_changed</Code> in metadata so the UI knows whether to redirect to <Code>/profile</Code>.</li>
  </ul>

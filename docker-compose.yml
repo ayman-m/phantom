@@ -38,6 +38,24 @@
 
 services:
 
+  # ───────────────────────────────────────────────────────────────
+  # phantom-tls-init — one-shot. Creates the self-signed cert + key on the
+  # shared phantom_tls volume (never overwrites an existing pair) and exits.
+  # xlog and phantom-agent both wait for it to finish, so each finds the
+  # cert on disk at its own first boot. Without this step the cert
+  # was written by phantom-agent, which compose starts only after xlog is
+  # healthy: xlog gave up waiting, served plain HTTP, and stayed that way.
+  # Runs the agent image (same digest, no extra pull); it has openssl.
+  # ───────────────────────────────────────────────────────────────
+  phantom-tls-init:
+    image: phantom-agent:local
+    container_name: phantom_tls_init
+    restart: "no"
+    pull_policy: never   # built by the phantom-agent service below
+    entrypoint: ["/app/tls-init.sh"]
+    volumes:
+      - phantom_tls:/tls
+
   # xlog is the standalone log-generation service that
   # exposes a GraphQL API for synthetic-log workers, scenario execution,
   # observable catalogs, and ATT&CK coverage. The agent's xlog connector
@@ -53,6 +71,10 @@ services:
     restart: unless-stopped
     ports:
       - "8999:8000"
+    depends_on:
+      phantom-tls-init:
+        # The cert must exist before this service reads /tls at boot.
+        condition: service_completed_successfully
     environment:
       # Bearer token enforced by xlog/app/auth.py. Match the value
       # against the agent's setup-form `xlogApiToken` field. Set it
@@ -442,6 +464,8 @@ services:
       - "3000:3000"   # Next.js UI
       - "8080:8080"   # Embedded MCP admin + JSON-RPC transport
     depends_on:
+      phantom-tls-init:
+        condition: service_completed_successfully
       xlog:
         condition: service_healthy
       caldera:

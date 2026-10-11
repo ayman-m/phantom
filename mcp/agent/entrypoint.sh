@@ -163,9 +163,9 @@ fi
 #      to spec without operator intervention.
 #
 # Mechanism: 2048-bit self-signed cert written to /tls/cert.pem +
-# /tls/key.pem on the shared phantom_tls volume. xlog and caldera
-# read those same files (ro mount) at startup; the agent reads them
-# via SSL_CERT_FILE/SSL_KEY_FILE.
+# /tls/key.pem on the shared phantom_tls volume. xlog
+# reads those same files (ro mount) at startup; the agent reads them
+# via PHANTOM_TLS_CERT_FILE/PHANTOM_TLS_KEY_FILE (set below).
 #
 # When the operator picks "custom" TLS in the setup form, /api/setup
 # overwrites /tls/{cert,key}.pem with their PEM. When they pick
@@ -178,10 +178,10 @@ TLS_KEY="$TLS_DIR/key.pem"
 SETUP_JSON="/app/runtime/setup.json"
 
 # The shared phantom_tls volume is the single source of truth for
-# certs across the stack. When the agent writes /tls/cert.pem +
-# /tls/key.pem, xlog (ro mount) reads them at startup and serves
-# HTTPS; same for caldera. The agent itself reads them via SSL_CERT_FILE
-# below.
+# certs across the stack. xlog (ro mount) reads /tls/cert.pem +
+# /tls/key.pem at startup and serves HTTPS, so the pair has to exist before
+# it starts: see tls-init.sh. The agent itself reads them
+# via PHANTOM_TLS_CERT_FILE below.
 #
 # Auto-gen runs whenever /tls/ doesn't already have a valid cert + key
 # pair. setup.json's existence is intentionally NOT part of the gate:
@@ -197,33 +197,15 @@ SETUP_JSON="/app/runtime/setup.json"
 # the auto-cert (self-signed mode) or writes the operator's PEM
 # (custom mode). Either way /tls/cert.pem is populated.
 
-mkdir -p "$TLS_DIR"
-
+# Generation lives in /app/tls-init.sh, the single owner of TLS material.
+# In the compose stacks the `phantom-tls-init` service has already run it
+# before xlog and this container started, so this call finds the
+# pair and does nothing. It only generates here when the agent image runs
+# without that service (docker-compose.agent-only.yml, a bare `docker run`).
 if [ ! -f "$TLS_CERT" ] || [ ! -f "$TLS_KEY" ]; then
-  log "no TLS cert at $TLS_DIR/ — generating self-signed cert (TLS-by-default)"
-  # 2048-bit (vs the operator-facing 4096-bit) since this is short-
-  # lived bootstrap material; gets replaced when the operator picks
-  # custom TLS via the setup form. Fast generation (sub-second) keeps
-  # boot responsive on weak VMs.
-  openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
-    -keyout "$TLS_KEY" -out "$TLS_CERT" \
-    -subj "/CN=phantom-setup/O=Phantom/OU=Auto-generated" \
-    -addext "subjectAltName=DNS:localhost,DNS:phantom-agent,DNS:xlog,DNS:caldera,IP:127.0.0.1" \
-    -addext "extendedKeyUsage=serverAuth" \
-    2>/dev/null
-  chmod 600 "$TLS_KEY"
-  chmod 644 "$TLS_CERT"
-  log "wrote $TLS_CERT + $TLS_KEY (shared volume — xlog/caldera will read on next restart)"
-  # PHANTOM_AUTO_TLS=1 means "this boot generated the cert," which
-  # implies xlog/caldera in the same compose-up cycle haven't seen
-  # the cert yet (they started in parallel). The XLOG_URL flip below
-  # honors this: on the generation boot we keep xlog on http://, then
-  # on the next compose restart xlog reads the cert and the flip kicks
-  # in.
   PHANTOM_AUTO_TLS=1
-else
-  log "reusing existing TLS cert at $TLS_CERT (shared volume)"
 fi
+/app/tls-init.sh
 
 # When /tls/ has cert files, point the agent's listener at them via
 # the env vars its tls-proxy + MCP both consume. This unifies the

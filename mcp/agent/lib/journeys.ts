@@ -4479,6 +4479,7 @@ export const JOURNEYS: Journey[] = [
       "Sign in with the NEW password → success, lands on dashboard.",
       "Sign in with the OLD password → 401. The hash takes precedence; there is no legacy fallback.",
       "Bad current_password during rotation → 403 toast 'current_password is incorrect'.",
+      "Submit a wrong current password five times in a minute → the sixth attempt is refused with 429 'Too many failed attempts. Try again in Ns.'; sign-in is unaffected. After the wait (or a restart) the form works again.",
       "New pwd < 8 chars → button stays disabled with inline hint.",
       "Open a second tab signed in before the rotation. Click around — within 30s (positive-validation cache window) you get bounced to sign-in. ALL devices are signed out symmetrically; there's no 'log out everywhere else' button because that's the default behavior.",
     ],

@@ -248,26 +248,18 @@ def _resolve_ssl_args() -> dict:
 
     # Priority 1: shared phantom_tls volume mounted at /tls.
     #
-    # Boot-order race: xlog has no depends_on relationship with
-    # phantom-agent, so nothing in compose requires phantom-agent's
-    # entrypoint (the process that generates cert.pem/key.pem onto this
-    # shared volume on first boot) to have run before xlog starts. xlog's
-    # own healthcheck has a plain-HTTP fallback, so it reports healthy
-    # either way. xlog can therefore win the race, find the volume empty,
-    # fall through to plain HTTP, and stay that way for its entire process
-    # lifetime, because this decision only runs once at startup. Every
-    # https://xlog:8000 client (phantom-agent itself, every xlog connector
-    # instance) would then fail with a confusing "[SSL] record layer
-    # failure", which looks like a cert/config problem but is a pure
-    # timing race that a plain `docker restart xlog` heals.
+    # In the compose stacks the `phantom-tls-init` one-shot service creates
+    # cert.pem/key.pem and exits before xlog starts (xlog depends_on it with
+    # service_completed_successfully), so the pair is already on disk here
+    # and the loop below does not wait at all.
     #
-    # So: poll briefly for the cert to land instead of deciding on a
-    # single point-in-time check. Cert generation is a fast, one-shot
-    # `openssl req` in phantom-agent's entrypoint, a few hundred ms in
-    # practice, so a short bounded wait closes the race without
-    # meaningfully slowing xlog's boot, and still falls through to the
-    # existing plaintext-with-warning behavior for a genuine standalone
-    # deployment that never gets a phantom-agent sibling at all.
+    # The bounded wait remains for any other launch order (xlog started by
+    # hand next to a phantom-agent that is still generating the cert). The
+    # decision runs once, at startup, so a miss means plain HTTP for the whole
+    # process lifetime and a confusing "[SSL] record layer failure" from every
+    # https://xlog:8000 client until `docker restart xlog`. A standalone xlog
+    # with no cert provider at all still falls through to the env-var forms
+    # and then plain HTTP, with the warning below.
     shared_cert = "/tls/cert.pem"
     shared_key = "/tls/key.pem"
     wait_timeout_s = 10.0

@@ -18,10 +18,19 @@
  *   4. Clear the session cookie locally. The operator must log in
  *      again with the new password.
  *
+ * Wrong current-password guesses are limited like login (5 in 60 s lock the
+ * key out for 60 s, 429 + Retry-After) with their own counter, keyed on BOTH the
+ * source address and the session, so a stolen cookie cannot be used to guess
+ * the password through this endpoint, from one address or many. The attempt is
+ * counted before the password is checked (parallel guesses cannot all slip
+ * through) and given back if it proved nothing: validation errors, an expired
+ * session, or an unreachable MCP never count.
+ *
  * Response:
  *   ok:     { ok: true }                    + cookie cleared
  *   401:    { error: "Invalid session" }    (token missing/expired)
  *   403:    { error: "current_password incorrect" }
+ *   429:    { error: "Too many failed attempts...", retryAfter }
  *   400:    { error: "<validation>" }
  *   503:    { error: "Service unavailable" } (MCP unreachable)
  */
@@ -30,6 +39,17 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { SESSION_COOKIE_NAME } from "@/lib/auth-defaults";
 import { changePassword } from "@/lib/auth-store";
+import { createHash } from "node:crypto";
+
+import {
+  acquireAll,
+  changePasswordLimiter,
+  checkAll,
+  clearAll,
+  getSourceIp,
+  lockedResponseBody,
+  refundAll,
+} from "@/lib/auth-rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +61,18 @@ export async function POST(request: NextRequest) {
       { error: "Not authenticated" },
       { status: 401 },
     );
+  }
+
+  const keys = [
+    `ip:${getSourceIp(request)}`,
+    `sid:${createHash("sha256").update(token).digest("hex")}`,
+  ];
+  const gate = checkAll(changePasswordLimiter, keys);
+  if (!gate.allowed) {
+    return NextResponse.json(lockedResponseBody(gate.retryAfter), {
+      status: 429,
+      headers: { "Retry-After": String(gate.retryAfter) },
+    });
   }
 
   let body: {
@@ -86,6 +118,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Count the attempt now, before the asynchronous check; settle it below.
+  const reserved = acquireAll(changePasswordLimiter, keys);
+  if (!reserved.allowed) {
+    return NextResponse.json(lockedResponseBody(reserved.retryAfter), {
+      status: 429,
+      headers: { "Retry-After": String(reserved.retryAfter) },
+    });
+  }
+
   const result = await changePassword({
     sessionToken: token,
     currentPassword,
@@ -93,6 +134,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (!result.ok) {
+    if (result.reason !== "current_password_incorrect") {
+      // Expired session, validation error or outage: proved nothing about the password.
+      refundAll(changePasswordLimiter, keys);
+    }
     if (result.reason === "invalid_session") {
       return NextResponse.json(
         { error: "Session expired. Please sign in again." },
@@ -100,6 +145,7 @@ export async function POST(request: NextRequest) {
       );
     }
     if (result.reason === "current_password_incorrect") {
+      // Already counted when reserved.
       return NextResponse.json(
         { error: "Current password is incorrect" },
         { status: 403 },
@@ -117,6 +163,8 @@ export async function POST(request: NextRequest) {
       { status: 503 },
     );
   }
+
+  clearAll(changePasswordLimiter, keys);
 
   // Success — clear the cookie. The operator's current session has
   // been revoked server-side as part of the change (revoke_all);

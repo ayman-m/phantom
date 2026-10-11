@@ -106,6 +106,12 @@ COPY --from=agent-builder /build/public /app/public
 COPY mcp/agent/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# tls-init.sh — creates the shared TLS cert once. The phantom-tls-init compose
+# service runs it as its entrypoint before xlog and this container start;
+# entrypoint.sh also calls it (no-op when the cert exists).
+COPY mcp/agent/tls-init.sh /app/tls-init.sh
+RUN chmod +x /app/tls-init.sh
+
 # tls-proxy.js — TLS-terminating reverse proxy used by entrypoint.sh
 # when SSL_CERT_PEM/SSL_KEY_PEM is set. Lives outside Next.js's
 # standalone bundle so a separate COPY is needed (next.config.ts's

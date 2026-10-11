@@ -43,81 +43,26 @@ import {
   SESSION_TTL_SECONDS,
 } from "@/lib/auth-defaults";
 import { login } from "@/lib/auth-store";
+import {
+  acquireAll,
+  checkAll,
+  clearAll,
+  getSourceIp,
+  loginLimiter,
+  lockedResponseBody,
+  refundAll,
+} from "@/lib/auth-rate-limit";
 
 export const dynamic = "force-dynamic";
-
-// ─── In-memory per-IP rate limit (sliding window) ─────────────────
-
-const WINDOW_MS = 60_000;
-const MAX_FAILURES = 5;
-const LOCKOUT_MS = 60_000;
-
-interface RateLimitEntry {
-  failureCount: number;
-  windowResetAt: number;
-  lockedUntilMs: number;
-}
-const rateLimit = new Map<string, RateLimitEntry>();
-
-function getSourceIp(request: NextRequest): string {
-  // x-forwarded-for is set by the tls-proxy sidecar in front of
-  // Next.js. Fall back to "unknown" for the dev-loopback case where
-  // the header isn't present (tests, local debug).
-  const xff = request.headers.get("x-forwarded-for");
-  if (xff) {
-    return xff.split(",")[0]?.trim() || "unknown";
-  }
-  return request.headers.get("x-real-ip") || "unknown";
-}
-
-function rateCheck(ip: string): { allowed: true } | { allowed: false; retryAfter: number } {
-  const now = Date.now();
-  const entry = rateLimit.get(ip);
-  if (entry && entry.lockedUntilMs > now) {
-    return {
-      allowed: false,
-      retryAfter: Math.ceil((entry.lockedUntilMs - now) / 1000),
-    };
-  }
-  // Clean up expired window so the Map doesn't grow unboundedly.
-  if (entry && entry.windowResetAt < now && entry.lockedUntilMs <= now) {
-    rateLimit.delete(ip);
-  }
-  return { allowed: true };
-}
-
-function recordFailure(ip: string): void {
-  const now = Date.now();
-  let entry = rateLimit.get(ip);
-  if (!entry || entry.windowResetAt < now) {
-    entry = {
-      failureCount: 0,
-      windowResetAt: now + WINDOW_MS,
-      lockedUntilMs: 0,
-    };
-  }
-  entry.failureCount += 1;
-  if (entry.failureCount >= MAX_FAILURES) {
-    entry.lockedUntilMs = now + LOCKOUT_MS;
-  }
-  rateLimit.set(ip, entry);
-}
-
-function clearFailures(ip: string): void {
-  rateLimit.delete(ip);
-}
 
 // ─── Handler ────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const ip = getSourceIp(request);
-  const gate = rateCheck(ip);
+  const keys = [getSourceIp(request)];
+  const gate = checkAll(loginLimiter, keys);
   if (!gate.allowed) {
     return NextResponse.json(
-      {
-        error: `Too many failed attempts. Try again in ${gate.retryAfter}s.`,
-        retryAfter: gate.retryAfter,
-      },
+      lockedResponseBody(gate.retryAfter),
       {
         status: 429,
         headers: { "Retry-After": String(gate.retryAfter) },
@@ -146,11 +91,21 @@ export async function POST(request: NextRequest) {
   // ADMIN_USERNAME returns the same 401 as a wrong password so
   // attackers can't enumerate.
   if (username !== ADMIN_USERNAME) {
-    recordFailure(ip);
+    loginLimiter.recordFailure(keys[0]);
     return NextResponse.json(
       { error: "Invalid credentials" },
       { status: 401 },
     );
+  }
+
+  // Count this attempt BEFORE the (asynchronous) password check, so parallel
+  // guesses cannot all slip through the gate; settle it below.
+  const reserved = acquireAll(loginLimiter, keys);
+  if (!reserved.allowed) {
+    return NextResponse.json(lockedResponseBody(reserved.retryAfter), {
+      status: 429,
+      headers: { "Retry-After": String(reserved.retryAfter) },
+    });
   }
 
   const userAgent = request.headers.get("user-agent") || undefined;
@@ -158,7 +113,7 @@ export async function POST(request: NextRequest) {
 
   if (!result.ok) {
     if (result.reason === "invalid_credentials") {
-      recordFailure(ip);
+      // Already counted when reserved.
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 },
@@ -166,7 +121,8 @@ export async function POST(request: NextRequest) {
     }
     // mcp_unreachable | transport_error — the MCP is down or
     // misconfigured. NOT counted as a credentials failure (so an
-    // outage doesn't lock the operator out).
+    // outage doesn't lock the operator out): give the reservation back.
+    refundAll(loginLimiter, keys);
     return NextResponse.json(
       {
         error: "Authentication service unavailable. Please retry.",
@@ -177,7 +133,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Success — clear any pending failures for this IP, set the cookie.
-  clearFailures(ip);
+  clearAll(loginLimiter, keys);
   const response = NextResponse.json({
     ok: true,
     credentialsChanged: result.credentialsChanged,

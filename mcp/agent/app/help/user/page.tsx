@@ -687,7 +687,7 @@ After a failed login attempt:
               <ul className="list-disc pl-5 space-y-1.5 text-sm">
                 <li><strong>The default credentials banner doesn&apos;t go away after changing the password.</strong> Hard-refresh the page (clears the AuthGate&apos;s cached state). If it persists, check the docker logs for entrypoint errors during the auth seed.</li>
                 <li><strong>Login says &ldquo;Authentication service unavailable.&rdquo;</strong> The agent can&apos;t reach the MCP. Check <Code>docker compose ps</Code> — phantom-agent should be <Code>Up (healthy)</Code>.</li>
-                <li><strong>Login says &ldquo;Too many failed attempts. Try again in Ns.&rdquo;</strong> Per-IP rate limit fired (5 failures in 60s). Wait it out; the lockout is 60s.</li>
+                <li><strong>Login says &ldquo;Too many failed attempts. Try again in Ns.&rdquo;</strong> Per-IP rate limit fired (5 failures in 60s). Wait it out; the lockout is 60s. Wrong current passwords on the Change password form count separately and lock only that form.</li>
                 <li><strong>You changed your password and another tab still loads.</strong> The server-side cache is up to 30s. Click around — the next API call will get 401 and bounce you to sign in. (Or wait 30s.)</li>
                 <li><strong>You upgrade Phantom and your password stops working.</strong> Auth state lives on the persistent <Code>phantom_data</Code> volume. As long as the volume isn&apos;t dropped (<Code>docker compose down -v</Code> would do that), credentials survive upgrades. If you DID drop the volume, you&apos;re back to the default credentials banner.</li>
               </ul>
@@ -4605,7 +4605,9 @@ probed          ── transient state during an in-flight probe`}</Pre>
                 requires your current password as a second factor:
                 a stolen session cookie alone can&apos;t lock you
                 out, because rotation also needs the password you
-                already know.
+                already know. Five wrong current passwords in a
+                minute lock the form for 60 seconds, the same as
+                sign-in (v1.0.1+).
               </p>
               <p>
                 See{" "}
