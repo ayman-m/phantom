@@ -42,7 +42,8 @@ export class PhantomMCPClient {
     headers["Content-Type"] = "application/json";
     headers["Accept"] = "text/event-stream, application/json";
 
-    if (this.mcpToken) headers.Authorization = this.mcpToken;
+    // The MCP's transport endpoint requires a standard bearer credential.
+    if (this.mcpToken) headers.Authorization = `Bearer ${this.mcpToken}`;
     if (this.sessionId) headers["mcp-session-id"] = this.sessionId;
     if (this.protocolVersion) headers["mcp-protocol-version"] = this.protocolVersion;
 

@@ -9,21 +9,25 @@ Two acceptable bearer shapes:
 
   2. **API key** (`phantom_ak_<id>_<secret>`): operator-minted long-
      lived keys for external integrations. Looked up in the
-     SqliteApiKeyStore; verified by hash; scoped per-row. Active keys
-     are accepted on routes that match their scope list.
+     SqliteApiKeyStore; verified by hash; scoped per-row.
+
+An API key is NOT a general credential on this port. It is accepted only
+on the routes listed in `API_KEY_ROUTE_SCOPES`, each of which names the one
+scope it needs (`*` satisfies any of them). Every other route is MCP_TOKEN
+only. That matters because port 8080 is published on the host: a key minted
+for a SIEM poller (`audit:read`) must not be able to create jobs or read
+instances. The agent API on port 3000 maps keys to `agent:read` /
+`agent:write` itself and reaches this port with MCP_TOKEN.
 
 `require_bearer()` accepts either shape and returns:
   * None on success
   * JSONResponse(401/403/503) on failure
-
-`require_scope(scope)` adds an additional check — used by routes that
-want to gate on a specific scope (e.g. `audit:read` on the audit-list
-endpoint). Pass-through for MCP_TOKEN (admin); enforced for API keys.
 """
 
 from __future__ import annotations
 
 import hmac
+import re
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -39,12 +43,30 @@ def _extract_token(request: Request) -> str | None:
     return header[len("bearer "):].strip()
 
 
+# The REST routes an API key may use, and the scope each requires. Keep in sync
+# with the scope table in /help/user#api-keys and the catalog on /api-keys.
+# `tools:call` (the JSON-RPC tool endpoint) is enforced in api/mcp_auth.py.
+API_KEY_ROUTE_SCOPES: tuple[tuple[frozenset[str], "re.Pattern[str]", str], ...] = (
+    (frozenset({"GET"}), re.compile(r"^/api/v1/audit(/.*)?$"), "audit:read"),
+    (frozenset({"GET"}), re.compile(r"^/api/v1/settings$"), "settings:read"),
+    (frozenset({"PUT"}), re.compile(r"^/api/v1/settings$"), "settings:write"),
+    (frozenset({"POST"}), re.compile(r"^/api/v1/approvals/[^/]+/resolve$"), "approvals:resolve"),
+)
+
+
+def api_key_allows(scopes: list[str], method: str, path: str) -> bool:
+    """May a key holding `scopes` call `method path` on this port?"""
+    for methods, pattern, needed in API_KEY_ROUTE_SCOPES:
+        if method.upper() in methods and pattern.match(path):
+            return "*" in scopes or needed in scopes
+    return False
+
+
 def require_bearer(request: Request) -> JSONResponse | None:
-    """Accept MCP_TOKEN OR an active API key.
+    """Accept MCP_TOKEN, or an active API key on the routes it is scoped for.
 
     Side effect for API keys: the row's last_used_at is updated and the
-    resolved scopes are stashed on `request.state.api_key_scopes`. Routes
-    that care can then call `require_scope()` to enforce.
+    resolved scopes are stashed on `request.state.api_key_scopes`.
     """
     expected = config.mcp_token
     if not expected:
@@ -73,28 +95,17 @@ def require_bearer(request: Request) -> JSONResponse | None:
         if store is not None:
             row = store.verify(token)
             if row is not None:
+                if not api_key_allows(row.scopes, request.method, request.url.path):
+                    return JSONResponse(
+                        {"error": "this API key's scopes do not allow this route"},
+                        status_code=403,
+                    )
                 request.state.auth_principal = f"api_key:{row.id}"
                 request.state.api_key_scopes = row.scopes
                 return None
 
     return JSONResponse(
         {"error": "invalid bearer token"},
-        status_code=403,
-    )
-
-
-def require_scope(request: Request, scope: str) -> JSONResponse | None:
-    """Per-route scope gate. Call AFTER `require_bearer()`.
-
-    Wildcard `*` in the principal's scope list grants any scope. Used
-    by routes that want stricter granularity than "valid token == full
-    access". MCP_TOKEN principals always carry `*`.
-    """
-    scopes: list[str] = getattr(request.state, "api_key_scopes", []) or []
-    if "*" in scopes or scope in scopes:
-        return None
-    return JSONResponse(
-        {"error": f"token lacks required scope: {scope}"},
         status_code=403,
     )
 

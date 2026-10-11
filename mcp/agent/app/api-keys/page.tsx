@@ -58,7 +58,7 @@ const SCOPE_CATALOG: {
   {
     key: "tools:call",
     label: "Tool dispatch",
-    description: "JSON-RPC tool dispatch (read-only tools by default).",
+    description: "The JSON-RPC tool endpoint on port 8080: every tool the agent can call, including ones that change state. Grant sparingly.",
   },
   {
     key: "agent:read",

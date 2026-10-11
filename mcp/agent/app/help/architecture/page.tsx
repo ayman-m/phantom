@@ -884,6 +884,13 @@ PHANTOM_TLS_ENABLED = "1"
  the chat handler still stream end-to-end because the proxy
  uses Node&apos;s streams, not <Code>fetch()</Code>.
  </p>
+ <p>
+ Every request gets its own connection to the inner port (no
+ connection pooling). A pooled connection that carried a stream
+ which ended with an error was handed to the next request, which
+ Next.js answered with an empty 400; this was visible as the
+ request right after a failed <Code>/api/chat</Code> call.
+ </p>
  </SubSection>
 
  <SubSection icon="schedule" title="Who creates the certificate, and boot order">
@@ -5022,7 +5029,7 @@ Cookie: phantom_session=<32B random>; HttpOnly; Secure; SameSite=Strict;
  <ul className="list-disc pl-6 space-y-1">
  <li><strong>Coarse scopes</strong>: <Code>agent:read</Code> (GET routes + chat read), <Code>agent:write</Code> (mutations + <Code>/api/chat</Code>), <Code>agent:*</Code> (both). <Code>*</Code> remains full admin. Chosen per key at mint time.</li>
  <li><strong>Credential exclusion (security invariant)</strong>: <Code>/api/agent/providers/*</Code>, <Code>/api/agent/instances/*</Code>, and <Code>/api/agent/api-keys/*</Code> reject API keys <em>even with</em> <Code>agent:*</Code> — those stay session-cookie-only. A leaked key can never mint more keys or read provider secrets. Enforced in <Code>middleware.ts</Code> via <Code>lib/agent-scopes.ts</Code>, on top of the MCP api-keys surface which already refuses API-key auth on itself.</li>
- <li><strong>Validation wire</strong>: <Code>middleware.ts</Code> → <Code>lib/auth-store.ts validateApiKey()</Code> → MCP <Code>POST /api/v1/ui/auth/verify_key</Code> (loopback, <Code>MCP_TOKEN</Code> bearer, 30s positive cache; revocation busts the cache). Same shape as the session-validate path.</li>
+ <li><strong>Validation wire</strong>: <Code>middleware.ts</Code> → <Code>lib/auth-store.ts validateApiKey()</Code> → MCP <Code>POST /api/v1/ui/auth/verify_key</Code> (loopback, <Code>MCP_TOKEN</Code> bearer, 30s positive cache; a revoked key stops working within that window). Same shape as the session-validate path.</li>
  </ul>
  </SubSection>
 
@@ -8564,13 +8571,15 @@ function AuthIdentity() {
  </SubSection>
  <SubSection icon="key" title="External clients → REST (API keys)">
  <p>
- Operator-issued API keys (32-byte random, hashed at rest with
- a per-deploy pepper) gate{" "}
- <Code>/api/v1/*</Code> for non-browser callers. Routes accept
- either UI Basic auth (operator path) or an API key bearer
- (script path). Keys carry a name, created-at, last-used-at,
- and disabled flag.
+ Operator-issued API keys (<Code>phantom_ak_&lt;id&gt;_&lt;secret&gt;</Code>,
+ only a hash stored) work on two surfaces, and a key is never a
+ general credential on either:
  </p>
+ <ul className="list-disc pl-6 space-y-1">
+ <li><strong>Port 3000, the agent API</strong>: <Code>agent:read</Code> / <Code>agent:write</Code> / <Code>agent:*</Code> as described under Authentication, enforced in <Code>middleware.ts</Code>.</li>
+ <li><strong>Port 8080, the embedded MCP (published on the host)</strong>: the JSON-RPC tool endpoint (<Code>MCP_PATH</Code>) needs <Code>Authorization: Bearer</Code> with <Code>MCP_TOKEN</Code>, or a key holding <Code>tools:call</Code> (or <Code>*</Code>); <Code>api/mcp_auth.py</Code> refuses everything else with 401/403 before the tool layer sees the request. The REST routes under <Code>/api/v1/*</Code> accept a key only where the scope table in <Code>api/auth.py</Code> (<Code>API_KEY_ROUTE_SCOPES</Code>) names it: <Code>audit:read</Code> for <Code>GET /api/v1/audit*</Code>, <Code>settings:read</Code> / <Code>settings:write</Code> for <Code>/api/v1/settings</Code>, <Code>approvals:resolve</Code> for resolving an approval. <Code>*</Code> satisfies any row of that table and nothing outside it. Every other route is <Code>MCP_TOKEN</Code> only. Unauthenticated by design: <Code>/ping/</Code> (health) and <Code>GET /api/v1/metrics</Code> (Prometheus).</li>
+ <li><strong>The approval-bypass header</strong> (<Code>X-Phantom-Approval-Bypass</Code>) is honoured only when the caller authenticated as <Code>MCP_TOKEN</Code>, that is, as the agent that owns the approval policy. From a key it is ignored.</li>
+ </ul>
  </SubSection>
  <SubSection icon="cable" title="Phantom → external (per-connector)">
  <p>

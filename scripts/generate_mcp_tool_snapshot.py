@@ -81,7 +81,7 @@ class McpClient:
             "Accept": "text/event-stream, application/json",
         }
         if self.token:
-            headers["Authorization"] = self.token
+            headers["Authorization"] = f"Bearer {self.token}"
         if self.session_id:
             headers["mcp-session-id"] = self.session_id
         if self.protocol_version:

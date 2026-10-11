@@ -33,6 +33,20 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "1.0.2",
+    date: "2026-10-11",
+    title: "Security update.",
+    security: true,
+    highlights: [
+      "The MCP tool endpoint on port 8080 now requires the agent token or an API key with tools:call.",
+      "API keys can no longer reach routes beyond their scopes on port 8080.",
+      "Dependencies updated: no critical or high alerts remain on the public repository.",
+      "The log generator starts reliably on a fresh database.",
+      "The request right after a failed chat no longer gets an empty 400.",
+      "Settings reject a value whose type differs from the setting's default.",
+    ],
+  },
+  {
     version: "1.0.1",
     date: "2026-10-11",
     title: "Fresh installs generate logs on the first try.",

@@ -190,6 +190,7 @@ class SqliteSettingsStore:
                 f"Setting '{key}' is not overridable per the bundle manifest. "
                 f"Overridable keys: {sorted(self._overridable)}"
             )
+        self._check_type(key, value)
         old = self.get(key)
         ts = self._utc_now()
         with self._lock, sqlite3.connect(self._db_path) as conn:
@@ -209,6 +210,30 @@ class SqliteSettingsStore:
             key=key, value=value, default_value=self._defaults.get(key),
             updated_at=ts, updated_by=actor,
         )
+
+    def _check_type(self, key: str, value: Any) -> None:
+        """Reject a value of a different JSON type than the setting's default.
+
+        A bool flag set to the string "false" is truthy and an int model name
+        breaks provider selection, and nothing downstream re-checks. The default
+        is the only declaration of what a setting holds, so it is the contract.
+        """
+        default = self._defaults.get(key)
+        if default is None:
+            return
+        if isinstance(default, bool):
+            ok = isinstance(value, bool)
+        elif isinstance(default, (int, float)):
+            ok = isinstance(value, (int, float)) and not isinstance(value, bool)
+        elif isinstance(default, str):
+            ok = isinstance(value, str)
+        else:
+            ok = isinstance(value, type(default))
+        if not ok:
+            raise ValueError(
+                f"Setting '{key}' takes a {type(default).__name__} "
+                f"(default {default!r}); got {type(value).__name__}."
+            )
 
     def clear(self, key: str, actor: str | None = None) -> bool:
         """Remove an override. Returns True if a row was deleted."""

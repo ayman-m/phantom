@@ -4,6 +4,7 @@ import io
 import json
 import os
 import sqlite3
+import time
 import threading
 import uuid
 from pathlib import Path
@@ -31,11 +32,36 @@ def _loads(value: Optional[str], fallback: Any) -> Any:
         return fallback
 
 
+_WAL_ATTEMPTS = 100
+_WAL_RETRY_SECONDS = 0.05
+
+
+def _enable_wal(conn: Any) -> None:
+    """Switch the database to WAL, tolerating other processes doing the same.
+
+    xlog runs several server processes, and on a brand-new database file they
+    all execute this PRAGMA at the same moment. The switch needs an exclusive
+    lock and SQLite does not apply the busy timeout to it, so the losers fail
+    at once with "database is locked", which kills that worker's startup.
+    The mode is persistent: once any one process has switched, the rest only
+    need to see it, so retrying for a moment always converges. The process-local
+    _LOCK cannot help here, it does not span processes.
+    """
+    for attempt in range(_WAL_ATTEMPTS):
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+            return
+        except sqlite3.OperationalError as exc:
+            if "locked" not in str(exc).lower() or attempt == _WAL_ATTEMPTS - 1:
+                raise
+            time.sleep(_WAL_RETRY_SECONDS)
+
+
 def _connect() -> sqlite3.Connection:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
+    _enable_wal(conn)
     conn.execute("PRAGMA foreign_keys=ON")
     return conn
 

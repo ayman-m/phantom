@@ -100,7 +100,7 @@ def register_settings_routes(mcp: FastMCP, settings: SqliteSettingsStore) -> Non
             try:
                 row = settings.set(key=str(key), value=value, actor=actor)
                 applied.append(row.to_dict())
-            except PermissionError as exc:
+            except (PermissionError, ValueError) as exc:
                 rejected.append({"key": key, "reason": str(exc)})
             except Exception as exc:
                 rejected.append({"key": key, "reason": f"set failed: {exc}"})

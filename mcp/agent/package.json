@@ -10,7 +10,8 @@
     "test:json-to-yaml": "node scripts/test-json-to-yaml.mjs",
     "test:auth-rate-limit": "node scripts/test-auth-rate-limit.mjs",
     "test:tool-name-resolution": "node scripts/test-tool-name-resolution.mjs",
-    "test": "npm run test:json-to-yaml && npm run test:auth-rate-limit && npm run test:tool-name-resolution"
+    "test:tls-proxy-connections": "node scripts/test-tls-proxy-connections.mjs",
+    "test": "npm run test:json-to-yaml && npm run test:auth-rate-limit && npm run test:tool-name-resolution && npm run test:tls-proxy-connections"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
@@ -42,8 +43,12 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-config-next": "15.5.27",
-    "postcss": "^8.4.41",
+    "postcss": "^8.5.29",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "postcss": "$postcss",
+    "postcss-selector-parser": "^7.1.6"
   }
 }

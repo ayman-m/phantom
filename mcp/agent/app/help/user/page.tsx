@@ -4637,16 +4637,19 @@ probed          ── transient state during an in-flight probe`}</Pre>
             </p>
             <p>
               The page wires to the <Code>/api/v1/api_keys</Code>
-              backend. The model uses <Term>advisory scopes</Term> —
-              a flat list of capability strings the auth layer
-              compares against the route&apos;s required scope:
+              backend. A key carries a list of <Term>scopes</Term>, and
+              the server enforces them: a key can call only the routes
+              its scopes name, and nothing else on the embedded MCP port
+              (8080). To call the agent API on port 3000 a key needs{" "}
+              <Code>agent:read</Code> / <Code>agent:write</Code> (or{" "}
+              <Code>agent:*</Code>) instead.
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-sm">
               <li><Code>audit:read</Code> — GET <Code>/api/v1/audit*</Code></li>
-              <li><Code>settings:read</Code> / <Code>settings:write</Code></li>
-              <li><Code>approvals:resolve</Code></li>
-              <li><Code>tools:call</Code> — JSON-RPC tool dispatch</li>
-              <li><Code>*</Code> — superset / admin-equivalent</li>
+              <li><Code>settings:read</Code> / <Code>settings:write</Code> — GET / PUT <Code>/api/v1/settings</Code></li>
+              <li><Code>approvals:resolve</Code> — resolve a pending approval</li>
+              <li><Code>tools:call</Code> — the JSON-RPC tool endpoint (<Code>Authorization: Bearer phantom_ak_…</Code>)</li>
+              <li><Code>*</Code> — every scope in this list; it does not open any other route (v1.0.2+)</li>
             </ul>
             <p>
               Fresh installs read &quot;0 active, 0 revoked&quot;.

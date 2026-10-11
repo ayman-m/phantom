@@ -1209,7 +1209,8 @@ async def settings_update(
             try:
                 s.set(k, v, actor="agent")
                 applied.append(k)
-            except PermissionError as pe:
+            except (PermissionError, ValueError) as pe:
+                # Not overridable, or a value of the wrong type for this setting.
                 rejected.append({"key": k, "reason": str(pe)})
         for k in clear:
             try:

@@ -124,6 +124,11 @@ function proxyRequest(clientReq, clientRes) {
     method:  clientReq.method,
     path:    clientReq.url,
     headers: upstreamHeaders,
+    // One upstream connection per request. Node's default agent keeps and
+    // reuses sockets; a streamed response that ends abnormally (the chat
+    // route does when no provider is configured) leaves a socket in the
+    // pool that the NEXT request then reuses and Next answers 400.
+    agent:   false,
   });
 
   // Forward upstream's response back to the client unchanged.

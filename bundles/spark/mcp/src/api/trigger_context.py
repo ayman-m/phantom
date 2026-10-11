@@ -40,9 +40,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from usecase.audit_log import (
-    reset_current_approval_bypass,
     reset_current_trigger,
-    set_current_approval_bypass,
     set_current_trigger,
 )
 
@@ -50,11 +48,9 @@ logger = logging.getLogger("Phantom MCP.trigger")
 
 HEADER_NAME = "X-Phantom-Trigger"
 
-# Optional bypass header. Same lifetime as the trigger header
-# (per-request contextvar). Truthy values activate bypass; anything
-# else (or absent) leaves the default of False in place.
-BYPASS_HEADER_NAME = "X-Phantom-Approval-Bypass"
-_BYPASS_TRUTHY = frozenset({"1", "true", "yes", "on"})
+# X-Phantom-Approval-Bypass is NOT handled here. Skipping the approval gate is a
+# privilege, so api/mcp_auth.py honours it only after authenticating the caller
+# as the agent (MCP_TOKEN).
 
 # Cap the trigger string so a malformed/oversized header can't bloat
 # the audit table. Real triggers are short — "job:nightly-coverage"
@@ -63,10 +59,8 @@ MAX_TRIGGER_LEN = 128
 
 
 class TriggerContextMiddleware(BaseHTTPMiddleware):
-    """Read X-Phantom-Trigger + X-Phantom-Approval-Bypass from the
-    request, set the contextvars for the request lifetime, reset on
-    exit. Pairs with audit_log's record() (trigger) and
-    _approval_gate.gate_and_execute (bypass).
+    """Read X-Phantom-Trigger from the request, set the contextvar for the
+    request lifetime, reset on exit. Pairs with audit_log's record().
     """
 
     async def dispatch(
@@ -81,25 +75,11 @@ class TriggerContextMiddleware(BaseHTTPMiddleware):
             if trigger:
                 token = set_current_trigger(trigger)
 
-        # Bypass header: any of the truthy strings activates it.
-        # Logged at INFO when active so operators can see post-hoc that
-        # an approval was skipped due to bypass policy.
-        bypass_token = None
-        bypass_raw = request.headers.get(BYPASS_HEADER_NAME, "")
-        if bypass_raw and bypass_raw.strip().lower() in _BYPASS_TRUTHY:
-            bypass_token = set_current_approval_bypass(True)
-            logger.info(
-                "approval bypass active for this request (trigger=%s)",
-                raw or "(none)",
-            )
-
         try:
             return await call_next(request)
         finally:
             if token is not None:
                 reset_current_trigger(token)
-            if bypass_token is not None:
-                reset_current_approval_bypass(bypass_token)
 
 
 def install(app) -> None:  # noqa: ANN001 — Starlette/FastAPI app

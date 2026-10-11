@@ -1242,6 +1242,12 @@ async def async_main(transport: str):
         # Use uvicorn for HTTP transport
         app = mcp.http_app(path=config.mcp_path, transport=transport)
 
+        # Authenticate the JSON-RPC tool endpoint. Installed FIRST so it sits
+        # innermost: request_log (added after, so outermost) still records the
+        # 401s. Without it the endpoint on the published port answers anyone.
+        from api.mcp_auth import install as install_mcp_auth
+        install_mcp_auth(app, config.mcp_path)
+
         # Observability — request-log middleware. One structured access
         # log line per HTTP call + metrics observation
         # (phantom_mcp_http_requests_total / _duration_seconds). Toggle
