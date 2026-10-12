@@ -34,7 +34,7 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: "1.0.3",
-    date: "Unreleased", // set to the ISO publish date when v1.0.3 is tagged
+    date: "2026-10-12",
     title: "Session lifetime, walkthrough fixes and corrected help pages.",
     highlights: [
       "New Session lifetime card on Profile: choose 1 to 24 hours; the default stays 2.",

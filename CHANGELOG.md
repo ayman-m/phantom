@@ -8,7 +8,7 @@ Each release section is written in operator language, not git-shortlog language.
 
 ---
 
-## [v1.0.3] — Unreleased — *Session lifetime, walkthrough fixes and corrected help pages*
+## [v1.0.3] — 2026-10-12 — *Session lifetime, walkthrough fixes and corrected help pages*
 
 A patch release by operator decision: one new setting, plus the fixes from a page-by-page walkthrough of v1.0.2 (jobs, chat, notifications, tasks, settings, skills) and an audit of the help pages and journey catalog against what the product actually does.
 
