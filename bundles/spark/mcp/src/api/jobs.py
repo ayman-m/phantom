@@ -31,7 +31,7 @@ from starlette.responses import JSONResponse
 
 from api.auth import require_bearer
 from usecase.audit_log import reset_current_actor, set_current_actor
-from usecase.job_scheduler import CroniterJobScheduler
+from usecase.job_scheduler import CompletedRunOnceError, CroniterJobScheduler
 
 logger = logging.getLogger("Phantom MCP")
 
@@ -183,7 +183,10 @@ def register_job_routes(mcp: FastMCP, sched: CroniterJobScheduler) -> None:
             canonical = _ident_to_name(ident)
             if canonical is None:
                 return JSONResponse({"error": "not found"}, status_code=404)
-            row = sched.set_enabled(canonical, True)
+            try:
+                row = sched.set_enabled(canonical, True)
+            except CompletedRunOnceError as exc:
+                return JSONResponse({"error": str(exc)}, status_code=409)
             if row is None:
                 return JSONResponse({"error": "not found"}, status_code=404)
             return JSONResponse({"job": row.to_dict()})
@@ -259,6 +262,8 @@ def register_job_routes(mcp: FastMCP, sched: CroniterJobScheduler) -> None:
                         and body.get("permission_policy")
                         else None
                     ),
+                    # Operator's note on the job (the form's Description).
+                    description=body.get("description"),
                 )
             except ValueError as exc:
                 return JSONResponse({"error": str(exc)}, status_code=400)
@@ -307,6 +312,8 @@ def register_job_routes(mcp: FastMCP, sched: CroniterJobScheduler) -> None:
                     # permission policy: None=
                     # preserve, {}=clear, non-empty dict=set.
                     permission_policy=body.get("permission_policy"),
+                    # description: None=preserve, ""=clear, text=set.
+                    description=body.get("description"),
                 )
             except ValueError as exc:
                 return JSONResponse({"error": str(exc)}, status_code=400)

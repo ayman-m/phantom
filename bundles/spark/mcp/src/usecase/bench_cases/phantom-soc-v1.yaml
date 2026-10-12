@@ -19,8 +19,8 @@ manifest:
   version: "1.0"
   description: |
     Three SOC-scenario cases exercising the most common agent paths:
-    log generation (xlog), scenario reading, and a no-tool conversational
-    turn. Built to validate the bench runner; not yet a quality SLO.
+    log generation (xlog), a built-in platform health check, and a no-tool
+    conversational turn. Built to validate the bench runner; not yet a quality SLO.
   cases:
     - id: generate-syslog
       prompt: |
@@ -32,13 +32,13 @@ manifest:
         - xlog.create_data_worker
       max_wall_seconds: 60.0
 
-    - id: list-scenarios
+    - id: platform-health
       prompt: |
-        List the available scenario manifests in scenarios/ready/.
-        Use the phantom_list_scenarios tool. One call, no follow-up.
-      expected_output_match: "scenario"
+        Check the platform health. Use the health_status tool. One call,
+        no follow-up.
+      expected_output_match: "health"
       expected_tool_calls:
-        - phantom_list_scenarios
+        - health_status
       max_wall_seconds: 30.0
 
     - id: conversational-no-tool

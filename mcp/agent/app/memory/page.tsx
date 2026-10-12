@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { confirmAction } from "@/lib/stores/confirm";
 
 interface MemoryRow {
   id: string;
@@ -203,7 +204,13 @@ export default function MemoryPage() {
 
   const handleDelete = useCallback(
     async (key: string) => {
-      if (!confirm(`Delete memory key "${key}" from scope "${scope}"?`)) return;
+      const accepted = await confirmAction({
+        title: `Delete memory key "${key}"?`,
+        message: `It is removed from scope "${scope}".`,
+        confirmLabel: "Delete",
+        tone: "danger",
+      });
+      if (!accepted) return;
       try {
         const r = await fetch(
           `/api/agent/memory/${encodeURIComponent(key)}?scope=${encodeURIComponent(scope)}`,

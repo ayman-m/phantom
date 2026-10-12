@@ -67,7 +67,15 @@ verbatim as `schema_override` on that stage's worker. Without it the worker emit
 observables that the vendor's modeling rule cannot map, so events land raw and `xdm.*` stays
 empty. `compact=true` is lossless for this purpose and keeps the payload inside the tool-result cap.
 
-Call `data_sources_installed_as_vendors`. Group `vendors[]` by `data_source_class`. Verify `proxy` and `firewall` are present (Stages 1+2). Verify `saas` is present for Stage 3. If any class is missing, tell the operator it has no installed data source and skip the affected stage, continuing with the rest — degraded coverage but partial signal still useful. Never guess a vendor/product for a missing class.
+### Class check (MANDATORY — before creating any worker)
+
+1. Call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class`.
+2. For every row of the "Data classes used" table, write down the installed entry you will use for it, or `MISSING`. A class is only covered by an installed entry. A generic or catch-all schema is never a substitute, and never guess a vendor/product for a class.
+3. For each stage whose class is `MISSING` (and has no substitute in the table), say this to the operator, with the class and stage filled in: "No installed data source covers the `<class>` class, so I am skipping Stage <N> (<stage name>). I will not generate it with a generic schema. Install a `<class>` data source from the Marketplace to include it." Then create NO worker for that stage: not with a generic schema, not with another class's schema, not with a guessed vendor/product. Continue with the stages whose classes are covered. If every stage is `MISSING`, stop after saying it.
+   - Missing `saas`: skip Stage 3 entirely (3A and 3B). This is the case the sentence above is for: the SaaS bulk download is never generated from a generic schema, even if other stages ran.
+   - Missing `proxy`: skip only the proxy sub-stages (1A, 2A, and the proxy half of 3B). The firewall sub-stages (1B, 2B, and the firewall half of 3B) still run if a `firewall` entry is installed.
+   - Missing `firewall`: skip only the firewall sub-stages (1B, 2B, and the firewall half of 3B).
+4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
 ## Narrative thread
 
@@ -331,7 +339,7 @@ xlog.create_data_worker:
 | Stage 2 server-outbound-anomaly alert (web-app-01 → uncategorized destinations) | XSIAM Issues |
 | Stage 3A bulk-SaaS-download alert (`r.kowalski` 600 downloads / 30 min) | XSIAM Issues |
 | Stage 3B exfil-to-file-sharing alert (re-upload following Stage 3A) | XSIAM Issues |
-| Pivotable: filter `user=r.kowalski`, see all 4 stages on one timeline | XQL: `config timeframe = 24h \| dataset = msft_o365_audit_raw \| filter UserId = "r.kowalski@corp.example" \| limit 20` |
+| Pivotable: filter `user=r.kowalski`, see all 4 stages on one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the saas entry> \| filter <its user field> = "r.kowalski@corp.example" \| limit 20` |
 
 ## Tear-down
 

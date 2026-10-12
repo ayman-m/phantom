@@ -3,11 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useNotificationsStore } from "@/lib/stores/notifications";
+import { instanceStatusFromState, type InstanceStatus } from "@/lib/instance-status";
+import { confirmAction } from "@/lib/stores/confirm";
 import Link from "next/link";
 import {
   listMarketplaceConnectors,
   installConnector,
   uninstallConnector,
+  deleteUploadedConnector,
   listInstalledConnectors,
   listInstances,
   createInstance,
@@ -107,8 +110,6 @@ interface VersionEntry {
   changes: string[];
 }
 
-type InstanceStatus = "connected" | "error" | "not_tested";
-
 interface InstanceDef {
   id: string;
   name: string;
@@ -157,6 +158,8 @@ interface ConnectorDefinition {
   installs: string;
   installCount: number;
   status: InstallStatus;
+  /** "user" for a connector the operator uploaded; deletable from its detail panel. */
+  origin?: "bundle" | "user";
   reliability: string;
   authType: string;
   tools: ToolDef[];
@@ -206,6 +209,7 @@ function mapToConnectorDef(mc: MarketplaceConnector): ConnectorDefinition {
     installs: mc.installs,
     installCount: mc.installCount,
     status: mc.status as InstallStatus,
+    origin: mc.origin,
     reliability: mc.reliability,
     authType: mc.authType,
     tools: mc.tools as ToolDef[],
@@ -228,10 +232,6 @@ function mapApiInstance(
   allConnectors: ConnectorDefinition[],
 ): InstanceDef {
   const connector = allConnectors.find((c) => c.id === inst.connector_id);
-  const statusMap: Record<string, InstanceStatus> = {
-    connected: "connected",
-    error: "error",
-  };
   return {
     id: inst.id,
     name: inst.name,
@@ -239,7 +239,9 @@ function mapApiInstance(
     connectorName: connector?.name ?? inst.connector_id,
     connectorIcon: connector?.icon ?? "settings_input_component",
     connectorIconBg: connector?.iconBg ?? "rgba(140, 145, 157, 0.1)",
-    status: statusMap[inst.status] ?? "not_tested",
+    // The server reports connection health as `state` (connector_state.db);
+    // it survives a reload, unlike the per-session result of a Test click.
+    status: instanceStatusFromState(inst.state),
     enabled: inst.enabled,
     is_channel: inst.is_channel,
     config: inst.config,
@@ -629,7 +631,7 @@ function UploadConnectorPanel({
     setSubmitOk(false);
     const text = await file.text();
     // Client-side parse for preview; server's jsonschema validation
-    // is the source of truth + runs on Upload & Install.
+    // is the source of truth + runs on Upload.
     try {
       const yaml = await import("js-yaml");
       const parsed = yaml.load(text);
@@ -818,7 +820,7 @@ function UploadConnectorPanel({
               disabled={!yamlFile || submitting}
             >
               <span className="material-symbols-outlined text-[20px]">cloud_upload</span>
-              {submitting ? "Uploading…" : submitOk ? "Uploaded" : "Upload & Install"}
+              {submitting ? "Uploading…" : submitOk ? "Uploaded" : "Upload"}
             </button>
           </div>
         </header>
@@ -860,8 +862,9 @@ function UploadConnectorPanel({
           )}
           {submitOk && (
             <div className="rounded-xl border border-secondary/40 bg-secondary/10 p-3 text-xs text-secondary">
-              ✓ Connector uploaded. POST /api/agent/marketplace/{yamlFile?.parsed.id}/install
-              to make it available for instance creation, then close this panel.
+              ✓ Connector uploaded. It is now on the Marketplace tab: open its
+              card and click Install, then create an instance on the
+              Instances tab. Close this panel when you are done.
             </div>
           )}
 
@@ -987,7 +990,7 @@ function UploadConnectorPanel({
                 <p className="mt-2 text-[11px] text-on-surface-variant/60 ml-1">
                   Server-side schema validation (jsonschema against
                   bundles/spark/connectors/connector.schema.json) runs on
-                  Upload & Install. Any drift will appear inline above the
+                  Upload. Any drift will appear inline above the
                   drop zone with the violating field path.
                 </p>
               </section>
@@ -1314,7 +1317,7 @@ function UploadConnectorPanel({
               disabled={!yamlFile || submitting}
             >
               <span className="material-symbols-outlined text-[20px]">cloud_upload</span>
-              {submitting ? "Uploading…" : submitOk ? "Uploaded" : "Upload & Install"}
+              {submitting ? "Uploading…" : submitOk ? "Uploaded" : "Upload"}
             </button>
           </div>
         </footer>
@@ -1360,18 +1363,21 @@ function ConnectorDetailPanel({
   onClose,
   onInstall,
   onUninstall,
+  onDelete,
   pendingAction,
 }: {
   connector: ConnectorDefinition;
   onClose: () => void;
   onInstall: (connectorId: string, version: string) => void;
   onUninstall: (connectorId: string) => void;
+  /** Remove an uploaded connector from the marketplace (origin "user" only). */
+  onDelete: (connectorId: string) => void;
   /** "install" or "uninstall" while the corresponding API call is in
    *  flight; null otherwise. Drives the loading spinner + disabled
    *  state on the install/uninstall button so the operator gets
    *  immediate visual feedback that the click registered. Without it
    *  the button looked unresponsive while the POST/DELETE completed. */
-  pendingAction: "install" | "uninstall" | null;
+  pendingAction: "install" | "uninstall" | "delete" | null;
 }) {
   const [expandedTool, setExpandedTool] = useState<string | null>(null);
   const [showAllTools, setShowAllTools] = useState(false);
@@ -1501,6 +1507,28 @@ function ConnectorDetailPanel({
               >
                 <span className="material-symbols-outlined text-[20px]">upgrade</span>
                 Update to {connector.latestVersion}
+              </button>
+            )}
+            {connector.origin === "user" && (
+              <button
+                type="button"
+                className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 text-error transition-all active:scale-95 hover:bg-error/10 disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{ border: "0.5px solid rgba(244, 87, 87, 0.3)" }}
+                onClick={() => onDelete(connector.id)}
+                disabled={pendingAction !== null}
+                title="Remove this uploaded connector from the marketplace"
+              >
+                {pendingAction === "delete" ? (
+                  <>
+                    <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+                    Deleting…
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[20px]">delete_forever</span>
+                    Delete connector
+                  </>
+                )}
               </button>
             )}
             <button
@@ -1831,7 +1859,7 @@ function ConnectorDetailPanel({
                   ["Docker Image", connector.dockerImage],
                   ["Runtime", connector.runtime],
                   ["Connector ID", connector.id],
-                  ["Source", connector.status === "installed" ? "System" : "Marketplace"],
+                  ["Source", connector.origin === "user" ? "Uploaded" : connector.status === "installed" ? "System" : "Marketplace"],
                   ["Auth Type", connector.authType],
                 ].map(([label, value], i, arr) => (
                   <div
@@ -2111,7 +2139,7 @@ function InstancesTab({
     // as "***" from the server (redacted); the existing isSecret
     // detection in the form renders them with a lock icon and a
     // password-style input. Rotation isn't supported via this dialog
-    // yet — the banner inside the dialog points to /setup for that.
+    // yet.
     setEditConfig({ ...inst.config, ...inst.secrets });
     setEditFeedback(null);
   }, []);
@@ -4427,7 +4455,7 @@ export default function ConnectorsPage() {
   // operator sees the click registered. Map keyed by connector_id so
   // future bulk actions (install multiple) just compose naturally.
   const [pendingActions, setPendingActions] = useState<
-    Record<string, "install" | "uninstall">
+    Record<string, "install" | "uninstall" | "delete">
   >({});
   const addToast = useNotificationsStore((s) => s.addToast);
 
@@ -4507,6 +4535,43 @@ export default function ConnectorsPage() {
     [refreshData, addToast],
   );
 
+  // Delete an uploaded connector (origin "user"): removes its install marker
+  // and its connector.yaml. The MCP refuses while instances exist (409), and
+  // its message says how many; surface it as-is.
+  const handleDelete = useCallback(
+    async (connectorId: string) => {
+      const accepted = await confirmAction({
+        title: `Delete ${connectorId}?`,
+        message:
+          "This removes the uploaded connector from the marketplace. Upload its connector.yaml again to bring it back. A connector that still has instances cannot be deleted.",
+        confirmLabel: "Delete connector",
+        tone: "danger",
+      });
+      if (!accepted) return;
+      setPendingActions((prev) => ({ ...prev, [connectorId]: "delete" }));
+      try {
+        const result = await deleteUploadedConnector(connectorId);
+        if (result.ok) {
+          setSelectedConnector(null);
+          await refreshData();
+          addToast({ variant: "success", title: `${connectorId} deleted` });
+        } else {
+          addToast({
+            variant: "error",
+            title: `Could not delete ${connectorId}`,
+            description: result.error.message,
+          });
+        }
+      } finally {
+        setPendingActions((prev) => {
+          const { [connectorId]: _, ...rest } = prev;
+          return rest;
+        });
+      }
+    },
+    [refreshData, addToast],
+  );
+
   const handleTestInstance = useCallback(
     async (instanceId: string) => {
       // Backend response is {instance, probe_implemented,
@@ -4521,7 +4586,7 @@ export default function ConnectorsPage() {
       if (!result.data.probe_implemented) {
         // For connectors without a wired probe (xsiam) the state is
         // unchanged — keep whatever was there. Don't claim success.
-        newStatus = (cs?.state as InstanceStatus) ?? "not_tested";
+        newStatus = instanceStatusFromState(cs?.state);
       } else if (result.data.ok) {
         newStatus = "connected";
       } else {
@@ -4878,10 +4943,13 @@ export default function ConnectorsPage() {
       {/* ── Connector Detail Slide-over ────────────────────────── */}
       {selectedConnector && (
         <ConnectorDetailPanel
-          connector={selectedConnector}
+          // Re-read the connector from the refreshed list so the panel's
+          // Install / Uninstall button follows the state after a click.
+          connector={connectors.find((c) => c.id === selectedConnector.id) ?? selectedConnector}
           onClose={() => setSelectedConnector(null)}
           onInstall={handleInstall}
           onUninstall={handleUninstall}
+          onDelete={handleDelete}
           pendingAction={pendingActions[selectedConnector.id] ?? null}
         />
       )}

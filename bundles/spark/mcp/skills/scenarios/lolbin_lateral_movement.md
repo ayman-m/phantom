@@ -62,7 +62,14 @@ verbatim as `schema_override` on that stage's worker. Without it the worker emit
 observables that the vendor's modeling rule cannot map, so events land raw and `xdm.*` stays
 empty. `compact=true` is lossless for this purpose and keeps the payload inside the tool-result cap.
 
-Call `data_sources_installed_as_vendors`. Group `vendors[]` by `data_source_class`. Verify `edr` is present — if missing, stop and tell the operator to install an EDR data source; this skill cannot run without it. If `ndr` is missing, use the firewall-substitute pattern documented in `bruteforce_vpn_to_lateral` for Stage 2; the rule fidelity drops slightly but the chain still works.
+### Class check (MANDATORY — before creating any worker)
+
+1. Call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class`.
+2. For every row of the "Data classes used" table, write down the installed entry you will use for it, or `MISSING`. A class is only covered by an installed entry. A generic or catch-all schema is never a substitute, and never guess a vendor/product for a class.
+3. `edr` (Stages 1 and 3) is required. If it is `MISSING`, say this to the operator, with the class filled in: "No installed data source covers the `<class>` class, so I cannot run the LOLBin lateral movement scenario. Install a `<class>` data source from the Marketplace and ask again." Then stop: create no worker.
+   If `ndr` (Stage 2) is `MISSING`, use the installed `firewall` entry's internal-zone east-west logs (the pattern in `bruteforce_vpn_to_lateral` Stage 4); say you are substituting. If there is no `firewall` entry either, skip Stage 2 with the sentence below.
+   "No installed data source covers the `<class>` class, so I am skipping Stage <N> (<stage name>). I will not generate it with a generic schema. Install a `<class>` data source from the Marketplace to include it."
+4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
 ## Narrative thread
 
@@ -250,7 +257,7 @@ xlog.create_data_worker:
 | AMSI bypass alert | XSIAM Issues |
 | WinDefend service-stop alert | XSIAM Issues |
 | Event-log-cleared alert | XSIAM Issues |
-| Pivotable: filter by user=`g.foster` OR host=`wks-foster-01`, see all 3 stages | XQL: `config timeframe = 24h \| dataset = edr_logs \| filter user="g.foster" \| limit 20` |
+| Pivotable: filter by user=`g.foster` OR host=`wks-foster-01`, see all 3 stages | XQL: `config timeframe = 24h \| dataset = <dataset_name of the edr entry> \| filter <its user field> = "g.foster" \| limit 20` |
 
 ## Tear-down
 

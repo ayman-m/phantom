@@ -660,44 +660,19 @@ function timeOnly(iso: string): string {
   return `${hh}:${mm}:${ss}`;
 }
 
-// ─── Delete Button (with inline confirmation) ──────────────────────────────
+// ─── Delete Button ───────────────────────────────────────────────────────────
 
+/** The page's delete handler asks for confirmation in an in-app modal. */
 function DeleteButton({ onDelete }: { onDelete: () => void }) {
-  const [confirming, setConfirming] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Auto-reset confirmation after 3 seconds
-  useEffect(() => {
-    if (!confirming) return;
-    timerRef.current = setTimeout(() => setConfirming(false), 3000);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [confirming]);
-
   return (
     <button
       type="button"
-      aria-label={confirming ? "Confirm delete" : "Delete session"}
-      onClick={() => {
-        if (confirming) {
-          onDelete();
-          setConfirming(false);
-        } else {
-          setConfirming(true);
-        }
-      }}
-      className={cn(
-        "p-2 rounded-lg transition-all",
-        confirming
-          ? "bg-red-500/10 text-red-400"
-          : "hover:bg-white/5 text-on-surface-variant hover:text-red-400",
-      )}
-      title={confirming ? "Click again to confirm delete" : "Delete session"}
+      aria-label="Delete session"
+      onClick={onDelete}
+      className="p-2 rounded-lg transition-all hover:bg-white/5 text-on-surface-variant hover:text-red-400"
+      title="Delete session"
     >
-      <span className="material-symbols-outlined text-lg">
-        {confirming ? "delete_forever" : "delete"}
-      </span>
+      <span className="material-symbols-outlined text-lg">delete</span>
     </button>
   );
 }

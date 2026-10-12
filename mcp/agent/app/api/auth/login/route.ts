@@ -16,8 +16,11 @@
  *    side; that's the source of truth on every subsequent request.
  *  - Cookie attributes: HttpOnly + Secure + SameSite=Strict (CSRF
  *    protection without a separate token system).
- *  - Cookie Max-Age = 7200 (2 hours). After expiry, re-login. No
- *    remember-me option.
+ *  - Cookie Max-Age = the time left until the `expires_at_ms` the MCP
+ *    returned for this session, i.e. the operator-configured session
+ *    lifetime (default 2 hours; see /api/auth/session-lifetime). There is
+ *    no TTL constant on this side: the MCP auth store is the only home.
+ *    After expiry, re-login. No remember-me option.
  *  - Per-source-IP rate limit: 5 failures / 60s → 60s lockout.
  *    In-memory sliding window; resets on container restart.
  *  - Failed logins emit an audit row via the MCP-side auth_store
@@ -37,11 +40,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import {
-  ADMIN_USERNAME,
-  SESSION_COOKIE_NAME,
-  SESSION_TTL_SECONDS,
-} from "@/lib/auth-defaults";
+import { ADMIN_USERNAME, SESSION_COOKIE_NAME } from "@/lib/auth-defaults";
+import { cookieMaxAgeSeconds } from "@/lib/auth-route-helpers";
 import { login } from "@/lib/auth-store";
 import {
   acquireAll,
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
     httpOnly: true,
     secure: true,
     sameSite: "strict",
-    maxAge: SESSION_TTL_SECONDS,
+    maxAge: cookieMaxAgeSeconds(result.expiresAtMs, Date.now()),
     path: "/",
   });
   return response;

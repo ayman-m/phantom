@@ -153,29 +153,23 @@ fi
 # coordination directly from container env above.
 
 # ─── 2.2. TLS-by-default auto-generation ───────────────────────
-# Requirement: the stack MUST always have a TLS cert available. This
-# covers two scenarios:
-#   1. Fresh install: setup page needs HTTPS (chicken-and-egg —
-#      operator picks TLS mode through the page, page must already
-#      be TLS).
-#   2. Upgrade: an install created before TLS-by-default carries a
-#      setup.json with no cert; auto-gen on next boot brings it up
-#      to spec without operator intervention.
+# Requirement: the stack MUST always have a TLS cert available before the
+# first request: the login screen is served over HTTPS from the first boot,
+# and an install carried over from an older release may have no cert in
+# /tls/ yet; this step brings it up to spec without operator action.
 #
 # Mechanism: 2048-bit self-signed cert written to /tls/cert.pem +
 # /tls/key.pem on the shared phantom_tls volume. xlog
 # reads those same files (ro mount) at startup; the agent reads them
 # via PHANTOM_TLS_CERT_FILE/PHANTOM_TLS_KEY_FILE (set below).
 #
-# When the operator picks "custom" TLS in the setup form, /api/setup
-# overwrites /tls/{cert,key}.pem with their PEM. When they pick
-# "self-signed", /api/setup keeps the auto-generated material. Either
-# way /tls/ is populated, so this entrypoint reuses it on next boot.
+# An operator who wants their own certificate places a matching cert.pem +
+# key.pem pair in that volume; an existing pair is never overwritten, so
+# this entrypoint reuses it on every boot.
 PHANTOM_AUTO_TLS=0
 TLS_DIR="/tls"
 TLS_CERT="$TLS_DIR/cert.pem"
 TLS_KEY="$TLS_DIR/key.pem"
-SETUP_JSON="/app/runtime/setup.json"
 
 # The shared phantom_tls volume is the single source of truth for
 # certs across the stack. xlog (ro mount) reads /tls/cert.pem +
@@ -184,18 +178,8 @@ SETUP_JSON="/app/runtime/setup.json"
 # via PHANTOM_TLS_CERT_FILE below.
 #
 # Auto-gen runs whenever /tls/ doesn't already have a valid cert + key
-# pair. setup.json's existence is intentionally NOT part of the gate:
-# TLS-by-default means a cert is always available, irrespective of
-# whether the operator has ever opened the setup form. This also fixes
-# the upgrade path — installs created before the TLS-by-default change
-# carry a legacy setup.json with no cert; on next boot the agent
-# generates one and the whole stack moves to HTTPS without operator
-# intervention.
-#
-# Operator opt-out doesn't exist any more: the setup form has no
-# "HTTP only" option, and the API route at /api/setup either reuses
-# the auto-cert (self-signed mode) or writes the operator's PEM
-# (custom mode). Either way /tls/cert.pem is populated.
+# pair. TLS-by-default means a cert is always available; there is no
+# "HTTP only" option.
 
 # Generation lives in /app/tls-init.sh, the single owner of TLS material.
 # In the compose stacks the `phantom-tls-init` service has already run it
@@ -209,8 +193,7 @@ fi
 
 # When /tls/ has cert files, point the agent's listener at them via
 # the env vars its tls-proxy + MCP both consume. This unifies the
-# auto-gen path and operator-supplied path (the API route writes to
-# the same /tls/cert.pem on submit).
+# auto-gen path and the operator-supplied path (both land in /tls/cert.pem).
 #
 # IMPORTANT — env name choice: we deliberately use PHANTOM_TLS_CERT_FILE
 # (not SSL_CERT_FILE) because OpenSSL and Python's ssl module BOTH read
@@ -228,7 +211,7 @@ if [ -f "$TLS_CERT" ] && [ -f "$TLS_KEY" ]; then
   # NODE_EXTRA_CA_CERTS tells Node's https/fetch to trust the self-
   # signed cert in addition to the system CA store. Without this, the
   # agent's own outbound calls to https://localhost:8080 (the embedded
-  # MCP — bundle schema fetch, setup proxy, etc.) fail with TLS-handshake
+  # MCP — the /api/agent/* proxies, tool calls, etc.) fail with TLS-handshake
   # errors because Node doesn't recognize the cert chain. Setting this
   # before Next.js starts is essential — Node only reads the var at
   # process boot, not on each fetch. Note: NODE_EXTRA_CA_CERTS *appends*

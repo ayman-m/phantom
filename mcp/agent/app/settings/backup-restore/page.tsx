@@ -246,8 +246,9 @@ export default function BackupRestorePage() {
             <strong className="text-on-surface">Contents:</strong> personality
             blob, connector instances + cleartext secrets, memory entries
             (without embeddings), runtime job definitions, all skill MD
-            files, and knowledge bundle docs. Manifest jobs are NOT included
-            — they reseed from manifest.yaml at boot.
+            files, knowledge bundle docs, and your workflow state (journeys
+            marked tested, saved metric bookmarks). Manifest jobs are NOT
+            included — they reseed from manifest.yaml at boot.
           </p>
           <p className="text-warning">
             <span className="material-symbols-outlined text-[14px] align-text-bottom mr-1">
@@ -460,7 +461,7 @@ export default function BackupRestorePage() {
           <li>
             <strong className="text-on-surface">Restore is order-aware</strong>
             : personality → instances+secrets → skills → memory → knowledge
-            (no-op) → jobs. Job restores after connectors so a runtime
+            (no-op) → data sources → workflow state → jobs. Job restores after connectors so a runtime
             job referencing <code className="font-mono">phantom_create_data_worker</code>
             doesn&rsquo;t fail-closed at first cron tick.
           </li>
@@ -468,7 +469,10 @@ export default function BackupRestorePage() {
             <strong className="text-on-surface">Name collisions are skipped
             by default</strong> — your existing data is preserved unless
             you tick &ldquo;Overwrite existing entries.&rdquo; Personality
-            is the exception (single-row, always overwritten).
+            is the exception (single-row, always overwritten). If a
+            section&rsquo;s existing entries cannot be read, that section
+            is skipped and listed under Warnings rather than written
+            blind.
           </li>
           <li>
             <strong className="text-on-surface">PHANTOM_SECRET_KEK does

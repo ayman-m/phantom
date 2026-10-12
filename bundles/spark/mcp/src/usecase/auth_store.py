@@ -23,6 +23,12 @@ PBKDF2 password hash in SecretStore) to add:
      `credentials_changed=false`. The clean-volume case is the only
      time the seed fires.
 
+  4. The operator-configurable session lifetime (whole hours, 1..24,
+     default 2). It lives in the `auth_settings` table of the same
+     SQLite file, applies to sessions minted after the change, and is
+     the only source for both the server-side `expires_at_ms` and the
+     login cookie's Max-Age (derived from `expires_at_ms`).
+
 Why a new module rather than expanding ui_auth.py:
 
 ui_auth.py owns PBKDF2 + envelope serialization — pure cryptography.
@@ -66,9 +72,20 @@ logger = logging.getLogger("Phantom MCP.auth_store")
 # auth.v1 surface tidy.
 _FLAG_PATH_FMT = "/ui/auth/{username}/credentials_changed"
 
-# Default session TTL when the caller doesn't specify. Matches the
-# Next.js cookie Max-Age in mcp/agent/lib/auth-defaults.ts.
-DEFAULT_SESSION_TTL_SECONDS = 7200  # 2 hours
+# Session lifetime. The operator sets it on /profile (whole hours,
+# MIN..MAX); the value lives in the `auth_settings` table of
+# auth_sessions.db (one storage home: no env var, no SecretStore
+# overlay, no second constant on the Next.js side). Installs that never
+# touch it get the default below. The login cookie's Max-Age is derived
+# from the `expires_at_ms` this store returns at login.
+DEFAULT_SESSION_TTL_HOURS = 2
+MIN_SESSION_TTL_HOURS = 1
+MAX_SESSION_TTL_HOURS = 24
+_SESSION_TTL_KEY = "session_ttl_hours"
+
+
+class SessionLifetimeError(ValueError):
+    """The requested session lifetime is not a whole number of hours in range."""
 
 # How often expired sessions get pruned (lazily, on validate-session
 # calls). 10 minutes is a tradeoff between table growth and
@@ -99,7 +116,30 @@ CREATE INDEX IF NOT EXISTS idx_sessions_username
     ON sessions (username);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires
     ON sessions (expires_at_ms);
+
+-- Non-secret auth settings (today: the session lifetime). Plain text on
+-- purpose: nothing here is a credential, and keeping it out of
+-- SecretStore keeps it out of that store's environment overlay.
+CREATE TABLE IF NOT EXISTS auth_settings (
+    key            TEXT PRIMARY KEY NOT NULL,
+    value          TEXT NOT NULL,
+    updated_at_ms  INTEGER NOT NULL
+);
 """
+
+
+def validate_session_ttl_hours(hours: object) -> int:
+    """Only a real `int` in MIN..MAX passes. `bool` is an `int`
+    subclass, so it is refused explicitly; floats and strings are
+    refused rather than coerced."""
+    if isinstance(hours, bool) or not isinstance(hours, int):
+        raise SessionLifetimeError("hours must be a whole number")
+    if not MIN_SESSION_TTL_HOURS <= hours <= MAX_SESSION_TTL_HOURS:
+        raise SessionLifetimeError(
+            f"hours must be between {MIN_SESSION_TTL_HOURS} and "
+            f"{MAX_SESSION_TTL_HOURS}"
+        )
+    return hours
 
 
 def _token_hash(raw_token: str) -> str:
@@ -169,6 +209,23 @@ class _SessionsDb:
                 "(token_hash, username, created_at_ms, expires_at_ms, "
                 " user_agent_hash) VALUES (?, ?, ?, ?, ?)",
                 (token_hash, username, created_at_ms, expires_at_ms, user_agent_hash),
+            )
+
+    def get_setting(self, key: str) -> str | None:
+        with self._lock, self._connect() as c:
+            row = c.execute(
+                "SELECT value FROM auth_settings WHERE key = ?", (key,),
+            ).fetchone()
+        return None if row is None else row[0]
+
+    def set_setting(self, key: str, value: str, now_ms: int) -> None:
+        with self._lock, self._connect() as c:
+            c.execute(
+                "INSERT INTO auth_settings (key, value, updated_at_ms) "
+                "VALUES (?, ?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET "
+                "value = excluded.value, updated_at_ms = excluded.updated_at_ms",
+                (key, value, now_ms),
             )
 
     def lookup(self, token_hash: str) -> dict[str, Any] | None:
@@ -357,20 +414,60 @@ class AuthStore:
             return False
         return raw.strip().lower() == "true"
 
+    # ─── Session lifetime (operator setting) ──────────────
+
+    def session_ttl_hours(self) -> int:
+        """The configured session lifetime in whole hours, or
+        DEFAULT_SESSION_TTL_HOURS when the operator never set one. A
+        stored value that fails validation (only possible by editing
+        the DB by hand) is logged and ignored rather than allowed to
+        brick sign-in."""
+        raw = self._sessions.get_setting(_SESSION_TTL_KEY)
+        if raw is None:
+            return DEFAULT_SESSION_TTL_HOURS
+        try:
+            return validate_session_ttl_hours(int(raw))
+        except (ValueError, SessionLifetimeError):
+            logger.error(
+                "auth_store: stored session lifetime %r is invalid; "
+                "using the default of %d hours",
+                raw,
+                DEFAULT_SESSION_TTL_HOURS,
+            )
+            return DEFAULT_SESSION_TTL_HOURS
+
+    def set_session_ttl_hours(self, hours: object) -> int:
+        """Validate and persist the session lifetime. Returns the
+        PREVIOUS value (for the audit row). Applies to sessions minted
+        afterwards; sessions already minted keep their expiry.
+        Raises SessionLifetimeError for anything but a whole number of
+        hours in MIN..MAX."""
+        valid = validate_session_ttl_hours(hours)
+        previous = self.session_ttl_hours()
+        self._sessions.set_setting(
+            _SESSION_TTL_KEY, str(valid), int(time.time() * 1000),
+        )
+        return previous
+
     # ─── Session operations ───────────────────────────────
 
     def create_session(
         self,
         username: str,
         *,
-        ttl_seconds: int = DEFAULT_SESSION_TTL_SECONDS,
+        ttl_seconds: int | None = None,
         user_agent: str | None = None,
     ) -> str:
         """Mint a new session token (32 random bytes, hex-encoded).
         Persists the SHA-256 hash + metadata; returns the RAW token
         (the only place it ever exists in cleartext). Caller is
         responsible for setting the response cookie. The raw token is
-        never logged or echoed."""
+        never logged or echoed.
+
+        The lifetime is the operator-configured session lifetime
+        (`session_ttl_hours`) unless `ttl_seconds` overrides it."""
+        if ttl_seconds is None:
+            ttl_seconds = self.session_ttl_hours() * 3600
         raw_token = secrets.token_urlsafe(32)
         now_ms = int(time.time() * 1000)
         self._sessions.insert(

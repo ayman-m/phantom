@@ -41,9 +41,6 @@ export const dynamic = "force-dynamic";
 const PROVIDER_KEYS = [
   "anthropicApiKey",
   "anthropicCliKey",
-  "openaiApiKey",
-  "openaiCodexToken",
-  "ollamaEndpoint",
   "vertexServiceAccountJson",
   "vertexProjectId",
   "vertexLocation",
@@ -53,8 +50,6 @@ type ProviderKey = (typeof PROVIDER_KEYS)[number];
 const SENSITIVE_KEYS: ReadonlySet<ProviderKey> = new Set<ProviderKey>([
   "anthropicApiKey",
   "anthropicCliKey",
-  "openaiApiKey",
-  "openaiCodexToken",
   "vertexServiceAccountJson",
 ]);
 

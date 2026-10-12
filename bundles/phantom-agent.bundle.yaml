@@ -34,8 +34,6 @@ runtime:
         command: scripts/import_agent_bundle.sh <bundle.tar.gz> <target-dir>
       setup:
         command: open http://localhost:3000
-      applySetup:
-        command: scripts/agent_lifecycle.sh apply-setup
       start:
         command: scripts/agent_lifecycle.sh start
       stop:

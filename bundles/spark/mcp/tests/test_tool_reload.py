@@ -119,7 +119,7 @@ def test_register_all_tools_re_registers_each_call(monkeypatch):
 
 def test_register_all_tools_picks_up_new_instances(monkeypatch):
     """Simulate the hot-reload scenario: first call sees 1 connector,
-    operator submits setup form, second call sees 2 connectors."""
+    operator creates a second instance, second call sees 2 connectors."""
     import usecase.connector_loader as loader
 
     def fake_iter_v1(**kw):

@@ -16,6 +16,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { confirmAction } from "@/lib/stores/confirm";
 import { cn } from "@/lib/utils";
 
 interface PluginInfo {
@@ -64,12 +65,13 @@ export default function PluginsPage() {
   }, [refresh]);
 
   const handleReload = useCallback(async () => {
-    if (
-      !confirm(
-        "Reload plugins? Re-applies skills, scenarios, and memory seeds for every enabled plugin. Operator-edited memories are preserved (only missing seeds get written).",
-      )
-    )
-      return;
+    const accepted = await confirmAction({
+      title: "Reload plugins?",
+      message:
+        "Re-applies skills, scenarios, and memory seeds for every enabled plugin. Operator-edited memories are preserved (only missing seeds get written).",
+      confirmLabel: "Reload",
+    });
+    if (!accepted) return;
     setReloading(true);
     setError(null);
     try {

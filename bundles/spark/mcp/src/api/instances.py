@@ -1,7 +1,8 @@
 """Instance CRUD HTTP endpoints.
 
-The Next.js agent's setup screen + admin tools call these to materialize
-connector instances declared by `manifest.yaml:setup.bindsInstances[]`.
+The Next.js agent's /connectors page + admin tools call these to create
+connector instances (the Spark platform materializes the ones declared by
+`manifest.yaml:setup.bindsInstances[]` itself).
 Tools advertised by the MCP gate on the existence of instances (see
 `usecase/connector_loader.py:iter_registrations`).
 

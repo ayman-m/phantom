@@ -93,6 +93,7 @@ XLOG_MCP_URL=
 
 # Secret references. Replace locally or inject from your orchestrator.
 MCP_TOKEN=
+PHANTOM_DEFAULT_ADMIN_PASSWORD=
 UI_PASSWORD=
 GOOGLE_APPLICATION_CREDENTIALS=
 CALDERA_RED_PASSWORD=
@@ -167,8 +168,7 @@ fi
 printf 'Imported bundle to: %s\n' "$target"
 printf 'Next steps:\n'
 printf '  1. cp %s/.env.template %s/.env\n' "$target" "$target"
-printf '  2. Start the setup UI with: cd %s && docker compose up -d phantom-agent\n' "$target"
+printf '  2. Set PHANTOM_DEFAULT_ADMIN_PASSWORD (and the other secrets) in %s/.env, then start the agent with: cd %s && docker compose up -d phantom-agent\n' "$target" "$target"
 printf '     Secret provider references are in %s/.env.secret-refs\n' "$target"
 printf '     Set BIND_SECRET_PROVIDER=1 to register references through scripts/bind_secret_provider.py\n'
-printf '  3. Open http://localhost:3000 and complete first-run setup\n'
-printf '  4. cd %s && ./scripts/agent_lifecycle.sh apply-setup\n' "$target"
+printf '  3. Open https://localhost:3000, sign in as admin, add the model provider at /providers and connector instances at /connectors\n'

@@ -41,8 +41,8 @@ DNS is allowed outbound by default in most enterprises; this is why it's the mos
 
 | Stage | Data class | If missing |
 |---|---|---|
-| 1, 2 | `dns` | Required — without DNS resolver telemetry, the entire skill is unobservable |
-| 3 | `firewall` | Substitute with `dns` resolver outbound logs (lower fidelity) |
+| 1, 2 | `dns` | Required — without DNS query telemetry, the entire skill is unobservable. Accepted sources, in this order: (1) an installed `dns`-class entry; (2) an installed firewall entry whose schema carries DNS-question fields (a query-name field and a query-type field). Today that is FortiGate's DNS subsystem (`FTNTFGTsubtype = dns-response`, `FTNTFGTqname`, `FTNTFGTqtype`) — see "FortiGate DNS subsystem" below. Neither installed: stop |
+| 3 | `firewall` | Substitute with the DNS source's own outbound logs (lower fidelity) |
 
 ## Pre-flight
 
@@ -60,7 +60,32 @@ verbatim as `schema_override` on that stage's worker. Without it the worker emit
 observables that the vendor's modeling rule cannot map, so events land raw and `xdm.*` stays
 empty. `compact=true` is lossless for this purpose and keeps the payload inside the tool-result cap.
 
-Call `data_sources_installed_as_vendors`. Group `vendors[]` by `data_source_class`. Verify `dns` is present — if missing, stop and tell the operator to install a DNS data source from the Marketplace before this skill can run. If the operator's DNS telemetry is installed via the firewall vendor (some PANOS deployments, for example), `dns` and `firewall` may resolve to the same vendor entry — that's fine; the same logs cover both stages.
+### Class check (MANDATORY — before creating any worker)
+
+1. Call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class`.
+2. Pick the DNS source for Stages 1-2 in this order, and write down which you chose:
+   1. an entry whose `data_source_class` is `dns`;
+   2. otherwise a `firewall`-class entry whose schema has DNS-question fields. Confirm with `data_sources_get_schema(<entry>.data_source_id, compact=true)`: it must list a query-name field and a query-type field. FortiGate does (`FTNTFGTqname`, `FTNTFGTqtype`, `FTNTFGTipaddr`, gated by `FTNTFGTsubtype = dns-response`); other firewall entries are accepted only if their schema shows the same.
+   3. otherwise `MISSING`.
+3. If it is `MISSING`, say this to the operator and then stop (create no worker): "No installed data source produces DNS query telemetry (no `dns`-class source, and no firewall source with a DNS subsystem), so I cannot run the DNS tunneling scenario. Install a DNS data source from the Marketplace and ask again." Do not generate Stages 1-2 from a generic schema or a guessed vendor/product.
+4. Stage 3 uses the `firewall`-class entry. If there is none, skip Stage 3 with: "No installed data source covers the `firewall` class, so I am skipping Stage 3 (firewall confirmation). I will not generate it with a generic schema." If the DNS source from step 2 is itself the firewall entry, the same entry serves Stages 1-3.
+5. Query only datasets the chosen entries produce. Take each dataset name from that entry's `dataset_name` in `data_sources_installed_as_vendors`; there is no generic DNS dataset, so never write a dataset name from memory.
+6. In your final report, state which source served Stages 1-2 and which alerts therefore will or will not fire.
+
+#### FortiGate DNS subsystem (when step 2 chose a FortiGate entry)
+
+The FortiGate schema has no response-code, TTL, query-length or category fields, so the recipes below lose those keys. Map what exists and drop the rest; never invent a field name.
+
+| Recipe key | FortiGate field |
+|---|---|
+| `query` | `FTNTFGTqname` (and `dhost`) |
+| `queryType` | `FTNTFGTqtype`, only a value of `A`, `AAAA`, `TXT`, `CNAME`, `MX`, `NS`, `PTR`, `SRV` |
+| `responseIp` | `FTNTFGTipaddr` |
+| `src` / `shost` / `suser` / `spt` / `dpt` | same CEF names |
+| (pinned) | `FTNTFGTsubtype = dns-response`, `FTNTFGTeventtype = dns-response`, `app = DNS` |
+| `responseCode`, `ttl`, `cat`, `responseData` | no FortiGate field: omit |
+
+Say in the report that Stages 1-2 ran through the FortiGate DNS subsystem, which carries the query name and type but not the response code, so the DGA and tunneling detectors that depend on NXDOMAIN ratios or TTL are less likely to fire.
 
 ## Narrative thread
 
@@ -215,7 +240,7 @@ xlog.create_data_worker:
 | DGA / high-entropy DNS alert | XSIAM Issues |
 | DNS tunneling alert against `api-metrics-collector.cf` | XSIAM Issues |
 | C2 beaconing alert with destination `185.220.101.42` | XSIAM Issues |
-| Pivotable: source host `10.10.20.55` correlates all 3 alerts | XQL: `config timeframe = 24h \| dataset = dns_logs \| filter src_host="wks-rdavies-01" \| limit 20` |
+| Pivotable: source host `10.10.20.55` correlates all 3 alerts | XQL: `config timeframe = 24h \| dataset = <dataset_name of the Stage 1-2 entry> \| filter <its source-host field> = "wks-rdavies-01" \| limit 20` (for FortiGate: `dataset = fortinet_fortigate_raw`, `FTNTFGTsubtype = "dns-response"`, `shost`) |
 
 ## Tear-down
 

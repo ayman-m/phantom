@@ -50,6 +50,24 @@ logger = logging.getLogger("Phantom MCP")
 
 DEFAULT_DATA_ROOT = Path("/app/data")
 
+# Model-selection settings are operator/REST-only. A chat session picks its
+# model per session (header dropdown or `/model <name>`, stored in the session
+# metadata) and that choice must never reach the global default. The agent's
+# `settings_update` / `settings_reset` tools refuse these keys (see
+# builtin_components/self_mod_tools.py); the REST surface
+# (PUT /api/v1/settings) is unaffected, so the operator can still change the
+# default model there. A key counts as model-selection when it is
+# `geminiModel` or any key whose name ends in "model" (a future
+# `fallbackModel` is covered without a code change).
+AGENT_PROTECTED_SETTINGS: frozenset[str] = frozenset({"geminiModel"})
+
+
+def is_agent_protected_setting(key: object) -> bool:
+    """True when `key` is a model-selection setting the agent may not write."""
+    if not isinstance(key, str):
+        return False
+    return key in AGENT_PROTECTED_SETTINGS or key.lower().endswith("model")
+
 
 @dataclass(frozen=True)
 class SettingOverride:

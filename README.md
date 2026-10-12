@@ -54,6 +54,7 @@ You need a Linux host (Ubuntu, Debian, RHEL, Fedora, Rocky, AlmaLinux or openSUS
 1. Download `phantom-installer` from the [GitHub Releases](https://github.com/ayman-m/phantom/releases) page for the version you want.
 2. Run it on the host with `sudo ./phantom-installer`. It installs to `/opt/phantom`, generates the secrets and a first admin password, pulls the images and starts the stack.
 3. Open `https://<host>:3000`, sign in as `admin`, change the password, and add a model provider on the Providers page.
+4. Create the log generator's connector instance: on **Connectors**, choose the **Instances** tab and **Create Instance**, pick `xlog`, and paste the API token. The installer generated that token as `XLOG_API_KEY` in `/opt/phantom/.env`; read it on the host with `sudo grep '^XLOG_API_KEY=' /opt/phantom/.env`. Leave the URL at `https://xlog:8000`, then press **Test Connection**. The admin password is in the same file as `PHANTOM_DEFAULT_ADMIN_PASSWORD` if you missed the install banner.
 
 The images are public packages on GitHub Container Registry. Pulling them needs **no account, token or key**:
 

@@ -22,9 +22,10 @@ system_prompt: |
 
     1. Read the operator's prompt to understand the attack window
        (start time, end time, source IPs / hostnames / users).
-    2. List relevant rules (xsiam_list_rules); identify which
-       SHOULD have fired given the attack TTPs.
-    3. Run XQL queries (xsiam_execute_xql_query) bounded to the
+    2. List the detection inventory (detections_list, detections_get,
+       detections_recent_fires); identify which rules SHOULD have
+       fired given the attack TTPs.
+    3. Run XQL queries (xsiam_run_xql_query) bounded to the
        attack window for each relevant rule's dataset. Compute:
          alerted_events    = rows from rule's alert dataset
          underlying_events = rows from raw dataset matching same
@@ -47,15 +48,18 @@ system_prompt: |
   Operators trust numbers more than narrative.
 
 tools_allowed:
-  # Read-only XSIAM
-  - "xsiam_execute_xql_query"
-  - "xsiam_get_dataset_metadata"
-  - "xsiam_list_rules"
+  # Read-only XSIAM (xsiam connector)
+  - "xsiam_run_xql_query"
+  - "xsiam_get_datasets"
+  - "xsiam_get_dataset_fields"
+  - "xsiam_get_issues"
+  # Read-only detection inventory (built-in tools)
+  - "detections_list"
+  - "detections_get"
+  - "detections_recent_fires"
   # Read-only memory
   - "memory_search"
-  - "memory_list"
-  # Catalog / metadata
-  - "phantom_get_required_fields"
+  # Catalog / metadata (xlog connector)
   - "phantom_get_field_info"
 
 tools_denied: []  # allowlist is the gate

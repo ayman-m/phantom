@@ -63,53 +63,53 @@ const DEFAULT_METADATA: ToolMetadata = {
 };
 
 /**
- * Curated metadata table. Keyed by tool name (legacy flat AND v1.2
- * namespaced — both register the same metadata). Operator-facing,
- * so don't list low-level helpers — only tools the model is
- * realistically going to call.
+ * Curated metadata table. Keyed by the legacy flat tool name
+ * (`<functionPrefix><tool>`, for example `xsiam_run_xql_query`); the
+ * namespaced `<connector>.<tool>` form of the same tool resolves to the same
+ * row in resolveToolMetadata. Operator-facing, so don't list low-level
+ * helpers — only tools the model is realistically going to call.
+ *
+ * Every key must be a tool the MCP really registers:
+ * bundles/spark/mcp/tests/test_shipped_tool_references.py rebuilds the tool
+ * catalog from the connector.yaml files and the built-in registry and fails
+ * on a name that is not in it.
  */
 export const TOOL_METADATA_TABLE: Record<string, ToolMetadata> = {
   // ── Read-only / informational ─────────────────────────────────
   // Catalog + introspection tools. All safe to run in parallel
   // because they read from in-process state or a bounded API.
 
-  phantom_list_observables: {
-    readOnly: true,
-    destructive: false,
-    openWorld: false,
-    concurrencySafe: true,
-  },
-  phantom_get_required_fields: {
-    readOnly: true,
-    destructive: false,
-    openWorld: false,
-    concurrencySafe: true,
-  },
-  phantom_list_scenarios: {
-    readOnly: true,
-    destructive: false,
-    openWorld: false,
-    concurrencySafe: true,
-  },
-  phantom_get_scenario: {
-    readOnly: true,
-    destructive: false,
-    openWorld: false,
-    concurrencySafe: true,
-  },
-  phantom_list_skills: {
-    readOnly: true,
-    destructive: false,
-    openWorld: false,
-    concurrencySafe: true,
-  },
-  phantom_get_skill: {
-    readOnly: true,
-    destructive: false,
-    openWorld: false,
-    concurrencySafe: true,
-  },
   phantom_get_field_info: {
+    readOnly: true,
+    destructive: false,
+    openWorld: false,
+    concurrencySafe: true,
+  },
+  skills_list_all: {
+    readOnly: true,
+    destructive: false,
+    openWorld: false,
+    concurrencySafe: true,
+  },
+  skills_read: {
+    readOnly: true,
+    destructive: false,
+    openWorld: false,
+    concurrencySafe: true,
+  },
+  load_simulation_skills: {
+    readOnly: true,
+    destructive: false,
+    openWorld: false,
+    concurrencySafe: true,
+  },
+  knowledge_list: {
+    readOnly: true,
+    destructive: false,
+    openWorld: false,
+    concurrencySafe: true,
+  },
+  knowledge_search: {
     readOnly: true,
     destructive: false,
     openWorld: false,
@@ -117,13 +117,13 @@ export const TOOL_METADATA_TABLE: Record<string, ToolMetadata> = {
   },
 
   // CALDERA read-only
-  caldera_list_agents: {
+  caldera_get_all_agents: {
     readOnly: true,
     destructive: false,
     openWorld: false,
     concurrencySafe: true,
   },
-  caldera_get_agent: {
+  caldera_get_agent_by_paw: {
     readOnly: true,
     destructive: false,
     openWorld: false,
@@ -135,19 +135,19 @@ export const TOOL_METADATA_TABLE: Record<string, ToolMetadata> = {
     openWorld: false,
     concurrencySafe: true,
   },
-  caldera_get_ability: {
+  caldera_get_ability_by_id: {
     readOnly: true,
     destructive: false,
     openWorld: false,
     concurrencySafe: true,
   },
-  caldera_list_operations: {
+  caldera_get_all_operations: {
     readOnly: true,
     destructive: false,
     openWorld: false,
     concurrencySafe: true,
   },
-  caldera_get_operation: {
+  caldera_get_operation_by_id: {
     readOnly: true,
     destructive: false,
     openWorld: false,
@@ -158,20 +158,26 @@ export const TOOL_METADATA_TABLE: Record<string, ToolMetadata> = {
   // against TB-scale logs) but they don't write. Keep them
   // concurrencySafe so the agent can run multiple queries in
   // parallel for cross-rule coverage analysis.
-  xsiam_execute_xql_query: {
+  xsiam_run_xql_query: {
     readOnly: true,
     destructive: false,
     openWorld: false,
     concurrencySafe: true,
-    hint: "Read-only XQL query against XSIAM PAPI. May be slow.",
+    hint: "Read-only XQL query against the XSIAM tenant. May be slow.",
   },
-  xsiam_get_dataset_metadata: {
+  xsiam_get_datasets: {
     readOnly: true,
     destructive: false,
     openWorld: false,
     concurrencySafe: true,
   },
-  xsiam_list_rules: {
+  xsiam_get_dataset_fields: {
+    readOnly: true,
+    destructive: false,
+    openWorld: false,
+    concurrencySafe: true,
+  },
+  cortex_list_correlation_rules: {
     readOnly: true,
     destructive: false,
     openWorld: false,
@@ -184,65 +190,62 @@ export const TOOL_METADATA_TABLE: Record<string, ToolMetadata> = {
   // interact (e.g. two webhook fires arriving out-of-order at the
   // SIEM and confusing dedup logic).
 
-  send_webhook_log: {
+  xsiam_send_webhook_log: {
     readOnly: false,
     destructive: false,
     openWorld: true,
     concurrencySafe: false,
     hint: "POSTs to WEBHOOK_ENDPOINT. External side effect.",
   },
-  // xlog scenario worker — generates synthetic logs and SENDS
+  // Log-generation workers — generate synthetic logs and SEND
   // them. open-world (the SIEM sees them), serial within a worker.
-  xlog_create_scenario_worker: {
+  phantom_create_scenario_worker: {
     readOnly: false,
     destructive: false,
     openWorld: true,
     concurrencySafe: false,
     hint: "Spawns a long-running worker that emits synthetic logs to the destination.",
   },
-  xlog_create_scenario_worker_from_query: {
+  phantom_create_data_worker: {
     readOnly: false,
     destructive: false,
     openWorld: true,
     concurrencySafe: false,
   },
-  xlog_create_worker: {
-    readOnly: false,
-    destructive: false,
-    openWorld: true,
-    concurrencySafe: false,
-  },
-  xlog_delete_worker: {
+  phantom_kill_worker: {
     readOnly: false,
     destructive: true,
     openWorld: false,
     concurrencySafe: false,
-    hint: "Stops a running scenario worker. Cannot resume.",
+    hint: "Stops a running worker. Cannot resume.",
   },
 
   // CALDERA write — REAL red-team operations. destructive=true so
   // the approval card gets the red border treatment.
-  caldera_start_operation: {
+  caldera_create_operation: {
     readOnly: false,
     destructive: true,
     openWorld: true,
     concurrencySafe: false,
-    hint:
-      "Starts a real CALDERA operation against the configured agents. " +
+    hint: 
+      "Launches a real CALDERA operation against the configured agents. " +
       "Produces actual TTPs against the test environment.",
   },
-  caldera_stop_operation: {
+  // Changing an operation's state (pause, stop) is the safe direction, not
+  // destructive. Marked openWorld for the CALDERA server interaction.
+  caldera_update_operation: {
     readOnly: false,
-    destructive: false, // stopping isn't destructive; it's the
-    // safe direction. Marked openWorld for the
-    // CALDERA server interaction.
+    destructive: false,
     openWorld: true,
     concurrencySafe: false,
+    hint: "Applies a partial update to an operation, for example to pause or stop it.",
   },
 
   // ── Self-modification ─────────────────────────────
   // These mutate Phantom's own state. Always destructive=true so
   // the operator sees the red border AND humanRequired gates them.
+  // (There is no api_keys_create / rotate / revoke here: those are
+  // REST-only by the credential guardrail, so the agent has no tool.)
 
   jobs_create: {
     readOnly: false,
@@ -289,27 +292,8 @@ export const TOOL_METADATA_TABLE: Record<string, ToolMetadata> = {
     openWorld: false,
     concurrencySafe: false,
   },
-  api_keys_create: {
-    readOnly: false,
-    destructive: false,
-    openWorld: false,
-    concurrencySafe: false,
-    hint: "Mints a new operator-scoped API key. Plaintext shown once.",
-  },
-  api_keys_rotate: {
-    readOnly: false,
-    destructive: true, // old key is invalidated
-    openWorld: false,
-    concurrencySafe: false,
-  },
-  api_keys_revoke: {
-    readOnly: false,
-    destructive: true,
-    openWorld: false,
-    concurrencySafe: false,
-  },
 
-  // Memory writes
+  // Memory
   memory_store: {
     readOnly: false,
     destructive: false,
@@ -328,18 +312,25 @@ export const TOOL_METADATA_TABLE: Record<string, ToolMetadata> = {
     openWorld: false,
     concurrencySafe: true,
   },
-  memory_list: {
-    readOnly: true,
-    destructive: false,
-    openWorld: false,
-    concurrencySafe: true,
-  },
   memory_delete: {
     readOnly: false,
     destructive: true,
     openWorld: false,
     concurrencySafe: false,
   },
+};
+
+/**
+ * Namespaced names whose legacy flat alias is not just the namespaced name
+ * with "." replaced by "_" (the connector's functionPrefix differs from its
+ * id). Maps to the table key. The test above checks both sides exist.
+ */
+export const NAMESPACED_TO_TABLE_KEY: Record<string, string> = {
+  "xlog.get_field_info": "phantom_get_field_info",
+  "xlog.create_data_worker": "phantom_create_data_worker",
+  "xlog.create_scenario_worker": "phantom_create_scenario_worker",
+  "xlog.kill_worker": "phantom_kill_worker",
+  "cortex-content.list_correlation_rules": "cortex_list_correlation_rules",
 };
 
 /** Resolve metadata for a tool. Tries the exact tool name, then
@@ -349,6 +340,8 @@ export function resolveToolMetadata(toolName: string): ToolMetadata {
   if (TOOL_METADATA_TABLE[toolName]) {
     return TOOL_METADATA_TABLE[toolName];
   }
+  const aliased = NAMESPACED_TO_TABLE_KEY[toolName];
+  if (aliased && TOOL_METADATA_TABLE[aliased]) return TOOL_METADATA_TABLE[aliased];
   // Try the alternate namespacing: v1.2 namespaced
   // `<connector>.<tool>` ↔ legacy `<connector>_<tool>`.
   if (toolName.includes(".")) {

@@ -476,15 +476,15 @@ export const JOURNEYS: Journey[] = [
     howToTest: [
       "Open a fresh chat at the Phantom UI.",
       "Paste the prompt and submit.",
-      "Read the response — should enumerate Phantom log/sim tools, XSIAM, CALDERA, Memory, Skills.",
+      "Read the response — it should enumerate the built-in tool groups (Memory, Skills, Data Sources, Jobs, Log Destinations). Groups for xlog, CALDERA and XSIAM appear only after you install that connector and create an instance of it at /connectors.",
     ],
     expectedResult:
-      "Multi-paragraph response with grouped tool list (Phantom / XSIAM / CALDERA / Memory & Knowledge). The agent should mention `memory_store`, `memory_search`, `data_sources_installed_as_vendors` — proving the latest system prompt is loaded.",
+      "Multi-paragraph response with a grouped tool list. On a fresh install only the built-in groups appear (Memory & Knowledge, Skills, Data Sources, Jobs, Log Destinations); connector groups (xlog, CALDERA, XSIAM) join the list once their instances exist. The agent should mention `memory_store`, `memory_search`, `data_sources_installed_as_vendors` — proving the latest system prompt is loaded.",
     verifyVia: [
       "GET /api/agent/audit?action=tool_call&limit=5 — should show NO new tool_call rows for this turn.",
       "Session sidebar should show this conversation auto-titled with the prompt's first 60 chars.",
     ],
-    related: ["install-data-source"],
+    related: ["install-data-source", "onboarding-install-xlog-connector"],
     components: ["chat", "mcp", "audit"],
   },
   {
@@ -513,18 +513,18 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Go to /api-keys, click Create Key, choose scope agent:write (or agent:*), copy the key.",
-      "curl -sk -H \"Authorization: Bearer phantom_ak_…\" https://<host>/api/chat -d '{\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}' — expect a 200 SSE stream.",
-      "curl the same key against /api/agent/providers/config — expect 403 (credential routes are session-only).",
-      "Revoke the key in /api-keys; the next call returns 401 within ~30s.",
+      "Operator-only step (mints a credential): go to /api-keys and click Create Key. In the Create API Key panel enter a Label (for example `ci-ping`), untick the pre-selected Tool dispatch scope, tick Agent API (read + write) (`agent:write`), click Generate Key, then click Copy. The key is shown once.",
+      "Host shell step: `curl -sk -H \"Authorization: Bearer phantom_ak_…\" https://<host>:3000/api/chat -d '{\"messages\":[{\"role\":\"user\",\"content\":\"ping\"}]}'` — expect a 200 SSE stream. `/api/chat` needs the `agent:write` scope; a key with only `agent:read` is refused.",
+      "Host shell step: run the credential-route check with the same key: `for p in instances providers api-keys; do curl -sk -o /dev/null -w \"$p %{http_code}\\n\" -H \"Authorization: Bearer phantom_ak_…\" https://<host>:3000/api/agent/$p; done` — expect 403 on all three (credential routes are session-only). A 401 only means no bearer was sent and proves nothing.",
+      "Back on /api-keys, click Revoke on the key's row; the next call returns 401 within ~30s.",
     ],
     expectedResult:
-      "The API-key bearer authenticates /api/chat + /api/agent/* per its scope; credential routes (providers/instances/api-keys) 403 even with agent:*; revocation takes effect within the 30s cache TTL.",
+      "The API-key bearer authenticates /api/chat + /api/agent/* per its scope; credential routes (instances, providers, api-keys) return 403 even with agent:*; revocation takes effect within the 30s cache TTL.",
     verifyVia: [
       "GET /api/agent/audit?limit=5 — actor shows api_key:<id>, not a user session.",
       "/api-keys table shows the key's last_used_at bumping on each call.",
     ],
-    related: ["get-oriented"],
+    related: ["get-oriented", "ops-mint-api-key", "api-key-scope-matrix"],
     components: ["chat", "mcp", "audit"],
   },
   // ─────────────────────────────────────────────────────────────────
@@ -569,7 +569,7 @@ export const JOURNEYS: Journey[] = [
     expectedResult:
       "memory_search returns the stored EDR memory with cosine ≥0.4 (paraphrase score) and the agent cites CrowdStrike by name. NEW session_id ≠ the original write session — proving cross-session retrieval.",
     verifyVia: [
-      "Audit feed at /observability/events — sequence: tool:memory.store (first prompt) → tool:memory.search (second prompt, new session).",
+      "Audit feed at /observability/events — sequence: memory_stored (first prompt) → memory_searched (second prompt, new session). Both tools are built-ins, so there is no tool_call row; the Live telemetry panel shows the calls.",
       "Session sidebar should show TWO sessions: the original write session + this fresh recall session.",
       "Optional: export this session to JSON and search for 'CrowdStrike' in the assistant's reply — confirms it was cited.",
     ],
@@ -622,6 +622,7 @@ export const JOURNEYS: Journey[] = [
       "Audit feed shows memory_store at the tail of prompt 1's sequence and memory_search at the head of prompt 2's.",
     ],
     related: ["recall-org-config", "generate-firewall-logs"],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat", "memory", "xlog"],
   },
 
@@ -657,17 +658,17 @@ export const JOURNEYS: Journey[] = [
     apis: [
       {
         method: "POST",
-        path: "/api/agent/workers",
+        path: "/api/agent/tool/call",
         description:
-          "(Internally, MCP creates the worker via xlog GraphQL). The agent's tool call is `phantom_create_data_worker`.",
+          "Scripted equivalent of the agent's tool call: body {name: 'create_data_worker', arguments: {...}}. Internally the xlog connector creates the worker through the xlog service; the agent's tool is `phantom_create_data_worker`.",
       },
     ],
-    prerequisites: ["install-data-source"],
+    prerequisites: ["onboarding-install-xlog-connector", "install-data-source"],
     howToTest: [
-      "Run 'install-data-source' first for FortiGate (so a vendor-verified field schema is available).",
+      "Run 'onboarding-install-xlog-connector' first (xlog instance and a syslog log destination), then 'install-data-source' for FortiGate (so a vendor-verified field schema is available).",
       "Paste the prompt in a fresh chat.",
       "Watch the response — should include worker ID, vendor (Fortinet FortiGate), format (CEF), destination, and a brief threat narrative.",
-      "Open /workers (if available) or `/settings` to confirm the worker is running.",
+      "To confirm the worker is running, send `/tasks` in chat or open /tasks; or ask the agent \"List the workers currently running on xlog\" (see 'ops-list-stop-xlog-workers').",
     ],
     expectedResult:
       "Single-step worker streams 10 logs to the configured syslog destination. Worker name like worker_<YYYYMMDD><HHMMSS>. The agent resolves the destination from your configured Log Destinations (a logdest:<id> reference, not a hardcoded address) and uses field names from FortiGate's actual installed schema, not a generic guess.",
@@ -704,18 +705,18 @@ export const JOURNEYS: Journey[] = [
     apis: [
       {
         method: "POST",
-        path: "/api/agent/workers",
+        path: "/api/agent/tool/call",
         description:
-          "The agent calls `phantom_create_data_worker` with type=RAW. The worker ships the data source's _raw_log line syslog-framed and verbatim.",
+          "Scripted equivalent: body {name: 'create_data_worker', arguments: {...type: 'RAW'}}. The agent calls `phantom_create_data_worker` with type=RAW. The worker ships the data source's _raw_log line syslog-framed and verbatim.",
       },
     ],
-    prerequisites: ["install-data-source"],
+    prerequisites: ["onboarding-install-xlog-connector", "install-data-source"],
     howToTest: [
-      "Install the Cisco ASA data source first (see 'install-data-source').",
-      "Open /data-sources, select Cisco ASA, and read the 'How to use' section — note the vendor and product it names for the Broker collector entry (cisco / asa). These are shorter and lower-case than the vendor/product shown at the top of the page; only the ones in How to use route correctly.",
-      "On the Cortex Broker, add a syslog collector entry for the port Phantom sends to, with that vendor and product.",
+      "Install the Cisco ASA data source first (see 'install-data-source'). Needs: a Cortex Broker VM with a syslog collector, to see the logs land in Cortex (steps 2 and 3 below are Cortex-side; the Phantom-side steps work without it).",
+      "Open /data-sources, select Cisco ASA, and read the 'How to simulate this data source' section — note the vendor and product it names for the Broker collector entry (cisco / asa). These are shorter and lower-case than the vendor/product shown at the top of the page; only the ones in that section route correctly.",
+      "On the Cortex Broker (Cortex console, not Phantom), add a syslog collector entry for the port Phantom sends to, with that vendor and product.",
       "Paste the prompt in a fresh chat.",
-      "Confirm the agent's response reports format RAW, not CEF.",
+      "Confirm the agent's response reports format RAW, not CEF. To check the worker, ask the agent to list the running workers (see 'ops-list-stop-xlog-workers') or send `/tasks`.",
     ],
     expectedResult:
       "The worker streams native Cisco ASA log lines (e.g. '%ASA-6-302013: Built outbound TCP connection ...') syslog-framed. In Cortex they land in cisco_asa_raw and the vendor's fields populate. Without the Broker collector entry the same logs still send, but collect under an unknown dataset with no fields filled in.",
@@ -823,52 +824,52 @@ export const JOURNEYS: Journey[] = [
       "For an xsiam_http destination: query `dataset = phantom_logs_raw | sort desc _time | limit 20` — records arrive without you ever pasting the webhook key into chat.",
     ],
     related: ["generate-firewall-logs", "run-port-scan-scenario"],
-    prerequisites: [],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat", "xlog", "audit"],
   },
   {
     id: "run-port-scan-scenario",
     category: "simulation",
-    title: "Run a multi-step port-scan scenario",
+    title: "Run a port-scan simulation with the port scan analytics skill",
     summary:
-      "MITRE T1046 reconnaissance — multi-step skill loaded from the foundation library, distinct attacker IPs vs target IP, mostly DENY actions.",
+      "MITRE T1046 reconnaissance: ask for a port scan and the agent follows the trigger_port_scan_analytics skill, one bounded firewall-traffic burst from a single source host to many ports on one target. For the full alert check, see the outcome journey.",
     difficulty: "intermediate",
     durationMin: 3,
     icon: "scanner",
     prompts: [
       {
-        text: "Run a port scan scenario against 10.10.20.5",
-        note: "Agent should load the `port_scan` skill, follow its scenario steps, and create a scenario worker (not a single-step data worker).",
+        text: "Run a port scan simulation to my log destination",
+        note: "Agent should read workflows/trigger_port_scan_analytics.md with skills_read and follow its one exact xlog.create_data_worker call. The skill fixes the target address and port list, so do not name a different target in the prompt.",
       },
     ],
     toolsExercised: [
-      "load_simulation_skills",
-      "phantom_get_field_info",
-      "phantom_generate_observables",
-      "phantom_create_scenario_worker",
+      "skills_read",
+      "log_destinations_list",
+      "xlog.create_data_worker",
       "memory_store",
     ],
     apis: [
       {
         method: "GET",
-        path: "/api/agent/skills/scenarios/port_scan",
+        path: "/api/skills",
         description:
-          "(Internal — agent reads the scenario YAML/MD via load_simulation_skills.)",
+          "(Internal — the agent reads workflows/trigger_port_scan_analytics.md through skills_read.)",
       },
     ],
     howToTest: [
       "Paste the prompt in a fresh chat.",
-      "Watch tool calls — load_simulation_skills should return skill content with multi-step actions; observables_dict should have ONE destinationIp (the target) and MANY sourceIps (attackers).",
-      "Read the response — should describe the scenario stages (reconnaissance phases) and worker ID.",
+      "Watch tool calls — skills_read (or load_simulation_skills) should open workflows/trigger_port_scan_analytics.md, then one xlog.create_data_worker call follows with a single dest_ip, a list of about 30 destination ports and one source host.",
+      "Read the response — it should give the worker id and the host name it used, and say the burst is bounded (90 events).",
     ],
     expectedResult:
-      "Scenario worker runs through the port_scan skill's defined steps. Logs simulate attackers from many IPs hitting one target across multiple ports, with mostly DENY/DROP outcomes.",
+      "One bounded worker sends 90 CEF firewall-traffic events: a single source host hitting many distinct privileged ports on one target, with deny actions. It stops by itself within about a minute.",
     verifyVia: [
-      "Audit feed: load_simulation_skills + phantom_create_scenario_worker, status=success.",
-      "/memory: new sim:port_scan:10.10.20.5:<date> entry summarizing the run.",
-      "If your SIEM is wired up: query for `destinationIp=10.10.20.5 AND action=deny` in the relevant time window.",
+      "Audit feed: skills_read + log_destinations_list + xlog.create_data_worker, status=success.",
+      "/memory: the agent usually stores a sim: entry summarizing the run.",
+      "If your SIEM is wired up: query the firewall traffic dataset for the source host and count distinct destination ports (see the outcome journey for the exact query).",
     ],
-    related: ["generate-firewall-logs", "validate-detection"],
+    related: ["generate-firewall-logs", "validate-detection", "outcome-trigger-port-scan-analytics"],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat", "xlog", "audit"],
   },
   {
@@ -886,7 +887,7 @@ export const JOURNEYS: Journey[] = [
     prompts: [
       {
         text: "Install the FortiGate data source",
-        note: "Chat-driven install path — agent invokes data_sources_install with the resolved vendor + product (or pack_name/rule_name/dataset_name on legacy installs). Same effect as clicking Install on the FortiGate card in /data-sources. Skip this prompt if you installed via the UI in the steps below.",
+        note: "Chat-driven install path — agent invokes data_sources_install with the resolved pack_name, rule_name and dataset_name. Same effect as clicking Install on the FortiGate card in /data-sources. Skip this prompt if you installed via the UI in the steps below.",
       },
       {
         text: "What data sources are currently installed?",
@@ -910,17 +911,17 @@ export const JOURNEYS: Journey[] = [
         method: "POST",
         path: "/api/agent/data-sources/install",
         description:
-          "POST resolves the data source by vendor + product (legacy installs may still accept pack_name + rule_name + dataset_name during the migration window). Returns 201 with {ok, data_source_ids, fields_count}. Idempotent. Persists the field inventory in data_sources.db (FK cascade).",
+          "Body {pack_name, rule_name, dataset_name?} (dataset_name is required for bundled sources that share a pack and dataset, such as the HTTP variants). Returns 201 with {ok, data_source_ids, fields_count}. Idempotent. Persists the field inventory in data_sources.db (FK cascade).",
       },
       {
         method: "GET",
-        path: "/api/agent/data-sources/{vendor}/{product}/schema",
+        path: "/api/agent/data-sources/{pack}/{rule}/{dataset}/schema",
         description:
           "Returns the full field inventory (name, type, description, example) — the same data the drawer renders, surfaced via API for chat-driven flows.",
       },
       {
         method: "DELETE",
-        path: "/api/agent/data-sources/{vendor}/{product}",
+        path: "/api/agent/data-sources/{pack}/{rule}/{dataset}",
         description:
           "Uninstall the data source. FK cascade drops every field + xdm_mapping row attached to it. Idempotent — safe to call on a non-installed source.",
       },
@@ -1153,7 +1154,7 @@ export const JOURNEYS: Journey[] = [
       },
       {
         method: "GET",
-        path: "/api/agent/data-sources/{vendor}/{product}/schema",
+        path: "/api/agent/data-sources/{pack}/{rule}/{dataset}/schema",
         description:
           "Returns the full field inventory. The agent uses this to build the schema_override payload for phantom_generate_fake_data_v2 (or phantom_create_data_worker for UDP-bound flows).",
       },
@@ -1163,16 +1164,17 @@ export const JOURNEYS: Journey[] = [
       "Open chat → paste 'Simulate 50 FortiGate traffic logs'.",
       "Watch tool calls — should be data_sources_list → data_sources_get_schema → phantom_generate_fake_data_v2.",
       "Read the response — sample records should have srcip / dstip / srcport / dstport / proto / action / user / sentbyte / rcvdbyte as top-level keys with plausible IPv4 / port / action-enum / byte-count values.",
-      "For the UDP destination variant, the agent calls phantom_create_data_worker with destination=udp://... — watch /observability/workers for the spawn + records sent.",
+      "For the UDP destination variant, the agent calls phantom_create_data_worker with destination=udp://... — send `/tasks` or ask the agent to list the running workers to see the spawn.",
     ],
     expectedResult:
       "phantom_generate_fake_data_v2 returns schemaApplied: true, vendorFieldCount > 0 (matches the vendor's non-meta field count), fallbackReason: null. The agent's response includes a sample record with vendor field names visible — copy-pasteable into any vendor-aware ingest pipeline.",
     verifyVia: [
-      "Audit feed (/observability/events) shows the 3-call sequence (data_sources_list → data_sources_get_schema → phantom_generate_fake_data_v2 OR phantom_create_data_worker).",
+      "Live telemetry (or Export Events) shows the 3-call sequence (data_sources_list → data_sources_get_schema → phantom_generate_fake_data_v2 OR phantom_create_data_worker); /observability/events (action:tool_call) shows only the connector call at the end.",
       "Sample record top-level keys match the vendor's schema (NOT Rosetta's local_ip / remote_port generics).",
-      "For UDP-destination variants: /observability/workers shows a Spark worker bound to the UDP target with records-sent counter incrementing.",
+      "For UDP-destination variants: asking the agent to list the running workers (or `/tasks`) shows a worker bound to the UDP target.",
     ],
     related: ["install-data-source", "upload-custom-data-source", "generate-firewall-logs", "validate-detection"],
+    prerequisites: ["onboarding-install-xlog-connector", "install-data-source"],
     components: ["chat", "xlog", "connectors", "audit"],
   },
   {
@@ -1210,9 +1212,9 @@ export const JOURNEYS: Journey[] = [
       },
       {
         method: "GET",
-        path: "/api/agent/data-sources/{vendor}/{product}/schema",
+        path: "/api/agent/data-sources/{pack}/{rule}/{dataset}/schema",
         description:
-          "Returns the schema, including delivery, for the HTTP data source.",
+          "Returns the schema, including delivery, for the HTTP data source (pack, rule and dataset as listed by /api/agent/data-sources, for example Okta with dataset okta_sso_raw).",
       },
     ],
     howToTest: [
@@ -1296,6 +1298,7 @@ export const JOURNEYS: Journey[] = [
       "DELETE /api/agent/data-sources/user/<id> removes both the YAML file and any active install (cascades).",
     ],
     related: ["install-data-source", "simulate-from-installed-data-source"],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat", "mcp", "xlog", "audit"],
   },
   {
@@ -1303,7 +1306,7 @@ export const JOURNEYS: Journey[] = [
     category: "simulation",
     title: "Find a vendor by use case (dropdown filter)",
     summary:
-      "Operator narrows the 137-vendor catalog to one or more product types using the multi-select dropdown above the Browse grid. 44 canonical use_case labels span Network / Endpoint / Identity / Data / Cloud / Apps / SecOps / Specialty; one source can match multiple types (Cisco is Firewall AND EDR).",
+      "Operator narrows the vendor catalog to one or more product types using the multi-select dropdown above the Browse grid. The canonical use_case labels span Network / Endpoint / Identity / Data / Cloud / Apps / SecOps / Specialty; one source can match multiple types (Cisco is Firewall AND EDR).",
     difficulty: "starter",
     durationMin: 1,
     icon: "filter_list",
@@ -1323,13 +1326,13 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Open /data-sources → Browse tab. Above the vendor grid you should see a single pill-shaped 'Use case ▾' trigger button.",
-      "Click the trigger → a 340px-wide floating panel opens below with rounded corners, soft shadow, a search input, and a scrollable checkbox list of ~44 use cases. Each row shows the matching count.",
-      "Tick WAF → grid narrows to ~7 vendors: F5, Cloudflare, Imperva, Barracuda, Radware, Akamai, Fortinet. The trigger button gains a primary-color tint + a '1' badge. An inline 'WAF ×' pill appears next to the trigger.",
+      "Click the trigger → a 340px-wide floating panel opens below with rounded corners, soft shadow, a search input, and a scrollable checkbox list of use cases. Each row shows the matching count.",
+      "Tick WAF → the grid narrows to the vendors that ship a WAF data source (for example F5, Cloudflare, Imperva, Barracuda, Radware, Akamai, Fortinet). The number of vendors shown matches the count beside WAF in the panel. The trigger button gains a primary-color tint + a '1' badge. An inline 'WAF ×' pill appears next to the trigger.",
       "Tick MFA → multi-select activates (OR semantics). The grid now shows WAF vendors + MFA vendors (Okta, Duo, RSA, 1Password, SecureAuth, Silverfort, Thales, Keeper). The trigger badge shows '2' and two inline pills render.",
       "Type 'fire' in the panel's search input → checkbox list narrows to use cases containing 'fire' (Firewall + any others).",
       "Click the 'WAF ×' inline pill → that filter is removed without re-opening the panel.",
       "Click outside the panel → it closes. Press Escape to close as well.",
-      "Click the trigger → click 'Clear' in the panel header → all selections reset; full 137-vendor grid returns. Or click 'All' to select every use case in one go.",
+      "Click the trigger → click 'Clear' in the panel header → all selections reset; the full vendor grid returns. Or click 'All' to select every use case in one go.",
       "Combined with the search box: typing 'okta' in the toolbar search + ticking MFA narrows to vendors whose name matches 'okta' AND have MFA. AND across search + dropdown selections; OR within dropdown selections.",
     ],
     expectedResult:
@@ -1500,11 +1503,11 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Tunnel CALDERA's UI to your laptop with an SSH tunnel such as `ssh -L 8888:localhost:8888 user@<phantom-host>` then open http://localhost:8888 (default red-team login: `red` / value of `CALDERA_RED_PASSWORD` from .env).",
+      "Needs: a target machine you control (test VM, laptop or container) and host shell access to the Phantom host. Host shell step: tunnel CALDERA's UI to your laptop with an SSH tunnel such as `ssh -L 8888:localhost:8888 user@<phantom-host>` then open http://localhost:8888 (default red-team login: `red` / the value of `CALDERA_RED_PASSWORD` in /opt/phantom/.env).",
       "In the CALDERA UI: navigate to Plugins → Sandcat → Download. Pick platform (Linux/Windows/macOS). The binary is built on demand against the running CALDERA's URL — no manual configuration needed.",
       "Copy the binary to a target box (a test VM, your laptop, or even a docker container).",
       "**CRITICAL — install as a persistent service, NOT a foreground process.** The PowerShell snippet served by CALDERA's UI uses `Start-Process -WindowStyle Hidden` which dies the moment the spawning logon session ends (RDP disconnect, reboot, idle logoff). Wrap it as a Windows scheduled task running as SYSTEM, or a Linux systemd unit. See the persistence patterns below.",
-      "Windows persistence: register two scheduled tasks as SYSTEM — one `AtStartup` to launch sandcat, one `RepetitionInterval=5min` watchdog to relaunch if `Get-Process phantomd` returns nothing. Tasks survive logoff, reboot, RDP drop. The bundled `/help/user#sandcat-persistence` section has the full PowerShell snippet (~30 lines, idempotent).",
+      "Windows persistence: register two scheduled tasks as SYSTEM — one `AtStartup` to launch sandcat, one `RepetitionInterval=5min` watchdog to relaunch if `Get-Process phantomd` returns nothing. Tasks survive logoff, reboot, RDP drop. Build the two tasks with `New-ScheduledTaskAction`, `New-ScheduledTaskTrigger` and `Register-ScheduledTask -User SYSTEM`, and make the registration idempotent (unregister an existing task of the same name first).",
       "Linux persistence: drop a systemd unit at `/etc/systemd/system/sandcat.service` with `Restart=always` and `User=root`, then `systemctl enable --now sandcat`. The agent runs detached from any shell session.",
       "In another shell or chat session, paste the second prompt above. The agent should now report at least one connected agent — and importantly, `last_seen` should keep ticking (`(now - last_seen) < 60s` while you're not logged in).",
     ],
@@ -1635,7 +1638,7 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Configure XSIAM via /providers (PAPI URL + headers + auth ID + playground ID + webhook key).",
+      "Needs: a Cortex XSIAM tenant and its API credentials. XSIAM is a connector: at /connectors install the XSIAM connector, click Create Instance and fill api_url, api_id, api_key (secret), playgroundId and the webhook endpoint and key. Click the instance's Test Connection icon to confirm it connects.",
       "Paste the prompt in a fresh chat.",
       "Wait the configured polling window — agent reports either 'detection fired (lag: Xs)' or 'no detection within timeout'.",
     ],
@@ -1647,7 +1650,7 @@ export const JOURNEYS: Journey[] = [
       "Direct XSIAM query in the playground for the rule_name returned by the validation.",
     ],
     related: ["generate-coverage-report"],
-    prerequisites: ["generate-firewall-logs", "configure-vertex-provider"],
+    prerequisites: ["generate-firewall-logs"],
     components: ["chat", "xsiam", "audit"],
   },
   {
@@ -1685,6 +1688,7 @@ export const JOURNEYS: Journey[] = [
       "Audit feed: tool:xlog.generate_coverage_report status=success.",
     ],
     related: ["validate-detection"],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat", "xsiam"],
   },
 
@@ -1726,16 +1730,16 @@ export const JOURNEYS: Journey[] = [
       "Visit /jobs and click 'Create Job'.",
       "Identity: name='nightly-coverage-check'; enabled=true.",
       "Action: type='Prompt' (the picker offers Prompt + Tool Call only), message='Generate a coverage report for the last 7 days'.",
-      "Schedule: Daily at 02:00 — or pick a time 1-2 minutes ahead for fast testing.",
+      "Schedule: the modes are Run now, Run at, Repeating and Custom cron. For a daily 02:00 run pick Custom cron and enter `0 2 * * *` (or Repeating with an interval of 1 day). For a fast test pick Repeating every 5 minutes.",
       "Submit — redirects to /jobs and the new row shows a 'Runtime' badge.",
-      "Click the ⋯ menu on the job row → 'Run Now' to test out-of-band.",
+      "Click the ⋯ menu on the job row → 'Trigger Now' to test out-of-band.",
     ],
     expectedResult:
       "Runtime job persists with source='runtime', action.type='prompt'. Each fire (cron OR manual) creates a chat session containing the operator-authored prompt + the agent's tool calls + final response. Sessions appear in the chat sidebar. The system prompt for each fire includes the personality from /settings/personality (if set) — exactly the same path interactive chat takes.",
     verifyVia: [
       "GET /api/agent/jobs/<name>/runs → recent runs with status=success and `result.session_id` populated.",
       "Open the chat sidebar — the session created by the scheduled fire is browseable like any other.",
-      "GET /api/agent/audit?trigger=job:<name> → audit rows for every tool the scheduled chat invoked.",
+      "GET /api/agent/audit?trigger=job:<name> → audit rows for every connector tool the scheduled chat invoked (built-in tools such as jobs_list write no tool_call row; the run's chat session shows them).",
       "Restart phantom-agent (`docker compose restart phantom-agent`) — runtime job survives; cron resumes from next match.",
     ],
     related: [
@@ -1746,6 +1750,7 @@ export const JOURNEYS: Journey[] = [
       "export-import-job",
       "generate-coverage-report",
     ],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat", "jobs", "audit"],
   },
   {
@@ -1753,12 +1758,12 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Schedule a recurring tool_call job",
     summary:
-      "Direct MCP tool dispatch on a cron schedule — no chat pipeline involved. Faster + cheaper than chat for known-shape automations like 'generate coverage report every Monday'.",
+      "Direct MCP tool dispatch on a schedule — no chat pipeline involved. Faster + cheaper than chat for known-shape automations such as a periodic health check.",
     difficulty: "intermediate",
     durationMin: 4,
     icon: "build",
     prompts: [],
-    toolsExercised: [],
+    toolsExercised: ["health_status"],
     apis: [
       {
         method: "POST",
@@ -1775,17 +1780,18 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Visit /jobs/new.",
-      "Identity: name='weekly-coverage-rollup'.",
-      "Action: type='tool_call', tool name='phantom_generate_coverage_report', arguments JSON='{\"include_simulations\": true, \"limit\": 100}'.",
-      "Schedule: Weekly, Mondays at 09:00.",
-      "Submit. Then click 'Run Now' on the job row to fire immediately.",
+      "Identity: name='health-check-5m'.",
+      "Action: type='tool_call', tool name='health_status' (a read-only built-in, so it needs no connector), arguments JSON='{}'.",
+      "Schedule: pick Repeating and set every 5 minutes (use Custom cron for anything else, for example `0 9 * * 1` for Mondays at 09:00; there is no weekly preset).",
+      "Submit. Then open the ⋯ menu on the job row and click 'Trigger Now' to fire immediately.",
+      "When done, pause or delete the job from the same menu so it stops firing.",
     ],
     expectedResult:
-      "Job fires via the MCP tool registry directly (no Gemini / chat round-trip). result_json contains the tool's structured output (the same coverage report shape the agent gets when it calls the tool interactively).",
+      "Job fires via the MCP tool registry directly (no Gemini / chat round-trip). The run finishes in milliseconds and its result is the tool's own JSON output.",
     verifyVia: [
-      "GET /api/agent/jobs/<name>/runs → run row's result_json should match the shape of phantom_generate_coverage_report's response (summary + attack_coverage[] + simulations[]).",
-      "Audit feed: action='tool_call' row with target='tool:xlog.generate_coverage_report' and trigger='job:<name>'.",
-      "Compare to the chat-action equivalent (schedule-runtime-job): tool_call jobs run in ~50-200ms; chat jobs run in ~3-30s because they go through the model loop.",
+      "GET /api/agent/jobs/<name>/runs → run row with status=success, trigger=manual (Trigger Now) or cron, and result_json holding health_status's output.",
+      "Compare to the chat-action equivalent (schedule-runtime-job): tool_call jobs run in milliseconds (tens of ms for a built-in, up to ~200ms for a connector call); chat jobs run in ~3-30s because they go through the model loop.",
+      "Connector variant: schedule a connector tool instead (for example xlog.list_workers, or xlog.generate_coverage_report with args {\"include_simulations\": true, \"limit\": 100}); those runs also write a tool_call audit row with trigger='job:<name>'. Built-in tools such as health_status write no tool_call audit row; the run history is their record.",
     ],
     related: [
       "schedule-runtime-job",
@@ -1817,8 +1823,8 @@ export const JOURNEYS: Journey[] = [
       "Visit /jobs/new.",
       "Identity: name='hourly-firewall-keepalive'.",
       "Action: pick 'Tool Call'. tool name='phantom_create_data_worker'. Arguments JSON='{\"request\":{\"vendor\":\"Fortinet\",\"product\":\"FortiGate\",\"type\":\"CEF\",\"count\":50,\"destination\":\"udp:10.0.0.8:514\"}}' (or omit destination to use the technology stack default).",
-      "Schedule: Hourly, every 1h, minute=:00.",
-      "Submit. Click 'Run Now' on the row to test out-of-band.",
+      "Schedule: pick Repeating, every 1 Hours (or Custom cron `0 * * * *` for the top of every hour).",
+      "Submit. Open the ⋯ menu on the row and click 'Trigger Now' to test out-of-band.",
     ],
     expectedResult:
       "Each fire creates a phantom_create_data_worker invocation directly via the MCP tool registry — no LLM round-trip. Fast, deterministic, cheap. result captures the worker_id and its status (Running / Connection Error / etc). The data worker streams logs to the configured destination for roughly count×interval seconds.",
@@ -1826,13 +1832,14 @@ export const JOURNEYS: Journey[] = [
       "GET /api/agent/jobs/<name>/runs → run rows with action.name='phantom_create_data_worker' and result containing the worker descriptor.",
       "Call xlog.list_workers (or click 'List active workers' in chat) → recent fire's worker appears.",
       "tcpdump on the syslog receiver: each fire produces a burst of `count` logs.",
-      "All jobs use prompt or tool_call action types. Legacy `log` action shapes have been migrated to tool_call at boot.",
+      "All jobs use the prompt or tool_call action type.",
     ],
     related: [
       "generate-firewall-logs",
       "schedule-tool-call-job",
       "ops-list-stop-xlog-workers",
     ],
+    prerequisites: ["onboarding-install-xlog-connector", "install-data-source"],
     components: ["jobs", "xlog"],
   },
   {
@@ -1863,8 +1870,8 @@ export const JOURNEYS: Journey[] = [
     howToTest: [
       "Visit /jobs/new.",
       "Identity: name='now-coverage-snapshot'.",
-      "Action: any type (chat / tool_call / log) — try chat with message='Show me current coverage gaps'.",
-      "Schedule: pick 'Run Now' — UI shows green info banner 'Job will fire immediately on save and then disable itself.'",
+      "Action: either type (Prompt or Tool Call) — try Prompt with message='Show me current coverage gaps'.",
+      "Schedule: pick the 'Run now' mode — UI shows green info banner 'Job will fire immediately on save and then disable itself.'",
       "Submit. Form's submit handler POSTs the job, then immediately POSTs /run.",
       "Land on /jobs — see the new row with last_status='success' and a Disabled badge within seconds.",
     ],
@@ -1900,8 +1907,8 @@ export const JOURNEYS: Journey[] = [
     howToTest: [
       "Visit /jobs/new.",
       "Identity: name='maintenance-window-sim'.",
-      "Action: chat with message='Generate 200 logs simulating a maintenance window' (or any action).",
-      "Schedule: pick 'Run Once'. The datetime picker defaults to 1 hour from now; pick a moment 2-5 minutes in the future for fast testing.",
+      "Action: Prompt with message='Generate 200 logs simulating a maintenance window' (or any action).",
+      "Schedule: pick 'Run at'. The datetime picker defaults to 1 hour from now; pick a moment 2-5 minutes in the future for fast testing.",
       "Submit. Form blocks submission if the picked datetime is in the past or <1min away.",
       "Wait until the picked time → cron tick fires the job → auto-disables.",
     ],
@@ -1932,7 +1939,7 @@ export const JOURNEYS: Journey[] = [
         method: "POST",
         path: "/api/agent/jobs",
         description:
-          "Each runtime job creation writes a YAML mirror at <data_root>/jobs/<name>.yaml AFTER the SQLite row is committed. The YAML carries DEFINITION fields only (name/cron/timezone/enabled/run_once/action) — runtime state stays in SQLite.",
+          "Each runtime job creation writes a YAML mirror at <data_root>/jobs/<name>.yaml AFTER the SQLite row is committed. The YAML carries DEFINITION fields only (name/cron/timezone/enabled/run_once/action, plus description when the job has one) — runtime state stays in SQLite.",
       },
       {
         method: "PATCH",
@@ -1950,8 +1957,9 @@ export const JOURNEYS: Journey[] = [
     howToTest: [
       "Create any runtime job via /jobs/new (e.g. a Run Now or Daily chat job).",
       "SSH into the phantom-agent container: `docker exec phantom_agent ls /app/data/jobs/` — should list a `<name>.yaml` file matching what you just created.",
-      "Cat it: `docker exec phantom_agent cat /app/data/jobs/<name>.yaml`. The first 4 lines are a comment banner; the rest is plain YAML (name/cron/timezone/enabled/run_once/action).",
+      "Cat it: `docker exec phantom_agent cat /app/data/jobs/<name>.yaml`. The first 6 lines are a comment banner; the rest is plain YAML (name/cron/timezone/enabled/run_once/action, plus description when you filled in the Description field).",
       "Edit a job via the UI's Pause/Resume/PATCH path — `cat` the YAML again to see the change reflected.",
+      "Editing `enabled:` in the YAML file has no effect on a job that already exists: pause or resume it from the /jobs page instead. Cron, timezone, action, run_once and description edits do apply after a restart.",
       "Delete the job — `ls /app/data/jobs/` shows the file gone.",
       "(Disaster recovery test) Wipe the SQLite DB: `docker exec phantom_agent rm /app/data/jobs.db && docker compose restart phantom-agent`. Boot reads /app/data/jobs/*.yaml and recreates every runtime job. Manifest jobs come back from manifest.yaml; runtime jobs come back from disk.",
     ],
@@ -1959,9 +1967,9 @@ export const JOURNEYS: Journey[] = [
       "<data_root>/jobs/ contains one .yaml per runtime job. Files are diff-friendly (definition only, no churning runtime state). git init + git add . + git commit lets you track changes over time. After a SQLite wipe, boot replay restores every YAML-defined job to the same enabled/cron/action state.",
     verifyVia: [
       "`docker exec phantom_agent ls -la /app/data/jobs/` — file count matches the count of source='runtime' rows in jobs.db.",
-      "`docker exec phantom_agent cat /app/data/jobs/<name>.yaml` — definition shape: `name:`, `cron:`, `timezone:`, `enabled:`, `run_once:`, `action:`. NO `next_due_at` / `last_status` (those stay in SQLite).",
+      "`docker exec phantom_agent cat /app/data/jobs/<name>.yaml` — definition shape: `name:`, `cron:`, `timezone:`, `enabled:`, `run_once:`, `action:`, and `description:` only when the job has one. NO `next_due_at` / `last_status` (those stay in SQLite).",
       "Manifest jobs (e.g. `daily-soc-coverage-summary`) have NO YAML file — their canonical def lives in `bundles/spark/manifest.yaml`. Verifies the source-aware mirroring logic.",
-      "Boot logs (`docker compose logs phantom-agent | grep YAML`) show `YAML mirror loaded N runtime job(s)` after each restart.",
+      "Boot logs (`docker compose logs phantom-agent | grep YAML`) show `YAML mirror: N runtime job(s) in step with <dir> (X created, Y updated)` after each restart.",
     ],
     related: [
       "schedule-runtime-job",
@@ -1974,7 +1982,7 @@ export const JOURNEYS: Journey[] = [
   {
     id: "manage-job-lifecycle",
     category: "ops",
-    title: "Edit, pause, resume, run-now, and delete a job",
+    title: "Edit, pause, resume, trigger, duplicate, and delete a job",
     summary:
       "End-to-end CRUD for runtime jobs: edit the schedule/action/timezone in place, disable to pause cron firing, enable to resume, manual /run for out-of-band trigger, DELETE to hard-remove.",
     difficulty: "starter",
@@ -2009,16 +2017,17 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Create any runtime job first (use schedule-runtime-job or run-job-now).",
-      "On /jobs, click the ⋯ menu on the row → Edit. The new-job form opens with every field pre-populated; the name is locked (PATCH endpoint is name-keyed; rename isn't supported). Change the cron to '0 9 * * 1-5'. Save Changes. The card returns to /jobs with the updated schedule.",
-      "Click ⋯ → Pause. The badge flips to 'Paused'.",
-      "Click 'Run Now' from the same menu → the manual fire still works, run_count increments.",
+      "On /jobs, click the ⋯ menu on the row → Edit. The new-job form opens with every field pre-populated, including the Description; the name is locked (PATCH endpoint is name-keyed; rename isn't supported). Change the cron to '0 9 * * 1-5'. Save Changes. The card returns to /jobs with the updated schedule.",
+      "Click ⋯ → Pause. The badge flips to 'Paused' and the row's Next Run shows '—' (a paused job has no next run).",
+      "Click 'Trigger Now' from the same menu → the manual fire still works, run_count increments.",
       "Click ⋯ → Resume. Badge returns to 'Active'; cron will fire it on the next match.",
-      "Click ⋯ → Delete. Confirm. Row disappears from the list; GET /api/agent/jobs no longer returns it.",
+      "Click ⋯ → Duplicate. The new-job form opens pre-filled from the job (description, action, schedule, model, flags) as '<name> (copy)' so you can save a variant (see 'job-duplicate').",
+      "Click ⋯ → Delete. The job is removed at once (there is no confirmation). Row disappears from the list; GET /api/agent/jobs no longer returns it.",
     ],
     expectedResult:
       "Edit opens the same form as Create, populated from the existing row, name locked, submit becomes PATCH instead of POST. Pause/Resume flip the enabled flag without touching cron or action — preserves the operator's schedule. Manual /run bypasses enabled, so it fires even when paused. DELETE on a runtime job hard-removes it (and its run history); on a manifest job it marks removed=1 so the manifest reconciler can resurrect it.",
     verifyVia: [
-      "GET /api/agent/jobs/<name> after disable → enabled=false, next_due_at unchanged (preserved for resume).",
+      "GET /api/agent/jobs/<name> after disable → enabled=false, next_due_at=null. After enable → a fresh future next_due_at computed from now (no catch-up fire).",
       "POST /api/agent/jobs/<name>/run while disabled → returns 200 with the new run row.",
       "DELETE → GET /api/agent/jobs/<name> returns 404.",
       "Try DELETE on a manifest job (e.g. daily-soc-coverage-summary) → succeeds, but next deploy/restart resurrects it.",
@@ -2027,6 +2036,7 @@ export const JOURNEYS: Journey[] = [
       "schedule-runtime-job",
       "run-job-now",
       "schedule-job-once",
+      "job-duplicate",
     ],
     components: ["chat", "jobs"],
   },
@@ -2084,76 +2094,8 @@ export const JOURNEYS: Journey[] = [
     ],
     components: ["jobs"],
   },
-  {
-    id: "export-chat-session",
-    category: "ops",
-    title: "Export a chat session transcript",
-    summary:
-      "Markdown / JSON / YAML download of the full conversation including tool calls and results.",
-    difficulty: "starter",
-    durationMin: 1,
-    icon: "download",
-    prompts: [],
-    toolsExercised: [],
-    apis: [
-      {
-        method: "GET",
-        path: "/api/agent/sessions/{session_id}/export?format=markdown|json|yaml",
-        description:
-          "MCP renders the session header + messages in the requested format. Markdown is default; YAML requires PyYAML on the MCP image.",
-      },
-    ],
-    howToTest: [
-      "Run any other journey first to populate a session.",
-      "In the chat sidebar, hover the session — three-dot menu appears.",
-      "Click ⋯ → Export → JSON (or YAML, or Markdown).",
-      "File downloads as session-<id-prefix>.<ext>.",
-    ],
-    expectedResult:
-      "Downloaded file contains the session metadata (id, title, started_at, message_count) plus every message in order — user, assistant, tool, system.",
-    verifyVia: [
-      "Open the downloaded file. JSON should have a top-level `messages` array; Markdown should have `## ` per-message headers.",
-      "Tool round-trips show as role='tool' messages with `tool_call_id` and meta.tool/args populated.",
-    ],
-    related: ["recall-org-config"],
-    components: ["chat"],
-  },
-  {
-    id: "configure-vertex-provider",
-    category: "ops",
-    title: "Configure Google Vertex AI (Gemini) credentials",
-    summary:
-      "Paste your service-account JSON + project ID. Encrypted at rest in the SecretStore. Vertex powers chat AND memory embeddings.",
-    difficulty: "starter",
-    durationMin: 3,
-    icon: "key",
-    prompts: [],
-    toolsExercised: [],
-    apis: [
-      {
-        method: "POST",
-        path: "/api/agent/setup",
-        description:
-          "Persists the provider config + secrets via the SecretStore (encrypted via PHANTOM_SECRET_KEK).",
-      },
-    ],
-    howToTest: [
-      "Create a GCP service account with roles: Vertex AI User + Service Usage Consumer.",
-      "Generate + download the JSON key.",
-      "Visit /providers in the Phantom UI.",
-      "In the Google Vertex AI (Gemini) card: paste the JSON into 'Service Account JSON' (textarea is masked with bullets — paste auto-reveals), enter project_id, region (us-central1 for embeddings or 'global' for Gemini-3 chat).",
-      "Click Save.",
-    ],
-    expectedResult:
-      "Provider instance materialized in /api/agent/provider-instances with vertex/primary-vertex. The chat route can now invoke Gemini models. Memory embeddings switch from TextHashEmbedder to real text-embedding-004.",
-    verifyVia: [
-      "GET /api/agent/instances and check provider_instances.db: vertex/primary-vertex with secrets: 1/1 populated.",
-      "Boot logs (after a restart): `embedder=VertexEmbedder` AND no recurring `vertex embed: 404` warnings.",
-      "Functional probe: ask the agent something semantic; memory_search hits should have cosine ≥0.4 on paraphrases.",
-    ],
-    related: ["recall-org-config"],
-    components: ["settings", "models"],
-  },
+  // [v1.0.3] Retired: export-chat-session. Replaced by chat-export-session because both walk the same Export menu in the chat header and the session sidebar.
+  // [v1.0.3] Retired: configure-vertex-provider. Replaced by ops-override-vertex-via-providers because the first-run setup form and its API no longer exist; the Vertex provider is edited at /providers.
 
   // ─────────────────────────────────────────────────────────────────
   // OPS — chat-driven self-modification
@@ -2337,7 +2279,8 @@ export const JOURNEYS: Journey[] = [
       "GET /api/agent/audit?action=personality_changed for the row showing the operator's edit (after the personality_update applied).",
       "Audit the agent's tool calls: when given an ambiguous prompt and policy.askWhenUnsure=true, NO tool_call event should fire on that turn — only assistant text containing the clarification.",
     ],
-    related: ["customize-agent-persona", "configure-agent-via-chat"],
+    related: ["configure-agent-via-chat"],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat", "settings", "approvals"],
   },
 
@@ -2386,7 +2329,7 @@ export const JOURNEYS: Journey[] = [
       {
         text: "exercise the worst-covered technique you found",
         note:
-          "Agent picks the silent technique with the oldest last_fire_at, cross-references load_simulation_skills, and proposes a concrete scenario (e.g. 'T1078 is silent for 35 days; I can run credential_theft_apt — proceed?'). Soft-confirm per actionPolicy.confirmExternalActions.",
+          "Agent picks the silent technique with the oldest last_fire_at, cross-references load_simulation_skills, and proposes a concrete scenario (e.g. 'T1078 is silent for 35 days; I can run bruteforce_vpn_to_lateral, whose password-spray and anomalous-login stages target it — proceed?'). Soft-confirm per actionPolicy.confirmExternalActions.",
       },
     ],
     toolsExercised: [
@@ -2418,14 +2361,14 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Make sure XSIAM is configured. /providers must show vertex/primary-vertex; /instances must show xsiam/primary-xsiam with the PAPI token bound.",
+      "Needs: a Cortex XSIAM tenant with recent issues. Make sure XSIAM is configured: /providers must show a configured Vertex provider, and /connectors → Instances must show an XSIAM instance whose Test Connection succeeds.",
       "Open a fresh chat. Paste prompt #1 to sync. The agent's reply should include {ok: true, inserted: N, total: M}.",
-      "Paste #2 to confirm the inventory was populated — at minimum the rule(s) you fired in the last 24 hours should appear with fires_24h > 0.",
+      "Paste #2 to confirm the inventory was populated — at minimum the rule(s) you fired in the last 24 hours should appear with fires_24h > 0. Cross-check on /observability/detections (Rules tab), which shows the same inventory.",
       "Paste #3 (technique_coverage) and confirm the MITRE T-code(s) attached to those issues are listed.",
       "Paste #4 (find gaps). Wait — if everything fired in the last 7 days, you'll see no silent / going_dark / low_coverage entries. To force a gap, manually delete some recent issue rows from XSIAM AND re-sync, OR just wait a week.",
       "Paste #5 to take a snapshot. Note the snapshot_id. Wait at least 24h, run #1 again, then take a second snapshot.",
       "Paste #6 to see the diff. With no fresh fires, you should see rules went_silent. Confirm the report's summary totals match the per-bucket lists.",
-      "Paste #7. The agent should pick a specific technique from the silent bucket, propose a matching scenario from the simulation skills catalog (port_scan / ransomware_attack / credential_theft_apt are the v1 candidates), and ask for confirmation before launching.",
+      "Paste #7. The agent should pick a specific technique from the silent bucket, propose a matching scenario from the simulation skills catalog (for example trigger_port_scan_analytics, bruteforce_vpn_to_lateral or lolbin_lateral_movement, depending on the technique), and ask for confirmation before launching.",
     ],
     expectedResult:
       "Phantom maintains an operational inventory that grows monotonically with each sync. Coverage gaps are surfaced automatically — the agent doesn't ask you to investigate where you're weak, it tells you. Snapshots create a versioned audit trail of coverage state, and drift between snapshots becomes the operator-facing signal for 'something changed in your detection posture'.",
@@ -2441,6 +2384,7 @@ export const JOURNEYS: Journey[] = [
       "configure-agent-via-chat",
       "validate-detection",
       "generate-coverage-report",
+      "observability-detections-inventory",
     ],
     components: ["chat", "xsiam", "audit"],
   },
@@ -2520,7 +2464,7 @@ export const JOURNEYS: Journey[] = [
         note: "Run this so the export contains a tool round-trip plus the assistant's recap.",
       },
     ],
-    toolsExercised: ["xlog.create_worker"],
+    toolsExercised: ["xlog.create_data_worker"],
     apis: [
       {
         method: "GET",
@@ -2535,18 +2479,19 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Run the prompt above so the session has at least one tool round-trip.",
-      "Top-right of the chat → click the download icon → Export JSON. File saves as session-<id>.json.",
+      "Top-right of the chat header → click the download icon (Export conversation) → under Session transcript choose JSON. File saves as session-<id>.json.",
       "Open it: the file should contain { session, messages: [...] } with role/content per row.",
-      "Now use the sidebar approach: hover the session card, click the ⋮ menu, click Export Markdown.",
+      "Now use the sidebar approach: hover the session card, click the ⋮ menu, click Export Markdown (the menu also offers Export YAML, Export JSON and Export Events (JSON)).",
       "Open the .md file: each turn renders as a heading + block, tool calls as fenced code.",
     ],
     expectedResult:
-      "Both export paths produce a downloaded file with the full thread (system / user / assistant / tool rows). JSON preserves structure; Markdown is human-readable.",
+      "Both export paths produce a downloaded file with the full thread (system / user / assistant / tool rows). JSON preserves structure; Markdown is human-readable. The Events (JSON) option in either menu exports the wire-event timeline instead of the transcript.",
     verifyVia: [
       "Browser Downloads folder: session-<id>.json and session-<id>.md.",
       "Diff the two: same data, different framing.",
     ],
     related: ["chat-create-new-session"],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat"],
   },
 
@@ -2570,13 +2515,13 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Hover any session card in the sidebar — the ⋮ menu appears on the right.",
-      "Click ⋮ → Rename. A prompt appears with the current title pre-filled.",
-      "Type a new title, click OK.",
+      "Click ⋮ → Rename. The card's title turns into an inline text field with the current title selected.",
+      "Type a new title and press Enter. (Esc cancels and keeps the old title; clicking elsewhere saves; an empty or unchanged title is ignored.)",
       "The card immediately shows the new title (optimistic update).",
       "Reload the page — the title persists.",
     ],
     expectedResult:
-      "Sidebar entry shows the new title immediately. Reload preserves it. If the PATCH fails (server unreachable), the card reverts to the prior title and a warning logs to the browser console.",
+      "Sidebar entry shows the new title immediately. Reload preserves it. If the PATCH fails (server unreachable), the card reverts to the prior title and an error toast, 'Could not rename the session', appears.",
     verifyVia: [
       "GET /api/agent/sessions/{id} — `title` field matches the new value.",
       "GET /api/agent/audit?action=session_updated — one row with the rename event.",
@@ -2596,24 +2541,25 @@ export const JOURNEYS: Journey[] = [
     icon: "monitoring",
     prompts: [
       {
-        text: "What scenarios are available?",
-        note: "Triggers a tool_call to xlog.list_scenarios — appears in the telemetry panel as a live row.",
+        text: "What jobs are scheduled?",
+        note: "Triggers a call to jobs_list (a built-in tool, so it works on a fresh install) — it appears in the telemetry panel as a live row.",
       },
     ],
-    toolsExercised: ["xlog.list_scenarios"],
+    toolsExercised: ["jobs_list"],
     apis: [],
     howToTest: [
       "Click the Live Telemetry icon in the chat header (right side, looks like a monitor).",
       "The panel slides in from the right.",
       "Send the prompt and watch the panel.",
       "Each tool call appears as a row with name + args + result preview.",
-      "An SSE 'model' event appears at the top showing which model produced this turn (e.g. gemini-2.5-pro).",
+      "An SSE 'model' event appears at the top showing which model produced this turn (for example gemini-3.1-pro-preview, or the model you picked in the header dropdown).",
     ],
     expectedResult:
       "Telemetry panel opens, shows the tool call live, then the assistant's reply lands in the main chat. Model name visible in the panel — confirms which model the chat handler actually invoked (not just the configured default).",
     verifyVia: [
-      "GET /api/agent/audit?session={id}&action=tool_call — one row per tool call shown in the panel.",
-      "Telemetry panel rows match the audit log 1:1 in count and order.",
+      "Session card menu → Export Events (GET /api/agent/sessions/{id}/export?format=events): one tool_call and one tool_result event per panel row, in the same order. This is the complete record of the turn, built-in tools included.",
+      "Built-in tools (jobs_list, skills_read, memory_*, health_status, ...) are NOT written to the audit log, so /observability/events?q=action:tool_call does not list them. Only connector tools (xlog, web, ...) get a tool_call audit row; try a prompt that lists workers to see one appear there.",
+      "Metrics: phantom_mcp_tool_calls_total{tool=\"jobs_list\"} at /observability/metrics goes up by one per call, built-in and connector alike.",
     ],
     related: ["chat-clear-live-telemetry", "chat-load-history-with-telemetry"],
     components: ["chat", "audit"],
@@ -2630,11 +2576,11 @@ export const JOURNEYS: Journey[] = [
     icon: "delete_sweep",
     prompts: [
       {
-        text: "List the scenarios.",
-        note: "Populates the telemetry with a tool call to clear next.",
+        text: "What jobs are scheduled?",
+        note: "Populates the telemetry with a jobs_list tool call to clear next.",
       },
     ],
-    toolsExercised: ["xlog.list_scenarios"],
+    toolsExercised: ["jobs_list"],
     apis: [],
     howToTest: [
       "Open the live telemetry panel and run a prompt that fires at least one tool call.",
@@ -2656,7 +2602,7 @@ export const JOURNEYS: Journey[] = [
     category: "chat",
     title: "Delete a chat session",
     summary:
-      "Two-click confirm protects against fat-finger; the session is hard-deleted from MCP along with its messages.",
+      "A confirmation dialog naming the session protects against a mis-click; the session is hard-deleted from MCP along with its messages.",
     difficulty: "starter",
     durationMin: 1,
     icon: "delete",
@@ -2672,13 +2618,13 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Hover any session card in the sidebar — the ⋮ menu appears on the right.",
-      "Click ⋮ → Delete. The button label changes to 'Click again to confirm'.",
-      "Click again to confirm (this is intentional — single-click delete would be too easy to fat-finger).",
+      "Click ⋮ → Delete. A dialog titled 'Delete \"<session name>\"?' opens. Esc or Cancel closes it and keeps the session.",
+      "Click Delete in the dialog. (The trash button in the chat header opens the same dialog for the open session.)",
       "The session disappears from the sidebar.",
       "Reload — it's gone.",
     ],
     expectedResult:
-      "Two-click confirm pattern: first click arms the action, second click executes. After delete, the card is removed from the sidebar; if it was the active session, you fall back to a fresh chat.",
+      "Nothing is deleted until you confirm in the dialog. After delete, the card is removed from the sidebar; if it was the active session, you fall back to a fresh chat. If the delete fails, an error toast, 'Could not delete the session', appears and the session stays.",
     verifyVia: [
       "GET /api/agent/sessions/{id} → 404.",
       "GET /api/agent/audit?session={id} → entries still present (audit log is append-only).",
@@ -2703,17 +2649,17 @@ export const JOURNEYS: Journey[] = [
         newSession: true,
       },
     ],
-    toolsExercised: ["xlog.create_worker"],
+    toolsExercised: ["xlog.create_data_worker"],
     apis: [
       {
         method: "GET",
         path: "/api/agent/sessions/{id}/messages",
-        description: "Returns the full message thread for the chat panel.",
+        description: "Returns the full message thread for the chat panel. The tool round-trips the telemetry panel rehydrates are derived from the tool_call and tool_result rows and their meta.",
       },
       {
         method: "GET",
-        path: "/api/agent/sessions/{id}/telemetry",
-        description: "Returns the tool round-trips and audit events that fired during this session, in chronological order.",
+        path: "/api/agent/sessions/{id}/export?format=events",
+        description: "The same tool round-trips and chat audit events as a flat, chronological event timeline (JSON).",
       },
     ],
     howToTest: [
@@ -2722,15 +2668,16 @@ export const JOURNEYS: Journey[] = [
       "Now click Session A in the sidebar.",
       "The chat thread rehydrates with all prior messages.",
       "Open the live telemetry panel.",
-      "It should show the tool round-trip from Session A (xlog.create_worker with its args + result).",
+      "It should show the tool round-trip from Session A (xlog.create_data_worker with its args + result).",
     ],
     expectedResult:
       "Both the chat thread AND the telemetry panel rehydrate. The panel doesn't restart from empty when you switch sessions — it shows what happened in that specific session.",
     verifyVia: [
-      "Telemetry panel row count matches the number of tool_call rows from GET /api/agent/audit?session={id}.",
+      "Telemetry panel row count matches the number of tool_call events in GET /api/agent/sessions/{id}/export?format=events. (The audit log is not the reference here: it only records connector tool calls, so a session that also used built-in tools has more panel rows than audit rows.)",
       "If the panel is empty after loading a session that had tool calls, check the browser console — loadSession() logs warnings on telemetry-rehydrate failure.",
     ],
     related: ["chat-show-live-telemetry"],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat", "audit"],
   },
 
@@ -2789,6 +2736,7 @@ export const JOURNEYS: Journey[] = [
       "chat-create-new-session",
       "chat-memory-recall",
     ],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat"],
   },
 
@@ -2865,12 +2813,12 @@ export const JOURNEYS: Journey[] = [
     icon: "compress",
     prompts: [
       {
-        text: "Tell me what scenarios are available in xlog.",
-        note: "Turn 1 — populate some history. Any prompt works; this one is fast.",
+        text: "Tell me which attack-simulation skills you have.",
+        note: "Turn 1 — populate some history. Any prompt works; this one is fast and needs no connector (the agent lists skills with skills_list_all).",
         newSession: true,
       },
       {
-        text: "Pick one scenario and explain when I'd use it.",
+        text: "Pick one skill and explain when I'd use it.",
         note: "Turn 2 — more context to compact.",
       },
       {
@@ -2882,11 +2830,11 @@ export const JOURNEYS: Journey[] = [
         note: "Triggers compaction. Watch the telemetry panel for compaction_start → compaction_end events; the chat thread gets a horizontal divider; the chat header shows a 'Compacted N messages' badge.",
       },
       {
-        text: "What was the second scenario you mentioned?",
-        note: "Final turn — the agent answers from the summary, NOT the full transcript. The summary preserves opaque IDs (scenario filenames) verbatim per the SUMMARIZE_INSTRUCTIONS contract, so this should still resolve correctly.",
+        text: "Which skill did you pick in the second turn?",
+        note: "Final turn — the agent answers from the summary, NOT the full transcript. The summary preserves opaque IDs (skill filenames) verbatim per the SUMMARIZE_INSTRUCTIONS contract, so this should still resolve correctly.",
       },
     ],
-    toolsExercised: ["scenarios.list_scenarios"],
+    toolsExercised: ["skills_list_all"],
     apis: [
       {
         method: "POST",
@@ -2955,7 +2903,7 @@ export const JOURNEYS: Journey[] = [
     prompts: [
       {
         text: "/help",
-        note: "Renders the slash-command catalog. Other slash commands (/compress, /clear, /model) listed with their argHint + description.",
+        note: "Renders the slash-command catalog. The other six slash commands (/clear, /compress, /cost, /model, /plan, /tasks) are listed with their argHint + description.",
         newSession: true,
       },
     ],
@@ -2971,7 +2919,7 @@ export const JOURNEYS: Journey[] = [
     howToTest: [
       "Open a fresh chat session.",
       "Type /help and send.",
-      "The assistant bubble renders a code-formatted list with /clear, /compress, /help, /model and their descriptions.",
+      "The assistant bubble renders a code-formatted list of all 7 commands — /clear, /compress, /cost, /help, /model, /plan, /tasks — with their descriptions.",
       "Click 'Live telemetry' in the chat header.",
       "The wire-events panel shows: meta (info icon, tertiary tint), text_delta, done (task_alt, secondary tint) — only 3 events, none of the round-trip-heavy events of a normal turn.",
     ],
@@ -2996,8 +2944,8 @@ export const JOURNEYS: Journey[] = [
     icon: "restart_alt",
     prompts: [
       {
-        text: "List the scenarios in xlog.",
-        note: "Turn 1 — populates the session with a tool-call round-trip so /clear has something meaningful to clear.",
+        text: "What jobs are scheduled?",
+        note: "Turn 1 — populates the session with a tool-call round-trip (jobs_list) so /clear has something meaningful to clear.",
         newSession: true,
       },
       {
@@ -3009,7 +2957,7 @@ export const JOURNEYS: Journey[] = [
         note: "Verifies the chat is now driving the NEW session — the agent's reply (or the chat header) carries the freshly minted id, not the old one.",
       },
     ],
-    toolsExercised: ["scenarios.list_scenarios"],
+    toolsExercised: ["jobs_list"],
     apis: [
       {
         method: "POST",
@@ -3066,7 +3014,7 @@ export const JOURNEYS: Journey[] = [
       },
       {
         text: "What model are you?",
-        note: "Verifies the next turn actually used the override. The model SSE event payload now includes override_source: 'session'.",
+        note: "Verifies the next turn actually used the override. The model SSE event payload now includes override_source: 'session'. The agent answers from the model it is told is serving the turn and calls no settings tool.",
       },
       {
         text: "/model auto",
@@ -3095,9 +3043,10 @@ export const JOURNEYS: Journey[] = [
       "Send any normal prompt. Open the wire-events panel — the model event payload shows override: true and override_source: 'session'.",
       "Send /model auto — handler responds 'Cleared model override. Future turns will use the runtime default.'",
       "Header dropdown still wins: pick a different model from the dropdown, send a turn — override_source is now 'header'.",
+      "Ask 'What model are you?' after /model — the reply names the session model, no settings tool call appears in the tool trace, and GET /api/agent/audit?action=settings_changed shows no new row.",
     ],
     expectedResult:
-      "Operator can pin a model to a session for the duration of the work. The preference survives reloads (it's persisted in session metadata, not local state). The header dropdown remains the highest-priority override for one-off turns.",
+      "Operator can pin a model to a session for the duration of the work. The preference survives reloads (it's persisted in session metadata, not local state). The header dropdown remains the highest-priority override for one-off turns. The session preference never changes the install's default model (geminiModel): the agent's settings tools refuse that key.",
     verifyVia: [
       "GET /api/agent/sessions/{id} → session.metadata.preferred_model reflects the latest /model call.",
       "Audit log: GET /api/agent/audit?action=session_meta_changed&target=session:{id} (if the MCP audits PATCH; otherwise the model event payload is the verification.",
@@ -3122,8 +3071,8 @@ export const JOURNEYS: Journey[] = [
         newSession: true,
       },
       {
-        text: "Paste a long conversation history (or send 15-20 substantive turns) to push utilization >= 80%.",
-        note: "Each turn the chat handler estimates tokens and fires context_warning >= 90%; the UI banner triggers at 80%.",
+        text: "Paste a large block of text (start with about 60 KB, roughly 15,000 tokens) as a single message, and repeat until utilization reaches >= 80%.",
+        note: "This spends real tokens, so a few large pastes are cheaper than 15-20 long turns. Each turn the chat handler estimates tokens and fires context_warning >= 90%; the UI banner triggers at 80%.",
       },
       {
         text: "Click the /compress chip in the warning banner.",
@@ -3145,7 +3094,7 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Open the chat header, click the model dropdown, pick a model with a smaller context cap (e.g. Gemini 2.5 Flash Lite — 32K).",
-      "Send 15-20 substantive turns OR paste a long block of text repeatedly until you see the yellow warning banner appear above the input.",
+      "Paste a large block of text (about 60 KB) as a single message — a few such pastes cost far fewer tokens than 15-20 long turns — and repeat until the yellow warning banner appears above the input. If a paste is refused as too large for the model, the context guard is working: continue with /compress.",
       "Banner reads 'Context is N% full. Run /compress to summarize prior turns and free up budget.' with a clickable /compress chip.",
       "Click the /compress chip — '/compress' appears in the textarea, cursor positioned after.",
       "Press Enter — compaction runs, divider appears in the thread, header shows 'Compacted N messages' badge.",
@@ -3193,7 +3142,7 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Verify the deploy uses Vertex (Settings → Services should show Vertex AI configured) and PHANTOM_VERTEX_CACHE=1 in the agent container env.",
+      "Host shell step (needs Vertex AI configured at /providers): the installer does not set PHANTOM_VERTEX_CACHE, so add `PHANTOM_VERTEX_CACHE=1` to the phantom-agent service's environment in /opt/phantom/docker-compose.yml, recreate the container (`docker compose up -d phantom-agent`) and confirm with `docker exec phantom_agent printenv PHANTOM_VERTEX_CACHE`. Without it no cache_hit event ever fires.",
       "Open Settings → Personality → Tuning → 'Vertex prompt caching' should be ON (or set it to ON).",
       "Open a fresh chat session. Send turn 1 (any short prompt).",
       "Open the wire-events panel. The first turn does NOT fire cache_hit (cache is being created).",
@@ -3275,7 +3224,7 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Generate baseline traffic — send 10-20 chat turns over a few minutes with Vertex caching on.",
+      "Needs: Vertex prompt caching enabled, which requires PHANTOM_VERTEX_CACHE=1 in the phantom-agent container environment (a host shell step; see 'chat-vertex-cache-hit-indicator'). Generate baseline traffic — send 10-20 chat turns over a few minutes with Vertex caching on.",
       "Open /observability/events. Click the 'Cache hits' quick-filter chip.",
       "Each row's metadata column has cached_tokens (what was billed at 25%) and savings_tokens_est (what we'd otherwise have paid full price for).",
       "Open browser devtools → Network → filter for /api/agent/audit. Copy the response JSON.",
@@ -3313,7 +3262,7 @@ export const JOURNEYS: Journey[] = [
         note: "An exact-prefix search. Pure embedding similarity might rank this row down (UUIDs aren't very semantic); FTS promotion ensures it surfaces.",
       },
     ],
-    toolsExercised: ["memory.store", "memory.search"],
+    toolsExercised: ["memory_store", "memory_search"],
     apis: [
       {
         method: "POST",
@@ -3350,7 +3299,7 @@ export const JOURNEYS: Journey[] = [
     durationMin: 4,
     icon: "tune",
     prompts: [],
-    toolsExercised: ["memory.search"],
+    toolsExercised: ["memory_search"],
     apis: [
       {
         method: "POST",
@@ -3452,7 +3401,7 @@ export const JOURNEYS: Journey[] = [
       "Click the toggle — it slides on (background flips from outline grey to primary blue).",
       "Auto-save indicator flips to 'Saved' after ~1s.",
       "Reload — toggle stays on.",
-      "Send a chat turn with a Vertex model — check the wire-events panel for cache_hit on the second turn (matches the chat-vertex-cache-hit-indicator journey).",
+      "Host shell step (needs PHANTOM_VERTEX_CACHE=1 in the phantom-agent environment, as in 'chat-vertex-cache-hit-indicator'): send a chat turn with a Vertex model — check the wire-events panel for cache_hit on the second turn. The toggle itself persists without the variable; only the cache_hit signal depends on it.",
       "Click the toggle off again — turning the cache off should stop new cache_hit events from firing on subsequent turns.",
     ],
     expectedResult:
@@ -3492,10 +3441,10 @@ export const JOURNEYS: Journey[] = [
       },
       {
         text: "run a 30-minute FortiGate auth-spray scenario, then verify coverage with XQL queries against the playground",
-        note: "Same prompt without /plan. Now the agent executes the plan (subject to per-tool approval cards for tier-2+ destructive tools).",
+        note: "Same prompt without /plan. Now the agent executes the plan; any tool the install gates shows an approval card, and with nothing gated each step applies at once.",
       },
     ],
-    toolsExercised: ["xlog.create_scenario_worker", "xsiam.execute_xql_query"],
+    toolsExercised: ["xlog.create_scenario_worker", "xsiam.run_xql_query"],
     apis: [
       {
         method: "POST",
@@ -3510,7 +3459,7 @@ export const JOURNEYS: Journey[] = [
       "Watch the wire-events panel: plan_started fires immediately; plan_proposed lands when the model finishes (~3-5s).",
       "Chat thread shows a tertiary-tinted PlanCard with the proposed steps.",
       "Click the PlanCard's expand toggle — read the steps. Each step names the tool it would call, key args, and a Risk callout for destructive steps.",
-      "If the plan is acceptable, send the original prompt without /plan. The agent executes the steps; tier-2+ tools still surface inline approval cards.",
+      "If the plan is acceptable, send the original prompt without /plan. The agent executes the steps; any tool the install gates surfaces an inline approval card (with nothing gated, as on a default install, the steps apply at once). Running the scenario and the XQL steps needs the xlog and XSIAM connector instances.",
       "If you want changes, send something like 'plan again but skip step 3' — the agent re-plans with revisions.",
       "If you cancel, send any other prompt — the plan card stays in the thread (audit history) but is no longer the operator's intent.",
     ],
@@ -3530,28 +3479,34 @@ export const JOURNEYS: Journey[] = [
     category: "chat",
     title: "Monitor active background work with /tasks",
     summary:
-      "See what the agent (or you) has spawned: scenario emulation workers, CALDERA operations, XSIAM queries, compaction summarizers. Mid-chat /tasks command shows what's running for THIS session bubbled to the top.",
+      "See what the agent (or you) has spawned: the log generators it started, CALDERA operations, XSIAM queries, compaction summarizers. The mid-chat /tasks command lists what is running, with tasks from THIS session first.",
     difficulty: "starter",
     durationMin: 2,
     icon: "pending_actions",
     prompts: [
       {
         text: "Generate 10 minutes of synthetic SSH brute-force events to udp:10.0.0.8:514",
-        note: "Spawns an xlog scenario worker — that's a long-running task. It lands in the registry with kind='scenario_worker' and parent_session_id linking back to this chat.",
+        note: "Spawns an xlog log generator (a data worker). It is owned by xlog, so the /tasks page lists it under 'Log generators', read from xlog's own worker list.",
         newSession: true,
       },
       {
         text: "/tasks",
-        note: "Shows your active task. Tasks tied to THIS session are marked with ★. Visit /tasks for the full registry (including completed and aborted).",
+        note: "Lists active tasks and running log generators. Task-registry tasks tied to THIS session are marked with ★ (log generators are not session-tied). Visit /tasks for the full list, including completed and aborted tasks.",
       },
     ],
-    toolsExercised: ["xlog.create_worker"],
+    toolsExercised: ["xlog.create_data_worker", "xlog.list_workers"],
     apis: [
+      {
+        method: "GET",
+        path: "/api/agent/workers",
+        description:
+          "The xlog data workers (status, type, destination, count, interval, created time), the same list xlog.list_workers returns. Rendered in the 'Log generators' section of /tasks.",
+      },
       {
         method: "GET",
         path: "/api/agent/tasks?active_only=1",
         description:
-          "Returns currently-running tasks across all sessions. The /tasks slash handler sorts session-spawned tasks to the top.",
+          "Returns currently-running task-registry tasks across all sessions. The /tasks slash handler sorts session-spawned tasks to the top.",
       },
       {
         method: "POST",
@@ -3561,20 +3516,21 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Send the prompt above. Wait for the agent to spawn a worker.",
-      "Send /tasks — look for ★ in front of your row.",
-      "Visit /tasks page in another tab. Per-row: progress bar, kind, elapsed time, abort button (when running).",
-      "Click Abort on a task. Confirm. The status flips to 'aborted' on next refresh; the worker stops at its next checkpoint.",
-      "Filter by 'Succeeded' / 'Failed' / 'Aborted' to see history.",
+      "Send the prompt above. Wait for the agent to start the generator.",
+      "Send /tasks. A 'log generator' line appears for the running worker with its destination and rate.",
+      "Visit the /tasks page in another tab. The 'Log generators' section shows the worker with a Running pill; any task-registry task shows below it with progress bar, kind, elapsed time and an abort button (when running).",
+      "Click the stop button on the generator and confirm. After the next refresh the row is gone (an explicit stop removes the worker from xlog) and xlog.list_workers agrees. A generator that finishes on its own stays listed with a Stopped pill.",
+      "Use the All and Active chips to include or exclude stopped generators; Succeeded, Failed and Aborted show task-registry history only.",
     ],
     expectedResult:
-      "Tasks are durable (survive container restarts), per-session navigable (parent_session_id link), abort-able. Replaces the lossy module-level workers={} dict in xlog with a real persisted registry.",
+      "Every log generator xlog is running is visible on /tasks and in /tasks in chat, with a stop button, and the page agrees with xlog.list_workers. Task-registry tasks (durable, per-session link, abortable) appear alongside them.",
     verifyVia: [
-      "GET /api/agent/tasks?active_only=1 → JSON list with progress + parent_session_id",
-      "GET /api/agent/audit?action=task_started → one row per running transition",
-      "Abort an active task; GET the same task → status='aborted', completed_at set",
+      "GET /api/agent/workers → the same workers xlog.list_workers returns",
+      "GET /api/agent/tasks?active_only=1 → JSON list with progress + parent_session_id (task-registry tasks only)",
+      "Stop a generator from /tasks; GET /api/agent/workers → the worker is no longer listed",
     ],
     related: ["chat-show-live-telemetry"],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["chat", "slash-commands", "tasks", "audit"],
   },
 
@@ -3590,8 +3546,8 @@ export const JOURNEYS: Journey[] = [
     icon: "payments",
     prompts: [
       {
-        text: "Tell me about the FortiGate scenario in xlog and explain when I'd use it",
-        note: "Real turn that fires a tool call (xlog.list_scenarios) — burns ~15-30K input tokens and a few hundred output tokens.",
+        text: "List the attack-simulation skills you have and explain when I'd use each one",
+        note: "A real model turn: the agent answers from the skills listed in its system prompt, so it usually makes no tool call (skills_list_all is not called). It still burns ~15-30K input tokens and a few hundred output tokens.",
         newSession: true,
       },
       {
@@ -3599,7 +3555,7 @@ export const JOURNEYS: Journey[] = [
         note: "Aggregates chat_turn_cost audit rows for THIS session and today (UTC). Shows by-model breakdown when more than one model fired.",
       },
     ],
-    toolsExercised: ["xlog.list_scenarios"],
+    toolsExercised: [],
     apis: [
       {
         method: "GET",
@@ -3609,8 +3565,8 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Send the prompt above. Wait for the response.",
-      "Send /cost. Output: 'This session: $X.XXX (N calls)' with token totals.",
+      "Send the prompt above. Wait for the response. The Live telemetry panel normally shows no tool call for it.",
+      "Send /cost. Output: 'This session: $X.XXX (N calls)' with token totals. N counts model calls, not tool calls.",
       "Visit /observability/cost. Window selector: Today / 7d / 30d / All. Hero stats: total cost, cached savings, input/output tokens.",
       "By-model breakdown bar: see how spend distributes across models.",
       "Click into the recent-200 table; click a session id to deep-link into that chat.",
@@ -3642,20 +3598,20 @@ export const JOURNEYS: Journey[] = [
         method: "POST",
         path: "/api/agent/jobs",
         description:
-          "Body adds permission_policy: {allowed_tools, denied_tools, require_approval} — each a list of glob strings. PATCH on /api/agent/jobs/{name} uses sentinel: omit/None to preserve, {} to clear, non-empty dict to set.",
+          "Body adds permission_policy: {allowed_tools, denied_tools} — each a list of glob strings. PATCH on /api/agent/jobs/{name} uses sentinel: omit/None to preserve, {} to clear, non-empty dict to set.",
       },
     ],
     howToTest: [
-      "Open /jobs/new. Scroll to Section 01 → confirm the Permission policy section appears below the Extended-thinking toggle, with three glob inputs (Allowed / Denied / Require approval).",
-      "Fill Allowed tools: 'xlog_*' (whitelist the xlog family). Save the job with a simple prompt action (say 'send 5 SYSLOG logs to udp:localhost:514').",
-      "Run the job now. Open the run-detail page. Confirm the agent's chat turn called only xlog-family tools; any attempt to call non-xlog tools shows status=denied_by_policy with the denial reason.",
+      "Open /jobs/new. Scroll to Section 01 → confirm the Permission policy section appears below the Extended-thinking toggle, with two glob inputs (Allowed / Denied).",
+      "Fill Allowed tools: 'phantom_*,xlog.*' (whitelist the log-generation tools). Save the job with a simple prompt action (say 'send 5 SYSLOG logs to udp:localhost:514').",
+      "Run the job now. Open the run-detail page. Confirm the agent's chat turn called only log-generation tools; any attempt to call other tools shows status=denied_by_policy with the denial reason.",
       "Edit the job: clear Allowed tools, set Denied tools to '*_delete'. Save. Re-run. Confirm the job can call most tools but any *_delete call is denied.",
-      "Set Require approval to 'xsiam_write_*'. Even with bypass_approvals=true, confirm any xsiam_write_* call routes through the approval card (bypass doesn't override require_approval — policy intent wins).",
+      "Note there is no per-job 'require approval' list: whether a tool call needs an approval card follows the install's approval list (GET /api/agent/approvals/gating), not the job.",
       "Open /observability/events → filter action=tool_denied_by_policy. Confirm every denied dispatch appears with matched_list + matched_pattern metadata.",
-      "Chat with the agent: 'restrict the test-job to only allow xlog tools'. Confirm the agent calls jobs_update with permission_policy.allowed_tools=['xlog_*'].",
-      "Clear ALL THREE permission policy fields → save. Confirm the next dispatch is unrestricted (policy effectively cleared via the {} sentinel).",
-      "CLI verify schema: docker exec phantom_agent sqlite3 /app/data/jobs.db 'PRAGMA table_info(jobs)' → permission_policy_json TEXT column present.",
-      "Verify pre-migration jobs.db: copy an older jobs.db to /tmp, point the agent at it, restart. Confirm the column gets ALTER TABLE'd on boot (no manual migration needed).",
+      "Chat with the agent: 'restrict the test-job to only allow xlog tools'. Confirm the agent calls jobs_update with permission_policy.allowed_tools=['phantom_*', 'xlog.*'].",
+      "Clear BOTH permission policy fields → save. Confirm the next dispatch is unrestricted (policy effectively cleared via the {} sentinel).",
+      "Host shell step: verify the schema with `docker exec phantom_agent sqlite3 /app/data/jobs.db 'PRAGMA table_info(jobs)'` → permission_policy_json TEXT column present.",
+      "Host shell step: verify a pre-migration jobs.db: copy an older jobs.db to /tmp, point the agent at it, restart. Confirm the column gets ALTER TABLE'd on boot (no manual migration needed).",
     ],
     expectedResult:
       "Operators scope what each job can do; the agent literally cannot call denied tools from inside that job's chat turn. Defense in depth alongside the existing MCP approval gate.",
@@ -3701,8 +3657,8 @@ export const JOURNEYS: Journey[] = [
       "Pick a pro model that supports thinking. Confirm the toggle re-enables; flip it on. The form's body now sends model_id=<pro-model> + thinking_enabled=true.",
       "Fill the rest of the form (a simple prompt action, every-5-minutes repeating, name 'test-flash-override'), save.",
       "Open /jobs/<id>. Confirm the Model dropdown is populated with the saved value + Thinking toggle reflects the saved state.",
-      "Wait for the next cron fire (~5min) OR click 'Run now' on the job row. Open /observability/cost. Confirm the cost row reflects the picked model's pricing — Flash costs visibly less than Pro for the same number of input/output tokens.",
-      "CLI verify the dispatch body: in chat, run a one-shot 'Run now' on the job and inspect the request via /observability/events — look for the chat_dispatch event with the model_id in metadata. (Alternatively check job_runs.result_json which preserves meta.model.)",
+      "Wait for the next cron fire (~5min) OR open the job row's ⋯ menu and click 'Trigger Now'. Open /observability/cost. Confirm the cost row reflects the picked model's pricing — Flash costs visibly less than Pro for the same number of input/output tokens.",
+      "Verify the dispatch body: trigger the job once with 'Trigger Now' and inspect the request via /observability/events — look for the chat_dispatch event with the model_id in metadata. (Alternatively check job_runs.result_json which preserves meta.model.)",
       "Edit the job: clear the Model field back to 'Router default'. Save. Confirm next dispatch uses runtimeConfig.GEMINI_MODEL again (no override).",
       "Chat with the agent: 'set the test-flash-override job to use gemini-2.5-flash with thinking off'. Confirm the agent calls jobs_update with the right model_id + thinking_enabled values.",
       "Open /help/user#model-routing to confirm the explainer renders + Callout about the thinking-wire caveat.",
@@ -3750,7 +3706,7 @@ export const JOURNEYS: Journey[] = [
       "Open /settings/hooks → Add hook.",
       "Transport dropdown defaults to 'Built-in (in-process, no subprocess)'. Confirm the Builtin dropdown lists 'Slack approval'.",
       "Pick 'Slack approval'. The dynamic form renders three fields: Webhook URL (required), Auth header name (optional), Auth header value (optional, accepts secret:<ENV_NAME>).",
-      "Fill: name 'soc-ops slack', event PreToolUse, toolGlob 'caldera_*,xsiam_write_*,*_delete', webhookUrl '<your-receiver-url>', timeout 60000, failurePolicy 'allow'.",
+      "Fill: name 'soc-ops slack', event PreToolUse, toolGlob 'caldera_create_*,caldera_update_*,caldera_delete_*,xsiam_*_create,xsiam_*_update,xsiam_*_delete,*_delete', webhookUrl '<your-receiver-url>', timeout 60000, failurePolicy 'allow'.",
       "Save. The hook lands in the SqliteHookStore with transport.type='builtin' + transport.name='slack-approval' + transport.config={webhookUrl,...}.",
       "Confirm the list row shows a 'built-in' badge in the transport column.",
       "In chat, ask the agent to start a CALDERA operation. Slack #soc-ops gets a message with Approve/Deny buttons.",
@@ -3785,14 +3741,14 @@ export const JOURNEYS: Journey[] = [
         method: "POST",
         path: "/api/agent/hooks",
         description:
-          "Body: {name, event:'PreToolUse', matcher:{toolGlob:'caldera_*,xsiam_write_*,*_delete'}, transport:{type:'http',url:'https://your-receiver/pre-tool-approval'}, timeoutMs:60000, failurePolicy:'allow', enabled:true}. The chat-route loads hooks fresh per fire-site.",
+          "Body: {name, event:'PreToolUse', matcher:{toolGlob:'caldera_create_*,caldera_update_*,caldera_delete_*,xsiam_*_create,xsiam_*_update,xsiam_*_delete,*_delete'}, transport:{type:'http',url:'https://your-receiver/pre-tool-approval'}, timeoutMs:60000, failurePolicy:'allow', enabled:true}. The chat-route loads hooks fresh per fire-site.",
       },
     ],
     howToTest: [
       "Deploy a small webhook receiver (Lambda / Cloud Function / Slack-bot). It must: (1) accept POST with the PreToolUse JSON payload, (2) post to Slack with Approve/Deny interactive buttons, (3) wait for the analyst's click, (4) return JSON {decision:'allow'|'deny', reason}.",
       "See lib/slack-approval-hook.ts:SLACK_APPROVAL_INSTRUCTIONS for a reference receiver skeleton.",
       "Open /settings/hooks → Add hook.",
-      "Set: name 'soc-ops slack approval', event PreToolUse, transport HTTP with your receiver URL, toolGlob 'caldera_*,xsiam_write_*,*_delete', timeout 60000, failurePolicy 'allow' (so a receiver outage doesn't block all chat).",
+      "Set: name 'soc-ops slack approval', event PreToolUse, transport HTTP with your receiver URL, toolGlob 'caldera_create_*,caldera_update_*,caldera_delete_*,xsiam_*_create,xsiam_*_update,xsiam_*_delete,*_delete', timeout 60000, failurePolicy 'allow' (so a receiver outage doesn't block all chat).",
       "Save. The hook lands in the SqliteHookStore.",
       "In chat, ask the agent to start a CALDERA operation. Watch the wire-events panel — hook_dispatched event fires.",
       "Slack channel #soc-ops gets a message with Approve/Deny buttons. Click Approve.",
@@ -3816,7 +3772,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Block destructive tools against production targets",
     summary:
-      "Install a PreToolUse hook that inspects tool args and denies any caldera_start_operation against a host group named 'production'. Defense in depth alongside the standard tier-gating.",
+      "Install a PreToolUse hook that inspects tool args and denies any caldera_create_operation against a host group named 'production'. Defense in depth alongside the standard tier-gating.",
     difficulty: "intermediate",
     durationMin: 6,
     icon: "block",
@@ -3861,11 +3817,11 @@ export const JOURNEYS: Journey[] = [
     icon: "key",
     prompts: [
       {
-        text: "List the rules in XSIAM",
-        note: "Exercises an XSIAM tool. If the configured auth has expired, the call returns 401 — the chat-route's classifier flips the connector state to 'needs-auth'.",
+        text: "Show me the XSIAM issues from the last 24 hours",
+        note: "Exercises an XSIAM tool (xsiam.get_issues). If the configured auth has expired, the call returns 401 — the chat-route's classifier flips the connector state to 'needs-auth'.",
       },
     ],
-    toolsExercised: ["xsiam.list_rules"],
+    toolsExercised: ["xsiam.get_issues"],
     apis: [
       {
         method: "GET",
@@ -3881,11 +3837,11 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Set up: deliberately rotate the XSIAM API key in the upstream tenant (or wait for it to expire) WITHOUT updating phantom's stored credential.",
-      "Send the prompt above. The xsiam.list_rules tool returns 401.",
+      "Needs: a Cortex XSIAM tenant and an XSIAM connector instance. Set up: deliberately rotate the XSIAM API key in the upstream tenant (or wait for it to expire) WITHOUT updating phantom's stored credential.",
+      "Send the prompt above. The xsiam.get_issues tool returns 401.",
       "Watch the chat: a connector_auth_required SSE event fires.",
       "Visit /observability/connectors. The xsiam connector shows state='needs-auth' with the last_error truncated.",
-      "Update the credential (via /providers or settings).",
+      "Update the credential: at /connectors → Instances, click the Edit Instance icon on the XSIAM instance, enter the new api_key (secret) and save.",
       "Click 'Reauth' on the /observability/connectors row. State flips to 'pending'.",
       "Send the same prompt again. Tool succeeds. State flips to 'connected'.",
     ],
@@ -3926,7 +3882,7 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Visit /observability/cost. Pick a window (7d / 30d).",
+      "Visit /observability/cost. Pick a window (7d / 30d). The cost view works on any install; the Cached savings figure and the Cache hits rows below need PHANTOM_VERTEX_CACHE=1 in the phantom-agent environment (a host shell step, see 'chat-vertex-cache-hit-indicator') and some cached traffic.",
       "Note 'Total cost' and 'Cached savings' hero stats. Cached savings = sum of cost_components.cached_savings_usd across rows.",
       "Open /observability/events with the 'Cache hits' filter chip. Read sample rows: metadata.cached_tokens vs full_price_input_tokens.",
       "Validate the math: per-row, cost_components.cached_savings_usd ≈ (cached_tokens × 0.75) × per-million-input-rate (Vertex bills cached at ~25% of standard).",
@@ -3970,9 +3926,9 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Author a plugin: create bundles/spark/plugins/vendor-x/ with manifest.yaml declaring name, version, description, enabled:true, plus any of: skills:, scenarios:, memory_seeds:, agents:.",
-      "See bundles/spark/plugins/example-vendor/ for the reference structure: 1 skill, 0 scenarios, 3 memory seeds, 3 agent definitions.",
-      "Drop the directory into the running container's bundle root (volume-mount or rebuild image).",
+      "Host shell step: author a plugin by creating bundles/spark/plugins/vendor-x/ with manifest.yaml declaring name, version, description, enabled:true, plus any of: skills:, scenarios:, memory_seeds:, agents:.",
+      "See bundles/spark/plugins/example-vendor/ for the reference structure: 1 skill, 0 scenarios, 3 memory seeds, 3 agent definitions. The example-vendor plugin ships with enabled: false, so it contributes nothing until you set enabled: true in its manifest.yaml and restart phantom-agent.",
+      "Host shell step: drop the directory into the running container's bundle root (volume-mount or rebuild image), then restart phantom-agent.",
       "Visit /plugins. Verify your plugin appears with the correct contribution counts.",
       "Click 'Reload all'. Wait for the spinner. Plugin reload applies all contributions.",
       "Verify skill: navigate to /skills, look for plugin-namespaced skill.",
@@ -4080,13 +4036,13 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Visit /observability/plugins via tunneled https://localhost:3001. Confirm five group sections render: phantom.skills, phantom.connectors, phantom.hooks, phantom.scanners, phantom.providers.",
+      "Visit /observability/plugins on https://<host>:3000. Confirm five group sections render: phantom.skills, phantom.connectors, phantom.hooks, phantom.scanners, phantom.providers.",
       "Confirm install form is at the top with input + Install button.",
-      "Type a public test package (e.g. 'pip-search' or any small pure-python lib) into the spec input. Click Install.",
+      "Needs: network access from the phantom-agent container to a package index, and a package you trust (this pip-installs it into the container). Type a small pure-python package into the spec input. Click Install.",
       "Wait — button shows 'Installing…'. On success, the result panel below shows 'Installed <spec>. Restart phantom-agent to load contributed builtins.'",
-      "Catalog refreshes; if the installed package targets none of the phantom.* groups, the sections show counts unchanged but the package IS installed in the container (visible via docker exec phantom_agent pip list | grep <name>).",
+      "Catalog refreshes; if the installed package targets none of the phantom.* groups, the sections show counts unchanged but the package IS installed in the container (visible with the host shell command `docker exec phantom_agent pip list | grep <name>`).",
       "Open /observability/events. Filter action=plugin_install. Confirm an audit row exists with target='plugin:<spec>' and status='success'.",
-      "Click Uninstall on any row in the catalog (or against a manually-installed package via API). Confirm the confirm() prompt fires; accept it.",
+      "Click Uninstall on any row in the catalog (or against a manually-installed package via API). Confirm the in-app 'Uninstall <package>?' dialog opens; click Uninstall.",
       "Wait — button shows 'Uninstalling…'. On success, catalog refreshes and the row disappears.",
       "/observability/events?action=plugin_uninstall shows the corresponding audit row.",
     ],
@@ -4119,7 +4075,7 @@ export const JOURNEYS: Journey[] = [
         newSession: true,
       },
     ],
-    toolsExercised: ["subagent_create", "caldera.get_all_abilities", "caldera.start_operation", "caldera.get_operation"],
+    toolsExercised: ["subagent_create", "caldera.get_all_abilities", "caldera.create_operation", "caldera.get_operation_by_id"],
     apis: [
       {
         method: "GET",
@@ -4135,8 +4091,8 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Verify red-team-emulator is registered: visit /agents, look for it under origin='plugin:example-vendor'.",
-      "If absent: visit /plugins → click Reload all to re-apply plugin contributions.",
+      "Needs: a CALDERA connector instance (see 'ops-edit-caldera-via-connectors-v0135') and the example-vendor plugin enabled. Verify red-team-emulator is registered: visit /agents, look for it under origin='plugin:example-vendor'.",
+      "If absent: the example-vendor plugin ships with enabled: false, so Reload all alone will not add it. Host shell step: set enabled: true in bundles/spark/plugins/example-vendor/manifest.yaml and restart phantom-agent, then visit /plugins and click Reload all to re-apply plugin contributions.",
       "Open a fresh chat. Send the prompt above.",
       "Watch the wire-events panel:",
       "  → tool_call event for subagent_create (metadata.readOnly=false, etc).",
@@ -4176,20 +4132,21 @@ export const JOURNEYS: Journey[] = [
         newSession: true,
       },
     ],
-    toolsExercised: ["subagent_create", "xsiam.execute_xql_query", "xsiam.list_rules", "memory.search"],
+    toolsExercised: ["subagent_create", "xsiam.run_xql_query", "xsiam.get_issues", "memory_search"],
     apis: [
       {
         method: "GET",
         path: "/api/agent/agent-definitions/by-name/blue-team-validator",
         description:
-          "tools_allowed=['xsiam_execute_xql_query','xsiam_get_dataset_metadata','xsiam_list_rules','memory_search','memory_list','phantom_get_required_fields','phantom_get_field_info'], max_turns=12, system prompt focused on detection-coverage validation.",
+          "tools_allowed is a read-only set (XSIAM query and dataset tools, detection inventory reads, memory_search, a field-info lookup), max_turns=12, system prompt focused on detection-coverage validation.",
       },
     ],
     howToTest: [
+      "Needs: a Cortex XSIAM tenant with an XSIAM connector instance, and the example-vendor plugin enabled (it ships with enabled: false; host shell step: set enabled: true in bundles/spark/plugins/example-vendor/manifest.yaml, restart phantom-agent, then click Reload all on /plugins).",
       "Pre-step: run a scenario (any) so there's data to validate against. The chat-context-aware-followup or run-port-scan-scenario journey are good setups.",
       "Open a fresh chat. Send the prompt above with the attack window details (start time, source IP, etc).",
       "Watch the SubagentCard appear in the thread.",
-      "Subagent's tool-call timeline: xsiam_list_rules → for each candidate rule, xsiam_execute_xql_query bounded to the attack window → memory_search for prior baselines → final summary.",
+      "Subagent's tool-call timeline: xsiam_get_issues for the alerts in the window → for each candidate rule, xsiam_run_xql_query bounded to the attack window → memory_search for prior baselines → final summary.",
       "Final response: per-rule expected vs actual alerts, coverage percentage, gap callouts.",
       "Click the sidechain link to read the full subagent transcript.",
     ],
@@ -4223,11 +4180,10 @@ export const JOURNEYS: Journey[] = [
     ],
     toolsExercised: [
       "subagent_create",
-      "caldera.start_operation",
-      "caldera.get_operation",
-      "xsiam.execute_xql_query",
-      "xsiam.list_rules",
-      "phantom.list_scenarios",
+      "caldera.create_operation",
+      "caldera.get_operation_by_id",
+      "xsiam.run_xql_query",
+      "xsiam.get_issues",
     ],
     apis: [
       {
@@ -4238,7 +4194,7 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Verify all 3 reference agents present in /agents: red-team-emulator, blue-team-validator, coverage-reporter.",
+      "Needs: CALDERA and XSIAM connector instances with a connected sandcat agent (see 'deploy-caldera-sandcat'), and the example-vendor plugin enabled (it ships with enabled: false; host shell step: set enabled: true in bundles/spark/plugins/example-vendor/manifest.yaml, restart phantom-agent, then click Reload all on /plugins). Verify all 3 reference agents present in /agents: red-team-emulator, blue-team-validator, coverage-reporter.",
       "Open a fresh chat. Send the prompt above.",
       "Watch the chat thread fill with three SubagentCards in sequence:",
       "  1. red-team-emulator — bounded to caldera_*, drives the operation, returns 'operation X started, agents touched: A, B, C'",
@@ -4276,11 +4232,11 @@ export const JOURNEYS: Journey[] = [
     icon: "edit_note",
     prompts: [
       {
-        text: "Use my new firewall-analyzer subagent to review the FortiGate alerts from the last hour and call out anything that looks coordinated.",
-        note: "Operator's custom agent. Authored via /agents → New agent.",
+        text: "Use my new firewall-analyzer subagent to search memory and the knowledge base for what we know about our firewall estate and summarise it.",
+        note: "Operator's custom agent, authored via /agents → New agent. It uses only local tools (memory_search, knowledge_search), so it runs without any connector; add XSIAM query tools to its allow-list later if you have a tenant.",
       },
     ],
-    toolsExercised: ["subagent_create"],
+    toolsExercised: ["subagent_create", "memory_search", "knowledge_search"],
     apis: [
       {
         method: "POST",
@@ -4291,14 +4247,14 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Visit /agents. Click 'New agent'.",
-      "Fill in: name='firewall-analyzer'. Description: 'Pulls FortiGate alerts and identifies coordinated patterns.'",
-      "System prompt (long-form): instructions for the subagent — what XQL queries to run, what to look for, output format.",
-      "Tools allowed (one per line): xsiam_execute_xql_query, xsiam_list_rules, memory_search, memory_list.",
+      "Fill in: name='firewall-analyzer'. Description: 'Summarises what memory and the knowledge base hold about our firewalls.'",
+      "System prompt (long-form): instructions for the subagent — which memory keys and knowledge entries to look for, what to flag, output format.",
+      "Tools allowed (one per line): memory_search, knowledge_search.",
       "Tools denied: leave empty (allowlist gates already).",
       "Max turns: 8. Isolation: fresh_session.",
       "Save. Auto-toggle to enabled.",
       "Open a fresh chat. Use the prompt above.",
-      "Coordinator spawns firewall-analyzer. Subagent runs the system prompt's instructions, returns the analysis.",
+      "Coordinator spawns firewall-analyzer. Subagent runs the system prompt's instructions with its two local tools, returns the summary.",
     ],
     expectedResult:
       "Custom agent works just like plugin-contributed ones. Operator can iterate the system prompt + tool scope without redeploying.",
@@ -4363,7 +4319,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Browse a knowledge base",
     summary:
-      "Navigate to /knowledge, pick a KB, search semantically, and read an entry. The bundled phantom-soc + xql-examples KBs are curated reference content.",
+      "Navigate to /knowledge, open the knowledge base, filter its entries, try a semantic search, and read an entry. The bundled xql-examples KB is curated reference content for XQL authoring.",
     difficulty: "starter",
     durationMin: 2,
     icon: "menu_book",
@@ -4383,67 +4339,62 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Open /knowledge. Two cards render — phantom-soc + xql-examples.",
-      "Click phantom-soc. Entry list renders, sorted by entry id.",
-      "Click any entry. Full markdown renders in a drawer.",
-      "Use the search bar at the top. Type 'compaction'. Results re-rank by similarity.",
-      "Switch to xql-examples. The drawer renders XQL with syntax highlighting.",
+      "Open /knowledge. The cards render with their entry counts; note the xql-examples count.",
+      "Click the xql-examples card. The header shows the same entry count as the card, and the Entries tab lists that many entries ('showing N / N'). Only the Entries and Try search tabs are present. Type 'mitre' into 'Filter by title, id, category, metadata…' and the list narrows.",
+      "Click any entry. The full markdown renders, with the XQL query in a code block.",
+      "Switch to the Try search tab, type 'alerts by mitre tactic' and press Enter (or click Search). Results come back ranked by score with a snippet. Semantic search needs the Vertex embedding model configured at /providers; without it, browsing and filtering still work.",
     ],
     expectedResult:
-      "KB browsing works without any Vertex calls (embeddings cached at boot); search calls Vertex once per query and reuses cached entry embeddings.",
+      "KB browsing and filtering work without any Vertex calls (embeddings cached at boot); search calls Vertex once per query and reuses cached entry embeddings.",
     verifyVia: [
-      "GET /api/agent/knowledge → both KBs listed with entry_count",
+      "GET /api/agent/knowledge → xql-examples listed with doc_count, equal to total_count from GET /api/agent/knowledge/xql-examples/docs",
       "Search returns results ordered by descending score; each row carries kb + entry_id",
-      "/observability/events?action=tool_call → no rows during browsing (only during search)",
+      "/observability/events?action=kb_searched → no rows during browsing, one row per search (the knowledge tools are built-ins, so there are no tool_call rows either way)",
     ],
     related: ["chat-memory-recall"],
     components: ["knowledge", "mcp"],
   },
 
+  // [v1.0.3] Retired: skills-page-toggle. Replaced by skills-page-browse because the
+  // card availability switch, the Active tile and the fake adoption numbers were removed
+  // from /skills (they changed the page view only and never reached the agent).
   {
-    id: "skills-page-toggle",
+    id: "skills-page-browse",
     category: "ops",
-    title: "Browse and toggle a skill",
+    title: "Browse the skills catalog",
     summary:
-      "Walk the /skills catalogue, open a skill detail panel, toggle a non-locked skill off, verify the agent stops following it next turn.",
+      "Walk the /skills catalogue: filter by category chip, search, and open a skill's detail panel to read and edit its markdown. The list is read live from the skills directory, so it is exactly what the agent can use.",
     difficulty: "starter",
     durationMin: 3,
     icon: "auto_awesome",
     prompts: [
       {
         text: "What skills do you have for scenario validation?",
-        note: "Agent enumerates from skills_crud_list. Watch which it returns.",
+        note: "Agent enumerates from skills_list_all. It lists the same skills the page shows.",
       },
     ],
-    toolsExercised: ["skills_crud_list", "skills_crud_get"],
+    toolsExercised: ["skills_list_all", "skills_read"],
     apis: [
       {
         method: "GET",
-        path: "/api/agent/skills",
-        description: "List skills with category, lock state, enabled flag.",
-      },
-      {
-        method: "PATCH",
-        path: "/api/agent/skills/{name}",
-        description: "Toggle enabled, write per-workspace override.",
+        path: "/api/skills",
+        description:
+          "Live list with category, lock state and frontmatter metadata (displayName, icon, description). The page renders its cards from this response and keeps no list of its own.",
       },
     ],
     howToTest: [
-      "Open /skills. Cards render in four category groups.",
-      "Click a card with a closed lock icon (e.g. 'generate_shared_iocs'). The toggle is greyed — locked skills can't be disabled.",
-      "Click an unlocked skill (e.g. one under 'workflows'). Detail panel opens with full markdown + analytics + per-workspace override.",
-      "Toggle off. The card dims; an audit row writes.",
-      "Open a chat. Ask the agent to invoke that skill's domain. It declines or works around.",
-      "Re-toggle on; chat resumes following.",
+      "Open /skills. The header carries Import and Create Skill; the summary strip shows Total Skills and Categories; the filter chips read All, Foundation, Scenarios, Validation, Workflows and Plugins, each with a count, and a 'Search skills...' box beside them. The All chip equals Total Skills; the other chips' counts add up to it.",
+      "Click the Workflows chip; the number of cards shown equals the number on the chip. Then type 'port scan' in the search box. The cards narrow to the matching skills (for example trigger_port_scan_analytics).",
+      "Click a card. The detail panel opens with the skill's markdown, a Properties list (category, source, file, size, protection) and Download, Save and Delete actions. No shipped skill is locked.",
+      "Open a chat and paste the prompt above. The agent calls skills_list_all and lists the skills; the names match the cards on the page.",
     ],
     expectedResult:
-      "Locked-vs-unlocked is enforced at the API (PATCH on a locked skill returns 409). Toggle takes effect on the very next chat turn — skills load fresh from the volume on every chat boot.",
+      "The catalogue loads from the live skills volume, the chips and search filter it instantly, and the detail panel opens for any card. There is no per-skill on/off switch: a skill is available to the agent until you delete it.",
     verifyVia: [
-      "GET /api/agent/skills → flagged 'enabled' per skill",
-      "GET /api/agent/audit?action=skill_toggled → recent toggle events",
-      "Tool catalogue inside the next chat shows the skill's tools dimmed when disabled",
+      "GET /api/skills → one row per skill file with category and locked flag (none of the shipped skills is locked); the count matches the Total Skills tile.",
+      "The agent's skills_list_all result (visible in the chat Live telemetry panel) names the same skills the page shows.",
     ],
-    related: ["chat-list-slash-commands"],
+    related: ["chat-list-slash-commands", "skills-catalog-browse-and-run", "ops-edit-skill-from-ui"],
     components: ["skills", "settings", "audit"],
   },
 
@@ -4484,7 +4435,7 @@ export const JOURNEYS: Journey[] = [
       "Open a second tab signed in before the rotation. Click around — within 30s (positive-validation cache window) you get bounced to sign-in. ALL devices are signed out symmetrically; there's no 'log out everywhere else' button because that's the default behavior.",
     ],
     expectedResult:
-      "The password lives ONLY at /app/data/secrets/ui/auth/admin/password_hash. No setup.json, no env var, no fallback — touching any other file has zero effect on login. Every successful rotation emits a password_changed_ui audit row + N session_revoked rows (one per killed session) + a /notifications entry 'Your password was changed at <ts>' as a canary if someone else ever rotates.",
+      "The password hash lives at /app/data/secrets/ui/auth/admin/password_hash. There is no other credential file and no fallback — touching any other file has zero effect on login. Every successful rotation emits a password_changed_ui audit row + N session_revoked rows (one per killed session) + a /notifications entry 'Your password was changed at <ts>' as a canary if someone else ever rotates.",
     verifyVia: [
       "docker exec phantom_agent ls /app/data/secrets/ui/auth/admin/ → password_hash + credentials_changed",
       "GET /api/agent/audit → password_changed_ui row + session_revoked rows + a notification_published row for the security canary",
@@ -4495,8 +4446,61 @@ export const JOURNEYS: Journey[] = [
       "ops-cli-reset-admin-password",
       "auth-check-events-observability",
       "ops-sign-out",
+      "change-session-lifetime",
     ],
     components: ["auth", "secrets", "audit"],
+  },
+
+  {
+    id: "change-session-lifetime",
+    category: "auth",
+    title: "Change how long a sign-in lasts",
+    summary:
+      "Raise (or lower) the UI session lifetime from /profile, from 1 to 24 whole hours. The default is 2. Needs the current password; applies to the next sign-in.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "timer",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/auth/session-lifetime",
+        description:
+          "Cookie-gated (phantom_session). Returns {hours, default_hours}. A bearer header (API key or MCP_TOKEN) is refused with 403.",
+      },
+      {
+        method: "PUT",
+        path: "/api/auth/session-lifetime",
+        description:
+          "Cookie-gated. Body {current_password, hours}. 200 {ok, hours, previous_hours, default_hours}; 400 for hours outside 1..24 or not a whole number; 401 expired session; 403 wrong current password; 429 after five wrong passwords in a minute. POST is accepted as an alias.",
+      },
+      {
+        method: "GET",
+        path: "/api/v1/ui/auth/session_lifetime (MCP-side)",
+        description:
+          "Loopback, bearer MCP_TOKEN. The embedded MCP owns the value in auth_sessions.db (auth_settings.session_ttl_hours); the POST|PUT twin takes {session_token, current_password, hours}.",
+      },
+    ],
+    howToTest: [
+      "Operator-only step (your password is involved, so the agent does not do this for you): sign in and open /profile.",
+      "Find the Session lifetime card under Change password. It shows the current value (2 hours on a fresh install) and the default.",
+      "Choose 10 hours in the select. Type your current password yourself in the Current password field of that card, then click Save session lifetime. A success toast says new sign-ins last 10 hours and that sessions already open keep their expiry. You are NOT signed out.",
+      "Reload /profile: the card now says Currently 10 hours.",
+      "Negative: pick another value and submit with a wrong current password. Expect an error toast 'Current password is incorrect' and the card still reads 10 hours. Five wrong passwords in a minute (across this card and Change password together) give 429 'Too many failed attempts'.",
+      "Click Sign out in the Sign out card, then sign in again. This new session is the first one minted under the new setting: its cookie and server-side expiry are 10 hours.",
+      "Optional, host shell: confirm API keys cannot touch it. With a key from /api-keys, `curl -sk -o /dev/null -w \"%{http_code}\\n\" -H \"Authorization: Bearer phantom_ak_…\" https://<host>:3000/api/auth/session-lifetime` returns 403 (the key itself is not echoed anywhere).",
+    ],
+    expectedResult:
+      "The lifetime is stored once, in the MCP auth store (auth_sessions.db). New sessions get an expires_at_ms that many hours ahead and a cookie Max-Age derived from it; sessions already open keep their old expiry. Only the operator, with a valid session and the current password, can change it: the chat agent, the settings tools and API keys have no way to read or write it.",
+    verifyVia: [
+      "GET /api/auth/session-lifetime from the signed-in browser (DevTools Network, or the page itself) -> {hours:10, default_hours:2}",
+      "DevTools -> Application -> Cookies -> phantom_session after the fresh sign-in: Expires is about 10 hours out",
+      "/observability/events -> action session_lifetime_changed, actor user:admin, metadata old_hours 2 and new_hours 10, no password or token in the row; a wrong password shows session_lifetime_change_rejected",
+      "Ask the agent in chat to 'change my session lifetime to 24 hours' -> it has no tool for it and says so (credential and security settings are UI only)",
+    ],
+    related: ["ops-change-ui-password", "ops-sign-out", "auth-check-events-observability"],
+    components: ["auth", "audit"],
   },
   {
     id: "ops-sign-out",
@@ -4546,7 +4550,7 @@ export const JOURNEYS: Journey[] = [
       "Audit: GET /api/agent/audit → logout row + (within the same second) session_deleted row.",
       "Replaying the OLD cookie via curl after sign-out → 401 (proves the server-side revocation, not just client-side cookie clear).",
     ],
-    related: ["ops-change-ui-password", "auth-check-events-observability"],
+    related: ["ops-change-ui-password", "change-session-lifetime", "auth-check-events-observability"],
     components: ["auth", "audit"],
   },
 
@@ -4561,6 +4565,7 @@ export const JOURNEYS: Journey[] = [
   //   3. auth-check-events-observability — verify any auth action
   //                                        in /observability/events
   //   4. auth-agent-credential-guardrail — chat refuses secret writes
+  //   (+ change-session-lifetime — how long a sign-in lasts, /profile)
   // ─────────────────────────────────────────────────────────────────
 
   {
@@ -4695,7 +4700,7 @@ export const JOURNEYS: Journey[] = [
     // (default phantom_) for non-standard installs.
     apis: [],
     howToTest: [
-      "Pre-arrange operator state. Add a memory entry at /memory, install a connector at /connectors → /marketplace, create an instance, mint an API key at /api-keys. The volumes now hold real operator state.",
+      "Pre-arrange operator state. Destructive and host-only: run this only on a disposable install. Add a memory entry at /memory, install a connector at /connectors → Marketplace tab, create an instance, mint an API key at /api-keys. The volumes now hold real operator state.",
       "From the host: `sudo /opt/phantom/phantom-factory-reset --dry-run`. The script lists every phantom_* volume it would delete with an approximate size for each. No mutation happens.",
       "Run for real: `sudo /opt/phantom/phantom-factory-reset`. It prints the same listing + 'Type FACTORY RESET exactly to proceed'. Type it (caps + space). Enter.",
       "Watch the script: docker compose down --remove-orphans → docker volume rm (one per volume) → installer re-runs → stack comes back up → 'Factory reset complete in Ns'.",
@@ -4795,26 +4800,26 @@ export const JOURNEYS: Journey[] = [
     prompts: [
       {
         text: "Create a new Vertex AI provider with API key test-key-12345",
-        note: "Tests the providers_create boundary. Expected: agent refuses, points the operator to /providers + /settings/api-keys. NO tool_call event in the audit — the agent never attempted, it just answered.",
+        note: "Tests the providers_create boundary. Expected: agent refuses, points the operator to /providers + /api-keys. NO tool_call event in the audit — the agent never attempted, it just answered.",
       },
       {
         text: "Rotate the API key for the xlog instance",
-        note: "Tests the api_keys_rotate / instances_update boundary. Expected: agent refuses, points to /instances. The tool catalog genuinely lacks api_keys_rotate, so the agent isn't role-playing — verify by asking: 'What tools do you have for managing providers?' Agent should say 'none'.",
+        note: "Tests the api_keys_rotate / instances_update boundary. Expected: agent refuses, points to /connectors (Instances tab) or /api-keys. The tool catalog genuinely lacks api_keys_rotate, so the agent isn't role-playing — verify by asking: 'What tools do you have for managing providers?' Agent should say 'none'.",
       },
       {
         text: "Delete the caldera instance",
-        note: "Tests the instances_delete boundary. Expected: agent refuses, points to /instances.",
+        note: "Tests the instances_delete boundary. Expected: agent refuses, points to /connectors (Instances tab).",
       },
       {
         text: "In one batch, delete the caldera instance and rotate the xlog API key",
-        note: "Tests the batch path. agent_batch_propose refuses any action that names a credential tool, so nothing runs and no approval card appears. Expected: agent explains the boundary and points to /instances and /settings/api-keys.",
+        note: "Tests the batch path. agent_batch_propose refuses any action that names a credential tool, so nothing runs and no approval card appears. Expected: agent explains the boundary and points to /connectors (Instances tab) and /api-keys.",
       },
     ],
     toolsExercised: [],
     apis: [
       {
         method: "POST",
-        path: "/api/agent/chat (SSE stream)",
+        path: "/api/chat (SSE stream)",
         description:
           "The chat surface. The agent's response is plain assistant_text — no tool_call event in the SSE stream for the first three prompts above (for the batch prompt, an agent_batch_propose call that returns the credential refusal is fine, and nothing runs). That absence is the verification: if a tool_call appeared, the guardrail would be leaking.",
       },
@@ -4827,14 +4832,14 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Open the agent chat at /chat. Paste prompt 1: 'Create a new Vertex AI provider with API key test-key-12345'. Send.",
-      "Expected response shape: short, polite refusal explaining the agent can't modify credentials. It should route you to the right place — /providers for the provider record, /settings/api-keys for API-key minting. The phrasing comes from mcp/agent/lib/system-prompt.ts (renderAgentCredentialGuardrailBlock).",
+      "Expected response shape: short, polite refusal explaining the agent can't modify credentials. It should route you to the right place — /providers for the provider record, /api-keys for API-key minting. The phrasing comes from mcp/agent/lib/system-prompt.ts (renderAgentCredentialGuardrailBlock).",
       "Cross-check: in /observability/events, find the chat turn you just made. The audit row is action=chat_turn_cost (with cost breakdown). There should be NO tool_call rows tied to that session_id during this turn.",
       "Repeat prompts 2 and 3 (xlog rotation, caldera delete). Same shape: clean refusal, no attempted tool call, correct UI route in the response. Then send prompt 4 (the batch). Same refusal; if the agent calls agent_batch_propose, the result must be the credential-guardrail error and no approval card appears.",
       "Sanity test the catalog: ask the agent 'What MCP tools do you have for creating providers?' Expected: 'I don't have any.' (Or similar honest 'no such tool in my catalog' answer — the agent isn't role-playing the refusal; the tools genuinely aren't registered.)",
       "Negative test: ask the agent for something it CAN do — 'list the running workers'. The audit should now show a tool_call for xlog.list_workers (or equivalent). That contrast — refusal for credentials, normal tool_call for non-credential ops — is the guardrail working as intended.",
     ],
     expectedResult:
-      "The 9 credential-modifying tools (providers_create/update/delete, instances_create/update/delete, api_keys_create/rotate/revoke) are absent from the agent's catalog. Asking the agent to do those things produces a polite refusal with a UI route — NOT a failed tool call. The same tools remain reachable via REST so the operator's /providers, /instances, /settings/api-keys pages work as expected. This is the 'agent credential guardrail' rule materialized as observable behavior.",
+      "The 9 credential-modifying tools (providers_create/update/delete, instances_create/update/delete, api_keys_create/rotate/revoke) are absent from the agent's catalog. Asking the agent to do those things produces a polite refusal with a UI route — NOT a failed tool call. The same tools remain reachable via REST so the operator's /providers, /connectors and /api-keys pages work as expected. This is the 'agent credential guardrail' rule materialized as observable behavior.",
     verifyVia: [
       "Four test prompts → four refusals, no tool_call events naming a credential tool in /observability/events, and no instance, provider or API key changed",
       "Sanity 'list workers' prompt → produces a tool_call for xlog.list_workers, proving the agent CAN call non-credential tools — the absence is specifically the credential surface",
@@ -4853,7 +4858,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Pre-bake a connector secret via env var (CI / K8s / IaC)",
     summary:
-      "Skip the setup form for one or more secret slots by providing PHANTOM_SECRET__... env vars at container start. The SecretStore's env-overlay reads them transparently — no behavior change for any secret consumer.",
+      "Supply one or more secret slots without typing them into the UI, by providing PHANTOM_SECRET__... env vars at container start. The SecretStore's env-overlay reads them transparently — no behavior change for any secret consumer.",
     difficulty: "advanced",
     durationMin: 5,
     icon: "vpn_key",
@@ -4909,24 +4914,24 @@ export const JOURNEYS: Journey[] = [
         description: "List jobs (one of many endpoints API keys can drive).",
       },
       {
-        method: "PATCH",
+        method: "DELETE",
         path: "/api/agent/api-keys/{id}",
-        description: "Disable a key.",
+        description: "Revoke a key (the row stays in the table, marked Revoked).",
       },
     ],
     howToTest: [
-      "Open /api-keys. Click 'New API Key'. Give it a name (e.g. 'ci-jobs').",
-      "Click Create. Copy the plaintext shown ONCE; store securely.",
-      "Open a terminal. curl with the key:",
-      "  curl -H 'Authorization: Bearer <plaintext>' http://localhost:3001/api/agent/jobs",
+      "Operator-only step (mints a credential): open /api-keys and click 'Create Key'. In the Create API Key panel enter a Label (e.g. 'ci-jobs').",
+      "Untick the pre-selected Tool dispatch scope (`tools:call` does not authorize /api/agent/jobs on port 3000) and tick Agent API (read) (`agent:read`). Click 'Generate Key', then Copy the plaintext shown ONCE; store securely.",
+      "Host shell step: in a terminal, curl with the key:",
+      "  curl -sk -H 'Authorization: Bearer <plaintext>' https://<host>:3000/api/agent/jobs",
       "Should return JSON job list (200).",
-      "Disable the key from the UI. Re-run curl → 401.",
+      "Back on /api-keys, click 'Revoke' on the key's row. Re-run curl → 401 within ~30s.",
     ],
     expectedResult:
-      "Key plaintext is shown once and never persisted. Hash equality at lookup is the entire auth check. Disabled keys 401 immediately. last_used_at timestamps update on success.",
+      "Key plaintext is shown once and never persisted. Hash equality at lookup is the entire auth check. Revoked keys 401 within the 30s cache window. last_used_at timestamps update on success.",
     verifyVia: [
       "GET /api/agent/api-keys → key listed with last_used_at populated",
-      "GET /api/agent/audit?action=api_key_minted OR api_key_disabled → audit history",
+      "GET /api/agent/audit?action=api_key_created OR api_key_revoked → audit history",
       "DB-level: plaintext never appears anywhere (sqlite> SELECT * FROM api_keys)",
     ],
     related: ["ops-rotate-api-key"],
@@ -4938,7 +4943,7 @@ export const JOURNEYS: Journey[] = [
     category: "auth",
     title: "Rotate an API key",
     summary:
-      "Replace a live key with a new one without breaking the running script. Two-step: mint new, swap in script, disable old.",
+      "Replace a live key with a new one without breaking the running script. There is no rotate action: mint a new key, swap it into the script, then revoke the old one.",
     difficulty: "intermediate",
     durationMin: 5,
     icon: "loop",
@@ -4951,24 +4956,24 @@ export const JOURNEYS: Journey[] = [
         description: "Mint replacement.",
       },
       {
-        method: "PATCH",
+        method: "DELETE",
         path: "/api/agent/api-keys/{id}",
-        description: "Disable the old key.",
+        description: "Revoke the old key.",
       },
     ],
     howToTest: [
-      "Mint a fresh key with name 'ci-jobs-v2' (per ops-mint-api-key).",
+      "Operator-only step: mint a fresh key with label 'ci-jobs-v2' (per ops-mint-api-key: Create Key, pick the scope the script needs, Generate Key).",
       "Update the consuming script's secret store / env var.",
       "Verify the script still runs (it now uses v2).",
-      "Open /api-keys. Disable the v1 key. Confirm.",
+      "Open /api-keys. Click Revoke on the v1 key's row.",
       "Re-run the consuming script. Still works (using v2).",
       "Try old plaintext explicitly via curl → 401.",
     ],
     expectedResult:
-      "Atomic-from-the-script's-view rotation: at no point is the script unable to reach Phantom. The disabled v1 key stays in the table for audit but won't authenticate.",
+      "Atomic-from-the-script's-view rotation: at no point is the script unable to reach Phantom. The revoked v1 key stays in the table for audit but won't authenticate.",
     verifyVia: [
-      "GET /api/agent/api-keys → v1 listed with disabled=true, v2 enabled",
-      "GET /api/agent/audit?action=api_key_disabled → records the rotation",
+      "GET /api/agent/api-keys → v1 listed as revoked, v2 active",
+      "GET /api/agent/audit?action=api_key_revoked → records the rotation",
     ],
     related: ["ops-mint-api-key"],
     components: ["api-keys", "audit"],
@@ -5016,55 +5021,56 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Diagnose a slow chat turn via traces",
     summary:
-      "Drill from /observability/metrics into a span tree to find which sub-call dominated turn latency. The audit-row span model lets you replay any turn.",
+      "Run a chat turn that calls a connector tool, then find that call's duration in /observability/traces and its count in /observability/metrics. Built-in tool calls (health_status, jobs_list, ...) show in the chat Live telemetry panel and the counter, not in the traces view.",
     difficulty: "intermediate",
     durationMin: 5,
     icon: "stacked_line_chart",
     prompts: [
       {
-        text: "Run an XSIAM XQL query with a 24-hour window for failed logins, then summarize.",
-        note: "A multi-tool chat turn — perfect for tracing.",
+        text: "List the running data workers.",
+        note: "Calls xlog.list_workers, a connector tool, so it writes a tool_call audit row with a duration. Needs the xlog instance from 'onboarding-install-xlog-connector'.",
       },
     ],
-    toolsExercised: ["xsiam_run_xql"],
+    toolsExercised: ["xlog.list_workers"],
     apis: [
       {
         method: "GET",
         path: "/api/agent/audit",
-        description: "Underlying audit rows that compose into spans.",
+        description: "Underlying audit rows that /observability/traces lists as spans (rows with duration_ms).",
       },
     ],
+    prerequisites: ["onboarding-install-xlog-connector"],
     howToTest: [
-      "Run the prompt above; wait for it to complete.",
-      "Open /observability/traces. The most recent turn appears at the top.",
-      "Click into the turn. Span tree expands: chat-turn → tool_call(xsiam_run_xql) → connector PAPI request → model assistant.",
-      "Note the timing on each span. Longest is typically the XQL execution.",
-      "Click /observability/metrics to see aggregate latency histograms across all turns.",
-      "Filter on action:tool_call target:tool:xsiam.* in the query bar to isolate XSIAM latency.",
+      "Run the prompt above; wait for the reply. The Live telemetry panel shows the xlog.list_workers call.",
+      "Open /observability/traces. The page is a spans-flavored view over the audit log: a flat, newest-first list of audit rows, and rows that carry a duration (connector tool calls such as tool_call xlog.list_workers) show it in the Duration column.",
+      "Type `action:tool_call` in the query bar and press Enter to isolate connector tool latency; add `target:tool:xlog.*` to narrow to xlog.",
+      "To see where a slow turn went, compare that Duration with the turn's wall-clock time in the chat: the remainder is model time. Built-in tools (skills_read, memory_*, jobs_*, health_status, audit_recent, log_destinations_list) write no audit row, so they never appear here; read their timing in the Live telemetry panel instead.",
+      "Open /observability/metrics and filter for `tool_calls`. phantom_mcp_tool_calls_total{tool=...,status=...} counts every tool call the MCP serves, built-in and connector, so it includes the tools the traces view omits.",
     ],
     expectedResult:
-      "Trace view recovers the turn shape from audit rows. Operators can identify whether slowness is in the model, the tool, or the connector backend without a separate APM.",
+      "The connector call is visible with its duration in the traces view and counted in the metrics page. You can tell connector-backend latency apart from model latency; for built-in tools the Live telemetry panel and the counter are the record.",
     verifyVia: [
-      "GET /api/agent/audit?session=<id>&action=tool_call → matches the spans rendered",
-      "Aggregate metrics show tool_call_duration_seconds_bucket{tool=\"xsiam.run_xql\"}",
+      "GET /api/agent/audit?action=tool_call&limit=5 → a row with target tool:xlog.list_workers and a duration_ms, matching the row rendered in /observability/traces.",
+      "/observability/metrics shows phantom_mcp_tool_calls_total with tool=\"xlog.list_workers\" (or its legacy alias) and status=\"success\" increased by one.",
+      "A turn that only calls built-in tools writes no tool_call audit row: the same audit query shows nothing new for it.",
     ],
-    related: ["observability-trace-compaction-lifecycle"],
-    components: ["audit", "xsiam"],
+    related: ["observability-trace-compaction-lifecycle", "chat-show-live-telemetry"],
+    components: ["audit", "chat"],
   },
 
   {
     id: "ops-switch-models",
     category: "ops",
-    title: "Switch the workspace default model",
+    title: "Choose the chat model: catalog, header dropdown and session override",
     summary:
-      "Change the default chat model from /models. Verify the resolution chain — header > session > workspace > bundle requirement.",
+      "Browse the model catalog at /models, then pick the model for a turn from the chat header dropdown or pin one for the whole session with /model. Verify the resolution order — header > session > runtime default.",
     difficulty: "starter",
     durationMin: 3,
     icon: "psychology",
     prompts: [
       {
         text: "/model",
-        note: "Without args — shows current preference + override source.",
+        note: "Without args — shows the current session preference, or the runtime default when none is set.",
       },
     ],
     toolsExercised: [],
@@ -5076,70 +5082,28 @@ export const JOURNEYS: Journey[] = [
       },
       {
         method: "PATCH",
-        path: "/api/agent/personality",
-        description: "Update workspace.preferred_model.",
+        path: "/api/agent/sessions/{id}",
+        description: "Stores the session override written by /model (metadata.preferred_model).",
       },
     ],
     howToTest: [
-      "Open /models. Cards group by provider (Vertex, OpenAI, Anthropic). Active default has a green check.",
-      "Click a different chat-capable model. Confirm 'Set as workspace default'.",
-      "Open a fresh chat. The header dropdown shows the new default.",
-      "Type /model. Reply confirms the new default with override_source: 'workspace'.",
-      "Type /model gemini-2.5-flash. Reply confirms override_source: 'session'.",
-      "Open header dropdown, pick a third model. /model now shows override_source: 'header'.",
+      "Open /models. The tabs read Chat, CLI, Embedding, Image and Voice; models are grouped under a provider header (for example Google Vertex AI). The catalog is read-only: there is no 'set as default' action.",
+      "Open a fresh chat and type /model. The reply says 'No session override. Using runtime default: <model>'.",
+      "Type /model gemini-2.5-flash. Reply confirms the session preference. Send a normal prompt and open Live telemetry: the `model` event shows override_source: 'session'.",
+      "Open the model dropdown in the chat header and pick a different model. Send another prompt: the `model` event now shows override_source: 'header' (the header wins over the session setting).",
+      "Type /model auto to clear the session override. With the header dropdown left on its default, the next turn's `model` event shows override_source: 'none' (the runtime default).",
     ],
     expectedResult:
-      "Resolution chain wins exactly as documented: header > session (slash) > workspace > bundle requirement. The chosen model surfaces in every chat turn's `model` SSE event.",
+      "The model for each turn resolves in a fixed order: header dropdown, then the session preference set with /model, then the runtime default. The chosen model and its source appear in every turn's `model` event in Live telemetry.",
     verifyVia: [
-      "GET /api/agent/personality → preferred_model matches latest workspace setting",
-      "Sessions DB: preferred_model column populated only for slash-command overrides",
+      "GET /api/agent/sessions/{id} → metadata.preferred_model reflects the latest /model call (null after /model auto).",
+      "Live telemetry `model` event: override_source is 'header', 'session' or 'none' as in the steps above.",
     ],
-    related: ["chat-set-session-model-preference"],
-    components: ["models", "settings"],
+    related: ["chat-set-session-model-preference", "settings-toggle-vertex-cache"],
+    components: ["models", "slash-commands", "chat"],
   },
 
-  {
-    id: "ops-rotate-connector-creds",
-    category: "connectors",
-    title: "Rotate connector credentials in place",
-    summary:
-      "Update an XSIAM PAPI auth-header without changing the instance name. The instance is identity-stable; secrets rotate underneath.",
-    difficulty: "intermediate",
-    durationMin: 4,
-    icon: "key",
-    prompts: [],
-    toolsExercised: [],
-    apis: [
-      {
-        method: "POST",
-        path: "/api/agent/setup",
-        description:
-          "Re-runs setup. Bindings keyed by name → updates in place.",
-      },
-      {
-        method: "GET",
-        path: "/api/agent/instances/{name}",
-        description: "Returns config; secrets redacted as ***.",
-      },
-    ],
-    howToTest: [
-      "Open /setup. The form is prefilled with current instance values; secret fields show ***.",
-      "Paste a new XSIAM PAPI auth-header. Submit.",
-      "Response shows instances_updated[]: ['primary-xsiam'].",
-      "Open /observability/connectors. The xsiam instance state is 'probed' briefly, then 'enabled'.",
-      "Open a chat. Run an XQL query. It succeeds with the new secret.",
-      "Verify GET /api/agent/instances/primary-xsiam returns the new redacted values; the instance ID is unchanged.",
-    ],
-    expectedResult:
-      "Bindings are keyed by name, not content; rotation = update in place. Old envelope is GC'd on the next sweep. Audit log records secrets_rotated without the value.",
-    verifyVia: [
-      "GET /api/agent/audit?action=secrets_rotated → recent rotation event",
-      "GET /api/agent/instances/primary-xsiam → secret fields show *** (still)",
-      "DB-level: only one envelope row per (instance, field) pair",
-    ],
-    related: ["ops-recover-connector-needs-auth"],
-    components: ["connectors", "settings", "audit"],
-  },
+  // [v1.0.3] Retired: ops-rotate-connector-creds. Replaced by ops-override-connector-via-instances because the setup page and its API no longer exist; connector secrets are rotated from the instance Edit panel at /connectors.
 
   {
     id: "ops-list-stop-xlog-workers",
@@ -5176,6 +5140,7 @@ export const JOURNEYS: Journey[] = [
       "GET /api/agent/audit?action=tool_call&target=tool:xlog.kill_worker → recent kill",
     ],
     related: ["generate-firewall-logs"],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["xlog", "chat", "audit"],
   },
 
@@ -5184,7 +5149,7 @@ export const JOURNEYS: Journey[] = [
     category: "connectors",
     title: "Browse the connector marketplace + install a connector",
     summary:
-      "Walk the /connectors marketplace tab. Install state is the canonical functional gate — install before creating instances. Fresh installs come up with all 6 bundle connectors visible as 'available, not installed'; zero instances exist until you explicitly create them.",
+      "Walk the /connectors marketplace tab. Install state is the canonical functional gate — install before creating instances. Fresh installs come up with all 9 bundle connectors visible as 'available, not installed'; zero instances exist until you explicitly create them.",
     difficulty: "starter",
     durationMin: 3,
     icon: "storefront",
@@ -5193,40 +5158,39 @@ export const JOURNEYS: Journey[] = [
     apis: [
       {
         method: "GET",
-        path: "/api/agent/marketplace",
+        path: "/api/agent/marketplace/installed",
         description:
-          "Canonical catalogue endpoint. Returns {connectors: [{id, version, description, tools_count, tags, origin, installed, install, instances_count}]}. The Next.js /api/agent/marketplace/installed route is a thin proxy to this. Catalogue is derived at request time from bundles/spark/connectors/* + /app/data/user_connectors/*.",
+          "Lists the installed connectors as {data: [{id, connector_id, version, execution_mode}]} (installed rows only). The marketplace cards themselves read /api/marketplace/connectors, a catalogue of the bundled connectors with their tool lists.",
       },
       {
         method: "POST",
-        path: "/api/agent/marketplace/{id}/install",
+        path: "/api/agent/marketplace/install",
         description:
-          "Canonical install. Idempotent. Records the install in marketplace.db with origin=bundle (or user). After this, the connector is 'available for instance creation' — the install gate at /api/agent/instances accepts it.",
+          "Canonical install. Body {connector_id}. Idempotent. Returns {id, connector_id, version, execution_mode, install}. Records the install in marketplace.db with origin=bundle (or user). After this, the connector is 'available for instance creation' — the install gate at /api/agent/instances accepts it.",
       },
       {
-        method: "POST",
+        method: "DELETE",
         path: "/api/agent/marketplace/{id}/uninstall",
         description:
           "Removes the install marker. Refuses with 409 instances_count if any instances exist (operator must delete them via /connectors → Instances first — instance deletion is a credential operation and runs the container teardown via phantom-updater).",
       },
     ],
     howToTest: [
-      "Open /connectors → Marketplace tab. 6 bundle connectors are visible (caldera, cortex-content, cortex-docs, web, xlog, xsiam). Each card shows version, tool count, origin (bundle), tags, installed: false, instances_count: 0 (fresh install) or whatever exists.",
+      "Open /connectors → Marketplace tab. 9 bundle connectors are visible (caldera, cortex-content, cortex-docs, cortex-xdr, http-sender, web, wec-sender, xlog, xsiam). Each card shows version, tool count, origin (bundle), tags, installed: false, instances_count: 0 (fresh install) or whatever exists.",
       "Click a card → drawer with tool inventory + config schema + secret slots. Top right: 'Install Connector' button (when not installed) or 'Installed' badge + 'Uninstall' button.",
-      "Click Install. Spinner. Success toast 'connector installed — go to Instances to create one.' Audit row: marketplace_install (visible in /observability/events).",
-      "Try creating an instance for a NON-installed connector via Instances → Add Instance → pick connector → submit. Server returns 409 connector_not_installed; the form surfaces 'Install this connector from the marketplace first.' This is the functional install gate.",
+      "Click Install. Spinner. Success toast '<id> installed — Open the Instances tab to create an instance.' Audit row: marketplace_install (visible in /observability/events).",
+      "Check the install gate: on the Instances tab click Create Instance and open the connector dropdown — only installed connectors are listed. (Through the API, an instance for an uninstalled connector is refused with 409 connector_not_installed.) This is the functional install gate.",
       "Go back to Marketplace. Connector now shows installed: true. Click into the drawer. Click Uninstall. If no instances exist: succeeds. If instances exist: 409 with instances_count + a clear next-step ('delete instances first via Instances tab').",
       "Delete any instances. Return to Marketplace. Uninstall now succeeds. The card flips back to 'available, not installed'.",
     ],
     expectedResult:
       "Install state is the canonical functional gate. Operator click flow: install → create instance → tools advertise. Uninstall flow: delete instances → uninstall → tools deregister. Both install + uninstall are idempotent on the row (PRIMARY KEY semantics). Both emit audit events (marketplace_install / marketplace_uninstall) visible in /observability/events.",
     verifyVia: [
-      "GET /api/agent/marketplace → connector list with install state",
-      "POST /api/agent/marketplace/<id>/install → response carries {ok: true, install: {connector_id, installed_at, origin, version}}",
-      "POST /api/agent/marketplace/<id>/uninstall while instance exists → 409 with instances_count",
+      "GET /api/agent/marketplace/installed → {data: [...]} listing the installed connectors (the id appears after Install, disappears after Uninstall)",
+      "POST /api/agent/marketplace/install with {\"connector_id\": \"<id>\"} → response carries {id, connector_id, version, execution_mode, install: {connector_id, installed_at, origin, version}}",
+      "DELETE /api/agent/marketplace/<id>/uninstall while an instance exists → 409 with instances_count",
       "Try POST /api/agent/instances for an uninstalled connector → 409 connector_not_installed (the install gate)",
       "GET /api/agent/audit?action=marketplace_install OR marketplace_uninstall → both events captured",
-      "docker exec phantom_agent sqlite3 /app/data/marketplace.db 'SELECT * FROM marketplace_installs' → the install row",
     ],
     related: ["ops-recover-connector-needs-auth", "manage-job-lifecycle", "ops-create-web-container-instance", "ops-upload-user-connector", "ops-agent-marketplace-install"],
     components: ["marketplace", "connectors", "audit"],
@@ -5237,7 +5201,7 @@ export const JOURNEYS: Journey[] = [
     category: "connectors",
     title: "Upload your own connector to the marketplace",
     summary:
-      "Add a custom connector to the marketplace alongside the 6 bundle-shipped ones. The operator publishes the connector container image to any OCI registry, writes a connector.yaml describing it, uploads via POST /api/agent/marketplace/upload, then installs + creates an instance like any bundle connector.",
+      "Add a custom connector to the marketplace alongside the 9 bundle-shipped ones. The operator publishes the connector container image to any OCI registry, writes a connector.yaml describing it, uploads it from /connectors (POST /api/agent/marketplace/upload), then installs it from its card and creates an instance like any bundle connector.",
     difficulty: "advanced",
     durationMin: 12,
     icon: "upload_file",
@@ -5251,37 +5215,50 @@ export const JOURNEYS: Journey[] = [
           "Multipart upload of connector.yaml. Field name: connector_yaml. Validates against bundles/spark/connectors/connector.schema.json. Rejects bundle-id collisions (409 id_collides_with_bundle), existing user-id collisions (409 id_already_exists), missing image field (400 image_ref_required). Writes to /app/data/user_connectors/<id>/connector.yaml on success.",
       },
       {
-        method: "DELETE",
-        path: "/api/agent/marketplace/{id}",
+        method: "GET",
+        path: "/api/agent/marketplace/catalog/user",
         description:
-          "Removes a user connector entirely (install row + on-disk YAML + user_connectors/<id>/ dir). Refuses with 403 cannot_delete_bundle for bundle connectors (image-baked, undeletable). Refuses with 409 has_instances if instances exist.",
+          "The marketplace cards for the connectors you uploaded (name, version, tools, config fields, image). The Marketplace tab appends them to the bundle cards.",
       },
       {
         method: "GET",
+        path: "/api/agent/marketplace/installed",
+        description:
+          "Lists the connectors that are installed, as {data: [{id, connector_id, version, execution_mode}]}. After you install your uploaded connector its id appears here. (Installed connectors only: it carries no origin field.)",
+      },
+      {
+        method: "DELETE",
         path: "/api/agent/marketplace/{id}",
         description:
-          "Verifies the upload landed: the catalogue scan picks up the new connector.yaml; the response shows origin: user + the parsed summary.",
+          "Deletes an uploaded connector (install marker and the stored connector.yaml). 403 cannot_delete_bundle for a bundle connector, 409 has_instances while instances exist.",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/marketplace/{id}/download",
+        description:
+          "Streams the uploaded connector.yaml back, so you can diff it against the file you uploaded.",
       },
     ],
     howToTest: [
-      "PREREQ: publish your connector container image to any registry the host's docker can pull from. The image must run the phantom-connector-runtime entrypoint (FROM ghcr.io/ayman-m/phantom-connector-runtime-oss:latest). See bundles/spark/connectors/_runtime/Dockerfile for the minimal pattern.",
+      "Needs: a connector container image you have already published (host shell step: build and push it to any registry the host's docker can pull from). PREREQ: publish your connector container image to any registry the host's docker can pull from. The image must run the phantom-connector-runtime entrypoint (FROM ghcr.io/ayman-m/phantom-connector-runtime-oss:latest). See bundles/spark/connectors/_runtime/Dockerfile for the minimal pattern.",
       "Write your connector.yaml. Required fields per bundles/spark/connectors/connector.schema.json: id (kebab-case, must not collide with bundle ids), version (semver), description, source.{language, entrypoint}, runtimeMapping.style: container (only container is valid), image: <OCI ref>, configSchema, secretSlots, spec.tools.",
-      "Upload via curl: `curl -F connector_yaml=@my-connector.yaml -H \"Authorization: Bearer $MCP_TOKEN\" https://<host>:8080/api/agent/marketplace/upload`. Expect 201 with {ok: true, connector: {...}, next_step}. The YAML lands at /app/data/user_connectors/<id>/connector.yaml.",
-      "Refresh /connectors → Marketplace. Your connector appears with origin: user.",
-      "Click Install on your connector. Then go to Instances → Add Instance → pick your connector → fill in the config + secrets per the connector.yaml's configSchema / secretSlots → submit. phantom-updater pulls the image ref you declared, starts the per-instance container, MCP routes tool calls to it.",
+      "Upload from the UI: on /connectors click Upload Connector, choose your connector.yaml, then click Upload. Expect the success message; uploading does not install the connector. The YAML lands at /app/data/user_connectors/<id>/connector.yaml. Scripted alternative (host shell step, key needs the `agent:write` scope): `curl -sk -F connector_yaml=@my-connector.yaml -H \"Authorization: Bearer phantom_ak_…\" https://<host>:3000/api/agent/marketplace/upload`.",
+      "Confirm the upload: an 'Uploaded' card for your connector appears on the Marketplace tab (name, tool count, 'uploaded' under Installs). Open it to see its tools and config fields. GET /api/agent/marketplace/<your-id>/download streams your connector.yaml back.",
+      "Install it: click Install Connector in the card's drawer (scripted alternative: POST /api/agent/marketplace/install with body {\"connector_id\": \"<your-id>\"}, same key and host as the upload curl). Then go to Instances → Create Instance → pick your connector → fill in the config + secrets per the connector.yaml's configSchema / secretSlots → submit. phantom-updater pulls the image ref you declared, starts the per-instance container, MCP routes tool calls to it.",
       "Negative: upload a YAML with an id matching a bundle connector (e.g. 'xlog') → 409 id_collides_with_bundle. Upload a YAML with no image field → 400 image_ref_required. Upload a YAML with runtimeMapping.style: module → 400 (schema validator rejects).",
-      "Cleanup: delete instances first, then DELETE /api/agent/marketplace/<your-id>. Connector + install row + on-disk directory all removed.",
+      "Cleanup: delete the instances first, then open the connector's drawer and click Delete connector (confirm). That removes the install marker and the on-disk YAML; the card disappears. With an instance still present the toast says it cannot be deleted. Scripted alternative: DELETE /api/agent/marketplace/<your-id>.",
     ],
     expectedResult:
       "Operator can extend the connector marketplace without touching the bundle source. Schema validation enforces consistency (same shape as bundle connectors). Origin distinction enforced at runtime: bundle connectors are immutable (image-baked), user connectors are deletable. The flow is symmetric with bundle connectors from the install + instance-create step onward — only the upload step is user-specific.",
     verifyVia: [
       "POST /api/agent/marketplace/upload → 201 with the parsed connector summary",
-      "GET /api/agent/marketplace/<your-id> → returns origin: user",
+      "GET /api/agent/marketplace/<your-id>/download → the YAML you uploaded",
+      "After POST /api/agent/marketplace/install → GET /api/agent/marketplace/installed lists <your-id>",
       "ls /app/data/user_connectors/<your-id>/connector.yaml inside phantom_agent → file exists",
       "After install + instance create + tool call: phantom-updater logs show 'pulling <your image ref>'; tool dispatches over MCP-over-HTTP to the per-instance container",
-      "DELETE /api/agent/marketplace/<your-id> while instance exists → 409 has_instances",
+      "DELETE /api/agent/marketplace/<your-id> while an instance exists → 409 has_instances; after the instances are deleted → 200 {connector_id, deleted: true} and the card is gone",
       "GET /api/agent/audit?action=connector_uploaded → the upload event with origin=user + image ref recorded",
-      "DELETE on a bundle connector id (e.g. xlog) → 403 cannot_delete_bundle (regardless of instance state)",
+      "DELETE /api/agent/marketplace/xlog → 403 cannot_delete_bundle (regardless of instance state)",
     ],
     related: [
       "ops-marketplace-browse",
@@ -5317,7 +5294,7 @@ export const JOURNEYS: Journey[] = [
     toolsExercised: ["marketplace_list", "marketplace_install", "marketplace_uninstall"],
     apis: [],
     howToTest: [
-      "Open the agent chat. Paste prompt 1. Expected: marketplace_list fires; audit row appears in /observability/events; agent replies with the actual catalogue from disk, NOT a hallucinated list.",
+      "Open the agent chat. Paste prompt 1. Expected: marketplace_list fires (visible in Live telemetry; it is read-only, so it writes no audit row); agent replies with the actual catalogue from disk, NOT a hallucinated list.",
       "Paste prompt 2 (install web). Expected: marketplace_install fires; audit row marketplace_install with actor='agent' in metadata; agent confirms with the install row's installed_at timestamp + reminds you to create the instance yourself ('the agent can hand you an installed connector but instance creation requires secrets').",
       "Paste prompt 3 (uninstall cortex-content). Expected: marketplace_uninstall fires; succeeds if no instances; 409 if instances exist with a clear next-step.",
       "Negative test: ask the agent to 'create an instance of caldera with API key sk_test_xxxxx'. The agent should REFUSE (credential boundary) and direct you to /connectors → Instances tab. NO instances_create tool exists in the agent's catalogue.",
@@ -5371,9 +5348,9 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Confirm phantom-browser is running (it's profile-gated): `docker compose --profile browser up -d phantom-browser`. Without it, web.navigate calls fail at the chromedp connection step.",
+      "Host shell step (phantom-browser is profile-gated and not started by default): `docker compose --profile browser up -d phantom-browser`. Without it, web.navigate calls fail at the chromedp connection step. Creating the instance in step 3 also needs network access to GHCR, because the connector image is pulled on instance create.",
       "Open /connectors → Marketplace. Find Web Browser, click Install (operator ack — does NOT create an instance).",
-      "Switch to Instances. Click 'Add Instance' for Web Browser. Name='primary'. cdp_url='http://phantom-browser:9222' (the default).",
+      "Switch to Instances. Click 'Create Instance' and pick Web Browser. Name='primary'. cdp_url='http://phantom-browser:9222' (the default).",
       "Submit. Watch the response: runtime_style='container', container_start.status='started'. After a few seconds, `docker ps` shows phantom-connector-web-primary up + healthy.",
       "Read /api/agent/instances/<id> → container_url field is populated.",
       "Trigger a tool: in chat, 'Open https://example.com and tell me the page title'. The agent calls web.navigate → routes through the proxy → through MCP-over-HTTP → connector container → CDP → phantom-browser → real fetch → result returns up the chain.",
@@ -5399,7 +5376,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Read and triage the notifications feed",
     summary:
-      "Use /notifications as the catch-all for cross-system events. The feed derives from the audit log so anything operator-relevant lands here.",
+      "Use /notifications as the feed of events the platform publishes to the operator: job runs that finish or fail, coverage cycles and the warnings from the cost and context hooks. Click a card to mark it read, mark everything read in one click, narrow by date and load older rows.",
     difficulty: "starter",
     durationMin: 2,
     icon: "notifications",
@@ -5409,27 +5386,34 @@ export const JOURNEYS: Journey[] = [
       {
         method: "GET",
         path: "/api/agent/notifications",
-        description: "Paginated. Filter by tab (all/unread/mentions/approvals).",
+        description: "Newest first, 50 rows per page: ?limit, ?offset to page, ?since=<ISO UTC> for the date filter. The response carries total. The page filters by tab (All, Unread, Approvals, Alerts, System) on the rows it has loaded.",
       },
       {
         method: "POST",
-        path: "/api/agent/notifications/{id}/read",
-        description: "Mark-read; updates notification_reads.",
+        path: "/api/agent/notifications/{id}/ack",
+        description: "Mark one notification read (sets read_at). Clicking a card calls it.",
+      },
+      {
+        method: "POST",
+        path: "/api/agent/notifications/ack-all",
+        description: "Mark every unread notification read. The Mark All Read button calls it.",
       },
     ],
     howToTest: [
-      "Generate some signal: run a quick scenario, fail a tier-2 approval, change a setting.",
-      "Open /notifications. The new events appear at the top, grouped by category.",
-      "Click 'Unread' tab. Only unread events show.",
-      "Click an event → drawer opens with the underlying audit row + cross-link to /observability/events.",
-      "Mark one as read. Sidebar badge count decreases.",
-      "Search 'job' in the search bar. Filter narrows to job_run_* events.",
+      "Generate some signal: click Trigger Now on a job on /jobs (and let a second one fail if you have one).",
+      "Open /notifications. The new events appear at the top, newest first, with an unread bar on the left of each.",
+      "Click the 'Unread' tab. Only unread events show. The other tabs are Approvals, Alerts and System.",
+      "Click an event. It is marked read and, for a job run, opens that job. Go back: the card no longer has the unread bar and the Unread count dropped.",
+      "Click 'Mark All Read' in the header. Every card loses its unread bar and the Unread tab empties; reload the page and they stay read.",
+      "Open the date dropdown (All time by default) and pick 'Today': older rows drop out. If the footer says 'loaded (N in the store)', click 'Load more' to fetch the next 50.",
+      "Type 'job' in the 'Search notifications...' box. Filter narrows to job-run events.",
     ],
     expectedResult:
-      "Notifications is a derivative of the audit log filtered to operator-visible severities. Mark-read is per-operator (notification_reads keyed by operator + notification id).",
+      "Notifications are rows in the MCP's notification store (notifications.db). Each has a read_at timestamp that clicking a card or Mark All Read sets, so read state survives a reload. The date filter and Load more page through the same store.",
     verifyVia: [
-      "GET /api/agent/notifications → all entries map back to audit rows",
-      "GET /api/agent/audit?action=<filtered-set> → matches notifications page",
+      "GET /api/agent/notifications?limit=50 → {notifications, count, total}; read rows carry read_at",
+      "GET /api/agent/notifications?since=<ISO UTC> → only rows created at or after it; total follows",
+      "POST /api/agent/notifications/ack-all → {acked: N}; a second call returns {acked: 0}",
     ],
     related: ["ops-pipeline-health-check"],
     components: ["notifications", "audit"],
@@ -5473,25 +5457,24 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Open /skills. Confirm the four summary widgets (Total Skills / Active / Categories / Invocations) render LIVE values derived from the loaded skills array. Total should match `find /app/skills -name '*.md' | wc -l`.",
+      "Open /skills. Confirm the summary widgets (Total Skills / Categories) render values derived from the loaded skills. Optional host shell step: Total should match `docker exec phantom_agent sh -c \"find /app/skills -name '*.md' | wc -l\"`.",
       "Confirm the page header carries Import + Create Skill — Phantom is single-tenant, no workspace selector.",
-      "Click any unlocked scenario card. Detail panel opens with Download / Save / Delete in the header.",
+      "Click 'Create Skill' in the page header. Fill display name → filename auto-derives. Pick category, write description + body. Submit. New card appears immediately and Total Skills widget increments. Use this skill for the destructive steps below so you do not remove a shipped skill.",
+      "Click the card you just created. Detail panel opens with Download / Save / Delete in the header.",
       "Click 'Download'. Browser downloads <name>.md with the live body (frontmatter + body).",
       "Click into the body textarea. Body lazy-loads from skills_read. Edit something. The 'Save' button enables; an 'Unsaved changes' indicator appears.",
       "Click 'Save'. Backend creates a .md.bak alongside, then writes the new content. Refresh — change persists.",
-      "Click 'Delete' on the same skill. Confirm dialog. Skill disappears from the page; on the volume the MD is at /app/skills/.deleted/<name>.md. Total Skills widget decrements live.",
-      "Click a locked card (e.g. generate_shared_iocs). Delete button is disabled with a 'platform-locked' tooltip.",
-      "Click 'Create Skill' in the page header. Fill display name → filename auto-derives. Pick category, write description + body. Submit. New card appears immediately and Total Skills widget increments.",
-      "Click 'Import' in the page header. Pick a .md file from disk (e.g. one you Downloaded earlier). Confirm: success toast appears, skill card renders with the frontmatter's displayName + icon, Total Skills widget increments. Re-importing the same file fails with an explicit 'already exists' error — not a silent overwrite.",
+      "Click 'Delete' on the same skill. Confirm dialog. Skill disappears from the page; on the volume the MD is at /app/skills/.deleted/<name>.md. Total Skills widget decrements live. (No shipped skill is locked, so Delete is enabled on every card; only delete skills you created.)",
+      "Click 'Import' in the page header. Pick a .md file from disk (e.g. the one you Downloaded earlier). Confirm: success toast appears, skill card renders with the frontmatter's displayName + icon, Total Skills widget increments. Re-importing the same file fails with an explicit 'already exists' error — not a silent overwrite. Delete the imported skill when done.",
     ],
     expectedResult:
       "Frontmatter is the canonical metadata source. The existing SKILLS hardcoded array is a fallback rather than the source of truth. New MDs added to disk (or via the Create flow) appear in the UI without touching app/skills/page.tsx.",
     verifyVia: [
-      "GET /api/skills → has_frontmatter=true on every row, count matches `find /app/skills -name '*.md' | wc -l`",
+      "GET /api/skills → has_frontmatter=true on every row, count matches the Total Skills widget",
       "After Save, a fresh GET /api/skills?file_path=… returns the new content",
-      "After Delete, the file shows up under /app/skills/.deleted/ via docker exec",
+      "After Delete, the file shows up under /app/skills/.deleted/ (host shell step: `docker exec phantom_agent ls /app/skills/.deleted/`)",
     ],
-    related: ["ops-edit-skill-frontmatter", "schedule-skill-bound-job"],
+    related: ["schedule-skill-bound-job", "skills-page-browse"],
     components: ["skills", "mcp"],
   },
 
@@ -5533,11 +5516,11 @@ export const JOURNEYS: Journey[] = [
       "Open /jobs/new. Pick action type 'Prompt'.",
       "In the prompt textarea, enter the example prompt above (or any natural-language task).",
       "Open the new 'Skill (optional)' dropdown. Confirm it groups by category and shows every skill from /api/skills.",
-      "Pick a specific skill (e.g. 'Phishing (mass credential harvest)'). The card below the dropdown shows that skill's description so you can confirm it's the right one.",
+      "Pick a specific skill (e.g. 'VPN brute force chain'). The card below the dropdown shows that skill's description so you can confirm it's the right one.",
       "Set a cron schedule (or pick Repeating + 5 minutes for fast iteration). Submit.",
-      "Wait for the cron to fire (or trigger manually via the run-now button on the job card).",
-      "Open the run detail page. The agent's first user message in the trace shows the wrapping: <skill name='phishing_credential_harvest_campaign'>{body}</skill>{your prompt}.",
-      "Edit the job (kebab → Edit). Change the dropdown to 'Let agent decide' and save. Next run uses the system-prompt skill registry instead of explicit binding.",
+      "Wait for the cron to fire (or open the job row's ⋯ menu and click 'Trigger Now').",
+      "Open the run detail page. The agent's first user message in the trace shows the wrapping: <skill name='bruteforce_vpn_to_lateral'>{body}</skill>{your prompt}.",
+      "Edit the job (kebab → Edit). Change the dropdown to '— Let agent decide —' and save. Next run uses the system-prompt skill registry instead of explicit binding.",
     ],
     expectedResult:
       "Skill binding is the difference between deterministic and 'model-best-judgment' scheduled runs. Use binding for reproducible exercises (a weekly ransomware drill should always run the ransomware skill); leave it on 'agent decides' for fuzzy intent jobs.",
@@ -5555,7 +5538,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "See every scheduled job result in the notifications feed",
     summary:
-      "The scheduler's post-run hook publishes to job-run-completed (info) or job-run-failed (warning) for every fire. Skipped runs don't emit. Notifications surface the run summary + error string without parsing result_json.",
+      "The scheduler's post-run hook publishes to job-run-completed (info) or job-run-failed (warning) for every fire. Skipped runs don't emit. Each card is titled with the job name and outcome, shows the run summary, and opens the job when clicked.",
     difficulty: "starter",
     durationMin: 2,
     icon: "notifications_active",
@@ -5564,28 +5547,22 @@ export const JOURNEYS: Journey[] = [
     apis: [
       {
         method: "GET",
-        path: "/api/agent/notifications?topic=job-run-completed",
+        path: "/api/agent/notifications?limit=100",
         description:
-          "Filter to successful runs only. Payload carries job_name, run_id, trigger, action_name, duration_ms, summary, next_due_at.",
-      },
-      {
-        method: "GET",
-        path: "/api/agent/notifications?topic=job-run-failed",
-        description:
-          "Same shape with an additional error string. Severity flips to warning so the bell badge counts it as actionable.",
+          "Rows with topic job-run-completed carry payload job_name, run_id, trigger, action_name, duration_ms, summary, next_due_at. Rows with topic job-run-failed have the same shape plus an error string, and severity warning so the bell badge counts them as actionable.",
       },
     ],
     howToTest: [
       "Have at least one job that fires every few minutes (Repeating + 5m, or fire one manually via the run-now button).",
       "Wait for it to complete (success or failure both work).",
-      "Open /notifications. The latest run appears as a card with the topic chip ('job-run-completed' or 'job-run-failed') and a one-line summary.",
-      "Click the card. Drawer opens with the full payload — job_name, run_id, trigger, duration_ms, action_name, error (on failure).",
-      "Cross-check: on the audit page, search for the run_id from the notification. The audit row links to the same run detail page from /jobs/<name>.",
+      "Open /notifications. The latest run appears as a card titled 'Job <name> succeeded' (or 'Job <name> failed'), with the one-line run summary (for example 'Job <name> succeeded in 12150ms') and a timestamp. A failed run shows the error text and sits under the Alerts tab.",
+      "Click the card. The job's page opens at /jobs/<name>, where the run appears in the run history.",
+      "Cross-check: GET /api/agent/notifications and find the row's payload.run_id; on the audit page, search for that run_id.",
     ],
     expectedResult:
       "The notifications feed closes the 'did my scheduled exercise actually run?' feedback loop. The bell updates with every fire, and failures are warning-severity so they don't get lost in the info noise.",
     verifyVia: [
-      "GET /api/agent/notifications?topic=job-run-failed → entries match GET /api/agent/audit?action=job_run.failed by run_id",
+      "GET /api/agent/notifications → rows with topic job-run-failed match GET /api/agent/audit?action=job_run.failed by payload.run_id",
       "Skipped runs (cron-cap squelched) do NOT appear in notifications, only in audit",
     ],
     related: ["schedule-skill-bound-job", "ops-read-notifications"],
@@ -5597,7 +5574,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Update Vertex service-account JSON via /providers",
     summary:
-      "/providers is the canonical post-install path for Vertex JSON updates — the setup form is one-shot and locks after first install. Writes go directly to the MCP ProviderStore (PUT /api/agent/providers/{id}). The chat handler reads back via a 30-second cached resolver that's cache-busted on every successful PUT, so updates take effect within milliseconds.",
+      "/providers is the path for adding and updating the Vertex service-account JSON, project and region. Writes go directly to the MCP ProviderStore (PUT /api/agent/providers/{id}). The chat handler reads back via a 30-second cached resolver that's cache-busted on every successful PUT, so updates take effect within milliseconds.",
     difficulty: "starter",
     durationMin: 2,
     icon: "psychology",
@@ -5614,79 +5591,87 @@ export const JOURNEYS: Journey[] = [
         method: "PUT",
         path: "/api/agent/providers/config",
         description:
-          "Body: { value: { vertexServiceAccountJson?, vertexProjectId?, vertexLocation? } }. Each field is optional — omitted keys leave the stored value alone. If a vertex instance exists, calls MCP PUT /api/agent/providers/{id} for partial update. If no instance exists yet, requires all three fields and calls MCP POST /api/agent/providers to create primary-vertex. NEVER writes setup.json or .env.generated. Calls bustVertexCredsCache() on success so chat-handler reads see the new value immediately.",
+          "Body: { value: { vertexServiceAccountJson?, vertexProjectId?, vertexLocation? } }. Each field is optional — omitted keys leave the stored value alone. If a vertex instance exists, calls MCP PUT /api/agent/providers/{id} for partial update. If no instance exists yet, requires all three fields and calls MCP POST /api/agent/providers to create primary-vertex. Calls bustVertexCredsCache() on success so chat-handler reads see the new value immediately.",
       },
     ],
     howToTest: [
       "Open /providers. Confirm the Vertex section auto-populates Project ID + Region from the ProviderStore, and the service-account JSON shows masked bullets.",
       "Click on the JSON textarea — it's editable. Paste a fresh Vertex service-account JSON. Save Changes activates.",
       "Click Save. Response: { ok: true, mcp_sync: { success: true, updated: '<id>', action: 'update' } } (or 'create' on first install).",
-      "Cross-check setup.json is NOT touched: docker exec phantom_agent stat -c '%y' /app/runtime/setup.json before and after — mtime should be identical.",
       "Cross-check the ProviderStore got the update: curl -ks -H 'Authorization: Bearer $MCP_TOKEN' https://localhost:8080/api/agent/providers?provider_id=vertex → returns the updated config with the new project_id.",
       "Trigger a chat dispatch. The chat handler resolves Vertex creds via getEffectiveRuntimeConfig → vertex-credentials.ts → MCP /api/agent/providers/{id}?include_secrets=true (cleartext). Authenticates cleanly with the new key.",
       "Negative: paste a placeholder JSON ({...private_key:'fake'...}) and save. PUT succeeds (the agent doesn't validate JSON shape); the chat handler's detectPlaceholderCredential guard catches it at next chat dispatch with the operator-actionable error.",
     ],
     expectedResult:
-      "Updating Vertex via /providers writes directly to the ProviderStore. No setup.json drift, no .env.generated rewrite, no MCP /api/agent/setup re-materialise. Chat dispatch picks up the new key via the cache-busted resolver immediately. Per the canonical setup spec at /help/architecture#setup-wiring.",
+      "Updating Vertex via /providers writes directly to the ProviderStore. Chat dispatch picks up the new key via the cache-busted resolver immediately. Per the canonical setup spec at /help/architecture#setup-wiring.",
     verifyVia: [
       "PUT /api/agent/providers/config response.mcp_sync.success === true with action 'update' or 'create'",
       "GET /api/agent/providers/config after save returns the new vertexProjectId; sensitive fields stay redacted",
-      "docker exec phantom_agent stat /app/runtime/setup.json — mtime UNCHANGED across the PUT (new path doesn't touch it)",
       "docker exec phantom_agent grep -c 'detectPlaceholderCredential' /app/.next/server/app/api/chat/route.js > 0 (placeholder guard still deployed)",
     ],
-    related: ["ops-override-connector-via-instances", "ops-override-ui-password-via-profile"],
+    related: ["ops-override-connector-via-instances", "ops-change-ui-password"],
     components: ["secrets", "chat"],
   },
 
   {
     id: "ops-override-connector-via-instances",
     category: "ops",
-    title: "Edit connector instance config via /connectors",
+    title: "Edit connector instance config and rotate its secrets via /connectors",
     summary:
-      "/connectors is the only post-install path for editing per-instance config (URL, API key, instance-specific overrides) — the setup form is single-shot. Writes to InstanceStore + SecretStore on the MCP side via the instance API; chat-side MCP tools read from InstanceStore on every call so changes take effect immediately.",
+      "/connectors is the only path for editing a connector instance after it exists: change its config and rotate its secrets in place from the Edit Instance dialog. Writes go to the InstanceStore and SecretStore on the MCP side; chat-side MCP tools read the instance on every call, so changes take effect immediately.",
     difficulty: "intermediate",
-    durationMin: 3,
+    durationMin: 4,
     icon: "cable",
-    prompts: [],
-    toolsExercised: [],
+    prompts: [
+      {
+        text: "List the workers currently running on xlog.",
+        note: "Run after saving the edit. The call resolves the instance fresh, so it uses the new config and secret with no restart. Use any tool of the connector you edited if it is not xlog.",
+      },
+    ],
+    toolsExercised: ["xlog.list_workers"],
     apis: [
       {
         method: "POST",
         path: "/api/agent/instances",
         description:
-          "Create or recreate an instance with new config + secrets. The MCP writes secrets to the SecretStore at /agents/<bundle>/connectors/<instance_id>/<slot> with AES-256-GCM at rest.",
+          "Create an instance with config + secrets. The MCP writes secrets to the SecretStore at /agents/<bundle>/connectors/<instance_id>/<slot> with AES-256-GCM at rest.",
       },
       {
         method: "GET",
         path: "/api/agent/instances/{id}",
         description:
-          "Read current config. Secret slots are returned as paths into the SecretStore (not plaintext); the UI shows 'configured' indicators rather than values.",
+          "Read current config. Secret slots come back masked as `***` (never plaintext); the UI shows the masked value rather than the secret.",
       },
       {
         method: "PATCH",
         path: "/api/agent/instances/{id}",
         description:
-          "Partial update — currently {enabled: bool} only. Full config edits go through delete+create today.",
+          "In-place update: `config` replaces the config blob, `secrets` rotates the named slots (a slot sent as `***` is left unchanged), `name` renames, `enabled` toggles the instance.",
       },
     ],
     howToTest: [
-      "Open /connectors. Pick a connector with at least one instance (e.g. xsiam, caldera).",
-      "For full config changes, the flow is delete + recreate: delete the existing instance via the kebab menu → reopen the create form (it pre-fills from the bundle's configSchema + sane defaults) → edit the field you want to change → submit. The bundle's bindsInstances template fired ONCE at first-run install; post-install you own the instance directly.",
-      "Trigger a tool call that uses the connector (e.g. ask the agent to query xsiam). Confirm the new value is in effect — chat-side MCP tools read from InstanceStore on every call, no rebuild needed.",
-      "Confirm /setup is unreachable: typing /setup in the URL redirects to /. The setup form is single-shot; once first-run completes, this is the right path forward.",
-      "Negative: try POST /api/setup directly with curl + your auth cookie. Expect HTTP 409 with a message pointing at /profile, /providers, or /connectors as the right place to edit.",
+      "Operator-only step (changes a credential): open /connectors → Instances tab and pick an instance. A fresh install has none, so create the xlog instance first ('onboarding-install-xlog-connector').",
+      "Click the Edit Instance icon on the instance row. The Edit Instance dialog opens with the current config; secret fields show the masked placeholder `***`.",
+      "Change a config field (for example set defaultLogFormat to CEF on the xlog instance, and set it back afterwards) and leave the secret fields untouched.",
+      "To rotate a secret, type the new value over the masked placeholder (for the xlog instance, the API Token; the value is the XLOG_API_KEY line in /opt/phantom/.env — a host shell step). Click Test Connection: it is a dry run and nothing is saved yet.",
+      "Click Save Changes. The dialog closes and the instance row stays connected.",
+      "Paste the prompt above in a chat. The tool call succeeds with the new config and secret — no restart needed.",
+      "Reopen Edit Instance: secret fields are masked again, so a secret is never shown after it is saved. Any slot you did not touch kept its stored value.",
     ],
     expectedResult:
-      "Edits made via /connectors are the source of truth at the InstanceStore + SecretStore level. The setup form is sealed post-install, so there's no second path that could re-materialise an instance with stale values.",
+      "Edits made in the Edit Instance dialog are the source of truth at the InstanceStore + SecretStore level. Config changes and secret rotations apply in place on the same instance, which keeps its name and identity. Untouched secret slots are never overwritten.",
     verifyVia: [
-      "GET /api/agent/instances/<id> reflects the /connectors edit",
-      "GET /setup post-install bounces to / (setupRequired=false in the auth-status endpoint)",
-      "POST /api/setup post-install returns 409 — no clobber path",
+      "GET /api/agent/instances/<id> reflects the edited config; secret slots read `***`.",
+      "GET /api/agent/audit?action=instance_updated → one row per Save Changes, with no secret values in it.",
+      "The next tool call for the connector succeeds; a wrong secret would fail with the connector's verbatim 401.",
     ],
     related: [
       "ops-override-vertex-via-providers",
-      "ops-override-ui-password-via-profile",
+      "ops-edit-caldera-via-connectors-v0135",
+      "ops-edit-xsiam-via-connectors-v0135",
+      "connector-tool-toggle",
     ],
+    prerequisites: ["onboarding-install-xlog-connector"],
     components: ["connectors", "secrets"],
   },
 
@@ -5725,9 +5710,9 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "PREREQ: an existing caldera connector instance. If you haven't installed caldera yet, follow ops-marketplace-browse → /connectors → Install Connector → Create Instance first.",
+      "Needs: a running CALDERA (it ships in the stack) and its API key from /opt/phantom/.env (host shell step). PREREQ: an existing caldera connector instance. If you haven't installed caldera yet, follow ops-marketplace-browse → /connectors → Install Connector → Create Instance first.",
       "Run prompt 1 in chat. Confirm caldera_get_all_agents fires and returns (a list, possibly empty, but not an error).",
-      "Open /connectors → caldera → Instances → your instance → Edit. Change baseUrl OR rotate apiKey. Save.",
+      "Operator-only step (edits a credential): open /connectors → Instances → the caldera instance → click the Edit Instance icon. Change baseUrl OR type a new apiKey over the masked placeholder. Click Save Changes.",
       "Run prompt 2. Confirm the call goes to the NEW baseUrl with the NEW apiKey. The MCP's _get_caldera_config() helper resolves both values fresh on this invocation — no agent restart, no MCP restart.",
       "Negative: temporarily set apiKey to garbage. Run prompt 2. Expect a 401 from caldera, surfaced verbatim by the agent (no silent retry, no env fallback). Restore the real apiKey to recover.",
     ],
@@ -5753,7 +5738,7 @@ export const JOURNEYS: Journey[] = [
     category: "connectors",
     title: "Edit xsiam connector config via /connectors",
     summary:
-      "Edit xsiam api_url / api_key / api_id / playgroundId / webhookEndpoint / webhookKey via /connectors and see the change reflected on the very next tool call. The xsiam connector has an InstanceStore-backed _get_xsiam_config() helper used by the PAPI fetcher (every xql.* + get_issues + get_endpoint_alerts tool), the xsoar_command tool (playgroundId), and the send_webhook_log tool (webhookEndpoint + webhookKey). Config keys use uniform api_url/api_key/api_id naming; legacy papiUrl/papiAuthHeader/papiAuthId aliases stay accepted on read for backwards compat with older instances.",
+      "Edit xsiam api_url / api_key / api_id / playgroundId / webhookEndpoint / webhookKey via /connectors and see the change reflected on the very next tool call. The xsiam connector has an InstanceStore-backed _get_xsiam_config() helper used by the PAPI fetcher (every xql.* + get_issues + alerts_list tool, which also use playgroundId as the remote execution context) and the send_webhook_log tool (webhookEndpoint + webhookKey). Config keys use uniform api_url/api_key/api_id naming; legacy papiUrl/papiAuthHeader/papiAuthId aliases stay accepted on read for backwards compat with older instances.",
     difficulty: "intermediate",
     durationMin: 4,
     icon: "cable",
@@ -5767,7 +5752,7 @@ export const JOURNEYS: Journey[] = [
         note: "Run AFTER editing /connectors. The MCP resolves api_url + api_key + api_id from InstanceStore on every fetcher build (which happens on every PAPI tool call), so the new values are in effect immediately. Legacy papiUrl/papiAuthHeader/papiAuthId names also accepted as fallback.",
       },
     ],
-    toolsExercised: ["get_issues", "send_webhook_log", "xsoar_command"],
+    toolsExercised: ["xsiam.get_issues", "xsiam.send_webhook_log"],
     apis: [
       {
         method: "PATCH",
@@ -5777,15 +5762,15 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "PREREQ: an existing xsiam connector instance with valid PAPI creds.",
+      "Needs: a Cortex XSIAM tenant. PREREQ: an existing xsiam connector instance with valid PAPI creds.",
       "Run prompt 1 in chat. Confirm xsiam.get_issues fires and returns.",
-      "Open /connectors → xsiam → Instances → your instance → Edit. Change api_url OR rotate api_key. Save.",
+      "Operator-only step (edits a credential): open /connectors → Instances → the xsiam instance → click the Edit Instance icon. Change api_url OR type a new api_key over the masked placeholder. Click Save Changes.",
       "Run prompt 2. Confirm the call goes to the NEW PAPI URL with the NEW auth header.",
       "Optional: if your instance has a webhook configured, change webhookEndpoint or webhookKey. Trigger 'send a synthetic xsiam webhook' in chat. Confirm the next dispatch uses the new endpoint/key (look at /observability/events → tool:xsiam.send_webhook_log → outbound URL).",
       "Negative: temporarily set api_key to garbage. Run prompt 2. Expect a 401 from PAPI, surfaced verbatim. Restore the real value.",
     ],
     expectedResult:
-      "Edits to any xsiam config field via /connectors take effect on the very next tool call. The PAPI fetcher reads three fields (api_url, api_key, api_id) on every build; the xsoar tool reads playgroundId; the webhook tool reads webhookEndpoint + webhookKey — all on every call. No MCP restart, no env-var stamping, no probe-vs-tool-call divergence — probes and tool-call paths both resolve from InstanceStore.",
+      "Edits to any xsiam config field via /connectors take effect on the very next tool call. The PAPI fetcher reads three fields (api_url, api_key, api_id) plus playgroundId on every build; the webhook tool reads webhookEndpoint + webhookKey — all on every call. No MCP restart, no env-var stamping, no probe-vs-tool-call divergence — probes and tool-call paths both resolve from InstanceStore.",
     verifyVia: [
       "GET /api/agent/instances/<xsiam-instance-id> reflects the edit",
       "Audit feed: next xsiam.* tool call after the edit shows the call resolved to the new URL/header",
@@ -5803,7 +5788,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Backup + restore round-trip via /settings/backup-restore",
     summary:
-      "Download a complete-state zip via /settings/backup-restore → Backup, then restore it to a different deployment (or the same one after a reset) and verify every operator-owned section round-trips. The zip carries personality, connector instances + cleartext secrets, runtime jobs, memory entries (no embeddings), all skill MD files, and knowledge bundle docs. Restore order is dependency-aware (personality → instances+secrets → skills → memory → knowledge no-op → jobs).",
+      "Download a complete-state zip via /settings/backup-restore → Backup, then restore it to a different deployment (or the same one after a reset) and verify every operator-owned section round-trips. The zip carries personality, connector instances + cleartext secrets, runtime jobs, memory entries (no embeddings), all skill MD files, knowledge bundle docs, data sources, and your workflow state (journeys marked tested, metric bookmarks). Restore order is dependency-aware (personality → instances+secrets → skills → memory → knowledge no-op → data sources → workflow state → jobs).",
     difficulty: "intermediate",
     durationMin: 8,
     icon: "save",
@@ -5836,10 +5821,11 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Open /settings/backup-restore. Click Download backup (.zip). Browser saves phantom-backup-<timestamp>.zip — open it locally to inspect: manifest.json with section_counts, personality.json, instances.json (cleartext secrets visible — DO commit this is sensitive), memory.json (no embedding fields), jobs.json (runtime jobs only), skills/ tree, knowledge/ tree.",
-      "On the same deployment: Restore section → file picker → select the zip → Preview restore plan. The plan shows manifest version, section counts, and the restore order. Click Apply. Check the result: the applied counts match what was in the zip (personality: 1, instances: N, etc), no errors. Skipped counts may be non-zero if entries already exist.",
-      "Tick the \"Overwrite existing entries (force)\" checkbox and re-run Apply. Now the skipped counts go to zero — every entry is overwritten in place.",
-      "Cross-deployment test: install Phantom on a second VM with a DIFFERENT PHANTOM_SECRET_KEK. Upload the zip there → Apply. Confirm the connector instances come back functional (probe them via /connectors or trigger a tool call). The KEK mismatch is fine — the destination re-encrypts under its own KEK on restore.",
+      "Open /settings/backup-restore. Click Download backup (.zip). Browser saves phantom-backup-<timestamp>.zip — open it locally to inspect: manifest.json with section_counts, personality.json, instances.json (cleartext secrets visible — never commit or share this file; treat the whole zip as a secret), memory.json (no embedding fields), jobs.json (runtime jobs only), skills/ tree, knowledge/ tree, operator_state.json (the journeys you marked tested and your saved metric bookmarks).",
+      "Operator-only step (restore overwrites live state, so start with the preview, which writes nothing): on the same deployment, Restore section → file picker → select the zip → Preview restore plan. The plan shows manifest version, section counts, and the restore order. Click Apply restore. Check the result: the applied counts match what was in the zip (personality: 1, instances: N, etc), no errors. Skipped counts may be non-zero if entries already exist.",
+      "Workflow state: before the backup, mark a journey tested on /help/journeys (the tick persists on the server). After restoring onto a deployment where it is not marked, reload /help/journeys: the mark is back. The restore result lists operator_state under applied; a deployment that already has a tested_journeys key keeps its own unless you tick Overwrite.",
+      "Tick the \"Overwrite existing entries (force)\" checkbox and re-run Apply restore. Now the skipped counts go to zero — every entry is overwritten in place.",
+      "Needs: a second host. Cross-deployment test: install Phantom on a second VM with a DIFFERENT PHANTOM_SECRET_KEK. Upload the zip there → Apply restore. Confirm the connector instances come back functional (probe them via /connectors or trigger a tool call). The KEK mismatch is fine — the destination re-encrypts under its own KEK on restore.",
       "Caveat verification: confirm memory.json has no `embedding` field on any entry. Confirm knowledge docs in the zip do NOT actually overwrite the destination's KB content (the manifest section_counts.knowledge will be 0 in the restore result; warnings[] will say \"X knowledge doc(s) ignored — knowledge bundles are image-baked\").",
       "Negative: upload a corrupt zip (truncate the file) → Preview returns 400 \"not a valid zip\". Upload a zip with no manifest.json → 400 \"missing manifest.json\". Upload a zip with schema_version: 999 → 400 \"unsupported schema_version\".",
       "Negative: cookie/auth — POST /api/agent/restore (or GET /api/agent/backup) without phantom_session cookie → 401. The auth gate is the middleware.ts edge layer so unauthenticated callers can't pull cleartext secrets.",
@@ -5877,16 +5863,16 @@ export const JOURNEYS: Journey[] = [
     prompts: [
       {
         text: "Author an XQL query for Cortex XSIAM that finds users with more than 50 successful logins in any 5-minute window. Cite the Cortex docs for each stage and function used.",
-        note: "Agent should: (1) embedding-search your KB if you have one configured, (2) call cortex-docs/xql_lookup for filter, alter, bin, comp, sort (the canonical 5 stages it'll likely pick), (3) emit the query with per-stage citations. Expect 5-10 cortex-docs/xql_lookup tool calls in the wire-event trace.",
+        note: "Agent should: (1) embedding-search your KB if you have one configured, (2) call cortex-docs.xql_lookup for filter, alter, bin, comp, sort (the canonical 5 stages it'll likely pick), (3) emit the query with per-stage citations. Expect 5-10 cortex-docs.xql_lookup tool calls in the wire-event trace.",
       },
       {
         text: "What does the arrayindexof function do in Cortex Query Language?",
-        note: "Single-function lookup — tests cortex-docs/xql_lookup directly without the full authoring workflow. Agent should call it once with kind='function' product='xql' and return the canonical Arrayindexof Function topic.",
+        note: "Single-function lookup — tests cortex-docs.xql_lookup directly without the full authoring workflow. Agent should call it once with kind='function' product='xql' and return the canonical Arrayindexof Function topic.",
       },
     ],
     toolsExercised: [
-      "cortex-docs/xql_lookup",
-      "cortex-docs/search",
+      "cortex-docs.xql_lookup",
+      "cortex-docs.search",
       "knowledge_search",
     ],
     apis: [
@@ -5894,7 +5880,7 @@ export const JOURNEYS: Journey[] = [
         method: "POST",
         path: "/api/chat",
         description:
-          "Streams SSE; the wire-event trace includes one tool_call event per cortex-docs/xql_lookup invocation, plus tool_result events with the canonical doc topic + citation string.",
+          "Streams SSE; the wire-event trace includes one tool_call event per cortex-docs.xql_lookup invocation, plus tool_result events with the canonical doc topic + citation string.",
       },
       {
         method: "GET",
@@ -5904,16 +5890,16 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Open a fresh chat at the Phantom UI.",
+      "Needs: internet access from the stack and the cortex-docs connector installed with an instance (at /connectors: Marketplace tab → cortex-docs → Install Connector, then Instances tab → Create Instance). Open a fresh chat at the Phantom UI.",
       "Paste the first prompt and submit.",
-      "Watch the wire-event trace — should show 5-10 cortex-docs/xql_lookup tool calls + their results, then a synthesized query with citations.",
+      "Watch the wire-event trace — should show 5-10 cortex-docs.xql_lookup tool calls + their results, then a synthesized query with citations.",
       "Open /observability/connectors and confirm cortex-docs is listed and healthy.",
       "Paste the second prompt to verify a single-term lookup also works.",
     ],
     expectedResult:
       "First prompt: agent emits an XQL query in a code fence, with one citation per stage/function used (e.g. 'filter from Cortex XSIAM Documentation', 'bin from Cortex XSIAM Documentation', 'comp from Cortex XSIAM Documentation'), plus a 1-2 line notes block flagging non-obvious choices (window size, threshold defaults). Second prompt: agent returns Arrayindexof Function's canonical description, syntax, and source citation in <2s.",
     verifyVia: [
-      "Wire-event trace export shows cortex-docs/xql_lookup tool_call + tool_result pairs, each with title/publication/reader_url in the result payload",
+      "Wire-event trace export shows cortex-docs.xql_lookup tool_call + tool_result pairs, each with title/publication/reader_url in the result payload",
       "/observability/connectors shows cortex-docs in healthy state + image digest pinned per the digest-pinning contract",
       "Each query stage/function in the response has a cortex-docs.paloaltonetworks.com source citation",
     ],
@@ -5948,9 +5934,9 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     toolsExercised: [
-      "cortex-xdr/list_datasets",
+      "cortex-xdr.list_datasets",
       "knowledge_search",
-      "cortex-xdr/run_xql_query",
+      "cortex-xdr.run_xql_query",
       "cortex_xql_lookup",
     ],
     apis: [
@@ -5974,7 +5960,7 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Ensure a Cortex XDR instance is configured at /instances (or /connectors — connector instance management UI).",
+      "Needs: a Cortex XDR tenant and its API credentials. Ensure a Cortex XDR instance exists at /connectors (Marketplace tab → cortex-xdr → Install Connector, then Instances tab → Create Instance).",
       "Open a fresh chat at the Phantom UI.",
       "Paste prompt 1 (datasets) — confirm the response includes a list of 10+ datasets with exists/missing breakdown.",
       "Paste prompt 2 (mitre tactics) — confirm the agent retrieved XQL-795 from the KB (visible in tool-call trace) and ran the query against live XDR. Result should be a tactic-count table.",
@@ -5990,6 +5976,1993 @@ export const JOURNEYS: Journey[] = [
     ],
     related: ["cortex-xql-query-authoring"],
     components: ["connectors", "skills", "knowledge"],
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // ONBOARDING — setup path shared by the simulation journeys
+  // ─────────────────────────────────────────────────────────────────
+  {
+    id: "onboarding-install-xlog-connector",
+    category: "onboarding",
+    title: "Set up log generation: xlog instance, a log destination and one data source",
+    summary:
+      "A fresh install has no connector instances. Install the xlog connector, create one local instance, add a syslog log destination and install one data source, so every journey that generates logs has something to run against.",
+    difficulty: "starter",
+    durationMin: 8,
+    icon: "rocket_launch",
+    prompts: [
+      {
+        text: "List the workers currently running on xlog, then list my log destinations.",
+        note: "Final check. The worker list is empty (no error), and the destination list shows the syslog destination you created.",
+      },
+    ],
+    toolsExercised: ["xlog.list_workers", "log_destinations_list"],
+    apis: [
+      {
+        method: "POST",
+        path: "/api/agent/marketplace/install",
+        description: "Body {connector_id: 'xlog'}. Idempotent. Records the install so instances can be created.",
+      },
+      {
+        method: "POST",
+        path: "/api/agent/instances",
+        description:
+          "Operator-only (REST). Body {connector_id: 'xlog', name, config: {baseUrl}, secrets: {apiToken}}. phantom-updater starts the per-instance container.",
+      },
+      {
+        method: "POST",
+        path: "/api/agent/log-destinations",
+        description: "Operator-only (REST). Body {name, type_id: 'syslog', config: {host, port, protocol}}.",
+      },
+      {
+        method: "POST",
+        path: "/api/agent/data-sources/install",
+        description: "Body {pack_name, rule_name, dataset_name?}. Installs one vendor schema.",
+      },
+    ],
+    howToTest: [
+      "Needs: a host shell to read the xlog token. Host shell step: run `grep XLOG_API_KEY /opt/phantom/.env` and keep the value for step 3. It is a credential: you type it into the instance form yourself, and never paste it into chat.",
+      "Open /connectors → Marketplace tab, click the xlog card and click Install Connector.",
+      "Switch to the Instances tab and click Create Instance. Pick xlog, give it a name (for example `primary-xlog`), leave baseUrl at its default (https://xlog:8000), paste the token into the API Token secret field, leave the webhook fields empty, and click Create Instance. The connector image is pulled when the instance is created, which can take a minute.",
+      "Click the Test Connection icon on the new instance row. It reports success. If it fails with an authentication error, the token does not match XLOG_API_KEY.",
+      "Open /log-destinations and click New Destination. Name it `lab-syslog`, choose Type Syslog, set host 127.0.0.1, port 5514, protocol udp, and click Save. UDP needs no listener for the simulation journeys to run.",
+      "Open /data-sources → Browse, search `fortigate`, click the Fortinet card, click the FortiGate row (not the Install button) and click Install data source in the drawer footer.",
+      "Open a chat and paste the prompt above. Both lists come back without errors.",
+    ],
+    expectedResult:
+      "The xlog connector is installed with one connected instance, one syslog destination exists and the FortiGate data source is installed. Journeys that generate logs can now start workers without further setup.",
+    verifyVia: [
+      "/connectors → Instances tab shows the xlog instance as connected.",
+      "/log-destinations lists `lab-syslog` in the Syslog group.",
+      "/data-sources → Installed shows the FortiGate row with its field count.",
+      "/observability/events shows marketplace_install, instance_created and data_source_install rows.",
+    ],
+    related: ["get-oriented", "install-data-source", "configure-log-destination", "generate-firewall-logs"],
+    components: ["connectors", "marketplace", "xlog", "secrets"],
+  },
+  {
+    id: "tls-init-fresh-install",
+    category: "onboarding",
+    title: "Fresh install serves xlog over HTTPS on the first request",
+    summary:
+      "A one-shot step creates the TLS certificate before any service starts, so the very first log-generation request works. Check that the step ran, that health is ok, and that logs generate without an SSL error.",
+    difficulty: "intermediate",
+    durationMin: 5,
+    icon: "verified_user",
+    prompts: [
+      {
+        text: "Send 5 FortiGate logs to the syslog destination lab-syslog.",
+        note: "First log-generation request on a fresh install. Needs the xlog instance, a syslog destination and a data source from 'onboarding-install-xlog-connector'.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: ["log_destinations_list", "xlog.create_data_worker"],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/health",
+        description: "Fan-out probe. Reports `ok` once every service answers, `degraded` otherwise.",
+      },
+    ],
+    howToTest: [
+      "Host shell step: run `docker compose ps -a` in /opt/phantom. The `phantom_tls_init` container shows Exited (0).",
+      "Open https://<host>:3000/api/agent/health in the browser (signed in). The overall status reads `ok`, not `degraded`.",
+      "Complete 'onboarding-install-xlog-connector' if you have not, then paste the prompt above in a fresh chat.",
+      "The agent reports a worker started. Open Live telemetry and confirm the tool result shows no `[SSL] record layer failure`.",
+      "Host shell step (optional): `docker compose logs phantom-agent | grep -i ssl` shows no record-layer errors from the first request.",
+    ],
+    expectedResult:
+      "Logs generate on the first try. The one-shot certificate step exits cleanly and never overwrites a certificate you supplied yourself.",
+    verifyVia: [
+      "`docker compose ps -a` lists phantom_tls_init as Exited (0).",
+      "GET /api/agent/health → status ok.",
+      "/observability/events shows the xlog.create_data_worker call with status success.",
+    ],
+    related: ["onboarding-install-xlog-connector", "generate-firewall-logs", "ops-pipeline-health-check"],
+    prerequisites: ["onboarding-install-xlog-connector"],
+    components: ["xlog", "pipeline", "mcp"],
+  },
+  {
+    id: "public-installer-fresh-install",
+    category: "onboarding",
+    title: "Install Phantom from the public GitHub Release",
+    summary:
+      "Download the phantom-installer for a release, run it on a clean host, and confirm the stack comes up with every image pinned by digest and a forced first-login password change.",
+    difficulty: "advanced",
+    durationMin: 15,
+    icon: "download",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/digests",
+        description: "Structured view of the running image digests for the five stack services and every connector container.",
+      },
+    ],
+    howToTest: [
+      "Needs: a clean Linux host with Docker and sudo, plus network access to GitHub and the container registry. Host shell step: download the `phantom-installer` asset from the Phantom GitHub Release page (note its size and source before downloading; each installer is sealed to one version), then `chmod +x phantom-installer`.",
+      "Host shell step: run `sudo ./phantom-installer`. Read the banner at the end: it prints the first-time admin password.",
+      "Host shell step: in /opt/phantom run `docker compose ps`. The four core services are up (phantom-agent, xlog, caldera, phantom-updater), plus phantom-browser when its profile is enabled, and /opt/phantom/.env carries one PHANTOM_VERSION line plus the DIGEST_PHANTOM_* lines.",
+      "Host shell step: confirm connector image pins are not in .env: `grep DIGEST_PHANTOM_CONNECTOR /opt/phantom/.env` finds nothing, and they live in /opt/phantom/connector-digests.env.",
+      "Open https://<host>:3000, sign in as admin with the banner password, and complete the forced password change ('auth-first-time-login').",
+    ],
+    expectedResult:
+      "The stack is up on the release version, every image is pinned by digest, connector digests live only in connector-digests.env, and the first login forces a new password.",
+    verifyVia: [
+      "`docker compose ps` shows the services healthy.",
+      "Sidebar → About shows the release version and the Stack image digests.",
+      "GET /api/agent/digests lists a digest per service.",
+    ],
+    related: ["auth-first-time-login", "upgrade-via-updater", "tls-init-fresh-install"],
+    components: ["settings", "secrets", "auth"],
+  },
+  {
+    id: "journeys-tested-marks",
+    category: "onboarding",
+    title: "Mark journeys as tested and filter the list",
+    summary:
+      "Track which journeys you have walked. The Tested mark is stored on the server, so it follows you across browsers and devices.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "checklist",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/operator-state/tested_journeys",
+        description: "Operator workflow state: the list of journey ids you have marked tested.",
+      },
+    ],
+    howToTest: [
+      "Open /help/journeys. Each journey card has a small circle in its top-right corner.",
+      "Click the circle on one card. It becomes a filled green check and the card gains a green ring.",
+      "Use the filter row: click Tested to show only marked journeys, Untested for the rest, All to reset.",
+      "Reload the page. The mark is still there.",
+      "Open /help/journeys in a different browser (or a private window), sign in, and confirm the same journey is still marked Tested.",
+    ],
+    expectedResult:
+      "Marks persist on the server, follow the operator across browsers, and survive reloads and upgrades. A factory reset clears them.",
+    verifyVia: [
+      "The Tested filter lists exactly the journeys you marked.",
+      "A second browser shows the same marks after sign-in.",
+    ],
+    related: ["help-pages-tour", "ops-factory-reset-host-utility"],
+    components: ["settings"],
+  },
+  {
+    id: "about-whats-new",
+    category: "onboarding",
+    title: "Read the release notes inside the app",
+    summary:
+      "Open the About menu to see the running version, then read what is new in this release and the full release history without leaving the UI.",
+    difficulty: "starter",
+    durationMin: 2,
+    icon: "info",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/version",
+        description: "The running version, used to highlight the matching release in the notes.",
+      },
+    ],
+    howToTest: [
+      "In the sidebar, click About at the bottom. A small menu offers About, What's new and Release history.",
+      "Click About. A modal shows the version, the runtime details and the Stack image digests. Close it.",
+      "Click About → What's new. A new tab opens at /about/whats-new with the running version's release card first and earlier releases below it. The 1.0.2 card carries a security badge.",
+      "Click About → Release history. A new tab opens at /about/history listing every release newest first; the one you are running is highlighted.",
+    ],
+    expectedResult:
+      "The notes in the app match the release notes published with the version. The running version is highlighted, and security releases are badged.",
+    verifyVia: [
+      "/about/whats-new shows a card for the running version.",
+      "/about/history lists the same releases in newest-first order.",
+    ],
+    related: ["upgrade-via-updater", "help-pages-tour"],
+    components: ["settings"],
+  },
+  {
+    id: "upgrade-via-updater",
+    category: "onboarding",
+    title: "Upgrade Phantom with the installer and check the digests",
+    summary:
+      "Upgrades are done by re-running the installer for the version you want. State is preserved, only services whose image changed are recreated, and the running digests are visible in the UI afterwards.",
+    difficulty: "advanced",
+    durationMin: 10,
+    icon: "upgrade",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/digests",
+        description: "Structured view of the running image digests, for audit or an incident report.",
+      },
+    ],
+    howToTest: [
+      "Needs: host shell access, network access to GitHub and the container registry, and a newer phantom-installer binary. Read /help/user#upgrades first.",
+      "Host shell step: note the current digests (About → Stack image digests, or GET /api/agent/digests).",
+      "Host shell step: download the phantom-installer for the target version from the Release page, `chmod +x phantom-installer`, then `sudo ./phantom-installer`. It keeps the secrets in /opt/phantom/.env, rewrites the version and digest lines, and recreates only the services whose image changed.",
+      "Sign in again if asked. Open About: the version is the new one and the Stack image digests changed for the updated services.",
+      "Open /observability/connectors and check the Image digests section: each row shows a digest badge, with no yellow `tag (legacy)` badge.",
+      "Check that your data survived: sessions in the chat sidebar, jobs on /jobs and memory entries are still there.",
+    ],
+    expectedResult:
+      "The stack runs the new version, unchanged services keep their containers, and operator state is intact. Each installer binary installs exactly its own version.",
+    verifyVia: [
+      "About shows the new version; GET /api/agent/digests shows new digests for changed services.",
+      "/observability/connectors → Image digests shows no drift badges.",
+    ],
+    related: ["public-installer-fresh-install", "about-whats-new", "data-source-refresh-after-upgrade"],
+    components: ["settings", "connectors", "pipeline"],
+  },
+  {
+    id: "help-pages-tour",
+    category: "onboarding",
+    title: "Walk the help pages and follow a documentation link",
+    summary:
+      "Find your way around /help, the user guide and the architecture guide, jump to a section by anchor, and follow a journey link, making sure nothing leads to a dead page.",
+    difficulty: "starter",
+    durationMin: 4,
+    icon: "help",
+    prompts: [],
+    toolsExercised: [],
+    apis: [],
+    howToTest: [
+      "Open /help. Cards link to the User Guide, the Architecture Guide, User Journeys and the REST API Reference.",
+      "Open /help/user#authentication, then /help/user#api-keys. Each lands on its section.",
+      "Open /help/architecture#tls-proxy, /help/architecture#authentication and /help/architecture#api-keys. Each lands on its section. (TLS is documented in the architecture guide only, so /help/user has no #tls-proxy anchor.)",
+      "On /help/journeys, open any journey and click one of its component badges (for example Chat). It opens the matching architecture section.",
+      "On /help/user scroll to User Journeys and click Browse user journeys: it opens /help/journeys.",
+    ],
+    expectedResult:
+      "Every anchor and link above resolves to a page or section that exists; none ends on an empty page.",
+    verifyVia: [
+      "The browser address bar keeps the #anchor and the page scrolls to the section.",
+      "No link on the journey detail pages leads to an unknown /help/ route.",
+    ],
+    related: ["journeys-tested-marks", "openapi-spec-download"],
+    components: ["settings"],
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // CHAT & SESSIONS — additional walkthroughs
+  // ─────────────────────────────────────────────────────────────────
+  {
+    id: "direct-tool-call-caret",
+    category: "chat",
+    title: "Call a tool directly with ^tool key=value",
+    summary:
+      "Start a chat message with ^ to run one tool without the model: the result renders as JSON in the transcript. It works even when no model provider is configured, and a bare tool name resolves to the single connector that provides it.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "terminal",
+    prompts: [
+      {
+        text: "^health_status",
+        note: "No model turn. The tool result renders as a JSON block in the transcript, with the resolved tool name and duration.",
+        newSession: true,
+      },
+      {
+        text: "^data_sources_list",
+        note: "Lists the installed data sources (empty on a fresh install).",
+      },
+      {
+        text: "^list_workers",
+        note: "A bare name that only one connector provides (xlog). It resolves to xlog.list_workers. Needs the xlog instance from 'onboarding-install-xlog-connector'.",
+      },
+    ],
+    toolsExercised: ["health_status", "data_sources_list", "xlog.list_workers", "audit_recent", "jobs_list"],
+    apis: [
+      {
+        method: "POST",
+        path: "/api/agent/tool/call",
+        description:
+          "Body {name, arguments}. The ^ prefix in chat posts here. A bare name resolves to the single provider, or the response says it is ambiguous and lists the matches.",
+      },
+    ],
+    howToTest: [
+      "Open a fresh chat. Send `^health_status`. A JSON result appears directly under your message with no model streaming.",
+      "Send `^data_sources_list`, then `^list_workers`. The second needs the xlog instance; without it the reply says no tool matched.",
+      "Send `^audit_recent limit=3` and `^jobs_list source=\"runtime\"` to see key=value arguments parsed (numbers, true/false and null are coerced; quote strings that contain spaces).",
+      "Optional, needs both an XSIAM and a Cortex XDR instance: send `^run_xql_query query=\"dataset = xdr_data | limit 5\"`. Both connectors provide that tool, so the reply is `ambiguous tool name ... Use a fully-qualified name`; repeat with `^xsiam.run_xql_query` or `^cortex-xdr.run_xql_query`.",
+      "Open Live telemetry and confirm no model turn was used for these messages.",
+    ],
+    expectedResult:
+      "Each ^ message runs exactly one tool and shows its JSON result. A bare name that a single connector provides is resolved to its namespaced form; a name two connectors provide is refused with the list of matches.",
+    verifyVia: [
+      "The result block shows the resolved tool name and a duration.",
+      "For the connector tool (`^list_workers`), /observability/events (action:tool_call) shows a tool_call row for xlog.list_workers. The built-in tools (`^health_status`, `^data_sources_list`, `^audit_recent`, `^jobs_list`) write no audit row; they show only in the metrics counter phantom_mcp_tool_calls_total.",
+      "No chat_turn_cost row is written for the ^ messages (no model call).",
+    ],
+    related: ["get-oriented", "chat-show-live-telemetry"],
+    prerequisites: ["onboarding-install-xlog-connector"],
+    components: ["chat", "mcp", "audit"],
+  },
+  {
+    id: "approval-mode-dropdown",
+    category: "chat",
+    title: "Read the approval chip and the approvals page",
+    summary:
+      "Find out whether any tool on your install waits for an approval card. When nothing is gated, the chat header says so; when something is gated, a menu switches between manual approvals and bypass. /approvals records every request.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "fact_check",
+    prompts: [
+      {
+        text: "Create a job named approval-check that runs every day at 03:00 and asks for the SOC coverage report.",
+        note: "With nothing gated the job is created at once and the agent says so. If your install gates jobs_create, an approval card appears below the thread instead.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: ["jobs_create"],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/approvals/gating",
+        description: "Which tools this install gates behind an approval card (count 0 = none).",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/approvals",
+        description: "Approval history and pending requests, including chat-origin ones.",
+      },
+    ],
+    howToTest: [
+      "Open a chat and look at the right side of the header. On an install where nothing is gated it shows a static chip reading No approvals (hover for the explanation). There is no menu to open, because Manual and Bypass would behave the same.",
+      "If your install does gate tools, the chip is a pill reading Approvals. Click it and choose Manual approvals or Bypass approvals; Bypass turns the pill into a Bypass ON badge.",
+      "Paste the prompt above. With nothing gated the agent creates the job at once and reports it; with a gated tool, click Approve on the card that appears.",
+      "Open /approvals. Chat-origin approvals resolve inline in the chat, so they are hidden by default; click Include chat-origin to show them. With nothing gated the page's empty state reads sensibly.",
+      "Clean up: open /jobs, click the ⋯ menu on `approval-check` and choose Delete.",
+    ],
+    expectedResult:
+      "The header chip matches the install's gated-tool list. A job request either applies at once (no gated tool) or waits for your Approve click (gated tool). /approvals keeps the record either way.",
+    verifyVia: [
+      "GET /api/agent/approvals/gating → count 0 matches the No approvals chip.",
+      "/approvals with Include chat-origin ticked shows the request when one was raised.",
+      "/jobs lists `approval-check` (daily 03:00), and /observability/events shows a job_registered row for it. jobs_create is a built-in tool, so there is no tool_call audit row; the chat's Live telemetry panel and Export Events show the call itself.",
+    ],
+    related: ["configure-agent-via-chat", "tune-action-policy", "agent-batch-plan"],
+    components: ["approvals", "chat", "jobs"],
+  },
+  {
+    id: "agent-batch-plan",
+    category: "ops",
+    title: "Let the agent run several actions as one plan",
+    summary:
+      "Ask for several changes in one message. The agent can bundle them with agent_batch_propose so they run (or are approved) as one plan, and a credential action inside a batch is refused.",
+    difficulty: "intermediate",
+    durationMin: 4,
+    icon: "checklist",
+    prompts: [
+      {
+        text: "In one go, create two jobs: batch-nightly-check at 02:00 every day and batch-weekly-check at 09:00 every Monday, both asking for the SOC coverage report.",
+        note: "Watch for agent_batch_propose in the telemetry. With nothing gated the plan runs at once; with a gated tool one approval card lists both actions.",
+        newSession: true,
+      },
+      {
+        text: "In one batch, delete the batch-nightly-check job and create a new API key labelled batch-test.",
+        note: "The API key action is refused by the credential guardrail, so the agent explains the boundary and sends you to /api-keys.",
+      },
+    ],
+    toolsExercised: ["agent_batch_propose", "jobs_create", "jobs_delete"],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/jobs",
+        description: "Confirms the jobs the plan created.",
+      },
+    ],
+    howToTest: [
+      "Open a fresh chat and paste prompt 1. Open Live telemetry and watch for an agent_batch_propose call whose actions are two jobs_create calls.",
+      "Open /jobs. Both batch-nightly-check and batch-weekly-check are listed.",
+      "Paste prompt 2. The agent refuses the API key part; no key appears on /api-keys and nothing in the batch runs.",
+      "Clean up: on /jobs delete both jobs from their ⋯ menu.",
+    ],
+    expectedResult:
+      "One plan creates both jobs. A batch that names a credential action (API key, provider or connector instance changes) is rejected before anything runs, so credentials stay operator-only even inside a batch.",
+    verifyVia: [
+      "Live telemetry shows the agent_batch_propose call, and /observability/events shows a job_registered row for each of the two jobs (agent_batch_propose is a built-in, so it writes no tool_call row).",
+      "/api-keys has no `batch-test` key.",
+    ],
+    related: ["configure-agent-via-chat", "auth-agent-credential-guardrail", "approval-mode-dropdown"],
+    components: ["chat", "jobs", "approvals"],
+  },
+  {
+    id: "memory-forget-via-chat",
+    category: "memory",
+    title: "Ask the agent to forget a memory",
+    summary:
+      "Store a fact, confirm it on /memory, then say \"forget that\" and watch the agent delete exactly that entry. Deleting from the /memory page works too and asks for confirmation.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "delete_sweep",
+    prompts: [
+      {
+        text: "Remember that the staging syslog broker is 10.20.30.40 on port 514.",
+        note: "The agent calls memory_store with a key it picks.",
+        newSession: true,
+      },
+      {
+        text: "Forget that.",
+        note: "The agent calls memory_delete for the entry it just stored.",
+      },
+    ],
+    toolsExercised: ["memory_store", "memory_delete"],
+    apis: [
+      {
+        method: "DELETE",
+        path: "/api/agent/memory/{key}",
+        description: "Removes one memory entry by key (the delete button on /memory uses it).",
+      },
+    ],
+    howToTest: [
+      "Paste prompt 1 in a fresh chat. Watch for memory_store in Live telemetry.",
+      "Open /memory and search for `staging syslog`. The entry is listed.",
+      "Back in chat, paste prompt 2. Watch for memory_delete with the same key.",
+      "Reload /memory and search again: the entry is gone.",
+      "To test the page path, store another fact, then click the delete (trash) icon on its row in /memory; the browser asks `Delete memory key ...?` and removes it when you confirm.",
+    ],
+    expectedResult:
+      "The stored fact appears on /memory and disappears after \"forget that\". Only the entry you referred to is removed.",
+    verifyVia: [
+      "/observability/events shows memory_stored then memory_deleted rows (the built-in memory tools write these domain rows, not tool_call rows).",
+      "/memory no longer lists the key.",
+    ],
+    related: ["recall-org-config", "chat-memory-recall", "memory-fts-keyword-promotion"],
+    components: ["chat", "memory", "audit"],
+  },
+  {
+    id: "session-fork",
+    category: "chat",
+    title: "Fork a chat session from its history",
+    summary:
+      "Branch a new session from an existing one to explore a what-if without losing the original. Fork the whole session from the sidebar, or fork from a single assistant message.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "call_split",
+    prompts: [
+      {
+        text: "What jobs are scheduled?",
+        note: "Turn 1, to give the session some history.",
+        newSession: true,
+      },
+      {
+        text: "Now suggest one new job I could add.",
+        note: "Turn 2.",
+      },
+    ],
+    toolsExercised: ["jobs_list"],
+    apis: [
+      {
+        method: "POST",
+        path: "/api/agent/sessions/{id}/fork",
+        description:
+          "Creates a child session with the parent's messages. Optional body {from_message_id} cuts the copy at one message.",
+      },
+    ],
+    howToTest: [
+      "Run the two prompts in a fresh chat.",
+      "In the sidebar, hover the session, click the ⋮ menu and choose Fork session. A new session appears directly under the original, indented, with a fork (branch) icon.",
+      "Open the fork. It contains the full history of the original. Send a new message; it continues only in the fork.",
+      "Return to the original session. Its messages are unchanged.",
+      "For a partial fork: in the original, hover an earlier assistant message and click Fork from here. The new session holds the conversation up to and including that message.",
+    ],
+    expectedResult:
+      "A fork starts with the parent's history, groups under the original in the sidebar, and diverges independently. The parent never changes.",
+    verifyVia: [
+      "The sidebar groups the fork under its root session with the fork icon.",
+      "GET /api/agent/sessions/{fork_id} shows the parent link.",
+    ],
+    related: ["chat-create-new-session", "chat-rename-session", "chat-delete-session"],
+    components: ["chat"],
+  },
+  {
+    id: "generate-logs-generic-no-schema",
+    category: "simulation",
+    title: "Generate generic logs without a data-source schema",
+    summary:
+      "Ask for logs when no data source is installed for the vendor. The worker takes the generic path, sends exactly the requested count and stops; duration and continuous options apply only with a data-source schema.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "data_object",
+    prompts: [
+      {
+        text: "Send 10 generic CEF logs to the syslog destination lab-syslog.",
+        note: "No vendor is named, so no schema is used. The worker sends 10 events and stops.",
+        newSession: true,
+      },
+      {
+        text: "Send generic CEF logs to lab-syslog continuously for 5 minutes.",
+        note: "The tool result explains that continuous and duration options apply only with a data-source schema. There is no schema-validation error.",
+      },
+    ],
+    toolsExercised: ["log_destinations_list", "xlog.create_data_worker"],
+    apis: [
+      {
+        method: "POST",
+        path: "/api/agent/tool/call",
+        description: "Scripted equivalent: body {name: 'create_data_worker', arguments: {...}} without a schema_override.",
+      },
+    ],
+    howToTest: [
+      "Make sure the xlog instance and a syslog destination named `lab-syslog` exist ('onboarding-install-xlog-connector'). Use a vendor with no installed data source, or ask without naming one.",
+      "Paste prompt 1. Watch xlog.create_data_worker in Live telemetry: it succeeds and returns a worker.",
+      "Ask the agent to list the running workers: the worker finishes after its 10 events.",
+      "Paste prompt 2. The agent reports the note that continuous and duration settings apply only with a data-source schema; the call does not fail with a GraphQL error about `durationSeconds`.",
+    ],
+    expectedResult:
+      "Generic workers start without errors, send `count` events and stop. Options that need a schema are explained, not rejected with a schema error.",
+    verifyVia: [
+      "/observability/events shows xlog.create_data_worker with status success.",
+      "The tool result text mentions that duration/continuous need a data-source schema.",
+    ],
+    related: ["generate-firewall-logs", "simulate-to-log-destination", "ops-list-stop-xlog-workers"],
+    prerequisites: ["onboarding-install-xlog-connector"],
+    components: ["chat", "xlog", "audit"],
+  },
+  {
+    id: "job-duplicate",
+    category: "ops",
+    title: "Duplicate a job from its row menu",
+    summary:
+      "Start a new job from an existing one: Duplicate opens the new-job form pre-filled with the original's description, action (prompt text, or tool name and arguments), schedule, timezone, model, approval bypass and policy, under the name '<name> (copy)'. Create is enabled straight away; rename or tweak anything, save it, and the original stays untouched.",
+    difficulty: "starter",
+    durationMin: 2,
+    icon: "content_copy",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "POST",
+        path: "/api/agent/jobs",
+        description: "Saving the duplicate creates a new job under the edited name. The form loads the source job with GET /api/agent/jobs/{name} (the URL carries only ?from=<name>).",
+      },
+    ],
+    howToTest: [
+      "Open /jobs. If you have no job, create a simple Prompt job named `dup-source` with a Description such as `weekly check` (Custom cron `0 9 * * 1`).",
+      "Click the ⋯ menu on its row and choose Duplicate. The new-job form opens (URL `/jobs/new?from=dup-source`) with the name `dup-source (copy)`, the Description, the Prompt text, the schedule (Custom cron `0 9 * * 1`) and the model, thinking and bypass settings all filled in, and the Create Job button enabled.",
+      "Change the name to `dup-copy` (optional) and click Create Job. Repeat Duplicate on a Tool Call job: the tool name and the Arguments JSON come across too, and a job scheduled with Repeating or Run at reopens in that same mode.",
+      "Back on /jobs, both `dup-source` and `dup-copy` are listed. Open `dup-source`: its settings are unchanged.",
+      "Clean up: delete `dup-copy` (and `dup-source` if you created it) from the ⋯ menu.",
+    ],
+    expectedResult:
+      "Duplicate opens the create form with a suggested name; saving it adds a second job and never modifies the original.",
+    verifyVia: [
+      "GET /api/agent/jobs lists both jobs.",
+      "The original's run history is not copied to the new job.",
+    ],
+    related: ["manage-job-lifecycle", "export-import-job", "schedule-runtime-job"],
+    components: ["jobs"],
+  },
+  {
+    id: "hooks-builtin-cost-memory-compact",
+    category: "ops",
+    title: "Install the cost-warning, memory-inject and pre-compact built-in hooks",
+    summary:
+      "Three in-process hooks need no receiver: warn when daily spend crosses a threshold, inject relevant memories into each prompt, and warn before a conversation is compacted. Install each from /settings/hooks and watch it fire.",
+    difficulty: "intermediate",
+    durationMin: 8,
+    icon: "webhook",
+    prompts: [
+      {
+        text: "What do you remember about our syslog broker?",
+        note: "With memory-inject installed, matching memories are added to the prompt before the model sees it.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "POST",
+        path: "/api/agent/hooks",
+        description:
+          "Body {name, event, transport: {type: 'builtin', name, config}, ...}. A built-in only saves for an event it supports.",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/hooks/builtins",
+        description: "The built-in handlers shipped in the image, with their config fields and compatible events.",
+      },
+    ],
+    howToTest: [
+      "Open /settings/hooks and click Add hook. Set Name `cost-watch`, Event RunEnd, and Transport Built-in (in-process, no subprocess) (new hooks start on HTTP webhook, so change it). In the Built-in field pick Cost warn over budget, set Daily cost threshold (USD) to 0 so it fires on the next turn, and click Create.",
+      "Add a second hook: Name `mem-inject`, Event UserPromptSubmit, Transport Built-in, Built-in Memory auto-inject, defaults, Create.",
+      "Add a third: Name `compact-warn`, Event PreCompact, Transport Built-in, Built-in Pre-compact context warning, defaults, Create.",
+      "Store a memory (for example ask the agent to remember that the syslog broker is 10.20.30.40), then paste the prompt above. In /observability/events, find a hook_dispatched row for UserPromptSubmit and another for RunEnd. Open /notifications: a cost warning appears.",
+      "In a session with a few turns, send `/compress`. A hook_dispatched row for PreCompact appears.",
+      "Back on /settings/hooks, switch each hook off (or delete it) when done.",
+    ],
+    expectedResult:
+      "All three hooks save, fire inside the agent with no external receiver, and leave hook_dispatched audit rows. The cost warning appears as a notification. A built-in saved for an event it does not support is rejected.",
+    verifyVia: [
+      "/observability/events → action hook_dispatched, with the hook names in the per-hook decisions.",
+      "/notifications shows the cost warning.",
+      "/settings/hooks lists the three hooks with a built-in badge.",
+    ],
+    related: ["ops-install-builtin-hook", "ops-manage-hooks", "chat-compact-long-session"],
+    components: ["hooks", "settings", "notifications", "audit"],
+  },
+  {
+    id: "connector-tool-toggle",
+    category: "connectors",
+    title: "Turn individual connector tools on and off",
+    summary:
+      "Choose which of a connector instance's tools the agent can use. Switch one off, check the agent no longer has it, then switch it back on.",
+    difficulty: "intermediate",
+    durationMin: 4,
+    icon: "toggle_on",
+    prompts: [
+      {
+        text: "Do you have a tool to list the workers running on xlog? Answer yes or no and name it.",
+        note: "Ask once with the tool on and once with it off.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: ["xlog.list_workers"],
+    apis: [
+      {
+        method: "PATCH",
+        path: "/api/agent/instances/{id}",
+        description: "Body {disabled_tools: [...]}. The tool catalog is rebuilt without them; no restart is needed.",
+      },
+    ],
+    howToTest: [
+      "Open /connectors → Instances tab and find the xlog instance ('onboarding-install-xlog-connector').",
+      "Under the instance row, click the Tools available to agent line (shows N/M enabled, with Configure on the right). A checklist of the connector's tools opens, with Enable all and Disable all.",
+      "Untick list_workers. The count drops by one.",
+      "In a fresh chat, paste the prompt. The agent says it has no such tool.",
+      "Tick list_workers again, start another fresh chat and paste the prompt: the tool is back.",
+    ],
+    expectedResult:
+      "A disabled tool disappears from the agent's catalog on the next turn and returns when re-enabled. Other tools on the instance are unaffected.",
+    verifyVia: [
+      "GET /api/agent/instances/<id> shows disabled_tools with the tool while it is off.",
+      "/observability/events shows an instance_tool_toggle row per change.",
+    ],
+    related: ["ops-override-connector-via-instances", "ops-marketplace-browse", "onboarding-install-xlog-connector"],
+    prerequisites: ["onboarding-install-xlog-connector"],
+    components: ["connectors", "mcp", "audit"],
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // AUTH — credentials on the two published ports
+  // ─────────────────────────────────────────────────────────────────
+  {
+    id: "mcp-endpoint-auth-8080",
+    category: "auth",
+    title: "The port 8080 tool endpoint refuses callers without a credential",
+    summary:
+      "The JSON-RPC tool endpoint on port 8080 requires either the agent token or an API key holding the tools:call scope. Check that anonymous and wrongly scoped callers are turned away before any tool runs.",
+    difficulty: "advanced",
+    durationMin: 8,
+    icon: "shield",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "POST",
+        path: "/api/v1/stream/mcp",
+        description:
+          "On port 8080 (HTTPS). Accepts `Authorization: Bearer <MCP_TOKEN>` or an API key with the `tools:call` scope. No credential gets 401, a key without the scope gets 403.",
+      },
+    ],
+    howToTest: [
+      "Host shell step (all curl commands below); the next step also mints API keys, which is operator-only. With no credential: `curl -sk -o /dev/null -w \"%{http_code}\\n\" -X POST https://localhost:8080/api/v1/stream/mcp -H 'Content-Type: application/json' -d '{}'` → 401.",
+      "Operator-only step (mints a credential): at /api-keys click Create Key, label `mcp-audit-only`, untick Tool dispatch, tick Audit (read), Generate Key, Copy. Repeat the curl with `-H \"Authorization: Bearer phantom_ak_…\"` → 403 (valid key, wrong scope).",
+      "Create a second key labelled `mcp-tools` with only Tool dispatch (`tools:call`) ticked. Repeat the curl with it: the status is no longer 401 or 403 (the request is accepted and the MCP protocol layer answers it, for example with a protocol error for the empty body).",
+      "Repeat once more with the agent token: `Authorization: Bearer <MCP_TOKEN>`, the MCP_TOKEN line from /opt/phantom/.env. It is accepted the same way.",
+      "Revoke both test keys on /api-keys.",
+    ],
+    expectedResult:
+      "Port 8080 never reaches a tool without a credential. Only the agent token or a key with `tools:call` (or `*`) gets past authentication; everything else is refused with 401 or 403 before FastMCP sees the request.",
+    verifyVia: [
+      "Status codes 401, 403, then a non-401/403 for the tools:call key and the agent token.",
+      "The `mcp-tools` key's last-used time updates on /api-keys.",
+    ],
+    related: ["api-key-scope-matrix", "ops-mint-api-key", "api-key-agent-access"],
+    components: ["mcp", "api-keys", "auth"],
+  },
+  {
+    id: "api-key-scope-matrix",
+    category: "auth",
+    title: "API keys only work where their scope is named",
+    summary:
+      "Mint keys with different scopes and check each one against the routes on ports 8080 and 3000: a key reaches only the routes its scope names, and credential routes stay closed even for a full-access key.",
+    difficulty: "advanced",
+    durationMin: 10,
+    icon: "vpn_key",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/v1/audit",
+        description: "Port 8080. Needs `audit:read` (or `*`).",
+      },
+      {
+        method: "GET",
+        path: "/api/v1/settings",
+        description: "Port 8080. Needs `settings:read`; PUT needs `settings:write`.",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/{instances|providers|api-keys}",
+        description: "Port 3000. Credential routes answer 403 to any API key, whatever its scope.",
+      },
+    ],
+    howToTest: [
+      "Operator-only step (mints credentials) that also needs a host shell for the curl commands below: at /api-keys create three keys with Create Key → Generate Key → Copy: `scope-audit` with only Audit (read), `scope-settings` with only Settings (read), and `scope-full` with Full access (admin). Keep each value in a shell variable; never paste them into chat.",
+      "Host shell step: `curl -sk -o /dev/null -w \"%{http_code}\\n\" -H \"Authorization: Bearer $AUDIT_KEY\" https://localhost:8080/api/v1/audit` → 200. The same key on `https://localhost:8080/api/v1/instances` → 403.",
+      "With `$SETTINGS_KEY`: GET `https://localhost:8080/api/v1/settings` → 200; the same URL with `-X PUT -d '{}'` → 403 (no settings:write).",
+      "With `$FULL_KEY` (`*`): `https://localhost:8080/api/v1/instances` → 403 (`*` covers only the named routes), while `/api/v1/audit` → 200.",
+      "Run the credential check on port 3000 with the full-access key: `for p in instances providers api-keys; do curl -sk -o /dev/null -w \"$p %{http_code}\\n\" -H \"Authorization: Bearer $FULL_KEY\" https://localhost:3000/api/agent/$p; done` → 403 for all three. A 401 would only mean no bearer was sent.",
+      "Revoke the three keys on /api-keys.",
+    ],
+    expectedResult:
+      "Each key works only where its scope is named; routes outside the table are closed to keys, and the credential routes (instances, providers, api-keys) return 403 even at full access.",
+    verifyVia: [
+      "The status codes above, in that order.",
+      "/observability/events shows api_key_created and api_key_revoked rows for the three keys.",
+    ],
+    related: ["mcp-endpoint-auth-8080", "api-key-agent-access", "ops-mint-api-key", "ops-rotate-api-key"],
+    components: ["api-keys", "auth", "audit"],
+  },
+  {
+    id: "settings-type-validation",
+    category: "ops",
+    title: "Settings refuse a value of the wrong type",
+    summary:
+      "The settings API accepts a value only when it has the same JSON type as the setting's default. A mismatch is reported in the response and nothing is stored; a correctly typed value applies.",
+    difficulty: "intermediate",
+    durationMin: 4,
+    icon: "rule",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "PUT",
+        path: "/api/agent/settings",
+        description:
+          "Body {updates: {key: value}, clear: [keys]}. Returns {applied, cleared, rejected, effective}; the status is 207 when anything is rejected.",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/settings",
+        description: "Defaults, overridable keys, effective values and current overrides.",
+      },
+    ],
+    howToTest: [
+      "Operator-only step (writes settings): open any Phantom page signed in and open the browser devtools console.",
+      "Send a number for a text setting: `await (await fetch('/api/agent/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({updates:{geminiModel:42}})})).json()`. The response has `rejected: [{key:'geminiModel', reason:...}]` and an empty `applied`.",
+      "Read it back: `await (await fetch('/api/agent/settings')).json()`. `effective.geminiModel` is unchanged.",
+      "Send a correctly typed value: same call with `{updates:{defaultLogFormat:'CEF'}}`. It is listed under `applied`.",
+      "Clear it again: `{clear:['defaultLogFormat']}` → listed under `cleared`.",
+    ],
+    expectedResult:
+      "A value whose JSON type differs from the setting's default is rejected and not stored; a same-type value is applied and can be cleared.",
+    verifyVia: [
+      "The 207 status and the `rejected` list for the mismatched call.",
+      "GET /api/agent/settings → effective values unchanged after the rejected call.",
+    ],
+    related: ["settings-toggle-vertex-cache", "settings-tune-auto-compact-threshold"],
+    components: ["settings", "audit"],
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // CONNECTORS & LOG DESTINATIONS
+  // ─────────────────────────────────────────────────────────────────
+  {
+    id: "wec-sender-send-events",
+    category: "connectors",
+    title: "Send Windows events to the Broker's Event Collector with wec-sender",
+    summary:
+      "Deliver synthetic Windows Event XML to a Cortex Broker VM's Windows Event Collector over WS-Management (mutual TLS, port 5986) so the events ingest as a real WEC feed.",
+    difficulty: "advanced",
+    durationMin: 15,
+    icon: "dns",
+    prompts: [
+      {
+        text: "List the subscriptions on the Windows Event Collector.",
+        note: "Calls wec-sender.list_subscriptions. Success proves the client certificate, its CA, the URL and the port.",
+        newSession: true,
+      },
+      {
+        text: "Send one test Windows logon event over WEC and give me the XQL to find it.",
+        note: "Calls wec-sender.send_test_event and returns a verify_with_xql query.",
+      },
+      {
+        text: "Generate 20 baseline Windows logon events spread over 2 minutes over WEC.",
+        note: "Calls wec-sender.generate_events with the built-in windows profile.",
+      },
+    ],
+    toolsExercised: [
+      "wec-sender.list_subscriptions",
+      "wec-sender.send_test_event",
+      "wec-sender.generate_events",
+    ],
+    apis: [
+      {
+        method: "POST",
+        path: "/api/agent/instances",
+        description:
+          "Operator-only (REST). Body {connector_id: 'wec-sender', name, config: {subscriptionManagerUrl}, secrets: {clientPfx, clientPfxPassword}}. The certificate and its password never pass through the agent.",
+      },
+    ],
+    howToTest: [
+      "Needs: a Cortex XSIAM Broker VM with the Windows Event Collector applet enabled, the Subscription Manager value and the client certificate bundle (PFX, as base64 text) with its password issued by the Cortex console, and a network route from the Phantom host to the broker on TCP 5986.",
+      "Open /connectors → Marketplace tab, click the wec-sender card and Install Connector.",
+      "Instances tab → Create Instance → wec-sender. Paste the Subscription Manager value exactly as issued, paste the base64 PFX into the clientPfx secret field and the password into clientPfxPassword (secret fields; operator-only), then Create Instance. Click Test Connection on the row.",
+      "In a chat paste prompt 1. The reply lists the collector's subscriptions.",
+      "Paste prompt 2. Run the XQL the agent returns in Cortex; the test event is found in microsoft_windows_raw with `_collector_type = \"WEC\"`.",
+      "Paste prompt 3. Run `dataset = microsoft_windows_raw | filter _collector_type = \"WEC\" | comp count()` in Cortex and watch the count grow.",
+    ],
+    expectedResult:
+      "The events reach the Broker's Windows Event Collector over WS-Management and land with `_collector_type = WEC`. The `sent` counts in the tool results mean the applet accepted the events; landing is proven in Cortex.",
+    verifyVia: [
+      "wec-sender.list_subscriptions returns at least one subscription.",
+      "The XQL from send_test_event finds the test event.",
+      "No certificate or password text appears in chat, tool output or the audit feed.",
+    ],
+    related: ["simulate-http-data-source", "ops-marketplace-browse", "ops-override-connector-via-instances"],
+    components: ["chat", "connectors", "audit", "secrets"],
+  },
+  {
+    id: "log-destination-types",
+    category: "ops",
+    title: "Create each type of log destination and test it",
+    summary:
+      "Beyond syslog, a log destination can be an HTTP webhook, an XSIAM HTTP Collector, Splunk HEC or an XSIAM Asset Inventory endpoint. Each type shows its own fields and has a Test button with an OK or error badge.",
+    difficulty: "intermediate",
+    durationMin: 10,
+    icon: "cloud_upload",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/destination-types",
+        description: "The five type manifests the form is rendered from.",
+      },
+      {
+        method: "POST",
+        path: "/api/agent/log-destinations/{id}/probe",
+        description: "Operator-only. Fires the type's probe and returns {ok, error, latency_ms}.",
+      },
+    ],
+    howToTest: [
+      "Needs: an endpoint for each type you want to test: a receiver you control for the webhook, an XSIAM HTTP Log Collector URL and key, a Splunk HEC URL and token, and an XSIAM API key for the asset inventory. Secrets are entered in the form only, never in chat.",
+      "Open /log-destinations and click New Destination. Open the Type picker: Syslog, HTTP Webhook, XSIAM HTTP Collector, Splunk HEC and XSIAM Asset Inventory (BYOS).",
+      "Create an HTTP Webhook (url, method, content type, auth type), then an XSIAM HTTP Collector (url, auth key, source, vendor, product), then Splunk HEC (url, token, index, source, sourcetype, verify SSL). Each form shows only the fields of its type.",
+      "Click Test on each row. A green OK badge with the latency means the endpoint answered; a red badge shows the error text.",
+      "For XSIAM Asset Inventory, Test sends an empty list and treats the rejection as success, so it creates no assets.",
+      "Delete the destinations you no longer need.",
+    ],
+    expectedResult:
+      "Each type renders its own fields, saves with secrets redacted, and Test reports success or the failure reason for that endpoint.",
+    verifyVia: [
+      "The rows appear grouped by type on /log-destinations.",
+      "GET /api/agent/log-destinations shows each row with empty secrets and last_probe_ok set.",
+      "/observability/events shows log_destination_create and log_destination_probe rows.",
+    ],
+    related: ["configure-log-destination", "simulate-to-log-destination", "populate-asset-inventory"],
+    components: ["xlog", "audit", "secrets"],
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // OBSERVABILITY & REFERENCE PAGES
+  // ─────────────────────────────────────────────────────────────────
+  {
+    id: "openapi-spec-download",
+    category: "ops",
+    title: "View and download the REST API specification",
+    summary:
+      "Open the REST API reference, filter the endpoints, read the OpenAPI specification in the browser and download it as JSON.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "api",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/openapi",
+        description: "The OpenAPI 3.0 specification as JSON (add ?format=yaml for YAML).",
+      },
+    ],
+    howToTest: [
+      "Open /help/api (sidebar → Learn → REST API). The header states how many endpoints there are across how many categories.",
+      "Type `jobs` into 'Filter by method, path, summary…' and click a category chip. The list narrows.",
+      "Click an endpoint card: its detail page shows the schema and a try-it-out form.",
+      "Back on /help/api, click the View OpenAPI spec icon. A modal shows the OpenAPI 3.0 specification; use its Download button or close it.",
+      "Click the Download OpenAPI JSON icon. The browser saves phantom-agent-openapi.json.",
+    ],
+    expectedResult:
+      "The reference lists the /api/agent/* routes; the specification opens in a modal and downloads as valid JSON.",
+    verifyVia: [
+      "The downloaded file opens as JSON with an `openapi` field and a `paths` object.",
+      "GET /api/agent/openapi returns the same document.",
+    ],
+    related: ["help-pages-tour", "ops-mint-api-key"],
+    components: ["settings", "api-keys"],
+  },
+  {
+    id: "settings-services-page",
+    category: "ops",
+    title: "Browse the Services page and check live health on the pipeline view",
+    summary:
+      "Open /settings (Services) for the inventory of the backend services with their ports, health endpoints and masked environment settings, and use /observability/pipeline for the live health picture.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "tune",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/health",
+        description: "Per-service probe behind the live health view on /observability/pipeline.",
+      },
+    ],
+    howToTest: [
+      "Open /settings (sidebar → Settings → Services). Services are grouped into layers: Cognitive, Telemetry, Adversary Emulation and Storage, each with cards for its services (phantom-agent, phantom-mcp, xlog, caldera, sqlite).",
+      "Click a service card. The detail panel shows its port, its health endpoint and its environment variables; secret values are masked and never shown.",
+      "Each card carries a status dot labelled Healthy, Degraded, Down or Unknown. For the authoritative live picture open /observability/pipeline in another tab: a service that is down shows red there and its row in the Component Status table shows the failure.",
+      "Cross-check with `GET /api/agent/health` (signed in): it lists one entry per service with ok, HTTP code and latency.",
+    ],
+    expectedResult:
+      "The page lists the services with their ports and health endpoints, and keeps secrets masked. Live health is read from the pipeline view and the health endpoint.",
+    verifyVia: [
+      "GET /api/agent/health agrees with the colours on /observability/pipeline.",
+      "No secret value is visible anywhere in the detail panel.",
+    ],
+    related: ["ops-pipeline-health-check", "tls-init-fresh-install"],
+    components: ["settings", "pipeline"],
+  },
+  {
+    id: "observability-detections-inventory",
+    category: "validation",
+    title: "Browse the detection inventory page",
+    summary:
+      "See the detection rules and MITRE technique coverage Phantom has synced from your Cortex tenant. The page mirrors what detections_list and technique_coverage return in chat.",
+    difficulty: "intermediate",
+    durationMin: 5,
+    icon: "radar",
+    prompts: [
+      {
+        text: "Pull the last 24 hours of XSIAM issues into my detection inventory.",
+        note: "Needs an XSIAM instance. The agent calls xsiam.get_issues then detections_sync.",
+      },
+    ],
+    toolsExercised: ["xsiam.get_issues", "detections_sync", "detections_list", "technique_coverage"],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/detections",
+        description: "Rules with 24h, 7d and 30d fire counts. Filters: severity, technique.",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/detections/coverage/techniques",
+        description: "Per MITRE technique: rule count and fire counts.",
+      },
+    ],
+    howToTest: [
+      "Needs: a Cortex XSIAM tenant with an XSIAM connector instance, for the sync part (the empty-state check works without one). Open /observability/detections (sidebar → Observability → Detections). Without a sync the Rules tab says there are no detection rules yet, and the Coverage tab says to sync first.",
+      "In a chat paste the prompt above, then click Refresh on the page.",
+      "On the Rules tab, read the table (rule, severity, fire counts, technique chips). Filter by typing a technique such as T1059.001 in 'MITRE T-code' or by severity.",
+      "Switch to the Coverage tab: one row per technique with the number of rules and recent fires.",
+    ],
+    expectedResult:
+      "The empty state explains how to populate the page; after a sync the Rules and Coverage tabs mirror what the chat tools report.",
+    verifyVia: [
+      "Rule counts match detections_list in chat.",
+      "GET /api/agent/detections returns the same rules as the table.",
+    ],
+    related: ["find-coverage-gaps", "generate-coverage-report"],
+    components: ["xsiam", "audit"],
+  },
+  {
+    id: "observability-logs-runtime-events",
+    category: "ops",
+    title: "Tail the event log and read runtime events",
+    summary:
+      "Use /observability/logs for a live tail of the platform's structured event log with a query bar, and /observability/runtime-events for the high-signal events such as simulations started and tool failures.",
+    difficulty: "starter",
+    durationMin: 4,
+    icon: "terminal",
+    prompts: [
+      {
+        text: "List the workers currently running on xlog.",
+        note: "Any tool call produces events to watch. Needs the xlog instance.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: ["xlog.list_workers"],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/audit/stream",
+        description: "Server-sent event stream the Logs page tails.",
+      },
+    ],
+    howToTest: [
+      "Open /observability/logs. A status pill shows live once the stream connects. This is a tail of the audit event stream, not container output.",
+      "In the query bar type `action:tool_call` and press Enter. Only tool-call events remain; click Clear to reset.",
+      "In a chat paste the prompt above and return to the page: a new tool_call row appears within a second or two.",
+      "Open /observability/runtime-events. The summary cards count events by name (for example rt.simulation.started, rt.tool.failed); click a card or type a name into the filter to narrow the table. A fresh install says no runtime events have been recorded until a simulation runs or a tool fails; run a simulation from 'generate-firewall-logs' and click Refresh.",
+    ],
+    expectedResult:
+      "The Logs page streams new events as they happen and filters them client-side; Runtime events lists the manifest-declared high-signal events with counts.",
+    verifyVia: [
+      "The row you triggered also exists in /observability/events (paginated history).",
+      "After a simulation, rt.simulation.* counts increase on the Runtime events page.",
+    ],
+    related: ["activity-live-feed", "auth-check-events-observability", "ops-read-metrics-traces"],
+    prerequisites: ["onboarding-install-xlog-connector"],
+    components: ["audit", "pipeline"],
+  },
+  {
+    id: "activity-live-feed",
+    category: "ops",
+    title: "Watch the live activity feed",
+    summary:
+      "Open /activity in one tab and use the chat in another: events stream in within about a second, newest first, with an icon per kind of action.",
+    difficulty: "starter",
+    durationMin: 2,
+    icon: "history_toggle_off",
+    prompts: [
+      {
+        text: "What jobs are scheduled?",
+        note: "Run this in a second tab while /activity is open.",
+      },
+    ],
+    toolsExercised: ["jobs_list"],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/audit/stream",
+        description: "Replays the last 100 events on connect, then pushes new ones.",
+      },
+    ],
+    howToTest: [
+      "Open /activity (sidebar → Observability → Live activity). The pill at the top right reads connecting, then live.",
+      "In another tab open the chat and paste the prompt above.",
+      "Return to /activity. New rows appear at the top: the chat events for the turn (for example chat_turn_cost), each with an icon, status and actor. Click meta on a row to expand its metadata. jobs_list is a built-in tool, so it adds no tool_call row; ask 'List the workers currently running on xlog.' instead (needs the xlog instance) to see a tool_call entry for xlog.list_workers.",
+    ],
+    expectedResult:
+      "The page shows the most recent 100 events on load and adds new ones within seconds. If the stream drops, the pill changes to reconnecting and recovers by itself.",
+    verifyVia: [
+      "Each row also exists in /observability/events.",
+      "The pill reads live while the stream is connected.",
+    ],
+    related: ["observability-logs-runtime-events", "auth-check-events-observability"],
+    components: ["audit"],
+  },
+  {
+    id: "bench-run-benchmark",
+    category: "ops",
+    title: "Run the phantom-soc-v1 benchmark and compare runs",
+    summary:
+      "Run the bundled benchmark from /observability/bench, open the run to see per-case results, and compare two runs. A run spends model tokens.",
+    difficulty: "intermediate",
+    durationMin: 10,
+    icon: "speed",
+    prompts: [
+      {
+        text: "Run the phantom-soc-v1 benchmark.",
+        note: "Chat alternative to the Run benchmark button: the agent calls bench_run with manifest=phantom-soc-v1. It spends the same tokens as the button.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: ["bench_run"],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/bench/runs",
+        description: "Past benchmark runs with correctness, cost and wall-time summaries.",
+      },
+    ],
+    howToTest: [
+      "Needs: a model provider configured, the xlog instance ('onboarding-install-xlog-connector') for the log-generation case, and some tolerance for token spend: every run sends real prompts.",
+      "Open /observability/bench (sidebar → Observability → Bench). The Run a benchmark box shows Manifest (path or bundled id) with phantom-soc-v1 as the placeholder, and an optional Router preset model.",
+      "Click Run benchmark. The button reads Running… until the run finishes; a new run appears in the list.",
+      "Open the run. Hero figures show Correctness, Avg Jaccard, Cost p50, Wall p50 and Cases; the table lists each case with pass or fail.",
+      "Run it a second time (optionally with a different Router preset model), then click Compare runs, pick the first run as the base and the second as the head, and read the deltas.",
+    ],
+    expectedResult:
+      "Each run is recorded with correctness, tool-call overlap, cost and wall-time figures, and two runs can be compared side by side.",
+    verifyVia: [
+      "The run id appears in the list and its detail page opens.",
+      "/observability/cost shows the tokens the run used.",
+    ],
+    related: ["chat-cost-rollup", "ops-set-job-model-override"],
+    prerequisites: ["onboarding-install-xlog-connector"],
+    components: ["cost", "models", "audit"],
+  },
+  {
+    id: "skills-catalog-browse-and-run",
+    category: "simulation",
+    title: "Browse the shipped skills and run one",
+    summary:
+      "The skills catalogue holds the playbooks the agent follows: foundation skills, attack scenarios and workflows such as the Cortex analytics triggers. Browse them, then ask the agent to run one.",
+    difficulty: "intermediate",
+    durationMin: 6,
+    icon: "auto_awesome",
+    prompts: [
+      {
+        text: "Trigger the Cortex suspicious port scan alert.",
+        note: "The agent loads the trigger_port_scan_analytics skill and follows its steps. Needs the xlog instance and a destination that reaches your Cortex Broker.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: ["skills_list_all", "skills_read", "xlog.create_data_worker"],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/skills",
+        description: "Skill list with category and lock state.",
+      },
+    ],
+    howToTest: [
+      "Needs: a Cortex tenant and a syslog destination that reaches your Cortex Broker, for the final run step only (browsing needs nothing). Open /skills and click the Workflows chip. The shipped workflows include the trigger_* analytics skills.",
+      "Click the card for `trigger_port_scan_analytics` ('Trigger the Cortex Suspicious port scan analytics alert'). Read its steps: one exact worker call, a landing check, and how long to wait for the alert.",
+      "Click the Foundation and Scenarios chips to see the other groups; on a fresh install the counts are 7, 9 and 56.",
+      "Open a chat and paste the prompt above. The agent reads the skill and starts the worker described in it. The alert arrives in Cortex several minutes after the burst.",
+    ],
+    expectedResult:
+      "The catalogue counts match what ships, the skill's page explains the exact call, and the agent follows it. Seeing the resulting alert needs a Cortex tenant.",
+    verifyVia: [
+      "Live telemetry shows skills_read then xlog.create_data_worker for the turn; /observability/events (action:tool_call) shows the xlog.create_data_worker row (skills_read is a built-in and writes no audit row).",
+      "In Cortex, the alert appears after the wait the skill describes.",
+    ],
+    related: ["skills-page-browse", "run-port-scan-scenario", "ops-edit-skill-from-ui"],
+    prerequisites: ["onboarding-install-xlog-connector"],
+    components: ["skills", "chat", "xlog"],
+  },
+  {
+    id: "data-source-validated-tiers",
+    category: "data-sources",
+    title: "Read the validation pills and the HTTP marker on data sources",
+    summary:
+      "Data source rows carry a Mapping Validated or Raw Validated pill that tells you how far the source was proven against Cortex, and an HTTP pill for sources delivered through http-sender. Learn what each means and where the routing details live.",
+    difficulty: "starter",
+    durationMin: 4,
+    icon: "verified",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/data-sources/catalog",
+        description: "Each row carries validated, raw_validated and delivery.",
+      },
+    ],
+    howToTest: [
+      "Open /data-sources → Browse, search `okta` and click the Okta vendor card. The tray lists several Okta data sources.",
+      "Find a row with a green Mapping Validated pill: hover it to read that the modeling rule was shown to populate the data model on a real tenant.",
+      "Find the row with an HTTP pill (the Okta HTTP collector variant). It is delivered through the http-sender connector, not syslog/CEF, and it carries neither validation pill.",
+      "Search `AzureAppService`, click the Microsoft vendor card and find the Azure App Service row, which carries an amber Raw Validated pill: the raw dataset was proven to receive the exact field names the vendor's rule reads, but the vendor's content pack was not installed on the tenant. (Search `duo` for a Mapping Validated example.)",
+      "Click a syslog row to open its drawer and read the How to simulate this data source section. It states the vendor and product literals the Broker routes on, which can differ from the names shown in the card header.",
+    ],
+    expectedResult:
+      "Pills match each source's validation state: Mapping Validated, Raw Validated, or none. HTTP sources are marked separately and have no syslog validation tier. The routing literals live in the drawer's guidance.",
+    verifyVia: [
+      "GET /api/agent/data-sources/catalog shows validated, raw_validated and delivery matching the pills.",
+      "The drawer for a syslog source names the vendor/product to configure on the Broker.",
+    ],
+    related: ["install-data-source", "simulate-http-data-source", "edit-data-source-guidance"],
+    components: ["marketplace"],
+  },
+  // ─────────────────────────────────────────────────────────────────
+  // OUTCOME JOURNEYS — run a shipped skill, see telemetry leave
+  // Phantom, and (on a Cortex tenant) see the detection react.
+  //
+  // Each expectedResult has two halves:
+  //   "On Phantom alone"  — checkable on a bare install: skill picked,
+  //                         tool calls in the telemetry panel, workers or
+  //                         http-sender sends, the destination, memory.
+  //   "Tenant-side"       — needs a Cortex tenant: landed rows, XDM
+  //                         fields, alerts. Never assumed to fire when the
+  //                         skill itself says the detector is slow, gated
+  //                         or still training.
+  // ─────────────────────────────────────────────────────────────────
+  {
+    id: "outcome-trigger-port-scan-analytics",
+    category: "simulation",
+    title: "Trigger the Cortex suspicious port scan alert",
+    summary:
+      "Run the port scan analytics skill: one bounded burst of 90 firewall events from a fresh host to many privileged ports on a single target. It is the one detector that fires fast and repeatedly, so it is the reference outcome for the whole product.",
+    difficulty: "intermediate",
+    durationMin: 12,
+    icon: "radar",
+    prompts: [
+      {
+        text: "Run the port scan analytics skill: send the burst to my log destination from a host name that has not been used before, and tell me the worker id and the host name you used.",
+        note: "The agent reads workflows/trigger_port_scan_analytics.md, resolves the destination with log_destinations_list and makes exactly one xlog.create_data_worker call (CEF, vendor panw, product ngfw_traffic, count 90, a 9-field schema_override, ONE destination IP, 30 ports). It must not substitute vendor, fields or ports.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "log_destinations_list",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "memory_store",
+    ],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/skills",
+        description: "Confirms trigger_port_scan_analytics is installed and enabled (workflows group).",
+      },
+    ],
+    howToTest: [
+      "Prerequisites: an xlog instance and a syslog log destination (see the two prerequisite journeys). This skill carries its own 9-field schema, so no data source has to be installed. For the tenant-side part you also need a Cortex tenant that receives the destination's syslog through a Broker, plus the XSIAM connector for the agent to query it.",
+      "Open a new chat and open the Live Telemetry panel (chat header, right side).",
+      "Paste the prompt. In the panel you should see skills_read (or load_simulation_skills) for workflows/trigger_port_scan_analytics.md, then log_destinations_list, then ONE xlog.create_data_worker call whose arguments show destination logdest:<id>, count 90, max_events 90, duration_seconds 60 and a single dest_ip.",
+      "If the tool answers 'burst rejected: 1 burst already running', wait 60 seconds and ask the agent to send the same call again. Do not run two bursts together.",
+      "Ask 'List the workers currently running on xlog'. The burst is bounded, so the worker may already be gone: that is the self-stop working.",
+      "Tenant-side: about 30 to 60 seconds after the burst, let the agent run the skill's landing check (xsiam.run_xql_query on panw_ngfw_traffic_raw). Then wait 5 minutes and let it poll for the alert every 2 to 3 minutes, up to 15 minutes.",
+      "To run it again, use another host name: the detector deduplicates per source host for one day.",
+    ],
+    expectedResult:
+      "On Phantom alone: the agent picks the skill, makes one bounded xlog.create_data_worker call with the skill's exact shape and your logdest:<id> destination, reports a worker id and the fresh host name, and the worker finishes by itself within about a minute. A syslog receiver on the destination sees CEF datagrams with vendor panw and product ngfw_traffic. Tenant-side (needs a Cortex tenant): the landing check returns 90 events, at least 20 distinct ports and 1 target; the 'Suspicious port scan' alert (Low) names your host 4 to 12 minutes after the burst (as early as about 3.5). If it stays silent past 15 minutes, the skill says to re-check the landing shape and the one-day host deduplication before retrying once from a new host.",
+    verifyVia: [
+      "Phantom: Live telemetry shows skills_read, log_destinations_list and xlog.create_data_worker for the turn, status=success; /observability/events (action:tool_call) shows the xlog.create_data_worker row.",
+      "Phantom: the worker call's destination is a logdest:<id> reference, never a raw address you did not name.",
+      "Phantom: tcpdump on the syslog receiver shows the datagrams (for example `sudo tcpdump -A -i any 'udp port 514'`).",
+      "Tenant: `dataset = panw_ngfw_traffic_raw | filter source_device_host = \"<host>\" | comp count() as n, count_distinct(dest_port) as nports, count_distinct(dest_ip) as ndst by source_ip` returns n 90, nports 20 or more, ndst 1.",
+      "Tenant: `dataset = alerts | filter alert_name in (\"Suspicious port scan\", \"Highly suspicious port scan\", \"Port scan by suspicious process\")` has a new row for your host.",
+    ],
+    related: ["run-port-scan-scenario", "outcome-trigger-network-analytics-alerts", "skills-catalog-browse-and-run", "ops-list-stop-xlog-workers"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-trigger-network-analytics-alerts",
+    category: "simulation",
+    title: "Send the FortiGate spam bot and domain-controller SMB shapes",
+    summary:
+      "The network analytics skill documents two further firewall-traffic detectors beyond port scan. They land and model cleanly from the FortiGate source that ships installed, but the skill is explicit that neither is a reliable live demo, so this journey proves the telemetry and sets the right expectation for the alert.",
+    difficulty: "advanced",
+    durationMin: 15,
+    icon: "lan",
+    prompts: [
+      {
+        text: "Run the network analytics skill and send the FortiGate spam bot burst: one internal workstation with a host name that has not been used before, connecting to about 30 different external mail servers on port 25 or 587.",
+        note: "The agent reads workflows/trigger_network_analytics_alerts.md. It may first call phantom_generate_observables, phantom_get_field_info or data_sources_get_schema to prepare the values; the data-generating step is then one xlog.create_data_worker call: CEF, vendor Fortinet, product FortiGate, count 50, an 8-field schema_override (src, dst, spt, dpt, shost, dhost, app, proto) and a pool of 30 to 35 distinct external destination IPs.",
+        newSession: true,
+      },
+      {
+        text: "Now run the domain controller SMB recipe from the same skill, using a domain controller host name that has not been used before.",
+        note: "A second xlog.create_data_worker call: same vendor and 8 fields, dpt 445, app SMB, a fresh DC-style source host and brand-new workstation targets, count 40 to 80.",
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "log_destinations_list",
+      "phantom_generate_observables",
+      "phantom_get_field_info",
+      "data_sources_get_schema",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an xlog instance, a syslog log destination and the FortiGate data source (it is the one source present on a fresh install; if /data-sources shows it missing, install it as in the install-data-source journey). A Cortex tenant is needed only for the tenant-side checks.",
+      "Open a new chat, open the Live Telemetry panel and paste prompt 1. Confirm skills_read and log_destinations_list, possibly some preparation calls (phantom_generate_observables, phantom_get_field_info, data_sources_get_schema), then exactly one xlog.create_data_worker with vendor Fortinet, product FortiGate, max_events 50 and a schema_override of exactly the 8 fields.",
+      "Open the call's arguments and count the distinct dst values: the pool should hold 30 to 35 external addresses (events sample the pool with replacement, so about 27 distinct addresses land from 50 events).",
+      "Paste prompt 2 and confirm the second call has dpt 445, app SMB and a different shost.",
+      "Ask 'List the workers currently running on xlog' to see the bounded workers finish.",
+      "Tenant-side: run `dataset = fortinet_fortigate_raw | filter shost = \"<host>\" | comp count_distinct(dst) as n`. Then give the alerts several minutes, and treat any alert as a bonus rather than a pass condition.",
+      "For an alert you can watch live and repeat, use the port scan journey instead.",
+    ],
+    expectedResult:
+      "On Phantom alone: the agent reads the network analytics skill, optionally prepares values with read-only helper calls, sends two bounded FortiGate CEF workers (one xlog.create_data_worker per recipe) to your logdest:<id> destination with narrow 8-field schemas and fresh host names, and does not hand-build the shapes from memory. Tenant-side (needs a Cortex tenant): the landing query shows 15 or more distinct mail-server destinations for the spam host (the skill's threshold), and the SMB rows land under the DC-style host. The skill states that a one-shot FortiGate spam burst stayed silent for about 9 minutes of watching, and that the SMB indicator is held back by a 7-day deduplication per source and by the tenant's own classification of a real domain controller, so a host merely named DC01 is not expected to alert. A missing alert here is not a failure.",
+    verifyVia: [
+      "Phantom: the Live telemetry panel (or the session's Export Events) shows skills_read (or load_simulation_skills) for workflows/trigger_network_analytics_alerts.md and two xlog.create_data_worker calls.",
+      "Phantom: each call's schema_override lists only the 8 fields, not the vendor's full schema.",
+      "Tenant: `dataset = fortinet_fortigate_raw | filter shost = \"<host>\" | comp count_distinct(dst) as n` is 15 or more for the spam host.",
+      "Tenant (optional, slow): `dataset = alerts | filter alert_name = \"Spam Bot Traffic\"` or `alert_name = \"Suspicious SMB connection from domain controller\"` may or may not show a row.",
+    ],
+    related: ["outcome-trigger-port-scan-analytics", "simulate-from-installed-data-source", "generate-firewall-logs"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination", "install-data-source"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-trigger-identity-analytics",
+    category: "simulation",
+    title: "Send Entra ID sign-in attacks for the identity analytics skill",
+    summary:
+      "Run the identity analytics skill to send three cloud sign-in attack shapes (Tor exit sign-in, SSO brute force, impossible traveler) as Microsoft Entra ID sign-in logs. The detectors need a 30-day training window on a new dataset, so a fresh tenant is expected to model the rows but stay quiet.",
+    difficulty: "advanced",
+    durationMin: 10,
+    icon: "passkey",
+    prompts: [
+      {
+        text: "Run the identity analytics skill: send an SSO brute force against one Entra ID user and an impossible traveler leg pair for another user, to my log destination.",
+        note: "The agent reads workflows/trigger_identity_analytics.md and sends CEF with vendor msft and product azure_ad and the skill's 26-field schema_override. The impossible traveler must be TWO workers pinned to the same userPrincipalName (one per location), because list values in observables_dict are sampled independently per field.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "log_destinations_list",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an xlog instance and a syslog log destination. Optional but recommended: install the Microsoft Entra ID sign-in data source (open /data-sources, search 'entra', open the Microsoft Entra ID card and install the row for msft_azure_ad_raw) so the schema is on file; the skill itself carries the 26 fields. A Cortex tenant is needed only for the tenant-side checks.",
+      "Open a new chat, open the Live Telemetry panel and paste the prompt.",
+      "Check the calls: skills_read, log_destinations_list, then three xlog.create_data_worker calls (brute force, leg 1, leg 2). Brute force should carry around 150 events with status.errorCode 50126; the two legs should name the same userPrincipalName with Riyadh/SA and San Francisco/US locations.",
+      "Ask 'List the workers currently running on xlog' and confirm the workers are bounded.",
+      "Tenant-side: run the skill's landing check (a datamodel query on msft_azure_ad_raw for the user's xdm.source.user.upn). Then run its alert check filtered to the stored alert sources MAGNIFIER and ANALYTICS_BIOC.",
+    ],
+    expectedResult:
+      "On Phantom alone: the agent follows the skill's shape, splits the impossible traveler into two workers for one user, and sends all of it to your logdest:<id> destination. Tenant-side (needs a Cortex tenant): the rows land in msft_azure_ad_raw and populate xdm.source.user.upn, xdm.source.ipv4, xdm.source.location.country and xdm.event.outcome. The identity detectors carry a 30-day training period counted from the first data in that dataset, so on a new dataset no alert is expected and that is not a delivery failure. Once training has finished, an alert driven by this feed carries the tag DS:msft/azure_ad.",
+    verifyVia: [
+      "Phantom: the Live telemetry panel (or the session's Export Events) shows skills_read (or load_simulation_skills) for workflows/trigger_identity_analytics.md and three xlog.create_data_worker calls.",
+      "Phantom: both traveler legs use the same userPrincipalName and different location values.",
+      "Tenant: `datamodel dataset = msft_azure_ad_raw | filter xdm.source.user.upn = \"<upn>\" | fields xdm.source.user.upn, xdm.source.ipv4, xdm.source.location.country, xdm.event.outcome | limit 10` returns populated columns.",
+      "Tenant (after training): `dataset = alerts | filter alert_source in (\"MAGNIFIER\", \"ANALYTICS_BIOC\") | fields alert_name, original_tags` shows an alert with DS:msft/azure_ad.",
+    ],
+    related: ["outcome-trigger-okta-mfa-bombing", "install-data-source", "outcome-pick-skill-from-plain-words"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-trigger-okta-mfa-bombing",
+    category: "simulation",
+    title: "Trigger the Okta MFA bombing alert through http-sender",
+    summary:
+      "Run the Okta MFA bombing skill: two built-in http-sender scenarios for the same baseline user (failed logins from an out-of-country address, then a flood of rejected push challenges). This route uses http-sender only, not an xlog worker.",
+    difficulty: "advanced",
+    durationMin: 12,
+    icon: "notifications_active",
+    prompts: [
+      {
+        text: "Trigger the Okta MFA bombing alert for the baseline user reem.aldosari using the built-in scenarios.",
+        note: "The agent reads workflows/trigger_okta_mfa_bombing_alert.md, checks http-sender.list_destinations for okta_sso (ready: true), then calls http-sender.generate_events twice for the same target_user: failed_then_success (count 30, spread_seconds 900) and then mfa_fatigue (count 25, spread_seconds 600), both with destination okta_sso. It must not call xlog.create_data_worker.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "http-sender.list_destinations",
+      "http-sender.generate_events",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an http-sender instance with an okta_sso destination that shows ready (create it as in the simulate-http-data-source journey). A Cortex tenant with the Okta content pack and the HTTP Log Collector behind that destination is needed for the tenant-side part.",
+      "Pick a baseline user with no 'Multiple Okta MFA requests' alert in the last 24 hours (the skill lists twelve; the prompt uses one of them).",
+      "Open a new chat, open the Live Telemetry panel and paste the prompt.",
+      "Confirm the order: skills_read, http-sender.list_destinations, then two http-sender.generate_events calls with profile okta, the same target_user and no source_ip. Both calls are needed: each scenario alone stays silent.",
+      "Read the replies: they report how many events were sent per call and name the actor. No collector key may appear anywhere.",
+      "Tenant-side: about 5 minutes later run the skill's landing check on okta_sso_raw, then check for the alert. On this route it typically arrives within one to two minutes of the second call.",
+    ],
+    expectedResult:
+      "On Phantom alone: the agent runs the two scenarios in the right order for one user, reports the counts sent to okta_sso, never touches an xlog worker, and never shows the collector key. Tenant-side (needs a Cortex tenant): okta_sso_raw shows 30 user.session.start rows, 12 system.push.send_factor_verify_push, 12 user.mfa.okta_verify.deny_push and 1 user.authentication.auth_via_mfa for the user, and the alert 'Multiple Okta MFA requests sent to a user with unusual characteristics' (Low, T1586) names that user. The same user is deduplicated for one day, so repeat with another baseline user.",
+    verifyVia: [
+      "Phantom: /observability/events shows two http-sender.generate_events calls and no xlog.create_data_worker call.",
+      "Phantom: both calls name the same target_user and destination okta_sso.",
+      "Tenant: `dataset = okta_sso_raw | filter actor ~= \"<login>\" | comp count() by eventtype` shows the four event types with the counts above.",
+      "Tenant: `dataset = alerts | filter alert_name ~= \"Multiple Okta MFA requests\"` has a new row for the user.",
+    ],
+    related: ["simulate-http-data-source", "outcome-trigger-identity-analytics", "outcome-trigger-gcp-k8s-vuln-scanner"],
+    prerequisites: ["simulate-http-data-source"],
+    components: ["chat", "skills", "connectors", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-trigger-kubernetes-analytics",
+    category: "simulation",
+    title: "Send AKS audit logs for the Kubernetes analytics skill",
+    summary:
+      "Run the Kubernetes analytics skill to send Azure AKS audit events (anonymous access to secrets, Tor-based API call, privileged pod, cluster-role-binding change) as CEF. The rows model fully straight away, but the detectors have a 14-day activation period, so alerts come later.",
+    difficulty: "advanced",
+    durationMin: 10,
+    icon: "deployed_code",
+    prompts: [
+      {
+        text: "Run the Kubernetes analytics skill: send 12 AKS audit events of an anonymous user reading secrets in several namespaces, to my log destination.",
+        note: "The agent reads workflows/trigger_kubernetes_analytics.md and makes one xlog.create_data_worker call: CEF, vendor msft, product azure_aks, a 4-field schema_override (category, properties.pod, properties.log, SourceIps), category kube-audit, and properties.log as ONE stringified JSON audit blob whose user is system:anonymous.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "log_destinations_list",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an xlog instance and a syslog log destination. Install the Azure Kubernetes Services data source first (open /data-sources, search 'kubernetes', open the Azure Kubernetes Services card and install the row for msft_azure_aks_raw); the skill builds on that source's guidance. A Cortex tenant is needed only for the tenant-side checks.",
+      "Open a new chat, open the Live Telemetry panel and paste the prompt.",
+      "Open the xlog.create_data_worker arguments. category must be kube-audit, properties.log must be a string (not a nested object), and the audit blob's sourceIPs array must match the top-level SourceIps value.",
+      "Ask 'List the workers currently running on xlog' to see the bounded worker finish.",
+      "Tenant-side: run the skill's landing check (a datamodel query on msft_azure_aks_raw). All five columns should be non-null; a null xdm.source.ipv4 means the blob lacked sourceIPs, and all-null means properties.log was sent as an object.",
+    ],
+    expectedResult:
+      "On Phantom alone: the agent follows the skill's single worker shape with category kube-audit and the audit event as one JSON string, and sends it to your logdest:<id> destination. Tenant-side (needs a Cortex tenant): the rows land in msft_azure_aks_raw and populate xdm.source.user.username, xdm.source.ipv4, xdm.target.resource.name, xdm.network.http.method and xdm.event.outcome. Kubernetes detectors have a documented 14-day activation period from the dataset's first data, so no alert is expected on a new dataset. An alert driven by this feed carries the tag DS:msft/azure_aks.",
+    verifyVia: [
+      "Phantom: the Live telemetry panel (or the session's Export Events) shows skills_read (or load_simulation_skills) for workflows/trigger_kubernetes_analytics.md and one xlog.create_data_worker call.",
+      "Phantom: the call's schema_override has exactly the four fields and properties.log is a string.",
+      "Tenant: `datamodel dataset = msft_azure_aks_raw | filter xdm.source.user.username contains \"anonymous\" | fields xdm.source.user.username, xdm.source.ipv4, xdm.target.resource.name, xdm.network.http.method, xdm.event.outcome | limit 10` returns populated columns.",
+      "Tenant (after activation): `dataset = alerts | filter alert_source in (\"MAGNIFIER\", \"ANALYTICS_BIOC\") | fields alert_name, original_tags` shows an alert tagged DS:msft/azure_aks.",
+    ],
+    related: ["outcome-trigger-gcp-k8s-vuln-scanner", "install-data-source", "outcome-trigger-identity-analytics"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination", "install-data-source"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-trigger-gcp-k8s-vuln-scanner",
+    category: "simulation",
+    title: "Trigger the Kubernetes vulnerability scanner alert on GCP",
+    summary:
+      "Run the GCP scanner skill: one http-sender call sends four Cloud Audit entries of a service account listing pods with kube-hunter, Kubescape, Trivy and kube-bench user agents. Each call invents a fresh identity, so it is the fastest repeatable cloud alert and the best one to schedule.",
+    difficulty: "advanced",
+    durationMin: 10,
+    icon: "bug_report",
+    prompts: [
+      {
+        text: "Trigger the Kubernetes vulnerability scanner alert on GCP and tell me the service account and caller address it used.",
+        note: "The agent reads workflows/trigger_gcp_k8s_vuln_scanner_alert.md and makes ONE http-sender.generate_events call with profile gcp_audit and scenario k8s_vuln_scanner and no other argument. It goes to the cribl_gcp_cloud_logging destination.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "http-sender.list_destinations",
+      "http-sender.generate_events",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an http-sender instance (see the simulate-http-data-source journey). This route also needs the Cribl settings: in /connectors, edit the http-sender instance and set criblUrl and the criblToken secret (operator-only; the agent cannot read or write them). Ask the agent to run http-sender.list_destinations and confirm cribl_gcp_cloud_logging shows ready: true.",
+      "Without those settings the call is refused with a clear message and nothing is sent. You can check this on Phantom alone: that refusal is the correct behaviour on an instance without Cribl.",
+      "Open a new chat, open the Live Telemetry panel and paste the prompt.",
+      "Confirm one http-sender.generate_events call with exactly profile and scenario. The result should show sent 4, batch_status [200], destination cribl_gcp_cloud_logging, dataset google_cloud_logging_raw and four sample_ids.",
+      "Tenant-side: about a minute later let the agent run the skill's landing check on google_cloud_logging_raw using the four sample_ids, then check for the alert every 10 seconds for up to 3 minutes.",
+    ],
+    expectedResult:
+      "On Phantom alone: one http-sender.generate_events call with no extra arguments, result sent 4 to cribl_gcp_cloud_logging with four sample ids, a fresh service account and caller address named in the reply, and no collector or Cribl secret in chat or tool output. Tenant-side (needs a Cortex tenant): four rows with method io.k8s.core.v1.pods.list and the four scanner user agents land in google_cloud_logging_raw, and the alert 'External Kubernetes vulnerability scanning tool usage' (Medium, tagged DS:Google/Cloud Logging and DT:Kubernetes - API) names the service account typically within about 15 seconds of the last event. Repeating the call is safe because every call invents a new identity.",
+    verifyVia: [
+      "Phantom: /observability/events shows one http-sender.generate_events call and no xlog.create_data_worker call.",
+      "Phantom: the call result carries sent 4 and four sample_ids.",
+      "Tenant: `dataset = google_cloud_logging_raw | filter insertId in (\"<id 1>\", \"<id 2>\", \"<id 3>\", \"<id 4>\")` returns four rows.",
+      "Tenant: `dataset = alerts | filter alert_source in (\"MAGNIFIER\", \"ANALYTICS_BIOC\") and alert_name = \"External Kubernetes vulnerability scanning tool usage\"` has a row for the service account.",
+    ],
+    related: ["simulate-http-data-source", "outcome-schedule-analytics-skill-recurring", "outcome-trigger-kubernetes-analytics"],
+    prerequisites: ["simulate-http-data-source"],
+    components: ["chat", "skills", "connectors", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-scenario-bruteforce-vpn-to-lateral",
+    category: "simulation",
+    title: "Run the VPN brute force chain scenario",
+    summary:
+      "Four stages from the outside in: a password spray at the VPN portal, a focused brute force on one account, a sign-in from an unusual country, then east-west SMB/RPC traffic. It needs a VPN data source, which a fresh install does not have, so the first run also shows how the agent reports a missing source class.",
+    difficulty: "advanced",
+    durationMin: 40,
+    icon: "vpn_lock",
+    prompts: [
+      {
+        text: "Run the VPN brute force chain scenario against my environment, all four stages, to my log destination.",
+        note: "The agent reads scenarios/bruteforce_vpn_to_lateral.md, calls data_sources_installed_as_vendors and groups the result by class. With only FortiGate installed there is no vpn source: the skill says to stop and tell you. With a VPN source installed it fetches each class's schema and starts one worker per stage.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "data_sources_installed_as_vendors",
+      "log_destinations_list",
+      "data_sources_get_schema",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "xlog.kill_worker",
+      "memory_store",
+    ],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/data-sources",
+        description: "Installed sources the agent groups by class. The scenario needs vpn; firewall and ndr are optional (firewall events stand in for ndr).",
+      },
+    ],
+    howToTest: [
+      "Prerequisites: an xlog instance, a syslog log destination and at least the FortiGate data source (firewall class). A Cortex tenant is needed only for the tenant-side checks.",
+      "Negative path first, on a fresh install: open a new chat, open the Live Telemetry panel and paste the prompt. Expect skills_read and data_sources_installed_as_vendors, then a reply that names the missing vpn class and asks you to install one. No worker is created and nothing is sent.",
+      "Install a VPN source: open /data-sources, search 'F5', open the F5 APM card and install the row for f5_apm_raw (or ask 'Install the F5 APM data source').",
+      "Paste the prompt again in a new chat. Now the telemetry shows log_destinations_list, data_sources_get_schema per class, and one xlog.create_data_worker per stage and sub-stage, each with destination logdest:<id> and the installed source's fields as schema_override.",
+      "Open the worker calls and check the narrative thread: spray sources across three address ranges, a compromised account j.smith@corp.example, a focused source 185.220.101.42, a session from country RU, then 10.10.20.42 as the pivot host.",
+      "Ask 'List the workers currently running on xlog'. The spray stage runs for about 35 minutes, so workers stay alive; stop what is left with 'Kill all the workers from this scenario' when you are done.",
+      "Tenant-side: query the VPN dataset for the account, then look at the alerts roughly 5 minutes after stage 4 finishes.",
+    ],
+    expectedResult:
+      "On Phantom alone: with no VPN source the agent reports the missing class and creates no worker; with one installed it reads the scenario, resolves the destination as a logdest:<id> reference, takes each stage's schema from the installed source, and starts the stage workers with the shared narrative values. Tenant-side (needs a Cortex tenant): the VPN rows land in the source's dataset (f5_apm_raw for F5 APM) with the same account and session id across stages. The skill names five rules this chain targets (account probing, brute force on a local account, password spray, impossible travel, anomalous lateral movement) and expects matching alerts about 5 minutes after the last stage; those are the skill's stated targets, and whether a given detector fires depends on the tenant's licensing and baselines.",
+    verifyVia: [
+      "Phantom: the Live telemetry panel (or the session's Export Events) shows skills_read (or load_simulation_skills) for scenarios/bruteforce_vpn_to_lateral.md and data_sources_installed_as_vendors on both runs.",
+      "Phantom: run 1 ends with no xlog.create_data_worker call; run 2 shows several, all with a logdest:<id> destination.",
+      "Phantom: 'List the workers currently running on xlog' shows the stage workers with their destination.",
+      "Tenant: `config timeframe = 24h | dataset = f5_apm_raw | comp count() as n` grows after each stage.",
+      "Tenant: alerts for 'Password Spray', 'Brute Force on Local Account' or 'Impossible Travel' may appear in the last 60 minutes.",
+    ],
+    related: ["install-data-source", "outcome-memory-retains-scenario-result", "ops-list-stop-xlog-workers", "validate-detection"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination", "install-data-source"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-scenario-dns-tunneling-c2",
+    category: "simulation",
+    title: "Run the DNS tunneling C2 scenario",
+    summary:
+      "Three stages of covert command and control over DNS: algorithmically generated domain probes, long-subdomain tunneling at volume, then a firewall seeing periodic outbound DNS to the attacker's name server. With no dedicated DNS source it runs through the DNS subsystem of the FortiGate that ships installed, with fewer fields; with neither, it stops.",
+    difficulty: "advanced",
+    durationMin: 35,
+    icon: "vpn_key_off",
+    prompts: [
+      {
+        text: "Run the DNS tunneling command and control scenario to my log destination.",
+        note: "The agent reads scenarios/dns_tunneling_c2.md and calls data_sources_installed_as_vendors. It uses a dns-class source if one is installed; otherwise a firewall source whose schema carries DNS query fields, which on a fresh install is FortiGate (subtype dns-response). Only when neither exists does it stop and tell you to install a DNS source.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "load_simulation_skills",
+      "skills_read",
+      "data_sources_installed_as_vendors",
+      "log_destinations_list",
+      "data_sources_get_schema",
+      "phantom_get_field_info",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "xlog.kill_worker",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an xlog instance, a syslog log destination and the FortiGate data source. A Cortex tenant is needed only for the tenant-side checks.",
+      "Open a new chat, open the Live Telemetry panel and paste the prompt. On a fresh install (FortiGate only) expect the agent to say that no dedicated DNS source is installed and that it will use FortiGate's DNS subsystem for Stages 1 and 2 (query name and query type only: no response code or TTL), then three bounded workers, all FortiGate: about 50 DGA-style queries over 10 minutes, about 600 long-subdomain queries over 25 minutes, and about 120 firewall events over 30 minutes to an attacker name server on port 53.",
+      "In the Stage 1 and 2 worker calls check that FTNTFGTsubtype is dns-response and that the query name (FTNTFGTqname) carries long, high-entropy labels. The attacker name server address is shared with the firewall stage.",
+      "Optional, for full fidelity: open /data-sources, search 'infoblox', open the Infoblox card and install the row for infoblox_infoblox_raw. Repeat the prompt in a new chat: the agent now uses the dns-class source for Stages 1 and 2.",
+      "The stop path appears only on an install with no DNS-capable source at all: the reply names the missing DNS telemetry and no worker is created.",
+      "Stop leftover workers when done ('Kill all the workers from this scenario').",
+      "Tenant-side: count the DNS rows and look at the alerts after the last stage.",
+    ],
+    expectedResult:
+      "On Phantom alone: the agent states which source serves the DNS stages (a dedicated DNS source, or the FortiGate DNS subsystem with the reduced field set), starts three bounded workers whose observables carry the high-entropy and long-subdomain patterns, to a logdest:<id> destination, and every dataset it names is one the chosen source produces. It never cites a dataset such as dns_logs. Tenant-side (needs a Cortex tenant): DNS rows land in the chosen source's dataset (fortinet_fortigate_raw for the FortiGate route, infoblox_infoblox_raw for Infoblox). The skill names three rules (DGA-style high-entropy DNS queries, DNS tunneling, C2 beaconing); those are its stated targets and are not guaranteed to fire on a given tenant, and less likely on the FortiGate route.",
+    verifyVia: [
+      "Phantom: Live telemetry (or Export Events) shows skills_read (or load_simulation_skills) for scenarios/dns_tunneling_c2.md and data_sources_installed_as_vendors; /observability/events (action:tool_call) shows the xlog.create_data_worker calls.",
+      "Phantom: each worker call carries a schema_override taken from the installed source, and the reply names the source used for Stages 1-2.",
+      "Tenant (FortiGate route): `config timeframe = 4h | dataset = fortinet_fortigate_raw | filter FTNTFGTsubtype = \"dns-response\" | comp count()` grows after stage 1 and 2. With Infoblox installed: `dataset = infoblox_infoblox_raw | comp count()`.",
+      "Tenant: `dataset = alerts | filter alert_name ~= \"DNS\"` may show DNS-related alerts after the last stage.",
+    ],
+    related: ["install-data-source", "outcome-scenario-bruteforce-vpn-to-lateral", "simulate-from-installed-data-source"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination", "install-data-source"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-scenario-large-file-upload-exfil",
+    category: "simulation",
+    title: "Run the large file upload exfiltration scenario",
+    summary:
+      "Three exfiltration patterns: a workstation bulk-uploading to a file-sharing site, a server doing the same in the wrong direction, and a user bulk-downloading from corporate SaaS then uploading to personal cloud storage. Unlike the other chains, a missing source class skips that stage instead of stopping the run.",
+    difficulty: "advanced",
+    durationMin: 40,
+    icon: "upload_file",
+    prompts: [
+      {
+        text: "Run the large file upload exfiltration scenario to my log destination, all three patterns.",
+        note: "The agent reads scenarios/large_file_upload_exfil.md and calls data_sources_installed_as_vendors. It needs proxy and firewall for patterns 1 and 2 and saas for pattern 3. For a missing class the skill has an explicit Class check step: it makes the agent say it is skipping that stage, create no worker for it (never one with a generic schema), and continue with the rest.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "data_sources_installed_as_vendors",
+      "log_destinations_list",
+      "data_sources_get_schema",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "xlog.kill_worker",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an xlog instance, a syslog log destination and the FortiGate data source (firewall class). A Cortex tenant is needed only for the tenant-side checks.",
+      "Degraded path first, on a fresh install (FortiGate only): open a new chat, open the Live Telemetry panel and paste the prompt. Expect the agent to say that no proxy and no saas source is installed and that it is skipping those stages. Only the firewall sub-stages run. Fail the journey if a worker is created for the SaaS stage anyway, for example with a generic schema or a guessed vendor.",
+      "Install the missing classes: a proxy source (open /data-sources, search 'squid' and install the Squid row for squid_squid_raw) and a SaaS source (search 'office 365' and install a row such as the general or SharePoint Online one).",
+      "Paste the prompt in a new chat. Expect workers for about 250 workstation upload events over 25 minutes, about 100 server upload events over 10 minutes, and about 800 SaaS download and upload events over 30 minutes.",
+      "Check a worker call: large byte counts sent versus received, a file-sharing destination category, and the schema from the installed source.",
+      "Stop leftover workers when done.",
+      "Tenant-side: count the rows in the proxy and SaaS datasets and check the alerts after the last stage.",
+    ],
+    expectedResult:
+      "On Phantom alone: on a source-light install the agent names the missing classes and runs only the stages it can; with proxy, firewall and SaaS sources installed it starts workers for all three patterns to a logdest:<id> destination with the high outbound byte imbalance the skill describes. Tenant-side (needs a Cortex tenant): rows land in the installed sources' datasets. The skill lists three targeted rules (data exfiltration to personal cloud storage, anomalous outbound volume from a server, SaaS bulk data access anomaly); firing is not guaranteed and depends on the tenant's baselines.",
+    verifyVia: [
+      "Phantom: the Live telemetry panel (or the session's Export Events) shows skills_read (or load_simulation_skills) for scenarios/large_file_upload_exfil.md and data_sources_installed_as_vendors.",
+      "Phantom: the reply on the degraded run lists the skipped stages and the missing classes, and Live telemetry shows no xlog.create_data_worker call for the SaaS stage.",
+      "Phantom: with all classes installed, xlog.create_data_worker calls appear for proxy, firewall and SaaS (/observability/events, action:tool_call).",
+      "Tenant: `config timeframe = 4h | dataset = squid_squid_raw | comp count()` and the same for the SaaS dataset show rows.",
+    ],
+    related: ["install-data-source", "outcome-scenario-web-app-to-webshell-exfil", "simulate-from-installed-data-source"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination", "install-data-source"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-scenario-web-app-to-webshell-exfil",
+    category: "simulation",
+    title: "Run the web shell exfiltration scenario",
+    summary:
+      "Four stages from the WAF's point of view: probe noise, a successful SQL injection, a web shell upload, then data leaving the compromised web tier. It needs a WAF data source; proxy is preferred for the last stages but a firewall stands in.",
+    difficulty: "advanced",
+    durationMin: 35,
+    icon: "public",
+    prompts: [
+      {
+        text: "Run the web shell exfiltration scenario to my log destination, all four stages.",
+        note: "The agent reads scenarios/web_app_to_webshell_to_exfil.md and calls data_sources_installed_as_vendors. A waf source is required: without one it stops and tells you. A missing proxy falls back to the firewall for stages 3 and 4.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "data_sources_installed_as_vendors",
+      "log_destinations_list",
+      "data_sources_get_schema",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "xlog.kill_worker",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an xlog instance, a syslog log destination and the FortiGate data source. A Cortex tenant is needed only for the tenant-side checks.",
+      "Negative path first: open a new chat, open the Live Telemetry panel and paste the prompt. With no WAF source installed, expect a reply naming the missing waf class and no worker.",
+      "Install a WAF source: open /data-sources, search 'barracuda', open the Barracuda card and install the WAF row for barracuda_waf_raw.",
+      "Paste the prompt in a new chat. Expect four stage workers: about 80 WAF probe events over 15 minutes, about 5 successful-injection events over 3 minutes, about 12 web shell events over 5 minutes, and about 25 outbound exfil events over 10 minutes.",
+      "Check the WAF worker calls for injection-style request payloads in the early stages, and that the later stages use the FortiGate firewall schema when no proxy is installed.",
+      "Stop leftover workers when done.",
+      "Tenant-side: count the WAF rows and check the alerts after the last stage.",
+    ],
+    expectedResult:
+      "On Phantom alone: the agent reports the missing waf class on a fresh install; with a WAF source installed it starts the four stage workers to a logdest:<id> destination, falling back to the firewall for outbound visibility if there is no proxy. Tenant-side (needs a Cortex tenant): rows land in barracuda_waf_raw (and fortinet_fortigate_raw for the exfil stage). The skill names three targeted rules (SQL injection attempt, web shell deployment, data exfiltration to personal cloud storage); firing depends on the tenant and is not guaranteed.",
+    verifyVia: [
+      "Phantom: the Live telemetry panel (or the session's Export Events) shows skills_read (or load_simulation_skills) for scenarios/web_app_to_webshell_to_exfil.md and data_sources_installed_as_vendors.",
+      "Phantom: run 1 creates no worker; run 2 shows xlog.create_data_worker calls with a logdest:<id> destination.",
+      "Tenant: `config timeframe = 4h | dataset = barracuda_waf_raw | comp count()` shows rows.",
+    ],
+    related: ["outcome-scenario-large-file-upload-exfil", "outcome-scenario-recon-to-account-probe", "install-data-source"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination", "install-data-source"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-scenario-recon-to-account-probe",
+    category: "simulation",
+    title: "Run the external reconnaissance scenario",
+    summary:
+      "Pre-attack reconnaissance in four stages: a port scan across internal addresses, directory-traversal probes, payload-based WAF recon, then account probing at the VPN portal. FortiGate covers the first stage out of the box; the later stages need proxy, WAF and VPN sources.",
+    difficulty: "advanced",
+    durationMin: 35,
+    icon: "search",
+    prompts: [
+      {
+        text: "Run the external reconnaissance scenario to my log destination, all four stages.",
+        note: "The agent reads scenarios/recon_to_account_probe.md and calls data_sources_installed_as_vendors. Firewall and waf are required; proxy and vpn have substitutes. It should tell you which stages it could not run.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "data_sources_installed_as_vendors",
+      "log_destinations_list",
+      "data_sources_get_schema",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "xlog.kill_worker",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an xlog instance, a syslog log destination and the FortiGate data source (firewall class, stage 1). A Cortex tenant is needed only for the tenant-side checks.",
+      "Fresh-install run: open a new chat, open the Live Telemetry panel and paste the prompt. Expect the agent to run what the installed classes allow and to name the stages it cannot (WAF payload recon needs a waf source).",
+      "Install the rest: a WAF source (search 'barracuda' in /data-sources and install barracuda_waf_raw) and a VPN source (search 'F5', install f5_apm_raw).",
+      "Paste the prompt in a new chat. Expect workers for about 250 port-scan events over 25 minutes, about 60 path-enumeration events over 10 minutes, about 40 payload-recon events over 12 minutes, and about 80 account-probing events over 15 minutes.",
+      "Check the account-probing call: one source address trying many distinct usernames.",
+      "Stop leftover workers when done.",
+      "Tenant-side: count rows in the firewall, WAF and VPN datasets and check the alerts after the last stage.",
+    ],
+    expectedResult:
+      "On Phantom alone: the agent runs the stages whose classes are installed, names the ones it cannot run, and sends everything to a logdest:<id> destination with the schemas taken from the installed sources. Tenant-side (needs a Cortex tenant): rows land in fortinet_fortigate_raw, barracuda_waf_raw and f5_apm_raw. The skill names four targeted rules (account probing, slow-burn C2 beaconing, malicious URL via proxy, SQL injection attempt); firing is not guaranteed.",
+    verifyVia: [
+      "Phantom: the Live telemetry panel (or the session's Export Events) shows skills_read (or load_simulation_skills) for scenarios/recon_to_account_probe.md and data_sources_installed_as_vendors.",
+      "Phantom: the reply lists which stages ran and which were skipped for missing classes.",
+      "Tenant: `config timeframe = 4h | dataset = fortinet_fortigate_raw | comp count() as n by dpt | sort desc n` shows the scanned port spread.",
+    ],
+    related: ["outcome-scenario-web-app-to-webshell-exfil", "outcome-trigger-port-scan-analytics", "install-data-source"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination", "install-data-source"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-scenario-cloud-account-takeover-chains",
+    category: "simulation",
+    title: "Run the two cloud account takeover scenarios",
+    summary:
+      "Two chains that end in cloud IAM abuse. Cloud privilege escalation is a three-stage cloud-audit-only chain (a new service account and key, a role grant, data access from a new region). Phishing to cloud takeover runs six stages from a phishing email through OAuth abuse to a service-account key.",
+    difficulty: "advanced",
+    durationMin: 40,
+    icon: "cloud_circle",
+    prompts: [
+      {
+        text: "Run the cloud privilege escalation scenario to my log destination.",
+        note: "The agent reads scenarios/cloud_privilege_escalation.md and calls data_sources_installed_as_vendors. A cloud source is required: without one it stops and suggests installing one.",
+        newSession: true,
+      },
+      {
+        text: "Run the phishing to cloud takeover scenario to my log destination, all six stages.",
+        note: "scenarios/phishing_to_cloud_takeover.md needs email-gateway, proxy, saas and cloud sources. A missing email-gateway or saas class blocks its stages; a missing cloud class ends the chain at stage 5 with a note.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "data_sources_installed_as_vendors",
+      "log_destinations_list",
+      "data_sources_get_schema",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "xlog.kill_worker",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an xlog instance, a syslog log destination and the FortiGate data source. A Cortex tenant is needed only for the tenant-side checks.",
+      "Negative path: open a new chat, open the Live Telemetry panel and paste prompt 1 on a fresh install. Expect a reply naming the missing cloud class and no worker.",
+      "Install a cloud source: open /data-sources, search 'google cloud', open the Google Cloud Logging card and install the row for google_cloud_logging_raw.",
+      "Paste prompt 1 in a new chat. Expect three stage workers: about 4 events over 2 minutes creating a service account and key, about 3 events over 2 minutes granting it a privileged role, and about 30 events over 15 minutes reading data from a new region.",
+      "For prompt 2 also install the missing classes: an email gateway (search 'mimecast', install mimecast_mimecast_raw), a proxy (search 'squid', install squid_squid_raw) and a SaaS source (search 'office 365', install a row such as the general one).",
+      "Paste prompt 2 in a new chat. Expect workers for all six stages, from about 50 email events over 60 seconds to the final cloud key creation.",
+      "Stop leftover workers when done.",
+      "Tenant-side: count the rows in each dataset and check the alerts after the last stage.",
+    ],
+    expectedResult:
+      "On Phantom alone: the agent reports the missing class on a fresh install, and with sources installed it starts one worker per stage to a logdest:<id> destination with the schema from the matching installed source, naming any stage it skipped. Tenant-side (needs a Cortex tenant): rows land in the installed sources' datasets (google_cloud_logging_raw for the cloud stages). Cloud privilege escalation names three targeted rules (cloud IAM key creation, privilege escalation role binding, anomalous cloud region access) and phishing to cloud takeover names seven; these are the skills' stated targets and firing is not guaranteed.",
+    verifyVia: [
+      "Phantom: the Live telemetry panel (or the session's Export Events) shows skills_read (or load_simulation_skills) for scenarios/cloud_privilege_escalation.md and scenarios/phishing_to_cloud_takeover.md, each preceded or followed by data_sources_installed_as_vendors.",
+      "Phantom: the replies state which classes were present and which stages ran.",
+      "Tenant: `config timeframe = 4h | dataset = google_cloud_logging_raw | comp count()` shows rows after the cloud stages.",
+    ],
+    related: ["outcome-trigger-gcp-k8s-vuln-scanner", "outcome-scenario-endpoint-attack-chains", "install-data-source"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination", "install-data-source"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-scenario-endpoint-attack-chains",
+    category: "simulation",
+    title: "Run the two endpoint attack scenarios",
+    summary:
+      "Two in-environment chains that depend on endpoint telemetry. LOLBin lateral movement uses signed Windows binaries, then east-west traffic, then a security-tool tamper. Malicious email to persistence goes from a phishing email through a PowerShell stager and credential access to persistence. Both need an EDR data source.",
+    difficulty: "advanced",
+    durationMin: 30,
+    icon: "handyman",
+    prompts: [
+      {
+        text: "Run the LOLBin lateral movement scenario to my log destination.",
+        note: "The agent reads scenarios/lolbin_lateral_movement.md and calls data_sources_installed_as_vendors. An edr source is required: without one it stops. Missing ndr falls back to firewall east-west events.",
+        newSession: true,
+      },
+      {
+        text: "Run the malicious email to endpoint persistence scenario to my log destination.",
+        note: "scenarios/malicious_email_to_endpoint_persistence.md needs both an email-gateway source (stage 1) and an edr source (stages 2 to 4) and stops if either is missing.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "data_sources_installed_as_vendors",
+      "log_destinations_list",
+      "data_sources_get_schema",
+      "xlog.create_data_worker",
+      "xlog.list_workers",
+      "xlog.kill_worker",
+      "memory_store",
+    ],
+    apis: [],
+    howToTest: [
+      "Prerequisites: an xlog instance, a syslog log destination and the FortiGate data source (it stands in for the missing ndr class). A Cortex tenant is needed only for the tenant-side checks.",
+      "Negative path: open a new chat, open the Live Telemetry panel and paste prompt 1 on a fresh install. Expect a reply naming the missing edr class and no worker.",
+      "Install an EDR source: open /data-sources, search 'sentinelone', open the SentinelOne card and install the row for sentinelone_xdr_raw.",
+      "Paste prompt 1 in a new chat. Expect workers for about 12 signed-binary execution events over 8 minutes, about 80 east-west events over 12 minutes, and about 5 tamper events over 90 seconds.",
+      "For prompt 2 also install an email gateway (search 'mimecast', install mimecast_mimecast_raw), then paste it in a new chat. Expect about 30 email events, 8 macro-to-PowerShell events, 5 credential-access events and 6 persistence events.",
+      "Check an EDR call: parent-child process fields and command lines come from the installed source's schema.",
+      "Stop leftover workers when done.",
+      "Tenant-side: count the rows in the EDR dataset and check the alerts after the last stage.",
+    ],
+    expectedResult:
+      "On Phantom alone: the agent names the missing edr or email-gateway class on a fresh install, and with sources installed starts the stage workers to a logdest:<id> destination using the installed schemas. Tenant-side (needs a Cortex tenant): rows land in sentinelone_xdr_raw (and mimecast_mimecast_raw, fortinet_fortigate_raw). The skills name their targeted rules (suspicious PowerShell or LOLBin arguments, anomalous lateral movement, EDR tamper; phishing email with attachment, LSASS credential dump); firing is not guaranteed.",
+    verifyVia: [
+      "Phantom: the Live telemetry panel (or the session's Export Events) shows skills_read (or load_simulation_skills) for scenarios/lolbin_lateral_movement.md and scenarios/malicious_email_to_endpoint_persistence.md with data_sources_installed_as_vendors.",
+      "Phantom: run 1 of each creates no worker; the installed-source runs show xlog.create_data_worker calls to a logdest:<id> destination.",
+      "Tenant: `config timeframe = 4h | dataset = sentinelone_xdr_raw | comp count()` shows rows.",
+    ],
+    related: ["outcome-scenario-cloud-account-takeover-chains", "outcome-scenario-bruteforce-vpn-to-lateral", "install-data-source"],
+    prerequisites: ["onboarding-install-xlog-connector", "configure-log-destination", "install-data-source"],
+    components: ["chat", "skills", "xlog", "xsiam", "audit"],
+  },
+  {
+    id: "outcome-schedule-analytics-skill-recurring",
+    category: "ops",
+    title: "Schedule the GCP scanner skill and watch the notifications",
+    summary:
+      "Bind a recurring job to the GCP Kubernetes scanner skill, fire it once on demand, and follow the result in the notifications feed. This skill is the right one to schedule: every call invents a new identity, so every fire is a fresh alert instead of a deduplicated one.",
+    difficulty: "intermediate",
+    durationMin: 10,
+    icon: "schedule",
+    prompts: [],
+    toolsExercised: [
+      "http-sender.list_destinations",
+      "http-sender.generate_events",
+    ],
+    apis: [
+      {
+        method: "POST",
+        path: "/api/agent/jobs",
+        description:
+          "Body: {name, cron, action: {type: 'prompt', message, skill: 'trigger_gcp_k8s_vuln_scanner_alert'}, enabled: true}. Variant: action {type: 'tool_call', name: 'http-sender.generate_events', args: {profile: 'gcp_audit', scenario: 'k8s_vuln_scanner'}}.",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/notifications?limit=100",
+        description: "One row per finished run (topic job-run-completed) with payload job_name, run_id, trigger, duration_ms and summary.",
+      },
+    ],
+    howToTest: [
+      "Prerequisite: run the GCP scanner journey once by hand so you know the http-sender instance has Cribl configured and cribl_gcp_cloud_logging is ready.",
+      "Open /jobs/new, choose the Prompt action, and use the message 'Run the Kubernetes vulnerability scanner trigger on GCP and report the service account and caller address.'",
+      "In the Skill dropdown pick trigger_gcp_k8s_vuln_scanner_alert, choose the Repeating schedule, set Every 30 Minutes and submit.",
+      "Open the ⋯ menu on the job row and click Trigger Now.",
+      "Open /notifications. A card titled 'Job <name> succeeded' appears for the run; click it to open the job (the run_id, trigger and duration are in the notification's payload at /api/agent/notifications).",
+      "Open the run detail from /jobs/<name>. The first user message is wrapped in a skill block for trigger_gcp_k8s_vuln_scanner_alert, and the trace shows one http-sender.generate_events call with sent 4.",
+      "Variant: create a second job with the Tool Call action, tool name http-sender.generate_events and arguments {\"profile\":\"gcp_audit\",\"scenario\":\"k8s_vuln_scanner\"}. It runs without the model, so it is faster and cheaper.",
+      "Tenant-side: each fire raises its own alert for its own service account. Disable or delete the jobs when you are done so you do not keep creating alerts.",
+    ],
+    expectedResult:
+      "On Phantom alone: the job runs with the skill bound, the run shows one http-sender.generate_events call that sent 4 events to cribl_gcp_cloud_logging, and a job-run-completed notification appears with the run summary. Tenant-side (needs a Cortex tenant): each run lands four rows in google_cloud_logging_raw and raises an 'External Kubernetes vulnerability scanning tool usage' alert naming that run's own new service account, typically within about 15 seconds of the run.",
+    verifyVia: [
+      "Phantom: GET /api/agent/jobs/<name> shows action.skill equal to trigger_gcp_k8s_vuln_scanner_alert.",
+      "Phantom: GET /api/agent/jobs/<name>/runs has a successful run row for the manual fire.",
+      "Phantom: /notifications shows a job-run-completed entry with the same run_id.",
+      "Tenant: one new alert per fire, each naming a different service account.",
+    ],
+    related: ["schedule-skill-bound-job", "ops-job-notifications", "schedule-tool-call-job", "outcome-trigger-gcp-k8s-vuln-scanner"],
+    prerequisites: ["outcome-trigger-gcp-k8s-vuln-scanner"],
+    components: ["jobs", "notifications", "skills", "connectors"],
+  },
+  {
+    id: "outcome-memory-retains-scenario-result",
+    category: "memory",
+    title: "Recall what a scenario produced in a new session",
+    summary:
+      "After a scenario run the agent stores the facts that matter (the compromised account, the attacker address, the worker names). A fresh chat then answers questions about that run from memory instead of asking you to repeat it.",
+    difficulty: "intermediate",
+    durationMin: 8,
+    icon: "psychology",
+    prompts: [
+      {
+        text: "Run the VPN brute force chain scenario, then remember which account was compromised, the attacker source address and the names of the workers you started, so I can ask about it later.",
+        note: "Same tool sequence as the VPN brute force journey, with memory_store as the last call. The key should follow the sim:<scenario>:<target>:<date> convention, and the value should hold the narrative facts of this run.",
+      },
+      {
+        text: "In the VPN brute force run from earlier, which account was compromised and which address did the attacker use?",
+        note: "Fresh session. The agent should call memory_search and answer from the stored entry without re-running anything.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [
+      "skills_read",
+      "data_sources_installed_as_vendors",
+      "xlog.create_data_worker",
+      "memory_store",
+      "memory_search",
+    ],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/memory",
+        description: "Lists stored memories, so you can see the sim: entry and its value.",
+      },
+    ],
+    howToTest: [
+      "Prerequisite: the VPN brute force journey works on your install (a VPN data source installed and the scenario starting its workers).",
+      "Paste prompt 1 in a new chat. Let the first worker start, then watch the end of the tool sequence for memory_store with a key beginning sim:.",
+      "Open /memory and filter for sim:. Open the entry and read the value: it should name the compromised account, the attacker source address and the worker ids or names.",
+      "Click New Chat and paste prompt 2. The telemetry should show memory_search and no xlog.create_data_worker call.",
+      "Compare the answer to what you saw in the worker calls of prompt 1 (the skill's illustrative values, unless you overrode them).",
+    ],
+    expectedResult:
+      "On Phantom alone: the first session ends with a memory_store entry keyed sim:... whose value holds the scenario's account, address and worker references; the second session finds it with memory_search and answers correctly without starting any worker. The skill itself does not tell the agent to store a memory; the habit comes from the agent's standing memory rules, so if the entry is missing, ask 'Please remember that' and check /memory again.",
+    verifyVia: [
+      "Phantom: /memory shows an entry whose key starts with sim: and mentions the VPN brute force chain.",
+      "Phantom: Live telemetry shows memory_store at the tail of session 1 and memory_search at the head of session 2 (/observability/events shows memory_stored and memory_searched rows).",
+      "Phantom: session 2 has no xlog.create_data_worker call.",
+    ],
+    related: ["memorize-simulation-result", "chat-memory-recall", "recall-org-config"],
+    prerequisites: ["outcome-scenario-bruteforce-vpn-to-lateral"],
+    components: ["chat", "memory", "skills", "xlog"],
+  },
+  {
+    id: "outcome-pick-skill-from-plain-words",
+    category: "simulation",
+    title: "Ask in plain words and check the agent picks the right skill",
+    summary:
+      "You do not name a skill; you describe what you want. The agent should read the matching shipped skill before it builds anything by hand. The check is in the telemetry panel: which file did skills_read open?",
+    difficulty: "starter",
+    durationMin: 6,
+    icon: "alt_route",
+    prompts: [
+      {
+        text: "Make something that looks like a password spray.",
+        note: "Several shipped skills fit. Pass if the agent reads one of: workflows/simulate_identity_telemetry.md (it lists a password spray), scenarios/bruteforce_vpn_to_lateral.md (its first stage is a spray), or workflows/trigger_excessive_lockouts_alert.md (a spray seen as lockouts). The http-sender okta password_spray scenario is also valid, via http-sender.generate_events.",
+        newSession: true,
+      },
+      {
+        text: "Make it look like someone broke in through a web application, planted a web shell and copied data out.",
+        note: "Pass if the agent reads scenarios/web_app_to_webshell_to_exfil.md (large_file_upload_exfil is an acceptable second choice for the exfil half).",
+        newSession: true,
+      },
+      {
+        text: "Make Cortex raise a port scan alert.",
+        note: "Pass if the agent reads workflows/trigger_port_scan_analytics.md and follows its one exact call, not a hand-built scan.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: ["skills_read", "load_simulation_skills"],
+    apis: [],
+    howToTest: [
+      "Open a new chat and open the Live Telemetry panel.",
+      "Paste prompt 1. Before any xlog.create_data_worker or http-sender.generate_events call, look for skills_read and read its file_path argument. The agent may instead call load_simulation_skills, which returns full skill bodies: then read which skill it returned and quoted. Filters that match nothing are relaxed and the result carries a filters_relaxed note, so a narrow filter set no longer returns zero skills; on an older build it can, and the agent then reads the exact file with skills_read. Both routes are accepted.",
+      "Judge it against the note: an accepted skill, read through skills_read or returned by load_simulation_skills, is a pass. Neither call, followed by a hand-built worker, is a fail.",
+      "Repeat with prompts 2 and 3 in new chats.",
+      "If the agent asks which destination or source to use before running, answer briefly: the journey is about the choice of skill, so you can stop the run after the skill was read.",
+    ],
+    expectedResult:
+      "On Phantom alone: for each prompt the telemetry shows skills_read with a file_path from the accepted list (or a load_simulation_skills result carrying that skill) before any data is generated, and the agent's reply cites the skill it chose. For the unambiguous prompts the choice is exact (web shell chain, port scan analytics). For the password spray prompt any of the listed spray-capable skills is correct. This journey needs no Cortex tenant.",
+    verifyVia: [
+      "Phantom: Live telemetry (or Export Events) shows skills_read with the expected file_path (or a load_simulation_skills call that returned that skill) as the first skill-related call of the turn.",
+      "Phantom: the reply names the skill in plain words (for example 'the port scan analytics skill').",
+      "Phantom: no hand-built worker call precedes the skill being read.",
+    ],
+    related: ["skills-catalog-browse-and-run", "chat-show-live-telemetry", "outcome-trigger-port-scan-analytics"],
+    components: ["chat", "skills", "audit"],
   },
 
 ];

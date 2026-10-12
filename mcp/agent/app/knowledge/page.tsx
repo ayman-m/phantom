@@ -2,16 +2,15 @@
  * Knowledge Bases — operator browser for the bundle's loaded KBs.
  *
  * Spec context: per spec.md §6.10, KBs are *read-only* at the agent
- * surface. Operators add/remove docs by editing the bundle (under
+ * surface. Entries are added/removed by editing the bundle (under
  * `bundles/spark/kbs/<name>/entries/*.md`) and redeploying — the boot
  * loader reconciles. So this page is intentionally a *browser*, not
- * an editor: list KBs, drill into one, search semantically. Future
- * Tier-3 runtime CRUD (mirroring runtime jobs YAML dual-write) will
- * add Create / Add entry / Import / Settings tabs.
+ * an editor: list KBs, drill into one, search semantically. That
+ * authoring workflow is developer context and lives in the architecture
+ * page (#knowledge-bases), not on this operator page. Import and
+ * Settings tabs are added only when runtime CRUD ships.
  *
- * UI ports the spark_ui `/w/{ws}/knowledge/page.tsx` grid layout but
- * drops the workspace prefix (phantom is single-tenant) and the
- * Create/Settings affordances.
+ * Phantom is single-tenant, so there is no workspace prefix.
  */
 
 "use client";
@@ -126,10 +125,8 @@ export default function KnowledgePage() {
               No knowledge bases loaded
             </div>
             <div>
-              The bundle&apos;s manifest declares no{" "}
-              <code className="font-mono">knowledge.bundled[]</code> entries,
-              or the boot loader hasn&apos;t finished yet. Check{" "}
-              <code className="font-mono">bundles/spark/manifest.yaml</code>.
+              This install has no knowledge bases yet, or they are still
+              loading. Refresh in a moment.
             </div>
           </div>
         ) : (
@@ -180,30 +177,12 @@ export default function KnowledgePage() {
                   >
                     read-only
                   </span>
-                  <span
-                    className="rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-on-surface-variant/80"
-                    style={glassStyleSubtle}
-                  >
-                    sqlite
-                  </span>
                 </div>
               </Link>
             ))}
           </div>
         )}
 
-        {/* Operator-language one-liner that names what they can do
-            (edit entries + redeploy) without spec/jargon. Detailed
-            mechanics live in
-            /help/architecture#knowledge-bases. */}
-        <div className="rounded-xl px-4 py-3 text-[11px] text-on-surface-variant/60 leading-relaxed" style={glassStyleSubtle}>
-          <span className="material-symbols-outlined text-[13px] align-middle mr-1 text-primary/70">
-            lightbulb
-          </span>
-          To add or edit entries, modify the markdown files under{" "}
-          <code className="font-mono text-on-surface-variant/80">bundles/spark/kbs/</code>{" "}
-          and redeploy. Changes are picked up automatically.
-        </div>
       </div>
     </div>
   );

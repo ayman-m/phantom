@@ -57,9 +57,8 @@ Per `manifest.yaml:audit.events`:
     caldera_operation_created       — caldera.start_operation
     detection_validation_recorded   — xsiam.execute_xql_query (with intent)
     coverage_report_generated       — xlog.generate_coverage_report
-    setup_completed                 — POST /api/v1/setup
     settings_changed                — POST /api/v1/settings
-    instance_created                — InstanceStore.create / setup_submit
+    instance_created                — InstanceStore.create
 
 Plus the secret-store + provider-store + delete events that aren't
 in the manifest's audit.events list but the spec's §6.10 row 14
@@ -224,7 +223,6 @@ ACTION_SCENARIO_STARTED = "scenario_started"
 ACTION_CALDERA_OPERATION_CREATED = "caldera_operation_created"
 ACTION_DETECTION_VALIDATION_RECORDED = "detection_validation_recorded"
 ACTION_COVERAGE_REPORT_GENERATED = "coverage_report_generated"
-ACTION_SETUP_COMPLETED = "setup_completed"
 ACTION_SETTINGS_CHANGED = "settings_changed"
 ACTION_INSTANCE_CREATED = "instance_created"
 

@@ -69,7 +69,13 @@ verbatim as `schema_override` on that stage's worker. Without it the worker emit
 observables that the vendor's modeling rule cannot map, so events land raw and `xdm.*` stays
 empty. `compact=true` is lossless for this purpose and keeps the payload inside the tool-result cap.
 
-Call `data_sources_installed_as_vendors`. Group `vendors[]` by `data_source_class`. Verify `waf` is present — if missing, stop and tell the operator to install a WAF data source. If `proxy` is missing, fall back to `firewall` for Stages 3-4 (outbound visibility is reduced — no URL category, no user context — but the connection itself is logged).
+### Class check (MANDATORY — before creating any worker)
+
+1. Call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class`.
+2. For every row of the "Data classes used" table, write down the installed entry you will use for it, or `MISSING`. A class is only covered by an installed entry. A generic or catch-all schema is never a substitute, and never guess a vendor/product for a class.
+3. `waf` (Stages 1-3) is required. If it is `MISSING`, say this to the operator, with the class filled in: "No installed data source covers the `<class>` class, so I cannot run the web shell exfiltration scenario. Install a `<class>` data source from the Marketplace and ask again." Then stop: create no worker.
+   If `proxy` is `MISSING`, use the installed `firewall` entry for Stages 3-4 and say so (outbound visibility is reduced: no URL category, no user context). If neither `proxy` nor `firewall` is installed, skip the outbound legs of Stages 3 and 4 with this sentence: "No installed data source covers the `<class>` class, so I am skipping Stage <N> (<stage name>). I will not generate it with a generic schema. Install a `<class>` data source from the Marketplace to include it."
+4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
 ## Narrative thread
 
@@ -337,7 +343,7 @@ xlog.create_data_worker:
 | Successful SQLi alert with `action=allow` + large response | XSIAM Issues |
 | Webshell deployment alert against `/uploads/img.php` | XSIAM Issues |
 | Exfiltration alert: web-app-01 → file-sharing destination | XSIAM Issues |
-| Pivotable: filter `dst_ip=10.10.30.10`, see all phases on one timeline | XQL: `config timeframe = 24h \| dataset = waf_logs \| filter dst_ip="10.10.30.10" \| limit 20` |
+| Pivotable: filter `dst_ip=10.10.30.10`, see all phases on one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the waf entry> \| filter <its destination-IP field> = "10.10.30.10" \| limit 20` |
 
 ## Tear-down
 

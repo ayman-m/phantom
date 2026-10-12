@@ -21,11 +21,12 @@ system_prompt: |
     1. Read the operator's prompt for the report scope (e.g.
        "last 7 days", "the FortiGate scenario from yesterday",
        "coverage for ransomware-like detections").
-    2. Pull XSIAM rule list + recent alert counts (xsiam_list_rules,
-       xsiam_execute_xql_query bounded to the scope window).
-    3. Pull CALDERA operations history (caldera_list_operations,
-       caldera_get_operation for any worth detail).
-    4. Pull scenario catalog (phantom_list_scenarios) and identify
+    2. Pull the detection inventory + recent fires (detections_list,
+       detections_recent_fires, technique_coverage) and, for alert
+       counts, xsiam_run_xql_query bounded to the scope window.
+    3. Pull CALDERA operations history (caldera_get_all_operations,
+       caldera_get_operation_by_id for any worth detail).
+    4. Pull the simulation skill catalog (skills_list_all) and identify
        which scenarios match the operator's scope.
     5. Cross-reference: which scenarios fired against which rules,
        what the alert-to-event ratio was, what gaps remain.
@@ -53,26 +54,33 @@ system_prompt: |
   - Reports should be SHORT — tables + bullets, not paragraphs.
 
 tools_allowed:
-  # Read-only XSIAM
-  - "xsiam_execute_xql_query"
-  - "xsiam_get_dataset_metadata"
-  - "xsiam_list_rules"
-  # Read-only CALDERA
-  - "caldera_list_operations"
-  - "caldera_get_operation"
-  - "caldera_list_agents"
-  - "caldera_get_agent"
+  # Read-only XSIAM (xsiam connector)
+  - "xsiam_run_xql_query"
+  - "xsiam_get_datasets"
+  - "xsiam_get_dataset_fields"
+  # Read-only detection inventory + coverage (built-in tools)
+  - "detections_list"
+  - "detections_get"
+  - "detections_recent_fires"
+  - "technique_coverage"
+  - "coverage_gaps"
+  - "coverage_snapshot_list"
+  - "coverage_snapshot_get"
+  - "coverage_diff"
+  # Read-only CALDERA (caldera connector)
+  - "caldera_get_all_operations"
+  - "caldera_get_operation_by_id"
+  - "caldera_get_operation_report"
+  - "caldera_get_all_agents"
+  - "caldera_get_agent_by_paw"
   - "caldera_get_all_abilities"
-  - "caldera_get_ability"
-  # Read-only phantom catalog
-  - "phantom_list_scenarios"
-  - "phantom_get_scenario"
-  - "phantom_list_skills"
-  - "phantom_get_skill"
-  - "phantom_get_required_fields"
+  - "caldera_get_ability_by_id"
+  # Read-only skill catalog + xlog coverage roll-up
+  - "skills_list_all"
+  - "skills_read"
+  - "phantom_generate_coverage_report"
   # Read-only memory
   - "memory_search"
-  - "memory_list"
 
 tools_denied: []
 

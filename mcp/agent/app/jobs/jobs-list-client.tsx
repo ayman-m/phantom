@@ -223,17 +223,6 @@ function actionLabel(
   return t || "—";
 }
 
-function buildDuplicateQuery(job: Job): string {
-  const params = new URLSearchParams();
-  params.set("name", `${job.name} (copy)`);
-  params.set("schedule", job.schedule);
-  if (job.kind === "JOB_KIND_ONCE") params.set("kind", "once");
-  else params.set("kind", "weekly");
-  if (job.action?.agent_id) params.set("agent_id", job.action.agent_id);
-  if (job.action?.message) params.set("input", job.action.message);
-  return params.toString();
-}
-
 function stateLabel(state: JobState): string {
   switch (state) {
     case "JOB_STATE_ACTIVE":
@@ -397,7 +386,9 @@ function JobCard({
   const agentName = actionLabel(job.action, agentNameMap);
   const scheduleText = humanSchedule(job.schedule, job.kind);
   const displayState = effectiveState(job);
-  const showNextRun = displayState !== "JOB_STATE_COMPLETED";
+  // Only an Active job has a next run; a paused or completed one never
+  // fires on its own, so any timestamp would be stale or misleading.
+  const showNextRun = displayState === "JOB_STATE_ACTIVE";
   const nextRun = showNextRun ? relativeTime(job.next_run_at) : "—";
   const lastRun = relativeTime(job.last_run_at);
 
@@ -436,6 +427,14 @@ function JobCard({
               {scheduleText}
               {job.timezone && job.timezone !== "UTC" ? ` (${job.timezone})` : ""}
             </p>
+            {job.description && (
+              <p
+                className="text-xs text-on-surface-variant/70 mt-0.5 truncate"
+                title={job.description}
+              >
+                {job.description}
+              </p>
+            )}
           </div>
         </div>
 
@@ -475,8 +474,12 @@ function JobCard({
         <JobActions
           jobId={job.id}
           jobName={job.name}
-          isPaused={job.state === "JOB_STATE_PAUSED"}
-          duplicateQuery={buildDuplicateQuery(job)}
+          // A completed run-once job gets no Pause/Resume: its stored
+          // Run-at time has no year, so Resume would arm it for the same
+          // date next year. The menu keeps Trigger Now, Edit (set a new
+          // Run-at time) and Duplicate.
+          isPaused={displayState !== "JOB_STATE_ACTIVE"}
+          isCompleted={displayState === "JOB_STATE_COMPLETED"}
           // Pass the full Job object so JobActions can render
           // "Export definition (.json)" from the list view too.
           // We deliberately DO NOT pass `runs` here — listing the

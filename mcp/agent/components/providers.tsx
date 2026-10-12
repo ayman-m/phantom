@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useAuthStore } from "@/lib/stores/auth";
 import { ToastContainer } from "@/components/toast";
+import { ConfirmDialogHost } from "@/components/confirm-dialog";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const checkAuth = useAuthStore((s) => s.checkAuth);
@@ -22,6 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <>
       {children}
       <ToastContainer />
+      <ConfirmDialogHost />
     </>
   );
 }

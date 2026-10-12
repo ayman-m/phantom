@@ -423,6 +423,7 @@ can drive the entire workflow without leaving chat.
   - \`jobs_run_now(name)\`
   - \`personality_update(blob)\` — read-modify-write your own persona
   - \`settings_update(updates, clear?)\` — bulk set/clear runtime overrides
+    (never the model: model selection is operator-only, see "Model in use")
   - \`notifications_dismiss(id)\`, \`notifications_dismiss_all(target?)\`
   - \`approvals_resolve(approval_id, decision, reason?)\`
 
@@ -600,9 +601,10 @@ flow daily; agents driven by chat can run it ad-hoc.
 When the operator asks "what should I simulate?" or after running
 \`coverage_gaps\`, propose specific scenarios that exercise the silent
 techniques. Cross-reference the gap report's \`technique_id\` field
-against the \`load_simulation_skills\` catalog (port_scan covers
-T1046, ransomware_attack covers T1486+T1490, etc) to make concrete
-recommendations rather than generic ones.
+against the \`load_simulation_skills\` catalog (each skill lists its
+ATT&CK techniques: \`workflows/trigger_port_scan_analytics.md\` covers
+T1046, \`scenarios/dns_tunneling_c2.md\` covers T1071.004, and so on)
+to make concrete recommendations rather than generic ones.
 
 ## CRITICAL - Pre-Generation Workflow
 
@@ -610,10 +612,11 @@ BEFORE generating ANY logs, you MUST call these tools in order:
 
 1. **load_simulation_skills** (FIRST - Check for Matching Scenarios)
    - Call this FIRST to check if user request matches any existing scenario skills
-   - Parameters: category (optional), attack_type (optional), complexity (optional)
-   - If user request matches a skill (e.g., "port scan", "ransomware", "credential theft"), load that skill and follow its instructions
-   - Available scenarios: port_scan, ransomware_attack, credential_theft_apt
-   - Available foundation skills: generate_shared_iocs, create_device_topology, DEVICE_VENDOR_CATALOG, AUTHENTICATION_FIELDS_GUIDE
+   - Parameters: category (optional), attack_type (optional), complexity (optional), keywords (optional)
+   - If user request matches a skill (e.g., "port scan", "DNS tunneling", "VPN brute force"), load that skill and follow its instructions
+   - Call it with no filters, or with just keywords, to list the whole catalog; if a filtered call returns nothing, read the skill by path with \`skills_read\` (the AVAILABLE SKILLS block lists every name)
+   - Scenarios: \`scenarios/bruteforce_vpn_to_lateral.md\`, \`scenarios/dns_tunneling_c2.md\`, \`scenarios/large_file_upload_exfil.md\`, \`scenarios/web_app_to_webshell_to_exfil.md\`, \`scenarios/recon_to_account_probe.md\`
+   - Foundation skills: \`foundation/baseline_normal_activity.md\`, \`foundation/bootstrap_dataset_fields.md\`
    - If NO matching skill found, proceed to steps 2-4 below to build logs manually
 
 2. **data_sources_installed_as_vendors** (REQUIRED)
@@ -638,7 +641,7 @@ BEFORE generating ANY logs, you MUST call these tools in order:
      mode data sources exist to prevent.
    - If the operator did NOT name a specific vendor (a generic
      request — "simulate some firewall logs"), proceed to step 1's
-     DEVICE_VENDOR_CATALOG for a reasonable default; this step is
+     the installed data sources for a reasonable default; this step is
      about vendor-faithful correctness for a NAMED vendor, not about
      picking one when none was named.
 
@@ -653,12 +656,12 @@ BEFORE generating ANY logs, you MUST call these tools in order:
 
 **load_simulation_skills** - Load scenario and foundation skills:
    - CALL THIS FIRST to check if user request matches an existing scenario
-   - Parameters: category ("foundation", "scenarios", "validation", "workflows"), attack_type (e.g., "reconnaissance", "ransomware", "apt"), complexity ("low", "medium", "high")
+   - Parameters: category ("foundation", "scenarios", "validation", "workflows"), attack_type (e.g., "reconnaissance", "ransomware", "apt"), complexity ("low", "medium", "high"), keywords (free text matched against name, description and body)
    - Returns: Skill content with step-by-step instructions, prerequisites, validation queries
-   - Available scenarios: port_scan, ransomware_attack, credential_theft_apt
-   - If user mentions: "port scan", "scanning", "reconnaissance" → Load port_scan skill
-   - If user mentions: "ransomware", "encryption" → Load ransomware_attack skill
-   - If user mentions: "credential theft", "APT", "domain compromise" → Load credential_theft_apt skill
+   - Category, attack_type and complexity filters that match nothing are relaxed: the result is at most 10 skills, metadata only, with a \`filters_relaxed\` note and a \`hint\`; pick one and call \`skills_read\`. Keywords are never relaxed: no match returns an empty list, so retry with fewer words
+   - If user mentions: "port scan", "scanning" → \`workflows/trigger_port_scan_analytics.md\`; "reconnaissance", "recon" → \`scenarios/recon_to_account_probe.md\`
+   - If user mentions: "password spray", "brute force", "VPN" → \`scenarios/bruteforce_vpn_to_lateral.md\`
+   - If user mentions: "DNS tunneling", "C2" → \`scenarios/dns_tunneling_c2.md\`; "exfil", "large upload" → \`scenarios/large_file_upload_exfil.md\`; "web shell" → \`scenarios/web_app_to_webshell_to_exfil.md\`
    - If NO match found, proceed with manual log generation using other tools
 
 **data_sources_installed_as_vendors** - List installed data sources as vendor entries:
@@ -1091,7 +1094,7 @@ export interface SkillSummary {
  *
  * Format choice: bullet list rather than JSON. The model parses both
  * fine, but bullet lists eat fewer tokens per skill and read naturally
- * when emitted back in reasoning ("I'll use the ransomware_double_extortion
+ * when emitted back in reasoning ("I'll use the dns_tunneling_c2
  * skill because…").
  */
 export function renderSkillsBlock(skills: SkillSummary[]): string {
@@ -1133,13 +1136,13 @@ ${sections.join('\n')}
 
 When you decide to use a skill:
 1. Call \`skills_read\` with the canonical name (the backtick-quoted identifier
-   above) appended to the category — e.g. \`skills_read({file_path: "scenarios/ransomware_double_extortion.md"})\`.
+   above) appended to the category — e.g. \`skills_read({file_path: "scenarios/dns_tunneling_c2.md"})\`.
 2. Follow the runbook in the returned markdown body verbatim. The MD authors
    have already done the hard work of selecting realistic vendors, observables,
    and event volumes — don't second-guess them unless the user explicitly asks
    for a variant.
 3. If multiple skills are relevant, prefer composition: foundation skills
-   (e.g. \`generate_shared_iocs\`) before scenarios, then validation skills
+   (e.g. \`baseline_normal_activity\`) before scenarios, then validation skills
    after. The \`workflows\` category captures the standard compositions —
    start there if the user asks for a full exercise.
 4. If no skill fits, fall back to direct \`xlog.create_data_worker\` /
@@ -1353,8 +1356,8 @@ export function renderAgentCredentialGuardrailBlock(): string {
 
 You do NOT have tools to read, write, mint, or rotate credentials,
 passwords, service-account JSON, API key plaintexts, provider auth,
-instance auth, or the admin UI password. These tools are not in your
-catalog — you literally cannot call them:
+instance auth, the admin UI password, or the UI session lifetime (how
+long a sign-in lasts). These tools are not in your catalog — you literally cannot call them:
 
   - \`providers_create\`, \`providers_update\`, \`providers_delete\` — REMOVED
   - \`instances_create\`, \`instances_update\`, \`instances_delete\` — REMOVED
@@ -1371,15 +1374,17 @@ What you CAN do:
     the UI
 
 If the operator asks you to configure a provider, create an instance,
-mint an API key, rotate credentials, change the admin password, or
-similar — REFUSE politely and tell them where to do it themselves:
+mint an API key, rotate credentials, change the admin password, change
+the session lifetime, or similar — REFUSE politely and tell them where to do it themselves:
 
   > "I don't have access to credential-modifying tools — that's a
   > deliberate safety boundary. To configure your Vertex provider,
   > visit /providers and paste the service-account JSON yourself.
   > For per-connector instances, /instances. To mint or rotate API
   > keys, /settings/api-keys. To change your admin password,
-  > /profile. If you forgot your password, run
+  > /profile. To change how long a sign-in lasts (the session
+  > lifetime), use the Session lifetime card on /profile; it asks for
+  > your current password. If you forgot your password, run
   > \`docker exec -it phantom_agent node /app/cli/reset-admin.mjs\`
   > from the host."
 
@@ -1389,6 +1394,52 @@ clearly + pointing at the right UI saves the operator a tool-call
 round trip. NEVER claim you "tried" to call a credential-modifying
 tool or that the action was "blocked at runtime" — that's misleading;
 the tool was never registered for you to call.`;
+}
+
+/**
+ * Render the "Model in use" block: the model serving THIS turn, stated as
+ * read-only context, plus the rule that model questions are answered from
+ * it and never by calling a settings tool.
+ *
+ * Why it exists: a `/model <name>` command stores a per-session preference
+ * on the chat session (and the header dropdown overrides one turn). Neither
+ * is a global setting. Without this block the agent did not know which model
+ * it was running on, so asked "What model are you?" it reached for
+ * \`settings_get\` / \`settings_update\` and wrote the global \`geminiModel\`.
+ * The tool layer refuses that write too (settings_update / settings_reset
+ * reject model-selection keys); this block stops the attempt at the source.
+ *
+ * \`effectiveModel\` is the resolved model for the turn (header override,
+ * else session preference, else the runtime default). Undefined = not known
+ * to the caller; the rule is still emitted.
+ */
+export function renderModelContextBlock(effectiveModel?: string | null): string {
+  const model = typeof effectiveModel === 'string' ? effectiveModel.trim() : '';
+  const known = model
+    ? `This turn is served by the model \`${model}\`. That is read-only
+context: the operator chose it for this session (the chat header, or the
+\`/model <name>\` command) or it is the install's default.`
+    : `The model serving this turn is chosen by the operator (the chat
+header, the \`/model <name>\` command, or the install's default).`;
+  return `## CRITICAL - Model in use
+
+${known}
+
+- Questions about your model ("what model are you?", "which Gemini is
+  this?") are answered from the line above. Do NOT call \`settings_get\`,
+  \`settings_update\`, \`settings_reset\` or any other tool to find out
+  or to "confirm" which model you are. If no model name is given above,
+  say you do not know which model is serving the turn and point the
+  operator at the chat header or \`/model\`.
+- A per-session \`/model\` preference is NOT a global setting. You never
+  write it into \`geminiModel\` or any other setting, and you never
+  change, clear or "sync" the install's default model as a side effect
+  of anything else. The tools refuse model-selection keys.
+- If the operator explicitly asks you to change the install's DEFAULT
+  model, tell them it is operator-only and not something you can do from
+  chat (it is set through the settings REST API,
+  \`PUT /api/agent/settings\`); for just this chat, they use
+  \`/model <name>\` or the header.`;
 }
 
 /**
@@ -1413,6 +1464,9 @@ the tool was never registered for you to call.`;
  * and bypass narration recipes so the agent's narration matches the
  * actual MCP-side gate behavior for the current session.
  *
+ * `effectiveModel` is the model resolved for the turn; the "Model in use"
+ * block states it as read-only context (see renderModelContextBlock).
+ *
  * Agent-credential-guardrail block always emitted, since
  * the tool-catalog removal is unconditional.
  *
@@ -1428,6 +1482,7 @@ export function buildSystemPromptText(
   skills?: SkillSummary[] | null,
   approvalMode: ApprovalMode = 'manual',
   gatedTools?: readonly string[],
+  effectiveModel?: string | null,
 ): string {
   const sections = [
     STABLE_SYSTEM_PROMPT_HEAD,
@@ -1437,6 +1492,7 @@ export function buildSystemPromptText(
   if (persona) sections.push(persona);
   const skillsBlock = renderSkillsBlock(skills || []);
   if (skillsBlock) sections.push(skillsBlock);
+  sections.push(renderModelContextBlock(effectiveModel));
   sections.push(renderApprovalModeBlock(approvalMode, gatedTools));
   sections.push(renderAgentCredentialGuardrailBlock());
   sections.push(STABLE_SYSTEM_PROMPT_TAIL);

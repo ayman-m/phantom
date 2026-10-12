@@ -1,9 +1,9 @@
-"""Bearer-token auth for the MCP admin/setup HTTP endpoints.
+"""Bearer-token auth for the MCP admin HTTP endpoints.
 
 Two acceptable bearer shapes:
 
-  1. **MCP_TOKEN** (bundle-internal): the Next.js agent's setup screen
-     and internal tools send `Authorization: Bearer <MCP_TOKEN>`. This
+  1. **MCP_TOKEN** (bundle-internal): the Next.js agent's /api/agent/*
+     proxies and internal tools send `Authorization: Bearer <MCP_TOKEN>`. This
      is the unrestricted admin path — same trust as the embedded MCP
      itself. Generated at container start (or pinned in `.env`).
 

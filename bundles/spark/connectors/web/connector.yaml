@@ -80,7 +80,7 @@ configSchema:
   # Keys are snake_case so they line up directly with the connector
   # code's `getattr(config, "<name>")` lookups via the _ConfigProxy.
   # No camel→snake conversion layer in instance_store.merged_config()
-  # — whatever the setup form stores under these names is what the
+  # — whatever the /connectors instance form stores under these names is what the
   # connector reads.
   type: "object"
   required: ["cdp_url"]

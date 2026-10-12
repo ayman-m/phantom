@@ -33,6 +33,20 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "1.0.3",
+    date: "Unreleased", // set to the ISO publish date when v1.0.3 is tagged
+    title: "Session lifetime, walkthrough fixes and corrected help pages.",
+    highlights: [
+      "New Session lifetime card on Profile: choose 1 to 24 hours; the default stays 2.",
+      "Duplicate, model choice, Edit and paused-job times on Jobs now behave; job Description is saved.",
+      "Rename and delete use in-app dialogs, and forks nest under their parent session.",
+      "Notifications, Tasks, Skills, Knowledge, Providers and Services show only real data; Notifications controls work.",
+      "Agent no longer changes the global model when asked; skills it names all exist.",
+      "Uploaded connectors appear on Connectors and can be deleted; instance status survives a reload.",
+      "Backups keep tested-journey marks; restore skips a section it cannot compare instead of writing blind.",
+    ],
+  },
+  {
     version: "1.0.2",
     date: "2026-10-11",
     title: "Security update.",

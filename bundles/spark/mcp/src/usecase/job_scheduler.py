@@ -47,7 +47,8 @@ never fired again).
       last_status    TEXT,                 -- success|failure|skipped
       last_error     TEXT,
       next_due_at    TEXT,
-      registered_at  TEXT NOT NULL
+      registered_at  TEXT NOT NULL,
+      description    TEXT NOT NULL DEFAULT ''  -- operator's note on the job
     );
     job_runs(
       id           TEXT PRIMARY KEY,
@@ -74,7 +75,7 @@ import sqlite3
 import threading
 import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Awaitable, Callable
@@ -116,6 +117,16 @@ WARN_AFTER_SECONDS = 600
 # occurrence because that error never self-heals.
 MAX_CONSECUTIVE_FAILURES = 10
 
+
+class CompletedRunOnceError(ValueError):
+    """Raised when something tries to arm a run-once job that already fired.
+
+    A run-once job stores its Run-at time as `M H D Mo *` (no year). After it
+    fires it is disabled; arming it from that stored cron would pick the same
+    date next year and fire unattended. The only ways back are a new Run-at
+    time (PATCH with a different `cron`) or Duplicate / a new job.
+    """
+
 # Where the embedded MCP can reach the agent's /api/chat endpoint when
 # firing action_type="chat" jobs. In phantom-standalone deploys agent
 # and MCP share the container, so localhost:3000 is correct. Operators
@@ -140,6 +151,9 @@ ToolDispatcher = Callable[[str, dict[str, Any]], Awaitable[Any]]
 # happy path. The check is "looks like 8-4-4-4-12 hex with hyphens"; if
 # it matches we try id-lookup first, otherwise we go straight to name.
 import re as _re
+# Upper bound on a job's description (a note, not a document).
+MAX_DESCRIPTION_CHARS = 2000
+
 _UUID_RE = _re.compile(
     r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
     _re.IGNORECASE,
@@ -171,6 +185,28 @@ class JobDefinition:
     def action_args(self) -> dict[str, Any]:
         a = self.action.get("args") or {}
         return a if isinstance(a, dict) else {}
+
+
+def _completed_run_once_message(name: str) -> str:
+    return (
+        f"job {name!r} is a run-once job that already ran, so it cannot be "
+        "resumed (its stored Run-at time has no year and would fire again "
+        "next year). Set a new Run-at time with Edit, or Duplicate the job."
+    )
+
+
+# Keys a job's permission policy used to carry and no longer does.
+_LEGACY_POLICY_KEYS = ("require_approval",)
+
+
+def _without_legacy_policy_keys(policy: Any) -> Any:
+    """A copy of `policy` without the keys a policy no longer carries, so a
+    create or update never stores them. Anything that is not a dict passes
+    through unchanged. Rows already stored with a legacy key are not
+    migrated; the reader ignores the key."""
+    if not isinstance(policy, dict):
+        return policy
+    return {k: v for k, v in policy.items() if k not in _LEGACY_POLICY_KEYS}
 
 
 @dataclass(frozen=True)
@@ -238,16 +274,23 @@ class JobRow:
     # as a tool error, the chat thread surfaces the denial reason).
     # JSON blob shape:
     #   {
-    #     "allowed_tools":     ["pattern", ...],   # whitelist (globs)
-    #     "denied_tools":      ["pattern", ...],   # blacklist (globs)
-    #     "require_approval":  ["pattern", ...]    # force-prompt list
+    #     "allowed_tools":  ["pattern", ...],   # whitelist (globs)
+    #     "denied_tools":   ["pattern", ...]    # blacklist (globs)
     #   }
+    # Approval cards are decided by the manifest's humanRequired list, not
+    # by the policy. A legacy "require_approval" key (removed in v1.0.3) is
+    # dropped when a job is created or updated; a stored row that still has
+    # it is read and the key ignored.
     # Glob syntax: same as HookMatcher.toolGlob (`*`, `?`, comma-list).
     # Empty arrays = "no constraint on that dimension." Empty policy
     # object {} = no restrictions (equivalent to None). None means
     # "use the default policy at dispatch time" (the runtime default
     # is fully permissive — operator opts INTO restrictions).
     permission_policy: dict[str, Any] | None = None
+    # Operator's free-text note about what the job is for (the /jobs/new
+    # form's Description field). "" when none; rows stored before the column
+    # existed read as "".
+    description: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -270,6 +313,7 @@ class JobRow:
             "model_id": self.model_id,
             "thinking_enabled": self.thinking_enabled,
             "permission_policy": self.permission_policy,
+            "description": self.description,
         }
 
 
@@ -352,12 +396,15 @@ class CroniterJobScheduler:
         # Reconcile YAML-on-disk runtime jobs into SQLite. Per spark-
         # agents spec §7.1: <data_root>/jobs/*.yaml are operator-
         # editable runtime job definitions; SQLite is the runtime
-        # state cache. ON CONFLICT updates so re-running this is
-        # idempotent. Manifest jobs already loaded above; YAML jobs
-        # come second so a name collision is resolved by manifest
-        # winning on next register_jobs() boot (manifest is canonical
-        # for source='manifest' rows).
+        # state cache. Re-running this is idempotent (load_yaml_jobs
+        # explains which side wins which field). Manifest jobs already
+        # loaded above; YAML jobs come second and never overwrite a
+        # manifest row (a name collision is reported as a load issue).
         loaded_yaml = self.load_yaml_jobs()
+        # Bring every mirror file in line with SQLite (and the current banner),
+        # so files written by an older build stop claiming a state the job
+        # no longer has.
+        self.converge_job_mirrors()
         logger.info(
             "CroniterJobScheduler at %s — %d job(s) from manifest + %d from YAML mirror",
             self._db_path, len(self._defs), loaded_yaml,
@@ -439,6 +486,12 @@ class CroniterJobScheduler:
             if "permission_policy_json" not in cols:
                 c.execute(
                     "ALTER TABLE jobs ADD COLUMN permission_policy_json TEXT"
+                )
+            # Operator's note on the job. NOT NULL DEFAULT '' so rows from
+            # before the column existed read as empty with no backfill.
+            if "description" not in cols:
+                c.execute(
+                    "ALTER TABLE jobs ADD COLUMN description TEXT NOT NULL DEFAULT ''"
                 )
             if "id" not in cols:
                 # `id` is an opaque UUID; UI uses it for stable URLs that
@@ -606,6 +659,27 @@ class CroniterJobScheduler:
         # croniter returns tz-aware datetime → cast to UTC epoch.
         return nxt.timestamp()
 
+    @staticmethod
+    def _is_completed_run_once(j: JobRow) -> bool:
+        """True for a run-once job that already fired and is now disabled."""
+        return bool(j.run_once and j.last_fired_at and not j.enabled)
+
+    def _scheduled_next_due(self, j: JobRow) -> str | None:
+        """ISO next-fire time for `j`, or None when it has none.
+
+        A job only has a next run while it is enabled and not removed.
+        A paused (or never-enabled, or completed run-once) job is never
+        picked up by the tick loop, so any stored value would go stale
+        and the UI would show "next run 4h ago" for it. Resuming
+        recomputes from now, which also stops a stale past value being
+        replayed as an immediate catch-up fire. (Resuming a COMPLETED
+        run-once job is refused before this is reached: see
+        `set_enabled` / `update_job`.)
+        """
+        if not j.enabled or j.removed:
+            return None
+        return self._now_iso(self._next_due_epoch(j))
+
     # ─── Reconciliation with manifest ─────────────────────────
 
     def register_jobs(self) -> None:
@@ -649,8 +723,7 @@ class CroniterJobScheduler:
                     next_due_at=None, registered_at=now,
                     source="manifest",
                 )
-                next_due_epoch = self._next_due_epoch(tmp)
-                next_due_iso = self._now_iso(next_due_epoch)
+                next_due_iso = self._scheduled_next_due(tmp)
 
                 if d.name in existing:
                     # Reset source to manifest in case a prior run had
@@ -976,8 +1049,9 @@ class CroniterJobScheduler:
         next_due_iso = self._now_iso(next_due_epoch)
 
         # `run_once` jobs auto-disable after their first fire (success
-        # OR failure — both count). The cron column stays as-is so an
-        # operator who re-enables can see what schedule was used. We
+        # OR failure — both count). The cron column stays as-is so the
+        # operator can see what schedule was used; Resume is refused
+        # for a fired run-once job (its cron has no year). We
         # also clear next_due_at so the disabled job doesn't show a
         # phantom "next run" in the UI. The READ side filters disabled
         # jobs from the tick loop already (see _read_due_jobs WHERE
@@ -1044,6 +1118,11 @@ class CroniterJobScheduler:
                 "JobScheduler disabled run-once job %s after first fire "
                 "(status=%s)", row.name, status,
             )
+        if new_enabled != (1 if row.enabled else 0):
+            # A fire that disables the job (run-once completion, unknown
+            # tool, failure back-off) must reach the YAML mirror too, or
+            # replaying the mirror into a fresh DB would arm it again.
+            self._mirror_job_yaml(self.get_job(row.name))
 
         if duration_ms > WARN_AFTER_SECONDS * 1000:
             logger.warning(
@@ -1067,7 +1146,10 @@ class CroniterJobScheduler:
                 "run_id": run_id,
                 "trigger": trigger,
                 "action_name": action_name,
-                "next_due_at": next_due_iso,
+                # What was actually stored: None for a run-once job that
+                # just finished, an auto-disabled job, or a manual run of
+                # a paused job (none of them have a next run).
+                "next_due_at": new_next_due,
                 "error": error,
             },
         )
@@ -1099,7 +1181,7 @@ class CroniterJobScheduler:
                             "trigger": trigger,
                             "action_name": action_name or action_type,
                             "duration_ms": duration_ms,
-                            "next_due_at": next_due_iso,
+                            "next_due_at": new_next_due,
                             "error": error,
                             # Short summary the UI uses for the
                             # notification card without having to
@@ -1430,6 +1512,13 @@ class CroniterJobScheduler:
         return [self._row_to_jobrun(r) for r in rows]
 
     def set_enabled(self, name: str, enabled: bool) -> JobRow | None:
+        """Pause (`enabled=False`) or resume (`enabled=True`) a job.
+
+        Raises CompletedRunOnceError when asked to resume a run-once job
+        that already fired: its stored cron has no year, so resuming would
+        arm it for the same date next year. Give it a new Run-at time
+        (`update_job(cron=...)`) or duplicate it instead.
+        """
         from usecase.audit_log import (
             ACTION_JOB_DISABLED,
             ACTION_JOB_ENABLED,
@@ -1442,9 +1531,19 @@ class CroniterJobScheduler:
             ).fetchone()
             if row is None:
                 return None
+            # Pausing clears next_due_at; resuming recomputes it from
+            # now. Without this a paused job kept a frozen next_due_at
+            # that slid into the past, and resuming it fired a catch-up
+            # run on the next tick.
+            current = self._row_to_jobrow(row)
+            if enabled and not current.enabled and self._is_completed_run_once(current):
+                raise CompletedRunOnceError(_completed_run_once_message(name))
+            next_due_iso = self._scheduled_next_due(
+                replace(current, enabled=enabled)
+            )
             c.execute(
-                "UPDATE jobs SET enabled = ? WHERE name = ?",
-                (1 if enabled else 0, name),
+                "UPDATE jobs SET enabled = ?, next_due_at = ? WHERE name = ?",
+                (1 if enabled else 0, next_due_iso, name),
             )
             updated = c.execute(
                 "SELECT * FROM jobs WHERE name = ?", (name,)
@@ -1455,7 +1554,10 @@ class CroniterJobScheduler:
             status="success",
             metadata={"job_name": name},
         )
-        return self._row_to_jobrow(updated) if updated else None
+        out = self._row_to_jobrow(updated) if updated else None
+        if out is not None:
+            self._mirror_job_yaml(out)
+        return out
 
     async def trigger_now(self, name: str) -> JobRun | None:
         """Fire a job immediately, out of band. Used by /jobs/{name}/run."""
@@ -1471,6 +1573,20 @@ class CroniterJobScheduler:
     # cron string is validated by attempting to parse with croniter
     # before the row is written; an invalid expression raises
     # ValueError so the route handler can return 400.
+
+    @staticmethod
+    def _validate_description(description: Any) -> str:
+        """A description is plain text up to MAX_DESCRIPTION_CHARS; None is empty."""
+        if description is None:
+            return ""
+        if not isinstance(description, str):
+            raise ValueError("description must be a string")
+        text = description.strip()
+        if len(text) > MAX_DESCRIPTION_CHARS:
+            raise ValueError(
+                f"description is {len(text)} characters; the limit is {MAX_DESCRIPTION_CHARS}"
+            )
+        return text
 
     @staticmethod
     def _validate_cron(cron: str, tz: Any) -> None:
@@ -1630,6 +1746,7 @@ class CroniterJobScheduler:
         model_id: str | None = None,
         thinking_enabled: bool = False,
         permission_policy: dict[str, Any] | None = None,
+        description: str | None = None,
     ) -> JobRow:
         """Create a runtime job. Raises ValueError on validation failure
         or if a job with the same name already exists.
@@ -1638,7 +1755,9 @@ class CroniterJobScheduler:
         first fire (success or failure) so it never repeats. Used by
         the /jobs/new form's "Run Now" + "Run Once" frequencies — both
         produce a single-fire job that stays in the table with its
-        run history visible. Operators can re-enable to fire again.
+        run history visible. A fired run-once job is NOT re-armed by Resume
+        (see `CompletedRunOnceError`); it needs a new Run-at time or a
+        duplicate.
 
         When `bypass_approvals=True`, every chat dispatch
         for this job carries `X-Phantom-Approval-Bypass: 1` so the
@@ -1654,6 +1773,8 @@ class CroniterJobScheduler:
         self._validate_action(action)
         tz = self._resolve_tz(timezone_name)
         self._validate_cron(cron, tz)
+        description_text = self._validate_description(description)
+        permission_policy = _without_legacy_policy_keys(permission_policy) or None
 
         now = self._now_iso()
         # Compute next_due for immediate visibility.
@@ -1666,8 +1787,9 @@ class CroniterJobScheduler:
             model_id=(model_id or None),
             thinking_enabled=thinking_enabled,
             permission_policy=permission_policy,
+            description=description_text,
         )
-        next_due_iso = self._now_iso(self._next_due_epoch(tmp))
+        next_due_iso = self._scheduled_next_due(tmp)
 
         # Mint a UUID for the new row. If we're re-creating a previously-
         # removed row (the ON CONFLICT path below), the existing id is
@@ -1687,8 +1809,8 @@ class CroniterJobScheduler:
                 "INSERT INTO jobs "
                 "(name, id, cron, timezone, action_json, enabled, removed, "
                 " next_due_at, registered_at, source, run_once, bypass_approvals, "
-                " model_id, thinking_enabled, permission_policy_json) "
-                "VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, 'runtime', ?, ?, ?, ?, ?) "
+                " model_id, thinking_enabled, permission_policy_json, description) "
+                "VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, 'runtime', ?, ?, ?, ?, ?, ?) "
                 "ON CONFLICT(name) DO UPDATE SET "
                 " cron = excluded.cron, timezone = excluded.timezone, "
                 " action_json = excluded.action_json, "
@@ -1700,14 +1822,16 @@ class CroniterJobScheduler:
                 " bypass_approvals = excluded.bypass_approvals, "
                 " model_id = excluded.model_id, "
                 " thinking_enabled = excluded.thinking_enabled, "
-                " permission_policy_json = excluded.permission_policy_json",
+                " permission_policy_json = excluded.permission_policy_json, "
+                " description = excluded.description",
                 (name, new_id, cron, timezone_name, json.dumps(action),
                  1 if enabled else 0, next_due_iso, now,
                  1 if run_once else 0,
                  1 if bypass_approvals else 0,
                  (model_id or None),
                  1 if thinking_enabled else 0,
-                 json.dumps(permission_policy) if permission_policy else None),
+                 json.dumps(permission_policy) if permission_policy else None,
+                 description_text),
             )
 
         record_event(
@@ -1765,6 +1889,11 @@ class CroniterJobScheduler:
         #         restrictions). Same shape as add_job's None default.
         #   non-empty dict = set the policy.
         permission_policy: dict[str, Any] | None = None,
+        # Description sentinel: None = preserve, "" = clear, text = set.
+        description: str | None = None,
+        # run_once: None = preserve, True/False = set. Only the YAML
+        # boot reconcile changes it; the PATCH route never sends it.
+        run_once: bool | None = None,
     ) -> JobRow | None:
         """Update a job's mutable fields. Returns None if the job
         doesn't exist; raises ValueError on validation failure.
@@ -1810,10 +1939,16 @@ class CroniterJobScheduler:
         new_policy: dict[str, Any] | None
         if permission_policy is None:
             new_policy = existing.permission_policy
-        elif permission_policy == {}:
-            new_policy = None
         else:
-            new_policy = permission_policy
+            # A policy that held only a legacy key becomes {} here, which
+            # clears, like an explicit {}.
+            new_policy = _without_legacy_policy_keys(permission_policy) or None
+
+        new_description = (
+            existing.description if description is None
+            else self._validate_description(description)
+        )
+        new_run_once = existing.run_once if run_once is None else bool(run_once)
 
         if action is not None:
             self._validate_action(new_action)
@@ -1821,7 +1956,19 @@ class CroniterJobScheduler:
             tz = self._resolve_tz(new_tz)
             self._validate_cron(new_cron, tz)
 
-        # Recompute next_due whenever cron/tz changed.
+        # A run-once job that already fired is only armed again by a NEW
+        # Run-at time; enabling it on its old cron would schedule the same
+        # date next year (the stored cron has no year).
+        if (
+            enabled
+            and self._is_completed_run_once(existing)
+            and new_cron == existing.cron
+            and new_tz == existing.timezone
+        ):
+            raise CompletedRunOnceError(_completed_run_once_message(name))
+
+        # Recompute next_due on every update (cron/tz may have changed);
+        # a job that ends up disabled has none.
         tmp = JobRow(
             name=name, cron=new_cron, timezone=new_tz, action=new_action,
             enabled=existing.enabled if enabled is None else enabled,
@@ -1829,25 +1976,29 @@ class CroniterJobScheduler:
             last_fired_at=None, last_status=None, last_error=None,
             next_due_at=None, registered_at=existing.registered_at,
             source=existing.source,
+            run_once=new_run_once,
             bypass_approvals=new_bypass,
             model_id=new_model_id,
             thinking_enabled=new_thinking,
             permission_policy=new_policy,
+            description=new_description,
         )
-        next_due_iso = self._now_iso(self._next_due_epoch(tmp))
+        next_due_iso = self._scheduled_next_due(tmp)
 
         with self._lock, self._conn() as c:
             c.execute(
                 "UPDATE jobs SET cron = ?, timezone = ?, action_json = ?, "
                 "enabled = ?, next_due_at = ?, bypass_approvals = ?, "
                 "model_id = ?, thinking_enabled = ?, "
-                "permission_policy_json = ?, "
-                "removed = 0 WHERE name = ?",
+                "permission_policy_json = ?, description = ?, "
+                "run_once = ?, removed = 0 WHERE name = ?",
                 (new_cron, new_tz, json.dumps(new_action),
                  1 if (enabled if enabled is not None else existing.enabled) else 0,
                  next_due_iso, 1 if new_bypass else 0,
                  new_model_id, 1 if new_thinking else 0,
                  json.dumps(new_policy) if new_policy else None,
+                 new_description,
+                 1 if new_run_once else 0,
                  name),
             )
         out = self.get_job(name)
@@ -1907,7 +2058,7 @@ class CroniterJobScheduler:
     #     succeeds (so a write failure doesn't leave a half-baked file)
     #   - delete_job() removes the YAML for runtime jobs only
     #   - load_yaml_jobs() at boot reads every <data_root>/jobs/*.yaml
-    #     and reconciles into SQLite (idempotent — ON CONFLICT updates)
+    #     and reconciles into SQLite (idempotent — see its docstring)
     #
     # Manifest jobs (source='manifest') do NOT get a YAML mirror — their
     # canonical def is in manifest.yaml itself; mirroring would create
@@ -1934,7 +2085,7 @@ class CroniterJobScheduler:
         registered_at, removed) so the YAML stays a pure DEFINITION —
         diffable across operators without spurious "next_due_at moved
         by 24h" noise on every cron tick."""
-        return {
+        doc: dict[str, Any] = {
             "name": row.name,
             "cron": row.cron,
             "timezone": row.timezone,
@@ -1942,6 +2093,10 @@ class CroniterJobScheduler:
             "run_once": row.run_once,
             "action": row.action,
         }
+        # Only when set, so a job without one keeps the same file as before.
+        if row.description:
+            doc["description"] = row.description
+        return doc
 
     def _write_job_yaml(self, row: JobRow) -> None:
         """Write a runtime job's definition to <data_root>/jobs/<name>.yaml.
@@ -1963,6 +2118,14 @@ class CroniterJobScheduler:
         # Atomic write: tmp file + rename so a crash mid-write doesn't
         # leave a corrupt YAML behind.
         tmp = path.with_suffix(".yaml.tmp")
+        tmp.write_text(self._render_job_yaml(row), encoding="utf-8")
+        tmp.replace(path)
+        logger.info("YAML mirror written: %s", path)
+
+    def _render_job_yaml(self, row: JobRow) -> str:
+        """The exact text of a runtime job's mirror file: banner + document."""
+        import yaml
+
         body = yaml.safe_dump(
             self._row_to_yaml_doc(row),
             sort_keys=False,
@@ -1971,13 +2134,65 @@ class CroniterJobScheduler:
         # Banner so an operator reading the file knows what it is.
         banner = (
             "# Phantom runtime job definition (source='runtime').\n"
-            "# Edit + restart phantom-agent to apply. SQLite holds runtime\n"
-            "# state (last_fired_at, next_due_at) which is computed from\n"
-            "# this file at boot. Per spark-agents spec §7.1.\n"
+            "# Edit cron, timezone, action, run_once or description and\n"
+            "# restart phantom-agent to apply. Whether the job is paused or\n"
+            "# enabled is kept in SQLite (this file only mirrors it), as is\n"
+            "# runtime state (last_fired_at, next_due_at). Per spark-agents\n"
+            "# spec §7.1.\n"
         )
-        tmp.write_text(banner + body, encoding="utf-8")
-        tmp.replace(path)
-        logger.info("YAML mirror written: %s", path)
+        return banner + body
+
+    def converge_job_mirrors(self) -> int:
+        """Rewrite every runtime job's mirror whose text differs from what
+        SQLite says it should be, and return how many were rewritten. Run at
+        boot after load_yaml_jobs(), so a file written by an older build (an
+        old banner, or `enabled: true` for a run-once job that has since
+        completed) converges to the live state. Idempotent and cheap: a file
+        that already matches is read once and left untouched, so a second
+        boot writes nothing.
+
+        A file that failed to load (see yaml_load_issues) is never rewritten:
+        it may hold an operator's edit that has not been applied yet.
+        Failures are logged per job and never stop boot."""
+        try:
+            import yaml  # noqa: F401
+        except ImportError:
+            return 0
+        unreadable = {i["path"] for i in self.yaml_load_issues}
+        rewritten = 0
+        for row in self.list_jobs():
+            if row.source != "runtime":
+                continue
+            try:
+                path = self._job_yaml_path(row.name)
+                if str(path) in unreadable:
+                    continue
+                wanted = self._render_job_yaml(row)
+                try:
+                    current = path.read_text(encoding="utf-8")
+                except FileNotFoundError:
+                    current = None
+                if current == wanted:
+                    continue
+                self._write_job_yaml(row)
+                rewritten += 1
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("YAML mirror refresh failed for %s: %s", row.name, exc)
+        if rewritten:
+            logger.info("YAML mirror: %d file(s) refreshed from SQLite", rewritten)
+        return rewritten
+
+    def _mirror_job_yaml(self, row: JobRow | None) -> None:
+        """Best-effort re-export of a runtime job's mirror after a state
+        change that does not go through add_job / update_job (pause,
+        resume, a fire that disables the job). SQLite stays the source of
+        truth for the live state, so a mirror failure only logs."""
+        if row is None:
+            return
+        try:
+            self._write_job_yaml(row)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("YAML mirror update failed for %s: %s", row.name, exc)
 
     def _remove_job_yaml(self, name: str) -> None:
         try:
@@ -1990,14 +2205,28 @@ class CroniterJobScheduler:
 
     def load_yaml_jobs(self) -> int:
         """At boot, read <data_root>/jobs/*.yaml and reconcile each into
-        SQLite. Idempotent — ON CONFLICT in add_job's INSERT updates the
-        existing row. Returns the count of jobs loaded.
+        SQLite. Idempotent: replaying the same mirror any number of times
+        changes nothing and reports no issue. Returns the count of YAML
+        jobs now in step with SQLite (created, updated or already equal).
 
-        Called AFTER register_jobs() so manifest jobs are already in
-        place; YAML jobs that share a name with a manifest entry would
-        be overwritten by manifest reconciliation on the next boot — by
-        design, since manifest is the canonical source for manifest
-        source jobs. In practice operators don't pick conflicting names.
+        Per file, by what SQLite already holds under that name:
+          - nothing (fresh DB, or a deleted-then-restored job): create it
+            exactly as the YAML describes, `enabled` included.
+          - a runtime job: YAML is the definition, SQLite the live state.
+            cron, timezone, action, run_once and description from the YAML
+            win and are applied when they differ (that is what editing the
+            file and restarting means). `enabled` and everything the YAML
+            does not carry (last_fired_at, next_due_at, model_id,
+            bypass_approvals, permission_policy) stay as SQLite has them,
+            so a paused, auto-disabled or completed run-once job is never
+            re-armed by a restart. Pause / resume / auto-disable are
+            written back to the mirror, so it tracks the live state;
+            converge_job_mirrors() then refreshes any file that still
+            differs from SQLite (see there).
+          - a manifest job: never overwritten. The collision is reported
+            as a load issue (manifest is canonical for its own names).
+
+        Called AFTER register_jobs() so manifest jobs are already in place.
 
         Per-file failures are collected into self.yaml_load_issues
         instead of logged at WARN per file. ONE summary INFO line is
@@ -2021,21 +2250,18 @@ class CroniterJobScheduler:
             )
             return 0
         loaded = 0
+        created = updated = 0
         for path in sorted(self.yaml_dir.glob("*.yaml")):
             try:
                 doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
                 if not isinstance(doc, dict):
                     raise ValueError("top-level must be a mapping")
-                name = str(doc.get("name") or path.stem)
-                self.add_job(
-                    name=name,
-                    cron=str(doc.get("cron") or ""),
-                    timezone_name=str(doc.get("timezone") or "UTC"),
-                    action=doc.get("action") or {},
-                    enabled=bool(doc.get("enabled", True)),
-                    run_once=bool(doc.get("run_once", False)),
-                )
+                outcome = self._reconcile_yaml_job(doc, default_name=path.stem)
                 loaded += 1
+                if outcome == "created":
+                    created += 1
+                elif outcome == "updated":
+                    updated += 1
             except Exception as exc:  # noqa: BLE001
                 # One malformed file shouldn't break boot — collect into
                 # the issues list and continue. The summary at the end
@@ -2055,8 +2281,9 @@ class CroniterJobScheduler:
                 })
         if loaded:
             logger.info(
-                "YAML mirror loaded %d runtime job(s) from %s",
-                loaded, self.yaml_dir,
+                "YAML mirror: %d runtime job(s) in step with %s "
+                "(%d created, %d updated)",
+                loaded, self.yaml_dir, created, updated,
             )
         if self.yaml_load_issues:
             logger.info(
@@ -2065,6 +2292,52 @@ class CroniterJobScheduler:
                 len(self.yaml_load_issues),
             )
         return loaded
+
+    def _reconcile_yaml_job(self, doc: dict[str, Any], *, default_name: str) -> str:
+        """Bring one YAML mirror document into SQLite. Returns "created",
+        "updated" or "unchanged"; raises (-> a load issue) on a parse /
+        validation error or a manifest-name collision. See load_yaml_jobs
+        for which side wins which field."""
+        name = str(doc.get("name") or default_name)
+        cron = str(doc.get("cron") or "")
+        tz_name = str(doc.get("timezone") or "UTC")
+        action = doc.get("action") or {}
+        run_once = bool(doc.get("run_once", False))
+        existing = self.get_job(name)
+
+        if existing is None or existing.removed:
+            # A soft-removed manifest row is taken over by the runtime job,
+            # as add_job always did.
+            self.add_job(
+                name=name, cron=cron, timezone_name=tz_name, action=action,
+                enabled=bool(doc.get("enabled", True)), run_once=run_once,
+                description=doc.get("description"),
+            )
+            return "created"
+
+        if existing.source != "runtime":
+            raise ValueError(
+                f"job {name!r} collides with a manifest job of the same "
+                "name; the manifest definition is kept"
+            )
+
+        # Normalised exactly as stored, so an unedited mirror compares equal.
+        description = self._validate_description(doc.get("description"))
+        if (
+            existing.cron == cron
+            and existing.timezone == tz_name
+            and existing.action == action
+            and existing.run_once == run_once
+            and existing.description == description
+        ):
+            return "unchanged"
+
+        # `enabled` is deliberately not passed: SQLite owns pause state.
+        self.update_job(
+            name, cron=cron, timezone_name=tz_name, action=action,
+            run_once=run_once, description=description,
+        )
+        return "updated"
 
     # ─── Mappers ───────────────────────────────────────────────
 
@@ -2118,6 +2391,12 @@ class CroniterJobScheduler:
                 permission_policy = None
         else:
             permission_policy = None
+        # description: same defensive read; rows from before the column
+        # existed (or a NULL) are the empty string.
+        try:
+            description = row["description"] or ""
+        except (IndexError, KeyError):
+            description = ""
         # `run_count` is added by list_jobs/get_job's SELECT but absent
         # on rows fetched via internal helpers (e.g. update_job's
         # RETURNING shape). Default to 0 — stale, but never wrong-by-
@@ -2146,7 +2425,14 @@ class CroniterJobScheduler:
             last_fired_at=row["last_fired_at"],
             last_status=row["last_status"],
             last_error=row["last_error"],
-            next_due_at=row["next_due_at"],
+            # A disabled or removed job has no next run. Rows paused by
+            # an older build still carry a frozen next_due_at; never
+            # surface it.
+            next_due_at=(
+                row["next_due_at"]
+                if row["enabled"] and not row["removed"]
+                else None
+            ),
             registered_at=row["registered_at"],
             source=source,
             run_once=run_once,
@@ -2155,6 +2441,7 @@ class CroniterJobScheduler:
             model_id=model_id,
             thinking_enabled=thinking_enabled,
             permission_policy=permission_policy,
+            description=description,
         )
 
     @staticmethod

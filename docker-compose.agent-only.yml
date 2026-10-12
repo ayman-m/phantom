@@ -9,8 +9,9 @@
 #      from a slim bundle export, or by pulling from a registry).
 #   2. xlog and caldera (the local SOC services) run on a SEPARATE
 #      machine, exposing their ports to this host's network. The
-#      operator types their remote URLs into the setup form at
-#      first run; nothing in this compose file references them.
+#      operator enters their remote URLs as connector instances on
+#      /connectors after first login; nothing in this compose file
+#      references them.
 #
 # What's intentionally absent vs the full docker-compose.yml:
 #
@@ -24,11 +25,19 @@
 #
 # First-run flow on this machine:
 #   1. docker load < images/phantom-agent-local.tar
-#   2. set MCP_TOKEN in .env (or let the entrypoint generate one
-#      ephemerally on first boot)
+#   2. set PHANTOM_DEFAULT_ADMIN_PASSWORD in .env (the agent refuses to
+#      start on a fresh volume without it) and, optionally, MCP_TOKEN
+#      (or let the entrypoint generate one ephemerally on first boot)
 #   3. docker compose -f docker-compose.agent-only.yml up -d
-#   4. open http://<this-host>:3000 and complete the setup form,
-#      providing the URLs of the REMOTE xlog/caldera + XSIAM creds.
+#   4. open https://<this-host>:3000, sign in as `admin` with that
+#      password, add the model provider at /providers and create one
+#      connector instance per REMOTE xlog/caldera/XSIAM at /connectors.
+#
+# KNOWN LIMITATION of this recipe (it has not been brought up to the
+# installed stack's shape): it has no phantom-updater service, and every
+# bundle connector runs as a per-instance container started by
+# phantom-updater, so connector instances cannot start here.
+# Use the installer (or the root docker-compose.yml) for a working stack.
 #
 # See docs/split-deploy.md for the recipient-facing guide.
 
@@ -47,13 +56,18 @@ services:
       # reboots — necessary for any external integration that
       # caches the bearer.
       - MCP_TOKEN
+      # First password of the `admin` user. The agent seeds the account
+      # from it on a fresh volume and refuses to start without it; the UI
+      # asks you to change it at first login.
+      - PHANTOM_DEFAULT_ADMIN_PASSWORD
       # AES-256-GCM key for SecretStore encryption-at-rest. When set,
       # all operator-supplied secrets are encrypted before touching
       # disk. When unset, secrets are stored as plaintext (with a
       # loud startup warning) — preserves upgrade compatibility for
       # existing deploys. Generate with `openssl rand -base64 32`
       # and pin in .env. **Lose it = lose every operator secret**;
-      # the operator would have to re-fill the setup form.
+      # the operator would have to re-enter every provider and
+      # connector credential.
       - PHANTOM_SECRET_KEK
       # Notification channel:* webhook URLs (one env var per
       # manifest-declared channel). Channels with no URL set
@@ -65,8 +79,6 @@ services:
       - PHANTOM_NOTIFICATION_CHANNEL_SOC
       - PHANTOM_NOTIFICATION_CHANNEL_PURPLE_TEAM
       # Runtime mount paths consumed by the agent + embedded MCP:
-      - PHANTOM_AGENT_SETUP_PATH=/app/runtime/setup.json
-      - PHANTOM_AGENT_ENV_EXPORT_PATH=/app/runtime/.env.generated
       - BUNDLE_ROOT=/app/bundle
       - DATA_ROOT=/app/data
       # MCP transport defaults — operator can override via .env if
@@ -79,8 +91,10 @@ services:
       # leave unset for standalone mode.
       - SPARK_PLATFORM_GATEWAY
     volumes:
-      # Operator setup data — Phase-5 SecretStore, /app/data state,
-      # generated env. Persists across container restarts.
+      # /app/runtime host mount, retained but unused: runtime config
+      # lives in SecretStore (/app/data/secrets/) + the per-store
+      # SQLite DBs under /app/data, not here. Needs a fresh-install test
+      # before removal (the installer compose carries the same mount).
       - ./.phantom-agent:/app/runtime
       # MCP runtime state (audit log, instance store, KB, jobs,
       # sessions, memory). Named volume so docker manages it.

@@ -77,7 +77,6 @@ const KNOWN_ACTIONS: string[] = [
   "caldera_operation_created",
   "detection_validation_recorded",
   "coverage_report_generated",
-  "setup_completed",
   "settings_changed",
   "instance_created",
   "instance_deleted",

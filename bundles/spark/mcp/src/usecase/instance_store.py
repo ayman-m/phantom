@@ -1,8 +1,9 @@
 """Connector instance store — sqlite-backed CRUD over `data_root/instances.db`.
 
-Per spark-agents spec §7.5: the embedded MCP materializes one
-`connector_instances` row per `setup.bindsInstances[]` template when
-the operator submits the setup form. The MCP then advertises a
+Per spark-agents spec §7.5: the embedded MCP holds one
+`connector_instances` row per connector instance, created when the
+operator saves the /connectors form (or, on the Spark platform, from a
+`setup.bindsInstances[]` template). The MCP then advertises a
 connector's tools only when at least one instance for that connector
 exists (objective 5).
 

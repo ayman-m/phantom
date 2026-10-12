@@ -531,6 +531,27 @@ password:  <value of PHANTOM_DEFAULT_ADMIN_PASSWORD from .env>`}</Pre>
               <AuthChangePasswordFlow />
             </SubSection>
 
+            <SubSection icon="timer" title="Changing how long you stay signed in">
+              <p>
+                A sign-in lasts 2 hours by default, then you sign in
+                again (adjustable since v1.0.3). If that is too short for a long working session,
+                raise it on <Code>/profile</Code>:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>Find the <strong>Session lifetime</strong> card under Change password. It shows the current value and the default.</li>
+                <li>Pick 1, 2, 4, 8, 10, 12 or 24 hours, type your current password, and click <strong>Save session lifetime</strong>. The password is the same second factor Change password asks for, so someone holding only your browser cookie cannot extend future sessions.</li>
+                <li>The new length applies to your <strong>next sign-in</strong>. Sessions that are already open, including this one, keep their current expiry, and saving does not sign you out.</li>
+                <li>Five wrong passwords in a minute lock this form (and Change password) for a minute.</li>
+                <li>This is a UI setting only: the chat agent and API keys cannot read or change it. Each change is recorded in <Code>/observability/events</Code> as <Code>session_lifetime_changed</Code> (old and new hours, never the password).</li>
+              </ul>
+              <p>
+                A longer session means a stolen cookie works for longer.
+                Pick the shortest value that avoids being signed out
+                mid-task, and sign out from <Code>/profile</Code> when
+                you leave a shared machine.
+              </p>
+            </SubSection>
+
             <SubSection icon="terminal" title="Forgot your password (host utility)">
               <p>
                 If you can&apos;t log in (forgot the password, no
@@ -712,9 +733,10 @@ After a failed login attempt:
                 <Code>auth_sessions.db</Code>, never the raw token.
                 Cookies are <Code>HttpOnly</Code> +{" "}
                 <Code>Secure</Code> + <Code>SameSite=Strict</Code> with
-                a 2-hour absolute expiry, no remember-me. Each session
-                is independently revocable; a successful password
-                change revokes them all.
+                an absolute expiry (2 hours unless you change it, see{" "}
+                <em>Changing how long you stay signed in</em>), no
+                remember-me. Each session is independently revocable; a
+                successful password change revokes them all.
               </p>
             </SubSection>
 
@@ -957,6 +979,38 @@ sudo ./phantom-installer`}
               </p>
             </SubSection>
 
+            <SubSection icon="edit" title="Rename or delete a session">
+              <p>
+                Open a session&apos;s <strong>⋮</strong> menu (it appears when
+                you hover the row). <strong>Rename</strong> turns the title into
+                an editable field right in the sidebar: type the new name and
+                press <Code>Enter</Code> to save, or <Code>Esc</Code> to keep the old
+                one. Clicking away saves, the same as Enter. A blank name is
+                ignored. <strong>Delete</strong>, in the same menu or the trash
+                button in the chat header, opens a confirmation dialog that
+                names the session; the conversation and its messages are removed
+                only when you click <strong>Delete</strong> in it. Other
+                destructive actions across the product (stopping a worker,
+                deleting a hook, uninstalling a plugin) ask the same way, in a
+                dialog inside the page rather than a browser pop-up.
+              </p>
+            </SubSection>
+
+            <SubSection icon="call_split" title="Fork a session">
+              <p>
+                Open a session&apos;s <strong>⋮</strong> menu and choose{" "}
+                <strong>Fork session</strong> to branch a copy of its full
+                history into a new session; hover an assistant message and
+                click <strong>Fork from here</strong> to copy only up to that
+                message. The fork is listed directly under the session it came
+                from, indented, with a branch icon, and a fork of a fork nests
+                one level deeper. A fork always stays in its original
+                session&apos;s date bucket, even when you make it on a later
+                day. The original is never changed. If the original is deleted
+                the fork becomes a top-level session.
+              </p>
+            </SubSection>
+
             <SubSection icon="bolt" title="Tool calls in chat">
               <p>
                 When the agent decides to call a tool, you see an inline
@@ -981,7 +1035,7 @@ sudo ./phantom-installer`}
                 </li>
                 <li>
                   <em>&quot;What does the
-                  <Code>generate_shared_iocs</Code> skill do?&quot;</em>{" "}
+                  <Code>baseline_normal_activity</Code> skill do?&quot;</em>{" "}
                   — pulls from the skill catalog and explains.
                 </li>
                 <li>
@@ -1241,6 +1295,15 @@ sudo ./phantom-installer`}
                   <Code>override_source: &quot;session&quot;</Code> so
                   the UI can distinguish header vs session overrides.
                 </li>
+                <li>
+                  <Term>Never a global change</Term> — a session
+                  preference does not touch the install&apos;s default
+                  model. The agent is told which model is serving the
+                  turn, so &quot;what model are you?&quot; is answered
+                  from that, and its settings tools refuse the default
+                  model (<Code>geminiModel</Code>): only the operator
+                  changes it, through the settings API.
+                </li>
               </ul>
             </SubSection>
 
@@ -1342,10 +1405,10 @@ sudo ./phantom-installer`}
           {/* Tasks page + /tasks command. */}
           <Section id="tasks-ux" icon="task_alt" title="Tasks">
             <p>
-              Long-running operations the agent kicks off (a scenario
-              worker, a multi-step subagent, a deferred job dispatch) land
-              in the <Term>tasks registry</Term> rather than blocking the
-              chat. View them at{" "}
+              Long-running work the agent kicks off does not block the
+              chat: log generators it starts are listed from xlog, and
+              other background work is tracked in the{" "}
+              <Term>tasks registry</Term>. View both at{" "}
               <Link href="/tasks" className="link">/tasks</Link> or list
               the active set inline with <Code>/tasks</Code> in any chat.
             </p>
@@ -1357,7 +1420,7 @@ sudo ./phantom-installer`}
               </p>
               <Pre>{`pending      ── created, not yet picked up by a worker
 running      ── worker is actively executing
-completed    ── finished successfully
+succeeded    ── finished successfully
 failed       ── worker raised an unrecoverable error
 aborted      ── operator clicked Cancel before completion`}</Pre>
               <p>
@@ -1372,30 +1435,40 @@ aborted      ── operator clicked Cancel before completion`}</Pre>
 
             <SubSection icon="timeline" title="The /tasks page">
               <p>
-                Three tabs: <Term>Active</Term> (pending + running),{" "}
-                <Term>Recent</Term> (last 24h, all states), and{" "}
-                <Term>All</Term> (full history with date filter). Each
-                row shows: task ID, kind (scenario / subagent / job /
-                tool), target (the thing being acted on), elapsed time,
-                originating session, and a status pill.
-              </p>
-              <p>
-                Click any row to open the detail drawer with: the
-                originating chat link, the full audit-row trail (all
-                state transitions), the worker&apos;s last heartbeat,
-                and the output preview where applicable.
+                Filter chips: <Term>All</Term>, <Term>Active</Term>{" "}
+                (pending + running), <Term>Succeeded</Term>,{" "}
+                <Term>Failed</Term> and <Term>Aborted</Term>. Rows are
+                grouped by kind. Each row shows the title, status pill,
+                progress, elapsed time and, when a chat session spawned
+                it, a link back to that session. Expand a row for its
+                timestamps, task id, output and metadata. The page
+                refreshes every few seconds while anything is running.
               </p>
             </SubSection>
 
-            <SubSection icon="cancel" title="Cancelling + retrying">
+            <SubSection icon="sync" title="Log generators">
               <p>
-                Active tasks have a <Term>Cancel</Term> button in the
-                detail drawer. Cancel signals the worker to abort at its
-                next checkpoint; the task transitions to{" "}
-                <Code>aborted</Code> and any partially-applied side
-                effects are documented in the run output. Failed tasks
-                show a <Term>Retry</Term> button that re-creates the
-                task with the same inputs.
+                The synthetic-log generators the agent starts
+                (<Code>xlog.create_data_worker</Code>) are listed in a{" "}
+                <Term>Log generators</Term> section at the top of the
+                page, read live from xlog, the same list{" "}
+                <Code>xlog.list_workers</Code> returns. Each row shows the
+                wire format, destination, events per interval, start
+                time and a Running or Stopped pill. The <Term>All</Term>{" "}
+                chip lists every generator and <Term>Active</Term> only
+                the running ones. Use the stop button to end a running
+                generator; an explicit stop is permanent, so it does not
+                come back after a restart. Generators are not task-registry
+                rows, so the Succeeded, Failed and Aborted chips do not
+                include them.
+              </p>
+            </SubSection>
+
+            <SubSection icon="cancel" title="Aborting a task">
+              <p>
+                Running tasks have an abort button on the row. Abort
+                signals the worker to stop at its next checkpoint and the
+                task becomes <Code>aborted</Code>.
               </p>
             </SubSection>
 
@@ -1420,6 +1493,11 @@ aborted      ── operator clicked Cancel before completion`}</Pre>
             </p>
 
             <SubSection icon="category" title="Four categories">
+              <p>
+                The category chips above the grid each show how many
+                skills they hold (the <Term>All</Term> chip equals the
+                Total Skills tile).
+              </p>
               <ul className="list-disc pl-5 space-y-1.5 text-sm">
                 <li>
                   <Term>Foundation</Term> — reusable building blocks
@@ -1480,15 +1558,17 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
 2. ...`}</Pre>
             </SubSection>
 
-            <SubSection icon="lock" title="Lock state and overrides">
+            <SubSection icon="lock" title="Lock state">
               <p>
-                Each card shows a lock icon (platform-enforced skills
-                can&apos;t be disabled by the operator), a toggle for
-                enable/disable, and click-through to a detail panel with
-                the full markdown content and analytics (calls in last
-                24h / 7d / 30d). Skills are global to the install —
-                Phantom is single-tenant, so a skill is either on or off
-                for the whole agent.
+                Each card shows a lock icon for platform-protected
+                skills (frontmatter <Code>locked: true</Code>), which
+                the UI will not delete. Click a card for its detail
+                panel: the full markdown body to edit, plus its
+                category, source, file and size. There is no
+                per-skill on/off switch: every skill in the list is
+                available to the agent, and removing one (Delete) is
+                what takes it away. Skills are global to the install,
+                since Phantom is single-tenant.
               </p>
             </SubSection>
 
@@ -1505,8 +1585,8 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 an unwanted change. <Term>Delete</Term> soft-deletes:
                 the MD moves to <Code>/app/skills/.deleted/</Code> on
                 the volume, recoverable via <Code>docker exec</Code>{" "}
-                + <Code>mv</Code>. Locked skills (e.g.{" "}
-                <Code>generate_shared_iocs</Code>) render Delete as
+                + <Code>mv</Code>. Locked skills (frontmatter{" "}
+                <Code>locked: true</Code>) render Delete as
                 disabled — they&apos;re foundational and breaking
                 them breaks the agent.
               </p>
@@ -1864,6 +1944,22 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 <em>&quot;output JSON for detections&quot;</em> — same
                 meaning, different words.
               </p>
+              <p>
+                Semantic search needs a Google Vertex AI provider. Until one
+                is saved, search falls back to a keyword-style hash
+                similarity, new entries are tagged{" "}
+                <Code>texthash-v1-768d</Code>, and asking the agent &quot;are you
+                healthy?&quot; reports <Code>embedder_mode: stub</Code> with a
+                warning. Add the provider on{" "}
+                <Link href="/providers" className="link">/providers</Link>{" "}
+                (Google Vertex AI card, then Save): it takes effect as soon as
+                it is saved, with no restart, and new entries are embedded with{" "}
+                <Code>text-embedding-004</Code> from then on. Entries saved
+                while the stub was active are not searched semantically until
+                you save them again; the health report counts them as{" "}
+                <Code>embedding_model_mismatches</Code>. The bundled
+                knowledge base re-indexes itself in the background.
+              </p>
             </SubSection>
 
             <SubSection icon="diversity_3" title="MMR + temporal decay + FTS hybrid">
@@ -1996,9 +2092,11 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 into a per-KB SQLite database with the embedding cached
                 alongside. Source-hash detection means re-running boot
                 without changes is a no-op (no Vertex calls). Adding an
-                entry is therefore: drop a markdown file, redeploy. Future
-                Tier-3 will add runtime CRUD — the page is currently
-                read-only by design.
+                entry is therefore: drop a markdown file, redeploy. The
+                Knowledge pages are read-only: the index card and the
+                detail page show the same entry count, and the detail
+                page lists every entry with a filter and a search
+                playground.
               </p>
             </SubSection>
           </Section>
@@ -2011,6 +2109,22 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
               schedule, action type, last-run status, and a quick-link to
               run history.
             </p>
+
+            <SubSection icon="notes" title="Job description">
+              <p>
+                The optional <Term>Description</Term> field in{" "}
+                <Link href="/jobs/new" className="link">/jobs/new</Link>{" "}
+                is a note about what the job is for. It is stored with the
+                job, shown under the schedule on the{" "}
+                <Link href="/jobs" className="link">/jobs</Link> list and
+                under the title on the job&apos;s page, and carried over by{" "}
+                <Term>Duplicate</Term>. Edit a job to change it; clearing
+                the field removes it. Jobs created before descriptions
+                existed simply show none. The chat agent can set it too
+                (<Code>jobs_create</Code> and <Code>jobs_update</Code> take a{" "}
+                <Code>description</Code>).
+              </p>
+            </SubSection>
 
             <SubSection icon="alarm" title="Cron syntax">
               <p>
@@ -2063,38 +2177,35 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 tool-dispatch loop. Without a policy a job&apos;s chat turn
                 can call ANY tool the agent has access to; a scheduled
                 &quot;fire-bulk-logs&quot; job could technically also
-                call <Code>caldera_start_operation</Code>{" "}
+                call <Code>caldera_create_operation</Code>{" "}
                 if the model decided to. Permission policies let you
                 scope what each job can touch.
               </p>
               <p>
-                The form (Section 01, below Extended-thinking) has three
+                The form (Section 01, below Extended-thinking) has two
                 comma-separated glob inputs:
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-sm">
                 <li>
                   <Term>Allowed tools</Term> — whitelist when non-empty.
                   Tools not matching any pattern are denied. Example:{" "}
-                  <Code>xlog_*, scenarios_*</Code> restricts the job to
-                  the xlog and scenarios tool families.
+                  <Code>phantom_*, xlog.*</Code> restricts the job to
+                  the log-generation tools (each has a flat{" "}
+                  <Code>phantom_</Code> name and a namespaced{" "}
+                  <Code>xlog.</Code> name).
                 </li>
                 <li>
                   <Term>Denied tools</Term> — blacklist. Denies even
                   tools that matched the allowed list (denied wins).
-                  Example: <Code>*_delete, caldera_start_operation</Code>{" "}
+                  Example: <Code>*_delete, caldera_create_operation</Code>{" "}
                   forbids destructive tools.
-                </li>
-                <li>
-                  <Term>Require approval</Term> — forces the standard
-                  approval card for matching tools, regardless of the
-                  job&apos;s <Code>bypass_approvals</Code> setting.
-                  Example: <Code>xsiam_write_*, api_keys_*</Code>{" "}
-                  routes credential-touching tools through operator
-                  confirmation.
                 </li>
               </ul>
               <p>
-                Empty all three = no policy (no restrictions). Glob
+                Whether a tool call needs an approval card is not set
+                per job: it follows the install&apos;s approval list
+                (see <Link href="#approvals" className="link">Approvals</Link>).
+                Empty both = no policy (no restrictions). Glob
                 syntax: <Code>*</Code> matches any sequence,{" "}
                 <Code>?</Code> matches one char, comma-separated for OR.
                 When a tool is denied, the chat thread surfaces a tool-
@@ -2123,7 +2234,13 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 below Bypass-approvals) defaults to{" "}
                 <strong>Router default (no override)</strong> — meaning
                 &ldquo;use whatever <Code>runtimeConfig.GEMINI_MODEL</Code>{" "}
-                is at dispatch time.&rdquo; Pick a specific model when:
+                is at dispatch time.&rdquo; The dropdown lists the chat models
+                from the same registry as the{" "}
+                <Link href="/models" className="link">
+                  /models
+                </Link>{" "}
+                page; it shows &ldquo;No models registered yet&rdquo; only
+                when that registry is empty. Pick a specific model when:
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-sm">
                 <li>
@@ -2177,10 +2294,11 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 The <Code>⋯</Code> kebab on each job row has an{" "}
                 <Term>Edit</Term> item between Pause and Duplicate. Click
                 it → the new-job form opens with every field
-                pre-populated from the existing row: schedule (loaded as
+                pre-populated from the existing row: description, schedule (loaded as
                 Custom + raw cron — switch to Repeating to re-derive),
                 timezone, action type and body, enabled flag, approval
-                bypass.
+                bypass, model override, extended thinking and permission
+                policy.
               </p>
               <p>
                 The <Term>name is locked</Term> — the backend PATCH
@@ -2195,6 +2313,32 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 Manifest-source jobs accept the patch but the next
                 manifest reconciliation (boot) reverts it; a runtime
                 source badge tells you which is which.
+              </p>
+            </SubSection>
+
+            <SubSection id="duplicate-job" icon="content_copy" title="Duplicate a job">
+              <p>
+                <Term>Duplicate</Term> in the <Code>⋯</Code> menu opens
+                the new-job form pre-filled from that job, named{" "}
+                <Code>&lt;name&gt; (copy)</Code> (or{" "}
+                <Code>(copy 2)</Code>, and so on, when that name is
+                taken). It carries the real action — the prompt text and
+                skill, or the tool name and its arguments JSON — plus the
+                description, timezone, the enabled flag, approval bypass, model
+                override, extended thinking and permission policy. The
+                schedule keeps its kind: <Term>Repeating</Term> for an
+                &ldquo;every N minutes/hours/days&rdquo; job,{" "}
+                <Term>Run at</Term> for a one-shot (a date that has
+                already passed becomes one hour from now), otherwise{" "}
+                <Term>Custom cron</Term> with the same expression.
+                Create is enabled as soon as the form is filled in;
+                rename or adjust anything before saving. The original
+                job and its run history are untouched.
+              </p>
+              <p>
+                A paused or completed job shows no next run: the{" "}
+                <Term>Next Run</Term> column reads &ldquo;—&rdquo;, and{" "}
+                <Term>Resume</Term> schedules it again from now.
               </p>
             </SubSection>
 
@@ -2216,7 +2360,8 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                   is applied to the system prompt, the agent can call{" "}
                   <Code>memory_search</Code> /{" "}
                   <Code>knowledge_search</Code> on demand, every fired
-                  tool is audited, and any{" "}
+                  connector tool is audited (built-in tools are not; the
+                  run&apos;s chat session records them), and any{" "}
                   <Code>humanRequired</Code> tool surfaces the same
                   approval card flow (or auto-approves when the
                   job&apos;s &quot;bypass approvals&quot; toggle is on).
@@ -2293,11 +2438,13 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 <Link href="/notifications" className="link">
                   /notifications
                 </Link>{" "}
-                and update the bell badge in the top nav. The
-                payload also carries{" "}
-                <Code>{`{job_name, run_id, trigger, action_name, duration_ms, next_due_at}`}</Code>{" "}
-                so a click-through can route back to the run detail
-                page.
+                and update the bell badge in the top nav. A job card
+                is titled with the job name and outcome (for example{" "}
+                <Term>Job nightly-sweep succeeded</Term>), shows the
+                one-line run summary and the time, and clicking it
+                opens that job&apos;s page. Cards for other topics show
+                the title and text the publisher supplied, or the topic
+                name when it supplied none.
               </p>
             </SubSection>
 
@@ -2377,8 +2524,8 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
             </p>
             <p>
               <Link href="/providers" className="link">/providers</Link> manages
-              credentials. Vertex AI is the default — the setup form
-              writes the service-account JSON into the secret store, and
+              credentials. Vertex AI is the default — saving the Vertex
+              form writes the service-account JSON into the secret store, and
               the bundle&apos;s <Code>requiredSecrets</Code> declares
               where it lands.
             </p>
@@ -2515,32 +2662,27 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
               </p>
             </SubSection>
 
-            <SubSection icon="settings_backup_restore" title="Caldera password — setup form to caldera handoff">
+            {/* [v1.0.3] Retired: "Caldera password — setup form to caldera
+                handoff" (agent writes /operator-creds/caldera.yaml, then asks
+                phantom-updater to restart caldera). Replaced by the
+                description below, because the setup form that wrote that file
+                no longer exists and nothing else writes it. */}
+            <SubSection icon="settings_backup_restore" title="Caldera login — where it comes from">
               <p>
-                The caldera password from your setup form flows
-                directly into the running caldera container, no manual
-                <Code> docker compose restart caldera</Code> needed:
+                Caldera&apos;s own web login (red user + password) and
+                API key are written into its config every time the
+                caldera container starts, from{" "}
+                <Code>CALDERA_RED_USER</Code>,{" "}
+                <Code>CALDERA_RED_PASSWORD</Code> and{" "}
+                <Code>CALDERA_API_KEY</Code> in{" "}
+                <Code>/opt/phantom/.env</Code>. The caldera instance on{" "}
+                <Link href="/connectors" className="link">/connectors</Link>{" "}
+                holds the credentials Phantom uses to call caldera; saving
+                it does not change caldera&apos;s own login. To rotate the
+                login, change the values in <Code>.env</Code>, recreate the
+                caldera container, then update the instance&apos;s secrets
+                to match.
               </p>
-              <ol className="list-decimal pl-5 space-y-1.5 text-sm">
-                <li>
-                  You type a new <Code>calderaRedPassword</Code> in
-                  <Link href="/setup" className="link"> /setup</Link> and
-                  click Save.
-                </li>
-                <li>
-                  Agent writes the password to a shared docker volume
-                  (<Code>phantom_operator_creds:/operator-creds/caldera.yaml</Code>).
-                </li>
-                <li>
-                  Agent POSTs to phantom-updater asking it to restart caldera.
-                </li>
-                <li>
-                  Caldera&apos;s entrypoint reads the bridge file on startup
-                  and regenerates its <Code>local.yml</Code> with your
-                  typed password (logs:{" "}
-                  <Code>[caldera-init] applied operator creds from /operator-creds/caldera.yaml</Code>).
-                </li>
-              </ol>
             </SubSection>
 
             <SubSection icon="verified_user" title="Per-instance trusted flag">
@@ -2613,7 +2755,7 @@ probed          ── transient state during an in-flight probe`}</Pre>
                 When an instance hits <Code>auth_required</Code> (the
                 most common cause: XSIAM PAPI tokens expiring after 90
                 days), the row turns amber and a <Term>Reauth</Term>{" "}
-                button appears. Click it → the setup form opens with that
+                button appears. Click it → the instance form opens with that
                 instance&apos;s fields prefilled (URL, auth ID, etc.) and
                 only the secret slots empty. Submit → the instance flips
                 back to <Code>enabled</Code> on the next probe (within
@@ -2799,24 +2941,26 @@ probed          ── transient state during an in-flight probe`}</Pre>
                   Click the{" "}
                   <Term>Upload Connector</Term> button on the
                   Marketplace tab → file picker → select your YAML →
-                  submit. (Or use curl with bearer{" "}
+                  <Term>Upload</Term>. Uploading does not install the
+                  connector. (Or use curl with bearer{" "}
                   <Code>MCP_TOKEN</Code>:{" "}
                   <Code>curl -F connector_yaml=@your-connector.yaml https://&lt;host&gt;:8080/api/v1/marketplace/upload</Code>.)
                 </li>
                 <li>
-                  The connector appears in the marketplace with{" "}
-                  <Code>origin: user</Code>. Install it, then create
-                  an instance from the Instances tab. Same flow as
-                  any bundle connector from there on.
+                  The connector appears on the Marketplace tab as an
+                  &quot;Uploaded&quot; card. Open it and click{" "}
+                  <Term>Install</Term>, then create an instance from
+                  the Instances tab. Same flow as any bundle
+                  connector from there on.
                 </li>
               </ol>
               <p className="text-sm text-on-surface-variant">
-                User connectors are deletable via DELETE{" "}
-                <Code>/api/v1/marketplace/&lt;id&gt;</Code> (refuses if
-                instances exist). Bundle connectors are 403-rejected
-                on DELETE — they&apos;re image-baked and can&apos;t be
-                removed at runtime; use Uninstall to hide them from
-                instance creation.
+                To remove a connector you uploaded, open its card and
+                click <Term>Delete connector</Term> (it refuses while
+                the connector still has instances; delete those
+                first). Bundle connectors cannot be deleted — they are
+                image-baked; use Uninstall to hide them from instance
+                creation.
               </p>
             </SubSection>
 
@@ -4469,7 +4613,7 @@ probed          ── transient state during an in-flight probe`}</Pre>
                 </li>
                 <li>
                   <Term>XSIAM</Term> — <Code>send_webhook_log</Code>,
-                  <Code> xql_*</Code>. Run inline.
+                  <Code> run_xql_query</Code>. Run inline.
                 </li>
                 <li>
                   <Term>XLog</Term> — log generation, scenario workers. Run
@@ -4553,33 +4697,37 @@ probed          ── transient state during an in-flight probe`}</Pre>
           <Section id="notifications" icon="notifications" title="Notifications">
             <p>
               <Link href="/notifications" className="link">/notifications</Link>{" "}
-              is the platform alert feed. Job completions, failed
-              scenarios, approval resolutions, configuration changes —
-              anything that fires a system-level event lands here. The
-              filter bar lets you scope by tab (all / unread / mentions
-              / approvals) and search by free-text. Mark-read is
-              optimistic and persists across sessions.
-            </p>
-            <p>
-              Event sources currently wired:
+              is the feed of events the platform publishes to you,
+              newest first. The tabs (All, Unread, Approvals, Alerts,
+              System) and the search box filter the rows already
+              loaded.
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-sm">
               <li>
-                <Term>Jobs</Term> — runs that complete, fail, or are
-                disabled.
+                <Term>Click a card</Term> to mark it read; a job run
+                also opens that job.
               </li>
               <li>
-                <Term>Scenarios</Term> — long-running scenario workers
-                that finish or error.
+                <Term>Mark All Read</Term> marks every unread
+                notification read, including rows you have not
+                loaded yet. Read state is stored with the
+                notification, so it survives a reload.
               </li>
               <li>
-                <Term>Approvals</Term> — pending, granted, denied.
+                <Term>Date dropdown</Term> limits the feed to Today,
+                the last 7 days or the last 30 days (All time is the
+                default).
               </li>
               <li>
-                <Term>System</Term> — settings changes, secret rotations,
-                MCP_TOKEN refresh.
+                <Term>Load more</Term> appears when the store holds
+                more rows than the 50 shown per page.
               </li>
             </ul>
+            <p>
+              What publishes notifications today: finished and failed
+              job runs, coverage cycles, and the warnings from the
+              built-in cost and context-size hooks.
+            </p>
           </Section>
 
           <Section id="profile" icon="person" title="Your Profile">
@@ -4728,38 +4876,49 @@ probed          ── transient state during an in-flight probe`}</Pre>
                 /observability/metrics
               </Link>{" "}
               renders the Prometheus text feed from the MCP — counter,
-              gauge, and histogram series for tool calls, request
-              latency, and store operations. No external Prometheus or
+              gauge, and histogram series. No external Prometheus or
               Grafana required; the page parses and graphs the text
-              directly. Common series:
+              directly, and its filter box narrows the list by name.
+              Common series:
             </p>
             <ul className="list-disc pl-5 space-y-1.5 text-sm">
               <li>
-                <Code>tool_call_total{"{tool=\"...\"}"}</Code> — counter
-                per tool, per status.
+                <Code>phantom_mcp_tool_calls_total{"{tool=\"...\",status=\"...\"}"}</Code>{" "}
+                — counter per tool and status. It counts every tool call the
+                MCP serves, built-in tools and connector tools alike.
               </li>
               <li>
-                <Code>tool_call_duration_seconds_bucket</Code> — histogram
-                of tool latency.
+                <Code>phantom_mcp_http_requests_total</Code> and{" "}
+                <Code>phantom_mcp_http_request_duration_seconds</Code> —
+                request count and latency of the MCP&apos;s own HTTP
+                surface.
               </li>
               <li>
-                <Code>agent_chat_turn_duration_seconds</Code> — end-to-end
-                chat-turn timing.
+                <Code>phantom_mcp_active_sessions</Code> — operator sessions
+                currently active.
               </li>
               <li>
-                <Code>store_op_total{"{store=\"...\",op=\"...\"}"}</Code> —
-                read/write counts per store.
+                <Code>phantom_batch_proposals_total</Code>,{" "}
+                <Code>phantom_batch_actions_total</Code> and{" "}
+                <Code>phantom_batch_size</Code> — plans proposed through{" "}
+                <Code>agent_batch_propose</Code> and the actions inside
+                them.
               </li>
             </ul>
             <p>
               <Link href="/observability/traces" className="link">
                 /observability/traces
               </Link>{" "}
-              shows OpenTelemetry spans for end-to-end requests. Each
-              chat-turn spans the agent → MCP → tool → connector → LLM
-              path; clicking a span tree lets you find latency spikes
-              precisely. Spans are stored alongside the audit log and
-              survive container restarts.
+              is a span-style view over the audit log: a newest-first list
+              of audit rows, with a duration shown for the rows that carry
+              one (connector tool calls such as <Code>xlog.list_workers</Code>
+              do). It takes the same query syntax as the Events page, so{" "}
+              <Code>action:tool_call</Code> isolates tool latency. Only
+              connector tool calls write a <Code>tool_call</Code> audit row;
+              built-in tools (<Code>skills_read</Code>, <Code>memory_*</Code>,{" "}
+              <Code>jobs_*</Code>, <Code>health_status</Code>, ...) appear in
+              the chat Live telemetry panel and in the tool-call counter
+              instead. The audit log survives container restarts.
             </p>
           </Section>
 
@@ -4928,7 +5087,10 @@ session:s_4k21m
               <Code>/api/agent/health</Code> probes as the pipeline graph
               — so if an entry shows degraded here, the matching node
               flips amber on the graph too. They&apos;re two views of one
-              source.
+              source. A service the health route does not probe reads{" "}
+              <Term>Unknown</Term> rather than Healthy; the embedded
+              sqlite stores report the phantom-mcp probe, because they
+              live inside that process.
             </p>
           </Section>
 
@@ -5202,10 +5364,15 @@ session:s_4k21m
                   picked)
                 </li>
                 <li>
-                  <Term>Log destinations</Term> — every destination
-                  config with secrets
+                  <Term>Workflow state</Term> — the journeys you marked
+                  tested and your saved metric bookmarks, so your
+                  progress follows you to a new install
                 </li>
               </ul>
+              <p className="text-sm text-on-surface-variant">
+                Log destinations are not in the zip: recreate them on
+                the destination from <Code>/log-destinations</Code>.
+              </p>
               <p className="text-warning text-sm">
                 <span className="material-symbols-outlined text-[14px] align-text-bottom mr-1">
                   warning
@@ -5238,7 +5405,7 @@ session:s_4k21m
   Memory              152 entries (no collisions; embeddings re-built)
   Knowledge             — (no-op; image-baked)
   Data sources          7 user uploads + 12 install picks
-  Log destinations      2 destinations (1 collision; default = skip)
+  Operator state        ✓ present (tested journeys, bookmarks)
   Jobs                  6 runtime jobs (last in restore order)
 
   ☐ Overwrite existing entries (force)`}</Pre>
@@ -5273,6 +5440,11 @@ session:s_4k21m
                   install endpoint)
                 </li>
                 <li>
+                  <Term>Workflow state</Term> (each key is written
+                  back; a key the destination already has is kept
+                  unless you overwrite)
+                </li>
+                <li>
                   <Term>Jobs</Term> last — runtime jobs that
                   reference connectors don&apos;t fire on a missing
                   instance because instances landed in step 2.
@@ -5291,6 +5463,15 @@ session:s_4k21m
                 Restore plan to overwrite. <Term>Personality is
                 always overwritten</Term> regardless — it&apos;s a
                 single-row blob, there&apos;s no merge semantics.
+              </p>
+              <p className="text-sm">
+                If Restore cannot read what a section already holds on
+                the destination (the service was busy or answered an
+                error), it does not assume the destination is empty:
+                without Overwrite it skips that section, counts it
+                under <Code>skipped</Code> and lists it under{" "}
+                <Term>Warnings</Term>. Run the restore again, or tick
+                Overwrite to write the section anyway.
               </p>
             </SubSection>
 
@@ -5419,41 +5600,65 @@ POST   /api/agent/restore                 -- apply (with ?force=1 to overwrite)`
             </p>
 
             <Callout tone="info">
-              <Term>One-line summary.</Term> The first-run setup form
-              runs ONCE at install. Every change after that goes
+              <Term>One-line summary.</Term> Every change to credentials
+              and connector settings goes
               through the dedicated UI for what you&apos;re editing —
               {" "}<Link href="/profile" className="link">/profile</Link>{" "}for
               your UI password,{" "}
               <Link href="/providers" className="link">/providers</Link>{" "}
               for Vertex / Gemini service-account JSON,{" "}
               <Link href="/connectors" className="link">/connectors</Link>{" "}
-              for per-connector instance creds. No setup re-runs,
-              no merge logic, no surprise replacements.
+              for per-connector instance creds. Each surface writes straight
+              to its own store, with no merge logic and no surprise
+              replacements.
             </Callout>
 
+            {/* [v1.0.3] Retired: Scenario 1 and Scenario 2 as written for the
+                first-run setup form (the .setup_complete flag, the /setup
+                redirect, POST /api/setup returning 409). Replaced by the
+                default-admin first-login flow below, because the setup page
+                and its API no longer exist. */}
             <SubSection icon="rocket_launch" title="Scenario 1 — First-time install">
               <p>
-                AuthGate detects no setup-completed flag at{" "}
-                <Code>/app/runtime/.setup_complete</Code> → renders the
-                setup form. You fill everything (UI password, Vertex
-                SA JSON, connector configs — Caldera, XSIAM, XLOG) and
-                submit.
+                There is nothing to configure before you sign in. The
+                installer writes <Code>/opt/phantom/.env</Code>, the
+                agent seeds the <Code>admin</Code> account on its first
+                boot, and you sign in with the generated{" "}
+                <Code>PHANTOM_DEFAULT_ADMIN_PASSWORD</Code>. See{" "}
+                <Link href="#authentication" className="link">
+                  Authentication → First-time login
+                </Link>{" "}
+                for where to find it. Then, in order:
               </p>
+              <ol className="list-decimal pl-6 space-y-1">
+                <li>
+                  Change the password at{" "}
+                  <Link href="/profile" className="link">/profile</Link>.
+                  The UI redirects you there until you do.
+                </li>
+                <li>
+                  Add the Vertex project, region and service-account JSON
+                  at{" "}
+                  <Link href="/providers" className="link">/providers</Link>{" "}
+                  (Scenario 3b).
+                </li>
+                <li>
+                  Create an instance for each connector you use at{" "}
+                  <Link href="/connectors" className="link">/connectors</Link>{" "}
+                  (Scenario 3a).
+                </li>
+              </ol>
               <p>
-                The agent then delegates each piece of data to its
-                canonical store:
+                Each value goes to its canonical store:
               </p>
               <ul className="list-disc pl-6 space-y-1">
-                <li>UI password → <Code>POST /api/v1/ui/auth/password</Code> → SecretStore <Code>/ui/auth/&lt;user&gt;/password_hash</Code> (PBKDF2)</li>
-                <li>Vertex creds → <Code>POST /api/v1/setup</Code> → ProviderStore <Code>primary-vertex</Code> instance (config + secrets)</li>
-                <li>Connector configs → same setup endpoint → InstanceStore one row per connector</li>
-                <li>TLS material → <Code>/tls/cert.pem</Code> + <Code>/tls/key.pem</Code> on the shared volume</li>
-                <li>Setup-completed flag → <Code>/app/runtime/.setup_complete</Code> (presence-only marker)</li>
+                <li>UI password → SecretStore <Code>/ui/auth/&lt;user&gt;/password_hash</Code> (PBKDF2)</li>
+                <li>Vertex credentials → ProviderStore (config) + SecretStore (service-account JSON)</li>
+                <li>Connector configs → InstanceStore, one row per connector instance; their secrets → SecretStore</li>
+                <li>TLS material → <Code>/tls/cert.pem</Code> + <Code>/tls/key.pem</Code> on the shared volume (self-signed unless you supply your own pair)</li>
               </ul>
               <p>
-                <Code>setup.json</Code> and <Code>.env.generated</Code>{" "}
-                are NOT written. Operator-typed values live exclusively
-                in the stores listed above. See{" "}
+                See{" "}
                 <Link href="/help/architecture#setup-wiring" className="link">/help/architecture#setup-wiring</Link>{" "}
                 for the canonical specification.
               </p>
@@ -5461,24 +5666,16 @@ POST   /api/agent/restore                 -- apply (with ?force=1 to overwrite)`
 
             <SubSection icon="upload" title="Scenario 2 — Upgrade preserves everything">
               <p>
-                Upgrading the stack via{" "}
-                <Code>docker compose pull + up</Code> swaps in new
-                images without touching persistent volumes. The
-                bind-mounted <Code>./.phantom-agent</Code> path holds
-                the setup-completed flag; the named volume{" "}
+                Upgrading the stack swaps in new images without
+                touching persistent volumes. The named volume{" "}
                 <Code>phantom_mcp_data</Code> holds the SecretStore +
-                InstanceStore + ProviderStore + audit log. Both
-                survive container recreation.
-              </p>
-              <p>
-                After upgrade, AuthGate calls{" "}
-                <Code>isSetupRequired()</Code> and renders the
-                LoginScreen. The setup form is unreachable
-                post-install: typing <Code>/setup</Code> directly
-                redirects to <Code>/</Code>, and{" "}
-                <Code>POST /api/setup</Code> returns 409. Your
-                existing credentials, connector instances, provider
-                config, password hash, audit history — all preserved.
+                InstanceStore + ProviderStore + audit log, and{" "}
+                <Code>phantom_agent_runtime</Code> holds the
+                agent&apos;s runtime state. Both survive container
+                recreation, so after an upgrade you sign in with your
+                own password. Your credentials, connector instances,
+                provider config, password hash and audit history are
+                all preserved.
               </p>
             </SubSection>
 
@@ -5487,9 +5684,9 @@ POST   /api/agent/restore                 -- apply (with ?force=1 to overwrite)`
                 Want to rotate the Caldera password, change the XSIAM
                 PAPI URL, or update the XLOG webhook key? Use{" "}
                 <Link href="/connectors" className="link">/connectors</Link>.
-                Each connector has an instance (created at first-run
-                from the bundle&apos;s <Code>bindsInstances</Code>{" "}
-                template) and you can edit its config + secrets in
+                Each connector has an instance you create at
+                /connectors → Create Instance (for xlog, paste the token the installer
+                generated as <Code>XLOG_API_KEY</Code> in <Code>/opt/phantom/.env</Code>), and you can edit its config + secrets in
                 place. Writes go through the MCP&apos;s instance API
                 directly to the InstanceStore + SecretStore — no setup
                 re-run, no agent restart. Tool calls (
@@ -5529,8 +5726,7 @@ POST   /api/agent/restore                 -- apply (with ?force=1 to overwrite)`
                 Save calls <Code>PUT /api/v1/providers/{"{id}"}</Code>{" "}
                 directly on the MCP. Untouched secret slots round-trip
                 as the redaction sentinel and are preserved server-side.
-                <Code>setup.json</Code> and <Code>.env.generated</Code>{" "}
-                are NEVER written by this path. The cache for
+                The cache for
                 chat-handler vertex-cred resolution is invalidated
                 in the same response, so the next chat dispatch sees
                 your update with no propagation delay.
@@ -5642,11 +5838,11 @@ POST   /api/agent/restore                 -- apply (with ?force=1 to overwrite)`
               <p>
                 The <Code>MCP_TOKEN</Code> rotated. A copy saved elsewhere
                 may be stale; the container always
-                reads the live one from{" "}
-                <Code>/app/runtime/setup.json</Code> (or its env). When
-                in doubt, exec into the container and check{" "}
-                <Code>env | grep MCP_TOKEN</Code>. Setup-form values for
-                MCP_TOKEN are persisted but ignored on the wire.
+                reads the live one from its environment, which compose
+                fills from <Code>MCP_TOKEN</Code> in{" "}
+                <Code>/opt/phantom/.env</Code>. When in doubt, exec into
+                the container and check{" "}
+                <Code>env | grep MCP_TOKEN</Code>.
               </p>
             </Decision>
 
@@ -5657,11 +5853,9 @@ POST   /api/agent/restore                 -- apply (with ?force=1 to overwrite)`
                   /connectors
                 </Link>{" "}
                 → Instances tab. If the connector has no instance there,
-                the credentials weren&apos;t bound at first-run setup.
-                Create an instance directly from /connectors → Create
-                Instance — the form uses the same configSchema +
-                secretSlots the bundle exposes, so it asks for the
-                same fields setup would have. The marketplace status
+                create one from /connectors → Create
+                Instance — the form uses the configSchema +
+                secretSlots the bundle exposes. The marketplace status
                 derives from instance presence — once an instance
                 exists, the badge flips to{" "}
                 <Term>Installed</Term> on the next refresh.

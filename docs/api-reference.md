@@ -11,13 +11,6 @@ Routes that are intentionally unauthenticated (Prometheus exposition, MCP JSON-R
 
 ---
 
-## Setup + first-run
-
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/v1/setup` | Return the bundle's setup schema (connectors, providers, settings, secret slots). Drives the first-run form. |
-| `POST` | `/api/v1/setup` | Materialize connector + provider instances from operator-supplied values. Body: `{"values": {...}, "replace": true}`. |
-
 ## Connector instances
 
 | Method | Path | Description |
@@ -174,7 +167,6 @@ The append-only `audit_events` table records every state change. Per `manifest.a
 | `caldera_operation_created` | Red-team op launched | `operation:<id>` |
 | `detection_validation_recorded` | Detection check completed | `validation:<id>` |
 | `coverage_report_generated` | Coverage report produced | `report:<id>` |
-| `setup_completed` | Setup form submitted successfully | `setup` |
 | `settings_changed` | `/api/v1/settings PUT` | `setting:<key>` |
 | `instance_created` | Connector instance materialized | `instance:<id>` |
 | `approval_requested` / `approval_resolved` | Approval gate transitions | `approval:<id>` |
@@ -190,10 +182,10 @@ Filter by event name with `?action=settings_changed`, by target prefix with `?ta
 
 ## Curated tool catalog
 
-The `bundles/tool-catalog.yaml` enumerates the curated tools. The live MCP advertises a tool ONLY when its connector has at least one materialized instance (objective 5). To inspect what's currently live:
+The `bundles/tool-catalog.yaml` enumerates the curated tools. The live MCP advertises a tool ONLY when its connector has at least one materialized instance (objective 5). To see which connectors have instances:
 
 ```bash
-curl http://localhost:8080/api/v1/setup -H "Authorization: Bearer $MCP_TOKEN" | jq
+curl http://localhost:8080/api/v1/instances -H "Authorization: Bearer $MCP_TOKEN" | jq
 ```
 
 Or run the bundled snapshot generator:

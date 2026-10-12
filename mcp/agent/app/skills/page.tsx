@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { ImportSkillButton } from "./import-button";
+import { confirmAction } from "@/lib/stores/confirm";
+import { notify } from "@/lib/stores/notifications";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -19,7 +21,6 @@ type CategoryKey =
   | "plugins";
 
 type SourceType = "platform" | "workspace" | "managed" | "plugin";
-type LoadingMode = "always" | "on-demand";
 
 interface SkillDef {
   id: string;
@@ -29,24 +30,11 @@ interface SkillDef {
   description: string;
   icon: string;
   source: SourceType;
-  loadingMode: LoadingMode;
-  enabled: boolean;
+  /** Protected skills cannot be deleted from the UI. */
   locked: boolean;
-  agentCount: number;
-  calls7d: number;
-  content: string;
-  charCount: number;
-  tokenCount: number;
-  maxConcurrentAgents: number;
-  eligibleAgents: string;
-  analytics: {
-    calls24h: number;
-    calls7d: number;
-    calls30d: number;
-    avgContextTokens: number;
-    activeAgents: number;
-    topAgents: { name: string; color: string }[];
-  };
+  /** Path under the skills directory, e.g. "scenarios/port_scan.md". */
+  filePath: string;
+  sizeBytes: number;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -114,32 +102,25 @@ const SOURCE_META: Record<SourceType, { label: string; className: string }> = {
   plugin: { label: "PLUGIN", className: "text-tertiary border border-tertiary/30" },
 };
 
-// Counts in CATEGORY_FILTERS are hardcoded fallbacks for
-// the SSR / first-paint case before the live /api/skills response
-// lands. Once skills are loaded, the page renders the actual filtered
-// counts on the chips via the live `skills` array (see the rendered
-// pill row — count comes from a useMemo there). Plugin-contributed
-// skills may or may not be present at install time depending on
-// what the operator has configured.
-const CATEGORY_FILTERS: { key: CategoryKey; label: string; count: number }[] = [
-  { key: "all", label: "All", count: 0 },
-  { key: "foundation", label: "Foundation", count: 0 },
-  { key: "scenarios", label: "Scenarios", count: 0 },
-  { key: "validation", label: "Validation", count: 0 },
-  { key: "workflows", label: "Workflows", count: 0 },
-  { key: "plugins", label: "Plugins", count: 0 },
+// The chip row. Counts are NOT stored here: they are derived at render time
+// from the same `skills` array the grid renders (SkillsPage::categoryCounts),
+// so a chip can never disagree with the list below it.
+const CATEGORY_FILTERS: { key: CategoryKey; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "foundation", label: "Foundation" },
+  { key: "scenarios", label: "Scenarios" },
+  { key: "validation", label: "Validation" },
+  { key: "workflows", label: "Workflows" },
+  { key: "plugins", label: "Plugins" },
 ];
 
 // Summary stats are computed from the live `skills` array (see
 // SkillsPage::summaryStats useMemo) rather than hardcoded, so they
 // cannot drift out of sync with what /api/skills returns.
 //
-// Caption + delta strings are still constants because they don't
-// depend on the live count — operators can read them as static
-// help text.
+// The caption is a constant because it doesn't depend on the live count.
 const SUMMARY_CAPTIONS = {
   totalCaption: "Registered skills",
-  invocationsDelta: "Tracking not yet implemented",
 } as const;
 
 // Phantom is single-tenant — there are no workspaces. The Workspaces
@@ -147,517 +128,6 @@ const SUMMARY_CAPTIONS = {
 // data is empty. Future work: drop the entire workspace section from
 // the detail panel.
 const DEFAULT_WORKSPACES: { name: string; slug: string; icon: string; enabled: boolean }[] = [];
-
-// ─── Mock Data ──────────────────────────────────────────────────────────────
-
-// ─── Phantom Skills (sourced from bundles/spark/mcp/skills/*) ─────────────
-//
-// Skills shipped with the bundle, organized by the
-// on-disk layout:
-//   foundation/  — primitive helpers (IOC generation, topology) — 5 skills
-//   scenarios/   — named ATT&CK scenarios — 12 skills
-//   workflows/   — multi-step orchestration including build_xql_query — 3 skills
-// (There is no separate validation/ category; it lives under workflows/.)
-//
-// Description text is paraphrased from the skill's MD frontmatter; the
-// `content` field is a one-line summary so the detail panel renders
-// without freighting the bundle. To pull the live MD body, hit
-// /api/skills?file_path=<path> which proxies the MCP's `skills_read`.
-
-const SKILLS: SkillDef[] = [
-  // ── Foundation ───────────────────────────────────────────────────────
-  {
-    id: "foundation-iocs",
-    name: "generate_shared_iocs",
-    displayName: "Generate shared IOCs",
-    category: "foundation",
-    description:
-      "Pre-generates the indicators (IPs, domains, hashes, users) that downstream scenarios reuse — keeps cross-scenario telemetry coherent.",
-    icon: "fingerprint",
-    source: "platform",
-    loadingMode: "always",
-    enabled: true,
-    locked: true,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/foundation/generate_shared_iocs.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#00f5ff" }] },
-  },
-  {
-    id: "foundation-topology",
-    name: "create_device_topology",
-    displayName: "Create device topology",
-    category: "foundation",
-    description:
-      "Materializes a fleet of synthetic devices (workstations, servers, network gear) with realistic naming + IP plans for log generation.",
-    icon: "lan",
-    source: "platform",
-    loadingMode: "always",
-    enabled: true,
-    locked: true,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/foundation/create_device_topology.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#00f5ff" }] },
-  },
-  // ── Scenarios ───────────────────────────────────────────────────────
-  {
-    id: "scenario-knock-knock",
-    name: "knock_knock",
-    displayName: "Knock-knock (recon)",
-    category: "scenarios",
-    description:
-      "External recon scenario — port scans, banner grabs, DNS enumeration. Drops Stage-1 reconnaissance signals into your XSIAM tenant.",
-    icon: "radar",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/knock_knock.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-ink-and-foil",
-    name: "ink_and_foil",
-    displayName: "Ink & Foil (phishing → C2)",
-    category: "scenarios",
-    description:
-      "Phishing email → malicious attachment → first-stage C2 callback. Exercises detection rules around credential theft + outbound beaconing.",
-    icon: "mail_lock",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/ink_and_foil.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-everything-is-now",
-    name: "everything_is_now",
-    displayName: "Everything is now (lateral)",
-    category: "scenarios",
-    description:
-      "Lateral movement scenario — credential reuse, RDP/WMI/PsExec hops across the synthetic device topology.",
-    icon: "device_hub",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/everything_is_now.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-alpha-and-omega",
-    name: "alpha_and_omega",
-    displayName: "Alpha & Omega (privesc)",
-    category: "scenarios",
-    description:
-      "Local + domain privilege escalation chain — token impersonation, GPO abuse, golden-ticket forging.",
-    icon: "shield_with_heart",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/alpha_and_omega.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-sic-mundus",
-    name: "sic_mundus_creatus_est",
-    displayName: "Sic Mundus Creatus Est (full chain)",
-    category: "scenarios",
-    description:
-      "End-to-end attack chain — recon → initial access → persistence → privesc → exfil. Full coverage exercise.",
-    icon: "auto_stories",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/sic_mundus_creatus_est.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-crossroads",
-    name: "crossroads",
-    displayName: "Crossroads (insider threat)",
-    category: "scenarios",
-    description:
-      "Insider data-exfiltration scenario — abnormal file access, off-hours uploads, USB write events.",
-    icon: "fork_right",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/crossroads.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-midnight-butterfly",
-    name: "midnight_butterfly",
-    displayName: "Midnight butterfly (low-and-slow)",
-    category: "scenarios",
-    description:
-      "Low-and-slow data exfiltration spread over hours/days — DNS tunneling, encrypted side channels, beaconing under threshold.",
-    icon: "nights_stay",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/midnight_butterfly.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  // ── Heavy-volume kill chains ─────────────────────────────
-  // Each of these models a complete attack chain across multiple ATT&CK
-  // tactics with 1-13k synthetic events. Designed for end-to-end
-  // detection stress-tests; per-skill detection coverage is documented
-  // in the bottom of each MD body.
-  {
-    id: "scenario-ransomware-double-extortion",
-    name: "ransomware_double_extortion",
-    displayName: "Ransomware (double extortion)",
-    category: "scenarios",
-    description:
-      "Full LockBit-style chain: phish → PowerShell → LSASS dump → defender tamper → SMB lateral → bulk exfil → file encryption + Volume Shadow delete. ~1.5k events.",
-    icon: "lock_open",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/ransomware_double_extortion.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-apt-long-dwell",
-    name: "apt_long_dwell_espionage",
-    displayName: "APT (long-dwell espionage)",
-    category: "scenarios",
-    description:
-      "Slow-burn nation-state campaign: CVE-2023-22515 exploit + web shell + LDAP recon + low-rate password spray + DNS C2 + tunnelled exfil. ~3k events over 12 simulated hours.",
-    icon: "hourglass_empty",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/apt_long_dwell_espionage.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-insider-threat",
-    name: "insider_threat_data_theft",
-    displayName: "Insider threat (privileged DBA)",
-    category: "scenarios",
-    description:
-      "DBA exfil with HR-resignation pivot: 1k baseline events + cross-unit DB access + bulk dump + USB write + log clearing. ~2.5k events with baseline-vs-anomaly pattern.",
-    icon: "person_off",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/insider_threat_data_theft.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-supply-chain-npm",
-    name: "supply_chain_npm_compromise",
-    displayName: "Supply chain (npm fan-out)",
-    category: "scenarios",
-    description:
-      "Backdoored npm package installs across 30+ build hosts → same-IoC outbound from many sources → secrets sweep → S3 exfil. Tests destination-IoC correlation, not host-level.",
-    icon: "account_tree",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/supply_chain_npm_compromise.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-cloud-account-takeover",
-    name: "cloud_account_takeover_m365",
-    displayName: "Cloud takeover (M365 OAuth)",
-    category: "scenarios",
-    description:
-      "OAuth consent phishing for a finance VP → token-based sign-in → inbox-rule persistence (auto-deletes alerts) → mailbox harvest via Graph + lateral mail. 100% cloud audit telemetry.",
-    icon: "cloud_off",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/cloud_account_takeover_m365.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-phishing-credential-harvest",
-    name: "phishing_credential_harvest_campaign",
-    displayName: "Phishing (mass credential harvest)",
-    category: "scenarios",
-    description:
-      "5k inbound phish → 0.6% click-through → fake portal POST → SSO replay from foreign IPs → MFA-push fatigue → VPN + RDP fan-out. ~6k events.",
-    icon: "phishing",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/phishing_credential_harvest_campaign.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-web-app-sqli",
-    name: "web_app_sqli_to_rce",
-    displayName: "Web app (SQLi → RCE → exfil)",
-    category: "scenarios",
-    description:
-      "External portal compromise: 3k WAF scans (noise) → successful UNION-SELECT SQLi → admin login → file-upload web shell → reverse shell → DB mass-export → exfil via paste/discord.",
-    icon: "bug_report",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/web_app_sqli_to_rce.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-living-off-the-land",
-    name: "living_off_the_land_lolbin",
-    displayName: "Living off the land (LOLBin)",
-    category: "scenarios",
-    description:
-      "Fileless attack via signed Microsoft tools: certutil/mshta/wmic/bitsadmin/msbuild + WMI event-subscription persistence + DoH C2. Pure command-line argument signal.",
-    icon: "terminal",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/living_off_the_land_lolbin.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-cryptojacking",
-    name: "cryptojacking_xmrig_botnet",
-    displayName: "Cryptojacking (XMRig botnet)",
-    category: "scenarios",
-    description:
-      "Redis CONFIG-SET → SSH key drop → Docker API container deploy → cron+systemd persistence + EDR disable → sustained XMRig mining-pool C2 across cloud workloads. ~2.7k events.",
-    icon: "memory",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/cryptojacking_xmrig_botnet.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-business-email-compromise",
-    name: "business_email_compromise",
-    displayName: "BEC (CEO wire-transfer fraud)",
-    category: "scenarios",
-    description:
-      "10-day quiet mailbox dwell + look-alike domain registration + inbox rule that auto-deletes evidence + spoofed CEO wire instruction to AP. No malware — pure social engineering.",
-    icon: "mark_email_unread",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/business_email_compromise.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-kubernetes-escape",
-    name: "kubernetes_container_escape",
-    displayName: "Kubernetes (container escape)",
-    category: "scenarios",
-    description:
-      "Pod RCE → service-account token abuse → privileged pod with hostPath:/ → chroot escape → cluster-admin ClusterRoleBinding + cross-namespace exec. Heavy on kube-audit telemetry.",
-    icon: "stack",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/kubernetes_container_escape.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  {
-    id: "scenario-ddos-multivector",
-    name: "ddos_volumetric_layer7",
-    displayName: "DDoS (volumetric + L7)",
-    category: "scenarios",
-    description:
-      "Multi-vector availability attack: DNS+NTP+memcached amplification + TCP SYN flood + L7 HTTP-GET flood + Slowloris. ~13k events to test rate-change alerting.",
-    icon: "warning",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/scenarios/ddos_volumetric_layer7.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#1f7bff" }] },
-  },
-  // ── Validation ──────────────────────────────────────────────────────
-  {
-    id: "validation-ioc-correlation",
-    name: "validate_ioc_correlation",
-    displayName: "Validate IOC correlation",
-    category: "validation",
-    description:
-      "Runs XQL queries against the XSIAM tenant to confirm the IOCs from a scenario actually triggered the expected detection rules.",
-    icon: "fact_check",
-    source: "platform",
-    loadingMode: "always",
-    enabled: true,
-    locked: true,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/validation/validate_ioc_correlation.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#45ffd6" }] },
-  },
-  // ── Workflows ───────────────────────────────────────────────────────
-  {
-    id: "workflow-purple-team",
-    name: "purple_team_exercise",
-    displayName: "Purple-team exercise",
-    category: "workflows",
-    description:
-      "End-to-end purple exercise — pick scenario, run via Caldera + xlog, validate detection in XSIAM, file the postmortem.",
-    icon: "groups",
-    source: "platform",
-    loadingMode: "on-demand",
-    enabled: true,
-    locked: false,
-    agentCount: 1,
-    calls7d: 0,
-    content: "See bundles/spark/mcp/skills/workflows/purple_team_exercise.md",
-    charCount: 0,
-    tokenCount: 0,
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: { calls24h: 0, calls7d: 0, calls30d: 0, avgContextTokens: 0, activeAgents: 1, topAgents: [{ name: "phantom", color: "#6a7cff" }] },
-  },
-];
 
 // ─── Styles ─────────────────────────────────────────────────────────────────
 
@@ -693,48 +163,15 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
-function DangerSectionHeader({ label }: { label: string }) {
-  return (
-    <div className="flex items-center gap-3 mb-4">
-      <div
-        className="h-[2px] w-16"
-        style={{ background: "linear-gradient(90deg, #ef4444 0%, transparent 100%)" }}
-      />
-      <span className="font-label uppercase tracking-[0.2em] text-[10px] font-black text-[#ffb4ab]/60">
-        {label}
-      </span>
-    </div>
-  );
-}
-
-function LockBadge({ locked }: { locked: boolean }) {
-  if (locked) {
-    return (
-      <div className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary-fixed-dim border border-primary/30 rounded-lg text-[10px] font-bold">
-        <span className="material-symbols-outlined text-sm">lock</span>
-        Enforced
-      </div>
-    );
-  }
-  return (
-    <div className="flex items-center gap-1.5 px-3 py-1 bg-[#424751]/10 text-on-surface-variant/60 border border-[#424751]/20 rounded-lg text-[10px] font-bold">
-      <span className="material-symbols-outlined text-sm">lock_open</span>
-    </div>
-  );
-}
-
 function SkillCard({
   skill,
   onSelect,
-  onToggleEnabled,
 }: {
   skill: SkillDef;
   onSelect: () => void;
-  onToggleEnabled: () => void;
 }) {
   const cat = CATEGORY_META[skill.category];
   const src = SOURCE_META[skill.source];
-  const isDisabled = !skill.enabled;
 
   return (
     <div
@@ -747,9 +184,7 @@ function SkillCard({
           onSelect();
         }
       }}
-      className={`p-6 rounded-2xl hover:ring-1 hover:ring-primary/20 transition-all cursor-pointer group ${
-        isDisabled ? "opacity-60 grayscale-[0.5]" : ""
-      }`}
+      className="p-6 rounded-2xl hover:ring-1 hover:ring-primary/20 transition-all cursor-pointer group"
       style={glassStyle}
     >
       {/* Icon + controls */}
@@ -770,46 +205,9 @@ function SkillCard({
           >
             {skill.locked ? "lock" : "lock_open"}
           </span>
-          {/* Toggle — was a static <div> that didn't actually toggle.
-              Now a real <button> with stopPropagation so clicks don't
-              bubble up to the card's onClick (which would open the
-              detail panel). Color is primary blue because green washed
-              out on the light background. */}
-          <button
-            type="button"
-            role="switch"
-            aria-checked={skill.enabled}
-            aria-label={
-              skill.enabled
-                ? `Disable skill ${skill.displayName}`
-                : `Enable skill ${skill.displayName}`
-            }
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleEnabled();
-            }}
-            onKeyDown={(e) => {
-              // Don't let Enter/Space bubble to the card's keydown
-              // handler (which would also re-open detail).
-              if (e.key === "Enter" || e.key === " ") {
-                e.stopPropagation();
-              }
-            }}
-            className={`w-10 h-5 rounded-full flex items-center px-1 transition-colors cursor-pointer hover:ring-2 hover:ring-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-              skill.enabled
-                ? "bg-primary/30"
-                : "bg-surface-container-highest"
-            }`}
-          >
-            <div
-              className={`w-3.5 h-3.5 rounded-full transition-all ${
-                skill.enabled
-                  ? "bg-primary ml-auto"
-                  : "bg-on-surface-variant/40"
-              }`}
-            />
-          </button>
         </div>
+      </div>
+      {/* Display name (frontmatter-driven        </div>
       </div>
       {/* Display name (frontmatter-driven, operator-friendly) +
           canonical name (snake_case, model-facing). `skill.name` is the
@@ -836,21 +234,9 @@ function SkillCard({
       </p>
       {/* Footer */}
       <div className="flex justify-between items-center pt-4 border-t border-outline-variant/30">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-on-surface-variant text-sm">
-            <span className="material-symbols-outlined text-lg">group</span>
-            <span>{skill.agentCount} agents</span>
-          </div>
-          <span
-            className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-              skill.loadingMode === "always"
-                ? "text-secondary bg-secondary/10"
-                : "text-tertiary bg-tertiary/10"
-            }`}
-          >
-            {skill.loadingMode === "always" ? "ALWAYS" : "ON-DEMAND"}
-          </span>
-        </div>
+        <span className="font-mono text-[10px] text-on-surface-variant/60 truncate">
+          {skill.filePath}
+        </span>
         <span className={`text-[10px] px-2 py-0.5 rounded ${src.className}`}>
           {src.label}
         </span>
@@ -862,14 +248,12 @@ function SkillCard({
 function SkillDetailPanel({
   skill,
   onClose,
-  onToggleEnabled,
   onDownload,
   onSave,
   onDelete,
 }: {
   skill: SkillDef;
   onClose: () => void;
-  onToggleEnabled: () => void;
   // The detail panel hosts the per-skill CRUD actions.
   // Download is always available (even for locked skills — viewing
   // and saving locally doesn't mutate state). Save fires when the
@@ -881,7 +265,6 @@ function SkillDetailPanel({
   onDelete: (skill: SkillDef) => void;
 }) {
   const cat = CATEGORY_META[skill.category];
-  const [activeRange, setActiveRange] = useState<"24h" | "7d" | "30d">("24h");
 
   // Local body state. The body auto-loads on panel mount (a lazy-load on
   // click/focus would leave the textarea showing a one-line
@@ -891,12 +274,7 @@ function SkillDetailPanel({
   // place of the textarea while the fetch is in flight.
   //
   // - `bodyContent`     — the live MD body once loaded, or empty
-  //                       string while loading. The seed value
-  //                       (skill.content, a one-line filename hint)
-  //                       is not used as a textarea
-  //                       placeholder; it's only shown if the auto-
-  //                       load fails and the operator hasn't clicked
-  //                       Retry yet.
+  //                       string while loading or if the load fails.
   // - `loadState`       — "loading" | "loaded" | "error". Replaces
   //                       the older bodyLoaded + isLoading boolean
   //                       pair so the three rendering modes are an
@@ -960,18 +338,33 @@ function SkillDetailPanel({
   const isLoading = loadState === "loading";
   const bodyLoaded = loadState === "loaded";
 
+  const saveBody = useCallback(async () => {
+    if (!dirty || isSaving) return;
+    setIsSaving(true);
+    const ok = await onSave(skill, bodyContent);
+    setIsSaving(false);
+    if (ok) setDirty(false);
+  }, [dirty, isSaving, onSave, skill, bodyContent]);
+
+  // Closing with unsaved edits asks first (in-app dialog, not window.confirm).
+  const requestClose = useCallback(async () => {
+    if (dirty) {
+      const discard = await confirmAction({
+        title: "Discard unsaved changes?",
+        message: "The edits in this skill have not been saved.",
+        confirmLabel: "Discard",
+        tone: "danger",
+      });
+      if (!discard) return;
+    }
+    onClose();
+  }, [dirty, onClose]);
+
   return (
     <>
       <div
         className="fixed inset-0 bg-black/60 z-40 backdrop-blur-[2px] animate-[fadeIn_0.2s_ease-out]"
-        onClick={() => {
-          if (
-            dirty &&
-            !window.confirm("Unsaved changes — close anyway?")
-          )
-            return;
-          onClose();
-        }}
+        onClick={() => void requestClose()}
         aria-hidden="true"
       />
       <aside
@@ -982,14 +375,7 @@ function SkillDetailPanel({
         <header className="p-8 pb-6 border-b border-white/5 shrink-0">
           <div className="flex items-start justify-between mb-6">
             <button
-              onClick={() => {
-                if (
-                  dirty &&
-                  !window.confirm("Unsaved changes — close anyway?")
-                )
-                  return;
-                onClose();
-              }}
+              onClick={() => void requestClose()}
               className="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-all active:scale-95 group"
               aria-label="Close panel"
             >
@@ -1014,13 +400,7 @@ function SkillDetailPanel({
                 Download
               </button>
               <button
-                onClick={async () => {
-                  if (!dirty || isSaving) return;
-                  setIsSaving(true);
-                  const ok = await onSave(skill, bodyContent);
-                  setIsSaving(false);
-                  if (ok) setDirty(false);
-                }}
+                onClick={() => void saveBody()}
                 disabled={!dirty || isSaving}
                 className={`h-9 px-3 flex items-center gap-1.5 rounded-full transition-all text-xs font-medium ${
                   dirty && !isSaving
@@ -1176,285 +556,57 @@ function SkillDetailPanel({
             </div>
           </section>
 
-          {/* Configuration */}
+          {/* Properties — everything here is read from the skill's file and
+              its frontmatter; nothing is a setting the agent consults. */}
           <section>
-            <SectionHeader label="Configuration" />
+            <SectionHeader label="Properties" />
             <div className="grid grid-cols-1 gap-3">
-              {/* Availability — power icon + toggle were green (#7bdc7b)
-                  which read fine on dark navy but desaturated on the
-                  pale-azure light bg. Switched to primary blue tints,
-                  and the toggle is now a functional <button> mirroring
-                  the card-level toggle (clicking flips skill.enabled
-                  via the parent's setSkills). */}
-              <div
-                className="flex items-center justify-between p-5 bg-surface-container rounded-xl"
-                style={ghostBorder}
-              >
-                <div className="flex items-center gap-4">
-                  <span
-                    className="material-symbols-outlined text-primary"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    power_settings_new
-                  </span>
-                  <div>
-                    <div className="font-semibold">Availability</div>
-                    <div className="text-xs text-on-surface-variant">
-                      System-wide accessibility for agents
-                    </div>
-                  </div>
+              {[
+                ["Category", CATEGORY_META[skill.category].label],
+                ["Source", SOURCE_META[skill.source].label],
+                ["File", skill.filePath],
+                [
+                  "Size",
+                  `${skill.sizeBytes.toLocaleString()} bytes (about ${Math.ceil(skill.sizeBytes / 4).toLocaleString()} tokens)`,
+                ],
+                [
+                  "Protection",
+                  skill.locked ? "Locked: cannot be deleted from the UI" : "Not locked",
+                ],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="flex items-center justify-between p-4 bg-surface-container rounded-xl"
+                  style={ghostBorder}
+                >
+                  <span className="text-sm text-on-surface-variant">{label}</span>
+                  <span className="text-sm font-mono text-on-surface text-right break-all">{value}</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={skill.enabled}
-                    aria-label={
-                      skill.enabled
-                        ? `Disable skill ${skill.displayName}`
-                        : `Enable skill ${skill.displayName}`
-                    }
-                    onClick={onToggleEnabled}
-                    className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors hover:ring-2 hover:ring-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/40 ${
-                      skill.enabled ? "bg-primary/30" : "bg-surface-container-highest"
-                    }`}
-                  >
-                    <div
-                      className={`absolute top-1 w-3 h-3 rounded-full transition-all ${
-                        skill.enabled ? "right-1 bg-primary" : "left-1 bg-on-surface-variant/40"
-                      }`}
-                    />
-                  </button>
-                  <LockBadge locked={skill.locked} />
-                </div>
-              </div>
-
-              {/* Loading Mode */}
-              <div
-                className="flex items-center justify-between p-5 bg-surface-container rounded-xl"
-                style={ghostBorder}
-              >
-                <div className="flex items-center gap-4">
-                  <span
-                    className="material-symbols-outlined text-primary-fixed-dim"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    {skill.loadingMode === "always" ? "bolt" : "schedule"}
-                  </span>
-                  <div>
-                    <div className="font-semibold">Loading Mode</div>
-                    <div className="text-xs text-on-surface-variant">
-                      {skill.loadingMode === "always"
-                        ? "Loaded into every agent context"
-                        : "Loaded only when explicitly requested"}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-1 p-1 bg-surface-container-low rounded-lg border border-white/5">
-                    <div
-                      className={`px-3 py-1.5 text-[10px] font-bold rounded ${
-                        skill.loadingMode === "always"
-                          ? "bg-[#a7c8ff]/20 text-primary-fixed-dim"
-                          : "text-on-surface-variant/40"
-                      }`}
-                    >
-                      Always
-                    </div>
-                    <div
-                      className={`px-3 py-1.5 text-[10px] font-bold rounded ${
-                        skill.loadingMode === "on-demand"
-                          ? "bg-[#fbbc30]/20 text-[#fbbc30]"
-                          : "text-on-surface-variant/40"
-                      }`}
-                    >
-                      On-demand
-                    </div>
-                  </div>
-                  <LockBadge locked={false} />
-                </div>
-              </div>
-
-              {/* Max Concurrent Agents */}
-              <div
-                className="flex items-center justify-between p-5 bg-surface-container rounded-xl"
-                style={ghostBorder}
-              >
-                <div className="flex items-center gap-4">
-                  <span
-                    className="material-symbols-outlined text-[#fbbc30]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    groups
-                  </span>
-                  <div>
-                    <div className="font-semibold">Max Concurrent Agents</div>
-                    <div className="text-xs text-on-surface-variant">
-                      Maximum simultaneous agent loads (0 = unlimited)
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 bg-surface-container-highest px-4 py-2 rounded-lg">
-                    <span className="font-mono text-sm">
-                      {skill.maxConcurrentAgents === 0
-                        ? "Unlimited"
-                        : skill.maxConcurrentAgents}
-                    </span>
-                    <span className="material-symbols-outlined text-sm cursor-pointer hover:text-primary-fixed-dim">
-                      edit
-                    </span>
-                  </div>
-                  <LockBadge locked={false} />
-                </div>
-              </div>
-
-              {/* Eligible Agents */}
-              <div
-                className="flex items-center justify-between p-5 bg-surface-container rounded-xl"
-                style={ghostBorder}
-              >
-                <div className="flex items-center gap-4">
-                  <span
-                    className="material-symbols-outlined text-[#c084fc]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    verified_user
-                  </span>
-                  <div>
-                    <div className="font-semibold">Eligible Agents</div>
-                    <div className="text-xs text-on-surface-variant">
-                      Which agents can use this skill
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 bg-surface-container-highest px-4 py-2 rounded-lg">
-                    <span className="text-sm">{skill.eligibleAgents}</span>
-                    <span className="material-symbols-outlined text-sm text-on-surface-variant">
-                      expand_more
-                    </span>
-                  </div>
-                  <LockBadge locked={false} />
-                </div>
-              </div>
+              ))}
             </div>
-          </section>
-
-          {/* Adoption Analytics */}
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <SectionHeader label="Adoption" />
-              <div className="flex gap-2 p-1 bg-surface-container-low rounded-lg border border-white/5">
-                {(["24h", "7d", "30d"] as const).map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setActiveRange(range)}
-                    className={`px-3 py-1.5 text-[10px] font-bold rounded ${
-                      activeRange === range
-                        ? "bg-[#a7c8ff]/20 text-primary-fixed-dim shadow-sm"
-                        : "text-on-surface-variant/40 hover:text-on-surface"
-                    }`}
-                  >
-                    {range.toUpperCase()}:{" "}
-                    {range === "24h"
-                      ? skill.analytics.calls24h.toLocaleString()
-                      : range === "7d"
-                        ? skill.analytics.calls7d.toLocaleString()
-                        : skill.analytics.calls30d.toLocaleString()}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="p-6 bg-surface-container-low rounded-xl" style={ghostBorder}>
-                <div className="text-[10px] uppercase font-bold text-on-surface-variant/60 mb-1">
-                  Avg Context Tokens
-                </div>
-                <div className="text-3xl font-headline font-bold text-on-surface">
-                  {skill.analytics.avgContextTokens}
-                </div>
-              </div>
-              <div
-                className="p-6 bg-surface-container-low rounded-xl border-l-2 border-l-[#7bdc7b]"
-                style={ghostBorder}
-              >
-                <div className="text-[10px] uppercase font-bold text-on-surface-variant/60 mb-1">
-                  Active Agents
-                </div>
-                <div className="text-3xl font-headline font-bold text-[#7bdc7b]">
-                  {skill.analytics.activeAgents}
-                </div>
-              </div>
-            </div>
-            {skill.analytics.topAgents.length > 0 && (
-              <div>
-                <div className="text-xs font-bold text-on-surface-variant mb-3">
-                  Top Agents
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {skill.analytics.topAgents.map((agent) => (
-                    <div
-                      key={agent.name}
-                      className="px-3 py-1.5 bg-surface-container-highest border border-white/5 rounded-lg text-xs font-medium flex items-center gap-2"
-                    >
-                      <span
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{
-                          backgroundColor: agent.color,
-                          boxShadow: `0 0 8px ${agent.color}`,
-                        }}
-                      />
-                      {agent.name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </section>
 
           {/* Phantom is a single-tenant operator install: there is no
               workspace concept anywhere in the MCP, so there is no
               workspace assignment or override section. Skills are
-              global to the install — toggle them on/off in the card
-              header; deletion is below in the Danger Zone. */}
-
-          {/* Danger Zone */}
-          <section className="pb-8">
-            <DangerSectionHeader label="Danger Zone" />
-            <div
-              className="p-5 bg-surface-container rounded-xl border border-[#ef4444]/10"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="material-symbols-outlined text-[#ffb4ab]">
-                    delete_forever
-                  </span>
-                  <div>
-                    <div className="font-semibold text-[#ffb4ab]">Delete Skill</div>
-                    <div className="text-xs text-on-surface-variant/70">
-                      Permanently remove this skill from the platform. This action cannot be undone.
-                    </div>
-                  </div>
-                </div>
-                <button className="px-4 py-2 bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ffb4ab] rounded-lg text-xs font-bold hover:bg-[#ef4444]/20 transition-colors">
-                  Delete
-                </button>
-              </div>
-            </div>
-          </section>
+              global to the install; Download, Save and Delete are in
+              the header. */}
         </div>
 
         {/* Footer */}
         <footer className="p-6 border-t border-white/5 bg-surface-container-low/50 flex gap-4 shrink-0">
-          <button className="flex-1 py-4 bg-primary-container hover:bg-primary-container/80 text-on-primary-container font-headline font-bold rounded-xl transition-all shadow-lg shadow-primary-fixed-dim/10">
-            Save Changes
+          <button
+            onClick={() => void saveBody()}
+            disabled={!dirty || isSaving}
+            className="flex-1 py-4 bg-primary-container hover:bg-primary-container/80 text-on-primary-container font-headline font-bold rounded-xl transition-all shadow-lg shadow-primary-fixed-dim/10 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving ? "Saving…" : "Save Changes"}
           </button>
           <button
-            onClick={onClose}
+            onClick={() => void requestClose()}
             className="px-6 py-4 bg-surface-container-highest text-on-surface-variant font-headline font-bold rounded-xl transition-all hover:text-on-surface"
           >
-            Cancel
+            Close
           </button>
         </footer>
       </aside>
@@ -1490,7 +642,6 @@ function CreateSkillPanel({
     content: string,
   ) => Promise<boolean>;
 }) {
-  const [loadingMode, setLoadingMode] = useState<LoadingMode>("always");
   const [contextPreviewOpen, setContextPreviewOpen] = useState(false);
   const [skillContent, setSkillContent] = useState("");
   // New fields required by the backend POST. Category is one of
@@ -1512,11 +663,11 @@ function CreateSkillPanel({
   // frontmatter later via Edit.
   const handleCreate = useCallback(async () => {
     if (!createFilename.trim()) {
-      alert("Filename is required.");
+      notify("warning", "Filename is required.");
       return;
     }
     if (!skillContent.trim()) {
-      alert("Skill content cannot be empty.");
+      notify("warning", "Skill content cannot be empty.");
       return;
     }
     let body = skillContent;
@@ -1532,7 +683,6 @@ function CreateSkillPanel({
         createDescription.trim() &&
           `description: ${JSON.stringify(createDescription.trim())}`,
         `source: workspace`,
-        `loadingMode: ${loadingMode}`,
         `locked: false`,
       ].filter(Boolean);
       body = `---\n${fmLines.join("\n")}\n---\n\n${skillContent}`;
@@ -1546,7 +696,6 @@ function CreateSkillPanel({
     createDescription,
     createDisplayName,
     createFilename,
-    loadingMode,
     onClose,
     onCreate,
     skillContent,
@@ -1718,117 +867,6 @@ function CreateSkillPanel({
             </div>
           </section>
 
-          {/* Loading & Availability */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="h-1 w-12 bg-[#a7c8ff] rounded-full" />
-              <span className="font-label uppercase tracking-widest text-[10px] font-bold text-primary-fixed-dim">
-                Loading & Availability
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => setLoadingMode("always")}
-                className={`p-4 rounded-xl cursor-pointer text-left transition-all ${
-                  loadingMode === "always"
-                    ? "bg-[rgba(25,99,179,0.2)] border border-[#a7c8ff]/30"
-                    : "bg-surface-container-highest border border-white/5 hover:bg-[#424751]"
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <span
-                    className="material-symbols-outlined text-primary-fixed-dim"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    bolt
-                  </span>
-                  <span className="text-sm font-bold text-on-surface">
-                    Always Loaded
-                  </span>
-                </div>
-                <p className="text-[10px] text-on-surface-variant/70 leading-relaxed">
-                  Injected into every agent context at startup.
-                </p>
-              </button>
-              <button
-                onClick={() => setLoadingMode("on-demand")}
-                className={`p-4 rounded-xl cursor-pointer text-left transition-all ${
-                  loadingMode === "on-demand"
-                    ? "bg-[rgba(251,188,48,0.1)] border border-[#fbbc30]/30"
-                    : "bg-surface-container-highest border border-white/5 hover:bg-[#424751]"
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="material-symbols-outlined text-[#fbbc30]">
-                    schedule
-                  </span>
-                  <span className="text-sm font-bold text-on-surface">
-                    On-demand
-                  </span>
-                </div>
-                <p className="text-[10px] text-on-surface-variant/70 leading-relaxed">
-                  Loaded only when explicitly requested by the agent.
-                </p>
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
-                <div className="flex items-center gap-4">
-                  <span className="material-symbols-outlined text-primary-fixed-dim">
-                    visibility
-                  </span>
-                  <div>
-                    <h4 className="text-sm font-medium">Availability</h4>
-                    <p className="text-[10px] text-on-surface-variant">
-                      Visible to all eligible agents
-                    </p>
-                  </div>
-                </div>
-                <div className="w-10 h-5 bg-primary/30 rounded-full relative">
-                  <div className="absolute right-1 top-1 w-3 h-3 bg-primary rounded-full" />
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
-                <div className="flex items-center gap-4">
-                  <span className="material-symbols-outlined text-[#fbbc30]">
-                    groups
-                  </span>
-                  <div>
-                    <h4 className="text-sm font-medium">Max Concurrent Agents</h4>
-                    <p className="text-[10px] text-on-surface-variant">
-                      Simultaneous loads (0 = unlimited)
-                    </p>
-                  </div>
-                </div>
-                <input
-                  type="number"
-                  defaultValue="0"
-                  min="0"
-                  className="w-20 bg-surface-container border-none rounded-lg px-3 py-1.5 text-center text-xs font-mono text-on-surface focus:ring-1 focus:ring-primary/40"
-                />
-              </div>
-              <div className="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
-                <div className="flex items-center gap-4">
-                  <span className="material-symbols-outlined text-[#c084fc]">
-                    verified_user
-                  </span>
-                  <div>
-                    <h4 className="text-sm font-medium">Eligible Agents</h4>
-                    <p className="text-[10px] text-on-surface-variant">
-                      Which agents can use this skill
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg">
-                  <span className="text-xs text-on-surface">All agents</span>
-                  <span className="material-symbols-outlined text-sm text-on-surface-variant">
-                    expand_more
-                  </span>
-                </div>
-              </div>
-            </div>
-          </section>
-
           {/* Context Preview (Collapsible) */}
           <section className="space-y-4 pb-4">
             <button
@@ -1907,7 +945,6 @@ interface LiveSkillRow {
   description?: string;
   icon?: string;
   source?: string;
-  loadingMode?: string;
   locked?: boolean;
   attack?: string[];
   filename: string;
@@ -1950,24 +987,9 @@ function liveRowToSkillDef(row: LiveSkillRow): SkillDef {
       "(No description in frontmatter. Edit the skill MD to add one.)",
     icon: row.icon || "extension",
     source: ((row.source as SourceType) || "platform"),
-    loadingMode: ((row.loadingMode as LoadingMode) || "on-demand"),
-    enabled: true,
     locked: Boolean(row.locked),
-    agentCount: 1,
-    calls7d: 0,
-    content: `See bundles/spark/mcp/skills/${row.file_path}`,
-    charCount: row.size_bytes || 0,
-    tokenCount: Math.ceil((row.size_bytes || 0) / 4),
-    maxConcurrentAgents: 0,
-    eligibleAgents: "phantom-soc-simulation",
-    analytics: {
-      calls24h: 0,
-      calls7d: 0,
-      calls30d: 0,
-      avgContextTokens: 0,
-      activeAgents: 1,
-      topAgents: [{ name: "phantom", color: "#1f7bff" }],
-    },
+    filePath: row.file_path,
+    sizeBytes: row.size_bytes || 0,
   };
 }
 
@@ -1977,15 +999,13 @@ export default function SkillsPage() {
   const [selectedSkill, setSelectedSkill] = useState<SkillDef | null>(null);
   const [showCreatePanel, setShowCreatePanel] = useState(false);
 
-  // Skills are loaded live from /api/skills (which calls the
-  // MCP's skills_list_all). The hardcoded `SKILLS` array above is a
-  // fallback for SSR / first-paint and for environments where the
-  // MCP isn't reachable yet. Once the live fetch completes we replace
-  // it. New skill files added to disk appear automatically — adding
-  // an entry to the array is not required.
-  const [skills, setSkills] = useState<SkillDef[]>(SKILLS);
+  // Skills are loaded live from /api/skills (which calls the MCP's
+  // skills_list_all); the on-disk skills directory is the only source, so a
+  // skill that is added, edited or removed on disk shows up here without a
+  // code change.
+  const [skills, setSkills] = useState<SkillDef[]>([]);
   const [liveLoadStatus, setLiveLoadStatus] = useState<
-    "loading" | "live" | "fallback"
+    "loading" | "live" | "error"
   >("loading");
 
   useEffect(() => {
@@ -1999,32 +1019,19 @@ export default function SkillsPage() {
           skills?: LiveSkillRow[];
         };
         if (cancelled) return;
-        if (Array.isArray(body.skills) && body.skills.length > 0) {
+        if (Array.isArray(body.skills)) {
           setSkills(body.skills.map(liveRowToSkillDef));
           setLiveLoadStatus("live");
         } else {
-          // API returned empty — keep the fallback array. Probably a
-          // first-boot edge where the volume hasn't seeded yet.
-          setLiveLoadStatus("fallback");
+          setLiveLoadStatus("error");
         }
       } catch {
-        if (!cancelled) setLiveLoadStatus("fallback");
+        if (!cancelled) setLiveLoadStatus("error");
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  const toggleEnabled = useCallback((id: string) => {
-    setSkills((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s)),
-    );
-    // Keep the open detail panel in sync if it's the same skill —
-    // otherwise the panel's availability toggle would lag the card.
-    setSelectedSkill((cur) =>
-      cur && cur.id === id ? { ...cur, enabled: !cur.enabled } : cur,
-    );
   }, []);
 
   // ─── CRUD handlers ─────────────────────────────
@@ -2052,6 +1059,7 @@ export default function SkillsPage() {
       const body = (await res.json()) as { skills?: LiveSkillRow[] };
       if (Array.isArray(body.skills)) {
         setSkills(body.skills.map(liveRowToSkillDef));
+        setLiveLoadStatus("live");
       }
     } catch {
       // Network blip — leave the existing array in place rather than
@@ -2070,7 +1078,7 @@ export default function SkillsPage() {
         { cache: "no-store" },
       );
       if (!res.ok) {
-        alert(`Download failed: ${res.status}`);
+        notify("error", `Download failed: ${res.status}`);
         return;
       }
       const body = (await res.json()) as {
@@ -2079,7 +1087,7 @@ export default function SkillsPage() {
         error?: string;
       };
       if (!body.success || !body.content) {
-        alert(body.error || "Download failed: empty response");
+        notify("error", body.error || "Download failed: empty response");
         return;
       }
       const blob = new Blob([body.content], { type: "text/markdown" });
@@ -2092,7 +1100,7 @@ export default function SkillsPage() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert(`Download failed: ${err instanceof Error ? err.message : err}`);
+      notify("error", `Download failed: ${err instanceof Error ? err.message : err}`);
     }
   }, []);
 
@@ -2114,13 +1122,13 @@ export default function SkillsPage() {
           error?: string;
         };
         if (!res.ok || !body.success) {
-          alert(body.error || `Save failed: ${res.status}`);
+          notify("error", body.error || `Save failed: ${res.status}`);
           return false;
         }
         await refetchSkills();
         return true;
       } catch (err) {
-        alert(`Save failed: ${err instanceof Error ? err.message : err}`);
+        notify("error", `Save failed: ${err instanceof Error ? err.message : err}`);
         return false;
       }
     },
@@ -2130,15 +1138,16 @@ export default function SkillsPage() {
   const handleDeleteSkill = useCallback(
     async (skill: SkillDef) => {
       if (skill.locked) {
-        alert(`"${skill.displayName}" is platform-locked and can't be deleted.`);
+        notify("warning", `"${skill.displayName}" is platform-locked and can't be deleted.`);
         return;
       }
-      const ok = window.confirm(
-        `Delete skill "${skill.displayName}"?\n\n` +
-          `The MD file moves to /app/skills/.deleted/ on the server — recoverable via\n` +
-          `docker cp / docker exec, but it disappears from the agent's skill registry\n` +
-          `immediately.`,
-      );
+      const ok = await confirmAction({
+        title: `Delete skill "${skill.displayName}"?`,
+        message:
+          "The MD file moves to /app/skills/.deleted/ on the server (recoverable via docker cp / docker exec), but it disappears from the agent's skill registry immediately.",
+        confirmLabel: "Delete",
+        tone: "danger",
+      });
       if (!ok) return;
       const filePath = `${skill.category}/${skill.name}.md`;
       try {
@@ -2151,14 +1160,14 @@ export default function SkillsPage() {
           error?: string;
         };
         if (!res.ok || !body.success) {
-          alert(body.error || `Delete failed: ${res.status}`);
+          notify("error", body.error || `Delete failed: ${res.status}`);
           return;
         }
         // Close the detail panel + refresh the list.
         setSelectedSkill(null);
         await refetchSkills();
       } catch (err) {
-        alert(`Delete failed: ${err instanceof Error ? err.message : err}`);
+        notify("error", `Delete failed: ${err instanceof Error ? err.message : err}`);
       }
     },
     [refetchSkills],
@@ -2185,13 +1194,13 @@ export default function SkillsPage() {
           error?: string;
         };
         if (!res.ok || !body.success) {
-          alert(body.error || `Create failed: ${res.status}`);
+          notify("error", body.error || `Create failed: ${res.status}`);
           return false;
         }
         await refetchSkills();
         return true;
       } catch (err) {
-        alert(`Create failed: ${err instanceof Error ? err.message : err}`);
+        notify("error", `Create failed: ${err instanceof Error ? err.message : err}`);
         return false;
       }
     },
@@ -2215,16 +1224,30 @@ export default function SkillsPage() {
     return result;
   }, [skills, categoryFilter, searchQuery]);
 
-  // Summary widgets derive from the LIVE skills array.
-  // Hardcoded values would drift as skills are added; live derivation
-  // also lets the Active count actually mean "active".
+  // Summary widgets derive from the LIVE skills array, so they cannot
+  // drift from what /api/skills returns.
   const summaryStats = useMemo(() => {
     const categories = new Set(skills.map((s) => s.category));
     return {
       total: skills.length,
-      active: skills.filter((s) => s.enabled).length,
       categories: categories.size,
     };
+  }, [skills]);
+
+  // Chip counts come from the same array the grid filters, so "(N)" on a
+  // chip is exactly the number of cards that chip shows (before the search
+  // box narrows them).
+  const categoryCounts = useMemo(() => {
+    const counts: Record<CategoryKey, number> = {
+      all: skills.length,
+      foundation: 0,
+      scenarios: 0,
+      validation: 0,
+      workflows: 0,
+      plugins: 0,
+    };
+    for (const s of skills) counts[s.category] += 1;
+    return counts;
   }, [skills]);
 
   return (
@@ -2246,7 +1269,7 @@ export default function SkillsPage() {
               </h1>
             </div>
             <p className="text-sm text-on-surface-variant ml-9">
-              Manage skill definitions and context injection across the platform.
+              Browse, edit and create the skills the agent can apply.
             </p>
           </div>
           {/* Phantom is a single-tenant agent install; there's no
@@ -2272,7 +1295,7 @@ export default function SkillsPage() {
             where the number sat below the icon on a new line.
             Theme-aware tints (bg-primary/15 instead of hardcoded
             rgba) so the icon backgrounds reflow on theme switch. */}
-        <section className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-5 rounded-2xl flex items-center gap-4" style={glassStyle}>
             <div className="h-12 w-12 rounded-xl bg-primary/15 flex items-center justify-center text-primary shrink-0">
               <span className="material-symbols-outlined">auto_awesome</span>
@@ -2290,22 +1313,6 @@ export default function SkillsPage() {
             </div>
           </div>
           <div className="p-5 rounded-2xl flex items-center gap-4" style={glassStyle}>
-            <div className="h-12 w-12 rounded-xl bg-secondary/15 flex items-center justify-center text-secondary shrink-0">
-              <span className="material-symbols-outlined">check_circle</span>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">
-                Active
-              </p>
-              <p className="text-2xl font-bold font-headline text-secondary">
-                {summaryStats.active}
-              </p>
-              <p className="text-[11px] text-on-surface-variant/70 truncate">
-                Enabled platform-wide
-              </p>
-            </div>
-          </div>
-          <div className="p-5 rounded-2xl flex items-center gap-4" style={glassStyle}>
             <div className="h-12 w-12 rounded-xl bg-tertiary/15 flex items-center justify-center text-tertiary shrink-0">
               <span className="material-symbols-outlined">category</span>
             </div>
@@ -2318,22 +1325,6 @@ export default function SkillsPage() {
               </p>
               <p className="text-[11px] text-on-surface-variant/70 truncate">
                 Skill taxonomies
-              </p>
-            </div>
-          </div>
-          <div className="p-5 rounded-2xl flex items-center gap-4" style={glassStyle}>
-            <div className="h-12 w-12 rounded-xl bg-primary/15 flex items-center justify-center text-primary shrink-0">
-              <span className="material-symbols-outlined">trending_up</span>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-wider text-on-surface-variant">
-                Invocations
-              </p>
-              <p className="text-2xl font-bold font-headline text-primary">
-                —
-              </p>
-              <p className="text-[11px] text-on-surface-variant/70 truncate">
-                {SUMMARY_CAPTIONS.invocationsDelta}
               </p>
             </div>
           </div>
@@ -2359,7 +1350,7 @@ export default function SkillsPage() {
                     : "text-on-surface hover:bg-surface-container-high"
                 }`}
               >
-                {f.label} ({f.count})
+                {f.label} ({categoryCounts[f.key]})
               </button>
             ))}
           </div>
@@ -2384,26 +1375,50 @@ export default function SkillsPage() {
               key={skill.id}
               skill={skill}
               onSelect={() => setSelectedSkill(skill)}
-              onToggleEnabled={() => toggleEnabled(skill.id)}
             />
           ))}
-          {filteredSkills.length === 0 && (
+          {filteredSkills.length === 0 && liveLoadStatus === "loading" && (
+            <p className="col-span-3 py-16 text-center text-sm text-on-surface-variant">
+              Loading skills…
+            </p>
+          )}
+          {filteredSkills.length === 0 && liveLoadStatus === "error" && (
+            <div className="col-span-3 flex flex-col items-center justify-center py-16 text-center">
+              <span className="material-symbols-outlined text-4xl text-error/60 mb-3">
+                error
+              </span>
+              <p className="text-sm font-bold text-on-surface-variant">
+                Could not load the skills list
+              </p>
+              <button
+                onClick={() => void refetchSkills()}
+                className="text-xs font-bold text-primary-fixed-dim hover:underline mt-2"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+          {filteredSkills.length === 0 && liveLoadStatus === "live" && (
             <div className="col-span-3 flex flex-col items-center justify-center py-16 text-center">
               <span className="material-symbols-outlined text-4xl text-on-surface-variant/30 mb-3">
                 search_off
               </span>
               <p className="text-sm font-bold text-on-surface-variant">
-                No skills match your filter
+                {skills.length === 0
+                  ? "No skills installed yet"
+                  : "No skills match your filter"}
               </p>
-              <button
-                onClick={() => {
-                  setCategoryFilter("all");
-                  setSearchQuery("");
-                }}
-                className="text-xs font-bold text-primary-fixed-dim hover:underline mt-2"
-              >
-                Clear filters
-              </button>
+              {skills.length > 0 && (
+                <button
+                  onClick={() => {
+                    setCategoryFilter("all");
+                    setSearchQuery("");
+                  }}
+                  className="text-xs font-bold text-primary-fixed-dim hover:underline mt-2"
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
           )}
         </section>
@@ -2414,7 +1429,6 @@ export default function SkillsPage() {
         <SkillDetailPanel
           skill={selectedSkill}
           onClose={() => setSelectedSkill(null)}
-          onToggleEnabled={() => toggleEnabled(selectedSkill.id)}
           onDownload={handleDownloadSkill}
           onSave={handleSaveSkill}
           onDelete={handleDeleteSkill}

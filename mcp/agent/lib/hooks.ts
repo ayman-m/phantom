@@ -10,7 +10,7 @@
  *
  * Enterprise SOC ops need policy that doesn't fit inside any one tool:
  *
- *   - "Block any caldera_start_operation against production hosts
+ *   - "Block any caldera_create_operation against production hosts
  *      until #soc-ops approves" — needs PreToolUse + external comms.
  *   - "Inject the active incident's ticket id into every chat as
  *      context" — needs UserPromptSubmit.

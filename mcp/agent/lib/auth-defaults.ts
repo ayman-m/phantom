@@ -57,8 +57,7 @@ export const ADMIN_USERNAME = "admin";
  *  boolean flag). */
 export const SESSION_COOKIE_NAME = "phantom_session";
 
-/** Absolute session lifetime in seconds. Cookies expire after this
- *  regardless of activity; idle-timeout is not separately enforced
- *  (single-operator dev tool — 2h is short enough that a forgotten
- *  laptop session expires quickly anyway). */
-export const SESSION_TTL_SECONDS = 7200; // 2 hours
+// The session lifetime is NOT defined here. It is an operator setting
+// (whole hours, 1..24, default 2) stored in the MCP auth store; the login
+// route derives the cookie Max-Age from the expiry the MCP returns.
+// See app/api/auth/session-lifetime/route.ts.

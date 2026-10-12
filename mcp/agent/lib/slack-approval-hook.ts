@@ -52,6 +52,12 @@
  * round-trips can take a while if the analyst is offline).
  */
 
+/** Default matcher: CALDERA writes, XSIAM create/update/delete tools and every
+ *  `*_delete` tool. Every name pattern here must match real tools; see
+ *  bundles/spark/mcp/tests/test_shipped_tool_references.py. */
+export const DEFAULT_TOOL_GLOB =
+  "caldera_create_*,caldera_update_*,caldera_delete_*,xsiam_*_create,xsiam_*_update,xsiam_*_delete,*_delete";
+
 export interface SlackApprovalHookConfig {
   /** Operator-friendly name shown in /settings/hooks. */
   name: string;
@@ -59,8 +65,8 @@ export interface SlackApprovalHookConfig {
   webhookUrl: string;
   /** Optional auth header name+value the receiver expects. */
   authHeader?: { name: string; value: string };
-  /** Tool glob — defaults to "caldera_*,xsiam_write_*,*_delete"
-   *  (destructive families). Operator can override per-deployment. */
+  /** Tool glob — defaults to DEFAULT_TOOL_GLOB (the destructive
+   *  families). Operator can override per-deployment. */
   toolGlob?: string;
   /** Failure policy. Default 'allow' (a slack-receiver outage
    *  shouldn't block all chat tool calls). Operator can override
@@ -103,8 +109,7 @@ export function buildSlackApprovalHookPayload(
     event: "PreToolUse",
     matcher: {
       toolGlob:
-        config.toolGlob ??
-        "caldera_*,xsiam_write_*,*_delete,api_keys_*",
+        config.toolGlob ?? DEFAULT_TOOL_GLOB,
     },
     transport: {
       type: "http",
@@ -143,8 +148,8 @@ hook to a webhook receiver you deploy.
    receiver decides).
 
 3. **A list of which tools should route through Slack.** Default
-   matches \`caldera_*\`, \`xsiam_write_*\`, \`*_delete\`, and
-   \`api_keys_*\` — change to taste.
+   matches CALDERA operation and config writes, XSIAM create and
+   update tools, and every \`*_delete\` tool — change to taste.
 
 ## Installing the hook
 
@@ -154,7 +159,7 @@ POST to \`/api/agent/hooks\` (or use the form in /settings/hooks):
 {
   "name": "soc-ops slack approval",
   "event": "PreToolUse",
-  "matcher": { "toolGlob": "caldera_*,xsiam_write_*,*_delete" },
+  "matcher": { "toolGlob": "${DEFAULT_TOOL_GLOB}" },
   "transport": {
     "type": "http",
     "url": "https://your-receiver.example.com/pre-tool-approval-poll",

@@ -142,8 +142,8 @@ const STORES: Store[] = [
   },
   {
     id: "secrets",
-    name: "secret_store.db",
-    detail: "AES-256-GCM envelopes",
+    name: "secrets/",
+    detail: "AES-256-GCM files · mode 0600",
     icon: (
       <g>
         <rect x="-7" y="-2" width="14" height="10" rx="2" fill="none" />

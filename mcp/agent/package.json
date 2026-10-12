@@ -11,7 +11,22 @@
     "test:auth-rate-limit": "node scripts/test-auth-rate-limit.mjs",
     "test:tool-name-resolution": "node scripts/test-tool-name-resolution.mjs",
     "test:tls-proxy-connections": "node scripts/test-tls-proxy-connections.mjs",
-    "test": "npm run test:json-to-yaml && npm run test:auth-rate-limit && npm run test:tool-name-resolution && npm run test:tls-proxy-connections"
+    "test:system-prompt-model": "node scripts/test-system-prompt-model.mjs",
+    "test:system-prompt-guardrail": "node scripts/test-system-prompt-guardrail.mjs",
+    "test:auth-session-lifetime": "node scripts/test-auth-session-lifetime.mjs",
+    "test:notification-display": "node scripts/test-notification-display.mjs",
+    "test:job-form": "node scripts/test-job-form.mjs",
+    "test:session-tree": "node scripts/test-session-tree.mjs",
+    "test:system-prompt-skill-names": "node scripts/test-system-prompt-skill-names.mjs",
+    "test:service-health": "node scripts/test-service-health.mjs",
+    "test:journeys-catalog": "node scripts/test-journeys-catalog.mjs",
+    "test:instance-status": "node scripts/test-instance-status.mjs",
+    "test:connector-spec": "node scripts/test-connector-spec.mjs",
+    "test:tool-metadata": "node scripts/test-tool-metadata.mjs",
+    "test:permission-policy": "node scripts/test-permission-policy.mjs",
+    "test:operator-state-backup": "node scripts/test-operator-state-backup.mjs",
+    "test:restore-existing": "node scripts/test-restore-existing.mjs",
+    "test": "npm run test:json-to-yaml && npm run test:auth-rate-limit && npm run test:tool-name-resolution && npm run test:tls-proxy-connections && npm run test:system-prompt-model && npm run test:system-prompt-guardrail && npm run test:auth-session-lifetime && npm run test:notification-display && npm run test:job-form && npm run test:system-prompt-skill-names && npm run test:service-health && npm run test:session-tree && npm run test:journeys-catalog && npm run test:instance-status && npm run test:connector-spec && npm run test:tool-metadata && npm run test:permission-policy && npm run test:operator-state-backup && npm run test:restore-existing"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",

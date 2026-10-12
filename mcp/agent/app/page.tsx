@@ -29,6 +29,8 @@ import {
 import { listModels } from "@/lib/api/models";
 import type { ModelInfo, Session } from "@/lib/api/types";
 import { SparkLogo } from "@/components/sidebar";
+import { confirmAction } from "@/lib/stores/confirm";
+import { notify } from "@/lib/stores/notifications";
 
 // ─── Quick Action Chips (phantom-flavored) ──────────────────────────────────
 
@@ -787,6 +789,18 @@ export default function ChatPage() {
   const handleDeleteSession = useCallback(
     (id: string) => {
       void (async () => {
+        // One in-app confirmation for every delete entry point (the sidebar
+        // row menu and the chat header's trash button).
+        const target = sessions.find((x) => x.id === id);
+        const label = target?.title || target?.firstMessage || "this session";
+        const accepted = await confirmAction({
+          title: `Delete "${label}"?`,
+          message:
+            "The conversation and its messages are removed. This cannot be undone.",
+          confirmLabel: "Delete",
+          tone: "danger",
+        });
+        if (!accepted) return;
         const result = await deleteSession(id);
         if (result.ok) {
           setSessions((prev) => prev.filter((s) => s.id !== id));
@@ -795,10 +809,12 @@ export default function ChatPage() {
             setActiveSessionId(null);
             clearLastSessionState();
           }
+        } else {
+          notify("error", "Could not delete the session", result.error.message);
         }
       })();
     },
-    [activeSessionId, resetChat, clearLastSessionState]
+    [sessions, activeSessionId, resetChat, clearLastSessionState]
   );
 
   // Rename an existing session.
@@ -807,8 +823,7 @@ export default function ChatPage() {
   //   1. Optimistically updates local state so the sidebar reflects
   //      the change immediately.
   //   2. Fires the PATCH; on failure, reverts the local state and
-  //      logs a warning. (No error toast yet — would need a notif
-  //      system; for now operator can re-rename.)
+  //      shows an error toast.
   const handleRenameSession = useCallback(
     (id: string, title: string) => {
       const trimmed = title.trim();
@@ -832,6 +847,7 @@ export default function ChatPage() {
           setSessions((prev) =>
             prev.map((s) => (s.id === id ? { ...s, title: prevTitle } : s)),
           );
+          notify("error", "Could not rename the session", result.error.message);
         }
       })();
     },
@@ -946,25 +962,17 @@ export default function ChatPage() {
         }
         // Surface failure to the operator. Silently swallowing
         // `result.ok === false` would make a failing export look
-        // identical to "the feature is missing" — the
-        // operator clicks Export, nothing happens, no error
-        // appears anywhere. Using window.alert here as the simplest
-        // unmissable surface; a proper toast/notification primitive
-        // is a separate scope (none exists in the codebase today).
+        // identical to "the feature is missing": the operator clicks
+        // Export, nothing happens, no error appears anywhere.
         const detail = result.error || "Unknown error";
         // console.error so the failure is captured for devtools / log
-        // capture, in addition to the operator-facing alert.
+        // capture, in addition to the operator-facing toast.
         // eslint-disable-next-line no-console
         console.error(
           `[chat] session export failed (id=${id.slice(0, 8)} format=${format}):`,
           detail,
         );
-        if (typeof window !== "undefined") {
-          window.alert(
-            `Export failed (format=${format}).\n\n${detail}\n\n` +
-              `The failure has been logged to the browser console for diagnosis.`,
-          );
-        }
+        notify("error", `Export failed (format=${format})`, detail);
       })();
     },
     []

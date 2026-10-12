@@ -5,11 +5,17 @@
         ?target=user:operator
         ?unread=true
         ?limit=100
+        ?offset=0         (page through the newest-first list)
+        ?since=<ISO-8601 with Z or an offset>   (only rows created at or
+                                after it; anything else is a 400)
+        Response carries `total`: rows matching the filters, ignoring limit/offset.
   GET  /api/v1/notifications/unread_count       → integer
         ?target=user:operator
   POST /api/v1/notifications                    → publish (admin)
         body: {"topic": "simulation-complete", "payload": {...}, "actor": "operator"}
   POST /api/v1/notifications/{id}/ack           → mark read
+  POST /api/v1/notifications/ack_all            → mark every unread row read
+        optional body: {"target": "user:operator"}
 
 The agent UI's notification bell calls list() + unread_count() to
 render. Tools call publish() at the end of long-running operations
@@ -20,6 +26,7 @@ via API key with a future `notifications:write` scope.
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from typing import Any
 
 from fastmcp import FastMCP
@@ -30,6 +37,37 @@ from api.auth import require_bearer
 from usecase.notifications import SqliteNotificationStore
 
 logger = logging.getLogger("Phantom MCP")
+
+
+def _normalize_since(raw: str) -> str:
+    """`raw` as the store's own created_at format (UTC, microseconds, Z), or
+    ValueError. The store compares created_at as text, so a value in any
+    other shape would silently filter wrongly ("2026-10-12" or a bare
+    "yesterday" would match everything or nothing); it is rejected instead.
+    An explicit Z or UTC offset is required, since a bare local time is
+    ambiguous."""
+    text = raw.strip()
+    if text[-1:] in ("Z", "z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        raise ValueError(
+            "`since` must be an ISO-8601 timestamp such as "
+            "2026-10-12T00:00:00Z"
+        ) from None
+    if parsed.tzinfo is None:
+        raise ValueError(
+            "`since` must carry a timezone: end it with Z or a +hh:mm offset"
+        )
+    try:
+        utc = parsed.astimezone(timezone.utc)
+    except OverflowError:
+        # 0001-01-01T00:00:00+01:00 and the like fall outside the datetime range.
+        raise ValueError("`since` is outside the supported date range") from None
+    # isoformat zero-pads the year and always writes six fractional digits,
+    # which the store's text comparison relies on.
+    return utc.isoformat(timespec="microseconds").replace("+00:00", "Z")
 
 
 def register_notification_routes(
@@ -62,15 +100,33 @@ def register_notification_routes(
             limit = int(q.get("limit") or "100")
         except ValueError:
             limit = 100
+        try:
+            offset = max(0, int(q.get("offset") or "0"))
+        except ValueError:
+            offset = 0
+        target = q.get("target") or None
+        since = q.get("since") or None
+        if since is not None:
+            try:
+                since = _normalize_since(since)
+            except ValueError as exc:
+                return JSONResponse(
+                    {"error": str(exc), "code": "bad_since"}, status_code=400
+                )
         results = store.list(
-            target=q.get("target") or None,
+            target=target,
             unread_only=unread_only,
             limit=limit,
+            offset=offset,
+            since=since,
         )
         return JSONResponse(
             {
                 "notifications": [n.to_dict() for n in results],
                 "count": len(results),
+                "total": store.count(
+                    target=target, unread_only=unread_only, since=since
+                ),
             }
         )
 
@@ -145,6 +201,24 @@ def register_notification_routes(
             },
         )
         return JSONResponse(notif.to_dict(), status_code=201)
+
+    @mcp.custom_route(
+        "/api/v1/notifications/ack_all",
+        methods=["POST"],
+        include_in_schema=False,
+    )
+    async def ack_all(request: Request) -> JSONResponse:
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        target: str | None = None
+        if request.headers.get("content-length", "0") not in ("", "0"):
+            try:
+                body = await request.json()
+            except Exception:
+                return JSONResponse({"error": "Body must be JSON"}, status_code=400)
+            if isinstance(body, dict) and isinstance(body.get("target"), str):
+                target = body["target"] or None
+        return JSONResponse({"acked": store.ack_all(target=target)})
 
     @mcp.custom_route(
         "/api/v1/notifications/{notif_id}/ack",

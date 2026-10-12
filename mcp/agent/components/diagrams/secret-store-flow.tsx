@@ -6,32 +6,29 @@
  * Visual argument: the SecretStore is the single encrypted-at-rest
  * source of truth for every operator credential the platform handles.
  * Write surfaces converge on it (top half) and read consumers fan out
- * from it (bottom half), all going through the same PBKDF2 + AES-256-
- * GCM envelope.
+ * from it (bottom half), all going through the same AES-256-GCM
+ * envelope (the UI password is stored as a PBKDF2 hash inside it).
  *
  * Highlights three operator-relevant points:
  *
- *  1. The /setup form is a ONE-SHOT bootstrap — runs once at first
- *     install, then locks. Post-install edits go through the dedicated
- *     surfaces (/providers for Vertex JSON, /connectors for per-
- *     instance creds + config, /profile for UI password). The setup
- *     write edge is rendered with a "FIRST RUN ONLY" tag to make this
- *     explicit. By design there are no merge-vs-replace semantics
- *     from setup re-runs; edits are surgical and surface-specific.
+ *  1. First boot needs no operator input. The installer writes
+ *     /opt/phantom/.env (including PHANTOM_DEFAULT_ADMIN_PASSWORD),
+ *     entrypoint.sh seeds the admin password hash into the store, the
+ *     operator logs in and rotates it at /profile, then adds provider
+ *     credentials at /providers and connector instance credentials at
+ *     /connectors. Every edit is surgical and surface-specific; there
+ *     are no merge-vs-replace semantics.
  *
- *  2. The SecretStore lives on the bind-mounted /app/runtime path so
- *     the encrypted file survives `docker compose down + up` with a
- *     new image (the canonical upgrade flow). The PBKDF2 key derives
- *     from PHANTOM_SECRET_KEY pinned in .env — losing that key
- *     bricks the store.
+ *  2. The SecretStore is a file tree under /app/data/secrets/ on the
+ *     phantom_mcp_data volume, so the encrypted files survive
+ *     `docker compose down + up` with a new image (the canonical
+ *     upgrade flow). The AES-256-GCM key is PHANTOM_SECRET_KEK, pinned
+ *     in .env — losing that key bricks the store.
  *
- *  3. v1.2 transition state: the chat handler today reads Vertex
- *     credentials from setup.json's GOOGLE_APPLICATION_CREDENTIALS
- *     (the legacy env-var mirror), shown as a dashed muted edge. The
- *     v1.2 target is for the chat handler to read directly from the
- *     provider instance via the SecretStore — shown as a dotted
- *     "future" edge. The /providers/config PUT writes to BOTH
- *     destinations now so the migration is transparent.
+ *  3. Chat reads Vertex credentials from the provider instance (the
+ *     SecretStore-backed ProviderStore) through a 30-second cache that
+ *     /providers clears on save, so a saved key is used by the next
+ *     chat turn.
  *
  * No animations. Pure SVG + CSS. Theme-aware via the shared
  * _diagram-theme module.
@@ -49,7 +46,7 @@ const STYLES =
 }
 .dgm-root.sss .write-card.profile { stroke: var(--dgm-edge-operator); }
 .dgm-root.sss .write-card.providers { stroke: var(--dgm-edge-shared); }
-.dgm-root.sss .write-card.setup { stroke: var(--dgm-state-info); }
+.dgm-root.sss .write-card.firstboot { stroke: var(--dgm-state-info); }
 .dgm-root.sss .write-card.connectors { stroke: var(--dgm-edge-compose); }
 .dgm-root.sss .write-card.envoverlay { stroke: var(--dgm-edge-iap); stroke-dasharray: 8 6; }
 
@@ -108,15 +105,6 @@ const STYLES =
   stroke: var(--dgm-edge-operator);
   stroke-width: 1.4;
 }
-.dgm-root.sss .read-card.legacy {
-  stroke: var(--dgm-text-muted);
-  stroke-dasharray: 6 5;
-}
-.dgm-root.sss .read-card.future {
-  stroke: var(--dgm-edge-iap);
-  stroke-dasharray: 3 5;
-  opacity: 0.85;
-}
 .dgm-root.sss .read-name {
   font-size: 13px;
   font-weight: 700;
@@ -134,7 +122,7 @@ const STYLES =
 }
 .dgm-root.sss .converge-edge.profile { stroke: var(--dgm-edge-operator); }
 .dgm-root.sss .converge-edge.providers { stroke: var(--dgm-edge-shared); }
-.dgm-root.sss .converge-edge.setup { stroke: var(--dgm-state-info); }
+.dgm-root.sss .converge-edge.firstboot { stroke: var(--dgm-state-info); }
 .dgm-root.sss .converge-edge.connectors { stroke: var(--dgm-edge-compose); }
 .dgm-root.sss .converge-edge.envoverlay {
   stroke: var(--dgm-edge-iap);
@@ -144,15 +132,6 @@ const STYLES =
   stroke: var(--dgm-edge-operator);
   stroke-width: 1.4;
   fill: none;
-}
-.dgm-root.sss .fanout-edge.legacy {
-  stroke: var(--dgm-text-muted);
-  stroke-dasharray: 6 5;
-}
-.dgm-root.sss .fanout-edge.future {
-  stroke: var(--dgm-edge-iap);
-  stroke-dasharray: 3 5;
-  opacity: 0.7;
 }
 .dgm-root.sss .lock-icon {
   fill: none;
@@ -185,7 +164,7 @@ const STYLES =
 
 interface WriteSurface {
   id: string;
-  variant: "setup" | "providers" | "connectors" | "profile" | "envoverlay";
+  variant: "firstboot" | "providers" | "connectors" | "profile" | "envoverlay";
   name: string;
   detail: string;
   path: string;
@@ -193,25 +172,25 @@ interface WriteSurface {
 
 interface ReadSurface {
   id: string;
-  variant: "live" | "legacy" | "future";
+  variant: "live";
   name: string;
   detail: string;
 }
 
 const WRITES: WriteSurface[] = [
   {
-    id: "setup",
-    variant: "setup",
-    name: "/setup · FIRST RUN ONLY",
-    detail: "One-shot bootstrap. Locks once setupComplete: true persists.",
-    path: "/api/setup → MCP /api/v1/setup → bindsInstances + bindsProviders",
+    id: "firstboot",
+    variant: "firstboot",
+    name: "entrypoint · FIRST BOOT",
+    detail: "Seeds the admin hash from the installer's .env.",
+    path: "PHANTOM_DEFAULT_ADMIN_PASSWORD → /ui/auth/admin/password_hash",
   },
   {
     id: "providers",
     variant: "providers",
     name: "/providers/config",
-    detail: "Vertex JSON updates without re-running setup.",
-    path: "/api/agent/providers/config → writeRuntimeSetup + pushSetupToMcp",
+    detail: "Vertex project, region and key JSON.",
+    path: "/api/agent/providers/config → MCP /api/v1/providers",
   },
   {
     id: "connectors",
@@ -250,16 +229,10 @@ const READS: ReadSurface[] = [
     detail: "PBKDF2 verify on /api/auth/login",
   },
   {
-    id: "chat-vertex-current",
-    variant: "legacy",
-    name: "Chat → Vertex (today)",
-    detail: "Reads via setup.json env-var mirror",
-  },
-  {
-    id: "chat-vertex-future",
-    variant: "future",
-    name: "Chat → Vertex (v1.2 target)",
-    detail: "Reads provider instance directly",
+    id: "chat-vertex",
+    variant: "live",
+    name: "Chat → Vertex",
+    detail: "Provider instance, 30 s cache, cleared on save",
   },
 ];
 
@@ -305,10 +278,9 @@ export function SecretStoreFlow() {
         <title id="sss-title">SecretStore Flow</title>
         <desc id="sss-desc">
           Five operator-credential write surfaces converge on the SecretStore
-          (encrypted with PBKDF2 + AES-256-GCM, persisted on the bind-mounted
-          runtime volume). The store fans out to MCP tool calls, UI auth, and
-          two chat → Vertex paths (legacy env-var path today, provider-instance
-          path v1.2 target).
+          (encrypted with AES-256-GCM, persisted under /app/data/secrets/ on
+          the phantom_mcp_data volume). The store fans out to MCP tool calls, UI auth, and
+          chat, which reads Vertex credentials from the provider instance.
         </desc>
 
         <defs>
@@ -427,7 +399,7 @@ export function SecretStoreFlow() {
           x={HERO_X + 80}
           y={HERO_Y + 30}
         >
-          ENCRYPTED · BIND-MOUNTED
+          ENCRYPTED · NAMED VOLUME
         </text>
         <text
           className="secret-store-title"
@@ -441,21 +413,21 @@ export function SecretStoreFlow() {
           x={HERO_X + 80}
           y={HERO_Y + 86}
         >
-          /app/runtime/secret_store.db
+          /app/data/secrets/&lt;path&gt;
         </text>
         <text
           className="secret-store-detail"
           x={HERO_X + 80}
           y={HERO_Y + 106}
         >
-          PBKDF2-HMAC-SHA256 (600k) → AES-256-GCM
+          AES-256-GCM, 96-bit nonce per secret
         </text>
         <text
           className="secret-store-detail"
           x={HERO_X + 80}
           y={HERO_Y + 126}
         >
-          Key derives from PHANTOM_SECRET_KEY (env-pinned)
+          Key is PHANTOM_SECRET_KEK (env-pinned)
         </text>
         {/* Path-prefix exemplars */}
         <text
@@ -508,7 +480,7 @@ export function SecretStoreFlow() {
           return (
             <path
               key={`fanout-${r.id}`}
-              className={`fanout-edge ${r.variant === "live" ? "" : r.variant}`}
+              className="fanout-edge"
               d={`M ${x0} ${y0} C ${x0} ${y0 + 30}, ${xTarget} ${yTarget - 30}, ${xTarget} ${yTarget}`}
             />
           );
@@ -520,7 +492,7 @@ export function SecretStoreFlow() {
           return (
             <g key={r.id}>
               <rect
-                className={`read-card ${r.variant === "live" ? "" : r.variant}`}
+                className="read-card"
                 x={x}
                 y={READ_TOP}
                 width={READ_W}
@@ -562,32 +534,9 @@ export function SecretStoreFlow() {
             y1="14"
             x2="196"
             y2="14"
-            stroke="var(--dgm-text-muted)"
+            stroke="var(--dgm-edge-iap)"
           />
           <text className="legend-text" x="204" y="18">
-            legacy (being phased out)
-          </text>
-          <line
-            className="legend-line"
-            x1="380"
-            y1="14"
-            x2="416"
-            y2="14"
-            stroke="var(--dgm-edge-iap)"
-            strokeDasharray="3 5"
-          />
-          <text className="legend-text" x="424" y="18">
-            v1.2 target (planned)
-          </text>
-          <line
-            className="legend-line dashed"
-            x1="560"
-            y1="14"
-            x2="596"
-            y2="14"
-            stroke="var(--dgm-edge-iap)"
-          />
-          <text className="legend-text" x="604" y="18">
             env overlay (read-time only)
           </text>
         </g>

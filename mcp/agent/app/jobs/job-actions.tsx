@@ -9,13 +9,16 @@ interface JobActionsProps {
   jobId: string;
   jobName: string;
   isPaused: boolean;
+  /** A run-once job that already ran. Its stored Run-at time has no year,
+   * so Resume would arm it for the same date next year; the menu hides
+   * Pause/Resume and leaves Trigger Now, Edit (new Run-at time) and
+   * Duplicate. */
+  isCompleted?: boolean;
   /** Current bypass-approvals state. When undefined, the
    * "Bypass approvals" menu item is omitted (older callers / list
    * page that don't fetch the full job row don't get the toggle —
    * operators can flip it from the detail page instead). */
   bypassApprovals?: boolean;
-  /** Pre-encoded query string for duplicating this job. */
-  duplicateQuery?: string;
   /** Optional — when provided, enables the Export submenu. The job
    * detail page passes the row + recent runs already fetched server-
    * side so the export is a free client-side download (no extra API
@@ -38,8 +41,8 @@ export function JobActions({
   jobId,
   jobName,
   isPaused,
+  isCompleted = false,
   bypassApprovals,
-  duplicateQuery,
   job,
   runs,
   redirectOnDeleteTo,
@@ -107,10 +110,13 @@ export function JobActions({
     }
   }, [jobId, bypassApprovals, router]);
 
+  // Duplicate lives at /jobs/new?from=<name>. The form loads the source
+  // job itself, so the copy carries every field (action, schedule kind,
+  // model, bypass, ...) without any of it travelling in the URL.
   const handleDuplicate = useCallback(() => {
     setOpen(false);
-    router.push(`/jobs/new${duplicateQuery ? `?${duplicateQuery}` : ""}`);
-  }, [duplicateQuery, router]);
+    router.push(`/jobs/new?from=${encodeURIComponent(jobName)}`);
+  }, [jobName, router]);
 
   // Edit lives at /jobs/new?edit=<name>. Same form as
   // Create but populated from the existing job and submitting via
@@ -278,11 +284,13 @@ export function JobActions({
             label="Trigger Now"
             onClick={handleTrigger}
           />
-          <MenuItem
-            icon={isPaused ? "play_circle" : "pause_circle"}
-            label={isPaused ? "Resume" : "Pause"}
-            onClick={handleTogglePause}
-          />
+          {!isCompleted && (
+            <MenuItem
+              icon={isPaused ? "play_circle" : "pause_circle"}
+              label={isPaused ? "Resume" : "Pause"}
+              onClick={handleTogglePause}
+            />
+          )}
           {bypassApprovals !== undefined && (
             <MenuItem
               icon={bypassApprovals ? "verified_user" : "bolt"}

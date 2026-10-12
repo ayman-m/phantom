@@ -46,8 +46,8 @@ export const agentContract = {
       auth: 'MCP_TOKEN',
       // v1.2: ONE embedded MCP. Tool-providing connectors (caldera,
       // xsiam, xlog) live in the bundle and are loaded by this MCP;
-      // their per-instance configs come from setup form input via
-      // POST /api/v1/setup, not from per-connector MCP URLs.
+      // their per-instance configs are created by the operator at
+      // /connectors (MCP /api/v1/instances), not from per-connector MCP URLs.
       connectorInstances: [
         { id: 'embedded-mcp', urlEnv: 'MCP_URL', tokenEnv: 'MCP_TOKEN', required: true },
       ],

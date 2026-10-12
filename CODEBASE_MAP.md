@@ -42,7 +42,7 @@ modules inside each. Keep this current when you add or move a service.
 |------|------------|
 | `mcp/agent/app/` | Next.js App Router pages + API routes. |
 | `mcp/agent/app/(main)/` | Main app routes (sidebar-grouped). |
-| `mcp/agent/app/api/` | API routes — `auth`, `chat`, `skills`, `setup`, `marketplace`, `agent`. The `/api/agent/*` set are thin proxies to the embedded MCP via `lib/mcp-proxy.ts`. |
+| `mcp/agent/app/api/` | API routes — `auth`, `chat`, `skills`, `marketplace`, `agent`. The `/api/agent/*` set are thin proxies to the embedded MCP via `lib/mcp-proxy.ts`. |
 | `mcp/agent/app/help/` | In-product help — `architecture/page.tsx` (canonical spec), `user/page.tsx` (operator guide), `journeys/` (click-paths), `api/` (REST reference). |
 | `mcp/agent/app/observability/` | Runtime introspection — `events`, `logs`, `metrics`, `traces`, `cost`, `pipeline`, `connectors`, `runtime-events`. |
 | `mcp/agent/components/` | Shared React components. `sidebar.tsx` is the nav source of truth. |

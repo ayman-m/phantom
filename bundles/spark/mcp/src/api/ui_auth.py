@@ -1,6 +1,6 @@
 """Phantom UI auth HTTP surface — sessions + change + reset.
 
-Five routes, all requiring the standard MCP_TOKEN bearer (so the
+Six routes, all requiring the standard MCP_TOKEN bearer (so the
 Next.js side authenticates as the agent before relaying operator
 input):
 
@@ -23,10 +23,29 @@ input):
                                               current_password,
                                               new_password}
                                        → 200 {ok: true, sessions_revoked}
-                                       → 401 {error: "invalid session"}
+                                       → 401 {error: "invalid session",
+                                              code: "invalid_session"}
                                        → 403 {error: "current_password
-                                              is incorrect"}
+                                              is incorrect", code:
+                                              "current_password_incorrect"}
                                        → 400 {error: "<validation>"}
+
+  GET  /api/v1/ui/auth/session_lifetime
+                                       → 200 {hours, default_hours}
+
+  POST /api/v1/ui/auth/session_lifetime   (PUT is accepted too)
+                                       body: {session_token,
+                                              current_password, hours}
+                                       → 200 {ok: true, hours,
+                                              previous_hours,
+                                              default_hours}
+                                       → 400 {error: "<hours must be a
+                                              whole number 1..24>"}
+                                       → 401 {error: "invalid session",
+                                              code: "invalid_session"}
+                                       → 403 {error: "current_password
+                                              is incorrect", code:
+                                              "current_password_incorrect"}
 
   POST /api/v1/ui/auth/admin_reset     body: {new_password}
                                        → 200 {ok: true, sessions_revoked}
@@ -38,6 +57,16 @@ The MCP_TOKEN bearer authenticates that the CALLER is the agent
 process (either the Next.js side proxying operator input, or the
 reset-admin CLI running inside the agent container). The token comes
 from /proc/1/environ inside the phantom_agent container.
+
+The session lifetime routes are REST/UI-only: no MCP tool exposes them,
+the settings tools cannot reach them, and API keys are not accepted
+(the path is absent from `API_KEY_ROUTE_SCOPES`). Like `/change_password`,
+setting it needs a valid session AND the current password.
+
+The `code` field on the 401/403 above is the machine-readable
+discriminator the Next.js client maps on. A bare 401/403/503 WITHOUT it
+comes from `require_bearer` (bad or missing MCP_TOKEN, MCP_TOKEN not
+configured), which is a wiring fault, never a wrong password.
 
 `/login` requires username + password — those are the operator's
 credentials, NOT a bearer. `/change_password` requires a valid
@@ -52,6 +81,9 @@ the MCP_TOKEN bearer — that's the CLI-trust path; anyone who can
   login_failed                   actor=user:<username>  (no PII in body)
   password_changed_ui            actor=user:<username>
   password_changed_cli           actor=cli:<hostname>
+  session_lifetime_changed       actor=user:<username>
+                                 (metadata: old_hours, new_hours)
+  session_lifetime_change_rejected  actor=user:<username>  (wrong password)
   sessions_revoked               (count in metadata)
 
 The Next.js side may emit further audit events (e.g. login_failed
@@ -93,7 +125,12 @@ from usecase.audit_log import (
     reset_current_actor,
     set_current_actor,
 )
-from usecase.auth_store import auth_store
+from usecase.auth_store import (
+    DEFAULT_SESSION_TTL_HOURS,
+    SessionLifetimeError,
+    validate_session_ttl_hours,
+    auth_store,
+)
 from usecase.ui_auth import UiAuthError
 
 
@@ -395,7 +432,8 @@ def register_ui_auth_routes(mcp: FastMCP) -> None:
         validation = store.validate_session(token)
         if validation is None:
             return JSONResponse(
-                {"error": "invalid session"}, status_code=401,
+                {"error": "invalid session", "code": "invalid_session"},
+                status_code=401,
             )
         username = validation["username"]
 
@@ -408,7 +446,10 @@ def register_ui_auth_routes(mcp: FastMCP) -> None:
                 reason="current_password_incorrect",
             )
             return JSONResponse(
-                {"error": "current_password is incorrect"},
+                {
+                    "error": "current_password is incorrect",
+                    "code": "current_password_incorrect",
+                },
                 status_code=403,
             )
 
@@ -436,6 +477,107 @@ def register_ui_auth_routes(mcp: FastMCP) -> None:
             sessions_revoked=revoked,
         )
         return JSONResponse({"ok": True, "sessions_revoked": revoked})
+
+    # ─── GET|POST|PUT /api/v1/ui/auth/session_lifetime ─────
+
+    @mcp.custom_route(
+        "/api/v1/ui/auth/session_lifetime",
+        methods=["GET"],
+        include_in_schema=False,
+    )
+    async def session_lifetime_get(request: Request) -> JSONResponse:
+        """Current session lifetime in whole hours, plus the default.
+        MCP_TOKEN-gated; the Next.js route validates the operator's
+        session cookie before relaying."""
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        return JSONResponse(
+            {
+                "hours": auth_store().session_ttl_hours(),
+                "default_hours": DEFAULT_SESSION_TTL_HOURS,
+            }
+        )
+
+    @mcp.custom_route(
+        "/api/v1/ui/auth/session_lifetime",
+        methods=["POST", "PUT"],
+        include_in_schema=False,
+    )
+    async def session_lifetime_set(request: Request) -> JSONResponse:
+        """Operator-driven change of the session lifetime from /profile.
+        Same contract as change_password: a valid session token AND the
+        current password (a stolen cookie alone must not be able to
+        stretch every future session to 24 hours).
+
+        Bad input is a 400 before anything is checked; 401 = invalid
+        session; 403 = wrong current password. Applies to sessions
+        minted afterwards; existing sessions keep their expiry."""
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        body_or_err = await _parse_json_dict(request)
+        if isinstance(body_or_err, JSONResponse):
+            return body_or_err
+        body = body_or_err
+
+        token, err = _required_string(body, "session_token", max_len=128)
+        if err is not None:
+            return err
+        current_password, err = _required_string(
+            body, "current_password", max_len=512,
+        )
+        if err is not None:
+            return err
+        if "hours" not in body:
+            return JSONResponse(
+                {"error": "hours (whole number) is required"}, status_code=400,
+            )
+        try:
+            hours = validate_session_ttl_hours(body["hours"])
+        except SessionLifetimeError as exc:
+            return JSONResponse({"error": str(exc)}, status_code=400)
+
+        store = auth_store()
+        validation = store.validate_session(token)
+        if validation is None:
+            return JSONResponse(
+                {"error": "invalid session", "code": "invalid_session"},
+                status_code=401,
+            )
+        username = validation["username"]
+
+        if not store.verify_password(username, current_password):
+            _record(
+                "session_lifetime_change_rejected",
+                actor=f"user:{username}",
+                status="failure",
+                target=f"user:{username}",
+                reason="current_password_incorrect",
+            )
+            return JSONResponse(
+                {
+                    "error": "current_password is incorrect",
+                    "code": "current_password_incorrect",
+                },
+                status_code=403,
+            )
+
+        previous = store.set_session_ttl_hours(hours)
+        _record(
+            "session_lifetime_changed",
+            actor=f"user:{username}",
+            status="success",
+            target=f"user:{username}",
+            old_hours=previous,
+            new_hours=hours,
+        )
+        return JSONResponse(
+            {
+                "ok": True,
+                "hours": hours,
+                "previous_hours": previous,
+                "default_hours": DEFAULT_SESSION_TTL_HOURS,
+            }
+        )
 
     # ─── POST /api/v1/ui/auth/admin_reset ──────────────────
 

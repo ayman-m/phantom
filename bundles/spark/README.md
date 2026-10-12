@@ -66,13 +66,13 @@ The bundle follows the spec's split between two connector kinds:
 
 **No tool-connector instances are hardcoded in the manifest**.
 Instead, `setup.bindsInstances[]` declares one template per
-connector, and the runtime materializes one `connector_instances` row
-per template when the operator submits the setup form. The form fields
-each template references (e.g. `${setup.calderaBaseUrl}`,
-`${setup.xsiamPapiUrl}`, `${setup.xlogApiToken}`) are rendered by the
-standalone runtime from each connector.yaml's `configSchema` +
-`secretSlots` — see spec v1.2 §7.5 mode resolution for the standalone
-vs Spark-platform fork.
+connector. On the Spark platform the install pipeline materializes one
+`connector_instances` row per template from the install payload (the
+`${setup.calderaBaseUrl}`, `${setup.xsiamPapiUrl}`, ... placeholders).
+The standalone Phantom stack has no first-run setup page: the operator
+creates instances on the `/connectors` page, whose form is rendered from
+each connector.yaml's `configSchema` + `secretSlots`. See spec v1.2 §7.5
+mode resolution for the standalone vs Spark-platform fork.
 
 ## Mode resolution (where the MCP runs)
 
@@ -83,8 +83,8 @@ Per spec §7.5, the same bundle behaves identically in both modes
 |---|---|---|
 | Embedded MCP | Spawned from `bundles/spark/mcp/` | NOT spawned — `connector-manager` MCP supersedes it |
 | Tool connectors | Loaded into embedded MCP from `bundles/spark/connectors/<id>/` | For each entry: `gateway.PublishConnector` → admin approval → registered with `connector-manager` |
-| Tool-connector instances | `data_root/instances.db` (from setup form) | Postgres `connector_instances` (from same form, server-side) |
-| Setup UI | The Phantom agent's setup page | Spark workspace UI |
+| Tool-connector instances | `data_root/instances.db` (created on `/connectors`) | Postgres `connector_instances` (from the install payload, server-side) |
+| Instance UI | The Phantom agent's `/connectors` page | Spark workspace UI |
 | Tool namespace seen by the agent | `caldera/*`, `xsiam/*`, `xlog/*` | Same |
 
 The bundle owns its MCP runtime: the `phantom-mcp` Docker service

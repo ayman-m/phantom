@@ -36,6 +36,11 @@ const CREDENTIAL_PREFIXES = [
   // prevent, reached from a path the guardrail did not name.
   "/api/agent/backup",
   "/api/agent/restore",
+  // The UI session lifetime is a cookie-session security setting. It sits
+  // under /api/auth/*, which the middleware matcher does not cover, and the
+  // route refuses any bearer itself; listed here so the path stays denied
+  // to API keys if the matcher is ever widened.
+  "/api/auth/session-lifetime",
 ];
 
 export function isCredentialRoute(pathname: string): boolean {

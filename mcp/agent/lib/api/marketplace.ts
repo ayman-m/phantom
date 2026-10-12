@@ -23,6 +23,8 @@ export interface MarketplaceConnector {
   installs: string;
   installCount: number;
   status: "installed" | "not_installed";
+  /** "user" for a connector the operator uploaded; absent for bundle connectors. */
+  origin?: "bundle" | "user";
   reliability: string;
   authType: string;
   tools: Array<{
@@ -45,6 +47,7 @@ export interface MarketplaceConnector {
     required: boolean;
     defaultValue?: string;
     options?: string[];
+    description?: string;
   }>;
   versions: Array<{ version: string; date: string; changes: string[] }>;
   setupGuide: string;
@@ -56,18 +59,26 @@ export interface MarketplaceConnector {
   topAgents: Array<{ name: string; color: string }>;
 }
 
-/** Fetch all connectors from the marketplace. */
+/**
+ * Fetch every connector the marketplace shows: the bundle connectors from the
+ * curated catalogue, plus the connectors the operator uploaded (read from the
+ * MCP's marketplace catalogue, behind the session). A failure on the uploaded
+ * list leaves the bundle cards in place.
+ */
 export async function listMarketplaceConnectors(): Promise<MarketplaceConnector[]> {
-  try {
-    const res = await fetch("/api/marketplace/connectors");
-    if (!res.ok) return [];
-    return await res.json();
-  } catch {
-    return [];
-  }
+  const [bundle, uploaded] = await Promise.all([
+    fetch("/api/marketplace/connectors")
+      .then((res) => (res.ok ? (res.json() as Promise<MarketplaceConnector[]>) : []))
+      .catch(() => [] as MarketplaceConnector[]),
+    fetch("/api/agent/marketplace/catalog/user")
+      .then((res) => (res.ok ? (res.json() as Promise<MarketplaceConnector[]>) : []))
+      .catch(() => [] as MarketplaceConnector[]),
+  ]);
+  const known = new Set(bundle.map((c) => c.id));
+  return [...bundle, ...uploaded.filter((c) => !known.has(c.id))];
 }
 
-/** Fetch a single connector by ID. */
+/** Fetch a single bundle connector by ID (an uploaded connector answers null). */
 export async function getMarketplaceConnector(id: string): Promise<MarketplaceConnector | null> {
   try {
     const res = await fetch(`/api/marketplace/connectors/${encodeURIComponent(id)}`);
@@ -92,6 +103,14 @@ export async function installConnector(connectorId: string, version: string) {
 export async function uninstallConnector(connectorId: string) {
   return apiRequest<void>(
     `/api/v1/marketplace/${encodeURIComponent(connectorId)}/uninstall`,
+    { method: "DELETE" },
+  );
+}
+
+/** Delete a connector the operator uploaded (refused while it has instances). */
+export async function deleteUploadedConnector(connectorId: string) {
+  return apiRequest<{ connector_id: string; deleted: boolean }>(
+    `/api/v1/marketplace/${encodeURIComponent(connectorId)}`,
     { method: "DELETE" },
   );
 }
@@ -127,7 +146,10 @@ export interface ConnectorInstance {
   // without exposing values. Empty object when the connector has
   // no secret slots.
   secrets: Record<string, string>;
-  status: string;
+  /** Legacy key; the server does not send it. Read `state`. */
+  status?: string;
+  /** Connection health of the connector: connected | failed | needs-auth | pending | disabled. */
+  state?: string;
   enabled: boolean;
   is_channel: boolean;
   workspace_ids: string[];

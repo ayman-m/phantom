@@ -14,6 +14,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { confirmAction } from "@/lib/stores/confirm";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
@@ -69,12 +70,14 @@ export default function AgentsPage() {
 
   const handleDelete = useCallback(
     async (id: string, name: string) => {
-      if (
-        !confirm(
-          `Delete agent "${name}"? Plugin-contributed agents will reappear on the next plugin reload.`,
-        )
-      )
-        return;
+      const accepted = await confirmAction({
+        title: `Delete agent "${name}"?`,
+        message:
+          "Plugin-contributed agents will reappear on the next plugin reload.",
+        confirmLabel: "Delete",
+        tone: "danger",
+      });
+      if (!accepted) return;
       try {
         await deleteAgentDefinition(id);
         await refresh();

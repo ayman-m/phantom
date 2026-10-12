@@ -727,7 +727,7 @@ async function runSubagent(args: {
 
         // Evidence truncation (mirrors the main loop's block in the
         // tool-dispatch switch below) — without this, a subagent tool
-        // like xlog_logs_tail(count=1000) accumulates raw, untruncated
+        // like xsiam_run_xql_query with a large result accumulates raw, untruncated
         // output in subagentContents across every turn (up to
         // max_turns), the exact context/cost blowup this mechanism
         // exists to prevent on the main loop.
@@ -1001,8 +1001,9 @@ async function callGeminiRaw(
  * Returns null for tools that don't belong to any connector (built-in
  * MCP tools like instances_list, audit_recent, etc.).
  *
- * Handles both modern dotted form ("cortex-xdr.get_alerts" → "cortex-xdr")
- * and legacy flat aliases ("xdr_get_alerts" → "cortex-xdr").
+ * Handles both modern dotted form ("cortex-xdr.get_cases_and_issues" →
+ * "cortex-xdr") and legacy flat aliases ("xdr_get_cases_and_issues" →
+ * "cortex-xdr").
  *
  * A naive inline `toolName.split('_', 1)[0]` would produce wrong
  * connector_ids for connectors whose function prefix differs from
@@ -1262,8 +1263,8 @@ function renderMessageForReplay(
     // So replayed tool results bill at roughly the cached rate on every
     // turn except the first after cache expiry. A small cap would save
     // little, and it would cut large results such as
-    // `phantom_get_field_info` (17KB) and `phantom_get_technology_stack`
-    // (1.5KB) to a fraction of their content, leaving the model to
+    // `phantom_get_field_info` (17KB) to a fraction of their content,
+    // leaving the model to
     // relay the truncation stub back to the operator instead of
     // synthesizing an answer.
     //
@@ -2751,7 +2752,7 @@ async function fetchActionPolicy(): Promise<ActionPolicy> {
  * Resolve which model to actually call.
  *
  * Priority: per-request override (from chat header dropdown) →
- * runtime config (env / setup form) → hardcoded fallback.
+ * runtime config (env) → hardcoded fallback.
  *
  * The per-request override must be honored: ignoring it would make
  * every request use `runtimeConfig.GEMINI_MODEL || 'gemini-3.1-pro-preview'`
@@ -2873,6 +2874,7 @@ async function callGemini(
           skillsForPrompt,
           approvalMode,
           gating.known ? gating.gated : undefined,
+          resolveModelName(modelOverride, runtimeConfig),
         ),
       },
     ],
@@ -2950,8 +2952,8 @@ calling any tools. Output a numbered plan in plain markdown.
 Each step MUST include:
 
   1. The tool name you'd invoke (use Phantom's actual tool names —
-     xlog.create_scenario_worker, caldera.start_operation,
-     xsiam.execute_xql_query, data_sources_installed_as_vendors, etc).
+     xlog.create_scenario_worker, caldera.create_operation,
+     xsiam.run_xql_query, data_sources_installed_as_vendors, etc).
   2. The key arguments you'd pass (don't paste full schemas; just
      the operator-relevant fields like scenario name, destination,
      operation duration).
@@ -2972,7 +2974,7 @@ Format:
    **Risk:** writes ~1k events/min to the real syslog destination.
    Stop early with /tasks abort if the volume is wrong.
 
-2. **xsiam.execute_xql_query** — query "dataset = ngfw_logs |
+2. **xsiam.run_xql_query** — query "dataset = ngfw_logs |
    filter source_ip in (10.0.0.0/8) | summarize count() by user",
    tenant default
    *Why: confirms the spray events landed and lets us baseline how
@@ -2983,7 +2985,7 @@ Format:
 ## Notes
 
 - Estimated duration: 4h 5m
-- Tools that might require approval: 1 (caldera.start_operation if added)
+- Tools that might require approval: 1 (caldera.create_operation if added)
 - Recommended: review step 1's destination before approving — the
   events will hit a shared SIEM tenant.
 \`\`\`
@@ -3387,7 +3389,7 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
   // scenario_worker" → only worker tasks).
   {
     name: 'tasks',
-    description: 'Show active background tasks (scenario workers, CALDERA ops, etc).',
+    description: 'Show active background tasks (log generators, CALDERA ops, etc).',
     handler: async (ctx) => {
       const { sessionId, trigger, sendEvent, controller } = ctx;
       try {
@@ -3408,12 +3410,38 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
           },
         );
         const tasks = data.tasks ?? [];
-        if (tasks.length === 0) {
+        // Running log generators live in xlog, not in the task registry; the
+        // /tasks page lists them, so the slash command does too. A failure
+        // to reach xlog only drops that section.
+        let generatorLines: string[] = [];
+        try {
+          const w = await callMcpServer<{ workers?: Array<{
+            worker: string;
+            type: string;
+            status: string;
+            count: string;
+            interval: string;
+            destination: string;
+          }> }>(`/api/v1/workers`, {
+            method: 'GET',
+            headers: trigger ? { 'X-Phantom-Trigger': trigger } : undefined,
+          });
+          generatorLines = (w.workers ?? [])
+            .filter((x) => x.status.toLowerCase() === 'running')
+            .map(
+              (x) =>
+                `  \`log generator\` **${x.type} to ${x.destination}** — ` +
+                `${x.count} events every ${x.interval}s (worker ${x.worker.slice(0, 8)})`,
+            );
+        } catch {
+          generatorLines = [];
+        }
+        if (tasks.length === 0 && generatorLines.length === 0) {
           sendEvent('text_delta', {
             text:
               'No active background tasks.\n\n' +
               '_Tasks appear here when long-running work is spawned ' +
-              "(scenario emulation, CALDERA operations, etc). See [/tasks](/tasks) for the full registry including completed and failed tasks._",
+              "(log generators, scenario emulation, CALDERA operations, etc). See [/tasks](/tasks) for the full list including completed and failed tasks._",
           });
         } else {
           // Render a table-style summary the operator can act on.
@@ -3431,12 +3459,13 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
               : '';
             return `${own}\`${t.kind}\` **${t.title}** — ${t.status} (${pct}%)${label}`;
           });
+          const total = tasks.length + generatorLines.length;
           sendEvent('text_delta', {
             text:
-              `**${tasks.length} active task${tasks.length === 1 ? '' : 's'}** ` +
+              `**${total} active task${total === 1 ? '' : 's'}** ` +
               `(★ = spawned by this session)\n\n` +
-              lines.join('\n') +
-              `\n\nVisit [/tasks](/tasks) to see completed tasks or abort running ones.`,
+              [...lines, ...generatorLines].join('\n') +
+              `\n\nVisit [/tasks](/tasks) to see completed tasks, stop log generators or abort running tasks.`,
           });
         }
         sendEvent('done', { session_id: sessionId });
@@ -3683,12 +3712,13 @@ const TURN_CACHEABLE_TOOLS = new Set<string>([
 ]);
 
 // Catalog / config / credential mutations change what the cacheable reads
-// return, so they invalidate the whole turn snapshot. Kept as a name-prefix
-// predicate rather than an exhaustive list: a false positive only costs a cache
-// clear (still correct), while the explicit prefixes cover every agent-reachable
-// mutation that touches the static-read surface above.
+// return, so they invalidate the whole turn snapshot. The explicit names
+// cover every agent-reachable mutation that touches the static-read surface
+// above (a false positive would only cost a cache clear). The agent has no
+// provider, instance or API-key write tools, so none are listed. Every name
+// here must be a registered tool; tests/test_shipped_tool_references.py checks.
 function invalidatesTurnCache(toolName: string): boolean {
-  return /^(marketplace_(install|uninstall)|connector_upload|data_sources_(upload|edit|rollback|delete|create)|log_destinations_(create|update|delete)|settings_set|providers_(create|update|delete)|instances_(create|update|delete)|api_keys_)/.test(
+  return /^(marketplace_(install|uninstall)|connector_upload|data_sources_(install|uninstall|edit|rollback)|log_destinations_create|settings_(update|reset)|skills_(create|update|delete))$/.test(
     toolName,
   );
 }
@@ -4255,6 +4285,7 @@ export async function POST(request: NextRequest) {
             skillsForPrompt,
             approvalMode,
             await getApprovalGating().then((g) => (g.known ? g.gated : undefined)),
+            effectiveModel,
           ),
         );
         const toolsTokens = estimateTokens(JSON.stringify(tools ?? []));
@@ -4665,10 +4696,10 @@ export async function POST(request: NextRequest) {
             // Evaluate per-turn policy (set by the job dispatcher via
             // body.permission_policy) before the tool fires. A `deny`
             // short-circuits to a synthetic tool-error response the
-            // model sees as a failed call; an `ask` falls through to
-            // the standard approval card path (the existing approval
-            // gate handles it). Audit every deny so the operator can
-            // reconstruct why a job's tools were blocked.
+            // model sees as a failed call; anything else goes on to
+            // the manifest-driven approval gate. Audit every deny so
+            // the operator can reconstruct why a job's tools were
+            // blocked.
             const policyEval = evaluatePermissionPolicy(toolName, turnPolicy);
             if (policyEval.decision === 'deny') {
               const reason =

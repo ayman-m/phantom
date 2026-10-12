@@ -15,6 +15,7 @@
  */
 
 import Link from "next/link";
+import { confirmAction } from "@/lib/stores/confirm";
 import { useMemo, useState } from "react";
 
 import {
@@ -144,13 +145,14 @@ export default function HelpPage() {
               <button
                 type="button"
                 onClick={() => {
-                  if (
-                    window.confirm(
-                      `Reset all ${testedCount} tested marks? This only affects your browser.`,
-                    )
-                  ) {
-                    reset();
-                  }
+                  void confirmAction({
+                    title: `Reset all ${testedCount} tested marks?`,
+                    message: "This only affects your browser.",
+                    confirmLabel: "Reset",
+                    tone: "danger",
+                  }).then((accepted) => {
+                    if (accepted) reset();
+                  });
                 }}
                 className="text-[10px] uppercase tracking-widest text-on-surface-variant/50 hover:text-error transition-colors"
                 title="Clear your local tested marks"

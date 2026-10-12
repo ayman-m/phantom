@@ -439,7 +439,7 @@ export function AuthLoginFlow() {
           variant="notify"
           title="Set-Cookie"
           sub="phantom_session=<32B>"
-          detail="HttpOnly · Secure · SameSite=Strict · Max-Age=7200"
+          detail="HttpOnly · Secure · SameSite=Strict · Max-Age = session lifetime (2 h default)"
         />
 
         {/* Arrows */}

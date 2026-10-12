@@ -3,9 +3,12 @@
  *
  * One implementation, two instances:
  *   - `loginLimiter`           guards POST /api/auth/login
- *   - `changePasswordLimiter`  guards POST /api/auth/change-password
+ *   - `changePasswordLimiter`  guards POST /api/auth/change-password AND
+ *                              PUT|POST /api/auth/session-lifetime (both check
+ *                              the CURRENT password, so they share one budget
+ *                              and a stolen cookie gains nothing by alternating)
  *
- * Why the second one exists: change-password verifies the CURRENT password,
+ * Why the second one exists: change-password (and session-lifetime) verify the CURRENT password,
  * so without a limit a stolen session cookie lets an attacker guess the
  * password through that endpoint at the hash's speed, bypassing the login
  * lockout entirely. Each limiter has its own map, so failing one route never

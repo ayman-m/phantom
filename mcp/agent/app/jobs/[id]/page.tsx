@@ -190,6 +190,11 @@ export default async function JobDetailPage({ params }: PageProps) {
               ({job.timezone || "UTC"})
             </span>
           </p>
+          {job.description && (
+            <p className="text-sm text-on-surface-variant mt-2 whitespace-pre-wrap break-words">
+              {job.description}
+            </p>
+          )}
         </div>
         {/* Job-level deep-links into observability surfaces. Each
             opens the corresponding /observability/* page pre-filtered
@@ -222,7 +227,8 @@ export default async function JobDetailPage({ params }: PageProps) {
           <JobActions
             jobId={job.id}
             jobName={job.name}
-            isPaused={job.state === "JOB_STATE_PAUSED"}
+            isPaused={job.state !== "JOB_STATE_ACTIVE"}
+            isCompleted={job.state === "JOB_STATE_COMPLETED"}
             bypassApprovals={Boolean(job.bypass_approvals)}
             job={job}
             runs={runs}
@@ -235,7 +241,14 @@ export default async function JobDetailPage({ params }: PageProps) {
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         <StatCell label="Action" value={describeAction(job.action)} mono />
         <StatCell label="Last Run" value={formatTime(job.last_run_at)} />
-        <StatCell label="Next Run" value={formatTime(job.next_run_at)} />
+        <StatCell
+          label="Next Run"
+          value={
+            job.state === "JOB_STATE_ACTIVE"
+              ? formatTime(job.next_run_at)
+              : "—"
+          }
+        />
         <StatCell
           label="Total Runs"
           value={job.run_count ?? "0"}

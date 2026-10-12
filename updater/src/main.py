@@ -1391,15 +1391,15 @@ async def update_apply():
 async def restart_service(service: str):
     """Restart a single managed service.
 
-    Used by phantom-agent's /api/setup endpoint after writing operator
-    creds to a shared volume — the target service (e.g. caldera) needs
-    to come back up so its entrypoint re-templates its config from the
-    new file.
+    Nothing in the stack calls this today: its only caller was the
+    first-run setup page's /api/setup endpoint (removed), which used it
+    to bounce a service (e.g. caldera) after writing operator creds to a
+    shared volume. The endpoint is kept for operator/ops use.
 
     Calls `docker compose restart` (NOT `up -d`). The restart verb
     actually bounces the container — kills the main process with
     SIGTERM and starts it back up — so the image entrypoint runs
-    again and re-reads the operator-creds bridge file. `up -d` would
+    again and re-reads its config and environment. `up -d` would
     be a no-op for an already-running healthy container with
     unchanged config (silent failure of the user's actual intent).
 

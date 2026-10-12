@@ -321,6 +321,20 @@ class SqliteMemoryStore:
     def embedder(self) -> Embedder:
         return self._embedder
 
+    def set_embedder(self, embedder: Embedder) -> None:
+        """Swap the live embedder (stub -> Vertex once the operator saves
+        credentials). Rows already stored keep the `embedding_model` of the
+        embedder that wrote them; search() ignores a row's vector when that
+        model differs from the live one, so nothing is silently mis-scored.
+        Methods read `self._embedder` once per call, so a swap never splits a
+        single write or search across two embedders."""
+        logger.info(
+            "MemoryStore embedder swapped: %s -> %s",
+            getattr(self._embedder, "model_id", type(self._embedder).__name__),
+            getattr(embedder, "model_id", type(embedder).__name__),
+        )
+        self._embedder = embedder
+
     def _conn(self) -> sqlite3.Connection:
         c = sqlite3.connect(self._db_path, isolation_level=None, check_same_thread=False)
         c.row_factory = sqlite3.Row
@@ -594,10 +608,11 @@ class SqliteMemoryStore:
         value = self._redact_value(value)
         scope = scope or "agent"
         now = self._now_iso()
-        embedding = self._embedder.embed(value)
-        if len(embedding) != self._embedder.dims:
+        embedder = self._embedder  # one embedder for the whole write
+        embedding = embedder.embed(value)
+        if len(embedding) != embedder.dims:
             raise RuntimeError(
-                f"embedder returned {len(embedding)} dims; expected {self._embedder.dims}"
+                f"embedder returned {len(embedding)} dims; expected {embedder.dims}"
             )
         embedding_blob = self._pack(embedding)
         meta_dict = dict(meta or {})
@@ -614,7 +629,7 @@ class SqliteMemoryStore:
                     "ttl_seconds = ?, embedding = ?, meta_json = ?, "
                     "embedding_model = ? WHERE id = ?",
                     (value, now, ttl_seconds, embedding_blob,
-                     json.dumps(meta_dict), self._embedder.model_id, mid),
+                     json.dumps(meta_dict), embedder.model_id, mid),
                 )
                 # Keep FTS5 in sync. Contentless table, so
                 # we can't rely on triggers; manual delete-then-insert
@@ -638,7 +653,7 @@ class SqliteMemoryStore:
                     " ttl_seconds, embedding, meta_json, embedding_model) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (mid, key, value, scope, now, now, ttl_seconds,
-                     embedding_blob, json.dumps(meta_dict), self._embedder.model_id),
+                     embedding_blob, json.dumps(meta_dict), embedder.model_id),
                 )
                 if self._fts_available:
                     c.execute(
@@ -667,7 +682,7 @@ class SqliteMemoryStore:
             id=mid, key=key, value=value, scope=scope,
             created_at=created_at, updated_at=now,
             ttl_seconds=ttl_seconds, meta=meta_dict,
-            embedding_model=self._embedder.model_id,
+            embedding_model=embedder.model_id,
         )
 
     def get(self, *, key: str, scope: str = "agent") -> Memory | None:
@@ -801,7 +816,8 @@ class SqliteMemoryStore:
         """
         if not isinstance(query, str) or not query.strip():
             return []
-        query_vec = self._embedder.embed(query)
+        embedder = self._embedder  # one embedder for the whole search
+        query_vec = embedder.embed(query)
         clauses, params = [_NOT_EXPIRED_SQL], []
         if scope_prefix is not None:
             clauses.append("scope LIKE ? ESCAPE '\\'")
@@ -858,7 +874,7 @@ class SqliteMemoryStore:
         # below. Stripped before return.
         now_epoch = time.time()
         scored: list[tuple[Memory, float, list[float]]] = []
-        dims = self._embedder.dims
+        dims = embedder.dims
         mismatch_count_this_call = 0
         for row in rows:
             try:
@@ -879,7 +895,7 @@ class SqliteMemoryStore:
             # relevance. A row with no recorded embedding_model (pre-
             # migration data) is treated as unknown, not assumed-safe.
             row_model = row["embedding_model"]
-            mismatched = row_model != self._embedder.model_id
+            mismatched = row_model != embedder.model_id
             if mismatched:
                 self.embedding_model_mismatches += 1
                 mismatch_count_this_call += 1

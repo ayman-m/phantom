@@ -1,8 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { apiRequest, listRequest } from "@/lib/api/client";
-import type { ServiceStatus } from "@/lib/api/types";
+import {
+  languageCounts,
+  serviceHealthRow,
+  type HealthPayload,
+  type ServiceHealth,
+} from "@/lib/service-health";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -16,15 +20,10 @@ interface ServiceDef {
   layer: string;
   port: string;
   healthEndpoint: string;
+  /** Probe id in GET /api/agent/health; null = no probe of its own. */
+  probeId: string | null;
   envVars: { key: string; value: string; masked?: boolean }[];
   dependencies: { name: string; icon: string }[];
-}
-
-interface RecentEvent {
-  time: string;
-  type: "DEPLOY" | "CONFIG" | "RESTART" | "HEALTH" | "ERROR";
-  message: string;
-  dotColor: string;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -56,9 +55,10 @@ interface LayerGroup {
 //   Telemetry    → xlog (log generation)
 //   Adversary    → caldera (MITRE adversary emulation)
 //   Storage      → sqlite (in-process, embedded in MCP)
-// Each service's config and runtime status is derived from real env
-// variables (visible in compose.yml) and live health probes — see the
-// Services page under Observability for the live status checks.
+// Each service's config is derived from real env variables (visible in
+// compose.yml); its status comes from the server-side probes behind
+// GET /api/agent/health. The embedded sqlite stores have no probe of their own
+// and report the phantom-mcp probe, because they live inside that process.
 const LAYER_GROUPS: LayerGroup[] = [
   {
     name: "Cognitive Layer",
@@ -68,7 +68,7 @@ const LAYER_GROUPS: LayerGroup[] = [
       {
         name: "phantom-agent", icon: "smart_toy", language: "TypeScript / Next.js 15",
         description: "Operator UI + chat orchestrator. Routes prompts through Vertex/Gemini, fans tool calls into the embedded MCP.",
-        layer: "Cognitive", port: ":3000", healthEndpoint: "/api/auth/status",
+        layer: "Cognitive", port: ":3000", healthEndpoint: "/api/auth/status", probeId: "phantom-agent",
         envVars: [
           { key: "MCP_URL", value: "http://phantom-mcp:8080/api/v1/stream/mcp" },
           { key: "MCP_TOKEN", value: "(container env)", masked: true },
@@ -78,13 +78,13 @@ const LAYER_GROUPS: LayerGroup[] = [
           { key: "UI_PASSWORD", value: "(operator-supplied)", masked: true },
         ],
         dependencies: [
-          { name: "phantom-mcp", icon: "extension" },
+          { name: "phantom-mcp (embedded)", icon: "extension" },
         ],
       },
       {
         name: "phantom-mcp (embedded)", icon: "extension", language: "Python 3.12 / FastMCP",
         description: "MCP server hosting ~80 tools across xlog/caldera/xsiam. Sqlite-backed audit, sessions, secrets, settings.",
-        layer: "Cognitive", port: ":8080", healthEndpoint: "/api/v1/health",
+        layer: "Cognitive", port: ":8080", healthEndpoint: "/ping/", probeId: "phantom-mcp",
         envVars: [
           { key: "MCP_TRANSPORT", value: "streamable-http" },
           { key: "MCP_PATH", value: "/api/v1/stream/mcp" },
@@ -106,7 +106,7 @@ const LAYER_GROUPS: LayerGroup[] = [
       {
         name: "xlog", icon: "data_object", language: "Python 3.12 / FastAPI",
         description: "Synthetic log generation engine. GraphQL API; emits SYSLOG/CEF/JSON to webhooks, XSIAM PAPI, or files.",
-        layer: "Telemetry", port: ":8000 (host :8999)", healthEndpoint: "/health",
+        layer: "Telemetry", port: ":8000 (host :8999)", healthEndpoint: "/health", probeId: "xlog-api",
         envVars: [
           { key: "XLOG_API_KEY", value: "(operator-supplied bearer)", masked: true },
           { key: "WORKERS_NUMBER", value: "4" },
@@ -125,7 +125,7 @@ const LAYER_GROUPS: LayerGroup[] = [
       {
         name: "caldera", icon: "shield", language: "Python 3 / aiohttp",
         description: "MITRE Caldera 5.3 — adversary emulation server. v2 REST API, abilities + adversaries + operations.",
-        layer: "Adversary", port: ":8888 (host), :8443 (TLS)", healthEndpoint: "/",
+        layer: "Adversary", port: ":8888 (host), :8443 (TLS)", healthEndpoint: "/", probeId: "caldera",
         envVars: [
           { key: "CALDERA_API_KEY", value: "(operator-supplied)", masked: true },
           { key: "CALDERA_RED_USER", value: "red" },
@@ -143,7 +143,7 @@ const LAYER_GROUPS: LayerGroup[] = [
       {
         name: "sqlite (embedded)", icon: "database", language: "C / sqlite3",
         description: "In-process sqlite databases under /app/data/ for audit, sessions, memories, jobs, notifications, api_keys, settings, instances. No separate process — lives inside phantom-mcp.",
-        layer: "Storage", port: "(in-process)", healthEndpoint: "n/a",
+        layer: "Storage", port: "(in-process)", healthEndpoint: "n/a", probeId: "phantom-mcp",
         envVars: [
           { key: "PHANTOM_DATA_ROOT", value: "/app/data" },
           { key: "PHANTOM_SECRET_KEK", value: "(AES-256-GCM KEK for secret encryption-at-rest)", masked: true },
@@ -181,50 +181,26 @@ function badgeForLanguage(language: string) {
   return LANG_BADGE[root] ?? FALLBACK_LANG_BADGE;
 }
 
-const EVENT_TYPE_STYLE: Record<string, { bg: string; text: string; border: string }> = {
-  DEPLOY: { bg: "bg-secondary/10", text: "text-secondary", border: "border-secondary/20" },
-  CONFIG: { bg: "bg-surface-container-highest", text: "text-on-surface-variant", border: "border-outline-variant/20" },
-  RESTART: { bg: "bg-primary/10", text: "text-primary", border: "border-primary/20" },
-  HEALTH: { bg: "bg-tertiary/10", text: "text-tertiary", border: "border-tertiary/20" },
-  ERROR: { bg: "bg-error/10", text: "text-error", border: "border-error/20" },
-};
-
-const SAMPLE_EVENTS: RecentEvent[] = [
-  { time: "14:02:45", type: "DEPLOY", message: "New rollout completed successfully in 42s.", dotColor: "bg-secondary" },
-  { time: "12:15:22", type: "CONFIG", message: "Environment variable SPARK_LOG_LEVEL updated.", dotColor: "bg-surface-bright" },
-  { time: "11:58:10", type: "RESTART", message: "Manual container restart initiated by operator.", dotColor: "bg-primary" },
-  { time: "10:44:02", type: "DEPLOY", message: "Rollout started from CI/CD pipeline.", dotColor: "bg-surface-bright" },
-  { time: "09:12:33", type: "HEALTH", message: "Self-healing: instance recovered from transient error.", dotColor: "bg-tertiary" },
-];
-
 // ── Page Component ───────────────────────────────────────────────────────────
 
 export default function ServicesSettingsPage() {
-  const [liveStatuses, setLiveStatuses] = useState<Record<string, ServiceStatus>>({});
+  const [health, setHealth] = useState<HealthPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<PanelView>(null);
   const [visibleSecrets, setVisibleSecrets] = useState<Set<string>>(new Set());
 
   // ── Data fetching ────────────────────────────────────────────────────────
 
+  // The health route answers 503 with a full body when every probe fails, so
+  // the body is read whatever the status. A network failure leaves every
+  // service "unknown" rather than inventing a state.
   const loadStatuses = useCallback(async () => {
     setLoading(true);
-    const result = await apiRequest<{ services: ServiceStatus[] }>("/api/v1/status");
-    if (result.ok && result.data?.services) {
-      const map: Record<string, ServiceStatus> = {};
-      for (const svc of result.data.services) {
-        map[svc.name] = svc;
-      }
-      setLiveStatuses(map);
-    } else {
-      const listResult = await listRequest<ServiceStatus>("/api/v1/status");
-      if (listResult.ok) {
-        const map: Record<string, ServiceStatus> = {};
-        for (const svc of listResult.data) {
-          map[svc.name] = svc;
-        }
-        setLiveStatuses(map);
-      }
+    try {
+      const res = await fetch("/api/agent/health", { cache: "no-store" });
+      setHealth((await res.json()) as HealthPayload);
+    } catch {
+      setHealth(null);
     }
     setLoading(false);
   }, []);
@@ -235,8 +211,13 @@ export default function ServicesSettingsPage() {
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
-  function getStatus(name: string): "healthy" | "degraded" | "unhealthy" | "unknown" {
-    return liveStatuses[name]?.status ?? "unknown";
+  function rowFor(svc: ServiceDef) {
+    return serviceHealthRow(health, svc.probeId);
+  }
+
+  function getStatus(name: string): ServiceHealth {
+    const svc = ALL_SERVICES.find((s) => s.name === name);
+    return svc ? rowFor(svc).status : "unknown";
   }
 
   function statusDot(status: string) {
@@ -257,6 +238,7 @@ export default function ServicesSettingsPage() {
 
   const selectedDef = ALL_SERVICES.find((s) => s.name === selectedService);
   const healthyCount = ALL_SERVICES.filter((s) => getStatus(s.name) === "healthy").length;
+  const languages = languageCounts(ALL_SERVICES.map((s) => s.language));
 
   // ── Render ───────────────────────────────────────────────────────────────
 
@@ -366,7 +348,7 @@ export default function ServicesSettingsPage() {
           <footer className="pt-10 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-outline-variant/15">
             <div className="rounded-xl p-6 flex flex-col justify-center" style={glassPanel}>
               <p className="text-[10px] font-mono uppercase tracking-widest text-outline mb-2">Total Services</p>
-              <p className="text-4xl font-headline font-bold text-on-surface">14</p>
+              <p className="text-4xl font-headline font-bold text-on-surface">{ALL_SERVICES.length}</p>
             </div>
             <div className="rounded-xl p-6 flex flex-col justify-center" style={glassPanel}>
               <p className="text-[10px] font-mono uppercase tracking-widest text-outline mb-2">Healthy</p>
@@ -377,11 +359,17 @@ export default function ServicesSettingsPage() {
             </div>
             <div className="rounded-xl p-6 flex flex-col justify-center" style={glassPanel}>
               <p className="text-[10px] font-mono uppercase tracking-widest text-outline mb-3">Languages</p>
-              <p className="text-sm font-mono text-primary-fixed-dim">Go (11) · Python (2) · TS (1)</p>
+              <p className="text-sm font-mono text-primary-fixed-dim">
+                {languages.map(([lang, n]) => `${lang} (${n})`).join(" · ")}
+              </p>
               <div className="flex gap-1 mt-4">
-                <div className="h-1 flex-[11] bg-primary rounded-full" />
-                <div className="h-1 flex-[2] bg-secondary rounded-full" />
-                <div className="h-1 flex-[1] bg-[#00AADE] rounded-full" />
+                {languages.map(([lang, n]) => (
+                  <div
+                    key={lang}
+                    className={`h-1 rounded-full ${badgeForLanguage(lang).bg}`}
+                    style={{ flex: n }}
+                  />
+                ))}
               </div>
             </div>
           </footer>
@@ -467,7 +455,7 @@ export default function ServicesSettingsPage() {
                 </h3>
                 <div className="grid grid-cols-2 gap-px bg-outline-variant/10 rounded-xl overflow-hidden border border-outline-variant/15">
                   <div className="bg-surface-container p-5 flex flex-col gap-1">
-                    <span className="text-[11px] text-on-surface-variant uppercase font-medium">gRPC Port</span>
+                    <span className="text-[11px] text-on-surface-variant uppercase font-medium">Port</span>
                     <span className="font-mono text-sm text-primary">{selectedDef.port}</span>
                   </div>
                   <div className="bg-surface-container p-5 flex flex-col gap-1">
@@ -475,16 +463,16 @@ export default function ServicesSettingsPage() {
                     <span className="font-mono text-sm text-primary">{selectedDef.healthEndpoint}</span>
                   </div>
                   <div className="bg-surface-container p-5 flex flex-col gap-1">
-                    <span className="text-[11px] text-on-surface-variant uppercase font-medium">Uptime</span>
+                    <span className="text-[11px] text-on-surface-variant uppercase font-medium">Response time</span>
                     <span className="text-lg font-bold text-on-surface font-headline tracking-tight">
-                      {getStatus(selectedDef.name) === "healthy" ? "99.97%" : "—"}
+                      {rowFor(selectedDef).latencyMs !== null ? `${rowFor(selectedDef).latencyMs} ms` : "—"}
                     </span>
                   </div>
                   <div className="bg-surface-container p-5 flex flex-col gap-1">
-                    <span className="text-[11px] text-on-surface-variant uppercase font-medium">Last Deploy</span>
+                    <span className="text-[11px] text-on-surface-variant uppercase font-medium">Last checked</span>
                     <span className="text-lg font-bold text-on-surface font-headline tracking-tight">
-                      {liveStatuses[selectedDef.name]?.lastChecked
-                        ? `${Math.round((Date.now() - new Date(liveStatuses[selectedDef.name].lastChecked).getTime()) / 60000)}m ago`
+                      {rowFor(selectedDef).checkedAt
+                        ? new Date(rowFor(selectedDef).checkedAt as string).toLocaleTimeString()
                         : "—"}
                     </span>
                   </div>
@@ -576,52 +564,17 @@ export default function ServicesSettingsPage() {
                   </div>
                 </section>
               )}
-
-              {/* Recent Events */}
-              <section>
-                <h3 className="font-headline text-xs font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">
-                  Recent Events
-                </h3>
-                <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-px before:bg-outline-variant/20">
-                  {SAMPLE_EVENTS.map((evt, i) => {
-                    const style = EVENT_TYPE_STYLE[evt.type];
-                    return (
-                      <div key={i} className="relative pl-7">
-                        <div className={`absolute left-0 top-1.5 w-4 h-4 rounded-full ${evt.dotColor} flex items-center justify-center border-4 border-surface ${
-                          i === 0 ? "shadow-[0_0_10px_rgba(123,220,123,0.3)]" : ""
-                        }`} />
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-3">
-                            <span className="font-mono text-[10px] text-on-surface-variant/60">{evt.time}</span>
-                            <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${style.bg} ${style.text} border ${style.border} uppercase tracking-tighter`}>
-                              {evt.type}
-                            </span>
-                          </div>
-                          <p className="text-sm text-on-surface leading-snug">{evt.message}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
             </div>
 
             {/* Footer */}
             <div className="p-8 pt-6 border-t border-outline-variant/10 bg-surface-container-low/80 backdrop-blur-md flex gap-4">
               <a
-                href={`/monitor/logs?service=${selectedDef.name}`}
+                href={`/observability/logs`}
                 className="flex-1 flex items-center justify-center gap-2 h-11 border border-outline-variant/40 rounded-lg text-sm font-bold text-on-surface hover:bg-surface-bright transition-colors"
               >
                 <span className="material-symbols-outlined text-lg">terminal</span>
                 View Logs
               </a>
-              <button
-                type="button"
-                className="flex-1 flex items-center justify-center gap-2 h-11 border border-error/40 rounded-lg text-sm font-bold text-error hover:bg-error/10 transition-colors"
-              >
-                <span className="material-symbols-outlined text-lg">restart_alt</span>
-                Restart Service
-              </button>
             </div>
           </aside>
         </>

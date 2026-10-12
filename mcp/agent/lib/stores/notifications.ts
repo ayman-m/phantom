@@ -38,6 +38,18 @@ export function resetToastIdCounter(): void {
   nextToastId = 0;
 }
 
+/**
+ * Show a toast from anywhere (an event handler, a hook, a plain callback)
+ * without subscribing to the store. The replacement for window.alert().
+ */
+export function notify(
+  variant: ToastVariant,
+  title: string,
+  description?: string,
+): string {
+  return useNotificationsStore.getState().addToast({ variant, title, description });
+}
+
 export const useNotificationsStore = create<NotificationsStore>((set) => ({
   toasts: [],
   pendingApprovals: 0,

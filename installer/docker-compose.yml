@@ -18,11 +18,11 @@
 #      assume the operator has a writable host directory at a specific
 #      path.
 #   4. Every operator-runtime config var (XSIAM, webhook, model API
-#      keys, UI creds) is supplied via the FIRST-RUN SETUP PAGE at
-#      http://localhost:3000 — NOT via .env. The handful of vars that
-#      .env carries are the ones needed at container boot before the
-#      setup page is reachable (MCP token, encryption KEK, caldera
-#      red creds, xlog bearer).
+#      keys) is entered in the UI after first login — /providers for
+#      Vertex, /connectors for connector instances — NOT via .env.
+#      The handful of vars that .env carries are the ones needed at
+#      container boot (MCP token, encryption KEK, default admin
+#      password, caldera red creds, xlog bearer).
 #   5. Image refs use DIGEST PINNING (`@sha256:...`), not
 #      version-tag pinning (`:1.2.0`). See "Image pinning" below.
 #
@@ -120,9 +120,10 @@ services:
       - xlog_scenarios:/scenarios
       - xlog_data:/data
       # TLS — read-only mount of the shared phantom_tls volume. The
-      # agent (rw mount of the same volume) writes cert.pem + key.pem
-      # here when the operator picks a TLS mode in setup. xlog reads
-      # at startup and falls back to plain HTTP if files don't exist.
+      # one-shot phantom-tls-init service writes a self-signed
+      # cert.pem + key.pem here before xlog starts (an operator-supplied
+      # pair already on the volume is never overwritten). xlog reads at
+      # startup and falls back to plain HTTP if files don't exist.
       - phantom_tls:/tls:ro
     healthcheck:
       # TLS-aware healthcheck — try HTTPS first, fall back to plain
@@ -170,11 +171,13 @@ services:
       # entrypoint reads /tls/cert.pem + /tls/key.pem at startup if
       # present and configures TLS; falls back to HTTP otherwise.
       - phantom_tls:/tls:ro
-      # phantom_operator_creds carries operator-supplied
-      # caldera creds written by phantom-agent's /api/setup endpoint.
-      # Bridges the gap between setup.json (operator-typed values)
-      # and local.yml (caldera's auth source of truth). Read-only on
-      # caldera; written by the agent.
+      # phantom_operator_creds: optional override file for caldera's
+      # credentials (/operator-creds/caldera.yaml). Read-only on caldera.
+      # UNUSED: nothing in the current stack writes it (the /api/setup
+      # endpoint that did was removed), so caldera takes its credentials
+      # from the CALDERA_* env vars above. NOT removed yet: removing the
+      # volume changes the install contract and needs a fresh-install
+      # test first (see the volumes: section below).
       - phantom_operator_creds:/operator-creds:ro
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8888/', timeout=5)\""]
@@ -187,9 +190,9 @@ services:
     # has no runtime API for setting these, so it must happen before
     # `python3 server.py` starts.
     #
-    # Prefer values from /operator-creds/caldera.yaml (written by
-    # phantom-agent's /api/setup endpoint) over env defaults, so
-    # operator-typed setup-form passwords reach local.yml.
+    # Prefer values from /operator-creds/caldera.yaml when that file
+    # exists (nothing in the current stack writes it) over the env
+    # defaults.
     entrypoint: ["/bin/sh", "-ec"]
     command:
       - |
@@ -203,8 +206,8 @@ services:
         source_path = local_path if local_path.exists() else default_path
         cfg = yaml.safe_load(source_path.read_text()) or {}
 
-        # Resolution order: operator-creds file (operator typed in
-        # setup form) > env vars (installer-generated defaults).
+        # Resolution order: operator-creds file (if present) > env vars
+        # (installer-generated defaults).
         red_user = os.environ["CALDERA_RED_USER"]
         red_password = os.environ["CALDERA_RED_PASSWORD"]
         api_key = os.environ.get("CALDERA_API_KEY") or ""
@@ -463,10 +466,9 @@ services:
       - CALDERA_RED_USER
       - CALDERA_RED_PASSWORD
 
-      # The remaining operator config flows in via the SETUP PAGE
-      # at http://localhost:3000 on first run. These vars are accepted
-      # if pre-populated in .env (skips a step in the wizard) but are
-      # NOT required.
+      # The remaining operator config is entered in the UI after first
+      # login (/providers, /connectors). These vars are accepted if
+      # pre-populated in .env but are NOT required.
       - CORTEX_MCP_PAPI_URL
       - CORTEX_MCP_PAPI_AUTH_HEADER
       - CORTEX_MCP_PAPI_AUTH_ID
@@ -514,7 +516,8 @@ services:
       # the internal compose network — never exposed to the host.
       - PHANTOM_UPDATER_URL=http://phantom-updater:8090
     volumes:
-      # phantom_agent_runtime mount is retained but unused.
+      # phantom_agent_runtime mount is retained but unused. Needs a
+      # fresh-install test before removal (see the dev composes too).
       - phantom_agent_runtime:/app/runtime
       # MCP runtime state (audit log, instance store, KB, sessions, jobs).
       - phantom_mcp_data:/app/data
@@ -525,10 +528,10 @@ services:
       # startup. Single source of truth for TLS material across the
       # stack (no SSL_CERT_PEM compose-env passthrough).
       - phantom_tls:/tls
-      # phantom_operator_creds carries operator-typed
-      # credentials from /api/setup to services that need them outside
-      # the connector instance store (e.g. caldera's local.yml). Agent
-      # writes; caldera reads (ro on caldera's side).
+      # phantom_operator_creds: mount point for an optional caldera
+      # credentials override file. Nothing in the current stack writes to
+      # it (the /api/setup endpoint that did was removed); caldera reads
+      # it read-only if present.
       - phantom_operator_creds:/operator-creds
       # NOTE: the upstream dev compose bind-mounts ./bundles/spark over
       # /app/bundle for hot-reload during dev. Customers don't have
@@ -559,8 +562,9 @@ volumes:
   # Shared TLS volume — read by xlog + caldera, written by agent.
   # See per-service volumes: blocks above for mount points.
   phantom_tls:
-  # Operator-credentials hand-off — agent writes, caldera
-  # reads. Currently only carries caldera/red creds; future
-  # services that need operator-supplied env from setup form add
-  # mounts here too.
+  # UNUSED: optional caldera credentials override file (read-only on
+  # caldera). Nothing in the current stack writes to it; see the caldera
+  # service above. TODO(fresh-install test): remove this volume, its two
+  # mounts and the caldera entrypoint's /operator-creds branch together
+  # once a fresh install has been exercised without them.
   phantom_operator_creds:

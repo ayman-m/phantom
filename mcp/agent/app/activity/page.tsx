@@ -31,7 +31,7 @@ function actionMeta(action: string): { icon: string; tone: string } {
   if (action === 'caldera_operation_created') return { icon: 'security', tone: 'text-rose-400' };
   if (action === 'detection_validation_recorded') return { icon: 'fact_check', tone: 'text-emerald-400' };
   if (action === 'coverage_report_generated') return { icon: 'assessment', tone: 'text-primary' };
-  if (action === 'setup_completed' || action === 'settings_changed') {
+  if (action === 'settings_changed') {
     return { icon: 'settings', tone: 'text-slate-300' };
   }
   if (action.startsWith('secret_')) return { icon: 'key', tone: 'text-amber-400' };

@@ -13,8 +13,8 @@ set -euo pipefail
 #   agent-only — slim split-deploy archive: ONLY the phantom-agent
 #              image and `docker-compose.agent-only.yml`. The
 #              recipient runs the agent on their machine and
-#              configures it at first-run to point at remote
-#              xlog/caldera/XSIAM via the setup form. ~1.5 GB
+#              points it at remote xlog/caldera/XSIAM by creating
+#              connector instances on /connectors. ~1.5 GB
 #              tarball (no xlog/caldera images, no scenarios,
 #              no xlog config). See docs/split-deploy.md.
 
@@ -36,7 +36,7 @@ case "$BUNDLE_MODE" in
     ;;
   agent-only)
     # Only the agent image. xlog/caldera assumed to run on a
-    # separate host; their URLs come from the setup form.
+    # separate host; their URLs are entered as connector instances on /connectors.
     IMAGES=(
       "phantom-agent:local|phantom-agent-local.tar"
     )
@@ -181,7 +181,7 @@ if [ "$BUNDLE_MODE" = "agent-only" ]; then
 This archive contains everything you need to run the Phantom SOC
 simulation agent on a host that is **separate** from where xlog and
 caldera run. The agent will reach those services over the network
-once you provide their URLs in the setup form.
+once you create connector instances with their URLs on /connectors.
 
 ## What's in this archive
 
@@ -216,28 +216,40 @@ once you provide their URLs in the setup form.
 # 1. Load the agent image (~1.5 GB)
 docker load < images/phantom-agent-local.tar
 
-# 2. Bring up the agent
+# 2. Create .env with the first admin password (and the other boot values)
+{
+  echo "PHANTOM_DEFAULT_ADMIN_PASSWORD=$(openssl rand -base64 18)"
+  echo "MCP_TOKEN=$(openssl rand -hex 32)"
+  echo "PHANTOM_SECRET_KEK=$(openssl rand -base64 32)"
+} > .env
+chmod 600 .env
+
+# 3. Bring up the agent
 docker compose up -d
 
-# 3. Wait for healthy
+# 4. Wait for healthy
 until [ "$(docker inspect -f '{{.State.Health.Status}}' phantom_agent)" = "healthy" ]; do
   sleep 2
 done
 
-# 4. Open the setup page in a browser
-open http://$(hostname):3000   # or visit manually
+# 5. Open the UI in a browser and sign in as `admin` with the
+#    PHANTOM_DEFAULT_ADMIN_PASSWORD you set in .env (you are asked to
+#    change it at first login)
+open https://$(hostname):3000   # or visit manually
 ```
 
-On the setup page, fill in:
-  * Your operator UI password (you choose; persisted server-side)
-  * Vertex AI / Gemini credentials
-  * Caldera URL — `http://<machine-b>:8888` (the host where caldera runs)
-  * xlog URL — `http://<machine-b>:8000`
-  * XSIAM PAPI URL + auth header + auth ID + playground ID
-  * XSIAM webhook endpoint + key
+After signing in:
+  * /providers — add Vertex AI / Gemini credentials
+  * /connectors — create one instance per service:
+    * Caldera — base URL `http://<machine-b>:8888` (the host where caldera runs)
+    * xlog — base URL `https://<machine-b>:8000`
+    * XSIAM — PAPI URL + auth header + auth ID + playground ID, and the webhook endpoint + key
 
-See `docs/split-deploy.md` for the full operator guide, including
-network requirements on the xlog/caldera host.
+Known limitation: this recipe has no `phantom-updater` service, and
+connector instances run as containers that `phantom-updater` starts, so
+they cannot start from this archive alone. See `docs/split-deploy.md`
+for the full operator guide, including network requirements on the
+xlog/caldera host.
 EOF
 fi
 

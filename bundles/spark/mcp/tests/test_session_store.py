@@ -153,3 +153,37 @@ def test_exclude_scheduled_keeps_human_sessions_visible_under_scheduled_churn(
     assert {r.id for r in rows_filtered} == set(human_ids)
     for r in rows_filtered:
         assert "scheduled_by" not in (r.meta or {})
+
+
+# ─── fork metadata on the session payload ────────────────────────────────────
+
+
+def test_forked_session_exposes_parent_id_in_list_and_to_dict(store: SqliteSessionStore):
+    """The sidebar nests a fork under its parent from `parent_id`. The column
+    was always written by fork_session but never read, so the list payload
+    carried no parent and every fork rendered as a root."""
+    parent = store.create_session(user="ayman", title="root", meta={})
+    store.append_message(parent.id, role="user", content="hello")
+    fork = store.fork_session(from_session_id=parent.id)
+    assert fork is not None
+
+    by_id = {s.id: s for s in store.list_sessions()}
+    assert by_id[fork.id].parent_id == parent.id
+    assert by_id[fork.id].to_dict()["parent_id"] == parent.id
+    assert store.get_session(fork.id).to_dict()["parent_id"] == parent.id
+
+
+def test_non_fork_session_has_null_parent_id(store: SqliteSessionStore):
+    root = store.create_session(user="ayman", title="root", meta={})
+    assert root.to_dict()["parent_id"] is None
+    assert root.to_dict()["fork_point_message_id"] is None
+    assert store.list_sessions()[0].parent_id is None
+
+
+def test_fork_from_message_records_fork_point(store: SqliteSessionStore):
+    parent = store.create_session(user="ayman", title="root", meta={})
+    first = store.append_message(parent.id, role="user", content="one")
+    store.append_message(parent.id, role="assistant", content="two")
+    fork = store.fork_session(from_session_id=parent.id, from_message_id=first.id)
+    assert fork is not None
+    assert fork.to_dict()["fork_point_message_id"] == first.id

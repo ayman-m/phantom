@@ -63,9 +63,15 @@ verbatim as `schema_override` on that stage's worker. Without it the worker emit
 observables that the vendor's modeling rule cannot map, so events land raw and `xdm.*` stays
 empty. `compact=true` is lossless for this purpose and keeps the payload inside the tool-result cap.
 
-Before generating any data, call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class` into a category → entry lookup. The recipes below reference the entry as `<stack[<class>].vendor>` / `<stack[<class>].product>` — substitute the real values from the operator's installed data sources at execution time; call `data_sources_get_schema(<entry>.data_source_id)` per stage when a recipe needs `schema_override`. **Never hardcode vendor names in your tool calls** — the same skill must work whether the operator is running PANOS firewall + F5 APM VPN + Vectra NDR, or any other combination. If a required class has zero installed entries, stop and tell the operator: no data source is installed for that class — install one from the Marketplace before this skill can run.
+Before generating any data, call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class` into a category → entry lookup. The recipes below reference the entry as `<stack[<class>].vendor>` / `<stack[<class>].product>` — substitute the real values from the operator's installed data sources at execution time; call `data_sources_get_schema(<entry>.data_source_id)` per stage when a recipe needs `schema_override`. **Never hardcode vendor names in your tool calls** — the same skill must work whether the operator is running PANOS firewall + F5 APM VPN + Vectra NDR, or any other combination.
 
-If a required class is missing from the stack, follow the "If missing from stack" column above before invoking the recipe for that stage.
+### Class check (MANDATORY — before creating any worker)
+
+1. Call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class`.
+2. For every row of the "Data classes used" table, write down the installed entry you will use for it, or `MISSING`. A class is only covered by an installed entry. A generic or catch-all schema is never a substitute, and never guess a vendor/product for a class.
+3. `vpn` (Stages 1-3) is required. If it is `MISSING`, say this to the operator, with the class filled in: "No installed data source covers the `<class>` class, so I cannot run the VPN brute force chain scenario. Install a `<class>` data source from the Marketplace and ask again." Then stop: create no worker.
+   If `firewall` (Stage 1) is `MISSING`, skip Stage 1's perimeter view and rely on the VPN-side failure events. If `ndr` (Stage 4) is `MISSING`, use the `firewall` entry's internal-zone deny/allow events; with no `firewall` entry either, skip Stage 4. Say each substitution or skip with: "No installed data source covers the `<class>` class, so I am skipping Stage <N> (<stage name>). I will not generate it with a generic schema. Install a `<class>` data source from the Marketplace to include it."
+4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
 The `destination` for every stage is the store reference `logdest:<id>` resolved in Pre-flight.
 
@@ -382,7 +388,7 @@ After running all four stages, the operator should see (within ~5 min of Stage 4
 | ≥1 alert matching "Brute Force on Local Account" / "Account Lockout Risk" | XSIAM Issues, last 60 min |
 | ≥1 alert matching "Impossible Travel" / "Anomalous Geo Login" | XSIAM Issues, last 60 min |
 | ≥1 alert matching "Lateral Movement" / "Unusual Internal Connection" | XSIAM Issues, last 60 min |
-| Pivotable correlation: `user=j.smith` + `session_id=VPN-SESS-7f3a9c2b` | XQL query: `config timeframe = 24h \| dataset = vpn_logs | filter user="j.smith" \| limit 20` then pivot to NDR via session_id |
+| Pivotable correlation: `user=j.smith` + `session_id=VPN-SESS-7f3a9c2b` | XQL query: `config timeframe = 24h \| dataset = <dataset_name of the vpn entry> | filter <its user field> = "j.smith" \| limit 20` then pivot to NDR via session_id |
 
 If any of the four expected alerts is missing, the issue is one of:
 - The data class wasn't in the operator's tech stack → check pre-flight output

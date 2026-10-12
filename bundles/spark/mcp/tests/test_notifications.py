@@ -158,3 +158,62 @@ def test_persistence_across_reopen(tmp_path) -> None:
     rows = s2.list()
     assert len(rows) == 1
     assert rows[0].payload == {"step": 1}
+
+
+# ── paging, date filter, mark-all-read (the /notifications page) ──────────
+
+
+def _backdate(store: SqliteNotificationStore, notif_id: str, created_at: str) -> None:
+    import sqlite3
+
+    with sqlite3.connect(store._db_path) as conn:
+        conn.execute("UPDATE notifications SET created_at = ? WHERE id = ?", (created_at, notif_id))
+
+
+def test_list_pages_newest_first_without_gaps_or_repeats(store: SqliteNotificationStore) -> None:
+    ids = [store.publish("simulation-complete", payload={"n": i}).id for i in range(5)]
+    first = store.list(limit=2, offset=0)
+    second = store.list(limit=2, offset=2)
+    third = store.list(limit=2, offset=4)
+    paged = [n.id for n in first + second + third]
+    assert paged == list(reversed(ids))
+    assert store.list(limit=2, offset=99) == []
+
+
+def test_count_ignores_limit_and_offset_and_follows_the_filters(store: SqliteNotificationStore) -> None:
+    a = store.publish("simulation-complete")
+    store.publish("setup-required")
+    store.publish("detection-miss")
+    store.ack(a.id)
+    assert store.count() == 3
+    assert store.count(target="user:operator") == 2
+    assert store.count(unread_only=True) == 2
+    assert store.count(target="user:operator", unread_only=True) == 1
+
+
+def test_since_keeps_only_rows_created_at_or_after_it(store: SqliteNotificationStore) -> None:
+    old = store.publish("simulation-complete")
+    recent = store.publish("setup-required")
+    _backdate(store, old.id, "2026-01-01T00:00:00.000000Z")
+    cutoff = "2026-06-01T00:00:00.000000Z"
+    assert [n.id for n in store.list(since=cutoff)] == [recent.id]
+    assert store.count(since=cutoff) == 1
+    assert store.count() == 2
+
+
+def test_ack_all_marks_every_unread_row_and_reports_how_many(store: SqliteNotificationStore) -> None:
+    a = store.publish("simulation-complete")
+    store.publish("setup-required")
+    store.publish("detection-miss")
+    store.ack(a.id)
+    assert store.ack_all() == 2
+    assert store.unread_count() == 0
+    assert store.ack_all() == 0
+
+
+def test_ack_all_can_be_limited_to_one_target(store: SqliteNotificationStore) -> None:
+    store.publish("simulation-complete")
+    store.publish("detection-miss")
+    assert store.ack_all(target="channel:soc") == 1
+    assert store.unread_count(target="user:operator") == 1
+    assert store.unread_count(target="channel:soc") == 0

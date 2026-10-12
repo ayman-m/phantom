@@ -35,7 +35,7 @@ For the deployment shape where the agent runs separately from xlog/caldera, see 
 
 - Docker Engine 24+ with `docker compose` v2.
 - ~12 GB free disk for images + volumes.
-- A web browser to fill out the setup form.
+- A web browser (the UI is served over HTTPS with a self-signed certificate).
 - (Recommended) A Gemini API key from [Google AI Studio](https://aistudio.google.com/) **OR** a GCP service-account JSON for Vertex AI.
 - (Recommended) An XSIAM tenant with PAPI credentials + a webhook collector if you want to send simulated logs there.
 
@@ -65,6 +65,10 @@ git submodule update --init --recursive third_party/caldera
 #                           operator-supplied secret (Caldera creds,
 #                           XSIAM auth, Vertex SA JSON, etc.) is
 #                           stored as plaintext on disk.
+#      CALDERA_RED_PASSWORD, CALDERA_API_KEY — the Caldera red-team
+#                           password and API key Caldera is started
+#                           with; you enter the same values on the
+#                           caldera connector instance later.
 {
   echo "MCP_TOKEN=$(openssl rand -hex 32)"
   echo "PHANTOM_SECRET_KEK=$(openssl rand -base64 32)"
@@ -72,6 +76,8 @@ git submodule update --init --recursive third_party/caldera
   XLOG_KEY=$(openssl rand -hex 32)
   echo "XLOG_API_KEY=$XLOG_KEY"
   echo "XLOG_API_TOKEN=$XLOG_KEY"
+  echo "CALDERA_RED_PASSWORD=$(openssl rand -base64 18)"
+  echo "CALDERA_API_KEY=$(openssl rand -hex 24)"
 } > .env
 chmod 600 .env
 
@@ -83,27 +89,22 @@ until [ "$(docker inspect -f '{{.State.Health.Status}}' phantom_agent 2>/dev/nul
   sleep 3
 done
 
-# 5. Open the setup page
-echo "→ Open http://$(hostname):3000 in your browser"
+# 5. Open the UI
+echo "→ Open https://$(hostname):3000 in your browser"
 ```
 
-The setup page presents one form section per connector + provider + required setting. Fill in:
+The UI uses a self-signed certificate that the stack generates on first boot; accept the browser warning. There is no setup form: sign in as `admin` with the `PHANTOM_DEFAULT_ADMIN_PASSWORD` from `.env`. The UI sends you to `/profile` to change it first. Then add, in order:
 
-| Field | Value |
+1. **A model provider** at `/providers`: either a Gemini API key from Google AI Studio, or the Vertex AI project, region and service-account JSON.
+2. **A connector instance per service** at `/connectors` (Create Instance; the form is rendered from the connector's schema):
+
+| Connector | Fields |
 |---|---|
-| **UI password** | A strong password you'll use to log in to the agent |
-| **Gemini API key** _OR_ **GOOGLE_APPLICATION_CREDENTIALS** | Either an API key from Google AI Studio, or your service-account JSON content |
-| **calderaBaseUrl** | `http://caldera:8888` — the compose-service hostname |
-| **calderaApiKey** | The red-team API key (must match what was baked into Caldera at first boot) |
-| **calderaRedUser** / **calderaRedPassword** | Caldera red-team operator credentials |
-| **xlogBaseUrl** | `http://xlog:8000` — xlog's GraphQL API |
-| **xsiamPapiUrl** | Your XSIAM tenant's PAPI URL |
-| **xsiamPapiAuthHeader** / **xsiamPapiAuthId** | XSIAM PAPI bearer credentials |
-| **xsiamPlaygroundId** | Your XSIAM playground / war-room ID |
-| **xsiamWebhookEndpoint** / **xsiamWebhookKey** | XSIAM HTTP collector for synthetic logs |
-| **vertexProjectId** / **vertexRegion** / **vertexServiceAccountJson** | If using Vertex AI for Gemini, the GCP project + region + service-account JSON |
+| **caldera** | `baseUrl` `http://caldera:8888` (the compose-service hostname); `redUser`; secrets `apiKey` (the `CALDERA_API_KEY` from `.env`) and `redPassword` (`CALDERA_RED_PASSWORD`) |
+| **xlog** | `baseUrl` `https://xlog:8000` (xlog serves HTTPS on the compose network); secret `apiToken` (the `XLOG_API_KEY` from `.env`); optional `webhookEndpoint` and `defaultLogFormat` |
+| **xsiam** | `api_url` (your tenant's PAPI URL), `api_id` and `playgroundId`; secret `api_key` (the PAPI Authorization header value); optional `webhookEndpoint` and secret `webhookKey` (the XSIAM HTTP collector for synthetic logs) |
 
-Click **Save**. Phantom materializes one connector instance per binding (SecretStore-backed), reloads its tool registry, and routes you to the home/chat page.
+Each instance is stored in the InstanceStore, its secrets in the SecretStore, and the tool registry reloads when you save it. Every connector runs as its own container, started by `phantom-updater` on the first save, so the first instance of each connector waits for an image pull.
 
 ---
 
@@ -120,9 +121,9 @@ Expected: **31/31 PASS**, no skips. If any check fails, the script reports which
 You can also confirm each service is reachable:
 
 ```bash
-docker compose exec -T phantom-agent curl -sf http://localhost:3000/api/auth/status
-docker compose exec -T phantom-agent curl -sf http://localhost:8080/ping/
-docker compose exec -T xlog python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"
+docker compose exec -T phantom-agent curl -ksf https://localhost:3000/api/auth/status
+docker compose exec -T phantom-agent curl -ksf https://localhost:8080/ping/
+docker compose exec -T xlog python -c "import urllib.request,ssl; urllib.request.urlopen('https://localhost:8000/health', timeout=5, context=ssl._create_unverified_context())"
 docker compose exec -T caldera curl -sf http://localhost:8888/
 ```
 
@@ -134,7 +135,7 @@ docker compose exec -T caldera curl -sf http://localhost:8888/
 
 ```bash
 TOKEN=$(docker compose exec -T phantom-agent printenv MCP_TOKEN)
-curl -X PUT http://localhost:8080/api/v1/settings \
+curl -k -X PUT https://localhost:8080/api/v1/settings \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"updates": {"defaultLogFormat": "CEF"}, "actor": "operator"}'
@@ -146,7 +147,7 @@ Settings are persisted to `<data_root>/settings.db` and survive restarts.
 
 ```bash
 TOKEN=$(docker compose exec -T phantom-agent printenv MCP_TOKEN)
-curl -X POST http://localhost:8080/api/v1/api_keys \
+curl -k -X POST https://localhost:8080/api/v1/api_keys \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"label":"siem-poller","scopes":["audit:read"],"actor": "operator"}'
@@ -155,7 +156,7 @@ curl -X POST http://localhost:8080/api/v1/api_keys \
 
 ### Update credentials later
 
-Visit `http://<host>:3000/setup` and resubmit. The instance store updates atomically; old credentials are deleted from the SecretStore. The audit log records every rotation with the operator who initiated it.
+Each credential has its own page: `/profile` for your UI password, `/providers` for Vertex / Gemini, and `/connectors` for connector instance credentials (edit the instance). The stores update atomically; the replaced secret is deleted from the SecretStore. The audit log records every rotation with the operator who initiated it.
 
 ### Backup before upgrades
 
@@ -235,7 +236,7 @@ Common causes:
 
 ### Smoke test reports T9.x or T10.x failures
 
-Both phases require connector instances + a Vertex provider. If you skipped those at setup, the corresponding tools won't be advertised and these tests will be the first to fail. Resubmit the setup form with the missing fields filled in.
+Both phases require connector instances + a Vertex provider. If you have not added them yet, the corresponding tools won't be advertised and these tests will be the first to fail. Add the missing provider at `/providers` and instances at `/connectors`, then rerun the smoke test.
 
 ### "MCP_TOKEN is not configured" at the API surface
 

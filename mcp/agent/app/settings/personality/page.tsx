@@ -371,7 +371,7 @@ export default function PersonalityPage() {
 
           <CategoryListControl
             label="Local categories"
-            description="Tools that mutate the agent's own runtime state. Always gated by the inline approval card."
+            description="Tools that mutate the agent's own runtime state (jobs, settings, persona, skills)."
             value={config.actionPolicy.localCategories}
             onChange={(next) =>
               updateConfig("actionPolicy", {

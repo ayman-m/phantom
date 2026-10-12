@@ -6,7 +6,8 @@ usage() {
 Usage: scripts/install_agent_bundle.sh <bundle.tar.gz> [target-dir]
 
 Imports a Phantom agent bundle, starts the standalone renderer, and leaves the
-first-run setup UI available at http://localhost:3000.
+UI available at https://localhost:3000. Sign in as `admin` with the
+PHANTOM_DEFAULT_ADMIN_PASSWORD from .env.
 EOF
 }
 
@@ -34,5 +35,4 @@ fi
 
 docker compose up -d phantom-agent
 
-printf 'Phantom setup UI: http://localhost:3000\n'
-printf 'After setup, run: cd %s && ./scripts/agent_lifecycle.sh apply-setup\n' "$target"
+printf 'Phantom UI: https://localhost:3000 (sign in as admin with PHANTOM_DEFAULT_ADMIN_PASSWORD from .env)\n'

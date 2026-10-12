@@ -48,7 +48,7 @@ export interface ApprovalGating {
 // (yellow/amber). Mirrors the manifest's humanRequired list, since
 // the same gate is what makes a tool "soft" in operator perception.
 //
-// create_operation + send_webhook_log are not listed, to match the
+// caldera_create_operation + xsiam_send_webhook_log are not listed, to match the
 // manifest — approval is self-mod-only, so caldera ops
 // and xsiam log pushes shouldn't render as "this needs approval".
 const SOFT_TOOLS = new Set([

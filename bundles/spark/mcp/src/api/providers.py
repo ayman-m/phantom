@@ -17,6 +17,7 @@ the `ProviderStore`.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -92,6 +93,30 @@ def _instance_to_dict(
     }
 
 
+def _refresh_embedder(provider_id: str, reason: str) -> str | None:
+    """Re-decide the memory/KB embedder after a Vertex provider changed.
+
+    The embedder is chosen from the provider store; without this call a Vertex
+    provider saved after boot would leave memory + knowledge on the stub until
+    the container restarted. Returns the embedder mode, or None when the
+    provider is not Vertex (or the runtime is not wired, e.g. in unit tests).
+    """
+    if provider_id != "vertex":
+        return None
+    from usecase.embedder_runtime import embedder_runtime
+
+    rt = embedder_runtime()
+    if rt is None:
+        return None
+    try:
+        return rt.refresh(reason)
+    except Exception:  # noqa: BLE001
+        # The provider write already succeeded; a refresh failure must not turn
+        # it into a 500. The runtime logs and keeps the live embedder.
+        logger.exception("embedder refresh after %s failed", reason)
+        return None
+
+
 def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
     """Register /api/v1/providers/* + /api/v1/models routes."""
 
@@ -144,10 +169,18 @@ def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
                 "Created provider instance via API: provider_id=%s name=%s id=%s",
                 provider_id, name, instance.id,
             )
+            # Off the event loop: the refresh probes the new embedder with a real
+            # network call (see EmbedderRuntime._probe).
+            embedder_mode = await asyncio.to_thread(
+                _refresh_embedder, provider_id, "vertex provider created"
+            )
             return JSONResponse(
                 {
                     "instance": _instance_to_dict(instance),
-                    "requires_mcp_restart": True,
+                    # A Vertex provider is live as soon as it is saved: the
+                    # embedder is rebuilt above and chat reads the store per turn.
+                    "requires_mcp_restart": provider_id != "vertex",
+                    **({"embedder_mode": embedder_mode} if embedder_mode else {}),
                 },
                 status_code=201,
             )
@@ -257,7 +290,15 @@ def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
                 "Updated provider instance via API: id=%s provider_id=%s",
                 updated.id, updated.provider_id,
             )
-            return JSONResponse({"instance": _instance_to_dict(updated)})
+            embedder_mode = await asyncio.to_thread(
+                _refresh_embedder, updated.provider_id, "vertex provider updated",
+            )
+            return JSONResponse(
+                {
+                    "instance": _instance_to_dict(updated),
+                    **({"embedder_mode": embedder_mode} if embedder_mode else {}),
+                }
+            )
         finally:
             reset_current_actor(actor_token)
 
@@ -272,12 +313,23 @@ def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
         actor_token = set_current_actor("user:operator")
         try:
             instance_id = request.path_params["instance_id"]
+            existing = store.get(instance_id)
             deleted = store.delete(instance_id)
             if not deleted:
                 return JSONResponse({"error": "not found"}, status_code=404)
             logger.info("Deleted provider instance via API: id=%s", instance_id)
+            embedder_mode = None
+            if existing is not None:
+                embedder_mode = await asyncio.to_thread(
+                    _refresh_embedder, existing.provider_id, "vertex provider deleted",
+                )
             return JSONResponse(
-                {"deleted": True, "id": instance_id, "requires_mcp_restart": True}
+                {
+                    "deleted": True,
+                    "id": instance_id,
+                    "requires_mcp_restart": True,
+                    **({"embedder_mode": embedder_mode} if embedder_mode else {}),
+                }
             )
         finally:
             reset_current_actor(actor_token)

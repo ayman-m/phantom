@@ -24,23 +24,29 @@ them. Per the operator policy "Vertex is authoritative; no local ML
 substitution", the per-call fallback was removed. A Vertex outage
 now surfaces as a clear error to the caller (HTTP 5xx in the search
 endpoint, exception in tool calls). The boot-time TextHash path in
-main.py is unchanged — it still kicks in when Vertex isn't yet
-configured, so the agent UI loads and the operator can complete
-setup. But once VertexEmbedder is alive, it stays alive or it
-raises. No mid-life demotion.
+usecase/embedder_runtime.py is unchanged in that respect — it still
+picks the stub when Vertex isn't yet configured, so the agent UI loads
+and the operator can add the provider. But once VertexEmbedder is alive,
+it stays alive or it raises. No mid-life demotion.
 
-# Choosing between Vertex and TextHash at boot
+# Choosing between Vertex and TextHash
 
-main.py constructs a VertexEmbedder when:
+usecase/embedder_runtime.py (EmbedderRuntime) constructs a VertexEmbedder
+when:
   * The bundle declares manifest.memory.embeddingProvider == "google"
-  * A `vertex` provider instance has been materialized in the
-    ProviderStore (i.e. the operator filled out vertexProjectId +
-    vertexServiceAccountJson at setup)
+  * A `vertex` provider instance exists in the ProviderStore (the operator
+    saved the Google Vertex AI card on /providers: project, region,
+    service-account JSON)
 
-Otherwise it boots with TextHashEmbedder (a deterministic SHA-256-
-based stub — *not* a local ML model; near-zero compute) and emits
-a stark WARN-level log so the operator knows search quality is
-degraded until Vertex creds are submitted.
+It decides at boot AND again whenever a Vertex provider is created,
+updated or deleted through /api/v1/providers, swapping the new embedder
+into the memory store and the knowledge base. A provider saved after boot
+therefore takes effect immediately; no restart.
+
+Otherwise it uses TextHashEmbedder (a deterministic SHA-256-based stub —
+*not* a local ML model; near-zero compute) and emits a stark WARN-level
+log so the operator knows search quality is degraded until a Vertex
+provider is saved.
 """
 
 from __future__ import annotations

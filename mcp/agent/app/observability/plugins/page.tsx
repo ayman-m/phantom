@@ -26,6 +26,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { confirmAction } from "@/lib/stores/confirm";
 
 interface PluginRef {
   group: string;
@@ -147,9 +148,13 @@ export default function PluginsPage() {
   const [uninstalling, setUninstalling] = useState<string | null>(null);
   const handleUninstall = useCallback(
     async (distName: string) => {
-      if (!confirm(`Uninstall ${distName}? This runs pip uninstall -y inside the agent container.`)) {
-        return;
-      }
+      const accepted = await confirmAction({
+        title: `Uninstall ${distName}?`,
+        message: "This runs pip uninstall -y inside the agent container.",
+        confirmLabel: "Uninstall",
+        tone: "danger",
+      });
+      if (!accepted) return;
       setUninstalling(distName);
       setError(null);
       try {

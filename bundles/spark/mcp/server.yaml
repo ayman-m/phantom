@@ -9,8 +9,9 @@
 #   2. Load each connector per ../connectors/<id>/connector.yaml
 #      (source.entrypoint)
 #   3. Read materialized instances from data_root/instances.db
-#      (rows written when the operator submits the setup form per
-#      manifest's setup.bindsInstances[] templates)
+#      (rows written when the operator creates an instance on
+#      /connectors, or by the Spark platform from the manifest's
+#      setup.bindsInstances[] templates)
 #   4. Build a tool catalog namespaced as `<connector_id>/<tool_name>`
 #   5. Serve the catalog over MCP (JSON-RPC) on a local port
 #   6. Dispatch tools/call requests to the right connector instance

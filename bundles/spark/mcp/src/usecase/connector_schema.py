@@ -33,7 +33,7 @@ It validates the *manifest shape*. It does NOT:
   * Verify the configSchema is itself valid JSON Schema (no nested
     metaschema validation; we trust the bundle author here).
   * Validate per-instance config (that's instance_store.create's job
-    when an operator submits the setup form).
+    when an operator saves the /connectors form).
 
 # Single source of truth
 

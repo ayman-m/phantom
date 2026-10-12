@@ -10,13 +10,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *      at /api/v1/config{,/providers}. Phantom doesn't ship those
  *      routes; this page calls /api/agent/providers/config directly,
  *      which reads/writes the MCP-side ProviderStore.
- *   2. **Scope**: Vertex AI (Gemini) and Anthropic are functional.
- *      OpenAI is still presented but disabled with a "Work in progress"
- *      badge pending the OpenAI API / Codex CLI integration.
+ *   2. **Scope**: Vertex AI (Gemini) and Anthropic. A provider the chat
+ *      path cannot use has no card here.
  *
  * Anthropic credentials feed two paths:
- *   - anthropicApiKey is reserved for the future chat-route callAnthropic
- *     (direct API; not wired yet but the field persists for forward-compat).
+ *   - anthropicApiKey is the fallback credential for the same CLI shell-out
+ *     when anthropicCliKey is empty (lib/anthropic-credentials.ts). The chat
+ *     route makes no direct Anthropic API calls.
  *   - anthropicCliKey is consumed by POST /api/chat/cli (Claude Code CLI
  *     shell-out). Either field accepts an OAuth token (sk-ant-oat01-...)
  *     or an API key (sk-ant-api03-...) — Claude Code CLI handles both.
@@ -27,9 +27,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 interface ProviderConfig {
   anthropicApiKey: string;
   anthropicCliKey: string;
-  openaiApiKey: string;
-  openaiCodexToken: string;
-  ollamaEndpoint: string;
   /** Google Vertex AI — service-account JSON blob (multi-line). Encrypted in Infisical. */
   vertexServiceAccountJson: string;
   /** Google Vertex AI — GCP project that owns the quotas. Not a secret. */
@@ -55,9 +52,6 @@ const glassCard: React.CSSProperties = {
 const DEFAULT_PROVIDER_CONFIG: ProviderConfig = {
   anthropicApiKey: "",
   anthropicCliKey: "",
-  openaiApiKey: "",
-  openaiCodexToken: "",
-  ollamaEndpoint: "http://localhost:11434",
   vertexServiceAccountJson: "",
   vertexProjectId: "",
   vertexLocation: "us-central1",
@@ -78,16 +72,6 @@ function extractProviderConfig(
       typeof providers.anthropicCliKey === "string"
         ? providers.anthropicCliKey
         : "",
-    openaiApiKey:
-      typeof providers.openaiApiKey === "string" ? providers.openaiApiKey : "",
-    openaiCodexToken:
-      typeof providers.openaiCodexToken === "string"
-        ? providers.openaiCodexToken
-        : "",
-    ollamaEndpoint:
-      typeof providers.ollamaEndpoint === "string"
-        ? providers.ollamaEndpoint
-        : "http://localhost:11434",
     vertexServiceAccountJson:
       typeof providers.vertexServiceAccountJson === "string"
         ? providers.vertexServiceAccountJson
@@ -201,14 +185,6 @@ function EncryptedBadge({ value }: { value: string }) {
   );
 }
 
-function WipBadge() {
-  return (
-    <span className="bg-tertiary/10 text-tertiary text-[10px] font-bold px-2 py-0.5 rounded border border-tertiary/20 uppercase tracking-tighter">
-      Work in progress
-    </span>
-  );
-}
-
 // ── Page Component ───────────────────────────────────────────────────────────
 
 /**
@@ -270,39 +246,30 @@ export default function ProvidersSettingsPage() {
     setError(null);
   }
 
-  function isProviderDirty(provider: "anthropic" | "openai" | "vertex"): boolean {
+  function isProviderDirty(provider: "anthropic" | "vertex"): boolean {
     if (provider === "anthropic") {
       return (
         form.anthropicApiKey !== initialForm.current.anthropicApiKey ||
         form.anthropicCliKey !== initialForm.current.anthropicCliKey
       );
     }
-    if (provider === "vertex") {
-      return (
-        form.vertexServiceAccountJson !==
-          initialForm.current.vertexServiceAccountJson ||
-        form.vertexProjectId !== initialForm.current.vertexProjectId ||
-        form.vertexLocation !== initialForm.current.vertexLocation
-      );
-    }
     return (
-      form.openaiApiKey !== initialForm.current.openaiApiKey ||
-      form.openaiCodexToken !== initialForm.current.openaiCodexToken
+      form.vertexServiceAccountJson !==
+        initialForm.current.vertexServiceAccountJson ||
+      form.vertexProjectId !== initialForm.current.vertexProjectId ||
+      form.vertexLocation !== initialForm.current.vertexLocation
     );
   }
 
   // ── Save (per-card) ─────────────────────────────────────────────────────
 
-  async function handleSaveProvider(provider: "anthropic" | "openai" | "vertex") {
+  async function handleSaveProvider(provider: "anthropic" | "vertex") {
     setSavingProvider(provider);
     setError(null);
 
     const payload = {
       anthropicApiKey: form.anthropicApiKey,
       anthropicCliKey: form.anthropicCliKey,
-      openaiApiKey: form.openaiApiKey,
-      openaiCodexToken: form.openaiCodexToken,
-      ollamaEndpoint: form.ollamaEndpoint,
       vertexServiceAccountJson: form.vertexServiceAccountJson,
       vertexProjectId: form.vertexProjectId,
       vertexLocation: form.vertexLocation,
@@ -331,29 +298,26 @@ export default function ProvidersSettingsPage() {
 
   /**
    * Test Connection only validates pay-per-token API keys. CLI / OAuth
-   * refresh tokens (Anthropic CLI Token, OpenAI Codex CLI Token) can't be
+   * refresh tokens (the Anthropic CLI Token) can't be
    * probed without rotating them as a side effect, so their validation
    * happens at runtime when the CLI actually runs. This helper returns
    * true only when an API key is filled for the provider.
    */
-  function hasTestableApiKey(provider: "anthropic" | "openai" | "vertex"): boolean {
+  function hasTestableApiKey(provider: "anthropic" | "vertex"): boolean {
     if (provider === "anthropic") {
       return !!form.anthropicApiKey;
     }
-    if (provider === "vertex") {
-      // Vertex requires ALL three fields filled before either Test or
-      // Save activates — incomplete state would either fail at the
-      // JWT exchange (no project) or be saved as a half-config that
-      // the runtime can't register the provider from. Forcing all 3
-      // fields up front gives the user a single clear "fill the
-      // section completely" signal instead of letting them save junk.
-      return (
-        !!form.vertexServiceAccountJson.trim() &&
-        !!form.vertexProjectId.trim() &&
-        !!form.vertexLocation.trim()
-      );
-    }
-    return !!form.openaiApiKey;
+    // Vertex requires ALL three fields filled before either Test or
+    // Save activates — incomplete state would either fail at the
+    // JWT exchange (no project) or be saved as a half-config that
+    // the runtime can't register the provider from. Forcing all 3
+    // fields up front gives the user a single clear "fill the
+    // section completely" signal instead of letting them save junk.
+    return (
+      !!form.vertexServiceAccountJson.trim() &&
+      !!form.vertexProjectId.trim() &&
+      !!form.vertexLocation.trim()
+    );
   }
 
   /**
@@ -422,7 +386,7 @@ export default function ProvidersSettingsPage() {
       [provider]: { provider, status: "testing" },
     }));
 
-    // Build the body per provider. Anthropic and OpenAI use a single
+    // Build the body per provider. Anthropic uses a single
     // api_key. Vertex uses service-account JSON + project ID +
     // optional location, validated via a JWT→OAuth2 exchange followed
     // by a ping of Vertex's publisher-models endpoint.
@@ -445,8 +409,7 @@ export default function ProvidersSettingsPage() {
         location: form.vertexLocation || "us-central1",
       };
     } else {
-      const apiKey =
-        provider === "anthropic" ? form.anthropicApiKey : form.openaiApiKey;
+      const apiKey = form.anthropicApiKey;
       if (!apiKey) {
         setConnectionStatuses((prev) => ({
           ...prev,
@@ -750,8 +713,8 @@ export default function ProvidersSettingsPage() {
                   className="w-full bg-surface-container-lowest border-none rounded-lg px-4 py-3 text-xs font-mono text-on-surface focus:ring-1 focus:ring-primary/40 transition-all outline-none resize-y"
                 />
                 <p className="text-[10px] text-on-surface-variant/60 font-label">
-                  Paste the full JSON key from GCP Console → IAM → Service Accounts. Stored encrypted at rest under
-                  {" "}<code className="font-mono">setup.json</code>{" "}with operator-supplied <code className="font-mono">PHANTOM_SECRET_KEK</code>.
+                  Paste the full JSON key from GCP Console → IAM → Service Accounts. Stored encrypted at rest with the
+                  {" "}<code className="font-mono">PHANTOM_SECRET_KEK</code>{" "}from <code className="font-mono">/opt/phantom/.env</code>.
                   To replace a stored value, just type or paste — the masked bullets clear automatically. <em>Reveal</em> shows the redaction sentinel returned by the API (your real key is never sent back to the browser).
                 </p>
               </div>
@@ -810,7 +773,7 @@ export default function ProvidersSettingsPage() {
                   value={form.anthropicApiKey}
                   onChange={(v) => updateField("anthropicApiKey", v)}
                   placeholder="sk-ant-api03-..."
-                  helpText="Reserved for direct Claude API calls in the chat-route (follow-on release). Stored encrypted under primary-anthropic.secrets.api_key."
+                  helpText="Used for Claude models when no CLI token is set. Accepts an API key (sk-ant-api03-) or a Max OAuth token (sk-ant-oat01-). Stored encrypted."
                 />
                 <MaskedKeyInput
                   id="anthropic-cli-key"
@@ -824,141 +787,6 @@ export default function ProvidersSettingsPage() {
             </div>
           </section>
 
-          {/* ── OpenAI Card (WORK IN PROGRESS) ─────────────────────────── */}
-          <section
-            className="rounded-xl overflow-hidden relative opacity-50"
-            style={{ ...glassCard, filter: "grayscale(0.5)" }}
-          >
-            {/* Accent Bar */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary-container to-secondary" />
-
-            <div className="p-6">
-              {/* Card Header */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <span
-                      className="material-symbols-outlined text-2xl"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      layers
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="font-headline text-lg font-bold text-on-surface">OpenAI</h3>
-                    <div className="flex gap-2 mt-1">
-                      <WipBadge />
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    disabled
-                    className="px-4 py-2 text-xs font-bold font-headline rounded bg-transparent border border-outline-variant/10 text-on-surface-variant/40 cursor-not-allowed"
-                  >
-                    Test Connection
-                  </button>
-                  <button
-                    type="button"
-                    disabled
-                    className="px-6 py-2 text-xs font-bold font-headline rounded bg-surface-container-highest text-on-surface-variant/40 cursor-not-allowed"
-                  >
-                    Disabled
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <MaskedKeyInput
-                  id="openai-api-key"
-                  label="API Key"
-                  value={form.openaiApiKey}
-                  onChange={(v) => updateField("openaiApiKey", v)}
-                  placeholder="sk-..."
-                  helpText="Phantom's chat path is currently Vertex/Gemini only. OpenAI integration is on the roadmap."
-                  disabled
-                />
-                <MaskedKeyInput
-                  id="openai-codex-token"
-                  label="Codex CLI Token"
-                  value={form.openaiCodexToken}
-                  onChange={(v) => updateField("openaiCodexToken", v)}
-                  placeholder="rt_..."
-                  helpText="Roadmap — once OpenAI integration ships, this will accept the ~/.codex/auth.json refresh token."
-                  disabled
-                />
-              </div>
-            </div>
-          </section>
-
-
-          {/* ── Ollama (Disabled) ──────────────────────────────────────── */}
-          <section
-            className="rounded-xl overflow-hidden relative opacity-50"
-            style={{ ...glassCard, filter: "grayscale(0.5)" }}
-          >
-            <div className="p-6">
-              {/* Card Header */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant">
-                    <span className="material-symbols-outlined text-2xl">dns</span>
-                  </div>
-                  <div>
-                    <h3 className="font-headline text-lg font-bold text-on-surface">
-                      Ollama (Local)
-                    </h3>
-                    <div className="flex gap-2 mt-1">
-                      <span className="bg-tertiary/10 text-tertiary text-[10px] font-bold px-2 py-0.5 rounded border border-tertiary/20 uppercase tracking-tighter">
-                        Roadmap
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    disabled
-                    className="px-4 py-2 text-xs font-bold font-headline rounded bg-transparent border border-outline-variant/10 text-on-surface-variant/40 cursor-not-allowed"
-                  >
-                    Test Connection
-                  </button>
-                  <button
-                    type="button"
-                    disabled
-                    className="px-6 py-2 text-xs font-bold font-headline rounded bg-surface-container-highest text-on-surface-variant/40 cursor-not-allowed"
-                  >
-                    Disabled
-                  </button>
-                </div>
-              </div>
-
-              {/* Disabled field */}
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <label
-                    htmlFor="ollama-endpoint"
-                    className="block text-[11px] font-bold text-on-surface-variant uppercase tracking-widest font-label"
-                  >
-                    Endpoint URL
-                  </label>
-                  <div className="max-w-xl">
-                    <input
-                      id="ollama-endpoint"
-                      type="text"
-                      value={form.ollamaEndpoint}
-                      disabled
-                      className="w-full bg-surface-container-lowest/50 border-none rounded-lg px-4 py-3 text-sm font-mono text-on-surface-variant/40 cursor-not-allowed outline-none"
-                    />
-                  </div>
-                  <p className="text-[10px] text-on-surface-variant/50 font-label italic">
-                    Local inference backend integration arriving in v2.4.0.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
         </div>
 
         {/* ── Metadata Footer ─────────────────────────────────────────── */}
@@ -986,7 +814,6 @@ export default function ProvidersSettingsPage() {
                 {
                   [
                     form.anthropicApiKey,
-                    form.openaiApiKey,
                     form.vertexServiceAccountJson && form.vertexProjectId
                       ? "vertex"
                       : "",

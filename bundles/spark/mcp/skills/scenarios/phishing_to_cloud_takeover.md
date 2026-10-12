@@ -70,7 +70,12 @@ verbatim as `schema_override` on that stage's worker. Without it the worker emit
 observables that the vendor's modeling rule cannot map, so events land raw and `xdm.*` stays
 empty. `compact=true` is lossless for this purpose and keeps the payload inside the tool-result cap.
 
-Call `data_sources_installed_as_vendors`. Group `vendors[]` by `data_source_class` into the category lookup. If `email-gateway` AND `saas` are both missing, stop and tell the operator — there's no way to model this attack without at least one installed data source in each class. If only `proxy` is missing, fall back to firewall east-west denials at the proxy port (less fidelity but workable).
+### Class check (MANDATORY — before creating any worker)
+
+1. Call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class`.
+2. For every row of the "Data classes used" table, write down the installed entry you will use for it, or `MISSING`. A class is only covered by an installed entry. A generic or catch-all schema is never a substitute, and never guess a vendor/product for a class.
+3. For each stage whose class is `MISSING` (and has no substitute in the table), say this to the operator, with the class and stage filled in: "No installed data source covers the `<class>` class, so I am skipping Stage <N> (<stage name>). I will not generate it with a generic schema. Install a `<class>` data source from the Marketplace to include it." Then create NO worker for that stage: not with a generic schema, not with another class's schema, not with a guessed vendor/product. Continue with the stages whose classes are covered. If every stage is `MISSING`, stop after saying it. Apply the table's own fallbacks first: no `proxy` means use the `firewall` entry for Stage 2; no `cloud` means end the chain at Stage 5 and say the cloud pivot would fire if cloud audit were instrumented. If `email-gateway` AND `saas` are both `MISSING`, stop after saying it.
+4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
 ## Narrative thread
 
@@ -439,7 +444,7 @@ SA-with-Owner-and-self-impersonation pattern is suspicious enough to fire on its
 | Mailbox rule abuse with `forward_to=*@protonmail.com` | XSIAM Issues |
 | Exfiltration alert tied to OneDrive bulk-download volume | XSIAM Issues |
 | Cloud IAM SA key creation with `roles/owner` | XSIAM Issues |
-| Pivotable: filter `user=m.patel`, see all 7 alerts in one timeline | XQL: `config timeframe = 24h \| dataset = msft_o365_audit_raw \| filter UserId = "m.patel@corp.example" \| limit 20` |
+| Pivotable: filter `user=m.patel`, see all 7 alerts in one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the saas entry> \| filter <its user field> = "m.patel@corp.example" \| limit 20` |
 
 ## Tear-down
 

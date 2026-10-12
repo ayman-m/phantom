@@ -63,7 +63,12 @@ verbatim as `schema_override` on that stage's worker. Without it the worker emit
 observables that the vendor's modeling rule cannot map, so events land raw and `xdm.*` stays
 empty. `compact=true` is lossless for this purpose and keeps the payload inside the tool-result cap.
 
-Call `data_sources_installed_as_vendors`. Group `vendors[]` by `data_source_class`. All four classes typically have an installed data source in a perimeter-savvy deployment. If any class has no installed entry, tell the operator and follow the substitution column.
+### Class check (MANDATORY — before creating any worker)
+
+1. Call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class`.
+2. For every row of the "Data classes used" table, write down the installed entry you will use for it, or `MISSING`. A class is only covered by an installed entry. A generic or catch-all schema is never a substitute, and never guess a vendor/product for a class.
+3. For each stage whose class is `MISSING` (and has no substitute in the table), say this to the operator, with the class and stage filled in: "No installed data source covers the `<class>` class, so I am skipping Stage <N> (<stage name>). I will not generate it with a generic schema. Install a `<class>` data source from the Marketplace to include it." Then create NO worker for that stage: not with a generic schema, not with another class's schema, not with a guessed vendor/product. Continue with the stages whose classes are covered. If every stage is `MISSING`, stop after saying it. Substitutions from the table apply first: `proxy` missing means use the `firewall` entry for Stage 2; `vpn` missing means use the `saas` sign-in failures for Stage 4. Say when you substitute.
+4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
 ## Narrative thread
 
@@ -273,7 +278,7 @@ xlog.create_data_worker:
 | Suspicious URL alert: `.env` / `.git/config` / scanner UAs | XSIAM Issues |
 | WAF alert: SQLi probes from same source | XSIAM Issues |
 | Account-probing alert at VPN | XSIAM Issues |
-| Pivotable: filter by `src_ip=192.0.2.42` to see all 4 stages | XQL: `config timeframe = 24h \| dataset = firewall_logs \| filter src_ip="192.0.2.42" \| limit 20` |
+| Pivotable: filter by `src_ip=192.0.2.42` to see all 4 stages | XQL: `config timeframe = 24h \| dataset = <dataset_name of the firewall entry> \| filter <its source-IP field> = "192.0.2.42" \| limit 20` |
 
 ## Tear-down
 

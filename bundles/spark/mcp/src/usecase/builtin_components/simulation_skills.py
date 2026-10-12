@@ -6,8 +6,9 @@ Skills are structured guides for orchestrating attack scenarios using Phantom, C
 """
 
 import os
+from itertools import combinations
 from pathlib import Path
-from typing import Union, Dict, List, Optional, Any
+from typing import Union, Dict, List, Optional, Any, Tuple
 from mcp import types as mcp_types
 
 
@@ -148,6 +149,157 @@ def read_skill_file(file_path: str) -> Optional[str]:
         return None
 
 
+def _norm(text: str) -> str:
+    """Lowercase and treat `_`/`-` as spaces so `web shell`, `web-shell` and
+    a skill file named `web_app_to_webshell_...` can be compared."""
+    return " ".join(text.lower().replace("_", " ").replace("-", " ").split())
+
+
+def _keyword_score(metadata: Dict[str, Any], keywords: List[str]) -> int:
+    """How strongly a skill matches any of `keywords`; 0 means no match.
+
+    Matches name > displayName/description > frontmatter keywords > body text.
+    A phrase also matches with its spaces removed ("web shell" finds
+    "webshell"). Higher scores sort first.
+    """
+    skill_id = str(metadata.get("skill_id") or "")
+    fields = [
+        (_norm(skill_id), 8),
+        (_norm(str(metadata.get("name") or "")), 6),
+        (_norm(str(metadata.get("description") or "")), 4),
+        (_norm(" ".join(str(k) for k in (metadata.get("keywords") or []))), 4),
+    ]
+    body: Optional[str] = None
+    best = 0
+    for raw in keywords:
+        phrase = _norm(raw)
+        if not phrase:
+            continue
+        squashed = phrase.replace(" ", "")
+        for text, weight in fields:
+            if phrase in text or squashed in text.replace(" ", ""):
+                best = max(best, weight)
+        if best == 0:
+            if body is None:
+                path = metadata.get("file_path")
+                body = _norm(read_skill_file(path) or "") if path else ""
+            if phrase in body or squashed in body.replace(" ", ""):
+                best = 1
+    return best
+
+
+def _apply_filters(
+    all_skills: Dict[str, Dict[str, Any]],
+    category: Optional[str],
+    attack_type: Optional[str],
+    complexity: Optional[str],
+    caldera_available: Optional[bool],
+    keywords: Optional[List[str]],
+) -> List[Dict[str, Any]]:
+    matched: List[Dict[str, Any]] = []
+    for skill_id, metadata in all_skills.items():
+        if category and metadata.get("category") != category:
+            continue
+        # A skill that declares no attack_type / complexity has no opinion
+        # about it: absence is "no constraint", only a declared different
+        # value excludes the skill.
+        declared = metadata.get("attack_type")
+        if attack_type and declared and str(declared).lower() != attack_type.lower():
+            continue
+        declared = metadata.get("complexity")
+        if complexity and declared and str(declared).lower() != complexity.lower():
+            continue
+        if caldera_available is False and metadata.get("caldera_required") is True:
+            continue
+        entry = {"skill_id": skill_id, **metadata}
+        if keywords:
+            score = _keyword_score(entry, keywords)
+            if score == 0:
+                continue
+            entry["_score"] = score
+        matched.append(entry)
+    if keywords:
+        matched.sort(key=lambda e: -e["_score"])
+        for e in matched:
+            del e["_score"]
+    return matched
+
+
+# Filters that may be dropped when nothing matches, in preference order (the
+# first of two equally small drop sets wins). caldera_available is a hard
+# requirement (a skill that needs CALDERA cannot run without it) and keywords
+# are never relaxed: dropping them would turn "nothing matches your words" into
+# "here is the whole catalog". category goes last: a category the catalog does
+# not have is the only reason to widen past it.
+_RELAXABLE = ("complexity", "attack_type", "category")
+
+# A relaxed result is a set of suggestions, not an answer: at most this many
+# skills, metadata only, so a miss can never dump the catalog's bodies.
+RELAXED_RESULT_LIMIT = 10
+
+
+def filter_skills_with_notes(
+    category: Optional[str] = None,
+    attack_type: Optional[str] = None,
+    complexity: Optional[str] = None,
+    caldera_available: Optional[bool] = None,
+    keywords: Optional[List[str]] = None,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Filter skills; relax category/attack_type/complexity instead of returning nothing.
+
+    Returns (skills, filters_relaxed). When the filters as given match nothing,
+    the SMALLEST set of category/attack_type/complexity filters whose removal
+    produces matches is dropped (one filter at a time first, then pairs, then
+    all three) and reported as {"filter", "value", "reason"}; filters that were
+    not the cause are never reported. `keywords` and `caldera_available` are
+    never relaxed, so keywords that match nothing return ([], []). The list is
+    empty in `filters_relaxed` when the filters matched as given.
+    """
+    all_skills = get_skill_metadata()
+    given: Dict[str, Any] = {
+        "category": category or None,
+        "attack_type": attack_type or None,
+        "complexity": complexity or None,
+    }
+
+    def run(dropped: Tuple[str, ...] = ()) -> List[Dict[str, Any]]:
+        use = {k: (None if k in dropped else v) for k, v in given.items()}
+        return _apply_filters(
+            all_skills,
+            use["category"],
+            use["attack_type"],
+            use["complexity"],
+            caldera_available,
+            keywords or None,
+        )
+
+    matched = run()
+    if matched:
+        return matched, []
+    active = [n for n in _RELAXABLE if given[n] is not None]
+    for size in range(1, len(active) + 1):
+        for dropped in combinations(active, size):
+            matched = run(dropped)
+            if not matched:
+                continue
+            notes = []
+            for name in dropped:
+                others = [d for d in dropped if d != name]
+                together = f" (together with {', '.join(others)})" if others else ""
+                notes.append(
+                    {
+                        "filter": name,
+                        "value": given[name],
+                        "reason": (
+                            f"no skill matched {name}={given[name]!r} with the other "
+                            f"filters; ignoring it{together} gave {len(matched)} match(es)"
+                        ),
+                    }
+                )
+            return matched, notes
+    return [], []
+
+
 def filter_skills(
     category: Optional[str] = None,
     attack_type: Optional[str] = None,
@@ -155,134 +307,22 @@ def filter_skills(
     caldera_available: Optional[bool] = None,
     keywords: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
-    """
-    Filter skills based on criteria.
-
-    Args:
-        category: Filter by category (foundation, scenarios, validation, workflows)
-        attack_type: Filter by attack type (ransomware, apt, credential_theft, etc.)
-        complexity: Filter by complexity (low, medium, high)
-        caldera_available: Filter by whether CALDERA is available
-        keywords: If non-empty, only return skills
-            whose `keywords` (inline metadata OR frontmatter) intersect
-            the supplied list (case-insensitive substring match). The
-            chat-route uses this to filter "load_simulation_skills"
-            responses by what the operator's recent prompts actually
-            mentioned — keeps system-prompt-relevant skills front and
-            irrelevant ones out.
-
-    Returns:
-        List of matching skill metadata
-    """
-    all_skills = get_skill_metadata()
-    filtered = []
-
-    for skill_id, metadata in all_skills.items():
-        # Apply filters
-        if category and metadata.get("category") != category:
-            continue
-
-        if attack_type and metadata.get("attack_type") != attack_type:
-            continue
-
-        if complexity and metadata.get("complexity") != complexity:
-            continue
-
-        if caldera_available is False and metadata.get("caldera_required") is True:
-            continue
-
-        if keywords:
-            # Match against inline keywords +
-            # any frontmatter keywords the file declared. Empty
-            # skill keywords means "no opinion" → don't filter
-            # this skill out (keeps untagged skills available).
-            skill_keywords = (metadata.get("keywords") or [])
-            file_path_rel = metadata.get("file_path")
-            if file_path_rel:
-                fm = _read_frontmatter_keywords(file_path_rel)
-                if fm:
-                    skill_keywords = list(skill_keywords) + list(fm)
-            if skill_keywords:
-                # Lowercase + substring match: "fortigate" in
-                # "fortigate-auth-spray" → True. Looser than exact
-                # match because operator phrasing varies.
-                kw_lc = [k.lower() for k in keywords]
-                sk_lc = [k.lower() for k in skill_keywords]
-                if not any(
-                    any(kw in sk or sk in kw for sk in sk_lc)
-                    for kw in kw_lc
-                ):
-                    continue
-
-        # Add skill_id to metadata
-        skill_data = {"skill_id": skill_id, **metadata}
-        filtered.append(skill_data)
-
-    return filtered
-
-
-def _read_frontmatter_keywords(file_path_rel: str) -> List[str]:
-    """Read YAML frontmatter from a skill MD
-    file and return its `keywords` list (or empty). Best-effort:
-    malformed frontmatter / missing files return []. Cached
-    lifetime is per-process (skills don't change without a restart).
-    """
-    cached = _FRONTMATTER_KEYWORDS_CACHE.get(file_path_rel)
-    if cached is not None:
-        return cached
-    try:
-        skills_dir = find_skills_dir(Path(__file__).parent)
-        full_path = skills_dir / file_path_rel
-        if not full_path.exists():
-            _FRONTMATTER_KEYWORDS_CACHE[file_path_rel] = []
-            return []
-        text = full_path.read_text(encoding="utf-8")
-    except Exception:
-        _FRONTMATTER_KEYWORDS_CACHE[file_path_rel] = []
-        return []
-    # Look for a leading `---\n...\n---\n` block.
-    if not text.startswith("---"):
-        _FRONTMATTER_KEYWORDS_CACHE[file_path_rel] = []
-        return []
-    end_idx = text.find("\n---", 3)
-    if end_idx < 0:
-        _FRONTMATTER_KEYWORDS_CACHE[file_path_rel] = []
-        return []
-    fm_text = text[3:end_idx].strip()
-    try:
-        import yaml as _yaml
-
-        data = _yaml.safe_load(fm_text) or {}
-    except Exception:
-        _FRONTMATTER_KEYWORDS_CACHE[file_path_rel] = []
-        return []
-    raw = data.get("keywords") if isinstance(data, dict) else None
-    # Also accept a `when.keywords` nested form (matches the SnowAgent
-    # `when: { keywords: [...] }` shape).
-    if not raw and isinstance(data, dict):
-        when = data.get("when")
-        if isinstance(when, dict):
-            raw = when.get("keywords")
-    if isinstance(raw, list):
-        result = [str(k) for k in raw if isinstance(k, (str, int))]
-    elif isinstance(raw, str):
-        # Comma-separated fallback.
-        result = [s.strip() for s in raw.split(",") if s.strip()]
-    else:
-        result = []
-    _FRONTMATTER_KEYWORDS_CACHE[file_path_rel] = result
-    return result
-
-
-_FRONTMATTER_KEYWORDS_CACHE: Dict[str, List[str]] = {}
+    """Filter skills (see filter_skills_with_notes); drops the relaxation notes."""
+    return filter_skills_with_notes(
+        category, attack_type, complexity, caldera_available, keywords
+    )[0]
 
 
 def _as_keyword_list(value: Any) -> Optional[List[str]]:
-    """A model sends {} or a single string where a list is meant; accept both rather than fail the call."""
+    """A model sends {} or a single string where a list is meant; accept both rather than fail the call.
+
+    A string may hold several comma-separated phrases ("web shell, exfil").
+    """
     if isinstance(value, str):
-        return [value] if value.strip() else None
+        parts = [p.strip() for p in value.split(",") if p.strip()]
+        return parts or None
     if isinstance(value, (list, tuple)):
-        return [str(v) for v in value] or None
+        return [str(v) for v in value if str(v).strip()] or None
     return None
 
 
@@ -296,152 +336,157 @@ async def load_simulation_skills(
     keywords: Optional[Union[List[str], str, Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """
-    Load simulation skill prompts for purple team exercises.
+    Load simulation skill runbooks (scenarios, workflows, foundation).
 
-    This tool provides access to structured skill guides that teach LLM agents how to:
-    - Generate consistent IoCs across synthetic and real attack telemetry
-    - Create realistic network topologies with multiple log sources
-    - Execute complete attack scenarios (ransomware, APT, etc.)
-    - Validate detection coverage and IoC correlation
-    - Conduct end-to-end purple team exercises
+    Call this FIRST for any simulation request, to see whether a shipped skill
+    already covers it. Every filter is optional. The simplest, most reliable
+    call is `keywords` alone ("web shell", "dns tunneling", "port scan"), or no
+    filter at all with include_content=False to browse the whole catalog.
 
-    Skills can be filtered by category, attack type, complexity, and CALDERA availability.
+    Filtering is forgiving about metadata. Most shipped skills declare no
+    `attack_type` or `complexity`, and a skill that declares none is never
+    excluded by that filter. If the filters still match nothing, the smallest
+    set of category / attack_type / complexity filters whose removal produces
+    matches is dropped and listed in `filters_relaxed`. A relaxed result is a
+    short list of suggestions: at most 10 skills, metadata only (no `content`
+    even when include_content=True). Read `hint`, pick a skill by name and
+    description, then call `skills_read` with its path (for example
+    "scenarios/dns_tunneling_c2.md") or repeat the call with fewer filters.
+    `keywords` are never dropped: if no skill matches them the result is an
+    EMPTY list with a `hint` (retry with one or two broader words, or browse
+    with include_content=False and no filters). You can also skip this tool and
+    call `skills_read` with a path from the AVAILABLE SKILLS block.
 
     Args:
-        category: Filter by category
-            - "foundation": Core building blocks (IoC generation, topology design)
-            - "scenarios": Complete attack chains (ransomware, APT)
-            - "validation": Verification and testing (IoC correlation)
-            - "workflows": End-to-end processes (purple team exercise)
-            - None: Return summary of all skills
-
-        attack_type: Filter scenario skills by attack type
-            - "ransomware": Ransomware attack chains
-            - "apt": Advanced Persistent Threat scenarios
-            - "credential_theft": Credential-focused attacks
-            - None: Return all attack types
-
-        complexity: Filter by skill complexity
-            - "low": Simple, quick to execute
-            - "medium": Moderate complexity, standard scenarios
-            - "high": Complex, multi-day exercises
-            - None: Return all complexity levels
-
-        include_content: Whether to include full skill markdown content
-            - True: Return full skill content (for execution)
-            - False: Return only metadata (for browsing)
-
-        caldera_available: Filter by CALDERA requirement
-            - True: Return all skills (CALDERA optional and required)
-            - False: Return only skills that don't require CALDERA
-            - None: Return all skills regardless of CALDERA
+        category: "foundation" (building blocks), "scenarios" (multi-stage attack
+            chains), "validation" (verification), "workflows" (end-to-end runs and
+            the alert-trigger recipes). Omit for every category.
+        attack_type: Optional hint ("apt", "ransomware", "credential_theft", ...).
+            Only skills that declare a different attack_type are excluded.
+        complexity: Optional hint ("low", "medium", "high"). Only skills that
+            declare a different complexity are excluded.
+        include_content: True returns each skill's full markdown body (use when
+            about to execute); False returns metadata only (use when browsing).
+            Ignored (metadata only) when filters were relaxed.
+        caldera_available: False excludes skills that require CALDERA. This is a
+            hard requirement and is never relaxed.
+        keywords: Free text, one phrase or several comma-separated, matched
+            case-insensitively against each skill's name, display name,
+            description, frontmatter keywords and full body text. Matching any one
+            phrase is enough. "web shell" also finds "webshell". Results are
+            ordered best match first (name matches before body-only matches).
 
     Returns:
-        Dictionary containing:
-        - skills: List of skill objects with metadata and optionally content
-        - summary: Overview of returned skills
-        - total_count: Number of skills returned
+        success, skills (metadata, plus `content` when requested), summary
+        (total_skills returned, total_matched, by_category, filters_applied),
+        filters_relaxed (list of {filter, value, reason}; empty when the filters
+        matched as given), hint (null unless the result was relaxed or empty)
+        and usage_guidance.
 
     Examples:
-        # Get foundation skills with full content
-        load_simulation_skills(category="foundation", include_content=True)
+        # Find the web shell scenario
+        load_simulation_skills(keywords="web shell")
 
-        # Get ransomware scenario
-        load_simulation_skills(category="scenarios", attack_type="ransomware")
+        # The same, with extra hints that do not have to match exactly
+        load_simulation_skills(category="scenarios", attack_type="apt", complexity="medium", keywords="web shell")
 
-        # Browse all available skills (metadata only)
+        # Browse every skill, metadata only
         load_simulation_skills(include_content=False)
 
-        # Get skills that don't require CALDERA
-        load_simulation_skills(caldera_available=False)
-
-        # Get high complexity scenarios
-        load_simulation_skills(category="scenarios", complexity="high")
+        # Skills that run without CALDERA
+        load_simulation_skills(caldera_available=False, include_content=False)
     """
-    # Filter skills based on criteria
-    matched_skills = filter_skills(
+    keyword_list = _as_keyword_list(keywords)
+    matched_skills, filters_relaxed = filter_skills_with_notes(
         category=category,
         attack_type=attack_type,
         complexity=complexity,
         caldera_available=caldera_available,
-        keywords=_as_keyword_list(keywords),
+        keywords=keyword_list,
     )
 
-    # Prepare response
-    skills = []
+    total_matched = len(matched_skills)
+    if filters_relaxed:
+        # Nearest-match suggestions only: names and descriptions, never bodies.
+        matched_skills = matched_skills[:RELAXED_RESULT_LIMIT]
+        include_content = False
 
+    skills = []
     for skill_metadata in matched_skills:
         skill_data = skill_metadata.copy()
-
-        # Load content if requested
         if include_content:
             content = read_skill_file(skill_metadata["file_path"])
             if content:
                 skill_data["content"] = content
             else:
                 skill_data["content"] = f"Error: Could not read skill file at {skill_metadata['file_path']}"
-
         skills.append(skill_data)
 
-    # Generate summary
-    categories = {}
+    categories: Dict[str, int] = {}
     for skill in skills:
         cat = skill.get("category", "unknown")
         categories[cat] = categories.get(cat, 0) + 1
 
     summary = {
         "total_skills": len(skills),
+        "total_matched": total_matched,
         "by_category": categories,
         "filters_applied": {
             "category": category,
             "attack_type": attack_type,
             "complexity": complexity,
-            "caldera_available": caldera_available
-        }
+            "caldera_available": caldera_available,
+            "keywords": keyword_list,
+        },
     }
 
-    # Build usage guidance based on what was returned
-    usage_guidance = []
-
+    usage_guidance: List[str] = []
+    hint: Optional[str] = None
+    if filters_relaxed:
+        dropped = ", ".join(f"{r['filter']}={r['value']!r}" for r in filters_relaxed)
+        hint = (
+            f"Filters relaxed ({dropped}): nothing matched them, so these are the nearest skills "
+            f"(metadata only, {len(skills)} of {total_matched}). Choose by name and description, "
+            "then call skills_read with its path (for example \"scenarios/dns_tunneling_c2.md\") "
+            "or repeat this call with fewer filters and include_content=true."
+        )
+    elif not skills and keyword_list:
+        hint = (
+            f"No skill matches the keywords {keyword_list!r}. Retry with one or two broader "
+            "words, browse with include_content=false and no filters, or call skills_read "
+            "with a path from the AVAILABLE SKILLS block (for example "
+            "\"scenarios/dns_tunneling_c2.md\")."
+        )
+    elif not skills:
+        hint = (
+            "No skill matches these filters. Browse with include_content=false and no "
+            "filters, or call skills_read with a path from the AVAILABLE SKILLS block."
+        )
+    if hint:
+        usage_guidance.append(hint)
     if category == "foundation":
-        usage_guidance.append("Foundation skills are building blocks. Execute them in order:")
-        usage_guidance.append("1. generate_shared_iocs - Create consistent IoCs")
-        usage_guidance.append("2. create_device_topology - Design network environment")
-        usage_guidance.append("Then proceed to a scenario skill.")
-
+        usage_guidance.append("Foundation skills are building blocks that scenarios and workflows build on.")
     elif category == "scenarios":
-        usage_guidance.append("Scenario skills provide complete attack chains.")
-        usage_guidance.append("Prerequisites:")
-        usage_guidance.append("1. Run foundation skills first (IoCs and topology)")
-        usage_guidance.append("2. Follow step-by-step instructions in the scenario")
-        usage_guidance.append("3. Use validation skills after execution")
-
+        usage_guidance.append("Scenario skills are complete multi-stage attack chains.")
+        usage_guidance.append("Follow the step-by-step instructions in the skill, stage by stage.")
+        usage_guidance.append("If a stage needs a data-source class that is not installed, follow the skill's missing-class step for that stage.")
     elif category == "validation":
-        usage_guidance.append("Validation skills verify scenario execution.")
-        usage_guidance.append("Run these AFTER completing a scenario to:")
-        usage_guidance.append("- Check IoC correlation across data sources")
-        usage_guidance.append("- Identify detection gaps")
-        usage_guidance.append("- Generate validation reports")
-
+        usage_guidance.append("Validation skills verify an earlier run; use them after the run.")
     elif category == "workflows":
-        usage_guidance.append("Workflow skills orchestrate complete exercises.")
-        usage_guidance.append("These combine multiple skills into end-to-end processes.")
-        usage_guidance.append("Follow the phase-by-phase instructions for complete exercises.")
-
+        usage_guidance.append("Workflow skills are end-to-end recipes, including the alert-trigger recipes.")
+        usage_guidance.append("Follow the phase-by-phase instructions in the skill.")
     else:
-        # No category filter - provide general guidance
-        usage_guidance.append("Typical execution order:")
-        usage_guidance.append("1. Foundation skills (generate IoCs, create topology)")
-        usage_guidance.append("2. Scenario skills (execute attack chain)")
-        usage_guidance.append("3. Validation skills (verify correlation and coverage)")
-        usage_guidance.append("4. Workflow skills (for complete exercises with reporting)")
+        usage_guidance.append("Pick the skill that matches the request, then follow its instructions exactly.")
+        usage_guidance.append("Use foundation skills (baseline_normal_activity, bootstrap_dataset_fields) for background traffic and dataset preparation.")
 
     return {
         "success": True,
         "skills": skills,
         "summary": summary,
+        "filters_relaxed": filters_relaxed,
+        "hint": hint,
         "usage_guidance": usage_guidance,
-        "skills_directory": str(SKILLS_DIR)
+        "skills_directory": str(SKILLS_DIR),
     }
 
 
@@ -525,7 +570,7 @@ def get_skills_list_resource() -> mcp_types.Resource:
     content += '  "tool": "load_simulation_skills",\n'
     content += '  "params": {\n'
     content += '    "category": "scenarios",\n'
-    content += '    "attack_type": "ransomware"\n'
+    content += '    "keywords": "dns tunneling"\n'
     content += '  }\n'
     content += '}\n'
     content += "```\n"

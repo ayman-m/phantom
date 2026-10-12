@@ -14,7 +14,7 @@
  *
  * Common patterns the form helps with:
  *
- *   - "Block any caldera_start_operation against production hosts
+ *   - "Block any caldera_create_operation against production hosts
  *      until the on-call approves" → PreToolUse, command transport,
  *      failurePolicy:'block'
  *   - "Inject the active incident's ticket id into every chat" →
@@ -25,6 +25,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { confirmAction } from "@/lib/stores/confirm";
 import { cn } from "@/lib/utils";
 
 const HOOK_EVENTS = [
@@ -152,7 +153,13 @@ export default function HooksPage() {
 
   const handleDelete = useCallback(
     async (id: string, name: string) => {
-      if (!confirm(`Delete hook "${name}"? This is irreversible.`)) return;
+      const accepted = await confirmAction({
+        title: `Delete hook "${name}"?`,
+        message: "This is irreversible.",
+        confirmLabel: "Delete",
+        tone: "danger",
+      });
+      if (!accepted) return;
       try {
         const r = await fetch(`/api/agent/hooks/${encodeURIComponent(id)}`, {
           method: "DELETE",

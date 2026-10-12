@@ -75,6 +75,14 @@ When you add `app/<new-page>/page.tsx`, edit `components/sidebar.tsx` in the SAM
 
 If a page is deliberately operator-hidden (accessed only via a button on another page), document that with a code comment near the page's `export default`.
 
+## No native browser dialogs
+
+Never call `window.alert`, `window.confirm` or `window.prompt`: they freeze the page (and browser automation) and cannot be themed. Use the in-app equivalents:
+
+- **Confirm** a destructive or costly action with `await confirmAction({ title, message, confirmLabel, tone })` from [`lib/stores/confirm.ts`](lib/stores/confirm.ts). It resolves `true` or `false`; `ConfirmDialogHost` renders the modal.
+- **Report** an outcome or error with `notify("error" | ..., title, detail)` from [`lib/stores/notifications.ts`](lib/stores/notifications.ts) (a toast).
+- **Ask for text** by editing in place instead of prompting. See `RenameField` in [`components/chat/session-sidebar.tsx`](components/chat/session-sidebar.tsx): Enter saves, Esc cancels, an empty or unchanged value is ignored.
+
 ## Material 3 token system
 
 Theme switching uses `[data-theme="light"]` attribute selector (NOT a `.light` class). `.dark` is implicit default; light requires explicit `data-theme="light"`. Use semantic tokens (`text-primary`, `bg-surface-container`, `border-outline-variant`) — they auto-route through CSS variables for theme switching. No `dark:` prefixes; no hex literals in JSX.

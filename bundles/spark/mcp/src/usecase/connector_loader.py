@@ -1103,7 +1103,7 @@ def iter_registrations(
 # `set_reload_state(mcp, store, secret_store, tool_registry,
 #                   include_legacy)` is called once from main.py after
 # the initial registration completes. The /api/v1/admin/reload_tools
-# endpoint and the post-setup auto-reload in api/setup.py both pull
+# endpoint and the post-container_url auto-reload in api/instances.py both pull
 # this state to invoke `register_all_tools()` without needing
 # explicit DI from every callsite.
 # ─────────────────────────────────────────────────────────────────
@@ -1153,8 +1153,8 @@ def register_all_tools(
     """Register every tool that the current InstanceStore + bundle imply.
 
     Always re-registers (does NOT skip already-registered names). This
-    is intentional: when the operator submits the setup form with
-    `replace: true`, existing instances are deleted and recreated.
+    is intentional: when an instance is deleted and recreated through the
+    instance API, the old instance is gone.
     The OLD wrappers held closure references to the OLD instance
     objects whose secret_refs now point to deleted SecretStore paths;
     re-registering swaps in fresh wrappers with the NEW instance
@@ -1170,9 +1170,9 @@ def register_all_tools(
     Used by:
       * `main.py` async_main() at boot — first call, populates from zero.
       * `api/admin.py` /reload_tools endpoint — operator-driven reload.
-      * `api/setup.py` POST after replace:true — auto-reload so the
-        response can flip `requires_mcp_restart` to false AND the
-        connector wrappers see the freshly-materialized instances.
+      * `api/instances.py` after a connector instance's container_url is
+        stored — auto-reload so the connector wrappers see it without a
+        restart.
     """
     # Clear the tool_registry first so the dict reflects current
     # state. The previous-pass entries get replaced by the loop below.

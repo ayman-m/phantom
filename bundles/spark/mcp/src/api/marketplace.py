@@ -71,6 +71,12 @@ from usecase.marketplace_store import (
 
 logger = logging.getLogger("Phantom MCP")
 
+# Connector ids an upload may not use. Each one is a fixed route directly under
+# mcp/agent/app/api/agent/marketplace/ (install, installed, upload), which wins
+# over the dynamic [connectorId] route for the same path. A new fixed route there
+# must be added here; tests/test_marketplace_catalogue.py checks the two agree.
+_RESERVED_CONNECTOR_IDS = frozenset({"install", "installed", "upload"})
+
 
 # ─────────────────────────────────────────────────────────────────
 # Catalog scanning helpers
@@ -146,7 +152,7 @@ def _connector_summary(
     # fetch on the marketplace page render.
     raw_logo = spec.get("logo")
     logo = raw_logo if isinstance(raw_logo, str) and raw_logo.startswith("data:image/") else None
-    return {
+    summary: dict[str, Any] = {
         "id": connector_id,
         "version": spec.get("version", "0.0.0"),
         "display_name": spec.get("displayName") or connector_id.replace("-", " ").title(),
@@ -159,6 +165,30 @@ def _connector_summary(
         # marketplace.db (set at install time). They agree by
         # construction but only the DB row gates DELETE.
         "origin": origin,
+    }
+    if origin == ORIGIN_USER:
+        # The /connectors page draws bundle cards from its own curated list,
+        # so an uploaded connector has to bring what its card and its
+        # create-instance form need: image, config schema, secret slots and
+        # the tool list. Bundle entries stay light.
+        summary["detail"] = _user_detail(spec)
+    return summary
+
+
+def _user_detail(spec: dict[str, Any]) -> dict[str, Any]:
+    """The parts of an uploaded connector.yaml the marketplace card renders."""
+    tools = (spec.get("spec") or {}).get("tools")
+    secret_slots = spec.get("secretSlots")
+    config_schema = spec.get("configSchema")
+    source = spec.get("source")
+    return {
+        "image": spec.get("image") if isinstance(spec.get("image"), str) else "",
+        "language": source.get("language", "") if isinstance(source, dict) else "",
+        "config_schema": config_schema if isinstance(config_schema, dict) else {},
+        "secret_slots": [s for s in secret_slots if isinstance(s, dict)]
+        if isinstance(secret_slots, list)
+        else [],
+        "tools": [t for t in tools if isinstance(t, dict)] if isinstance(tools, list) else [],
     }
 
 
@@ -274,6 +304,9 @@ def register_marketplace_routes(
                 "tools_count": 18,
                 "tags": [...],
                 "origin": "bundle",         (from catalogue)
+                "detail": {...},            (user connectors only: image,
+                                             language, config_schema,
+                                             secret_slots, tools)
                 "installed": true,
                 "install": {                 (null when not installed)
                   "installed_at": "...",
@@ -569,7 +602,8 @@ def register_marketplace_routes(
           2. Content parses as YAML.
           3. Spec validates against connector.schema.json. All required fields, container-only style,
              schema-valid configSchema, etc.
-          4. spec.id does not collide with a bundle connector id.
+          4. spec.id is not a reserved route name (install, installed,
+             upload) and does not collide with a bundle connector id.
           5. spec.id does not collide with an EXISTING user connector
              id (use DELETE first to replace).
           6. spec has an 'image' field (required for user connectors
@@ -669,6 +703,24 @@ def register_marketplace_routes(
         if not isinstance(cid, str):
             return JSONResponse(
                 {"error": "uploaded YAML missing valid id field"},
+                status_code=400,
+            )
+
+        # An id that is also a fixed route segment of the UI's
+        # /api/agent/marketplace/<segment> proxies would make the uploaded
+        # connector's card undeletable (DELETE on that path reaches the fixed
+        # route, which has no DELETE handler, and answers 405).
+        if cid in _RESERVED_CONNECTOR_IDS:
+            return JSONResponse(
+                {
+                    "error": (
+                        f"connector id {cid!r} is reserved (it is a fixed "
+                        f"marketplace route name); reserved ids: "
+                        f"{', '.join(sorted(_RESERVED_CONNECTOR_IDS))}. "
+                        f"Choose a different id."
+                    ),
+                    "code": "id_reserved",
+                },
                 status_code=400,
             )
 

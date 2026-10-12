@@ -17,7 +17,7 @@ import { listJobs } from "@/lib/api/jobs";
  * surfaces. The live (SSE-streamed) version is at /activity.
  *
  * Each row is one phantom audit_events row (tool_call, simulation_*,
- * setup_completed, settings_changed, …). Filters via a single
+ * settings_changed, …). Filters via a single
  * Lucene-light query bar — see lib/observability-query.ts for syntax.
  * URL-syncs `?q=...` so deep-links from /jobs/[id] (and operator
  * bookmarks) survive a refresh.

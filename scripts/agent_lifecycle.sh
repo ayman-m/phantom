@@ -17,7 +17,6 @@ Commands:
   status      Show Compose service status.
   health      Run local health probes against the Compose network ports.
   logs        Follow Compose logs.
-  apply-setup Copy first-run setup values into .env and recreate the stack.
   export      Build an agent bundle archive.
 EOF
 }
@@ -56,16 +55,6 @@ case "$command" in
     ;;
   logs)
     docker compose -f "$COMPOSE_FILE" logs -f
-    ;;
-  apply-setup)
-    generated_env="$ROOT_DIR/.phantom-agent/.env.generated"
-    if [ ! -f "$generated_env" ]; then
-      printf 'No generated setup env found at %s\n' "$generated_env" >&2
-      exit 1
-    fi
-    cp "$generated_env" "$ROOT_DIR/.env"
-    chmod 600 "$ROOT_DIR/.env"
-    docker compose -f "$COMPOSE_FILE" up -d --force-recreate
     ;;
   export)
     "$ROOT_DIR/scripts/export_agent_bundle.sh"

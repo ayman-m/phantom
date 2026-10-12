@@ -544,7 +544,7 @@ export function AuthTopology() {
           variant="edge"
           title="Next.js /api/auth/*"
           sub="login · logout · status"
-          detail="change-password"
+          detail="change-password · session-lifetime"
         />
 
         {/* Service tier */}

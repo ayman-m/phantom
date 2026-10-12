@@ -216,6 +216,139 @@ def test_load_yaml_jobs_idempotent_on_repeat_boot(tmp_path: Path) -> None:
     s2 = _scheduler(tmp_path)
     count2 = len(s2.list_jobs())
     assert count1 == count2 == 1
+    # Replaying the mirror is not an error: a job that already exists with
+    # the same definition used to be reported as "already exists" on every
+    # boot, filling the yaml-issues list.
+    assert s2.yaml_load_issues == []
+
+
+def test_repeated_boots_leave_issues_empty_and_state_alone(tmp_path: Path) -> None:
+    """Every runtime job is replayed on every boot. None of them may turn
+    into a load issue, and the replay must not disturb live state."""
+    s1 = _scheduler(tmp_path)
+    for i in range(5):
+        s1.add_job(
+            name=f"job-{i}", cron="*/5 * * * *",
+            action={"type": "prompt", "message": f"m{i}"},
+            description=f"note {i}" if i % 2 else None,
+        )
+    before = {j.name: (j.id, j.registered_at, j.next_due_at) for j in s1.list_jobs()}
+    for _ in range(3):
+        s = _scheduler(tmp_path)
+        assert s.yaml_load_issues == []
+    after = {j.name: (j.id, j.registered_at, j.next_due_at) for j in s.list_jobs()}
+    assert after == before
+
+
+def test_description_round_trips_set_cleared_and_omitted(tmp_path: Path) -> None:
+    s = _scheduler(tmp_path)
+    s.add_job(name="a", cron="0 9 * * *", action={"type": "chat", "message": "x"},
+              description="first note")
+    s.add_job(name="b", cron="0 9 * * *", action={"type": "chat", "message": "x"})
+    s.add_job(name="c", cron="0 9 * * *", action={"type": "chat", "message": "x"},
+              description="to be cleared")
+    s.update_job("c", description="")
+    s2 = _scheduler(tmp_path)
+    assert s2.yaml_load_issues == []
+    assert s2.get_job("a").description == "first note"
+    assert s2.get_job("b").description == ""
+    assert s2.get_job("c").description == ""
+    # And once more through a database wipe: the mirror alone restores it.
+    (tmp_path / "jobs.db").unlink()
+    s3 = _scheduler(tmp_path)
+    assert s3.yaml_load_issues == []
+    assert [s3.get_job(n).description for n in "abc"] == ["first note", "", ""]
+
+
+def test_edited_yaml_definition_is_applied_on_reboot(tmp_path: Path) -> None:
+    """The mirror is the operator-editable definition: cron, timezone,
+    action, run_once and description edits apply on restart."""
+    s1 = _scheduler(tmp_path)
+    s1.add_job(name="edit-me", cron="0 9 * * *", action={"type": "chat", "message": "old"},
+               description="old note")
+    path = tmp_path / "jobs" / "edit-me.yaml"
+    doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+    doc.update(cron="30 6 * * *", timezone="Asia/Riyadh", description="new note",
+               run_once=True, action={"type": "chat", "message": "new"})
+    path.write_text(yaml.safe_dump(doc), encoding="utf-8")
+
+    s2 = _scheduler(tmp_path)
+    assert s2.yaml_load_issues == []
+    row = s2.get_job("edit-me")
+    assert (row.cron, row.timezone, row.description, row.run_once) == (
+        "30 6 * * *", "Asia/Riyadh", "new note", True,
+    )
+    assert row.action == {"type": "chat", "message": "new"}
+    assert row.enabled is True and row.next_due_at is not None
+
+
+def test_edited_yaml_with_a_bad_cron_is_a_load_issue_and_keeps_the_job(tmp_path: Path) -> None:
+    s1 = _scheduler(tmp_path)
+    s1.add_job(name="keep", cron="0 9 * * *", action={"type": "chat", "message": "x"})
+    path = tmp_path / "jobs" / "keep.yaml"
+    doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+    doc["cron"] = "not a cron"
+    path.write_text(yaml.safe_dump(doc), encoding="utf-8")
+
+    s2 = _scheduler(tmp_path)
+    assert [i["basename"] for i in s2.yaml_load_issues] == ["keep.yaml"]
+    assert s2.get_job("keep").cron == "0 9 * * *"
+
+
+def test_yaml_with_a_manifest_job_name_is_a_load_issue_not_an_overwrite(tmp_path: Path) -> None:
+    manifest = [{"name": "shared", "cron": "0 0 * * *",
+                 "action": {"type": "chat", "message": "manifest wins"}}]
+    yaml_dir = tmp_path / "jobs"
+    yaml_dir.mkdir(parents=True)
+    (yaml_dir / "shared.yaml").write_text(
+        "name: shared\ncron: '5 5 * * *'\ntimezone: UTC\n"
+        "action: { type: chat, message: from yaml }\n",
+        encoding="utf-8",
+    )
+    s = _scheduler(tmp_path, manifest_jobs=manifest)
+    assert [i["basename"] for i in s.yaml_load_issues] == ["shared.yaml"]
+    assert "manifest" in s.yaml_load_issues[0]["error"]
+    row = s.get_job("shared")
+    assert row.source == "manifest" and row.cron == "0 0 * * *"
+
+
+def test_paused_job_stays_paused_across_reboot_and_database_wipe(tmp_path: Path) -> None:
+    """set_enabled used to leave the mirror saying enabled: true."""
+    s1 = _scheduler(tmp_path)
+    s1.add_job(name="paused", cron="*/5 * * * *", action={"type": "chat", "message": "x"})
+    s1.set_enabled("paused", False)
+    assert yaml.safe_load((tmp_path / "jobs" / "paused.yaml").read_text())["enabled"] is False
+
+    s2 = _scheduler(tmp_path)
+    assert s2.yaml_load_issues == []
+    assert s2.get_job("paused").enabled is False
+    assert s2.get_job("paused").next_due_at is None
+
+    (tmp_path / "jobs.db").unlink()
+    s3 = _scheduler(tmp_path)
+    assert s3.get_job("paused").enabled is False
+
+    # Resume is mirrored too.
+    s3.set_enabled("paused", True)
+    s4 = _scheduler(tmp_path)
+    assert s4.get_job("paused").enabled is True
+    assert s4.yaml_load_issues == []
+
+
+def test_stale_enabled_in_an_old_mirror_does_not_resume_a_paused_job(tmp_path: Path) -> None:
+    """Mirrors written before pause was mirrored still say enabled: true.
+    A restart must not resume a job SQLite has paused."""
+    s1 = _scheduler(tmp_path)
+    s1.add_job(name="old-mirror", cron="*/5 * * * *", action={"type": "chat", "message": "x"})
+    s1.set_enabled("old-mirror", False)
+    path = tmp_path / "jobs" / "old-mirror.yaml"
+    doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+    doc["enabled"] = True
+    path.write_text(yaml.safe_dump(doc), encoding="utf-8")
+
+    s2 = _scheduler(tmp_path)
+    assert s2.yaml_load_issues == []
+    assert s2.get_job("old-mirror").enabled is False
 
 
 def test_load_yaml_jobs_ignores_malformed_files(tmp_path: Path, caplog) -> None:

@@ -13,16 +13,15 @@ tools the agent can call.
 
 # Why this exists
 
-Before this endpoint, materializing a new connector instance via
-/api/v1/setup required a process restart for the MCP to pick up
-the new connector's tools (FastMCP's `mcp.tool()` registration only
-runs in async_main()'s startup loop). The setup endpoint honestly
-returned `requires_mcp_restart: true` and operators had to
+Before this endpoint, creating a new connector instance required a
+process restart for the MCP to pick up the new connector's tools
+(FastMCP's `mcp.tool()` registration only runs in async_main()'s
+startup loop). Operators had to
 `docker compose restart phantom-agent`.
 
 The hot-reload makes that restart unnecessary: register_all_tools()
 is idempotent (skips names already in tool_registry), so calling it
-after a fresh /api/v1/setup picks up only the NEW tools without
+after a new instance is created (or via /reload_tools) picks up only the NEW tools without
 disturbing existing registrations.
 
 # What hot-reload doesn't do

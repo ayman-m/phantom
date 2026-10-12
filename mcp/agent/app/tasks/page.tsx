@@ -11,12 +11,17 @@
  * without forcing the operator to hit refresh. Terminal tasks
  * stick around so the operator can review what happened.
  *
- * Replaces — for the agent's chat-spawned work — the legacy
- * /listWorkers GraphQL query that only saw worker state in the
- * lossy module-level dict in xlog/app/schema.py.
+ * Two sources, deliberately not merged into one store:
+ *   - the task registry (/api/agent/tasks) for work the platform tracks as
+ *     tasks, and
+ *   - the xlog data workers (/api/agent/workers -> xlog listWorkers), the
+ *     synthetic-log generators the agent starts with xlog.create_data_worker.
+ *     xlog owns those, so they are read from xlog and shown in their own
+ *     section, with a Stop button that goes through the worker-rates API.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { confirmAction } from "@/lib/stores/confirm";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
@@ -29,6 +34,12 @@ import {
   type Task,
   type TaskStatus,
 } from "@/lib/api/tasks";
+import {
+  isWorkerRunning,
+  listDataWorkers,
+  type DataWorker,
+} from "@/lib/api/workers";
+import { stopWorker } from "@/lib/api/worker-rates";
 
 type Filter = "all" | "active" | "succeeded" | "failed" | "aborted";
 
@@ -43,6 +54,8 @@ const REFRESH_MS = 3000;
 export default function TasksPage() {
   const [filter, setFilter] = useState<Filter>("all");
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [workers, setWorkers] = useState<DataWorker[]>([]);
+  const [workersError, setWorkersError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -55,8 +68,13 @@ export default function TasksPage() {
       else if (filter !== "all") {
         params.status = filter as TaskStatus;
       }
-      const data = await listTasks(params);
+      const [data, workerResult] = await Promise.all([
+        listTasks(params),
+        listDataWorkers(),
+      ]);
       setTasks(data.tasks);
+      setWorkers(workerResult.workers);
+      setWorkersError(workerResult.error);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -73,9 +91,9 @@ export default function TasksPage() {
   // the data is stable and we'd be wasting cycles).
   useEffect(() => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
-    const hasActive = tasks.some(
-      (t) => !TASK_TERMINAL_STATUS.has(t.status),
-    );
+    const hasActive =
+      tasks.some((t) => !TASK_TERMINAL_STATUS.has(t.status)) ||
+      workers.some(isWorkerRunning);
     if (!hasActive) return;
     refreshTimerRef.current = setTimeout(() => {
       void fetchTasks();
@@ -83,11 +101,34 @@ export default function TasksPage() {
     return () => {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
     };
-  }, [tasks, fetchTasks]);
+  }, [tasks, workers, fetchTasks]);
+
+  const handleStopWorker = useCallback(
+    async (worker: string) => {
+      const accepted = await confirmAction({
+        title: `Stop data worker ${worker.slice(0, 8)}?`,
+        message:
+          "An explicit stop is permanent: the worker is not restored after a restart.",
+        confirmLabel: "Stop worker",
+        tone: "danger",
+      });
+      if (!accepted) return;
+      const ok = await stopWorker(worker);
+      if (!ok) setError(`Could not stop worker ${worker.slice(0, 8)}.`);
+      void fetchTasks();
+    },
+    [fetchTasks],
+  );
 
   const handleAbort = useCallback(
     async (id: string, title: string) => {
-      if (!confirm(`Abort task "${title}"? The worker will stop at its next checkpoint.`)) return;
+      const accepted = await confirmAction({
+        title: `Abort task "${title}"?`,
+        message: "The worker will stop at its next checkpoint.",
+        confirmLabel: "Abort task",
+        tone: "danger",
+      });
+      if (!accepted) return;
       try {
         await abortTask(id, "operator-requested");
         void fetchTasks();
@@ -109,9 +150,17 @@ export default function TasksPage() {
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
   })();
 
-  const activeCount = tasks.filter(
-    (t) => !TASK_TERMINAL_STATUS.has(t.status),
-  ).length;
+  // Workers are not task-registry rows, so only the "all" and "active" chips
+  // include them (a worker has no succeeded/failed/aborted state).
+  const shownWorkers =
+    filter === "all"
+      ? workers
+      : filter === "active"
+        ? workers.filter(isWorkerRunning)
+        : [];
+  const activeCount =
+    tasks.filter((t) => !TASK_TERMINAL_STATUS.has(t.status)).length +
+    workers.filter(isWorkerRunning).length;
 
   return (
     <div className="h-screen overflow-y-auto custom-scrollbar">
@@ -133,7 +182,8 @@ export default function TasksPage() {
               )}
             </div>
             <p className="text-sm text-on-surface-variant ml-9">
-              Long-running work the agent has spawned — auto-refreshes every {REFRESH_MS / 1000}s.
+              Long-running work the agent has spawned, including the log
+              generators it started — auto-refreshes every {REFRESH_MS / 1000}s while anything is running.
             </p>
           </div>
           <button
@@ -183,11 +233,17 @@ export default function TasksPage() {
           </div>
         )}
 
-        {loading && tasks.length === 0 ? (
+        {workersError && (
+          <div className="rounded-xl border border-error/30 bg-error/10 p-3 text-xs text-error">
+            Could not read the log generators from xlog: {workersError}
+          </div>
+        )}
+
+        {loading && tasks.length === 0 && shownWorkers.length === 0 ? (
           <div className="text-center py-16 text-sm text-on-surface-variant/60">
             Loading tasks…
           </div>
-        ) : tasks.length === 0 ? (
+        ) : tasks.length === 0 && shownWorkers.length === 0 ? (
           <div
             className="text-center py-12 rounded-2xl"
             style={glassCard}
@@ -200,12 +256,29 @@ export default function TasksPage() {
             </p>
             <p className="text-xs text-on-surface-variant/60 max-w-md mx-auto">
               Tasks appear here when the agent or operator spawns
-              long-running work — scenario emulation, CALDERA
-              operations, etc.
+              long-running work — log generators, scenario emulation,
+              CALDERA operations, etc.
             </p>
           </div>
         ) : (
           <div className="space-y-5">
+            {shownWorkers.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-label uppercase tracking-widest text-on-surface-variant/60">
+                  Log generators <span className="font-mono">·</span>{" "}
+                  <span className="font-mono">{shownWorkers.length}</span>
+                </h3>
+                <div className="grid gap-2">
+                  {shownWorkers.map((w) => (
+                    <WorkerRow
+                      key={w.worker}
+                      worker={w}
+                      onStop={handleStopWorker}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
             {grouped.map(([kind, kindTasks]) => (
               <div key={kind} className="space-y-2">
                 <h3 className="text-xs font-label uppercase tracking-widest text-on-surface-variant/60">
@@ -226,6 +299,68 @@ export default function TasksPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── Data worker row ────────────────────────────────────────────────
+
+function WorkerRow({
+  worker,
+  onStop,
+}: {
+  worker: DataWorker;
+  onStop: (worker: string) => void;
+}) {
+  const running = isWorkerRunning(worker);
+  return (
+    <div
+      className="rounded-2xl p-4 flex items-start gap-3"
+      style={glassCard}
+    >
+      <span
+        className={cn(
+          "material-symbols-outlined text-base shrink-0 mt-0.5",
+          running ? "text-primary" : "text-on-surface-variant/60",
+        )}
+      >
+        {running ? "sync" : "stop_circle"}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <span className="font-mono text-sm font-semibold text-on-surface truncate">
+            {worker.type || "worker"} to {worker.destination || "—"}
+          </span>
+          <span
+            className={cn(
+              "text-[10px] font-mono px-1.5 py-0.5 rounded uppercase tracking-wider",
+              running
+                ? "bg-primary/15 text-primary"
+                : "bg-white/5 text-on-surface-variant",
+            )}
+          >
+            {worker.status || "unknown"}
+          </span>
+        </div>
+        <p className="text-xs text-on-surface-variant">
+          {worker.count} events every {worker.interval}s
+          {worker.created_at ? ` · started ${worker.created_at}` : ""}
+        </p>
+        <p className="text-[10px] font-mono text-on-surface-variant/60 mt-0.5">
+          worker {worker.worker}
+        </p>
+      </div>
+      {running && (
+        <button
+          type="button"
+          onClick={() => onStop(worker.worker)}
+          aria-label="Stop worker"
+          className="p-1.5 rounded hover:bg-error/10 text-on-surface-variant hover:text-error transition-colors shrink-0"
+          title="Stop"
+        >
+          <span className="material-symbols-outlined text-base">cancel</span>
+        </button>
+      )}
     </div>
   );
 }

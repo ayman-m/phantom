@@ -23,10 +23,8 @@ flowchart LR
     end
     Vol1[("phantom_mcp_data<br/>sqlite stores")]
     Vol2[("phantom_mcp_skills<br/>skills library")]
-    Bind[/".phantom-agent/<br/>setup.json + .env.generated"/]
     PA --- Vol1
     PA --- Vol2
-    PA --- Bind
   end
 
   subgraph MachineB["Machine B (slim only)<br/>or same host (all-in-one)"]
@@ -52,8 +50,8 @@ flowchart LR
 - The dashed line between Next.js and MCP is `localhost` only — they live in the **same container**, share the same trust boundary. The MCP is part of the agent's image, not a sibling service. This is per the spark-agents v1.2 bundle spec and what makes the slim split-deploy bundle viable (one image to ship).
 - The two compose recipes in the repo correspond to two arrangements of this diagram:
   - `docker-compose.yml` — Machine A and Machine B collapse into the same Docker network on one host (all-in-one).
-  - `docker-compose.agent-only.yml` — Machine A only; Machine B is operated by another team and reached via HTTP at the URLs the operator types into the setup form.
-- Volumes (`phantom_mcp_data`, `phantom_mcp_skills`) survive container restarts AND `docker compose down`. Drop them only with `down -v` (destructive). The `./.phantom-agent/` bind-mount holds the setup form's submitted values.
+  - `docker-compose.agent-only.yml` — Machine A only; Machine B is operated by another team and reached via HTTP at the base URLs the operator enters on the connector instances at `/connectors`. That recipe has no `phantom-updater`, so connector containers cannot start with it; see the known limitation in `docs/split-deploy.md`.
+- Volumes (`phantom_mcp_data`, `phantom_mcp_skills`) survive container restarts AND `docker compose down`. Drop them only with `down -v` (destructive). Operator state (SecretStore, provider and instance stores) lives in `phantom_mcp_data` under `/app/data`; the `./.phantom-agent/` bind-mount of the source compose file is retained but unused.
 
 ---
 

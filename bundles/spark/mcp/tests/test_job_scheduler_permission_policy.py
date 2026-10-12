@@ -81,7 +81,6 @@ def test_add_job_persists_policy(scheduler: CroniterJobScheduler) -> None:
     policy = {
         "allowed_tools": ["xlog_*"],
         "denied_tools": ["*_delete"],
-        "require_approval": ["xsiam_write_*"],
     }
     row = scheduler.add_job(
         name="restricted-job", cron="*/5 * * * *",
@@ -183,3 +182,87 @@ def test_malformed_policy_json_degrades_to_none(tmp_path: Path) -> None:
     row = sched.get_job("corrupt-job")
     assert row is not None
     assert row.permission_policy is None  # degraded silently
+
+
+# ─── legacy require_approval key ─────────────────────────────────────
+
+
+def test_add_job_drops_the_legacy_require_approval_key(
+    scheduler: CroniterJobScheduler,
+) -> None:
+    row = scheduler.add_job(
+        name="legacy-add", cron="*/5 * * * *",
+        action={"type": "prompt", "message": "hi"},
+        permission_policy={
+            "allowed_tools": ["xlog_*"], "require_approval": ["jobs_*"],
+        },
+    )
+    assert row.permission_policy == {"allowed_tools": ["xlog_*"]}
+    fetched = scheduler.get_job("legacy-add")
+    assert fetched is not None
+    assert fetched.permission_policy == {"allowed_tools": ["xlog_*"]}
+
+
+def test_add_job_with_only_the_legacy_key_stores_no_policy(
+    scheduler: CroniterJobScheduler,
+) -> None:
+    row = scheduler.add_job(
+        name="legacy-only", cron="*/5 * * * *",
+        action={"type": "prompt", "message": "hi"},
+        permission_policy={"require_approval": ["jobs_*"]},
+    )
+    assert row.permission_policy is None
+    with sqlite3.connect(scheduler.db_path) as c:
+        raw = c.execute(
+            "SELECT permission_policy_json FROM jobs WHERE name = ?",
+            ("legacy-only",),
+        ).fetchone()[0]
+    assert raw is None
+
+
+def test_update_job_drops_the_legacy_require_approval_key(
+    scheduler: CroniterJobScheduler,
+) -> None:
+    scheduler.add_job(
+        name="legacy-upd", cron="*/5 * * * *",
+        action={"type": "prompt", "message": "hi"},
+    )
+    updated = scheduler.update_job(
+        "legacy-upd",
+        permission_policy={
+            "denied_tools": ["*_delete"], "require_approval": ["jobs_*"],
+        },
+    )
+    assert updated is not None
+    assert updated.permission_policy == {"denied_tools": ["*_delete"]}
+    with sqlite3.connect(scheduler.db_path) as c:
+        raw = c.execute(
+            "SELECT permission_policy_json FROM jobs WHERE name = ?",
+            ("legacy-upd",),
+        ).fetchone()[0]
+    assert "require_approval" not in raw
+
+
+def test_a_row_stored_with_the_legacy_key_is_read_unchanged(
+    scheduler: CroniterJobScheduler,
+) -> None:
+    """Existing rows are ignored silently, not migrated."""
+    scheduler.add_job(
+        name="legacy-old", cron="*/5 * * * *",
+        action={"type": "prompt", "message": "hi"},
+    )
+    with sqlite3.connect(scheduler.db_path) as c:
+        c.execute(
+            "UPDATE jobs SET permission_policy_json = ? WHERE name = ?",
+            ('{"allowed_tools": ["xlog_*"], "require_approval": ["x"]}',
+             "legacy-old"),
+        )
+    row = scheduler.get_job("legacy-old")
+    assert row is not None
+    assert row.permission_policy == {
+        "allowed_tools": ["xlog_*"], "require_approval": ["x"],
+    }
+    # Touching another field keeps the stored value as is.
+    kept = scheduler.update_job("legacy-old", cron="*/10 * * * *")
+    assert kept is not None
+    assert kept.permission_policy == row.permission_policy

@@ -30,7 +30,7 @@ This keeps the Phantom bundle portable without embedding XSIAM, Caldera, or log 
 | Knowledge bases | Spark `kbs/phantom-soc`, MCP skills, XQL resources, scenarios | Scenario-to-KB generation is limited to the bundled scenarios |
 | Run state | Persistent simulations, workers, validations, artifacts | Restore/rebind workflows for imported bundles |
 | Integration surface | Spark connector declarations for Phantom MCP plus optional Caldera MCP, XSIAM MCP, and Xlog MCP instances; MCP/REST/GraphQL endpoints | Marketplace connector packages are not part of the bundle |
-| UI bundle | Spark A2UI v0.8 setup/chat/settings/activity surfaces plus current Phantom Next.js renderer | The Spark A2UI renderer is not implemented here; the Phantom Next.js renderer is used |
+| UI bundle | Spark A2UI v0.8 chat/settings/activity surfaces (plus a `setup` surface that is not rendered: the first-run setup page was removed) plus current Phantom Next.js renderer | The Spark A2UI renderer is not implemented here; the Phantom Next.js renderer is used |
 | Secrets | Spark `requiredSecrets`, `secret-bindings.example.yaml`, generated `.env.secret-refs`, optional file/HTTP provider binding | No Infisical/platform adapter |
 | Observability | Spark observability metrics/events plus Compose healthchecks, smoke tests, and `observability.contract.yaml` | No OpenTelemetry instrumentation |
 
@@ -91,18 +91,17 @@ For air-gapped or no-registry imports, the export script packages Docker images 
 6. **Orchestrator interface**
    - Lifecycle commands cover install, start, stop, restart, status, health, logs and export.
    - Next.js runtime endpoints expose the manifest, health, guided workflows and report proxying under `/api/agent/*`.
-   - A2UI runtime endpoints expose the UI manifest, the Phantom component catalog, JSONL surfaces and named UI events under `/api/a2ui/*`.
+   - The A2UI manifest, catalog and JSONL surfaces ship in the bundle as files. The current agent app serves no `/api/a2ui/*` endpoints.
 
 7. **A2UI portable UI contract**
    - The bundle includes `a2ui/manifest.json`, `a2ui/catalogs/phantom-ui.v0.1.json`, surface JSONL files, a data model schema and an event schema.
    - Bundle metadata declares A2UI as the importable UI contract and keeps `phantom-agent` as the standalone renderer.
-   - First-run setup is exposed as both a standalone Next.js setup page and an A2UI `setup` surface.
+   - The A2UI `setup` surface and its `phantom.setup.save` event describe the first-run setup page, which was removed; nothing renders or handles them.
 
-8. **Standalone first-run setup**
-   - `phantom-agent` opens a setup flow when required runtime values are missing.
-   - Setup accepts a Google service account JSON upload, defaults `GEMINI_MODEL` to `gemini-3.1-pro-preview`, collects UI access, and binds MCP connector URLs/tokens. Downstream XSIAM, Xlog and Caldera service secrets stay in their connector services.
-   - Setup writes host-local runtime material under `.phantom-agent/` and emits `.phantom-agent/.env.generated` for Compose restarts.
-   - `scripts/agent_lifecycle.sh apply-setup` copies the generated env into `.env` and recreates the stack.
+8. **First login (no setup page)**
+   - There is no first-run setup page. The installer (or your `.env`) supplies `PHANTOM_DEFAULT_ADMIN_PASSWORD`; the agent seeds the `admin` account from it on a fresh volume and the UI asks you to change it at `/profile`.
+   - Model provider credentials (Google service-account JSON or Gemini API key) are added at `/providers`, and each connector's URL and secrets at `/connectors`. They are stored in the ProviderStore, InstanceStore and SecretStore under `/app/data`, not in files under `.phantom-agent/`.
+   - Downstream XSIAM, Xlog and Caldera service secrets stay with their connector instances.
 
 9. **Spark-compatible bundle projection**
    - `bundles/spark/manifest.yaml` follows Spark schema v1.1.

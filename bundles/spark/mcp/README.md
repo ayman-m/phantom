@@ -19,8 +19,7 @@ bundles/spark/mcp/
 │   ├── config/config.py    # pydantic Settings + per-call contextvar proxy (stage 3A)
 │   ├── api/
 │   │   ├── auth.py         # Bearer-token gate for admin endpoints
-│   │   ├── instances.py    # POST/GET/DELETE /api/v1/instances
-│   │   └── setup.py        # POST /api/v1/setup — expands setup.bindsInstances templates
+│   │   └── instances.py    # POST/GET/DELETE /api/v1/instances
 │   ├── usecase/
 │   │   ├── connector_loader.py  # reads bundle, gates tools on instances, wraps with contextvar
 │   │   ├── instance_store.py    # sqlite-backed CRUD over data_root/instances.db

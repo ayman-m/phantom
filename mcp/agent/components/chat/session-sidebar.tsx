@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { groupSessionTree } from "@/lib/session-tree";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -15,9 +16,9 @@ export interface SessionSummary {
    *  the sidebar display. Set via the Rename action in SessionMenu. */
   title?: string;
   /** When this session was forked
-   *  from another, parentId names the source session. The sidebar
-   *  groups forks visually under their parents (one level of
-   *  indentation; deeper tree rendering is a future enhancement). */
+   *  from another, parentId names the source session. The sidebar lists
+   *  a fork directly under its parent, indented one level per
+   *  generation (see lib/session-tree.ts). */
   parentId?: string | null;
 }
 
@@ -51,119 +52,6 @@ const glassPanel = {
   borderRight: "0.5px solid var(--glass-border)",
 } as const;
 
-// ─── Date Grouping ───────────────────────────────────────────────────────────
-
-type DateGroup = "Today" | "Yesterday" | "Previous 7 Days" | "Older";
-
-function getDateGroup(timestamp: string): DateGroup {
-  const date = new Date(timestamp);
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const sevenDaysAgo = new Date(today);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  if (date >= today) return "Today";
-  if (date >= yesterday) return "Yesterday";
-  if (date >= sevenDaysAgo) return "Previous 7 Days";
-  return "Older";
-}
-
-function groupSessionsByDate(
-  sessions: SessionSummary[],
-): Map<DateGroup, SessionSummary[]> {
-  const groups = new Map<DateGroup, SessionSummary[]>();
-  const order: DateGroup[] = ["Today", "Yesterday", "Previous 7 Days", "Older"];
-
-  for (const group of order) {
-    groups.set(group, []);
-  }
-
-  // Forks join the ROOT ancestor's
-  // date group instead of their own creation-time group. This keeps
-  // a parent + its forks visually adjacent even when the fork was
-  // created on a different day. Within a group, ordering is parent first, then
-  // forks in DFS order. Cycle-defended via a seen-set.
-  const byId = new Map(sessions.map((s) => [s.id, s]));
-  function rootAncestor(s: SessionSummary): SessionSummary {
-    const seen = new Set<string>();
-    let cur: SessionSummary = s;
-    while (cur.parentId && !seen.has(cur.parentId)) {
-      seen.add(cur.parentId);
-      const parent = byId.get(cur.parentId);
-      if (!parent) break;
-      cur = parent;
-    }
-    return cur;
-  }
-  // Bucket sessions by their root ancestor's date group, preserving
-  // the natural parent-first DFS order WITHIN a bucket. We sort the
-  // list once on (rootGroup, rootTimestampDesc, depthAsc, ownTimestampDesc)
-  // — rootGroup keeps a tree together, rootTimestampDesc puts newer
-  // trees first within a group, depthAsc renders the root before its
-  // children, ownTimestampDesc orders siblings newest-first.
-  function depthOf(s: SessionSummary): number {
-    const seen = new Set<string>();
-    let depth = 0;
-    let curId: string | null | undefined = s.parentId;
-    while (curId && !seen.has(curId) && depth < 8) {
-      seen.add(curId);
-      depth += 1;
-      curId = byId.get(curId)?.parentId ?? null;
-    }
-    return depth;
-  }
-  const decorated = sessions.map((s) => {
-    const root = rootAncestor(s);
-    return {
-      session: s,
-      rootGroup: getDateGroup(root.timestamp),
-      rootTime: root.timestamp,
-      depth: depthOf(s),
-      ownTime: s.timestamp,
-    };
-  });
-  decorated.sort((a, b) => {
-    const ai = order.indexOf(a.rootGroup);
-    const bi = order.indexOf(b.rootGroup);
-    if (ai !== bi) return ai - bi;
-    if (a.rootTime !== b.rootTime) {
-      return a.rootTime < b.rootTime ? 1 : -1; // newer root first
-    }
-    if (a.depth !== b.depth) return a.depth - b.depth; // root before children
-    return a.ownTime < b.ownTime ? 1 : -1; // newer sibling first
-  });
-  for (const d of decorated) {
-    groups.get(d.rootGroup)?.push(d.session);
-  }
-
-  // Remove empty groups
-  for (const [key, value] of groups) {
-    if (value.length === 0) groups.delete(key);
-  }
-
-  return groups;
-}
-
-/** Compute the depth of a session in the fork tree.
- *  Walks parentId chain; defends against cycles + missing parents
- *  (returns the current depth instead of looping forever). */
-function forkDepth(session: SessionSummary, allSessions: SessionSummary[]): number {
-  if (!session.parentId) return 0;
-  const byId = new Map(allSessions.map((s) => [s.id, s]));
-  let depth = 0;
-  const seen = new Set<string>();
-  let curId: string | null | undefined = session.parentId;
-  while (curId && !seen.has(curId) && depth < 8) {
-    seen.add(curId);
-    depth += 1;
-    const parent = byId.get(curId);
-    curId = parent?.parentId ?? null;
-  }
-  return depth;
-}
-
 function formatTime(timestamp: string): string {
   const date = new Date(timestamp);
   return date.toLocaleTimeString(undefined, {
@@ -179,14 +67,75 @@ function formatTokenCount(count: number): string {
   return String(count);
 }
 
+// ─── Inline rename editor ────────────────────────────────────────────────────
+
+/**
+ * Replaces a row's title while it is being renamed. Enter saves, Escape
+ * cancels, and leaving the field saves (the same as Enter). An empty or
+ * unchanged name is a cancel.
+ */
+function RenameField({
+  initial,
+  onSave,
+  onCancel,
+}: {
+  initial: string;
+  onSave: (title: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState(initial);
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Enter/Escape finish the edit; the blur that follows must not finish it again.
+  const finished = useRef(false);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
+  function commit() {
+    if (finished.current) return;
+    finished.current = true;
+    const next = value.trim();
+    if (!next || next === initial.trim()) onCancel();
+    else onSave(next);
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      type="text"
+      value={value}
+      maxLength={200}
+      aria-label="Session name"
+      onChange={(e) => setValue(e.target.value)}
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+        if (e.key === "Enter") {
+          e.preventDefault();
+          commit();
+        } else if (e.key === "Escape") {
+          e.preventDefault();
+          finished.current = true;
+          onCancel();
+        }
+      }}
+      onBlur={commit}
+      className="w-full rounded-md px-1.5 py-1 text-xs text-on-surface bg-surface-container-low border border-primary/60 focus:outline-none focus:ring-1 focus:ring-primary"
+    />
+  );
+}
+
 // ─── Session Menu ────────────────────────────────────────────────────────────
 
 interface SessionMenuProps {
   sessionId: string;
-  currentTitle: string;
+  /** Delete the session. The parent asks for confirmation (in-app modal). */
   onDelete: (id: string) => void;
   onExport: (id: string, format: ExportFormat) => void;
-  onRename?: (id: string, title: string) => void;
+  /** Start inline rename: the row's title becomes an editor. */
+  onStartRename?: (id: string) => void;
   // Fork session. Optional: the /chat page wires this up; callers
   // without fork support get the menu without the Fork entry.
   onFork?: (id: string) => void;
@@ -194,14 +143,12 @@ interface SessionMenuProps {
 
 function SessionMenu({
   sessionId,
-  currentTitle,
   onDelete,
   onExport,
-  onRename,
+  onStartRename,
   onFork,
 }: SessionMenuProps) {
   const [open, setOpen] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -209,22 +156,11 @@ function SessionMenu({
     function handleClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpen(false);
-        setConfirmingDelete(false);
       }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
-
-  const handleDelete = useCallback(() => {
-    if (!confirmingDelete) {
-      setConfirmingDelete(true);
-      return;
-    }
-    onDelete(sessionId);
-    setOpen(false);
-    setConfirmingDelete(false);
-  }, [confirmingDelete, onDelete, sessionId]);
 
   return (
     <div ref={menuRef} className="relative">
@@ -234,7 +170,6 @@ function SessionMenu({
         onClick={(e) => {
           e.stopPropagation();
           setOpen((prev) => !prev);
-          setConfirmingDelete(false);
         }}
         className="p-1 rounded-md hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
       >
@@ -318,25 +253,15 @@ function SessionMenu({
             </span>
             Export Events (JSON)
           </button>
-          {onRename && (
+          {onStartRename && (
             <>
               <div className="border-t border-white/5 my-1" />
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  // Simplest possible rename UX: a window.prompt with
-                  // the current title pre-filled. An inline-edit
-                  // affordance can come later.
-                  const next = window.prompt(
-                    "Rename chat session:",
-                    currentTitle,
-                  );
                   setOpen(false);
-                  if (next == null) return; // cancelled
-                  const trimmed = next.trim();
-                  if (!trimmed || trimmed === currentTitle) return;
-                  onRename(sessionId, trimmed);
+                  onStartRename(sessionId);
                 }}
                 className="w-full text-left px-3 py-2 text-xs text-on-surface-variant hover:bg-white/5 flex items-center gap-2 transition-colors"
               >
@@ -372,17 +297,13 @@ function SessionMenu({
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              handleDelete();
+              setOpen(false);
+              onDelete(sessionId);
             }}
-            className={cn(
-              "w-full text-left px-3 py-2 text-xs flex items-center gap-2 transition-colors",
-              confirmingDelete
-                ? "text-error bg-error/10"
-                : "text-error/70 hover:bg-error/5",
-            )}
+            className="w-full text-left px-3 py-2 text-xs flex items-center gap-2 transition-colors text-error/70 hover:bg-error/5 hover:text-error"
           >
             <span className="material-symbols-outlined text-sm">delete</span>
-            {confirmingDelete ? "Click again to confirm" : "Delete"}
+            Delete
           </button>
         </div>
       )}
@@ -404,7 +325,9 @@ export function SessionSidebar({
   collapsed = false,
   onToggleCollapse,
 }: SessionSidebarProps) {
-  const grouped = groupSessionsByDate(sessions);
+  const grouped = groupSessionTree(sessions, new Date());
+  // The session whose title is being edited inline (null when none).
+  const [renamingId, setRenamingId] = useState<string | null>(null);
 
   if (collapsed) {
     return (
@@ -491,32 +414,43 @@ export function SessionSidebar({
           </div>
         )}
 
-        {Array.from(grouped.entries()).map(([group, groupSessions]) => (
+        {grouped.map(({ group, rows }) => (
           <div key={group}>
             <h3 className="px-2 pb-1 text-[10px] font-headline uppercase tracking-widest text-on-surface-variant/60">
               {group}
             </h3>
             <div className="space-y-0.5">
-              {groupSessions.map((session) => {
+              {rows.map(({ session, depth }) => {
                 const isActive = session.id === activeSessionId;
-                // Visual fork
-                // indicator. When session.parentId is set, indent
-                // the row + render a fork glyph (call_split icon) to
-                // make the parent → child relationship visible at
-                // a glance.
-                // Multi-level depth: walk parentId chain
-                // to compute the indent depth. Cycle-defended (max
-                // 8 levels — beyond that, render at the cap).
+                // A fork is listed directly under its parent (the tree
+                // ordering is lib/session-tree.ts), indented 16px per
+                // generation (capped at 8) and marked with the branch
+                // glyph. A fork whose parent is no longer in the list
+                // keeps the glyph but renders as a root.
                 const isFork = Boolean(session.parentId);
-                const depth = forkDepth(session, sessions);
+                const isRenaming = renamingId === session.id;
+                const displayTitle =
+                  session.title || session.firstMessage || "New conversation";
                 return (
-                  <button
+                  <div
                     key={session.id}
-                    type="button"
-                    onClick={() => onSelectSession(session.id)}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      if (!isRenaming) onSelectSession(session.id);
+                    }}
+                    onKeyDown={(e) => {
+                      // Only the row itself: keys typed in the rename field or
+                      // pressed on the menu buttons must not select the row.
+                      if (e.target !== e.currentTarget) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onSelectSession(session.id);
+                      }
+                    }}
                     style={{ marginLeft: depth > 0 ? `${Math.min(depth, 8) * 16}px` : undefined }}
                     className={cn(
-                      "group w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-start gap-2",
+                      "group w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-start gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary",
                       isActive
                         ? "bg-secondary-container/15 border-l-2 border-secondary"
                         : "hover:bg-white/5 border-l-2 border-transparent",
@@ -537,17 +471,28 @@ export function SessionSidebar({
                           </span>
                         )}
                       </div>
-                      {/* Title */}
-                      <p
-                        className={cn(
-                          "text-xs leading-snug truncate",
-                          isActive
-                            ? "text-on-surface font-medium"
-                            : "text-on-surface-variant",
-                        )}
-                      >
-                        {session.title || session.firstMessage || "New conversation"}
-                      </p>
+                      {/* Title (an inline editor while renaming) */}
+                      {isRenaming ? (
+                        <RenameField
+                          initial={displayTitle}
+                          onSave={(next) => {
+                            setRenamingId(null);
+                            onRenameSession?.(session.id, next);
+                          }}
+                          onCancel={() => setRenamingId(null)}
+                        />
+                      ) : (
+                        <p
+                          className={cn(
+                            "text-xs leading-snug truncate",
+                            isActive
+                              ? "text-on-surface font-medium"
+                              : "text-on-surface-variant",
+                          )}
+                        >
+                          {displayTitle}
+                        </p>
+                      )}
                       {/* Meta: time + tokens */}
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-[10px] text-outline">
@@ -566,17 +511,14 @@ export function SessionSidebar({
                     {/* Menu */}
                     <SessionMenu
                       sessionId={session.id}
-                      currentTitle={
-                        session.title ||
-                        session.firstMessage ||
-                        "New conversation"
-                      }
                       onDelete={onDeleteSession}
                       onExport={onExportSession}
-                      onRename={onRenameSession}
+                      onStartRename={
+                        onRenameSession ? (id) => setRenamingId(id) : undefined
+                      }
                       onFork={onForkSession}
                     />
-                  </button>
+                  </div>
                 );
               })}
             </div>

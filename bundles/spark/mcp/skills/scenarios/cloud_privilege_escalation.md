@@ -63,7 +63,12 @@ verbatim as `schema_override` on that stage's worker. Without it the worker emit
 observables that the vendor's modeling rule cannot map, so events land raw and `xdm.*` stays
 empty. `compact=true` is lossless for this purpose and keeps the payload inside the tool-result cap.
 
-Call `data_sources_installed_as_vendors`. Group `vendors[]` by `data_source_class`. Verify `cloud` is present. If missing, stop and tell the operator no `cloud` data source is installed — install one from the Marketplace, or chain this skill with `phishing_to_cloud_takeover` instead, which models the SaaS → cloud pivot earlier in the kill chain (its Stage 6).
+### Class check (MANDATORY — before creating any worker)
+
+1. Call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class`.
+2. For every row of the "Data classes used" table, write down the installed entry you will use for it, or `MISSING`. A class is only covered by an installed entry. A generic or catch-all schema is never a substitute, and never guess a vendor/product for a class.
+3. The only required class is `cloud` (Stages 1-3). If it is `MISSING`, say this to the operator, with the class filled in: "No installed data source covers the `<class>` class, so I cannot run the cloud privilege escalation scenario. Install a `<class>` data source from the Marketplace and ask again." Then stop: create no worker. You may add that `phishing_to_cloud_takeover` models the SaaS to cloud pivot in its Stage 6.
+4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
 ## Narrative thread
 
@@ -224,7 +229,7 @@ xlog.create_data_worker:
 | IAM SA key creation alert from `actor_ip=194.165.16.45` | XSIAM Issues |
 | IAM role-binding-grants-owner alert | XSIAM Issues |
 | Cloud cross-region anomalous access by `data-export-svc@...` | XSIAM Issues |
-| Pivotable: filter by `project=gcp-prod-ExampleCorp` + actor IN (`cicd-deployer`, `data-export-svc`), see all 3 stages | XQL: `config timeframe = 24h \| dataset = google_cloud_audit_logs \| filter resource.labels.project_id = "gcp-prod-ExampleCorp" \| limit 20` |
+| Pivotable: filter by `project=gcp-prod-ExampleCorp` + actor IN (`cicd-deployer`, `data-export-svc`), see all 3 stages | XQL: `config timeframe = 24h \| dataset = <dataset_name of the cloud entry> \| filter <its project field> = "gcp-prod-ExampleCorp" \| limit 20` |
 
 ## Tear-down
 

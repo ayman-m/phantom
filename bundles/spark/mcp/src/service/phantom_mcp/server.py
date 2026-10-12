@@ -71,8 +71,7 @@ def create_mcp_lifespan():
 
             raise RuntimeError(
                 "No xlog instance configured. Add a primary-xlog "
-                "instance via /connectors and set its baseUrl, or "
-                "complete first-time setup at /setup."
+                "instance via /connectors and set its baseUrl."
             )
 
         try:
@@ -193,16 +192,15 @@ Always verify connectivity to backend services (Phantom, CALDERA, XSIAM) before 
 
         Returns:
             status:        "ok" — process is up
-            embedder_mode: "vertex" | "stub" — set by main.py at boot.
-                           "stub" means search returns hash-similarity
-                           scores, NOT semantic matches; the UI should
-                           show a degradation badge until creds are
-                           submitted. Reads from PHANTOM_EMBEDDER_MODE
-                           env var because the embedder is constructed
-                           in async_main but the route handler runs in
-                           Starlette's worker context — sharing a
-                           module-global would race; env vars are the
-                           cheapest cross-coroutine read.
+            embedder_mode: "vertex" | "stub". "stub" means search returns
+                           hash-similarity scores, NOT semantic matches;
+                           the UI should show a degradation badge until a
+                           Vertex provider is saved on /providers. The env
+                           var PHANTOM_EMBEDDER_MODE is stamped at boot and
+                           re-stamped by EmbedderRuntime.refresh() whenever a
+                           Vertex provider is saved, so this read is cheap
+                           and current (a module-global would race the
+                           worker context this handler runs in).
         """
         import os
         return JSONResponse(

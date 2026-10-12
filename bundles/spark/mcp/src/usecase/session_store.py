@@ -77,6 +77,12 @@ class Session:
     title: str | None
     meta: dict[str, Any]
     message_count: int = 0
+    # Fork lineage. `parent_id` is the session this one was forked from
+    # (NULL for a root session); `fork_point_message_id` is the message the
+    # fork branched at (NULL for a full-history fork). The chat sidebar nests
+    # a fork under its parent from `parent_id`.
+    parent_id: str | None = None
+    fork_point_message_id: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -87,6 +93,8 @@ class Session:
             "title": self.title,
             "meta": self.meta,
             "message_count": self.message_count,
+            "parent_id": self.parent_id,
+            "fork_point_message_id": self.fork_point_message_id,
         }
 
 
@@ -653,6 +661,9 @@ class SqliteSessionStore:
             count = int(row["n"])
         except (KeyError, IndexError):
             count = 0
+        # The fork columns are added by an ALTER at boot; a row object from
+        # before that migration has no such key.
+        keys = row.keys()
         return Session(
             id=row["id"],
             user=row["user"],
@@ -661,6 +672,12 @@ class SqliteSessionStore:
             title=row["title"],
             meta=json.loads(row["meta_json"]),
             message_count=count,
+            parent_id=(row["parent_id"] if "parent_id" in keys else None) or None,
+            fork_point_message_id=(
+                row["fork_point_message_id"]
+                if "fork_point_message_id" in keys
+                else None
+            ) or None,
         )
 
     @staticmethod

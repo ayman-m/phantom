@@ -30,11 +30,11 @@ this iteration:
      PHANTOM_SECRET_KEK live there). Adding more env vars matches
      the existing operational model.
   2. The SecretStore is the right home for connector secrets — those
-     flow through the setup form. Notification webhooks are a
+     flow through the /connectors instance form. Notification webhooks are a
      deployment-time config, not part of the connector instance
      model. Different surface, different lifecycle.
 
-A future improvement could add a setup-form section for channel
+A future improvement could add a settings section for channel
 URLs that writes them to the SecretStore at paths like
 `/agents/phantom/notifications/channels/<name>/webhook_url`. Until
 then, env-var config keeps the surface small and the

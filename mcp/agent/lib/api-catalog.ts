@@ -818,9 +818,9 @@ const CONFIGURATION: ApiEndpoint[] = [
     category: "configuration",
     method: "GET",
     path: "/api/marketplace/connectors",
-    summary: "List all connector definitions known to the agent",
+    summary: "List the bundle connector cards",
     description:
-      "Run the endpoint via the try-it-out form to see the response shape.",
+      "The connectors that ship with Phantom, with their live tool lists. Connectors the operator uploaded are not here: see /api/agent/marketplace/catalog/user.",
     responses: [{ status: "200", description: "OK" }],
   },
   {
@@ -828,10 +828,32 @@ const CONFIGURATION: ApiEndpoint[] = [
     category: "configuration",
     method: "GET",
     path: "/api/marketplace/connectors/{id}",
-    summary: "Get marketplace connectors",
+    summary: "Get one bundle connector card",
     description:
-      "Run the endpoint via the try-it-out form to see the response shape.",
+      "Looks the id up in the bundle list above, so an uploaded connector answers 404.",
     responses: [{ status: "200", description: "OK" }],
+  },
+  {
+    id: "marketplace-catalog-user",
+    category: "configuration",
+    method: "GET",
+    path: "/api/agent/marketplace/catalog/user",
+    summary: "List the cards for uploaded connectors",
+    description:
+      "One card per connector the operator uploaded (name, version, tools, config fields, image), built from the MCP marketplace catalogue. The Marketplace tab appends these to the bundle cards.",
+    responses: [{ status: "200", description: "Array of connector cards (empty when nothing is uploaded)." }],
+  },
+  {
+    id: "marketplace-by-connectorId-delete",
+    category: "configuration",
+    method: "DELETE",
+    path: "/api/agent/marketplace/{connectorId}",
+    summary: "Delete an uploaded connector",
+    description:
+      "Removes the install marker and the stored connector.yaml. 403 for a bundle connector, 409 while instances exist.",
+    pathParams: [{ name: "connectorId", type: "string", description: "Id of the uploaded connector." }],
+    responses: [{ status: "200", description: "{connector_id, deleted: true}." }],
+    riskTier: "soft",
   },
   {
     id: "marketplace-install-post",
@@ -979,10 +1001,12 @@ const OPERATIONS: ApiEndpoint[] = [
           action: { type: "object", description: "{type: chat|tool_call|log, ...}" },
           enabled: { type: "boolean" },
           run_once: { type: "boolean", description: "Auto-disable after first fire." },
+          description: { type: "string", description: "Optional note on what the job is for (up to 2000 characters). Shown on /jobs and the job page." },
         },
       },
       example: {
         name: "weekly-coverage-summary",
+        description: "Weekly XQL coverage digest for the SOC lead",
         cron: "0 9 * * MON",
         timezone: "UTC",
         action: { type: "tool_call", name: "xlog.generate_coverage_report", args: { request: { include_simulations: true, limit: 50 } } },
@@ -1026,6 +1050,7 @@ const OPERATIONS: ApiEndpoint[] = [
           timezone: { type: "string" },
           action: { type: "object" },
           enabled: { type: "boolean" },
+          description: { type: "string", description: "Omit to keep the stored note; \"\" clears it." },
         },
       },
       example: { enabled: false },
@@ -1100,12 +1125,25 @@ const OPERATIONS: ApiEndpoint[] = [
     method: "GET",
     path: "/api/agent/notifications",
     summary: "List notifications",
-    description: "Operator inbox. Supports unread_only filter.",
+    description: "Operator inbox, newest first. Page with limit and offset; the response carries `total` (rows matching the filters, ignoring limit and offset).",
     queryParams: [
-      { name: "unread_only", type: "boolean", description: "Hide already-read.", example: true },
-      { name: "limit", type: "integer", description: "Default 50.", example: 50 },
+      { name: "unread", type: "boolean", description: "Hide already-read.", example: true },
+      { name: "limit", type: "integer", description: "Rows per page. Default 100.", example: 50 },
+      { name: "offset", type: "integer", description: "Rows to skip. Default 0.", example: 50 },
+      { name: "since", type: "string", description: "Only rows created at or after this ISO-8601 UTC timestamp.", example: "2026-10-12T00:00:00.000000Z" },
+      { name: "target", type: "string", description: "Only rows for this target, for example user:operator.", example: "user:operator" },
     ],
-    responses: [{ status: "200", description: "Notification rows." }],
+    responses: [{ status: "200", description: "{notifications, count, total}." }],
+  },
+  {
+    id: "notifications-ack-all",
+    category: "operations",
+    method: "POST",
+    path: "/api/agent/notifications/ack-all",
+    summary: "Mark every unread notification read",
+    description: "Optional body {target} limits it to one target. Returns {acked: <rows changed>}.",
+    responses: [{ status: "200", description: "{acked}." }],
+    riskTier: "soft",
   },
   {
     id: "notifications-ack",
@@ -1431,7 +1469,7 @@ const OBSERVABILITY: ApiEndpoint[] = [
     path: "/api/agent/health",
     summary: "Liveness + readiness probe",
     description:
-      "Returns {status, embedder_mode}. embedder_mode='vertex' means the live VertexEmbedder is wired; 'stub' means the agent booted before Vertex creds were submitted.",
+      "Returns {status, embedder_mode}. embedder_mode='vertex' means the live VertexEmbedder is wired; 'stub' means no Vertex provider is saved yet (add one on /providers; it takes effect immediately).",
     responses: [
       {
         status: "200",

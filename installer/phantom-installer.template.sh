@@ -899,7 +899,10 @@ ${C_GREEN}  ✓ Phantom v$PHANTOM_VERSION is running.${C_RESET}
   ${C_BOLD}Configure providers:${C_RESET}  After first login + password change, set
                         up your model provider at /providers (Vertex
                         AI service-account JSON or Gemini API key).
-                        Connector instances live at /instances.
+  ${C_BOLD}Create the xlog instance:${C_RESET} At /connectors, Instances tab, Create
+                        Instance, pick xlog and paste its API token (the
+                        XLOG_API_KEY line in $INSTALL_DIR/.env; read it with
+                        sudo grep '^XLOG_API_KEY=' $INSTALL_DIR/.env).
 
   ${C_BOLD}Files on disk:${C_RESET}        $INSTALL_DIR/
                           ├── docker-compose.yml    (don't hand-edit)

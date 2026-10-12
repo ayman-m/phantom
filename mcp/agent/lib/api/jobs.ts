@@ -79,6 +79,17 @@ export interface Job {
    *  jobs) or the bypass slider in the new-job form. */
   bypass_approvals?: boolean;
   action?: JobAction;
+  /** Per-job model override; empty/absent means the runtime default. */
+  model_id?: string | null;
+  /** Extended-thinking toggle sent with each dispatch. */
+  thinking_enabled?: boolean;
+  /** Declarative tool policy: glob lists under allowed_tools and
+   *  denied_tools. Absent = no policy. */
+  permission_policy?: Record<string, string[]> | null;
+  /** Operator-written note about what the job is for. Empty when none. */
+  description?: string;
+  /** Only set while the job is Active; a paused or completed job has no
+   *  next run. */
   next_run_at?: string;
   last_run_at?: string;
   last_status?: string;
@@ -130,6 +141,7 @@ export interface CreateJobPayload {
     agent_id: string;
     message?: string;
   };
+  description?: string;
 }
 
 /** Payload for PATCH /api/v1/jobs/:name. The MCP scheduler exposes
@@ -144,6 +156,8 @@ export interface UpdateJobPayload {
    *  through to the existing value when undefined; only patches when
    *  the field is present in the body. */
   bypass_approvals?: boolean;
+  /** Omit to keep the stored note; "" clears it. */
+  description?: string;
 }
 
 // ─── Wire-shape normalizer ────────────────────────────────────────────────────
@@ -182,6 +196,10 @@ interface MCPJobRow {
   run_once?: boolean;
   /** Wire shape for the new bypass column. */
   bypass_approvals?: boolean;
+  model_id?: string | null;
+  thinking_enabled?: boolean;
+  permission_policy?: Record<string, string[]> | null;
+  description?: string | null;
   /** Lifetime fire count, populated by the scheduler's correlated
    *  subquery against job_runs. Absent when the MCP does not report
    *  it; left undefined so the UI renders "—" rather than a
@@ -250,7 +268,19 @@ export function normalizeJob(row: unknown): Job {
     run_once: runOnce,
     bypass_approvals: Boolean(r.bypass_approvals),
     action: (r.action as JobAction | undefined) ?? undefined,
-    next_run_at: nextDueAt ?? undefined,
+    // Carried through so Edit and Duplicate see the stored overrides;
+    // dropping them made an Edit save PATCH model_id "" and wipe them.
+    model_id: (r.model_id as string | null | undefined) ?? null,
+    thinking_enabled: Boolean(r.thinking_enabled),
+    permission_policy:
+      (r.permission_policy as Record<string, string[]> | null | undefined) ??
+      null,
+    // Rows stored before the column existed read as empty.
+    description: typeof r.description === "string" ? r.description : "",
+    // Only an enabled job has a next run (the MCP already omits it for
+    // paused/completed jobs; this keeps a stale value from older builds
+    // out of the UI too).
+    next_run_at: enabled ? (nextDueAt ?? undefined) : undefined,
     last_run_at: lastFiredAt ?? undefined,
     last_status: (r.last_status as string | undefined) ?? undefined,
     last_error: (r.last_error as string | undefined) ?? undefined,

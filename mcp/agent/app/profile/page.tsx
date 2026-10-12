@@ -14,7 +14,11 @@
  *      one) and clears the cookie; the page hard-redirects to "/"
  *      so AuthGate re-renders as the LoginScreen for the operator
  *      to sign in with the new password.
- *   4. Sign-out — standalone end-this-session action.
+ *   4. Session lifetime — select (1-24 whole hours) + the current
+ *      password, PUT to /api/auth/session-lifetime. Applies to the next
+ *      sign-in; sessions already open keep their expiry, so there is no
+ *      sign-out on success.
+ *   5. Sign-out — standalone end-this-session action.
  */
 
 "use client";
@@ -52,6 +56,34 @@ async function fetchStatus(): Promise<{
   }
 }
 
+// Hours offered in the Session lifetime select. The server accepts any whole
+// hour 1..24; if the stored value is not one of these (set through the REST
+// API) it is added to the list so the select always shows the real value.
+const SESSION_LIFETIME_CHOICES = [1, 2, 4, 8, 10, 12, 24];
+
+interface SessionLifetimeResponse {
+  hours: number;
+  default_hours: number;
+}
+
+async function fetchSessionLifetime(): Promise<SessionLifetimeResponse | null> {
+  try {
+    const r = await fetch("/api/auth/session-lifetime", { cache: "no-store" });
+    if (!r.ok) return null;
+    const data = (await r.json()) as Partial<SessionLifetimeResponse>;
+    if (typeof data.hours !== "number" || typeof data.default_hours !== "number") {
+      return null;
+    }
+    return { hours: data.hours, default_hours: data.default_hours };
+  } catch {
+    return null;
+  }
+}
+
+function formatHours(hours: number): string {
+  return hours === 1 ? "1 hour" : `${hours} hours`;
+}
+
 export default function ProfilePage() {
   const addToast = useNotificationsStore((s) => s.addToast);
 
@@ -68,6 +100,35 @@ export default function ProfilePage() {
   const [showNew, setShowNew] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+
+  // Session lifetime. `lifetimeHours` is the saved value (null until
+  // loaded); `lifetimeChoice` is what the select currently shows. The
+  // password field is its own state: it is a separate form from Change
+  // password and must not share (or leak into) that form's input.
+  const [lifetimeHours, setLifetimeHours] = useState<number | null>(null);
+  // The default is read from the server, never duplicated here.
+  const [lifetimeDefault, setLifetimeDefault] = useState<number | null>(null);
+  const [lifetimeChoice, setLifetimeChoice] = useState<number | null>(null);
+  const [lifetimeLoadFailed, setLifetimeLoadFailed] = useState(false);
+  const [lifetimePassword, setLifetimePassword] = useState("");
+  const [lifetimeSaving, setLifetimeSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchSessionLifetime().then((v) => {
+      if (cancelled) return;
+      if (v) {
+        setLifetimeHours(v.hours);
+        setLifetimeDefault(v.default_hours);
+        setLifetimeChoice(v.hours);
+      } else {
+        setLifetimeLoadFailed(true);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -159,6 +220,77 @@ export default function ProfilePage() {
       });
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  const lifetimeOptions = (() => {
+    const set = new Set(SESSION_LIFETIME_CHOICES);
+    if (lifetimeHours !== null) set.add(lifetimeHours);
+    return Array.from(set).sort((a, b) => a - b);
+  })();
+  const canSaveLifetime =
+    !lifetimeSaving &&
+    lifetimeHours !== null &&
+    lifetimeChoice !== null &&
+    lifetimeChoice !== lifetimeHours &&
+    lifetimePassword.length > 0;
+
+  async function handleLifetimeSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!canSaveLifetime) return;
+    setLifetimeSaving(true);
+    try {
+      const r = await fetch("/api/auth/session-lifetime", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          current_password: lifetimePassword,
+          hours: lifetimeChoice,
+        }),
+      });
+      if (r.ok) {
+        const data = (await r.json()) as SessionLifetimeResponse;
+        setLifetimeHours(data.hours);
+        setLifetimeChoice(data.hours);
+        setLifetimePassword("");
+        addToast({
+          variant: "success",
+          title: "Session lifetime updated",
+          description: `New sign-ins last ${formatHours(data.hours)}. Sessions that are already open keep their current expiry.`,
+        });
+      } else if (r.status === 401) {
+        // Session expired: same destination as sign-out. A hard navigation
+        // to "/" lets AuthGate see no valid session and render the sign-in
+        // screen.
+        addToast({
+          variant: "error",
+          title: "Session expired",
+          description: "Sign in again to change the session lifetime.",
+        });
+        window.location.href = "/";
+        return;
+      } else {
+        let detail = `Server returned ${r.status}`;
+        try {
+          const data = (await r.json()) as { error?: string };
+          if (data.error) detail = data.error;
+        } catch {
+          // non-JSON body
+        }
+        addToast({
+          variant: "error",
+          title: "Could not update session lifetime",
+          description: detail,
+        });
+      }
+    } catch (err) {
+      addToast({
+        variant: "error",
+        title: "Could not update session lifetime",
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setLifetimeSaving(false);
     }
   }
 
@@ -417,6 +549,114 @@ export default function ProfilePage() {
                     lock_reset
                   </span>
                   Update password
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* Session lifetime section.
+        *
+        * How long a sign-in lasts before the operator must sign in
+        * again. Absolute, not idle-based. Same second factor as Change
+        * password (current password), because a stolen cookie must not
+        * be able to stretch every future session. Applies to sessions
+        * minted AFTER the save, so success does not sign anyone out.
+        * Semantic M3 tokens only. */}
+      <section
+        className="rounded-2xl p-8 space-y-6"
+        style={glassPanel}
+      >
+        <div>
+          <h2 className="font-headline font-semibold text-lg text-on-surface">
+            Session lifetime
+          </h2>
+          <p className="text-xs text-on-surface-variant/70 mt-1">
+            How long a sign-in lasts before you are asked to sign in
+            again.{" "}
+            {lifetimeLoadFailed ? (
+              "The current value could not be loaded. Reload the page to try again."
+            ) : lifetimeHours === null ? (
+              "Loading the current value…"
+            ) : (
+              <>
+                Currently{" "}
+                <span className="font-medium text-on-surface">
+                  {formatHours(lifetimeHours)}
+                </span>{" "}
+                {lifetimeDefault !== null &&
+                  ` (default ${formatHours(lifetimeDefault)})`}
+                . A change applies to
+                your next sign-in; sessions that are already open keep
+                their current expiry.
+              </>
+            )}
+          </p>
+        </div>
+
+        <form onSubmit={handleLifetimeSubmit} className="space-y-5">
+          <div>
+            <label
+              htmlFor="session-lifetime-hours"
+              className="block text-xs font-medium uppercase tracking-wider text-on-surface-variant/80 mb-2"
+            >
+              Stay signed in for
+            </label>
+            <select
+              id="session-lifetime-hours"
+              value={lifetimeChoice ?? ""}
+              onChange={(e) => setLifetimeChoice(Number(e.target.value))}
+              disabled={lifetimeSaving || lifetimeHours === null}
+              className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all outline-none text-on-surface"
+              style={{ border: "0.5px solid var(--glass-border)" }}
+            >
+              {lifetimeOptions.map((h) => (
+                <option key={h} value={h}>
+                  {formatHours(h)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="session-lifetime-password"
+              className="block text-xs font-medium uppercase tracking-wider text-on-surface-variant/80 mb-2"
+            >
+              Current password
+            </label>
+            <input
+              id="session-lifetime-password"
+              type="password"
+              value={lifetimePassword}
+              onChange={(e) => setLifetimePassword(e.target.value)}
+              autoComplete="current-password"
+              className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all outline-none text-on-surface"
+              style={{ border: "0.5px solid var(--glass-border)" }}
+              disabled={lifetimeSaving || lifetimeHours === null}
+            />
+          </div>
+
+          <div className="flex gap-4 pt-2">
+            <button
+              type="submit"
+              disabled={!canSaveLifetime}
+              className="px-8 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all bg-primary text-primary-foreground disabled:bg-surface-container-highest disabled:text-on-surface-variant/50 disabled:cursor-not-allowed"
+            >
+              {lifetimeSaving ? (
+                <>
+                  <span className="material-symbols-outlined text-[20px] animate-spin">
+                    progress_activity
+                  </span>
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[20px]">
+                    timer
+                  </span>
+                  Save session lifetime
                 </>
               )}
             </button>

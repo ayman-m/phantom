@@ -28,6 +28,11 @@
  *                                            re-runs install per row so
  *                                            the destination ends up
  *                                            with the same install set.
+ *   - operator_state.json  the operator's workflow state from
+ *                          operator_state.db (journeys marked tested,
+ *                          saved metric bookmarks): every key with its
+ *                          value. Not a secret, not platform catalogue
+ *                          (see lib/operator-state-backup.ts).
  *
  * Auth: cookie session check at the route level. A backup with
  * cleartext secrets must not be reachable to anonymous callers.
@@ -50,6 +55,10 @@ import { NextResponse } from "next/server";
 import JSZip from "jszip";
 
 import { PhantomMCPClient } from "@/lib/mcp-client";
+import {
+  OPERATOR_STATE_FILE,
+  buildOperatorStateSection,
+} from "@/lib/operator-state-backup";
 import {
   deriveMcpBaseUrl,
   getEffectiveRuntimeConfig,
@@ -424,6 +433,22 @@ export async function GET() {
       sectionCounts.data_sources_installed = 0;
     }
 
+    // ── Section 8: Operator workflow state ───────────────────────────
+    // operator_state.db: tested-journey marks, metric bookmarks, ... Every
+    // key travels so the operator's progress follows them to a new install.
+    try {
+      const state = buildOperatorStateSection(
+        await mcpJson<unknown>("/api/v1/operator-state"),
+      );
+      zip.file(OPERATOR_STATE_FILE, JSON.stringify(state, null, 2));
+      sectionCounts.operator_state = state.count;
+    } catch (e) {
+      warnings.push(
+        `operator_state skipped: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      sectionCounts.operator_state = 0;
+    }
+
     // ── Manifest (last so section_counts is fully populated) ─────────
     const manifest = {
       schema_version: SCHEMA_VERSION,
@@ -440,6 +465,7 @@ export async function GET() {
         "skills",
         "knowledge",
         "data_sources",
+        "operator_state",
       ],
       section_counts: sectionCounts,
       warning:
@@ -453,6 +479,7 @@ export async function GET() {
         "memory",
         "knowledge",
         "data_sources",
+        "operator_state",
         "jobs",
       ],
       restore_notes: [
@@ -466,6 +493,9 @@ export async function GET() {
           "exported. Bundle YAMLs re-arrive in the destination's " +
           "image. The install set is exported as 3-tuples; restore " +
           "re-runs the install endpoint per row.",
+        "Operator state (tested-journey marks, metric bookmarks) is " +
+          "exported key by key; restore keeps a key the destination " +
+          "already holds unless overwrite is chosen.",
       ],
       ...(warnings.length ? { backup_warnings: warnings } : {}),
     };

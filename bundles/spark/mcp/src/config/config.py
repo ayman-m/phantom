@@ -87,14 +87,14 @@ class Settings(BaseSettings):
     caldera_api_key: str = Field("ADMIN123", validation_alias="CALDERA_API_KEY")
 
 
-    # --- admin/setup HTTP API auth ---
+    # --- admin HTTP API auth ---
     mcp_token: str | None = Field(
         None,
         validation_alias="MCP_TOKEN",
         description=(
             "Shared bearer token guarding the MCP's admin endpoints "
-            "(/api/v1/instances, /api/v1/setup). The Next.js agent's "
-            "setup screen sends this in the Authorization header. "
+            "(/api/v1/instances, /api/v1/providers, ...). The Next.js "
+            "agent's /api/agent/* proxies send this in the Authorization header. "
             "When unset the admin endpoints reject all requests."
         ),
     )

@@ -7,13 +7,14 @@
 #   1. phantom_mcp_data volume — sqlite stores: audit log, instance
 #      store, secret paths, KB, sessions, memory, jobs.
 #   2. phantom_mcp_skills volume — skills library (markdown).
-#   3. ./.phantom-agent/ bind-mount directory (if present) — setup
-#      form values and generated env snapshot.
+#   3. ./.phantom-agent/ bind-mount directory (if present) — the
+#      /app/runtime host mount of the source compose file. Nothing in
+#      the current stack writes to it; it is archived only so an older
+#      checkout's leftovers are not lost.
 #
-# Anything else the agent depends on (the Docker image, bundle source,
-# remote xlog/caldera URLs the operator typed at first run) is either
-# carried in the agent bundle archive or recoverable from the setup
-# page. This script captures only what isn't recoverable any other way.
+# Anything else the agent depends on (the Docker image, bundle source)
+# is carried in the agent bundle archive or the release images. This
+# script captures only what isn't recoverable any other way.
 #
 # Usage:
 #   scripts/backup_phantom.sh [--output DIR] [--label LABEL]
@@ -191,7 +192,8 @@ printf '  scripts/restore_phantom.sh %s\n' "$archive_path"
 # AES-GCM ciphertext when PHANTOM_SECRET_KEK is set. The KEK lives
 # in .env (NOT in this archive — env files have per-deploy values).
 # Without the KEK, restoring the tarball gives you encrypted blobs
-# you can't decrypt, and you'd have to re-fill the setup form.
+# you can't decrypt, and you'd have to re-enter every provider and
+# connector credential.
 if [ -f "$ROOT_DIR/.env" ] && grep -q '^PHANTOM_SECRET_KEK=' "$ROOT_DIR/.env" 2>/dev/null; then
   printf '\n'
   printf '  ⚠  PHANTOM_SECRET_KEK is set — secrets in this backup are\n'

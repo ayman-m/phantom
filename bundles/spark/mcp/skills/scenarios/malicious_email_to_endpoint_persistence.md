@@ -65,7 +65,12 @@ verbatim as `schema_override` on that stage's worker. Without it the worker emit
 observables that the vendor's modeling rule cannot map, so events land raw and `xdm.*` stays
 empty. `compact=true` is lossless for this purpose and keeps the payload inside the tool-result cap.
 
-Call `data_sources_installed_as_vendors`. Group `vendors[]` by `data_source_class`. Verify both `email-gateway` and `edr` are present. If either is missing, stop and tell the operator which class has no installed data source — Stages 2-4 ALL depend on endpoint process telemetry from `edr` and this skill cannot meaningfully run without it. (Network-tier substitutions don't capture the process tree, command-line, or memory-access events the rules need.)
+### Class check (MANDATORY — before creating any worker)
+
+1. Call `data_sources_installed_as_vendors` once. Group `vendors[]` by `data_source_class`.
+2. For every row of the "Data classes used" table, write down the installed entry you will use for it, or `MISSING`. A class is only covered by an installed entry. A generic or catch-all schema is never a substitute, and never guess a vendor/product for a class.
+3. Both `email-gateway` (Stage 1) and `edr` (Stages 2-4) are required; Stages 2-4 need the process tree, command line and memory-access events that only endpoint telemetry carries, and network-tier substitutions do not capture them. If it is `MISSING`, say this to the operator, with the class filled in: "No installed data source covers the `<class>` class, so I cannot run the email malware persistence scenario. Install a `<class>` data source from the Marketplace and ask again." Then stop: create no worker.
+4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
 ## Narrative thread
 
@@ -312,7 +317,7 @@ xlog.create_data_worker:
 | EDR alert: LSASS memory access | XSIAM Issues |
 | EDR alert: Defender disabled | XSIAM Issues |
 | EDR alert: Persistence scheduled task | XSIAM Issues (sometimes filed under same incident as tamper) |
-| Pivotable: filter by host=`wks-lthomas-01`, see all 4 stages on one timeline | XQL: `config timeframe = 24h \| dataset = edr_logs \| filter hostname="wks-lthomas-01" \| limit 20` |
+| Pivotable: filter by host=`wks-lthomas-01`, see all 4 stages on one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the edr entry> \| filter <its host field> = "wks-lthomas-01" \| limit 20` |
 
 ## Tear-down
 

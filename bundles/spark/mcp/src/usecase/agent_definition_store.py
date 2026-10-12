@@ -57,9 +57,9 @@ Same matcher as the hooks framework: comma-separated globs with
 `*` (any chars) and `?` (single char). Examples:
 
     tools_allowed: ["caldera_*"]               # red-team only
-    tools_allowed: ["xsiam_execute_xql_query",
-                    "xsiam_get_dataset_metadata",
-                    "xsiam_list_rules"]        # blue-team narrow
+    tools_allowed: ["xsiam_run_xql_query",
+                    "xsiam_get_datasets",
+                    "detections_list"]         # blue-team narrow
     tools_allowed: ["*_get_*", "*_list_*"]     # read-only everywhere
 
 # Schema

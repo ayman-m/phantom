@@ -1,6 +1,9 @@
 /**
- * Phantom marketplace endpoint — returns the three connectors that ship in
- * this bundle: xlog, caldera, xsiam. The connectors page (lifted from
+ * Phantom marketplace endpoint — returns the connectors that ship in this
+ * bundle (xlog, caldera, xsiam, web, the cortex-* connectors, http-sender and
+ * wec-sender). Connectors the operator uploaded are not here; they come from
+ * /api/agent/marketplace/catalog/user (session-gated, read from the MCP's
+ * marketplace catalogue). The connectors page (lifted from
  * Spark's workspace UI) calls /api/marketplace/connectors expecting a
  * GitHub-catalog-shaped JSON; in phantom standalone, the catalog IS the
  * bundle, so we serve hand-curated specs derived from the bundle's
@@ -13,6 +16,8 @@
  */
 
 import { NextResponse } from "next/server";
+
+import { toolsFromSpec } from "@/lib/connector-spec";
 
 export const dynamic = "force-dynamic";
 
@@ -881,48 +886,7 @@ async function loadLiveTools(connectorId: string): Promise<Tool[] | null> {
       const doc = yaml.load(text) as { spec?: { tools?: Array<Record<string, unknown>> } };
       const yamlTools = doc?.spec?.tools;
       if (!Array.isArray(yamlTools)) return null;
-      const out: Tool[] = [];
-      for (const t of yamlTools) {
-        const name = typeof t.name === "string" ? t.name : null;
-        if (!name) continue;
-        const method =
-          typeof t.method === "string"
-            ? t.method.startsWith("GET")
-              ? "GET"
-              : t.method.startsWith("PUT")
-                ? "PUT"
-                : t.method.startsWith("DELETE")
-                  ? "DELETE"
-                  : t.method.startsWith("POST")
-                    ? "POST"
-                    : "POST"
-            : "POST";
-        const description =
-          typeof t.description === "string"
-            ? t.description.trim().split("\n")[0].slice(0, 220)
-            : "";
-        const args: Tool["args"] = [];
-        if (Array.isArray(t.args)) {
-          for (const a of t.args as Array<Record<string, unknown>>) {
-            const aname = typeof a.name === "string" ? a.name : null;
-            if (!aname) continue;
-            args.push({
-              name: aname,
-              type: typeof a.type === "string" ? a.type : "string",
-              description: typeof a.description === "string" ? a.description : "",
-              required: a.required === true,
-              defaultValue:
-                typeof a.defaultValue === "string"
-                  ? a.defaultValue
-                  : typeof a.default === "string"
-                    ? a.default
-                    : undefined,
-            });
-          }
-        }
-        out.push({ name, method, description, args });
-      }
-      return out;
+      return toolsFromSpec(yamlTools);
     } catch {
       // try next candidate
     }

@@ -5,6 +5,14 @@
 > run the agent on a machine that is **separate** from where xlog
 > and caldera run.
 
+> **Known limitation.** The slim recipe (`docker-compose.agent-only.yml`)
+> has no `phantom-updater` service. Every bundle connector runs as a
+> per-instance container that `phantom-updater` starts, so connector
+> instances cannot start on a host that runs only the slim recipe. The
+> installer (see the README) and the root `docker-compose.yml` run the
+> updater; use one of those for a working stack. This guide describes the
+> slim recipe's intended shape.
+
 This is the right deployment shape when:
 
 - You want one Phantom agent installation that talks to a **shared**
@@ -30,9 +38,9 @@ this guide doesn't apply.
 │   ├─ Next.js UI         :3000     │                │  caldera container     :8888,    │
 │   └─ Embedded MCP       :8080     │                │                       :8443      │
 │  └─ Volumes:                      │                │                                   │
-│     • /app/runtime (setup data)   │                └──────────────────────────────────┘
-│     • /app/data (audit, secrets)  │                ┌──────────────────────────────────┐
-│     • /app/skills                 │                │ XSIAM tenant (external)          │
+│     • /app/data (audit, secrets)  │                └──────────────────────────────────┘
+│     • /app/skills                 │                ┌──────────────────────────────────┐
+│                                   │                │ XSIAM tenant (external)          │
 │                                   │ ─────────────► │  PAPI + webhook                  │
 └──────────────────────────────────┘                └──────────────────────────────────┘
 ```
@@ -76,10 +84,11 @@ phantom-agent-bundle-agent-only.tar.gz/
     └── …                           install, import, materialize-secrets
 ```
 
-**The agent's behavior is fully encoded in the image.** Everything
-operator-supplied (URLs, credentials, settings) flows in via the
-setup form at first run — no environment variables to set, no
-config files to edit, no secrets in CI.
+**The agent's behavior is fully encoded in the image.** The `.env`
+file carries only the few values the container needs at boot (see
+First-run flow). Everything else operator-supplied (provider and
+connector URLs and credentials, settings) is entered in the UI after
+first login — no config files to edit, no secrets in CI.
 
 ---
 
@@ -113,7 +122,7 @@ config files to edit, no secrets in CI.
       - "0.0.0.0:8443:8443"
   ```
 - DNS: either give Machine B a hostname Machine A can resolve, or
-  use Machine B's IP directly in the setup form.
+  use Machine B's IP directly in the connector instance form.
 
 ### Production hardening
 - Terminate TLS in front of xlog and caldera (a reverse proxy on
@@ -139,6 +148,10 @@ shasum -a 256 -c checksums.sha256
 docker load < images/phantom-agent-local.tar
 
 # 4. Generate operator-supplied secrets:
+#      PHANTOM_DEFAULT_ADMIN_PASSWORD — first password of the `admin`
+#                           user. The agent refuses to start on a fresh
+#                           volume without it. You are asked to change
+#                           it at first login.
 #      MCP_TOKEN          — bundle-internal bearer (pin so it stays
 #                           stable across restarts).
 #      PHANTOM_SECRET_KEK — 32-byte AES-256-GCM key encrypting all
@@ -148,6 +161,7 @@ docker load < images/phantom-agent-local.tar
 #                           is plaintext on disk and in the backup
 #                           tarball.
 {
+  echo "PHANTOM_DEFAULT_ADMIN_PASSWORD=$(openssl rand -base64 18)"
   echo "MCP_TOKEN=$(openssl rand -hex 32)"
   echo "PHANTOM_SECRET_KEK=$(openssl rand -base64 32)"
 } > .env
@@ -162,34 +176,34 @@ until [ "$(docker inspect -f '{{.State.Health.Status}}' phantom_agent 2>/dev/nul
 done
 echo "agent ready"
 
-# 7. Open the setup page
-echo "→ Open http://$(hostname):3000 in your browser"
+# 7. Open the UI
+echo "→ Open https://$(hostname):3000 in your browser"
 ```
 
-The setup page presents one form section per connector + provider +
-required setting. Fill in:
+The UI is served with a self-signed certificate (accept the browser
+warning, or supply your own pair on the `phantom_tls` volume). There
+is no setup form: sign in as `admin` with the
+`PHANTOM_DEFAULT_ADMIN_PASSWORD` from `.env`. The UI sends you to
+`/profile` to change it before anything else.
 
-| Field | Value |
+Then add what the agent needs, in order:
+
+1. **Model provider** at `/providers`: your Vertex AI project, region
+   and service-account JSON (or a Gemini API key). The provider
+   credentials go to the ProviderStore and SecretStore.
+2. **One connector instance per service** at `/connectors` (Create
+   Instance; the form is rendered from each connector's schema):
+
+| Connector | Fields |
 |---|---|
-| **UI password** | A strong password you'll use to log in to the agent |
-| **Gemini API key** _OR_ **GOOGLE_APPLICATION_CREDENTIALS** | Either an API key from Google AI Studio, or your service-account JSON content (one of, not both) |
-| **calderaBaseUrl** | `http://<machine-b>:8888` — Caldera's HTTP API on the remote host |
-| **calderaApiKey** | The red-team API key (must match what was baked into Caldera at its first boot) |
-| **calderaRedUser** / **calderaRedPassword** | Caldera red-team operator credentials |
-| **xlogBaseUrl** | `http://<machine-b>:8000` — xlog's GraphQL API |
-| **xsiamPapiUrl** | Your XSIAM tenant's PAPI URL |
-| **xsiamPapiAuthHeader** / **xsiamPapiAuthId** | XSIAM PAPI bearer credentials |
-| **xsiamPlaygroundId** | Your XSIAM playground / war-room ID |
-| **xsiamWebhookEndpoint** / **xsiamWebhookKey** | XSIAM HTTP collector for synthetic logs |
-| **vertexProjectId** / **vertexRegion** / **vertexServiceAccountJson** | If using Vertex AI for Gemini, the GCP project + region + service-account JSON content |
+| **caldera** | `baseUrl` `http://<machine-b>:8888`; `redUser`; secrets `apiKey` (the red-team API key baked into Caldera at its first boot) and `redPassword` |
+| **xlog** | `baseUrl` `https://<machine-b>:8000`; optional `webhookEndpoint` and `defaultLogFormat`; secret `apiToken` (the token xlog enforces) and optional `webhookKey` |
+| **xsiam** | `api_url`, `api_id`, `playgroundId`; secret `api_key` (the PAPI Authorization header value); optional `webhookEndpoint` and secret `webhookKey` (the XSIAM HTTP collector for synthetic logs) |
 
-Click **Save**. Phantom materializes one connector instance per
-binding (SecretStore-backed), reloads its tool registry,
-and routes you to the home page.
-
-You're done. The agent's tools (xlog scenarios, caldera operations,
-XSIAM detection validation) are now wired against your remote
-infrastructure.
+Each instance is stored in the InstanceStore (secrets in the
+SecretStore), and the tool registry reloads when you save it. The
+agent's tools (xlog scenarios, caldera operations, XSIAM detection
+validation) are then wired against your remote infrastructure.
 
 ---
 
@@ -211,27 +225,27 @@ script reports which capability and why.
 You can also test connectivity from the agent to Machine B directly:
 
 ```bash
-docker compose exec -T phantom-agent curl -sf http://<machine-b>:8000/health
+docker compose exec -T phantom-agent curl -ksf https://<machine-b>:8000/health
 docker compose exec -T phantom-agent curl -sf http://<machine-b>:8888/
 ```
 
 If either curl hangs or fails, the issue is between Machine A and
 Machine B — verify the firewall, the port binding (`0.0.0.0:`
-prefix), and the DNS / IP you used in the setup form.
+prefix), and the DNS / IP you used in the connector instance.
 
 ---
 
 ## Updating credentials later
 
-Operator-supplied values live in `/app/data/secrets/` (the SecretStore inside the persistent `phantom_mcp_data` volume) and
-`/app/runtime/setup.json` (in the bind-mounted `.phantom-agent/`
-directory). To rotate:
+Operator-supplied values live in `/app/data/secrets/` (the SecretStore
+inside the persistent `phantom_mcp_data` volume). Each one has its own
+page; there is no combined form. To rotate:
 
-- **Caldera credentials** — visit `/setup` again in the browser
-  and resubmit. The instance store updates atomically; old
-  credentials are deleted.
-- **XSIAM credentials** — same.
-- **Vertex / Gemini API keys** — same.
+- **Your UI password** — `/profile`.
+- **Caldera, xlog and XSIAM credentials** — edit the connector instance
+  at `/connectors`. The instance store updates atomically; the old
+  secret is replaced.
+- **Vertex / Gemini credentials** — edit the provider at `/providers`.
 
 The audit log (`/api/v1/audit`) records every credential rotation
 with the operator who initiated it.
@@ -247,12 +261,13 @@ The two volumes that hold operator state:
 | `phantom_mcp_data` | Sqlite stores: audit log, instance store, secret paths, KB, sessions, memory, jobs |
 | `phantom_mcp_skills` | Skills library (markdown), seeded from image at first run |
 
-The bind-mounted `./.phantom-agent/` directory holds the setup
-form's submitted values and a generated `.env` snapshot.
+The bind-mounted `./.phantom-agent/` directory (`/app/runtime` in the
+container) is retained but unused: nothing in the current stack writes
+to it.
 
 **Backup** (use the script — it captures BOTH volumes plus the
-`./.phantom-agent/` bind-mount, hashes each component, and writes
-a manifest so the restore side can refuse a corrupted archive):
+`./.phantom-agent/` bind-mount if present, hashes each component, and
+writes a manifest so the restore side can refuse a corrupted archive):
 ```bash
 scripts/backup_phantom.sh --label pre-upgrade
 # → ./phantom-backup-pre-upgrade-<UTC stamp>.tar.gz
@@ -268,7 +283,7 @@ docker compose down                       # leaves the volumes empty
 scripts/restore_phantom.sh phantom-backup-pre-upgrade-<UTC stamp>.tar.gz
 
 # 3. Bring the agent back up — your audit log, KB, instance configs,
-#    and operator setup values are all in place.
+#    provider config and secrets are all in place.
 docker compose up -d
 ```
 
@@ -287,7 +302,8 @@ supplied secret. The KEK itself is NOT in the tarball (it's in
 files often hold per-deploy values like network addresses you don't
 want restored verbatim). **Store the KEK separately in your secret
 manager.** Losing it means losing every secret in the backup; you'd
-have to re-fill the setup form on the restored machine.
+have to re-enter every provider and connector credential on
+the restored machine.
 
 The trade-off is intentional: a stolen backup tarball is useless
 without the KEK, which is the core security property
@@ -332,7 +348,7 @@ operator action beyond setting the env var.
 encrypted secrets.** The agent will refuse to read encrypted files
 without the KEK rather than return garbage. To go back to plaintext
 mode, you'd need to read every secret out (with the KEK), unset the
-env var, and re-fill the setup form.
+env var, and re-enter every provider and connector credential.
 
 ---
 
@@ -344,16 +360,17 @@ env var, and re-fill the setup form.
 - The combined-container healthcheck verifies both ports 3000 and
   8080 are responding. If one is down, the container is unhealthy.
 
-### Setup page shows "MCP not configured"
-- The SecretStore needs writable volume mounts. Verify
-  `phantom_mcp_data` and `./.phantom-agent` are mounted (check
-  `docker inspect phantom_agent`).
+### The UI shows "MCP not configured" or the agent exits at boot
+- The SecretStore needs a writable `phantom_mcp_data` mount. Verify it
+  is mounted (check `docker inspect phantom_agent`).
+- On a fresh volume the agent exits if `PHANTOM_DEFAULT_ADMIN_PASSWORD`
+  is missing from `.env`; the `[entrypoint]` log lines say so.
 
 ### Tool calls timeout or 502
 - Indicates Machine A → Machine B network failure. From inside
   the agent container:
   ```bash
-  docker compose exec -T phantom-agent curl -v http://<machine-b>:8000/health
+  docker compose exec -T phantom-agent curl -kv https://<machine-b>:8000/health
   ```
   If this fails, fix the network on Machine B before troubleshooting
   the agent further.

@@ -37,6 +37,7 @@
  * up to 30 seconds for the cached entry to expire.
  */
 
+import { classifyPasswordGatedFailure } from "@/lib/auth-route-helpers";
 import { resolveMcp } from "@/lib/mcp-proxy";
 
 const SESSION_CACHE_TTL_MS = 30_000;
@@ -113,6 +114,29 @@ export interface ChangePasswordRejected {
 
 export type ChangePasswordResult = ChangePasswordOk | ChangePasswordRejected;
 
+export interface SessionLifetime {
+  /** Configured session lifetime in whole hours. */
+  hours: number;
+  /** The lifetime installs get until the operator changes it. */
+  defaultHours: number;
+}
+
+export type GetSessionLifetimeResult =
+  | ({ ok: true } & SessionLifetime)
+  | { ok: false; reason: "mcp_unreachable"; detail: string };
+
+export type SetSessionLifetimeResult =
+  | ({ ok: true; previousHours: number } & SessionLifetime)
+  | {
+      ok: false;
+      reason:
+        | "invalid_session"
+        | "current_password_incorrect"
+        | "validation_error"
+        | "mcp_unreachable";
+      detail: string;
+    };
+
 // ─────────────────────────────────────────────────────────────────
 // Session validation cache
 // ─────────────────────────────────────────────────────────────────
@@ -154,9 +178,10 @@ export function bustApiKeyCache(token: string): void {
 // Internal — bearer-authenticated POST to MCP
 // ─────────────────────────────────────────────────────────────────
 
-async function mcpPost(
+async function mcpCall(
+  method: "GET" | "POST",
   path: string,
-  body: Record<string, unknown>,
+  body?: Record<string, unknown>,
 ): Promise<
   | { ok: true; status: number; data: Record<string, unknown> }
   | { ok: false; reason: "mcp_unreachable" | "transport_error"; detail: string }
@@ -172,12 +197,12 @@ async function mcpPost(
   }
   try {
     const resp = await fetch(`${r.base}${path}`, {
-      method: "POST",
+      method,
       headers: {
         Authorization: `Bearer ${r.token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
     });
     const text = await resp.text();
@@ -201,6 +226,10 @@ async function mcpPost(
       detail: err instanceof Error ? err.message : String(err),
     };
   }
+}
+
+function mcpPost(path: string, body: Record<string, unknown>) {
+  return mcpCall("POST", path, body);
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -376,23 +405,8 @@ export async function changePassword(args: {
           reason: "mcp_unreachable",
           detail: resp.detail ?? "MCP unreachable",
         };
-      case "http_error": {
-        const errMsg =
-          typeof resp.data.error === "string"
-            ? resp.data.error
-            : `HTTP ${resp.status}`;
-        if (resp.status === 401) {
-          return { ok: false, reason: "invalid_session", detail: errMsg };
-        }
-        if (resp.status === 403) {
-          return {
-            ok: false,
-            reason: "current_password_incorrect",
-            detail: errMsg,
-          };
-        }
-        return { ok: false, reason: "validation_error", detail: errMsg };
-      }
+      case "http_error":
+        return classifyPasswordGatedFailure(resp.status, resp.data);
     }
   }
   // ok=true path — bust the cache for the token we just rotated.
@@ -402,4 +416,81 @@ export async function changePassword(args: {
       ? resp.data.sessions_revoked
       : 0;
   return { ok: true, sessionsRevoked };
+}
+
+/** Read the operator-configured session lifetime. MCP_TOKEN-gated at
+ *  the MCP; the calling route validates the session cookie first. */
+export async function getSessionLifetime(): Promise<GetSessionLifetimeResult> {
+  const resp = await mcpCall("GET", "/api/v1/ui/auth/session_lifetime");
+  if (!resp.ok) {
+    return {
+      ok: false,
+      reason: "mcp_unreachable",
+      detail:
+        resp.reason === "http_error"
+          ? `MCP returned ${resp.status}`
+          : resp.detail,
+    };
+  }
+  if (
+    typeof resp.data.hours !== "number" ||
+    typeof resp.data.default_hours !== "number"
+  ) {
+    return {
+      ok: false,
+      reason: "mcp_unreachable",
+      detail: "MCP session-lifetime response malformed",
+    };
+  }
+  return {
+    ok: true,
+    hours: resp.data.hours,
+    defaultHours: resp.data.default_hours,
+  };
+}
+
+/** Change the session lifetime. Same contract as changePassword: needs
+ *  the caller's session token AND the current password. Applies to
+ *  sessions minted afterwards; the caller's own session is untouched,
+ *  so no cache bust or cookie change is needed. */
+export async function setSessionLifetime(args: {
+  sessionToken: string;
+  currentPassword: string;
+  hours: number;
+}): Promise<SetSessionLifetimeResult> {
+  const resp = await mcpPost("/api/v1/ui/auth/session_lifetime", {
+    session_token: args.sessionToken,
+    current_password: args.currentPassword,
+    hours: args.hours,
+  });
+  if (!resp.ok) {
+    switch (resp.reason) {
+      case "mcp_unreachable":
+      case "transport_error":
+        return {
+          ok: false,
+          reason: "mcp_unreachable",
+          detail: resp.detail ?? "MCP unreachable",
+        };
+      case "http_error":
+        return classifyPasswordGatedFailure(resp.status, resp.data);
+    }
+  }
+  if (
+    typeof resp.data.hours !== "number" ||
+    typeof resp.data.previous_hours !== "number" ||
+    typeof resp.data.default_hours !== "number"
+  ) {
+    return {
+      ok: false,
+      reason: "mcp_unreachable",
+      detail: "MCP session-lifetime response malformed",
+    };
+  }
+  return {
+    ok: true,
+    hours: resp.data.hours,
+    previousHours: resp.data.previous_hours,
+    defaultHours: resp.data.default_hours,
+  };
 }

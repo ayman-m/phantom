@@ -11,6 +11,7 @@ import logging
 import os
 import signal
 import tempfile
+import threading
 from functools import partial
 from typing import Any
 
@@ -130,6 +131,26 @@ async def shutdown(sig: signal.Signals, loop: asyncio.AbstractEventLoop):
     loop.stop()
 
 
+# The boot load and a re-index after an embedder change both walk the same
+# bundled KBs. They run one at a time: the second finds every document already
+# embedded by the live embedder and skips it, instead of embedding it twice.
+_kb_load_lock = threading.Lock()
+# True while the last bundled-KB load did not finish (the embedder circuit
+# breaker aborted it, or documents failed to embed). EmbedderRuntime reads it so
+# the next successful embedder install re-runs the load.
+_kb_load_incomplete = False
+
+
+def _run_bundled_knowledge_load(*, kb, bundle_root, bundled):
+    global _kb_load_incomplete
+    with _kb_load_lock:
+        summary = load_bundled_knowledge(kb=kb, bundle_root=bundle_root, bundled=bundled)
+        _kb_load_incomplete = any(
+            isinstance(c, dict) and c.get("skipped", 0) > 0 for c in summary.values()
+        )
+        return summary
+
+
 async def _load_bundled_knowledge_background(
     *, kb, bundle_root, bundled: list[dict[str, Any]],
 ) -> None:
@@ -153,7 +174,7 @@ async def _load_bundled_knowledge_background(
     """
     try:
         kb_summary_counts = await asyncio.to_thread(
-            load_bundled_knowledge, kb=kb, bundle_root=bundle_root, bundled=bundled,
+            _run_bundled_knowledge_load, kb=kb, bundle_root=bundle_root, bundled=bundled,
         )
         logger.info(
             "Knowledge bases loaded from bundle: %s", kb_summary_counts,
@@ -206,6 +227,12 @@ async def async_main(transport: str):
     # instance.config.baseUrl from the active xlog instance every
     # time it's invoked). No env-var capture at boot.
     mcp = create_mcp_server()
+
+    # Count every tool dispatch (built-in and connector) into
+    # phantom_mcp_tool_calls_total{tool,status}. A middleware, not a counter in
+    # the connector wrapper: built-in tools are registered unwrapped.
+    from usecase.tool_call_metrics import ToolCallMetricsMiddleware
+    mcp.add_middleware(ToolCallMetricsMiddleware())
 
     # Register tools via the bundle-aware loader.
     #
@@ -515,99 +542,28 @@ async def async_main(transport: str):
     #
     # POLICY: Vertex is authoritative for memory + KB embedding. Operator
     # explicitly requested no local-ML embedders (resource-constrained VM).
-    # TextHashEmbedder is NOT a local ML model — it's a deterministic
+    # TextHashEmbedder is NOT a local ML model: it is a deterministic
     # SHA-256 + dim-bucketing stub (~zero compute, no model weights). It
     # exists ONLY to keep the agent UI bootable BEFORE the operator has
-    # supplied Vertex creds, so they can navigate to /setup and complete
-    # configuration. Once Vertex is live, no per-call fallback to TextHash
-    # is allowed (see usecase/vertex_embedder.py).
-    fallback_embedder = TextHashEmbedder(dims=embed_dims)
-    embedder: Any = fallback_embedder
-    embedder_mode = "stub"  # stub | vertex — surfaces in /api/v1/health
-    if embed_provider_id == "google":
-        try:
-            vertex_instances = [
-                p for p in provider_store.list_all() if p.provider_id == "vertex"
-            ]
-            if vertex_instances:
-                # Pick the first materialized vertex instance — multi-
-                # instance routing would attach per-tenant identity;
-                # today there's one vertex configuration per deploy.
-                def _build_vertex_provider() -> Any:
-                    """Build the Vertex provider from the stores as they are NOW (also the embedder's refresh path)."""
-                    current = [p for p in provider_store.list_all() if p.provider_id == "vertex"]
-                    if not current:
-                        raise RuntimeError("no Vertex provider is configured")
-                    inst = current[0]
-                    from providers.vertex.src.provider import Provider as VertexProvider
-                    # Resolve secret-store paths to literal values
-                    # for the provider __init__. Keep config + secrets split
-                    # to match the provider's two-arg constructor.
-                    resolved_secrets: dict[str, Any] = {}
-                    for slot, ref in inst.secret_refs.items():
-                        if isinstance(ref, str) and ref.startswith("/") and secret_store:
-                            try:
-                                resolved_secrets[slot] = secret_store.read(ref)
-                            except Exception as e:
-                                logger.warning(
-                                    "vertex secret resolve failed for %s: %s", slot, e,
-                                )
-                                resolved_secrets[slot] = ""
-                        else:
-                            resolved_secrets[slot] = ref
-                    return VertexProvider(config=dict(inst.config), secrets=resolved_secrets)
-
-                from usecase.vertex_embedder import VertexEmbedder
-                provider_obj = _build_vertex_provider()
-                # Note: `fallback=` is deliberately not passed — VertexEmbedder
-                # ignores it and raises on per-call failure. The kwarg is
-                # accepted for compatibility but elicits an info log.
-                embedder = VertexEmbedder(
-                    provider=provider_obj, model_id=embed_model,
-                    dims=embed_dims, provider_factory=_build_vertex_provider,
-                )
-                embedder_mode = "vertex"
-                # Stash the live embedder so /api/v1/metrics can pull
-                # stats() at scrape time — see api/metrics.py.
-                from usecase.vertex_embedder import set_embedder
-                set_embedder(embedder)
-                logger.info(
-                    "Embedder=Vertex (model=%s, dims=%d) — authoritative; "
-                    "no per-call demotion to TextHash. Failures will raise.",
-                    embed_model, embed_dims,
-                )
-            else:
-                # Setup not complete yet — agent is bootable but search
-                # quality will be poor until the operator submits creds.
-                # WARN-level so the message shows up in operational dashboards.
-                logger.warning(
-                    "Embedder=TextHash (DEGRADED). manifest.memory.embeddingProvider="
-                    "google but no vertex provider instance is materialized. "
-                    "Memory + KB search returns hash-similarity scores, NOT semantic "
-                    "matches. Submit Vertex creds via /setup to upgrade.",
-                )
-        except Exception as exc:
-            # Setup ostensibly complete but Vertex init blew up. This is
-            # closer to a config bug than a transient outage — surface as
-            # ERROR so it shows up in alerts.
-            logger.error(
-                "Embedder=TextHash (DEGRADED). Could not initialize VertexEmbedder: "
-                "%s. Inspect provider config + secrets and restart.",
-                exc,
-            )
-    else:
-        # No embedding provider declared in manifest. Bundle author probably
-        # forgot — flag it.
-        logger.warning(
-            "Embedder=TextHash (DEGRADED). manifest.memory.embeddingProvider not "
-            "set — bundle has no declared embedding model. Set "
-            "manifest.memory.embeddingProvider=google + embeddingModel="
-            "text-embedding-004 to enable Vertex.",
-        )
-
-    # Stash mode for /api/v1/health to surface to the UI.
-    import os as _os
-    _os.environ["PHANTOM_EMBEDDER_MODE"] = embedder_mode
+    # saved a Vertex provider on /providers. Once Vertex is live, no per-call
+    # fallback to TextHash is allowed (see usecase/vertex_embedder.py).
+    #
+    # The choice is not final at boot: EmbedderRuntime re-decides it whenever
+    # a Vertex provider is saved through /api/v1/providers (api/providers.py),
+    # so a fresh install leaves stub mode without a restart.
+    from usecase.embedder_runtime import EmbedderRuntime, set_embedder_runtime
+    embedder_runtime = EmbedderRuntime(
+        provider_store=provider_store,
+        secret_store=secret_store,
+        embed_provider_id=embed_provider_id,
+        embed_model=embed_model,
+        embed_dims=embed_dims,
+        fallback_embedder=TextHashEmbedder(dims=embed_dims),
+    )
+    set_embedder_runtime(embedder_runtime)
+    # select_initial() probes a configured Vertex provider with one real embed()
+    # call (bounded by PROBE_TIMEOUT_S); run it on a thread so boot stays async.
+    embedder: Any = await asyncio.to_thread(embedder_runtime.select_initial)
 
     memory_store = SqliteMemoryStore(embedder=embedder)
     set_memory_store(memory_store)
@@ -630,6 +586,7 @@ async def async_main(transport: str):
     # re-embedding unchanged docs.
     kb = SqliteKnowledgeBase(embedder=embedder)
     set_knowledge_base(kb)
+    embedder_runtime.attach(memory_store, kb)
     bundled_kbs = knowledge_cfg.get("bundled") or []
     if isinstance(bundled_kbs, list) and bundled_kbs:
         # Backgrounded — see _load_bundled_knowledge_background's
@@ -642,6 +599,21 @@ async def async_main(transport: str):
                 kb=kb, bundle_root=bundle_root, bundled=bundled_kbs,
             )
         )
+        # After a Vertex embedder is installed while running (and the KB still
+        # holds documents another embedder produced, or the last load did not
+        # finish), the bundled documents are re-indexed in the background with
+        # the same loader the boot path runs. Hash-unchanged documents are
+        # re-embedded because upsert() also compares the model.
+        def _reindex_bundled_kb() -> None:
+            threading.Thread(
+                target=_run_bundled_knowledge_load,
+                kwargs={"kb": kb, "bundle_root": bundle_root, "bundled": bundled_kbs},
+                name="kb-reindex-after-embedder-upgrade",
+                daemon=True,
+            ).start()
+
+        embedder_runtime.on_vertex_activated = _reindex_bundled_kb
+        embedder_runtime.kb_load_incomplete = lambda: _kb_load_incomplete
     else:
         logger.info("No knowledge.bundled[] in manifest — KB store empty")
 
@@ -1060,7 +1032,7 @@ async def async_main(transport: str):
     register_observability_routes(mcp, events_store)
     logger.info(
         "Admin HTTP endpoints registered: /api/v1/instances/*, "
-        "/api/v1/providers/*, /api/v1/models, /api/v1/setup, "
+        "/api/v1/providers/*, /api/v1/models, "
         "/api/v1/audit/*, /api/v1/approvals/*, /api/v1/sessions/*, "
         "/api/v1/memories/*, /api/v1/context, /api/v1/jobs/*, "
         "/api/v1/kbs/*, /api/v1/settings, /api/v1/api_keys, "
@@ -1083,7 +1055,7 @@ async def async_main(transport: str):
     #
     # Admin HTTP endpoints registered above stay live so the platform
     # can:
-    #   1. GET /api/v1/setup → introspect bundle connector definitions
+    #   1. GET /api/v1/marketplace → list bundle connector definitions
     #   2. push them to the workspace marketplace via
     #      gateway.PublishConnector, gated on admin approval
     #
@@ -1106,7 +1078,7 @@ async def async_main(transport: str):
     if not platform_mode:
         # First-pass registration: covers every connector instance that
         # exists at boot. Idempotent — additional instances materialized
-        # later via /api/v1/setup will be picked up by reload_tools_now()
+        # later via /api/v1/instances (or /reload_tools) will be picked up by reload_tools_now()
         # without needing a process restart (hot-reload).
         namespaced_count, legacy_count = register_all_tools(
             mcp=mcp,

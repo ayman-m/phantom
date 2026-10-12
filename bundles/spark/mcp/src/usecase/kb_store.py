@@ -148,6 +148,20 @@ class SqliteKnowledgeBase:
     def embedder(self) -> Embedder:
         return self._embedder
 
+    def set_embedder(self, embedder: Embedder) -> None:
+        """Swap the live embedder (stub -> Vertex once the operator saves
+        credentials). Documents embedded by the old embedder are skipped by
+        search() and re-embedded by the next upsert() of the same content
+        (the unchanged fast path also compares embedding_model), so the
+        caller re-runs the bundled-KB loader after a swap. Methods read
+        `self._embedder` once per call."""
+        logger.info(
+            "KnowledgeBase embedder swapped: %s -> %s",
+            getattr(self._embedder, "model_id", type(self._embedder).__name__),
+            getattr(embedder, "model_id", type(embedder).__name__),
+        )
+        self._embedder = embedder
+
     def _conn(self) -> sqlite3.Connection:
         c = sqlite3.connect(self._db_path, isolation_level=None, check_same_thread=False)
         c.row_factory = sqlite3.Row
@@ -233,6 +247,7 @@ class SqliteKnowledgeBase:
         if not kb_name or not doc_id:
             raise ValueError("kb_name and doc_id are required")
         meta_dict = dict(metadata or {})
+        embedder = self._embedder  # one embedder for the whole upsert
         with self._lock, self._conn() as c:
             existing = c.execute(
                 "SELECT * FROM kb_documents WHERE kb_name = ? AND doc_id = ?",
@@ -240,7 +255,7 @@ class SqliteKnowledgeBase:
             ).fetchone()
             # "Unchanged" requires BOTH the content hash AND the
             # producing embedder to match. A content-only check
-            # would miss this corruption case: completing /setup with Vertex creds for the
+            # would miss this corruption case: saving the Vertex provider for the
             # first time doesn't touch any file on disk, so every
             # pre-existing doc's source_hash still matches and this
             # fast path would keep serving its OLD TextHash vector
@@ -250,22 +265,31 @@ class SqliteKnowledgeBase:
             if (
                 existing
                 and existing["source_hash"] == source_hash
-                and existing["embedding_model"] == self._embedder.model_id
+                and existing["embedding_model"] == embedder.model_id
             ):
                 # Nothing to do — content AND embedder both unchanged.
                 return self._row_to_doc(existing), "unchanged"
 
         # Re-embed when content changed, the doc is new, or the live
         # embedder no longer matches what produced the stored vector.
-        embedding = self._embedder.embed(content)
-        if len(embedding) != self._embedder.dims:
+        embedding = embedder.embed(content)
+        if len(embedding) != embedder.dims:
             raise RuntimeError(
-                f"embedder returned {len(embedding)} dims; expected {self._embedder.dims}"
+                f"embedder returned {len(embedding)} dims; expected {embedder.dims}"
             )
         embedding_blob = self._pack(embedding)
         now = self._now_iso()
 
         with self._lock, self._conn() as c:
+            # Re-check under the write lock: the embed above ran outside it, so
+            # a concurrent upsert of the same (kb_name, doc_id) (the boot load
+            # racing a re-index) may have inserted the row since the read.
+            # Without this the second INSERT died on UNIQUE(kb_name, doc_id) and
+            # counted as an embedder failure toward the loader's circuit breaker.
+            existing = c.execute(
+                "SELECT * FROM kb_documents WHERE kb_name = ? AND doc_id = ?",
+                (kb_name, doc_id),
+            ).fetchone()
             if existing:
                 doc_uuid = existing["id"]
                 c.execute(
@@ -275,7 +299,7 @@ class SqliteKnowledgeBase:
                     "embedding_model = ? WHERE id = ?",
                     (title, category, content, json.dumps(meta_dict),
                      source_path, source_hash, embedding_blob, now,
-                     self._embedder.model_id, doc_uuid),
+                     embedder.model_id, doc_uuid),
                 )
                 action = "update"
             else:
@@ -288,7 +312,7 @@ class SqliteKnowledgeBase:
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (doc_uuid, kb_name, doc_id, title, category, content,
                      json.dumps(meta_dict), source_path, source_hash,
-                     embedding_blob, now, self._embedder.model_id),
+                     embedding_blob, now, embedder.model_id),
                 )
                 action = "insert"
 
@@ -310,8 +334,22 @@ class SqliteKnowledgeBase:
             title=title, category=category, content=content,
             metadata=meta_dict, source_path=source_path,
             source_hash=source_hash, loaded_at=now,
-            embedding_model=self._embedder.model_id,
+            embedding_model=embedder.model_id,
         ), action
+
+    def count_stale_embeddings(self, model_id: str) -> int:
+        """Documents whose stored vector was not produced by `model_id`.
+
+        Search skips these (a vector from another model is not comparable), so
+        a nonzero count means the KB needs a re-index. A NULL model counts.
+        """
+        with self._lock, self._conn() as c:
+            row = c.execute(
+                "SELECT COUNT(*) FROM kb_documents "
+                "WHERE embedding_model IS NULL OR embedding_model != ?",
+                (model_id,),
+            ).fetchone()
+        return int(row[0])
 
     def remove(self, kb_name: str, doc_id: str) -> bool:
         with self._lock, self._conn() as c:
@@ -447,7 +485,8 @@ class SqliteKnowledgeBase:
         """
         if not isinstance(query, str) or not query.strip():
             return []
-        query_vec = self._embedder.embed(query)
+        embedder = self._embedder  # one embedder for the whole search
+        query_vec = embedder.embed(query)
         clauses, params = [], []
         if kb_name:
             clauses.append("kb_name = ?")
@@ -462,7 +501,7 @@ class SqliteKnowledgeBase:
             ).fetchall()
 
         scored: list[tuple[KbDocument, float]] = []
-        dims = self._embedder.dims
+        dims = embedder.dims
         mismatch_count = 0
         for row in rows:
             try:
@@ -471,7 +510,7 @@ class SqliteKnowledgeBase:
                 continue
             # A doc's embedding_model can lag the live embedder (see
             # upsert()'s fast-path) — most commonly right after
-            # /setup adds Vertex creds, before the loader's next boot
+            # a Vertex provider is saved, before the bundled-KB loader
             # re-indexes every bundled doc. Same-dims (TextHash and
             # Vertex are both 768) means cosine "succeeds" but compares
             # unrelated vector spaces. Unlike memory_store.search(),
@@ -480,7 +519,7 @@ class SqliteKnowledgeBase:
             # NULL embedding_model (pre-migration doc) counts as a
             # mismatch too — unknown provenance, not assumed-safe.
             row_model = row["embedding_model"]
-            if row_model != self._embedder.model_id:
+            if row_model != embedder.model_id:
                 mismatch_count += 1
                 self.embedding_model_mismatches += 1
                 continue

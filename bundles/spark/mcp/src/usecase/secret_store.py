@@ -9,9 +9,9 @@ Per spec §6.10, `secrets` has two backend impls:
 
 This module is a third backend — file-backed, encrypted-at-rest with
 AES-256-GCM, with the same `read(path) → value` interface as the
-planned Infisical backend. It exists because Phantom's setup-form UX
-(operator types secrets in the browser) doesn't fit the env-var
-pattern (which assumes secrets pre-exist in `process.env` before
+planned Infisical backend. It exists because Phantom's UI-entered
+secrets (the operator types them in the browser at /providers and
+/connectors) don't fit the env-var pattern (which assumes secrets pre-exist in `process.env` before
 container boot). When/if Phantom adopts Infisical for standalone,
 the SecretStore becomes a thin router that delegates to either the
 encrypted file backend (today) or the Infisical client (later).
@@ -33,8 +33,8 @@ KEK format: 32 bytes, base64-encoded. Generate with:
 
 The KEK lives alongside MCP_TOKEN in operator `.env` — same lifecycle,
 same backup discipline. **Lose the KEK and every operator-supplied
-secret becomes unrecoverable** (the operator must re-fill the setup
-form). This trade-off is the security win: the secrets directory +
+secret becomes unrecoverable** (the operator must re-enter them at
+/providers and /connectors). This trade-off is the security win: the secrets directory +
 backup tarball are useless without the KEK.
 
 When `PHANTOM_SECRET_KEK` is unset, the store falls back to the
@@ -47,8 +47,8 @@ behavior in `read()`).
 # Path conventions
 
 Paths follow the spec's `/<scope>/<id>/<sub-id>/<slot>` form. For
-Phantom-locally-materialized secrets (those collected via the setup
-form), the convention is:
+Phantom-locally-materialized secrets (those entered through the
+/providers and /connectors pages), the convention is:
 
     /agents/phantom/connectors/<instance_id>/<slot_name>
     /agents/phantom/providers/<instance_id>/<slot_name>
@@ -328,8 +328,8 @@ class SecretStore:
     # Use cases this unlocks:
     #   - K8s deployments (mount Secret as env vars; rotation = pod
     #     restart)
-    #   - CI end-to-end tests (set env vars instead of driving the setup
-    #     form via Playwright)
+    #   - CI end-to-end tests (set env vars instead of driving the UI
+    #     forms via Playwright)
     #   - Terraform/Helm bootstrap (write secrets once into IaC, every
     #     install of that site picks them up automatically)
     #   - Air-gapped re-installs (no need to retype 10+ secrets in a
@@ -541,7 +541,7 @@ class SecretStore:
           1. Env-var overlay — if PHANTOM_SECRET__<UPPERCASE_PATH> is
              set in the process environment, return its value. Lets
              operators pre-bake secrets via Kubernetes / Terraform /
-             .env without going through the setup form. See
+             .env without typing them into the UI. See
              _path_to_env_var() above for the mapping rules.
           2. File-backed AES-256-GCM at /app/data/secrets/...
           3. Otherwise raise SecretNotFoundError("secret not found").

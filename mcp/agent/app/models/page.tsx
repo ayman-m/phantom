@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { RetryButton } from "@/components/retry-button";
+import { fetchModelCatalog } from "@/lib/model-catalog";
 import type {
   ModelInfo,
   InteractionPattern,
@@ -52,28 +53,28 @@ const TABS: {
     label: "Chat",
     icon: "chat_bubble",
     emptyHint:
-      "No chat models discovered. Add credentials for Anthropic, OpenAI, or Google Vertex AI in Settings → Providers.",
+      "No chat models discovered. Add credentials for Anthropic or Google Vertex AI in Providers.",
   },
   {
     id: "cli",
     label: "CLI",
     icon: "terminal",
     emptyHint:
-      "No CLI agents connected. Configure a Claude Code setup-token or an OpenAI Codex refresh-token in Settings → Providers.",
+      "No CLI agents connected. Configure a Claude Code setup-token in Providers.",
   },
   {
     id: "embedding",
     label: "Embedding",
     icon: "hub",
     emptyHint:
-      "No embedding models discovered. OpenAI text-embedding-3-* and Google text-embedding-005 / gemini-embedding-001 show up here once the matching provider is configured.",
+      "No embedding models discovered. Google text-embedding-005 and gemini-embedding-001 show up here once Vertex AI is configured.",
   },
   {
     id: "image",
     label: "Image",
     icon: "image",
     emptyHint:
-      "No image models discovered. Google Imagen appears here when Vertex AI is configured; DALL-E will appear once the OpenAI image-generation exposure ships.",
+      "No image models discovered. Google Imagen appears here when Vertex AI is configured.",
   },
   {
     id: "voice",
@@ -151,9 +152,8 @@ export default function ModelsPage() {
     (async () => {
       setLoading(true);
       try {
-        const r = await fetch("/api/agent/models", { cache: "no-store" });
-        if (!r.ok) throw new Error(`models fetch ${r.status}`);
-        const data = (await r.json()) as ModelInfo[];
+        // Same fetcher as the /jobs/new Model dropdown (one registry).
+        const data = await fetchModelCatalog<ModelInfo>();
         if (!cancelled) {
           setAllModels(data);
           setError(null);

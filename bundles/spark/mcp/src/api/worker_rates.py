@@ -14,6 +14,9 @@ network, and its bearer token must not reach the browser. So the chain is:
 
 Surface (all require `Authorization: Bearer <MCP_TOKEN>`):
 
+  GET  /api/v1/workers                      → the data workers xlog is running
+                                              (the same list the agent's
+                                              xlog.list_workers tool returns)
   GET  /api/v1/worker-rates                 → live rates + ceilings
   POST /api/v1/worker-rates/{worker}/stop   → stop one worker, free its budget
 """
@@ -21,6 +24,8 @@ Surface (all require `Authorization: Bearer <MCP_TOKEN>`):
 from __future__ import annotations
 
 import logging
+from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 from fastmcp import FastMCP
@@ -98,8 +103,103 @@ def _unreachable(exc: Exception) -> JSONResponse:
     )
 
 
+# xlog serves its GraphQL schema at "/" (xlog/main.py). Same fields the
+# connector's list_workers tool selects, so /tasks and the agent agree.
+_LIST_WORKERS_QUERY = (
+    "query ListWorkers { listWorkers { worker type status count interval "
+    "destination createdAt } }"
+)
+
+
+def redact_destination(destination: Any) -> str:
+    """Strip credentials, path and query from a worker destination.
+
+    A worker's destination is the address it ships to: ``udp:10.0.0.8:514``
+    for a broker, or a full URL for an HTTP collector. A URL can carry
+    userinfo, a token in its query string or a token in a path segment
+    (``/services/collector/<token>``), and this value is rendered in the
+    browser, so keep only scheme, host and port, plus ``/\u2026`` when a path
+    existed. IPv6 hosts keep their brackets.
+    """
+    text = str(destination or "")
+    if "://" not in text:
+        return text
+    try:
+        parts = urlsplit(text)
+        host = parts.hostname or ""
+        if ":" in host:  # IPv6 literal: urlsplit strips the brackets
+            host = f"[{host}]"
+        if parts.port:
+            host = f"{host}:{parts.port}"
+        path = "/\u2026" if parts.path.strip("/") else ""
+        return f"{parts.scheme}://{host}{path}"
+    except ValueError:
+        # Cannot be parsed, so cannot be trusted: show only the scheme.
+        return f"{text.split('://', 1)[0]}://\u2026"
+
+
+def parse_list_workers(body: Any) -> list[dict[str, Any]]:
+    """Pull the worker rows out of a GraphQL response body.
+
+    Raises ValueError on a GraphQL ``errors`` array or a malformed body, so
+    the route can answer with a typed 502 rather than an empty list that
+    reads as "no workers".
+    """
+    if not isinstance(body, dict):
+        raise ValueError("xlog returned a non-object response")
+    if body.get("errors"):
+        raise ValueError("xlog rejected the listWorkers query")
+    rows = (body.get("data") or {}).get("listWorkers")
+    if not isinstance(rows, list):
+        raise ValueError("xlog response had no listWorkers list")
+    workers: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        workers.append(
+            {
+                "worker": str(row.get("worker") or ""),
+                "type": str(row.get("type") or ""),
+                "status": str(row.get("status") or ""),
+                "count": str(row.get("count") or ""),
+                "interval": str(row.get("interval") or ""),
+                "destination": redact_destination(row.get("destination")),
+                "created_at": str(row.get("createdAt") or ""),
+            }
+        )
+    return workers
+
+
 def register_worker_rate_routes(mcp: FastMCP) -> None:
     """Register the worker-rate REST endpoints on the FastMCP app."""
+
+    @mcp.custom_route(
+        "/api/v1/workers",
+        methods=["GET"],
+        include_in_schema=False,
+    )
+    async def list_workers(request: Request) -> JSONResponse:
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        try:
+            async with httpx.AsyncClient(timeout=_TIMEOUT, verify=False) as c:
+                r = await c.post(
+                    f"{_base()}/",
+                    json={"query": _LIST_WORKERS_QUERY},
+                    headers=_xlog_headers(),
+                )
+        except Exception as exc:  # network, TLS, DNS
+            return _unreachable(exc)
+        if r.status_code != 200:
+            return _translate(r)
+        try:
+            workers = parse_list_workers(r.json())
+        except ValueError as exc:
+            logger.warning("xlog listWorkers unusable: %s", exc)
+            return JSONResponse(
+                {"error": "xlog_error", "detail": str(exc)}, status_code=502
+            )
+        return JSONResponse({"workers": workers, "count": len(workers)})
 
     @mcp.custom_route(
         "/api/v1/worker-rates",

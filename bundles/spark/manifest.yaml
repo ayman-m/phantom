@@ -11,8 +11,10 @@ schemaVersion: "1.2"
 #     `./connectors/<id>/` with its own connector.yaml (mirroring Spark
 #     platform's installed_connectors.yaml_spec) and implementation
 #     source.
-#   - `setup.bindsInstances[]` lets first-run setup form input
-#     materialize one connector_instances row per connector.
+#   - `setup.bindsInstances[]` is the Spark-platform contract: the
+#     platform's install pipeline materializes one connector_instances
+#     row per connector from it. The standalone Phantom stack has no
+#     first-run setup page; operators create instances on /connectors.
 #
 # Per the user's "no Phantom-native tools" rule: the embedded MCP
 # carries ZERO native tools — every tool the agent calls comes through
@@ -580,7 +582,6 @@ audit:
     - "caldera_operation_created"
     - "detection_validation_recorded"
     - "coverage_report_generated"
-    - "setup_completed"
     - "settings_changed"
     - "instance_created"
     - "approval_requested"
@@ -760,11 +761,12 @@ agent:
     - "Record simulation IDs, worker IDs, Caldera operation IDs, and validation results in every final answer."
   thinkLevel: "medium"
 
-# Standalone setup. v1.2: `bindsInstances[]` materializes one
-# connector_instances row per binding when the operator submits the
-# setup form. ${setup.<field>} interpolates the form payload at
-# submit time. The setup form renders one section per binding from
-# the connector's configSchema + secretSlots.
+# Setup block (Spark v1.2 contract). `bindsInstances[]` is materialized
+# into one connector_instances row per binding by the Spark platform's
+# install pipeline, with ${setup.<field>} interpolated from the
+# install payload. (The standalone stack has no first-run setup page:
+# operators create instances on /connectors, whose form renders from
+# each connector's configSchema + secretSlots.)
 setup:
   required: true
   secrets:
@@ -788,23 +790,17 @@ setup:
         config:
           # Config keys are api_url / api_id / api_key, uniform with the
           # Cortex XDR connector. Setup-template variables
-          # (${setup.xsiam*}) on the right-hand side are setup.json
+          # (${setup.xsiam*}) on the right-hand side are install-payload
           # variable names, not connector config keys; only the
           # left-hand field names are the instance config.
           api_url: "${setup.xsiamPapiUrl}"
           api_id: "${setup.xsiamPapiAuthId}"
           playgroundId: "${setup.xsiamPlaygroundId}"
-          # Bind the optional webhookEndpoint slot so the
-          # form can resolve its formKey to "xsiamWebhookEndpoint"
-          # (per extractSetupKey in setup-screen.tsx). Without this
-          # bind, the xsiam connector's webhookEndpoint configSchema
-          # field falls back to the bare schemaKey "webhookEndpoint"
-          # — which collides with xlog's same-named field in the
-          # global form-values namespace and never prefills.
+          # Bind the optional webhookEndpoint config field.
           webhookEndpoint: "${setup.xsiamWebhookEndpoint}"
         secretRefs:
           api_key: "${setup.xsiamPapiAuthHeader}"
-          # Same fix for the optional webhook-auth secret slot.
+          # The optional webhook-auth secret slot.
           webhookKey: "${setup.xsiamWebhookKey}"
     - connectorId: "xlog"
       template:

@@ -55,6 +55,7 @@ from usecase.credential_guardrail import (
     assert_no_credential_tools,
     is_credential_tool,
 )
+from usecase.settings_store import is_agent_protected_setting
 
 logger = logging.getLogger("Phantom MCP")
 
@@ -621,33 +622,31 @@ def health_status() -> dict[str, Any]:
 
     Returns {ok: bool, embedder_mode, pending_approvals, errors_5min, ...}.
 
-    Determines embedder_mode by inspecting the live `get_embedder()`
-    singleton FIRST (most reliable — None means TextHash boot path was
-    chosen), then falls back to PHANTOM_EMBEDDER_MODE env var if the
-    singleton accessor isn't available. The env var alone is unreliable
-    for cross-process readers (docker exec, subprocess test runners).
+    Reads embedder_mode from the live EmbedderRuntime, which is re-decided
+    whenever a Vertex provider is saved on /providers, so it never lags the
+    stored configuration. Falls back to the PHANTOM_EMBEDDER_MODE env var only
+    when no runtime is wired (unit tests, a docker-exec shell).
     """
     out: dict[str, Any] = {"ok": True}
 
-    # Embedder mode — check the singleton first; the env var is a hint,
-    # not authoritative.
     try:
-        from usecase.vertex_embedder import get_embedder
-        live_embedder = get_embedder()
-        if live_embedder is not None:
-            out["embedder_mode"] = "vertex"
-        else:
-            out["embedder_mode"] = os.environ.get(
-                "PHANTOM_EMBEDDER_MODE", "stub"
-            )
+        from usecase.embedder_runtime import embedder_runtime
+        rt = embedder_runtime()
     except Exception:
+        rt = None
+    if rt is not None:
+        out["embedder_mode"] = rt.mode
+        out["embedder_model"] = rt.embedder_model_id
+        warning = rt.warning()
+    else:
         out["embedder_mode"] = os.environ.get("PHANTOM_EMBEDDER_MODE", "unknown")
-    if out["embedder_mode"] != "vertex":
-        out["ok"] = False
-        out["embedder_warning"] = (
-            "Embedder is in stub/unknown mode — semantic search returns "
-            "hash-similarity, not real embeddings. Submit Vertex creds via /setup."
+        warning = (
+            None if out["embedder_mode"] == "vertex"
+            else "Embedder mode could not be read from the running server."
         )
+    if warning:
+        out["ok"] = False
+        out["embedder_warning"] = warning
 
     # Cross-model embedding mismatches — rows in memory.db whose
     # stored vector was produced by a DIFFERENT embedder than the one
@@ -750,6 +749,7 @@ async def jobs_create(
     model_id: str | None = None,
     thinking_enabled: bool = False,
     permission_policy: dict[str, Any] | None = None,
+    description: str | None = None,
 ) -> dict[str, Any]:
     """Schedule a new runtime job. Waits for approval when the install gates it.
 
@@ -839,20 +839,30 @@ async def jobs_create(
             surfaces the denial reason). Shape:
                 {
                   "allowed_tools": ["pattern", ...],
-                  "denied_tools": ["pattern", ...],
-                  "require_approval": ["pattern", ...]
+                  "denied_tools": ["pattern", ...]
                 }
             Patterns are globs (same as HookMatcher.toolGlob: `*`, `?`,
             comma-separated lists). Set when the operator scopes the
             job — concrete trigger phrases: "only let this job touch
-            xlog tools", "don't let this job call any caldera tools",
-            "approve any *_delete this job tries". Omit / pass None
+            xlog tools", "don't let this job call any caldera tools".
+            There is no per-job approval list: whether a call needs an
+            approval card follows the install's approval list, so do
+            not offer to "approve" tools per job. Omit / pass None
             to leave the policy unrestricted (the runtime default).
-            Example: `{"allowed_tools": ["xlog_*"], "denied_tools":
+            Example: `{"allowed_tools": ["phantom_*", "xlog.*"], "denied_tools":
             ["*_delete"]}` restricts the job to xlog tools AND blocks
             destructive deletes within that family. Evaluation order:
-            denied beats allowed beats require_approval beats default-
-            allow.
+            denied beats allowed beats default-allow.
+        description: a short free-text note on what the job is for
+            (up to 2000 characters). It is the same text as the
+            Description field on the /jobs/new form: shown under the
+            schedule on the /jobs list and under the title on the job's
+            page, and copied by Duplicate. Set it whenever the operator
+            says why the job exists or what it watches — concrete
+            trigger phrases: "describe it as ...", "note that this is
+            for the Okta demo", "label it 'weekly coverage digest'".
+            Omit it (default) when they gave no purpose; do not invent
+            one. Plain text, no secrets.
 
     Returns the persisted job row on success.
 
@@ -887,6 +897,7 @@ async def jobs_create(
             model_id=model_id,
             thinking_enabled=thinking_enabled,
             permission_policy=permission_policy,
+            description=description,
         )
         return {"job": row.to_dict() if hasattr(row, "to_dict") else None}
 
@@ -900,6 +911,7 @@ async def jobs_create(
                 "model_id": model_id,
                 "thinking_enabled": thinking_enabled,
                 "permission_policy": permission_policy,
+                "description": description,
             },
             risk_tier="soft",
             executor=_exec,
@@ -918,6 +930,7 @@ async def jobs_update(
     model_id: str | None = None,
     thinking_enabled: bool | None = None,
     permission_policy: dict[str, Any] | None = None,
+    description: str | None = None,
 ) -> dict[str, Any]:
     """Modify an existing runtime job. Waits for approval when the install gates it.
 
@@ -967,6 +980,13 @@ async def jobs_update(
             policy; `{}` (empty dict) to clear the policy (revert to
             no restrictions); non-empty dict to set. See jobs_create
             for the full policy shape + glob syntax discussion.
+        description: the job's free-text note (what it is for).
+            Sentinel semantics: omit / None to preserve the current
+            note; empty string "" to CLEAR it; any other text (up to
+            2000 characters) to set it. Concrete trigger phrases:
+            "rename the description to ...", "add a note that this
+            job feeds the demo", "remove the description". See
+            jobs_create for where it is shown.
 
     Returns the updated job row on success.
     """
@@ -985,6 +1005,7 @@ async def jobs_update(
             model_id=model_id,
             thinking_enabled=thinking_enabled,
             permission_policy=permission_policy,
+            description=description,
         )
         return {"job": row.to_dict() if hasattr(row, "to_dict") else None}
 
@@ -999,6 +1020,7 @@ async def jobs_update(
                     "model_id": model_id,
                     "thinking_enabled": thinking_enabled,
                     "permission_policy": permission_policy,
+                    "description": description,
                 }.items() if v is not None
             },
             risk_tier="soft",
@@ -1161,6 +1183,19 @@ async def personality_patch(updates: dict[str, Any]) -> dict[str, Any]:
 # ─── Settings (1 tool) ──────────────────────────────────────────
 
 
+def _protected_setting_rejection(key: str) -> dict[str, Any]:
+    """`rejected[]` entry for a model-selection key the agent may not write."""
+    return {
+        "key": key,
+        "reason": (
+            f"'{key}' selects the model and is operator-only: the agent cannot "
+            "change or clear it. The operator sets the default model outside "
+            "chat (settings REST API); a chat session's model is a per-session "
+            "preference (/model <name>) and never a global setting."
+        ),
+    }
+
+
 async def settings_update(
     updates: dict[str, Any] | None = None,
     clear: list[str] | None = None,
@@ -1171,7 +1206,6 @@ async def settings_update(
     are returned in `rejected[]` rather than mutating anything. The
     current allow-list (Spark bundle) is:
 
-        - geminiModel                       (default model name)
         - defaultLogDestination             (default webhook/sink address)
         - setupUiUser                       (operator's display name)
         - defaultLogFormat                  (e.g. "cef", "leef", "syslog")
@@ -1184,9 +1218,22 @@ async def settings_update(
     rejected — connector credentials and provider credentials are set by
     the operator on the Instances and Providers pages, not by the agent.
 
+    MODEL SELECTION IS NOT WRITABLE HERE. `geminiModel` (and any other
+    key whose name ends in "model") is operator-only: the operator sets
+    the global default model outside chat, over the settings REST API
+    (PUT /api/agent/settings). A call
+    naming such a key is refused with a `rejected[]` entry and changes
+    nothing. A chat session's model is a per-session preference (header
+    dropdown, or the operator's `/model <name>` command) and is NOT a
+    global setting: never call this tool to record, confirm or "sync"
+    the session's model, and never call it to answer a question such as
+    "what model are you?" (the system prompt states the model in use).
+
     Args:
         updates: {key: value} pairs to set. Values must JSON-serialize.
+            Model-selection keys are rejected.
         clear:   keys to revert to manifest defaults (omit/null = no clear).
+            Model-selection keys are rejected.
 
     Returns {applied, cleared, rejected}. There is no bypass_approvals
     knob on this tool; if the session's approval mode is "manual" the
@@ -1201,10 +1248,29 @@ async def settings_update(
     updates = updates or {}
     clear = clear or []
 
+    # Model-selection keys are operator/REST-only. Refuse them before the
+    # approval gate so a refused call never creates an approval card.
+    rejected_protected: list[dict[str, Any]] = []
+    allowed_updates: dict[str, Any] = {}
+    for k, v in updates.items():
+        if is_agent_protected_setting(k):
+            rejected_protected.append(_protected_setting_rejection(k))
+        else:
+            allowed_updates[k] = v
+    allowed_clear: list[str] = []
+    for k in clear:
+        if is_agent_protected_setting(k):
+            rejected_protected.append(_protected_setting_rejection(k))
+        else:
+            allowed_clear.append(k)
+    if not allowed_updates and not allowed_clear:
+        return {"applied": [], "cleared": [], "rejected": rejected_protected}
+    updates, clear = allowed_updates, allowed_clear
+
     def _exec() -> dict[str, Any]:
         applied: list[str] = []
         cleared: list[str] = []
-        rejected: list[dict[str, Any]] = []
+        rejected: list[dict[str, Any]] = list(rejected_protected)
         for k, v in updates.items():
             try:
                 s.set(k, v, actor="agent")
@@ -1286,24 +1352,8 @@ async def notifications_dismiss_all(
         return {"error": "notification store not initialized on this MCP runtime"}
 
     def _exec() -> dict[str, Any]:
-        # NotificationStore.list signature varies; use whichever exists.
-        if hasattr(store, "list"):
-            rows = store.list(unread_only=True, limit=10000)
-        elif hasattr(store, "list_notifications"):
-            rows = store.list_notifications(unread_only=True, limit=10000)
-        else:
-            return {"error": "notification store has no list method"}
-        if target:
-            rows = [
-                r for r in rows
-                if (r.target if hasattr(r, "target") else r.get("target")) == target
-            ]
-        n = 0
-        for r in rows:
-            rid = r.id if hasattr(r, "id") else r.get("id")
-            if rid and store.ack(rid):
-                n += 1
-        return {"dismissed": n}
+        # Same store call the /notifications page's Mark All Read uses.
+        return {"dismissed": store.ack_all(target=target)}
 
     try:
         return await gate_and_execute(
@@ -1517,13 +1567,19 @@ async def settings_reset(
 ) -> dict[str, Any]:
     """Clear runtime settings overrides. Waits for approval when the install gates it (destructive).
 
+    Model-selection keys (`geminiModel` and any key ending in "model")
+    are operator-only and are never cleared by this tool: naming one is
+    refused, and clearing everything leaves them untouched. Both cases
+    list them under `rejected[]`.
+
     Args:
         keys: list of override keys to clear. If None or empty,
-            clears EVERY override — equivalent to "revert all my
-            customizations". Operator probably wants this on a fresh
-            deploy or when troubleshooting "why is the agent doing X?"
+            clears EVERY override except the model-selection keys —
+            equivalent to "revert all my customizations". Operator
+            probably wants this on a fresh deploy or when
+            troubleshooting "why is the agent doing X?"
 
-    Returns {cleared: [...], not_found: [...]}.
+    Returns {cleared: [...], not_found: [...], rejected: [...]}.
     """
     from usecase.builtin_components._approval_gate import gate_and_execute
     from usecase.settings_store import settings_store
@@ -1531,8 +1587,16 @@ async def settings_reset(
     if s is None:
         return {"error": "settings store not initialized on this MCP runtime"}
 
+    target_keys = list(keys) if keys else [o.key for o in s.overrides()]
+    rejected = [
+        _protected_setting_rejection(k)
+        for k in target_keys if is_agent_protected_setting(k)
+    ]
+    target_keys = [k for k in target_keys if not is_agent_protected_setting(k)]
+    if not target_keys:
+        return {"cleared": [], "not_found": [], "rejected": rejected}
+
     def _exec() -> dict[str, Any]:
-        target_keys = list(keys) if keys else [o.key for o in s.overrides()]
         cleared: list[str] = []
         not_found: list[str] = []
         for k in target_keys:
@@ -1540,12 +1604,12 @@ async def settings_reset(
                 cleared.append(k)
             else:
                 not_found.append(k)
-        return {"cleared": cleared, "not_found": not_found}
+        return {"cleared": cleared, "not_found": not_found, "rejected": rejected}
 
     try:
         return await gate_and_execute(
             tool_name="settings_reset",
-            args={"keys": list(keys or [])},
+            args={"keys": target_keys},
             risk_tier="destructive",
             executor=_exec,
         )

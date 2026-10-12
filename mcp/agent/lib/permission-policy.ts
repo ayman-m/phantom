@@ -19,10 +19,16 @@
  * Evaluation precedence (narrowest match wins):
  *
  *   1. `denied_tools` match     → decision = "deny"
- *   2. `require_approval` match → decision = "ask"
- *   3. `allowed_tools` non-empty AND no match → decision = "deny"
+ *   2. `allowed_tools` non-empty AND no match → decision = "deny"
  *      (i.e. allowed_tools is a WHITELIST when non-empty)
- *   4. Otherwise                → decision = "allow"
+ *   3. Otherwise                → decision = "allow"
+ *
+ * There is no "require approval" list. Whether a tool call needs an
+ * approval card is decided only by the manifest's approvals.humanRequired
+ * list (GET /api/agent/approvals/gating). An earlier `require_approval`
+ * field was evaluated here but the chat route never acted on its result,
+ * so it was removed; a stored policy that still carries the key is read
+ * and the key ignored.
  *
  * Empty/missing policy = fully permissive (the operator opts INTO
  * restrictions): permissive by default, restrictive only when the
@@ -39,7 +45,6 @@
 export interface PermissionPolicy {
   allowed_tools?: string[];
   denied_tools?: string[];
-  require_approval?: string[];
 }
 
 /** Outcome of `evaluatePermissionPolicy`. The chat-route maps these
@@ -48,20 +53,17 @@ export interface PermissionPolicy {
  *     gate, e.g. the approval gate).
  *   - `deny`  → short-circuit; the model sees a synthetic error
  *     "Tool denied by job permission policy". The thread renders the
- *     denial reason as a tool-error response.
- *   - `ask`   → trigger the standard inline approval card. The
- *     scheduler's `bypass_approvals=true` flag does NOT override
- *     `ask` from the policy — operator must explicitly grant. */
-export type PolicyDecision = "allow" | "deny" | "ask";
+ *     denial reason as a tool-error response. */
+export type PolicyDecision = "allow" | "deny";
 
 export interface PolicyEvaluation {
   decision: PolicyDecision;
   /** Operator-visible reason. Empty for `allow`; populated for `deny`
-   *  + `ask` with a one-line "denied by `denied_tools` match
+   *  with a one-line "denied by `denied_tools` match
    *  `caldera_*`" style string the chat thread surfaces. */
   reason?: string;
   /** Which list matched. Useful for audit row metadata. */
-  matchedList?: "allowed_tools" | "denied_tools" | "require_approval";
+  matchedList?: "allowed_tools" | "denied_tools";
   /** The specific pattern that matched. Same purpose. */
   matchedPattern?: string;
 }
@@ -81,9 +83,6 @@ export function evaluatePermissionPolicy(
     return { decision: "allow" };
   }
   const denied = Array.isArray(policy.denied_tools) ? policy.denied_tools : [];
-  const requireApproval = Array.isArray(policy.require_approval)
-    ? policy.require_approval
-    : [];
   const allowed = Array.isArray(policy.allowed_tools) ? policy.allowed_tools : [];
 
   // 1. Deny beats everything.
@@ -97,18 +96,7 @@ export function evaluatePermissionPolicy(
       };
     }
   }
-  // 2. Require-approval routes through the standard approval card.
-  for (const pattern of requireApproval) {
-    if (matchesGlobList(toolName, pattern)) {
-      return {
-        decision: "ask",
-        reason: `Approval required by policy.require_approval pattern \`${pattern}\``,
-        matchedList: "require_approval",
-        matchedPattern: pattern,
-      };
-    }
-  }
-  // 3. Allowed list is a whitelist when non-empty.
+  // 2. Allowed list is a whitelist when non-empty.
   if (allowed.length > 0) {
     for (const pattern of allowed) {
       if (matchesGlobList(toolName, pattern)) {
@@ -125,7 +113,7 @@ export function evaluatePermissionPolicy(
         "Denied — tool is not in policy.allowed_tools (whitelist mode)",
     };
   }
-  // 4. No constraints → allow.
+  // 3. No constraints → allow.
   return { decision: "allow" };
 }
 
@@ -161,11 +149,7 @@ export function validatePermissionPolicy(raw: unknown): PermissionPolicy | null 
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const r = raw as Record<string, unknown>;
   const out: PermissionPolicy = {};
-  for (const key of [
-    "allowed_tools",
-    "denied_tools",
-    "require_approval",
-  ] as const) {
+  for (const key of ["allowed_tools", "denied_tools"] as const) {
     const v = r[key];
     if (v === undefined || v === null) continue;
     if (!Array.isArray(v)) return null;

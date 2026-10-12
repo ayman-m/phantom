@@ -246,12 +246,10 @@ class SqliteNotificationStore:
     # Read paths
     # ─────────────────────────────────────────────────────────────
 
-    def list(
-        self,
-        target: str | None = None,
-        unread_only: bool = False,
-        limit: int = 100,
-    ) -> list[Notification]:
+    @staticmethod
+    def _where(
+        target: str | None, unread_only: bool, since: str | None
+    ) -> tuple[str, list[Any]]:
         clauses: list[str] = []
         args: list[Any] = []
         if target:
@@ -259,8 +257,25 @@ class SqliteNotificationStore:
             args.append(target)
         if unread_only:
             clauses.append("read_at IS NULL")
-        where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
-        args.append(int(limit))
+        if since:
+            # created_at is an ISO-8601 UTC string, so a string compare is a
+            # time compare as long as `since` is in the same format.
+            clauses.append("created_at >= ?")
+            args.append(since)
+        return (("WHERE " + " AND ".join(clauses)) if clauses else ""), args
+
+    def list(
+        self,
+        target: str | None = None,
+        unread_only: bool = False,
+        limit: int = 100,
+        offset: int = 0,
+        since: str | None = None,
+    ) -> list[Notification]:
+        """Newest first. `offset` pages through the same ordering; `since`
+        keeps only rows created at or after that ISO-8601 UTC timestamp."""
+        where, args = self._where(target, unread_only, since)
+        args = [*args, int(limit), max(0, int(offset))]
         with self._lock, sqlite3.connect(self._db_path) as conn:
             conn.row_factory = sqlite3.Row
             rows = conn.execute(
@@ -269,8 +284,8 @@ class SqliteNotificationStore:
                        read_at, dispatch_status, dispatch_error
                 FROM notifications
                 {where}
-                ORDER BY created_at DESC
-                LIMIT ?
+                ORDER BY created_at DESC, id DESC
+                LIMIT ? OFFSET ?
                 """,
                 args,
             ).fetchall()
@@ -285,6 +300,20 @@ class SqliteNotificationStore:
             for r in rows
         ]
 
+    def count(
+        self,
+        target: str | None = None,
+        unread_only: bool = False,
+        since: str | None = None,
+    ) -> int:
+        """How many rows `list` would return with no limit or offset."""
+        where, args = self._where(target, unread_only, since)
+        with self._lock, sqlite3.connect(self._db_path) as conn:
+            row = conn.execute(
+                f"SELECT COUNT(*) FROM notifications {where}", args
+            ).fetchone()
+        return int(row[0])
+
     def ack(self, notification_id: str) -> bool:
         ts = self._utc_now()
         with self._lock, sqlite3.connect(self._db_path) as conn:
@@ -294,6 +323,17 @@ class SqliteNotificationStore:
                 (ts, notification_id),
             )
             return cur.rowcount > 0
+
+    def ack_all(self, target: str | None = None) -> int:
+        """Mark every unread row (optionally only one target's) read; returns how many changed."""
+        ts = self._utc_now()
+        sql = "UPDATE notifications SET read_at = ? WHERE read_at IS NULL"
+        args: list[Any] = [ts]
+        if target:
+            sql += " AND target = ?"
+            args.append(target)
+        with self._lock, sqlite3.connect(self._db_path) as conn:
+            return conn.execute(sql, args).rowcount
 
     def unread_count(self, target: str | None = None) -> int:
         clauses = ["read_at IS NULL"]

@@ -144,6 +144,14 @@ def test_reaper_deletes_expired_row_regardless_of_local_tz(
     read the row as still-alive (or already-expired the wrong way)
     depending on time of year; calendar.timegm is correct
     unconditionally."""
+    # time.tzset is the only way to make a running process re-read TZ, and
+    # it does not exist on every platform / Python build (Windows, some
+    # embedded builds). Without it the process cannot be moved into a
+    # DST-observing zone, so the assertion below would not exercise
+    # anything: skip rather than pass vacuously.
+    if not hasattr(time, "tzset"):
+        pytest.skip("time.tzset is unavailable on this Python build; cannot switch the process timezone")
+
     store = _make_store(tmp_path)
     m = store.store(key="eph", value="v", scope="agent", ttl_seconds=5)
     _backdate(store, m.id, seconds_ago=10)  # past the 5s TTL
@@ -153,5 +161,7 @@ def test_reaper_deletes_expired_row_regardless_of_local_tz(
     try:
         assert store._reap_expired() == 1
     finally:
-        monkeypatch.delenv("TZ", raising=False)
+        # Put TZ back exactly as it was (monkeypatch.undo restores the
+        # original value, or removes it if it was unset), then re-read it.
+        monkeypatch.undo()
         time.tzset()

@@ -123,4 +123,3 @@ python3 tooling/validate/validate_all.py
 ## Known rough edges
 
 - `bundles/spark/connectors/web/Dockerfile` installs `playwright>=1.48.0` and `trafilatura>=2.0.0` in a `RUN pip install` line without quotes, so the shell reads `>=...` as a redirect. The packages install, but the version floors are not applied and files named `=1.48.0` and `=2.0.0` are written into the image.
-- `docs/quickstart-all-in-one.md` and `docs/split-deploy.md` were written for an earlier setup flow (a setup form and `docker compose up` without the variables above). Where they disagree with this page, follow this page.

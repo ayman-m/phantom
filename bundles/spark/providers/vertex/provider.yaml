@@ -1,9 +1,9 @@
 # Google Cloud Vertex AI provider for the Phantom SOC simulation agent.
 #
 # Per spark-agents spec v1.2 §7.6 — model providers are parallel to
-# tool connectors but contribute models, not tools. The setup form
+# tool connectors but contribute models, not tools. The /providers page
 # collects per-instance config (project_id, region) + secrets
-# (service account JSON); the runtime materializes provider instances
+# (service account JSON); the runtime stores provider instances
 # and queries them for the model catalog the modelRequirements
 # resolver picks from.
 #

@@ -5,7 +5,7 @@
  *
  * Three sections:
  *
- *   01 Identity    — name (required), description (optional, persisted in meta)
+ *   01 Identity    — name (required), description (optional, stored on the job)
  *   02 Action      — type picker (tool_call | log | chat) + body
  *   03 Schedule    — 4-mode picker: now | once | repeating | custom
  *
@@ -34,13 +34,44 @@
  * Submit posts to /api/agent/jobs which proxies POST /api/v1/jobs on
  * the embedded MCP. The MCP tags the job with source='runtime' so it
  * survives boot reconciliation untouched.
+ *
+ * Three entry points share this form:
+ *
+ *   /jobs/new              blank create
+ *   /jobs/new?edit=<name>  Save form for an existing job (PATCH, name locked)
+ *   /jobs/new?from=<name>  Duplicate: create form pre-filled from an
+ *                          existing job (action, schedule kind, model,
+ *                          flags), name "<name> (copy)"
+ *
+ * The edit and duplicate entries load the source job through the jobs
+ * API rather than carrying fields in the URL; lib/job-form.ts holds the
+ * pure mapping from a stored job to the form's fields.
  */
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 
-import { getJob } from "@/lib/api/jobs";
+import { getJob, listJobs } from "@/lib/api/jobs";
+import {
+  buildCron,
+  canSubmitJobForm,
+  defaultOnceAt,
+  INTERVAL_MAX,
+  intervalOutOfRange as isIntervalOutOfRange,
+  jobToFormValues,
+  uniqueCopyName,
+} from "@/lib/job-form";
+import type {
+  ActionType,
+  IntervalUnit,
+  JobFormValues,
+  ScheduleMode,
+} from "@/lib/job-form";
+import {
+  fetchModelCatalog,
+  selectableChatModels,
+} from "@/lib/model-catalog";
 
 const glassStyle = {
   background: "var(--glass-bg-strong)",
@@ -50,13 +81,11 @@ const glassStyle = {
 
 // ─── Types ────────────────────────────────────────────────────────────
 
-type ScheduleMode = "now" | "once" | "repeating" | "custom";
-type IntervalUnit = "minutes" | "hours" | "days";
 // Action types are {prompt, tool_call}. The legacy
 // `chat` and `log` types existed before; the backend's boot migration
 // rewrites old DB rows to the new shape. The UI now offers exactly
-// these two options.
-type ActionType = "tool_call" | "prompt";
+// these two options. (ScheduleMode / IntervalUnit / ActionType live in
+// lib/job-form.ts with the cron helpers.)
 
 const MODES: { id: ScheduleMode; label: string; icon: string; help: string }[] = [
   {
@@ -89,12 +118,12 @@ const UNITS: { id: IntervalUnit; label: string; max: number; help?: string }[] =
   // 1-59 — cron's `*/N * * * *` resets hourly, so non-divisors of 60
   // produce uneven gaps at the hour boundary. We allow them anyway and
   // describe the actual cadence in the preview.
-  { id: "minutes", label: "Minutes", max: 59 },
+  { id: "minutes", label: "Minutes", max: INTERVAL_MAX.minutes },
   // 1-23 — same caveat applies for hours not dividing 24.
-  { id: "hours", label: "Hours", max: 23 },
+  { id: "hours", label: "Hours", max: INTERVAL_MAX.hours },
   // 1-31 — `*/N * * *` over day-of-month resets monthly. For most use
   // cases pick 1, 2, 3, 4, or 7 to avoid stepwise drift across months.
-  { id: "days", label: "Days", max: 31 },
+  { id: "days", label: "Days", max: INTERVAL_MAX.days },
 ];
 
 /** True for one-shot modes that auto-disable after first fire. */
@@ -128,54 +157,8 @@ const ACTIONS: {
   },
 ];
 
-// ─── Cron Builder ─────────────────────────────────────────────────────
-
-/** Cron expression that matches a SPECIFIC minute on a SPECIFIC date.
- * Used by `now` (1-minute defensive future) and `once` (operator-chosen
- * datetime) to fire the job exactly once. The scheduler's `run_once`
- * flag handles auto-disable after the first fire — the cron itself
- * would match annually if not disabled. */
-function buildOnceCron(d: Date): string {
-  return `${d.getMinutes()} ${d.getHours()} ${d.getDate()} ${d.getMonth() + 1} *`;
-}
-
-/** Cron expression for "every N <unit>". */
-function buildIntervalCron(n: number, unit: IntervalUnit): string {
-  const safe = Math.max(1, Math.floor(n));
-  switch (unit) {
-    case "minutes":
-      return `*/${safe} * * * *`;
-    case "hours":
-      // Anchor at :00 of each hour — keeps the cadence readable.
-      return `0 */${safe} * * *`;
-    case "days":
-      // Anchor at 00:00 on day 1, 1+N, 1+2N, … of each month.
-      return `0 0 */${safe} * *`;
-  }
-}
-
-function buildCron(
-  mode: ScheduleMode,
-  intervalN: number,
-  intervalUnit: IntervalUnit,
-  customCron: string,
-  onceAt: Date,
-): string {
-  switch (mode) {
-    case "now": {
-      // Defensive 1-minute-future cron in case the post-create /run
-      // trigger fails — cron's tick is the second-best path to fire.
-      const future = new Date(Date.now() + 60_000);
-      return buildOnceCron(future);
-    }
-    case "once":
-      return buildOnceCron(onceAt);
-    case "repeating":
-      return buildIntervalCron(intervalN, intervalUnit);
-    case "custom":
-      return customCron.trim();
-  }
-}
+// ─── Schedule description ─────────────────────────────────────────────
+// (Cron building and parsing live in lib/job-form.ts.)
 
 function describeSchedule(
   mode: ScheduleMode,
@@ -244,14 +227,17 @@ function CreateJobPage() {
   // /jobs/[id]/edit/page.tsx would be ~700 lines of pure copy.
   const editName = searchParams.get("edit");
   const isEditMode = Boolean(editName);
-  const [editLoading, setEditLoading] = useState(isEditMode);
+  // Duplicate mode. ?from=<jobName> opens the create form pre-filled from
+  // that job. ?edit wins if both are present.
+  const fromName = isEditMode ? null : searchParams.get("from");
+  const isDuplicateMode = Boolean(fromName);
+  const sourceName = editName ?? fromName;
+  const [editLoading, setEditLoading] = useState(Boolean(sourceName));
   const [editLoadError, setEditLoadError] = useState<string | null>(null);
 
   // ── Identity ──
-  const [name, setName] = useState(searchParams.get("name") ?? "");
-  const [description, setDescription] = useState(
-    searchParams.get("description") ?? "",
-  );
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
 
   // ── Action ──
   const [actionType, setActionType] = useState<ActionType>("prompt");
@@ -264,9 +250,7 @@ function CreateJobPage() {
   // on-the-wire shape — `{type: "chat", message}` and
   // `{type: "prompt", message}` are both accepted by the scheduler
   // dispatch).
-  const [promptMessage, setPromptMessage] = useState(
-    searchParams.get("message") ?? "",
-  );
+  const [promptMessage, setPromptMessage] = useState("");
 
   // Optional skill binding for prompt actions. When
   // set, the scheduled prompt prepends the skill's MD body to the
@@ -276,9 +260,7 @@ function CreateJobPage() {
   // is in the system prompt, agent picks based on intent). Operator
   // overrides this when they want a deterministic-skill-binding job
   // rather than relying on the model's judgment.
-  const [skillBinding, setSkillBinding] = useState<string>(
-    searchParams.get("skill") ?? "",
-  );
+  const [skillBinding, setSkillBinding] = useState<string>("");
 
   // Skills registry — fetched once on mount for the picker dropdown.
   // Empty array if /api/skills hasn't responded yet OR returns
@@ -352,48 +334,43 @@ function CreateJobPage() {
   //     enableable for the picked model (supportsThinking flag).
   const [modelId, setModelId] = useState<string>("");
   const [thinkingEnabled, setThinkingEnabled] = useState(false);
-  // Per-job permission policy. Three comma-
-  // separated glob fields the operator edits as raw strings; the
-  // request body parses into arrays. Empty fields mean "no
-  // constraint on that dimension." All three empty = no policy.
+  // Per-job permission policy. Two comma-separated glob fields the
+  // operator edits as raw strings; the request body parses into
+  // arrays. Empty fields mean "no constraint on that dimension."
+  // Both empty = no policy.
   const [allowedTools, setAllowedTools] = useState<string>("");
   const [deniedTools, setDeniedTools] = useState<string>("");
-  const [requireApproval, setRequireApproval] = useState<string>("");
   const [availableModels, setAvailableModels] = useState<
     Array<{ provider: string; model: string; displayName?: string; supportsThinking: boolean }>
   >([]);
+  // loading -> ready | error. The "no models registered" hint shows only
+  // for a registry that loaded and is truly empty, never while the fetch
+  // is in flight or after it failed.
+  const [modelsStatus, setModelsStatus] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
   useEffect(() => {
-    let cancelled = false;
+    const ctrl = new AbortController();
     void (async () => {
       try {
-        const r = await fetch("/api/agent/models", { cache: "no-store" });
-        if (!r.ok) return;
-        const data = (await r.json()) as {
-          models?: Array<{
-            provider: string;
-            model: string;
-            displayName?: string;
-            supportsThinking?: boolean;
-            kind?: string;
-          }>;
-        };
-        if (cancelled) return;
-        const chatModels = (data.models ?? [])
-          .filter((m) => !m.kind || m.kind === "chat")
-          .map((m) => ({
+        // Same registry, same fetcher as the /models page.
+        const catalog = await fetchModelCatalog(ctrl.signal);
+        setAvailableModels(
+          selectableChatModels(catalog).map((m) => ({
             provider: m.provider,
             model: m.model,
             displayName: m.displayName,
             supportsThinking: Boolean(m.supportsThinking),
-          }));
-        setAvailableModels(chatModels);
+          })),
+        );
+        setModelsStatus("ready");
       } catch (err) {
+        if (ctrl.signal.aborted) return;
         console.warn("jobs/new: failed to load model catalog:", err);
+        setModelsStatus("error");
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => ctrl.abort();
   }, []);
 
   // "Run at" datetime — defaults to 1 hour from now (a sensible future
@@ -401,11 +378,7 @@ function CreateJobPage() {
   // input every time). Stored as a Date for math; the form's
   // <input type="datetime-local"> exchanges via formatDatetimeLocal /
   // parseDatetimeLocal helpers below.
-  const [onceAt, setOnceAt] = useState<Date>(() => {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() + 60, 0, 0);
-    return d;
-  });
+  const [onceAt, setOnceAt] = useState<Date>(() => defaultOnceAt(new Date()));
 
   // ── Submit state ──
   const [submitting, setSubmitting] = useState(false);
@@ -413,7 +386,7 @@ function CreateJobPage() {
 
   // ── Derived ──
   const cron = useMemo(
-    () => buildCron(mode, intervalN, intervalUnit, customCron, onceAt),
+    () => buildCron(mode, intervalN, intervalUnit, customCron, onceAt, new Date()),
     [mode, intervalN, intervalUnit, customCron, onceAt],
   );
 
@@ -429,25 +402,31 @@ function CreateJobPage() {
     [intervalUnit],
   );
 
-  const intervalOutOfRange =
-    mode === "repeating" &&
-    (intervalN < 1 || intervalN > currentUnit.max);
+  const intervalOutOfRange = isIntervalOutOfRange(
+    mode,
+    intervalN,
+    intervalUnit,
+  );
 
   const intervalUneven =
     mode === "repeating" &&
     !intervalOutOfRange &&
     hasUnevenInterval(intervalN, intervalUnit);
 
-  const canSubmit =
-    name.trim() !== "" &&
-    cron !== "" &&
-    (actionType !== "tool_call" || toolName.trim() !== "") &&
-    (actionType !== "prompt" || promptMessage.trim() !== "") &&
-    // Run at requires a future datetime. The 60-second buffer prevents
-    // borderline-now selections from racing the cron tick.
-    (mode !== "once" || onceAt.getTime() > Date.now() + 60_000) &&
-    // Repeating requires a valid interval in range.
-    !intervalOutOfRange;
+  const canSubmit = canSubmitJobForm(
+    {
+      name,
+      actionType,
+      toolName,
+      promptMessage,
+      mode,
+      intervalN,
+      intervalUnit,
+      customCron,
+      onceAt,
+    },
+    new Date(),
+  );
 
   // ── Handlers ──
   const buildAction = useCallback((): Record<string, unknown> | null => {
@@ -483,22 +462,34 @@ function CreateJobPage() {
     toolName,
     toolArgsJson,
     promptMessage,
+    skillBinding,
   ]);
 
-  // Populate every field from the existing job when in
-  // edit mode. The schedule/cron is set to "custom" mode + raw cron
-  // expression unconditionally; the existing repeating-mode parser
-  // doesn't round-trip every cron string cleanly, and forcing the
-  // operator to use Custom for an edit is acceptable UX (they can
-  // switch back to Repeating if they want — it'll re-derive cleanly
-  // from the values they choose). The dependency array intentionally
-  // omits everything but editName: this runs ONCE per mount, after
-  // which the form is owned by the operator's edits.
+  // Populate every field from an existing job: the job being edited
+  // (?edit=) or the job being duplicated (?from=). The mapping from a
+  // stored job to form fields is lib/job-form.ts:jobToFormValues, so the
+  // two entry points cannot drift. Differences between them:
+  //
+  //   edit       name locked to the job's, schedule shown as Custom +
+  //              raw cron (an edit should not silently re-derive it),
+  //              enabled mirrors the job's state.
+  //   duplicate  name becomes a unique "<name> (copy)", schedule keeps
+  //              its real kind (Repeating / Run at / Custom), enabled is
+  //              true unless the operator had paused the source.
+  //
+  // The dependency array intentionally lists only the source name: this
+  // runs ONCE per mount, after which the form is owned by the operator's
+  // edits.
   useEffect(() => {
-    if (!editName) return;
+    if (!sourceName) return;
     let cancelled = false;
     void (async () => {
-      const result = await getJob(editName);
+      const [result, siblings] = await Promise.all([
+        getJob(sourceName),
+        // Existing names make the copy's name unique; best effort (the
+        // backend still rejects a clash with a readable error).
+        isDuplicateMode ? listJobs() : Promise.resolve(null),
+      ]);
       if (cancelled) return;
       if (!result.ok) {
         setEditLoadError(result.error.message);
@@ -506,69 +497,40 @@ function CreateJobPage() {
         return;
       }
       const job = result.data;
-      setName(job.name);
-      // The Job interface doesn't surface `meta.description` directly;
-      // the MCP nests it under meta. Best-effort extraction so a job
-      // created with description renders that description on edit.
-      const meta = (job as unknown as { meta?: { description?: string } }).meta;
-      if (meta?.description) setDescription(meta.description);
-      setTimezone(job.timezone || "UTC");
-      setEnabled(job.state === "JOB_STATE_ACTIVE");
-      setBypassApprovals(Boolean(job.bypass_approvals));
-      // Model override + thinking. Older job rows may lack
-      // these fields (pre-migration); default to "" (runtime default)
-      // and false respectively.
-      setModelId(
-        ((job as unknown as { model_id?: string | null }).model_id ?? "") ||
-          "",
+      const v: JobFormValues = jobToFormValues(job, new Date());
+      setName(
+        isEditMode
+          ? job.name
+          : uniqueCopyName(
+              job.name,
+              siblings && siblings.ok ? siblings.data.map((j) => j.name) : [],
+            ),
       );
-      setThinkingEnabled(
-        Boolean(
-          (job as unknown as { thinking_enabled?: boolean }).thinking_enabled,
-        ),
-      );
-      // Hydrate the policy fields from the persisted blob.
-      // Older rows (pre-migration) have no permission_policy → all
-      // three remain empty strings → policy effectively absent.
-      const policy = (
-        job as unknown as { permission_policy?: Record<string, string[]> }
-      ).permission_policy;
-      setAllowedTools(((policy?.allowed_tools ?? []) as string[]).join(", "));
-      setDeniedTools(((policy?.denied_tools ?? []) as string[]).join(", "));
-      setRequireApproval(((policy?.require_approval ?? []) as string[]).join(", "));
-      // Schedule → custom mode with raw cron. See note above.
-      setMode("custom");
-      setCustomCron(job.schedule || "0 9 * * *");
-      // Action — discriminate by job.action.type. The only types are
-      // {prompt, tool_call}. Legacy `chat` is treated as `prompt` (the
-      // backend's boot migration normalizes existing rows on the
-      // server side; this client-side aliasing is for in-flight rows
-      // that haven't been re-fetched after migration). Legacy `log`
-      // gets converted at boot to a tool_call(phantom_create_data_worker,
-      // ...) shape, so by the time the operator hits Edit, the row's
-      // type is already `tool_call`. Anything unfamiliar falls
-      // through to `prompt` with the message body so the operator
-      // sees something sensible to edit rather than a blank form.
-      const action = job.action ?? {};
-      const incomingType = (action.type as string | undefined) ?? "prompt";
-      if (incomingType === "tool_call") {
-        setActionType("tool_call");
-        setToolName(typeof action.name === "string" ? action.name : "");
-        setToolArgsJson(
-          action.args ? JSON.stringify(action.args, null, 2) : "{}",
-        );
+      setDescription(v.description);
+      setTimezone(v.timezone);
+      setEnabled(isEditMode ? job.state === "JOB_STATE_ACTIVE" : v.enabled);
+      setBypassApprovals(v.bypassApprovals);
+      setModelId(v.modelId);
+      setThinkingEnabled(v.thinkingEnabled);
+      setAllowedTools(v.allowedTools);
+      setDeniedTools(v.deniedTools);
+      setActionType(v.actionType);
+      if (v.actionType === "tool_call") {
+        setToolName(v.toolName);
+        setToolArgsJson(v.toolArgsJson);
       } else {
-        // prompt (or legacy chat alias)
-        setActionType("prompt");
-        if (typeof action.message === "string") {
-          setPromptMessage(action.message);
-        }
-        // Rehydrate optional skill binding when
-        // editing an existing prompt-action job. Empty/undefined
-        // means "agent decides" — leave the picker on the default.
-        if (typeof action.skill === "string") {
-          setSkillBinding(action.skill);
-        }
+        setPromptMessage(v.promptMessage);
+        setSkillBinding(v.skillBinding);
+      }
+      if (isEditMode) {
+        setMode("custom");
+        setCustomCron(job.schedule || "0 9 * * *");
+      } else {
+        setMode(v.schedule.mode);
+        setIntervalN(v.schedule.intervalN);
+        setIntervalUnit(v.schedule.intervalUnit);
+        setCustomCron(v.schedule.customCron || "0 9 * * *");
+        if (v.schedule.onceAt) setOnceAt(v.schedule.onceAt);
       }
       setEditLoading(false);
     })();
@@ -576,7 +538,7 @@ function CreateJobPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editName]);
+  }, [sourceName]);
 
   const handleSubmit = useCallback(async () => {
     if (!canSubmit) return;
@@ -590,8 +552,7 @@ function CreateJobPage() {
       // PATCH updates an existing one. The PATCH endpoint accepts
       // partial bodies and is name-keyed (no rename), so we send
       // every field the form owns and the MCP applies them in
-      // place. We do NOT include `meta` on PATCH — the MCP's
-      // patch_job does not apply meta updates.
+      // place.
       const url = isEditMode
         ? `/api/agent/jobs/${encodeURIComponent(editName as string)}`
         : "/api/agent/jobs";
@@ -617,10 +578,10 @@ function CreateJobPage() {
           // "" → None at write time).
           model_id: modelId,
           thinking_enabled: thinkingEnabled,
-          // Permission policy. Parse the three
-          // comma-separated glob strings into arrays. All three empty
-          // → send {} so the backend's sentinel CLEARS any prior
-          // policy. Otherwise send the populated dict.
+          // Permission policy. Parse the two comma-separated glob
+          // strings into arrays. Both empty → send {} so the backend's
+          // sentinel CLEARS any prior policy. Otherwise send the
+          // populated dict.
           permission_policy: (() => {
             const parse = (s: string) =>
               s
@@ -629,19 +590,16 @@ function CreateJobPage() {
                 .filter((x) => x.length > 0);
             const a = parse(allowedTools);
             const d = parse(deniedTools);
-            const r = parse(requireApproval);
-            if (a.length === 0 && d.length === 0 && r.length === 0) {
+            if (a.length === 0 && d.length === 0) {
               return {};
             }
             return {
               ...(a.length ? { allowed_tools: a } : {}),
               ...(d.length ? { denied_tools: d } : {}),
-              ...(r.length ? { require_approval: r } : {}),
             };
           })(),
-          ...(description.trim()
-            ? { meta: { description: description.trim() } }
-            : {}),
+          // Always sent: "" on PATCH clears a stored description.
+          description: description.trim(),
         }),
       });
       const text = await resp.text();
@@ -694,6 +652,10 @@ function CreateJobPage() {
     mode,
     oneShot,
     bypassApprovals,
+    modelId,
+    thinkingEnabled,
+    allowedTools,
+    deniedTools,
     isEditMode,
     editName,
   ]);
@@ -728,7 +690,9 @@ function CreateJobPage() {
           <p className="text-sm text-on-surface-variant ml-9">
             {isEditMode
               ? "Update an existing job's schedule, action, or runtime flags. Name is fixed."
-              : "Schedule an automated task — runs at runtime, separate from manifest-declared jobs."}
+              : isDuplicateMode
+                ? `Copy of ${fromName}. Review the name and schedule, then create it — the original stays untouched.`
+                : "Schedule an automated task — runs at runtime, separate from manifest-declared jobs."}
           </p>
           {editLoading && (
             <p className="text-xs text-on-surface-variant/70 ml-9 mt-2 flex items-center gap-2">
@@ -740,7 +704,7 @@ function CreateJobPage() {
           )}
           {editLoadError && (
             <p className="text-xs text-error ml-9 mt-2">
-              Could not load job: {editLoadError}
+              Could not load {isDuplicateMode ? "the job to duplicate" : "job"}: {editLoadError}
             </p>
           )}
         </header>
@@ -907,7 +871,18 @@ function CreateJobPage() {
                   }}
                   className="w-full px-3 py-2 rounded-xl text-sm bg-surface-container-low border border-white/10 text-on-surface"
                 >
-                  <option value="">Router default ({"(no override)"})</option>
+                  <option value="">Router default (no override)</option>
+                  {/* A job can be pinned to a model the registry no longer
+                      lists (provider removed, model retired). Keep it
+                      selectable so opening the form does not silently
+                      drop the override. */}
+                  {modelId &&
+                    modelsStatus === "ready" &&
+                    !availableModels.some((m) => m.model === modelId) && (
+                      <option value={modelId}>
+                        {modelId} (not in the registry)
+                      </option>
+                    )}
                   {availableModels.map((m) => (
                     <option key={`${m.provider}/${m.model}`} value={m.model}>
                       {m.displayName || m.model}
@@ -915,11 +890,17 @@ function CreateJobPage() {
                     </option>
                   ))}
                 </select>
-                {availableModels.length === 0 && (
+                {modelsStatus === "ready" && availableModels.length === 0 && (
                   <p className="text-[10px] text-on-surface-variant/60 italic">
                     No models registered yet — configure a provider at{" "}
                     <code className="font-mono text-[10px]">/providers</code>{" "}
                     to populate this list.
+                  </p>
+                )}
+                {modelsStatus === "error" && (
+                  <p className="text-[10px] text-error">
+                    Could not load the model list. Reload the page to retry;
+                    the job will use the router default until you pick a model.
                   </p>
                 )}
               </div>
@@ -986,15 +967,15 @@ function CreateJobPage() {
               </div>
 
               {/* Permission policy editor.
-                  Three comma-separated globs the operator edits raw.
+                  Two comma-separated globs the operator edits raw.
                   Below each input, a tiny example helps. Empty fields
-                  mean "no constraint on that dimension"; all three
-                  empty means no policy (revert to unrestricted). */}
+                  mean "no constraint on that dimension"; both empty
+                  means no policy (revert to unrestricted). */}
               <div className="py-2 border-t border-white/5 pt-4 space-y-3">
                 <div>
                   <p className="text-sm text-on-surface">
                     Permission policy
-                    {(allowedTools || deniedTools || requireApproval) && (
+                    {(allowedTools || deniedTools) && (
                       <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-tighter border bg-secondary/15 text-secondary border-secondary/25 align-middle">
                         <span className="material-symbols-outlined text-[10px]">
                           shield_lock
@@ -1008,9 +989,10 @@ function CreateJobPage() {
                     route before each tool fires. Glob syntax:{" "}
                     <code className="font-mono text-[10px]">*</code> matches
                     anything, comma-separated for OR. Evaluation precedence:
-                    denied → require-approval → allowed (whitelist when
-                    non-empty) → allow-by-default. Leave all empty to
-                    impose no policy.
+                    denied → allowed (whitelist when non-empty) →
+                    allow-by-default. Leave both empty to impose no policy.
+                    Whether a tool needs an approval card is decided by
+                    the install&apos;s approval list, not by the job.
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -1020,7 +1002,7 @@ function CreateJobPage() {
                     value={allowedTools}
                     onChange={(e) => setAllowedTools(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl text-sm bg-surface-container-low border border-white/10 text-on-surface font-mono"
-                    placeholder="e.g. xlog_*, scenarios_*"
+                    placeholder="e.g. phantom_*, xlog.*"
                   />
                 </div>
                 <div className="space-y-1">
@@ -1030,17 +1012,7 @@ function CreateJobPage() {
                     value={deniedTools}
                     onChange={(e) => setDeniedTools(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl text-sm bg-surface-container-low border border-white/10 text-on-surface font-mono"
-                    placeholder="e.g. *_delete, caldera_start_operation"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-on-surface-variant">Require approval (force the approval card)</label>
-                  <input
-                    type="text"
-                    value={requireApproval}
-                    onChange={(e) => setRequireApproval(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl text-sm bg-surface-container-low border border-white/10 text-on-surface font-mono"
-                    placeholder="e.g. xsiam_write_*, api_keys_*"
+                    placeholder="e.g. *_delete, caldera_create_operation"
                   />
                 </div>
               </div>

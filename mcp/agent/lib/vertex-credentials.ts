@@ -16,9 +16,9 @@
  * delay.
  *
  * Failure mode: if the MCP is unreachable or the vertex provider
- * isn't materialized yet (first-install pre-setup), this returns
- * null and the caller falls back to legacy paths (setup.json or
- * env). That's intentional — chat should keep working in those
+ * isn't materialized yet (nothing saved at /providers), this returns
+ * null and the caller falls back to the GOOGLE_APPLICATION_CREDENTIALS
+ * env var. That's intentional — chat should keep working in those
  * states even if the SecretStore lookup fails.
  */
 
@@ -29,7 +29,7 @@
 // dependency that hangs the process. We read MCP_URL+MCP_TOKEN
 // directly from process.env here. Both are bundle-internal keys
 // (env-first by design — see BUNDLE_INTERNAL_KEYS in runtime-config),
-// so reading them from env without consulting setup.json is correct.
+// so reading them from env directly is correct.
 
 interface CacheEntry {
   value: string | null;
@@ -123,7 +123,7 @@ async function fetchUncached(
  * `GOOGLE_APPLICATION_CREDENTIALS` field. Chat handler reads that
  * field via `runtimeConfig.GOOGLE_APPLICATION_CREDENTIALS` — so the
  * 16+ existing call sites continue to work unchanged, they just
- * receive ProviderStore-backed data now instead of setup.json.
+ * receive ProviderStore-backed data.
  */
 export async function resolveVertexCredentialsFromStore(): Promise<
   string | null

@@ -1,14 +1,15 @@
 /**
  * KB detail page — two read-only tabs:
  *
- *   Entries     → paginated browse of every doc in this KB
+ *   Entries     → browse of every doc in this KB
  *                 (no `content` field; opens a drawer for full body)
  *   Try search  → semantic-search playground with score + snippet
  *
- * Spark_ui's reference page also has Import + Settings tabs; those
- * require runtime CRUD which v1.2 spec leaves out (kbWrites: []).
- * They're documented as future-Tier-3 work in the spec patch and
- * shown here as disabled tabs so operators see the seam.
+ * The entry count shown is the KB's `total_count` from the API, the same
+ * number the /knowledge index card shows. The list is fetched in pages until
+ * everything is loaded (up to MAX_PAGES), so the in-page filter covers every
+ * entry; if a KB ever exceeds that, the page says how many of the total are
+ * loaded instead of presenting the loaded count as the total.
  *
  * Routing: phantom is single-tenant, so we don't have spark_ui's
  * `/w/{workspace}/...` prefix — KBs are global to this deployment.
@@ -36,7 +37,12 @@ interface KbDoc {
 interface DocsResponse {
   documents: KbDoc[];
   count: number;
+  total_count?: number;
+  has_more?: boolean;
 }
+
+const PAGE_SIZE = 500;
+const MAX_PAGES = 20;
 
 interface SearchResponse {
   results: KbDoc[];
@@ -71,6 +77,10 @@ export default function KbDetailPage({
 
   // Entries tab state
   const [docs, setDocs] = useState<KbDoc[]>([]);
+  // Entries in the whole KB (unfiltered) and the category chips, both taken
+  // from the unfiltered load so picking a category does not shrink them.
+  const [kbTotal, setKbTotal] = useState<number | null>(null);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(true);
   const [filterText, setFilterText] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
@@ -88,15 +98,32 @@ export default function KbDetailPage({
     setLoadingDocs(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ limit: "500" });
-      if (categoryFilter) params.set("category", categoryFilter);
-      const r = await fetch(
-        `/api/agent/knowledge/${encodeURIComponent(name)}/docs?${params}`,
-        { cache: "no-store" },
-      );
-      if (!r.ok) throw new Error(`fetch ${r.status}`);
-      const data = (await r.json()) as DocsResponse;
-      setDocs(data.documents ?? []);
+      const loaded: KbDoc[] = [];
+      let total = 0;
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const params = new URLSearchParams({
+          limit: String(PAGE_SIZE),
+          offset: String(loaded.length),
+        });
+        if (categoryFilter) params.set("category", categoryFilter);
+        const r = await fetch(
+          `/api/agent/knowledge/${encodeURIComponent(name)}/docs?${params}`,
+          { cache: "no-store" },
+        );
+        if (!r.ok) throw new Error(`fetch ${r.status}`);
+        const data = (await r.json()) as DocsResponse;
+        const batch = data.documents ?? [];
+        loaded.push(...batch);
+        total = data.total_count ?? loaded.length;
+        if (!data.has_more || batch.length === 0) break;
+      }
+      setDocs(loaded);
+      if (!categoryFilter) {
+        setKbTotal(total);
+        setAllCategories(
+          [...new Set(loaded.map((d) => d.category).filter((c): c is string => !!c))].sort(),
+        );
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -158,13 +185,10 @@ export default function KbDetailPage({
     }
   }, [name, searchQuery, searchLimit]);
 
-  // Categories surface as filter chips. Derived from loaded docs so
+  // Categories surface as filter chips, derived from the unfiltered load so
   // we don't need a separate /categories endpoint.
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    for (const d of docs) if (d.category) set.add(d.category);
-    return [...set].sort();
-  }, [docs]);
+  const categories = allCategories;
+  const entryTotal = kbTotal ?? docs.length;
 
   const filteredDocs = useMemo(() => {
     const f = filterText.trim().toLowerCase();
@@ -211,7 +235,7 @@ export default function KbDetailPage({
                   {name}
                 </h1>
                 <p className="text-xs text-on-surface-variant/60 font-mono">
-                  {docs.length} {docs.length === 1 ? "entry" : "entries"}
+                  {entryTotal} {entryTotal === 1 ? "entry" : "entries"}
                   {" · "}embedded with text-embedding-004
                 </p>
               </div>
@@ -237,22 +261,6 @@ export default function KbDetailPage({
             label="Try search"
             icon="search"
             onClick={() => setTab("search")}
-          />
-          <Tab
-            id="import"
-            active={false}
-            label="Import"
-            icon="upload"
-            disabled
-            tooltip="Not yet available — to add or change entries, edit the markdown files under bundles/spark/kbs/ and redeploy."
-          />
-          <Tab
-            id="settings"
-            active={false}
-            label="Settings"
-            icon="tune"
-            disabled
-            tooltip="Not yet available — to add or change entries, edit the markdown files under bundles/spark/kbs/ and redeploy."
           />
         </div>
 
@@ -311,6 +319,9 @@ export default function KbDetailPage({
               ) : null}
               <div className="text-xs text-on-surface-variant/60 font-mono">
                 showing {filteredDocs.length} / {docs.length}
+                {docs.length < (categoryFilter ? docs.length : entryTotal)
+                  ? ` loaded (${entryTotal} in this KB)`
+                  : ""}
               </div>
             </div>
 
@@ -551,36 +562,25 @@ function Tab({
   label,
   icon,
   onClick,
-  disabled,
-  tooltip,
 }: {
   id: string;
   active: boolean;
   label: string;
   icon: string;
-  onClick?: () => void;
-  disabled?: boolean;
-  tooltip?: string;
+  onClick: () => void;
 }) {
   return (
     <button
       onClick={onClick}
-      disabled={disabled}
-      title={tooltip}
       className={
         "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium transition-colors " +
         (active
           ? "bg-primary-container text-on-primary-container"
-          : disabled
-            ? "text-on-surface-variant/30 cursor-not-allowed"
-            : "text-on-surface-variant hover:text-on-surface")
+          : "text-on-surface-variant hover:text-on-surface")
       }
     >
       <span className="material-symbols-outlined text-base">{icon}</span>
       {label}
-      {disabled ? (
-        <span className="text-[9px] uppercase tracking-wider">soon</span>
-      ) : null}
     </button>
   );
 }

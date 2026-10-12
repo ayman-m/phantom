@@ -21,9 +21,10 @@ dispatcher coupling local.
 # Lifecycle
 
 main.py async_main() constructs the dispatcher AFTER register_all_tools
-populates the tool_registry. Tools registered via setup-form reload
-(api/setup.py) re-use the same registry dict (mutated in place), so the
-dispatcher closure stays current without a re-set.
+populates the tool_registry. Tools registered by a later hot-reload
+(api/admin.py /reload_tools, api/instances.py) re-use the same registry
+dict (mutated in place), so the dispatcher closure stays current
+without a re-set.
 """
 
 from __future__ import annotations

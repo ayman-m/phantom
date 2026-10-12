@@ -2,7 +2,7 @@
  * Restore endpoint — accepts a zip produced by GET /api/agent/backup
  * and applies each section to the destination's stores in dependency
  * order: personality → instances+secrets → skills → memory → knowledge
- * (no-op) → jobs.
+ * (no-op) → data sources → operator state → jobs.
  *
  * The body is multipart/form-data with field name "file" (the zip).
  * Optional query params:
@@ -16,6 +16,11 @@
  * force=true a name collision overwrites; without it the existing
  * entry stays and the incoming one is reported as skipped.
  *
+ * Existing-entry lookup: a section that skips collisions first lists what
+ * the destination holds. If that listing fails, the destination is NOT
+ * treated as empty: without force the section is skipped with a warning
+ * (see lib/restore-existing.ts); with force it is written anyway.
+ *
  * Why we restore in this specific order:
  *   1. Personality has no deps; setting it first is harmless even if
  *      a later section fails.
@@ -26,6 +31,8 @@
  *   4. Memory is independent.
  *   5. Knowledge is read-only at runtime — the restore is a verify
  *      step (compare counts), not a write.
+ *   5b. Operator state (tested-journey marks, metric bookmarks) is
+ *      independent key-value data, written key by key.
  *   6. Jobs last because runtime jobs may reference connector tools
  *      (e.g. phantom_create_data_worker) which need their instance
  *      enabled before the first cron tick.
@@ -36,6 +43,15 @@ import { NextResponse } from "next/server";
 import JSZip from "jszip";
 
 import { PhantomMCPClient } from "@/lib/mcp-client";
+import {
+  OPERATOR_STATE_FILE,
+  planOperatorStateRestore,
+} from "@/lib/operator-state-backup";
+import {
+  guardSection,
+  keysFromList,
+  lookupExistingKeys,
+} from "@/lib/restore-existing";
 import {
   deriveMcpBaseUrl,
   getEffectiveRuntimeConfig,
@@ -88,6 +104,15 @@ interface MemoryFromBackup {
   ttl_seconds?: number | null;
   meta?: unknown;
   [k: string]: unknown;
+}
+
+/** How many entries operator_state.json holds (for the skipped count). */
+function operatorStateEntryCount(file: unknown): number {
+  const entries =
+    file !== null && typeof file === "object"
+      ? (file as { entries?: unknown }).entries
+      : undefined;
+  return Array.isArray(entries) ? entries.length : 0;
 }
 
 async function _resolveMcp(): Promise<McpResolved | NextResponse> {
@@ -242,6 +267,7 @@ export async function POST(request: Request) {
             n.endsWith(".json"),
         ).length,
         data_sources_installed: !!zip.file("data_sources/installed.json"),
+        operator_state: !!zip.file(OPERATOR_STATE_FILE),
       },
       restore_order: [
         "personality",
@@ -250,6 +276,7 @@ export async function POST(request: Request) {
         "memory",
         "knowledge",
         "data_sources",
+        "operator_state",
         "jobs",
       ],
       force,
@@ -280,6 +307,45 @@ export async function POST(request: Request) {
       );
       return undefined;
     }
+  }
+
+  /** GET a JSON list from the MCP; throws on a non-OK answer. */
+  async function getJson(path: string): Promise<unknown> {
+    const resp = await fetch(`${mcp.base}${path}`, {
+      headers: { Authorization: `Bearer ${mcp.token}` },
+      // Generous: a timeout here skips the section, so a slow but healthy
+      // listing should not be mistaken for a failed one.
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    return resp.json();
+  }
+
+  /**
+   * The keys the destination already holds for a section, or null when they
+   * could not be listed and the section must be skipped (a warning and the
+   * skipped count are recorded here). See lib/restore-existing.ts.
+   */
+  async function existingOrSkip(
+    label: string,
+    summaryKey: string,
+    incoming: number,
+    fetchBody: () => Promise<unknown>,
+    keysOf: (body: unknown) => string[] | null,
+  ): Promise<Set<string> | null> {
+    const guard = guardSection(
+      await lookupExistingKeys(fetchBody, keysOf),
+      force,
+      label,
+      incoming,
+    );
+    if (!guard.proceed) {
+      if (guard.warning) summary.warnings.push(guard.warning);
+      summary.applied[summaryKey] = 0;
+      summary.skipped[summaryKey] = incoming;
+      return null;
+    }
+    return guard.existing;
   }
 
   // ── 1. Personality — always overwrite (single-row blob) ──────────
@@ -314,24 +380,23 @@ export async function POST(request: Request) {
   const instWrap = await readJsonFile<{ instances?: InstanceFromBackup[] }>(
     "instances.json",
   );
-  if (instWrap?.instances?.length) {
-    // Pre-fetch existing instances to detect collisions.
-    let existing: Set<string> = new Set();
-    try {
-      const cur = await fetch(`${mcp.base}/api/v1/instances`, {
-        headers: { Authorization: `Bearer ${mcp.token}` },
-      });
-      if (cur.ok) {
-        const j = (await cur.json()) as {
-          instances?: { connector_id: string; name: string }[];
-        };
-        existing = new Set(
-          (j.instances ?? []).map((i) => `${i.connector_id}/${i.name}`),
-        );
-      }
-    } catch {
-      /* best-effort — restore proceeds even if list fetch fails */
-    }
+  // Pre-fetch existing instances to detect collisions.
+  const existingInstances = instWrap?.instances?.length
+    ? await existingOrSkip(
+        "instances",
+        "instances",
+        instWrap.instances.length,
+        () => getJson("/api/v1/instances"),
+        (b) =>
+          keysFromList(b, "instances", (i) =>
+            typeof i.connector_id === "string" && typeof i.name === "string"
+              ? `${i.connector_id}/${i.name}`
+              : null,
+          ),
+      )
+    : null;
+  if (instWrap?.instances?.length && existingInstances) {
+    const existing = existingInstances;
     let applied = 0;
     let skipped = 0;
     for (const inst of instWrap.instances) {
@@ -382,20 +447,28 @@ export async function POST(request: Request) {
   const skillFiles = Object.keys(zip.files).filter(
     (n) => n.startsWith("skills/") && !zip.files[n].dir && n.endsWith(".md"),
   );
-  if (skillFiles.length) {
+  // Get existing skills set so we know which to update vs create.
+  const existingSkills = skillFiles.length
+    ? await existingOrSkip(
+        "skills",
+        "skills",
+        skillFiles.length,
+        async () => {
+          const listResult = await mcpClient.callTool("skills_list_all", {});
+          const text = listResult.content?.[0]?.text;
+          if (typeof text !== "string") throw new Error("empty tool result");
+          return JSON.parse(text) as unknown;
+        },
+        (b) =>
+          keysFromList(b, null, (s) =>
+            typeof s.file_path === "string" ? s.file_path : null,
+          ),
+      )
+    : null;
+  if (skillFiles.length && existingSkills) {
+    const existing = existingSkills;
     let applied = 0;
     let skipped = 0;
-    // Get existing skills set so we know which to update vs create.
-    let existing: Set<string> = new Set();
-    try {
-      const listResult = await mcpClient.callTool("skills_list_all", {});
-      const listed = JSON.parse(
-        listResult.content?.[0]?.text || "[]",
-      ) as Array<{ file_path: string }>;
-      existing = new Set(listed.map((s) => s.file_path));
-    } catch {
-      /* best-effort */
-    }
     for (const fullName of skillFiles) {
       // Strip leading "skills/" so file_path becomes
       // "<category>/<skill>.md", matching the MCP's path convention.
@@ -517,27 +590,24 @@ export async function POST(request: Request) {
       !zip.files[n].dir &&
       n.endsWith(".json"),
   );
-  if (userYamlFiles.length) {
+  // Pre-fetch existing user-source ids on destination for collision
+  // detection. If the list is unavailable the section is skipped (see
+  // existingOrSkip), not written over what may be there.
+  const existingUserIds = userYamlFiles.length
+    ? await existingOrSkip(
+        "user data sources",
+        "data_sources_user",
+        userYamlFiles.length,
+        () => getJson("/api/v1/data-sources/user"),
+        (b) =>
+          keysFromList(b, "data_sources", (r) =>
+            typeof r.id === "string" ? r.id : null,
+          ),
+      )
+    : null;
+  if (userYamlFiles.length && existingUserIds) {
     let applied = 0;
     let skipped = 0;
-
-    // Pre-fetch existing user-source ids on destination for collision
-    // detection. Best-effort — falls through to per-row error if the
-    // list endpoint is down.
-    let existingUserIds: Set<string> = new Set();
-    try {
-      const list = await fetch(`${mcp.base}/api/v1/data-sources/user`, {
-        headers: auth,
-      });
-      if (list.ok) {
-        const j = (await list.json()) as {
-          data_sources?: { id: string }[];
-        };
-        existingUserIds = new Set((j.data_sources ?? []).map((r) => r.id));
-      }
-    } catch {
-      /* best-effort */
-    }
 
     for (const fileName of userYamlFiles) {
       let docRaw: string | null = null;
@@ -642,35 +712,29 @@ export async function POST(request: Request) {
   const installedWrap = await readJsonFile<{
     packs?: { pack_name: string; rule_name: string; dataset_name: string }[];
   }>("data_sources/installed.json");
-  if (installedWrap?.packs?.length) {
+  // Pre-fetch installed packs on destination so already-installed
+  // packs (e.g. from bundle defaults) are counted as skipped rather
+  // than reinstalled (idempotent install will succeed but we report
+  // honestly).
+  const existingInstalls = installedWrap?.packs?.length
+    ? await existingOrSkip(
+        "installed data sources",
+        "data_sources_installed",
+        installedWrap.packs.length,
+        () => getJson("/api/v1/data-sources"),
+        (b) =>
+          keysFromList(b, "data_sources", (r) =>
+            typeof r.pack_name === "string" &&
+            typeof r.rule_name === "string" &&
+            typeof r.dataset_name === "string"
+              ? `${r.pack_name}__${r.rule_name}__${r.dataset_name}`
+              : null,
+          ),
+      )
+    : null;
+  if (installedWrap?.packs?.length && existingInstalls) {
     let applied = 0;
     let skipped = 0;
-    // Pre-fetch installed packs on destination so already-installed
-    // packs (e.g. from bundle defaults) are counted as skipped rather
-    // than reinstalled (idempotent install will succeed but we report
-    // honestly).
-    let existingInstalls: Set<string> = new Set();
-    try {
-      const list = await fetch(`${mcp.base}/api/v1/data-sources`, {
-        headers: auth,
-      });
-      if (list.ok) {
-        const j = (await list.json()) as {
-          data_sources?: {
-            pack_name: string;
-            rule_name: string;
-            dataset_name: string;
-          }[];
-        };
-        existingInstalls = new Set(
-          (j.data_sources ?? []).map(
-            (r) => `${r.pack_name}__${r.rule_name}__${r.dataset_name}`,
-          ),
-        );
-      }
-    } catch {
-      /* best-effort */
-    }
 
     for (const pack of installedWrap.packs) {
       const key = `${pack.pack_name}__${pack.rule_name}__${pack.dataset_name}`;
@@ -711,26 +775,87 @@ export async function POST(request: Request) {
     summary.skipped.data_sources_installed = skipped;
   }
 
+  // ── 6b. Operator state — PUT each key; keep the destination's own
+  //        unless force (same rule as the other sections) ───────────
+  const stateFile = await readJsonFile<unknown>(OPERATOR_STATE_FILE);
+  // Skipped as a whole when the destination's keys cannot be listed.
+  const existingStateKeys =
+    stateFile !== undefined
+      ? await existingOrSkip(
+          "operator state",
+          "operator_state",
+          operatorStateEntryCount(stateFile),
+          () => getJson("/api/v1/operator-state"),
+          (b) =>
+            keysFromList(b, "entries", (e) =>
+              typeof e.key === "string" ? e.key : null,
+            ),
+        )
+      : null;
+  if (stateFile !== undefined && existingStateKeys) {
+    const plan = planOperatorStateRestore(
+      stateFile,
+      existingStateKeys,
+      force,
+    );
+    let applied = 0;
+    for (const { key, value } of plan.puts) {
+      try {
+        const resp = await fetch(
+          `${mcp.base}/api/v1/operator-state/${encodeURIComponent(key)}`,
+          {
+            method: "PUT",
+            headers: auth,
+            body: JSON.stringify({ value }),
+            signal: AbortSignal.timeout(15000),
+          },
+        );
+        if (resp.ok) {
+          applied += 1;
+        } else {
+          const body = await resp.text().catch(() => "");
+          summary.errors.push(
+            `operator state ${key} PUT returned HTTP ${resp.status}: ${body.slice(0, 200)}`,
+          );
+        }
+      } catch (e) {
+        summary.errors.push(
+          `operator state ${key} restore failed: ${
+            e instanceof Error ? e.message : String(e)
+          }`,
+        );
+      }
+    }
+    if (plan.invalid) {
+      summary.warnings.push(
+        `operator state: ${plan.invalid} unusable entr${plan.invalid === 1 ? "y" : "ies"} ignored`,
+      );
+    }
+    summary.applied.operator_state = applied;
+    summary.skipped.operator_state = plan.skipped;
+  }
+
   // ── 7. Jobs — POST each runtime job last (so connectors exist) ───
   const jobsWrap = await readJsonFile<{ jobs?: JobFromBackup[] }>(
     "jobs.json",
   );
-  if (jobsWrap?.jobs?.length) {
+  // Pre-fetch existing jobs to detect collisions.
+  const existingJobs = jobsWrap?.jobs?.length
+    ? await existingOrSkip(
+        "jobs",
+        "jobs",
+        jobsWrap.jobs.length,
+        () => getJson("/api/v1/jobs"),
+        (b) =>
+          keysFromList(b, "jobs", (j) =>
+            typeof j.name === "string" ? j.name : null,
+          ),
+      )
+    : null;
+  if (jobsWrap?.jobs?.length && existingJobs) {
+    const existing = existingJobs;
     let applied = 0;
     let skipped = 0;
-    // Pre-fetch existing jobs to detect collisions.
-    let existing: Set<string> = new Set();
-    try {
-      const cur = await fetch(`${mcp.base}/api/v1/jobs`, {
-        headers: { Authorization: `Bearer ${mcp.token}` },
-      });
-      if (cur.ok) {
-        const j = (await cur.json()) as { jobs?: { name: string }[] };
-        existing = new Set((j.jobs ?? []).map((i) => i.name));
-      }
-    } catch {
-      /* best-effort */
-    }
     for (const job of jobsWrap.jobs) {
       if (existing.has(job.name) && !force) {
         skipped += 1;
