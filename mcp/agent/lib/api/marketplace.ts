@@ -244,7 +244,12 @@ export async function updateInstance(
   // the older Spark-gateway shape was PUT. Switching to PATCH lets us
   // send a single field (e.g. {enabled: true}) without re-asserting
   // every other field.
-  return apiRequest<{ instance: ConnectorInstance }>(
+  // `restart` is present when the save changed what the connector container
+  // loads at start and the MCP asked phantom-updater to restart it.
+  return apiRequest<{
+    instance: ConnectorInstance;
+    restart?: { ok: boolean; status: string; error?: string };
+  }>(
     `/api/v1/instances/${encodeURIComponent(id)}`,
     { method: "PATCH", body: data },
   );

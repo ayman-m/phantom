@@ -2870,6 +2870,22 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 tests exactly what Save would store.
               </p>
               <p>
+                <strong>Saving restarts the connector.</strong> A connector
+                reads its settings once, when its container starts, so a save
+                that changes a setting or a secret restarts that container and
+                the dialog says so (&ldquo;Saved. The connector restarted and is
+                using the new settings.&rdquo;). The restart takes a few seconds,
+                and Test Connection can report the connector as unreachable until
+                it is back. A save that changes nothing, a rename, a tools change
+                and a save of a disabled instance do not restart it; enabling a
+                disabled instance does. If the restart fails, the dialog says
+                &ldquo;Saved, but the connector could not be restarted&rdquo;: your
+                settings are stored, but the connector may be stopped, because a
+                restart removes the old container before it starts the new one.
+                Turn the instance off and on again on its row to start it with the
+                stored settings.
+              </p>
+              <p>
                 <strong>http-sender: choose the destination first.</strong>{" "}
                 The HTTP sender can send to an XSIAM HTTP Log Collector, to the
                 Cribl integration, or to both, and its form starts with a{" "}

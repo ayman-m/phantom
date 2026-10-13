@@ -144,3 +144,46 @@ export function testOutcome(data: TestResponse): TestOutcome {
     message: `Test failed: ${data.error?.trim() || "unknown error"}`,
   };
 }
+
+/** The restart the MCP asks phantom-updater for after a save (PATCH /api/v1/instances/{id}). */
+export interface RestartResult {
+  ok: boolean;
+  /** restarted | in_progress | failed */
+  status: string;
+  error?: string;
+}
+
+export interface SaveOutcome {
+  type: "success" | "info" | "error";
+  message: string;
+}
+
+/**
+ * What the Edit dialog tells the operator after a successful save. A connector
+ * container reads its settings once, when it starts, so a save that changed
+ * them restarts it; the answer says whether that worked. No `restart` means the
+ * save needed none (a rename, a tools change, nothing changed, or the instance
+ * is disabled).
+ */
+export function saveOutcome(restart: RestartResult | null | undefined, connectorId: string): SaveOutcome {
+  if (!restart) return { type: "success", message: "Instance updated successfully." };
+  if (restart.ok && restart.status === "restarted") {
+    return { type: "success", message: "Saved. The connector restarted and is using the new settings." };
+  }
+  if (restart.ok) {
+    return {
+      type: "info",
+      message:
+        "Saved. The connector is restarting to load the new settings. Test Connection may report it unreachable for a few seconds.",
+    };
+  }
+  // The restart stops and removes the container before it starts a new one, so
+  // when the start fails the connector is gone, not running on old settings.
+  const why = restart.error?.trim() ? ` (${restart.error.trim()})` : "";
+  return {
+    type: "error",
+    message:
+      `Saved, but the connector could not be restarted${why}. The ${connectorId} connector may be stopped. ` +
+      `Your settings are stored: turn the instance off and on again to start it with them.`,
+  };
+}

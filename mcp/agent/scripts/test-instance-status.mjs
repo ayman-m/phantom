@@ -15,7 +15,7 @@ if (!process.features.typescript) {
   process.exit(0);
 }
 
-const { instanceStatusFromState, toolNote, testOutcome, NO_BUILT_IN_TEST } = await import("../lib/instance-status.ts");
+const { instanceStatusFromState, toolNote, testOutcome, saveOutcome, NO_BUILT_IN_TEST } = await import("../lib/instance-status.ts");
 
 let failed = 0;
 function test(name, fn) {
@@ -115,6 +115,32 @@ test("the connectors page no longer claims tools are paused for a connector that
   assert.doesNotMatch(page, /Tools paused \(not connected\)/);
   assert.doesNotMatch(page, /Probe not wired for this connector/);
   assert.match(page, /toolNote\(/);
+});
+
+test("a save says whether the connector restarted to load the new settings", () => {
+  assert.deepEqual(saveOutcome(undefined, "web"), { type: "success", message: "Instance updated successfully." });
+  assert.deepEqual(saveOutcome(null, "web").type, "success");
+  const done = saveOutcome({ ok: true, status: "restarted" }, "http-sender");
+  assert.equal(done.type, "success");
+  assert.match(done.message, /restarted and is using the new settings/);
+  const busy = saveOutcome({ ok: true, status: "in_progress" }, "http-sender");
+  assert.equal(busy.type, "info");
+  assert.match(busy.message, /is restarting to load the new settings/);
+  const bad = saveOutcome({ ok: false, status: "failed", error: "phantom-updater could not be reached" }, "http-sender");
+  assert.equal(bad.type, "error");
+  assert.match(bad.message, /^Saved, but the connector could not be restarted \(phantom-updater could not be reached\)/);
+  assert.match(bad.message, /may be stopped/);
+  assert.match(bad.message, /settings are stored/);
+  assert.match(bad.message, /off and on again/);
+  assert.doesNotMatch(bad.message, /docker restart|old settings/);
+  assert.doesNotMatch(saveOutcome({ ok: false, status: "failed" }, "web").message, /\(\)/);
+});
+
+test("the Edit dialog and the row toggle both show the restart outcome", () => {
+  const page = readFileSync(new URL("../app/connectors/page.tsx", import.meta.url), "utf8");
+  assert.ok((page.match(/saveOutcome\(/g) ?? []).length >= 2, "Save and the enable toggle both call saveOutcome");
+  assert.match(page, /notify\(/);
+  assert.doesNotMatch(page, /window\.(alert|confirm|prompt)\(/);
 });
 
 if (failed) { console.log(failed + " failed"); process.exit(1); }

@@ -1016,6 +1016,9 @@ POST   /api/v1/connectors/reconcile`}</Pre>
  <p>
  <Code>DELETE /api/v1/instances/&#123;id&#125;</Code> on the agent stops the container first and reports it in the response as <Code>container_stop</Code> (<Code>stopped</Code>, <Code>not_running</Code> or <Code>failed</Code>; <Code>null</Code> when the connector has no container). The instance is deleted either way, and a <Code>failed</Code> stop is logged as a warning because the container may still be running.
  </p>
+ <p>
+ <Code>PATCH /api/v1/instances/&#123;id&#125;</Code> on the agent restarts the container when the save changed what it loads at start. A connector container reads its instance row and secrets once, when it starts (<Code>phantom-connector-runtime</Code>, <Code>_load_instance</Code>), so without a restart a saved change waits for the next container restart. The MCP (<Code>api/instances.py</Code>) calls <Code>POST /api/v1/connectors/&#123;id&#125;/instances/&#123;name&#125;/restart</Code> on <Code>PHANTOM_UPDATER_URL</Code> (default <Code>http://phantom-updater:8090</Code>) with the same <Code>MCP_TOKEN</Code> bearer as <Code>start</Code> and <Code>stop</Code>, body <Code>instance_id</Code> and, for an uploaded connector, <Code>image_ref</Code>. It restarts when the config or a secret really changed (a secret sent as <Code>***</Code> does not count) or when a disabled instance is enabled, and not for a rename, a tools change, a save that changes nothing, or while the instance is disabled. <Code>&#123;name&#125;</Code> is the name the container was started with, read from the instance&apos;s <Code>container_url</Code> (a rename does not rename the container). The call is synchronous but the save does not wait on it for long: PATCH waits at most 10 s (under the agent proxy&apos;s 15 s limit) and answers <Code>restart</Code> as <Code>&#123;ok: true, status: &quot;restarted&quot;&#125;</Code>, <Code>&#123;ok: true, status: &quot;in_progress&quot;&#125;</Code> (the restart carries on in the background) or <Code>&#123;ok: false, status: &quot;failed&quot;, error&#125;</Code> when the updater is unreachable, times out (the call is bounded at 120 s) or refuses. There is no retry; the instance row is saved either way, and the Edit dialog tells the operator what happened. The outcome is written to the audit log as <Code>instance_restart</Code>. Test Connection after a save probes the container, so it reports it unreachable while it restarts.
+ </p>
  </SubSection>
 
  <SubSection icon="sync" title="Digest-drift reconciliation (startup + periodic)">
@@ -1203,6 +1206,17 @@ MCP read connector.yaml.runtimeMapping.style
  </ul>
  </SubSection>
 
+
+ <SubSection icon="build" title="Implementation gap">
+ <div className="rounded-lg border border-tertiary/30 bg-tertiary/5 p-3 text-sm">
+ <strong className="text-tertiary">Implementation gap</strong>
+ <ul className="list-disc pl-5 space-y-1 mt-2">
+ <li>
+ The updater&apos;s <Code>restart</Code> stops and removes the container with the given name, then starts a new one, and it does not check that the existing container&apos;s <Code>phantom.instance_id</Code> label matches the instance being saved. If two instances end up addressing the same container name (for example after a rename), saving one can replace the other&apos;s container. A failed start also leaves no container behind until the instance is turned off and on.
+ </li>
+ </ul>
+ </div>
+ </SubSection>
  </Section>
 );
 }

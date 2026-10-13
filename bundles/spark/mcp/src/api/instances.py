@@ -23,8 +23,10 @@ change is `docker compose restart phantom-mcp` after a successful CRUD.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
+import re
 from typing import Any
 
 from fastmcp import FastMCP
@@ -39,6 +41,151 @@ from usecase.instance_store import Instance, InstanceStore
 from usecase.secret_store import ForeignSecretRefError
 
 logger = logging.getLogger("Phantom MCP")
+
+
+# ─── restart on save ─────────────────────────────────────────────────────────
+#
+# A per-instance connector container reads its instance row and secrets once,
+# when it starts (phantom-connector-runtime/runtime/entrypoint.py:_load_instance).
+# Saving an instance therefore has no effect on the running container until it
+# is restarted, so PATCH asks phantom-updater to restart it. Same URL and
+# bearer token as the start and stop calls below (PHANTOM_UPDATER_URL, MCP_TOKEN).
+
+# How long PATCH waits for the restart before answering. A restart is stop,
+# image pull (best effort) and start, which can take longer than an operator
+# should wait on Save; the restart keeps running and the response says so. It
+# stays under the agent proxy's 15 s limit (mcp/agent/lib/mcp-proxy.ts), or the
+# save would look failed although it succeeded.
+RESTART_WAIT_S = 10.0
+# The updater call itself is bounded too, so a hung updater cannot pile up tasks.
+RESTART_CALL_TIMEOUT_S = 120.0
+
+_restart_tasks: set["asyncio.Task[Any]"] = set()
+
+
+async def _updater_restart(
+    connector_id: str, container_instance_name: str, instance_id: str,
+    image_ref: str | None = None,
+) -> dict[str, Any]:
+    """Ask phantom-updater to restart one instance's container (stop, then start).
+
+    Returns {"ok": True, "status": "restarted"} or {"ok": False, "status": "failed",
+    "error": <short reason>}. Never raises: the instance row is already saved.
+    `container_instance_name` is the name segment of the container that is
+    running (see _container_instance_name), already safe for a URL path.
+    """
+    import httpx
+
+    updater_url = os.environ.get("PHANTOM_UPDATER_URL", "http://phantom-updater:8090").rstrip("/")
+    url = f"{updater_url}/api/v1/connectors/{connector_id}/instances/{container_instance_name}/restart"
+    token = os.environ.get("MCP_TOKEN", "")
+    body: dict[str, Any] = {"instance_id": instance_id}
+    if image_ref:
+        body["image_ref"] = image_ref
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(RESTART_CALL_TIMEOUT_S)) as client:
+            resp = await client.post(
+                url, json=body, headers={"Authorization": f"Bearer {token}"} if token else {},
+            )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("could not call phantom-updater restart for %s/%s: %s",
+                       connector_id, container_instance_name, exc)
+        reason = "timed out" if isinstance(exc, httpx.TimeoutException) else "could not be reached"
+        return {"ok": False, "status": "failed", "error": f"phantom-updater {reason}"}
+    if resp.status_code >= 300:
+        detail = ""
+        try:
+            raw = resp.json().get("detail")
+            detail = raw if isinstance(raw, str) else ""
+        except Exception:  # noqa: BLE001
+            detail = ""
+        logger.warning("phantom-updater restart returned %d for %s/%s (body=%.300s)",
+                       resp.status_code, connector_id, container_instance_name, resp.text)
+        error = f"phantom-updater answered HTTP {resp.status_code}"
+        if detail:
+            error += f": {detail[:200]}"
+        return {"ok": False, "status": "failed", "error": error}
+    return {"ok": True, "status": "restarted"}
+
+
+def _container_instance_name(inst: Instance, fallback_slug: str) -> str:
+    """The name segment of the instance's running container.
+
+    The container is named phantom-connector-<connector>-<name at creation> and
+    its container_url carries that name. A rename does not rename the container,
+    so the live name is read from container_url; an instance without one falls
+    back to the slug of its current name.
+    """
+    url = inst.container_url or ""
+    prefix = f"http://phantom-connector-{inst.connector_id}-"
+    if url.startswith(prefix) and url.endswith(":9000"):
+        name = url[len(prefix):-len(":9000")]
+        if re.fullmatch(r"[a-zA-Z0-9_-]+", name):
+            return name
+    return fallback_slug
+
+
+def _audit_restart(connector_id: str, instance_id: str, result: dict[str, Any]) -> None:
+    """Write the final outcome of one restart as an `instance_restart` audit row."""
+    a = audit_log()
+    if a is None:
+        return
+    metadata: dict[str, Any] = {
+        "instance_id": instance_id,
+        "connector_id": connector_id,
+        "outcome": result.get("status"),
+    }
+    if result.get("error"):
+        metadata["error"] = str(result["error"])[:300]
+    a.record(
+        action="instance_restart",
+        target=f"instance:{instance_id}",
+        status="success" if result.get("ok") else "failure",
+        actor="user:operator",
+        metadata=metadata,
+    )
+
+
+async def _restart_and_wait(
+    connector_id: str, container_instance_name: str, instance_id: str,
+    image_ref: str | None,
+) -> dict[str, Any]:
+    """Run the restart and wait up to RESTART_WAIT_S for its outcome.
+
+    When it is still running at the deadline the task keeps going and the answer
+    is {"ok": True, "status": "in_progress"}: the save has succeeded and the
+    connector is on its way up. Either way the FINAL outcome is audited once
+    (as the task finishes), so a restart that fails after the response was sent
+    is visible in observability, not only in the MCP log.
+    """
+    task = asyncio.ensure_future(
+        _updater_restart(connector_id, container_instance_name, instance_id, image_ref)
+    )
+    _restart_tasks.add(task)
+
+    def _finished(t: "asyncio.Task[Any]") -> None:
+        _restart_tasks.discard(t)
+        if t.cancelled():
+            result: dict[str, Any] = {"ok": False, "status": "failed", "error": "restart was cancelled"}
+        elif t.exception() is not None:
+            result = {"ok": False, "status": "failed", "error": f"{type(t.exception()).__name__}"}
+        else:
+            result = t.result()
+        if not result.get("ok"):
+            logger.warning("restart of instance %s (%s) failed: %s",
+                           instance_id, connector_id, result.get("error"))
+        _audit_restart(connector_id, instance_id, result)
+
+    task.add_done_callback(_finished)
+    done, _ = await asyncio.wait({task}, timeout=RESTART_WAIT_S)
+    if task in done:
+        return task.result()
+    return {"ok": True, "status": "in_progress"}
+
+
+def _secrets_changed(secrets_in: Any) -> bool:
+    """True when a PATCH `secrets` object carries at least one real value ("***" means keep)."""
+    return isinstance(secrets_in, dict) and any(v != "***" for v in secrets_in.values())
 
 
 def _instance_to_dict(
@@ -643,6 +790,10 @@ def register_instance_routes(mcp: FastMCP, store: InstanceStore) -> None:
                         )
                 disabled_tools_change = body["disabled_tools"]
 
+            # What the container loaded when it started, for the restart decision below.
+            config_before = dict(instance.config)
+            was_enabled = instance.enabled
+
             if update_kwargs:
                 try:
                     instance = store.update(instance_id, **update_kwargs)
@@ -702,7 +853,34 @@ def register_instance_routes(mcp: FastMCP, store: InstanceStore) -> None:
                             },
                         )
 
-            return JSONResponse({"instance": _instance_to_dict(instance)})
+            payload: dict[str, Any] = {"instance": _instance_to_dict(instance)}
+
+            # The container loads config and secrets once, at start, so a saved
+            # change reaches it only through a restart. Restart when the config
+            # or a secret really changed, or when a disabled instance is enabled
+            # (its container kept the settings it had when it was disabled). Not
+            # for a tools-only or rename-only PATCH, a no-op save, or while the
+            # instance is disabled (nothing offers its tools to the agent, and
+            # enabling restarts it).
+            config_changed = "config" in update_kwargs and instance.config != config_before
+            needs_restart = (
+                instance.enabled
+                and (
+                    config_changed
+                    or _secrets_changed(update_kwargs.get("secrets"))
+                    or (not was_enabled and update_kwargs.get("enabled") is True)
+                )
+                and _connector_runtime_style(instance.connector_id) == "container"
+            )
+            if needs_restart:
+                payload["restart"] = await _restart_and_wait(
+                    instance.connector_id,
+                    _container_instance_name(instance, _slug_instance_name(instance.name)),
+                    instance.id,
+                    _connector_image_ref(instance.connector_id),
+                )
+
+            return JSONResponse(payload)
         finally:
             reset_current_actor(actor_token)
 

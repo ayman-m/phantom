@@ -60,7 +60,7 @@ Two calls to **`http-sender.generate_events`** for the **same baseline user**, o
 {"profile": "okta", "scenario": "mfa_fatigue", "destination": "okta_sso", "count": 25, "spread_seconds": 600, "target_user": "<CHANGE: the same login>"}
 ```
 
-Both windows end at the moment of the call, so the 29 failures start 15 minutes earlier and the flood 10 minutes earlier: that is what puts the failed logins **before** the flood inside the 30-minute test window. Do not pass `source_ip` (the scenarios choose an address abroad themselves) and do not use `okta_okta` as the destination.
+Both windows end at the moment of the call, so the 29 failures start 15 minutes earlier and the flood 10 minutes earlier: that is what puts the failed logins **before** the flood inside the 30-minute test window. Do not pass `source_ip` (the scenarios choose an address abroad themselves) and do not use `okta_okta` as the destination. When `list_destinations` shows `cribl_okta_sso` ready, use it in both calls instead of `okta_sso` (the alert fires on either); an instance whose Destination is Cribl only has no `okta_sso`.
 
 Expect an alert like: *"The user phantom-lab\<user> received a total of 12 MFA authentication requests during the alert period. Additionally, there were 0 successful and 29 failed logon attempts. The user rejected 12 requests. The user attempted to log in from a new country at least once. A user attempted to log in from a rare country for the organization. This authentication attempt was flagged as suspicious due to these characteristics"*. The alert's address is the one the failed logins came from.
 
@@ -215,7 +215,7 @@ config timeframe = 1h | dataset = okta_sso_raw
 | comp count() as n by eventtype, outcome
 ```
 
-Pass when you see 1 `user.authentication.sso` FAILURE row, 1 `user.authentication.verify`, and N each of `system.push.send_factor_verify_push` and `user.mfa.okta_verify.deny_push`.
+Pass, for the hand-built route, when you see 1 `user.authentication.sso` FAILURE row, 1 `user.authentication.verify`, and N each of `system.push.send_factor_verify_push` and `user.mfa.okta_verify.deny_push`. For Route B the counts follow the two calls instead: the `failed_then_success` failures plus one success (`count` minus 1 FAILURE rows), then the `mfa_fatigue` pushes, denials and one approval; many failed logins are expected there, not one.
 
 ## Step 3: wait, then check for the alert
 

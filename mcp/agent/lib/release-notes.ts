@@ -38,7 +38,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     title: "Connector setup: Test Connection for every connector and the HTTP Sender destination switch.",
     highlights: [
       "Test Connection works for all nine connectors and says what it checked and what it did not.",
-      "The Edit dialog shows every field and secret slot, so a field left empty can be filled in later.",
+      "The Edit dialog shows every field, and saving restarts the connector so new settings take effect.",
       "HTTP Sender asks for a destination first: XSIAM HTTP collector, Cribl integration or both.",
       "Connector forms list the settings each connector reads; lists and numbers save as real values.",
       "A disabled instance now pauses its tools; enable any instance you still rely on.",

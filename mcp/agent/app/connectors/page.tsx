@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useNotificationsStore } from "@/lib/stores/notifications";
+import { notify, useNotificationsStore } from "@/lib/stores/notifications";
 import {
   instanceStatusFromState,
+  saveOutcome,
   testOutcome,
   toolNote,
   type InstanceStatus,
@@ -2196,9 +2197,16 @@ function InstancesTab({
         }>),
       });
       if (result.ok) {
-        setEditFeedback({ type: "success", message: "Instance updated successfully." });
+        // A save that changed the settings restarts the connector's container
+        // (it reads them once, at start); say how that went.
+        const outcome = saveOutcome(result.data.restart, editingInstance.connectorId);
+        setEditFeedback(outcome);
         onRefreshData();
-        setTimeout(() => setEditingInstance(null), 800);
+        // Leave the dialog open long enough to read a restart message, and keep
+        // it open on a failed restart, whose text tells the operator what to do.
+        if (outcome.type !== "error") {
+          setTimeout(() => setEditingInstance(null), result.data.restart ? 2500 : 800);
+        }
       } else {
         setEditFeedback({ type: "error", message: "Failed to update instance." });
       }
@@ -2239,6 +2247,11 @@ function InstancesTab({
         // message verbatim — it's already operator-friendly.
         setToggleError(result.error.message ?? "Could not toggle instance.");
         setTimeout(() => setToggleError(null), 6000);
+      } else if (result.data.restart) {
+        // Enabling an instance restarts its connector so it loads the settings
+        // saved while it was off; say how that went.
+        const outcome = saveOutcome(result.data.restart, inst.connectorId);
+        notify(outcome.type, inst.name, outcome.message);
       }
       onRefreshData();
     } catch (err) {
