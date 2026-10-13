@@ -44,6 +44,28 @@ logger = logging.getLogger("Phantom MCP")
 DEFAULT_DATA_ROOT = Path("/app/data")
 
 
+def is_own_secret_ref(instance_id: str, slot: str, value: Any) -> bool:
+    """True when `value` is exactly this instance's own path for `slot`."""
+    from usecase.secret_store import connector_secret_path
+
+    return isinstance(value, str) and value == connector_secret_path(instance_id, slot)
+
+
+def _check_secret_input(instance_id: str, slot: Any, value: Any) -> None:
+    """Refuse a slot name or secret value that could reach another secret.
+
+    A value starting with "/" is stored verbatim as a SecretStore reference and
+    later resolved to plaintext, so the only one accepted is this instance's own
+    path for the slot (the update round trip). Anything else raises
+    ForeignSecretRefError, which the API maps to 400.
+    """
+    from usecase.secret_store import check_secret_input, connector_secret_path
+
+    check_secret_input(
+        lambda s: connector_secret_path(instance_id, s), slot, value
+    )
+
+
 @dataclass(frozen=True)
 class Instance:
     """One materialized connector instance.
@@ -113,6 +135,16 @@ class Instance:
                 and isinstance(ref_or_value, str)
                 and ref_or_value.startswith("/")
             ):
+                if not is_own_secret_ref(self.id, slot, ref_or_value):
+                    # A row written before writes were checked. Never follow
+                    # a reference into another owner's secret.
+                    logger.warning(
+                        "Instance %s/%s: slot %s holds a reference outside "
+                        "its own secret path; not resolving it.",
+                        self.connector_id, self.name, slot,
+                    )
+                    resolved[slot] = ""
+                    continue
                 try:
                     resolved[slot] = secret_store.read(ref_or_value)
                 except Exception as exc:
@@ -151,6 +183,14 @@ class Instance:
                 and isinstance(ref, str)
                 and ref.startswith("/")
             ):
+                if not is_own_secret_ref(self.id, slot, ref):
+                    logger.warning(
+                        "Instance %s/%s: slot %s holds a reference outside "
+                        "its own secret path; not resolving it.",
+                        self.connector_id, self.name, slot,
+                    )
+                    out[slot] = ""
+                    continue
                 try:
                     out[slot] = secret_store.read(ref)
                 except Exception as exc:
@@ -332,6 +372,10 @@ class InstanceStore:
 
         instance_id = str(uuid.uuid4())
         secrets_in = dict(secrets or {})
+        # Before anything is written. The id is new, so no "/" value can be this
+        # instance's own path: every one is refused.
+        for slot, value in secrets_in.items():
+            _check_secret_input(instance_id, slot, value)
 
         # Compute what to persist: paths if we have a SecretStore,
         # values otherwise.
@@ -340,11 +384,6 @@ class InstanceStore:
             for slot, value in secrets_in.items():
                 if not isinstance(value, str):
                     # Non-string values can't be stored; coerce or skip.
-                    persisted_secret_refs[slot] = value
-                    continue
-                if value.startswith("/"):
-                    # Already a path (e.g. operator pre-bound an external
-                    # secret). Store the path verbatim — don't double-write.
                     persisted_secret_refs[slot] = value
                     continue
                 path = connector_secret_path(instance_id, slot)
@@ -501,6 +540,10 @@ class InstanceStore:
         new_secret_refs: dict[str, Any] = dict(existing.secret_refs)
         secrets_to_write: list[tuple[str, str]] = []  # (slot, plaintext)
         if secrets is not None:
+            # Validate every slot first so a refusal leaves nothing half-applied.
+            for slot, value in secrets.items():
+                if value != "***":
+                    _check_secret_input(instance_id, slot, value)
             for slot, value in secrets.items():
                 if value == "***":
                     # Sentinel: keep the existing ref untouched.
@@ -509,7 +552,7 @@ class InstanceStore:
                     new_secret_refs[slot] = value
                     continue
                 if value.startswith("/"):
-                    # Already a SecretStore path — store verbatim.
+                    # This slot's own SecretStore path (checked above).
                     new_secret_refs[slot] = value
                     continue
                 if self._secret_store is not None:

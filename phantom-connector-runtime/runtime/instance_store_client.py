@@ -179,6 +179,19 @@ class InstanceStoreReader:
         resolved: dict[str, Any] = {}
         for slot, ref_or_value in instance.secret_refs.items():
             if isinstance(ref_or_value, str) and ref_or_value.startswith("/"):
+                # Mirrors the agent's own-path rule (connector_secret_path in
+                # usecase/secret_store.py): never follow a reference into
+                # another owner's secret, even from a row stored before
+                # writes were checked.
+                if ref_or_value != f"/agents/phantom/connectors/{instance.id}/{slot}":
+                    import logging
+                    logging.getLogger(__name__).warning(
+                        "instance %s/%s: slot %r holds a reference outside "
+                        "its own secret path; not resolving it",
+                        instance.connector_id, instance.name, slot,
+                    )
+                    resolved[slot] = ""
+                    continue
                 try:
                     resolved[slot] = secret_reader.read(ref_or_value)
                 except Exception as exc:  # noqa: BLE001

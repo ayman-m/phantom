@@ -10,10 +10,18 @@
  * Both endpoints proxy to the embedded MCP's /api/v1/settings,
  * attaching MCP_TOKEN server-side so the browser doesn't need to
  * hold the bundle-internal bearer.
+ *
+ * `defaultModel` (the install's default chat model) is checked here before it
+ * is forwarded: it must name a model the registry accepts, and it is stored as
+ * the canonical "provider/model" ref. A name the registry rejects answers 400
+ * with `code`, `field` and `suggestions`; nothing is written. A successful
+ * write drops the 30 s cache the chat route reads the default through, so the
+ * next turn uses the new default.
  */
 
 import { NextResponse } from 'next/server';
 
+import { bustInstallDefaultModelCache, checkModelWrite } from '@/lib/model-registry-server';
 import { deriveMcpBaseUrl, getEffectiveRuntimeConfig } from '@/lib/runtime-config';
 
 export const dynamic = 'force-dynamic';
@@ -58,7 +66,9 @@ export async function PUT(request: Request) {
   const r = await _resolveMcp();
   if (r instanceof NextResponse) return r;
   try {
-    const body = await request.text();
+    const checked = await checkModelWrite('settings', await request.text());
+    if (!checked.ok) return NextResponse.json(checked.body, { status: checked.status });
+    const body = checked.body;
     const upstream = await fetch(`${r.base}/api/v1/settings`, {
       method: 'PUT',
       headers: {
@@ -68,6 +78,8 @@ export async function PUT(request: Request) {
       body,
       signal: AbortSignal.timeout(10000),
     });
+    // Any 2xx may have set or cleared defaultModel (207 = some keys applied).
+    if (upstream.ok) bustInstallDefaultModelCache();
     return new NextResponse(await upstream.text(), {
       status: upstream.status,
       headers: { 'Content-Type': 'application/json' },

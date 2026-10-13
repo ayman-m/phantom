@@ -29,6 +29,8 @@
  * available to a separate module.
  */
 
+import type { TurnModelResult } from '@/lib/providers/model-resolution';
+import type { ModelEntry } from '@/lib/providers/registry/types';
 import type { EffectiveRuntimeConfig } from '@/lib/runtime-config';
 
 /**
@@ -37,8 +39,8 @@ import type { EffectiveRuntimeConfig } from '@/lib/runtime-config';
  * through call sites. Most handlers only use a subset.
  */
 export interface SlashCommandContext {
-  /** Text after the command name. `/model gemini-2.5-pro` becomes
-   *  args = "gemini-2.5-pro". Empty string for `/help`. */
+  /** Text after the command name. `/model gemini-3.7-flash` becomes
+   *  args = "gemini-3.7-flash". Empty string for `/help`. */
   args: string;
   /** The MCP session id. Resolved by route.ts before dispatch
    *  (lazy-created if no incoming session_id). */
@@ -51,11 +53,26 @@ export interface SlashCommandContext {
   /** Resolved runtime config (Gemini key, Vertex creds, MCP URL).
    *  Async-fetched once by route.ts before dispatch. */
   runtimeConfig: EffectiveRuntimeConfig;
-  /** Operator-selected model override from the chat header dropdown.
-   *  Undefined means handler should use the runtime default. */
+  /** Operator-selected model from the chat header dropdown (a canonical
+   *  ref). Undefined means the session preference or the install default
+   *  applies; handlers should call `resolveSessionModel` rather than read
+   *  this. */
   requestedModel: string | undefined;
   /** Operator-selected provider override (rare; typically `auto`). */
   requestedProvider: string | undefined;
+  /** Resolves the model this session runs on (header, session preference,
+   *  install default, derived default) with the registry it was resolved
+   *  against. Handlers that call a model or report on one use this instead
+   *  of reading `requestedModel` themselves. */
+  resolveSessionModel: () => Promise<{
+    result: TurnModelResult;
+    entries: ModelEntry[];
+    /** The session's stored `/model` preference, as written. */
+    session: string | undefined;
+    installDefault: string | undefined;
+  }>;
+  /** Fires when the client goes away. Pass it to every model call so the call is cancelled. */
+  signal: AbortSignal;
   /** SSE event emitter. Same shape route.ts uses for normal turns. */
   sendEvent: (kind: string, data: unknown) => void;
   /** The underlying stream controller. Handlers must call `close()`
@@ -96,7 +113,7 @@ export interface ParsedSlashCommand {
  * Examples:
  *   "/compress"               returns { name: "compress", args: "" }
  *   "  /clear  "              returns { name: "clear", args: "" }
- *   "/model gemini-2.5-pro"   returns { name: "model", args: "gemini-2.5-pro" }
+ *   "/model gemini-3.7-flash" returns { name: "model", args: "gemini-3.7-flash" }
  *   "/help compress"          returns { name: "help", args: "compress" }
  *   "what's /compress?"       returns null  (must be at the very start)
  *   "/"                       returns null  (no name)

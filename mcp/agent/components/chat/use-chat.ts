@@ -656,7 +656,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // Request body: { message, session_id?, model?, provider? }.
+    // Request body: { message, session_id?, model? } (model is a canonical ref).
     // Read from optionsRef to avoid stale closure over initial empty options.
     const currentOptions = optionsRef.current;
     const url = "/api/chat";
@@ -666,11 +666,14 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     }
     const effectiveModel = overrideModelRef.current || currentOptions?.defaultModel;
     const effectiveProvider = overrideProviderRef.current || currentOptions?.defaultProvider;
+    // Send the canonical reference ("provider/model"), the same form the
+    // server stores and reports, so the provider is never guessed from a bare
+    // model name. With no pick, the install default serves.
     if (effectiveModel) {
-      body.model = effectiveModel;
-    }
-    if (effectiveProvider) {
-      body.provider = effectiveProvider;
+      body.model =
+        effectiveProvider && !effectiveModel.includes("/")
+          ? `${effectiveProvider}/${effectiveModel}`
+          : effectiveModel;
     }
 
     // Placeholder assistant message that we'll append deltas into.
@@ -1010,13 +1013,22 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
           break;
         }
         case "error": {
+          // The route sends `{ error, code, ... }` (MODEL_UNAVAILABLE carries
+          // refs that would work in the message); show the sentence, not the JSON.
+          let errorText = event.data || "An error occurred";
+          try {
+            const parsed: { error?: unknown } = JSON.parse(event.data);
+            if (typeof parsed?.error === "string" && parsed.error) errorText = parsed.error;
+          } catch {
+            // Not JSON: show the raw text.
+          }
           setMessages((prev) => {
             const updated = [...prev];
             const last = updated[updated.length - 1];
             if (last && last.role === "assistant") {
               updated[updated.length - 1] = {
                 ...last,
-                content: event.data || "An error occurred",
+                content: errorText,
               };
             }
             return updated;

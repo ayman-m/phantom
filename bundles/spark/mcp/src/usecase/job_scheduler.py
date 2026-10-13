@@ -255,11 +255,14 @@ class JobRow:
     bypass_approvals: bool = False
     # Per-job model override. When set,
     # _dispatch_chat threads this into the `body.model` field of the
-    # /api/chat POST so the chat route's resolveModelName() picks it
-    # over runtimeConfig.GEMINI_MODEL. None means "use the runtime
-    # default" — the operator hasn't overridden. Stored verbatim;
-    # we don't validate that the model id is currently available
-    # (operator could revoke a provider after creating the job).
+    # /api/chat POST; the chat route resolves it against the model
+    # registry and runs the job on exactly that model. None means "use
+    # the install's default model" — the operator hasn't overridden.
+    # Stored verbatim (a canonical "provider/model" ref, or a legacy bare
+    # id); the agent's /api/agent/jobs proxy validates it at save time and
+    # the chat route validates it again at dispatch, so a model that was
+    # retired or whose provider was removed ends the run with
+    # MODEL_UNAVAILABLE instead of being substituted.
     model_id: str | None = None
     # Extended thinking mode. When true, the
     # dispatcher adds `thinking: true` to the request body so the
@@ -1255,8 +1258,9 @@ class CroniterJobScheduler:
         session, browseable in the chat sidebar like any other.
 
         When `model_id` is set, the request body
-        includes `model: <id>` so the chat route's resolveModelName()
-        picks it over runtimeConfig.GEMINI_MODEL. When `thinking_enabled`
+        includes `model: <id>` verbatim and the chat route runs the turn on
+        that model, or fails with MODEL_UNAVAILABLE (surfaced below as the
+        run's `chat error event`). When `thinking_enabled`
         is True, the body also carries `thinking: true` — the chat
         route forwards that to the model provider's thinkingConfig (no-
         op on flash variants, honored on pro variants).
@@ -1318,10 +1322,10 @@ class CroniterJobScheduler:
             )
 
         # Assemble the body. The chat route
-        # reads `body.model` via resolveModelName (single source of
-        # model selection per the route's own discipline; see the
-        # comment at chat/route.ts:2580+) and `body.thinking` for the
-        # extended-thinking config.
+        # reads `body.model` (resolved against the model registry; one
+        # chain: header, session, install default) and `body.thinking`
+        # for the extended-thinking config. The model id goes through
+        # verbatim; this method never resolves or rewrites it.
         body: dict[str, Any] = {"message": message}
         if model_id:
             body["model"] = model_id

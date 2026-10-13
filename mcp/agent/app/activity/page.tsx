@@ -23,6 +23,7 @@ function actionMeta(action: string): { icon: string; tone: string } {
   if (action === 'chat_compaction_failed') return { icon: 'error', tone: 'text-rose-400' };
   if (action === 'chat_context_warning') return { icon: 'warning', tone: 'text-amber-400' };
   if (action === 'chat_cache_hit') return { icon: 'bolt', tone: 'text-amber-400' };
+  if (action === 'chat_model_rejected') return { icon: 'block', tone: 'text-rose-400' };
   // Existing phantom audit families.
   if (action === 'tool_call') return { icon: 'build', tone: 'text-primary' };
   if (action === 'simulation_created' || action === 'scenario_started') {

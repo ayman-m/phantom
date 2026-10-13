@@ -28,12 +28,13 @@ import { useCallback, useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { benchCostDelta, formatBenchCost } from "@/lib/bench-cost";
 
 interface CaseScore {
   case_id: string;
   correctness: boolean | null;
   tool_call_jaccard: number;
-  cost_usd: number;
+  cost_usd: number | null; // null = unpriced
   wall_seconds: number;
   wall_warning: boolean;
   error: string | null;
@@ -49,8 +50,8 @@ interface RunDetail {
     case_count: number;
     correctness_rate: number;
     avg_tool_jaccard: number;
-    cost_p50: number;
-    cost_p95: number;
+    cost_p50: number | null;
+    cost_p95: number | null;
     wall_p50: number;
     wall_p95: number;
     infrastructure_errors: number;
@@ -286,14 +287,14 @@ function CompareInner() {
                   label="Cost p50"
                   baseVal={base.summary.cost_p50}
                   headVal={head.summary.cost_p50}
-                  format={(v) => `$${v.toFixed(4)}`}
+                  format={(v) => formatBenchCost(v)}
                   higherIsBetter={false}
                 />
                 <DeltaCard
                   label="Cost p95"
                   baseVal={base.summary.cost_p95}
                   headVal={head.summary.cost_p95}
-                  format={(v) => `$${v.toFixed(4)}`}
+                  format={(v) => formatBenchCost(v)}
                   higherIsBetter={false}
                 />
                 <DeltaCard
@@ -346,11 +347,26 @@ function DeltaCard({
   higherIsBetter,
 }: {
   label: string;
-  baseVal: number;
-  headVal: number;
+  baseVal: number | null;
+  headVal: number | null;
   format: (n: number) => string;
   higherIsBetter: boolean;
 }) {
+  // A cost with no price on one side (null) has nothing to compare: show both
+  // values as they read and no change, rather than a delta against $0.
+  if (baseVal === null || headVal === null) {
+    return (
+      <div className="rounded-xl bg-surface-container-low/40 p-3 space-y-1">
+        <div className="text-[10px] font-label text-on-surface-variant/60 uppercase tracking-widest">
+          {label}
+        </div>
+        <span className="font-mono text-xs text-on-surface-variant">
+          {baseVal === null ? "unpriced" : format(baseVal)} → {headVal === null ? "unpriced" : format(headVal)}
+        </span>
+        <div className="font-mono text-sm text-on-surface-variant">no change to compare</div>
+      </div>
+    );
+  }
   const delta = headVal - baseVal;
   const pct = baseVal !== 0 ? delta / Math.abs(baseVal) : 0;
   const significant = Math.abs(pct) >= REGRESSION_THRESHOLD;
@@ -427,7 +443,7 @@ function PerCaseDiff({ base, head }: { base: RunDetail; head: RunDetail }) {
               b && h && b.correctness !== h.correctness;
             const jaccardDelta =
               (h?.tool_call_jaccard ?? 0) - (b?.tool_call_jaccard ?? 0);
-            const costDelta = (h?.cost_usd ?? 0) - (b?.cost_usd ?? 0);
+            const costDelta = benchCostDelta(b?.cost_usd, h?.cost_usd);
             const wallDelta = (h?.wall_seconds ?? 0) - (b?.wall_seconds ?? 0);
             return (
               <tr
@@ -479,14 +495,17 @@ function PerCaseDiff({ base, head }: { base: RunDetail; head: RunDetail }) {
                 <td className="px-4 py-3 font-mono">
                   <span
                     className={cn(
-                      Math.abs(costDelta) < 0.0001
+                      costDelta === null || Math.abs(costDelta) < 0.0001
                         ? "text-on-surface-variant"
                         : costDelta < 0
                           ? "text-tertiary"
                           : "text-error",
                     )}
+                    title={costDelta === null ? "A run without a price on one side cannot be compared" : undefined}
                   >
-                    {costDelta >= 0 ? "+" : ""}${costDelta.toFixed(4)}
+                    {costDelta === null
+                      ? "unpriced"
+                      : `${costDelta >= 0 ? "+" : ""}$${costDelta.toFixed(4)}`}
                   </span>
                 </td>
                 <td className="px-4 py-3 font-mono">

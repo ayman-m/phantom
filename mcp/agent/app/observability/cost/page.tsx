@@ -20,7 +20,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { formatUsd } from "@/lib/model-pricing";
+import { formatCostOrUnpriced, formatUsd } from "@/lib/model-pricing";
+import {
+  addRowToBucket,
+  emptyBucket,
+  readCostRow,
+  type CostBucket,
+} from "@/lib/cost-rows";
 
 interface AuditRow {
   id: string | number;
@@ -46,12 +52,13 @@ const glassCard = {
   border: "0.5px solid var(--glass-border)",
 } as const;
 
-/** Group-by axes for the breakdown view. */
+/** Group-by axes for the breakdown view. `model` groups by the full
+ *  `provider/model` ref, so the same model id under two providers stays apart. */
 type GroupBy = "model" | "provider" | "session" | "job" | "callKind";
 
 const GROUP_BY_LABELS: Record<GroupBy, string> = {
   provider: "Provider",
-  model: "Model",
+  model: "Model (provider/model)",
   callKind: "Call kind",
   session: "Session",
   job: "Job",
@@ -107,9 +114,11 @@ export default function CostRollupPage() {
               </h1>
             </div>
             <p className="text-sm text-on-surface-variant ml-9 max-w-2xl">
-              Per-turn cost from <code className="font-mono">chat_turn_cost</code>{" "}
-              audit rows. Includes Vertex prompt-caching savings.
-              Pricing source: Vertex AI public pricing as of 2026-05.
+              Per-call cost from <code className="font-mono">chat_turn_cost</code>{" "}
+              audit rows, by provider and model. Includes prompt-caching
+              savings and cache-write cost. Pricing source: the per-model
+              rates shown on the Models page. A call to a model with no known
+              price is counted as unpriced and left out of the dollar totals.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -157,29 +166,48 @@ export default function CostRollupPage() {
         )}
 
         {/* Hero stat — total */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          {/* A window where no call had a price has no total: "unpriced", not $0. */}
           <StatCard
             label="Total cost"
-            value={formatUsd(stats.totalUsd)}
-            sub={`${stats.calls.toLocaleString()} calls`}
+            value={
+              stats.calls > 0 && stats.unpricedCalls === stats.calls
+                ? "unpriced"
+                : formatUsd(stats.totalUsd)
+            }
+            sub={`${stats.calls.toLocaleString()} calls${
+              stats.unpricedCalls > 0 && stats.unpricedCalls < stats.calls
+                ? `, ${stats.unpricedCalls.toLocaleString()} unpriced not included`
+                : ""
+            }`}
             tone="primary"
+          />
+          <StatCard
+            label="Unpriced calls"
+            value={stats.unpricedCalls.toLocaleString()}
+            sub={
+              stats.unpricedCalls > 0
+                ? "no known price; not in the total"
+                : "every call priced"
+            }
+            tone={stats.unpricedCalls > 0 ? "secondary" : "neutral"}
           />
           <StatCard
             label="Cached savings"
             value={formatUsd(stats.totalSavings)}
-            sub="Vertex prompt cache"
+            sub="Prompt cache"
             tone="secondary"
           />
           <StatCard
             label="Input tokens"
             value={stats.input.toLocaleString()}
-            sub={`${stats.cached.toLocaleString()} cached`}
+            sub={`${stats.cached.toLocaleString()} cached, ${stats.cacheWrite.toLocaleString()} cache writes`}
             tone="neutral"
           />
           <StatCard
             label="Output tokens"
             value={stats.output.toLocaleString()}
-            sub="model-emitted"
+            sub={`${stats.reasoning.toLocaleString()} of them reasoning`}
             tone="neutral"
           />
         </div>
@@ -239,8 +267,7 @@ export default function CostRollupPage() {
                             : key
                         : key
                     }
-                    usd={m.usd}
-                    calls={m.calls}
+                    bucket={m}
                     proportionUsd={m.usd / Math.max(stats.totalUsd, 0.0000001)}
                   />
                 ))}
@@ -260,16 +287,18 @@ export default function CostRollupPage() {
             >
               <div className="grid grid-cols-12 gap-2 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/70 border-b border-outline-variant/10">
                 <div className="col-span-2">Timestamp</div>
-                <div className="col-span-3">Session</div>
+                <div className="col-span-1">Session</div>
                 <div className="col-span-2">Model</div>
                 <div className="col-span-1 text-right">Input</div>
                 <div className="col-span-1 text-right">Output</div>
                 <div className="col-span-1 text-right">Cached</div>
+                <div className="col-span-1 text-right">Cache wr.</div>
+                <div className="col-span-1 text-right">Reasoning</div>
                 <div className="col-span-2 text-right">Cost</div>
               </div>
               <ul className="divide-y divide-outline-variant/10 max-h-[600px] overflow-y-auto">
                 {rows.slice(0, 200).map((r) => {
-                  const m = r.metadata ?? {};
+                  const row = readCostRow(r);
                   const session = (r.target ?? "").replace(/^session:/, "");
                   return (
                     <li
@@ -279,7 +308,7 @@ export default function CostRollupPage() {
                       <div className="col-span-2 font-mono text-[11px] text-on-surface-variant/80">
                         {r.ts.slice(0, 19)}
                       </div>
-                      <div className="col-span-3 truncate">
+                      <div className="col-span-1 truncate">
                         {session ? (
                           <Link
                             href={`/?session=${session}`}
@@ -291,20 +320,34 @@ export default function CostRollupPage() {
                           "—"
                         )}
                       </div>
-                      <div className="col-span-2 truncate font-mono text-[11px] text-on-surface-variant">
-                        {(m["model"] as string) ?? "—"}
+                      <div
+                        className="col-span-2 truncate font-mono text-[11px] text-on-surface-variant"
+                        title={row.modelRef}
+                      >
+                        {row.modelRef}
                       </div>
                       <div className="col-span-1 text-right font-mono text-[11px] text-on-surface-variant">
-                        {Number(m["input_tokens"] ?? 0).toLocaleString()}
+                        {row.input.toLocaleString()}
                       </div>
                       <div className="col-span-1 text-right font-mono text-[11px] text-on-surface-variant">
-                        {Number(m["output_tokens"] ?? 0).toLocaleString()}
+                        {row.output.toLocaleString()}
                       </div>
                       <div className="col-span-1 text-right font-mono text-[11px] text-tertiary">
-                        {Number(m["cached_input_tokens"] ?? 0).toLocaleString()}
+                        {row.cached.toLocaleString()}
                       </div>
-                      <div className="col-span-2 text-right font-mono text-[11px] text-on-surface">
-                        {formatUsd(Number(m["cost_usd"] ?? 0))}
+                      <div className="col-span-1 text-right font-mono text-[11px] text-on-surface-variant">
+                        {row.cacheWrite.toLocaleString()}
+                      </div>
+                      <div className="col-span-1 text-right font-mono text-[11px] text-on-surface-variant">
+                        {row.reasoning.toLocaleString()}
+                      </div>
+                      <div
+                        className={cn(
+                          "col-span-2 text-right font-mono text-[11px]",
+                          row.priced ? "text-on-surface" : "text-on-surface-variant/70",
+                        )}
+                      >
+                        {formatCostOrUnpriced(row.usd)}
                       </div>
                     </li>
                   );
@@ -344,76 +387,45 @@ function sinceFor(w: WindowOption): string | null {
 
 function aggregate(rows: AuditRow[]) {
   const out = {
-    calls: 0,
-    input: 0,
-    cached: 0,
-    output: 0,
+    ...emptyBucket(),
     totalUsd: 0,
     totalSavings: 0,
-    byModel: {} as Record<string, { usd: number; calls: number }>,
-    byCallKind: {} as Record<string, { usd: number; calls: number }>,
+    byModel: {} as Record<string, CostBucket>,
+    byCallKind: {} as Record<string, CostBucket>,
     // Additional group-by axes for the toggle. Operators
     // pick which axis the breakdown view renders; all axes computed
     // in one pass so toggle is instant.
-    byProvider: {} as Record<string, { usd: number; calls: number }>,
-    bySession: {} as Record<string, { usd: number; calls: number }>,
-    byJob: {} as Record<string, { usd: number; calls: number }>,
+    byProvider: {} as Record<string, CostBucket>,
+    bySession: {} as Record<string, CostBucket>,
+    byJob: {} as Record<string, CostBucket>,
   };
+  const add = (bucket: Record<string, CostBucket>, key: string, row: ReturnType<typeof readCostRow>) =>
+    addRowToBucket((bucket[key] ??= emptyBucket()), row);
   for (const r of rows) {
-    const m = r.metadata ?? {};
-    out.calls += 1;
-    out.input += Number(m["input_tokens"] ?? 0);
-    out.cached += Number(m["cached_input_tokens"] ?? 0);
-    out.output += Number(m["output_tokens"] ?? 0);
-    const usd = Number(m["cost_usd"] ?? 0);
-    out.totalUsd += usd;
-    const components = m["cost_components"] as
-      | Record<string, number>
-      | undefined;
-    out.totalSavings += Number(components?.["cached_savings_usd"] ?? 0);
-    const model = (m["model"] as string) ?? "unknown";
-    if (!out.byModel[model]) out.byModel[model] = { usd: 0, calls: 0 };
-    out.byModel[model].usd += usd;
-    out.byModel[model].calls += 1;
-    const kind = (m["call_kind"] as string) ?? "unknown";
-    if (!out.byCallKind[kind]) out.byCallKind[kind] = { usd: 0, calls: 0 };
-    out.byCallKind[kind].usd += usd;
-    out.byCallKind[kind].calls += 1;
-    // Provider derived from model prefix (no explicit
-    // provider column; cheap heuristic matching Phantom's catalog).
-    const provider = providerFromModel(model);
-    if (!out.byProvider[provider]) out.byProvider[provider] = { usd: 0, calls: 0 };
-    out.byProvider[provider].usd += usd;
-    out.byProvider[provider].calls += 1;
+    // readCostRow applies the defaults for rows written before the provider
+    // fields existed (provider vertex, model_ref provider/model, priced when
+    // there is a figure) and never yields NaN.
+    const row = readCostRow(r);
+    addRowToBucket(out, row);
+    out.totalSavings += row.savingsUsd;
+    add(out.byModel, row.modelRef, row);
+    add(out.byCallKind, row.callKind, row);
+    add(out.byProvider, row.provider, row);
     // Session: target is "session:<uuid>" for chat_turn_cost rows.
     const target = r.target ?? "";
     const sessionMatch = /^session:(.+)$/.exec(target);
-    const sessionKey = sessionMatch
-      ? `session:${sessionMatch[1].slice(0, 12)}…`
-      : "session:(unknown)";
-    if (!out.bySession[sessionKey]) out.bySession[sessionKey] = { usd: 0, calls: 0 };
-    out.bySession[sessionKey].usd += usd;
-    out.bySession[sessionKey].calls += 1;
+    add(
+      out.bySession,
+      sessionMatch ? `session:${sessionMatch[1].slice(0, 12)}…` : "session:(unknown)",
+      row,
+    );
     // Job: trigger_context middleware sets "job:<name>" when scheduler
     // dispatches; chat-driven turns get "(interactive chat)".
     const trigger = r.trigger ?? "";
     const jobMatch = /^job:(.+)$/.exec(trigger);
-    const jobKey = jobMatch ? `job:${jobMatch[1]}` : "(interactive chat)";
-    if (!out.byJob[jobKey]) out.byJob[jobKey] = { usd: 0, calls: 0 };
-    out.byJob[jobKey].usd += usd;
-    out.byJob[jobKey].calls += 1;
+    add(out.byJob, jobMatch ? `job:${jobMatch[1]}` : "(interactive chat)", row);
   }
-  return out;
-}
-
-/** Map a model id to its provider for the byProvider breakdown.
- *  Cheap prefix match — no explicit provider column in audit metadata. */
-function providerFromModel(model: string): string {
-  if (!model || model === "unknown") return "unknown";
-  if (model.startsWith("gemini-")) return "vertex / gemini";
-  if (model.startsWith("claude-")) return "anthropic";
-  if (model.startsWith("gpt-") || model.startsWith("o1-")) return "openai";
-  return model.split("-")[0] || "unknown";
+  return { ...out, totalUsd: out.usd };
 }
 
 function StatCard({
@@ -481,25 +493,40 @@ function Empty() {
 
 function BreakdownRow({
   label,
-  usd,
-  calls,
+  bucket,
   proportionUsd,
 }: {
   label: string;
-  usd: number;
-  calls: number;
+  bucket: CostBucket;
   proportionUsd: number;
 }) {
+  const allUnpriced = bucket.calls > 0 && bucket.unpricedCalls === bucket.calls;
   return (
     <div className="rounded-2xl p-3 flex items-center gap-3" style={glassCard}>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
           <span className="font-mono text-sm font-semibold text-on-surface truncate">
             {label}
           </span>
           <span className="text-[10px] font-mono text-on-surface-variant/60">
-            {calls} call{calls === 1 ? "" : "s"}
+            {bucket.calls} call{bucket.calls === 1 ? "" : "s"}
           </span>
+          {bucket.unpricedCalls > 0 && !allUnpriced && (
+            <span className="text-[10px] font-mono text-secondary">
+              {bucket.unpricedCalls} unpriced
+            </span>
+          )}
+          {(bucket.cacheWrite > 0 || bucket.reasoning > 0) && (
+            <span className="text-[10px] font-mono text-on-surface-variant/60">
+              {bucket.cacheWrite > 0
+                ? `${bucket.cacheWrite.toLocaleString()} cache writes`
+                : ""}
+              {bucket.cacheWrite > 0 && bucket.reasoning > 0 ? ", " : ""}
+              {bucket.reasoning > 0
+                ? `${bucket.reasoning.toLocaleString()} reasoning`
+                : ""}
+            </span>
+          )}
         </div>
         <div
           className="w-full h-1.5 rounded-full overflow-hidden"
@@ -513,7 +540,7 @@ function BreakdownRow({
         </div>
       </div>
       <span className="font-mono text-sm text-on-surface shrink-0">
-        {formatUsd(usd)}
+        {allUnpriced ? "unpriced" : formatUsd(bucket.usd)}
       </span>
     </div>
   );

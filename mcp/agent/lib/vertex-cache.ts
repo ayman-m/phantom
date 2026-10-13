@@ -10,7 +10,7 @@
  * Phantom's stable system prompt (see
  * `lib/system-prompt.ts`) is ~13k tokens. With `gemini-2.5-flash`'s
  * 1024-token cache minimum, this is well above the floor; with
- * `gemini-2.5-pro`'s 32k minimum (sometimes; varies by region and
+ * a Pro model's 32k minimum (sometimes; varies by region and
  * version), it's below — the create call fails. This module handles
  * both gracefully: try create, fall back to no-cache on failure.
  *

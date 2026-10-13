@@ -1210,7 +1210,7 @@ sudo ./phantom-installer`}
               <p className="text-sm leading-relaxed mt-2">
                 <strong>Critical property:</strong> direct tool invocation
                 works <em>even without a provider configured</em>. On a
-                fresh install before you&apos;ve set up Gemini or Vertex,
+                fresh install before you&apos;ve set up a model provider,
                 you can still <Code>^xdr_run_xql_query query=&quot;...&quot;</Code>{" "}
                 to validate the connector. The model is never called; the
                 tool dispatches through the embedded MCP&apos;s JSON-RPC
@@ -1339,23 +1339,29 @@ sudo ./phantom-installer`}
               </p>
               <ul className="list-disc pl-5 space-y-1 text-sm">
                 <li>
-                  <Code>/model</Code> (no args) — show the current
-                  preference (or the runtime default).
+                  <Code>/model</Code> (no args) — show the model this
+                  session runs on, the session preference and the install
+                  default, and where each comes from.
                 </li>
                 <li>
-                  <Code>/model gemini-2.5-pro</Code> — set the
-                  preference.
+                  <Code>/model vertex/gemini-3.7-flash</Code> — set the
+                  preference. The name is checked against the model
+                  registry first and the canonical{" "}
+                  <Code>provider/model</Code> form is stored; a name the
+                  registry does not accept is refused with suggestions.
                 </li>
                 <li>
                   <Code>/model auto</Code> — clear the override; future
-                  turns use the runtime default.
+                  turns use the install default.
                 </li>
                 <li>
                   <Term>SSE</Term> — emits{" "}
                   <Code>model_preference_changed</Code> when set; the
                   next turn&apos;s <Code>model</Code> event includes{" "}
                   <Code>override_source: &quot;session&quot;</Code> so
-                  the UI can distinguish header vs session overrides.
+                  the UI can distinguish header vs session overrides
+                  (<Code>none</Code> when the install default serves,{" "}
+                  <Code>derived</Code> when no usable default is set).
                 </li>
                 <li>
                   <Term>Never a global change</Term> — a session
@@ -1363,8 +1369,8 @@ sudo ./phantom-installer`}
                   model. The agent is told which model is serving the
                   turn, so &quot;what model are you?&quot; is answered
                   from that, and its settings tools refuse the default
-                  model (<Code>geminiModel</Code>): only the operator
-                  changes it, through the settings API.
+                  model (<Code>defaultModel</Code>): only the operator
+                  changes it, with Set as default on the Models page.
                 </li>
               </ul>
             </SubSection>
@@ -1791,8 +1797,8 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                   <Term>Model preference</Term> — overrides the runtime
                   default for this agent. Useful when a focused agent
                   benefits from a smaller faster model
-                  (<Code>gemini-2.5-flash</Code>) vs the chat
-                  default&apos;s <Code>gemini-2.5-pro</Code>.
+                  (<Code>anthropic/claude-haiku-5-5</Code>) vs the chat
+                  default.
                 </li>
               </ul>
             </SubSection>
@@ -1840,7 +1846,7 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
             <SubSection icon="route" title="When to spawn vs ask the parent">
               <p>
                 Subagents are a delegation tool, not a default. They
-                cost an extra Gemini call cycle (system-prompt
+                cost an extra model call cycle (system-prompt
                 tokens + tool-catalogue tokens for the scoped child),
                 they don&apos;t share the parent&apos;s short-term
                 memory, and their transcript doesn&apos;t bubble up
@@ -1935,7 +1941,7 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                   filtered to that session id. Subagents inherit the
                   parent&apos;s model unless the agent definition
                   overrides; switching a heavy subagent to a smaller
-                  model (e.g. <Code>gemini-2.5-flash</Code>) is the
+                  model (e.g. <Code>anthropic/claude-haiku-5-5</Code>) is the
                   fastest cost lever.
                 </li>
               </ol>
@@ -2007,12 +2013,14 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 meaning, different words.
               </p>
               <p>
-                Semantic search needs a Google Vertex AI provider. Until one
+                Semantic search needs a Google Vertex AI provider, even when
+                your chat runs on Claude or OpenAI. Until one
                 is saved, search falls back to a keyword-style hash
                 similarity, new entries are tagged{" "}
                 <Code>texthash-v1-768d</Code>, and asking the agent &quot;are you
                 healthy?&quot; reports <Code>embedder_mode: stub</Code> with a
-                warning. Add the provider on{" "}
+                warning (a limit, not a fault: the install still reports
+                healthy and chat is unaffected). Add the provider on{" "}
                 <Link href="/providers" className="link">/providers</Link>{" "}
                 (Google Vertex AI card, then Save): it takes effect as soon as
                 it is saved, with no restart, and new entries are embedded with{" "}
@@ -2328,12 +2336,12 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
             <SubSection id="model-routing" icon="psychology" title="Model override">
               <p>
                 Each job picks its own model + extended-thinking
-                preference, independent of the runtime default. The
+                preference, independent of the install default. The
                 form&apos;s <Term>Model</Term> dropdown (Section 01,
                 below Bypass-approvals) defaults to{" "}
-                <strong>Router default (no override)</strong> — meaning
-                &ldquo;use whatever <Code>runtimeConfig.GEMINI_MODEL</Code>{" "}
-                is at dispatch time.&rdquo; The dropdown lists the chat models
+                <strong>Install default (no override)</strong> — meaning
+                &ldquo;use the default model chosen on the Models page at
+                dispatch time.&rdquo; The dropdown lists the chat models
                 from the same registry as the{" "}
                 <Link href="/models" className="link">
                   /models
@@ -2345,10 +2353,11 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 <li>
                   <strong>You want cheaper dispatches</strong> on a
                   routine / high-volume job (e.g.{" "}
-                  <Code>gemini-2.5-flash</Code> for a job that fires
-                  every 5 minutes generating bulk log volume — Flash is
-                  ~10× cheaper and the work doesn&apos;t need Pro
-                  reasoning).
+                  <Code>anthropic/claude-haiku-5-5</Code> for a job that
+                  fires every 5 minutes generating bulk log volume — a
+                  small model costs a fraction of a flagship per token and
+                  the work doesn&apos;t need deep reasoning; the price of
+                  each model is on <Link href="/models" className="link">/models</Link>).
                 </li>
                 <li>
                   <strong>You want better quality</strong> on a job
@@ -2366,15 +2375,25 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 </li>
               </ul>
               <p>
+                Saving a job with a model the registry does not accept is
+                refused with suggestions, and the model is stored in its
+                full <Code>provider/model</Code> form. If a saved model is
+                later retired or its provider is removed, the job&apos;s
+                runs fail with a clear <Code>MODEL_UNAVAILABLE</Code> error
+                and the usual failed-run notification, instead of running on
+                a different model.
+              </p>
+              <p>
                 The <Term>Extended thinking</Term> toggle right below
                 the dropdown asks the model to use its deeper
-                reasoning path (Gemini&apos;s thinkingConfig). The UI
+                reasoning path (each provider uses its own: Gemini
+                thinking, Claude thinking, OpenAI reasoning). The UI
                 disables the toggle when the picked model doesn&apos;t
                 support thinking; a model without thinking support
                 ignores the setting.
                 <em>Note:</em> the toggle is stored and sent with each
                 run as <Code>body.thinking</Code>, which the chat route
-                maps to <Code>thinkingConfig</Code>. Extended thinking
+                maps to the picked model&apos;s own reasoning mode. Extended thinking
                 is on by default for every chat turn and job run unless
                 a request explicitly sends <Code>thinking: false</Code>,
                 so leaving the toggle off does not turn it off.
@@ -2614,46 +2633,149 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
             title="Models & Providers"
           >
             <p>
-              <Link href="/models" className="link">/models</Link> shows every
-              model the agent can route to, grouped by interaction kind
-              (Chat, Embedding, Image, Voice). Each model card lists
-              its provider, capability flags (streaming, tool_use), and
-              context window. The active tab uses the same green-active
-              treatment as the sidebar.
+              <em>New in v1.0.5.</em> Phantom can run on three model
+              providers: <Term>Google Vertex AI</Term> (Gemini models),{" "}
+              <Term>Anthropic</Term> (Claude models) and{" "}
+              <Term>OpenAI</Term>. You need at least one, and you can add
+              any combination. Add credentials on{" "}
+              <Link href="/providers" className="link">/providers</Link>,
+              see every model you can use on{" "}
+              <Link href="/models" className="link">/models</Link>, and pick
+              one install-wide default there.
             </p>
-            <p>
-              <Link href="/providers" className="link">/providers</Link> manages
-              credentials. Vertex AI is the default — saving the Vertex
-              form writes the service-account JSON into the secret store, and
-              the bundle&apos;s <Code>requiredSecrets</Code> declares
-              where it lands. The Anthropic (Claude API) card takes a single
-              API key, stored encrypted; the Claude models it adds to{" "}
-              <Link href="/models" className="link">/models</Link> are
-              listed but not yet selectable in chat, and its Test Connection
-              button is disabled.
-            </p>
+            <Callout tone="info">
+              Prompts, tool output and attached context are sent to the
+              provider that serves the turn. OpenAI requests ask that
+              nothing be stored on the OpenAI side. Read the usage policy of
+              each vendor you enable: Phantom prompts can describe attack
+              telemetry, and a provider may decline to answer some of it (the
+              chat then shows the refusal).
+            </Callout>
 
-            <SubSection icon="route" title="Resolution logic">
+            <SubSection icon="key" title="Add a provider on /providers">
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>
+                  <Term>Vertex AI</Term> takes a project, a region and the
+                  service-account JSON.
+                </li>
+                <li>
+                  <Term>Anthropic (Claude API)</Term> takes an API key and an
+                  optional base URL (leave it empty for Anthropic&apos;s own
+                  address; set it only for a gateway).
+                </li>
+                <li>
+                  <Term>OpenAI (Responses API)</Term> takes an API key, an
+                  optional organization, an optional project, and an optional
+                  base URL (include the <Code>/v1</Code> part).
+                </li>
+              </ul>
               <p>
-                The bundle&apos;s <Code>modelRequirements</Code> in{" "}
-                <Code>manifest.yaml</Code> declares minimum capabilities:
+                Each card has its own <strong>Save Changes</strong> and{" "}
+                <strong>Test Connection</strong>. Test Connection asks the
+                provider for its model list, which costs nothing, and reports
+                how many models the key can see. A saved key is never shown
+                again: the field reads <Code>***</Code>, and Test Connection
+                uses the saved key when you have not typed a new one. A key is
+                only ever sent to the base URL it was saved with, so if you
+                change a saved base URL the key field empties and you type the
+                key again before you can save or test. A base URL must be{" "}
+                <Code>https</Code>; Phantom refuses one that points at the
+                install itself, at <Code>localhost</Code> or a loopback or
+                link-local address, or at an internal host name. Addresses on
+                a private network (10.x, 172.16-31.x, 192.168.x) are allowed,
+                so a gateway inside your network works. Saving takes effect at
+                once, with no restart.
               </p>
-              <Pre>{`modelRequirements:
-  primary:
-    kind: chat
-    mustSupport: [streaming, tool_use]
-    contextWindowMin: 100000
-    preferFamily: [gemini-3, gemini-2.5, gpt-4o]
-  fallback:
-    kind: chat
-    mustSupport: [streaming, tool_use]
-    contextWindowMin: 32000`}</Pre>
+            </SubSection>
+
+            <SubSection icon="list_alt" title="Browse models on /models">
               <p>
-                At chat time, the resolver scans available providers,
-                picks the first model that meets <Code>primary</Code>
-                requirements, and falls back to <Code>fallback</Code> if
-                primary is unavailable. The chosen model shows in the
-                chat&apos;s telemetry panel.
+                <Link href="/models" className="link">/models</Link> lists the
+                models grouped by kind (Chat, Embedding, Image, Voice) and then
+                by provider. A row shows the model, its context window and its
+                price per million input and output tokens, or{" "}
+                <strong>Unpriced</strong> when Phantom has no price for it.
+                Models of a provider you have not set up are greyed out and
+                cannot be chosen. The list of each provider you have set up
+                comes from two sources that are merged: Phantom&apos;s built-in
+                catalog and the provider&apos;s own live model list, which is
+                refreshed in the background about every ten minutes. A line
+                under the provider name says when the live list was fetched,
+                or that the built-in table is showing because the provider
+                could not be reached. A badge marks anything that needs a
+                second look:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li><Term>Default</Term> and <Term>Default (derived)</Term> — the model used when nothing else is chosen (see below).</li>
+                <li><Term>Deprecated</Term> — still works, retires soon. <Term>Retired</Term> models are hidden and cannot be chosen.</li>
+                <li><Term>Unverified</Term> — no live proof yet that your key can use it, or the provider has no model list (Gemini).</li>
+                <li><Term>Not visible to key</Term> — the provider&apos;s list does not include it for your key.</li>
+                <li><Term>Unpriced</Term> — usable, but its calls are not added to cost totals.</li>
+              </ul>
+              <p>
+                Open a Gemini model and press <strong>Verify</strong> to check
+                that it is enabled for your Google credentials; Google offers
+                no list to prove it, and the check generates nothing and costs
+                nothing.
+              </p>
+            </SubSection>
+
+            <SubSection icon="star" title="Choose the default model">
+              <p>
+                Press <strong>Set as default</strong> on any chat model that
+                can be chosen and confirm the dialog. That model serves every
+                chat turn, job, subagent and benchmark case that does not name
+                its own; sessions pinned with <Code>/model</Code>, jobs with
+                their own model and the chat header&apos;s pick keep theirs. If no default
+                is set, or the default belongs to a provider you have not
+                configured (a fresh install starts on a Gemini model, for
+                example), Phantom uses the recommended model of the first
+                provider you did configure, in the order Vertex, Anthropic,
+                OpenAI, and marks it <strong>Default (derived)</strong>. Only
+                you can change the default; the agent cannot, and answers
+                &ldquo;which model are you?&rdquo; from the model it is told
+                is serving the turn.
+              </p>
+            </SubSection>
+
+            <SubSection icon="alt_route" title="Which model a conversation uses">
+              <p>
+                In order: the model picked in the chat header, then the
+                session&apos;s <Code>/model</Code> preference, then the
+                default above. You can change provider in the middle of a
+                session: earlier messages are replayed as plain text to the new
+                model. If the model that was asked for cannot run (unknown,
+                retired, or its provider is not configured), the turn stops
+                with a <Code>MODEL_UNAVAILABLE</Code> error that says why and
+                lists models that would work. Phantom never swaps in a different
+                model on its own, and a job or benchmark case that names such a
+                model fails the same way. The chat header and{" "}
+                <Code>/model</Code> accept a model written as{" "}
+                <Code>provider/model</Code> (for example{" "}
+                <Code>anthropic/claude-sonnet-5-5</Code>), or just the model
+                name when only one configured provider offers it.
+              </p>
+            </SubSection>
+
+            <SubSection icon="troubleshoot" title="When something is wrong">
+              <p>
+                Open{" "}
+                <Link href="/observability/events" className="link">
+                  /observability/events
+                </Link>{" "}
+                and use the filter chips: <em>Model rejected</em> (a turn,
+                command or job asked for a model that could not run, with
+                the reason), <em>Provider tests</em> (every Test Connection,
+                with the outcome and HTTP status, never the key),{" "}
+                <em>Model list refreshes</em> and{" "}
+                <em>Failed model list refreshes</em> (when a provider&apos;s
+                live list was fetched or could not be), <em>Provider notes</em>{" "}
+                (an adapter had to change a setting, dropped a malformed tool
+                call, or the model declined to answer) and <em>Turn costs</em>.
+                When a provider cannot be reached, Phantom keeps showing the
+                last list it fetched, then its built-in table; the turn itself
+                fails with the provider&apos;s error rather than moving to
+                another provider.
               </p>
             </SubSection>
           </Section>
@@ -5140,72 +5262,109 @@ session:s_4k21m
           {/* Cost rollup operator UX. */}
           <Section id="cost-ux" icon="payments" title="Cost Rollup">
             <p>
-              Every chat turn writes a <Code>chat_turn_cost</Code> audit
-              row with input tokens, output tokens, cached tokens, and a
-              dollar estimate (model&apos;s public per-token rate × token
-              counts).{" "}
+              Every model call in a chat turn writes a{" "}
+              <Code>chat_turn_cost</Code> audit row: the provider and model,
+              input, output, cached, cache-write and reasoning tokens, and a
+              dollar figure from the model&apos;s per-token price (the same
+              price you see on{" "}
+              <Link href="/models" className="link">/models</Link>).{" "}
               <Link href="/observability/cost" className="link">
                 /observability/cost
               </Link>{" "}
-              rolls those rows up into a dashboard, and{" "}
-              <Code>/cost</Code> in any chat shows the just-finished
-              turn&apos;s breakdown inline.
+              rolls those rows up, and <Code>/cost</Code> in any chat shows
+              this session and today inline. A call to a model Phantom has no
+              price for is counted as <strong>unpriced</strong>: it is shown
+              as such and left out of the dollar totals, never counted as $0.
             </p>
 
             <SubSection icon="terminal" title="The /cost slash command">
               <p>
-                Type <Code>/cost</Code> right after a turn to render an
-                inline cost card: input / output / cached token counts,
-                the model&apos;s rate, the resulting dollar estimate, and
-                the cumulative session total. <Code>/cost session</Code>{" "}
-                shows just the session total; <Code>/cost turn</Code>{" "}
-                forces just the last turn.
+                Type <Code>/cost</Code> for two blocks, <em>This session</em>{" "}
+                and <em>Today (UTC)</em> across all sessions. Each shows the
+                call count, input tokens (with how many were cached and
+                written to cache), output tokens (with how many were
+                reasoning), the total and, when prompt caching helped, what it
+                saved. When more than one provider or model ran today, the
+                reply also breaks today down by provider and by model. A total
+                that includes unpriced calls reads like{" "}
+                <em>$1.20 + 2 unpriced calls</em>, and a window with only
+                unpriced calls reads <em>unpriced</em>.
               </p>
             </SubSection>
 
             <SubSection icon="dashboard" title="The cost page">
-              <p>
-                Three primary views, each pickable from the page header:
-              </p>
               <ul className="list-disc pl-5 space-y-1.5 text-sm">
                 <li>
-                  <Term>Window picker</Term> — 1d / 7d / 30d / custom
-                  date range. The chart updates immediately; subtotals
-                  appear as cards above the chart.
+                  <Term>Window</Term> — Today, Last 7d, Last 30d or All time,
+                  with a refresh button.
                 </li>
                 <li>
-                  <Term>By model</Term> — stacked bar showing per-model
-                  spend in the chosen window. Useful for catching when a
-                  switch to a more expensive model is ballooning costs.
+                  <Term>Cards</Term> — Total cost, <Term>Unpriced calls</Term>{" "}
+                  (how many calls had no known price and are not in the
+                  total), Cached savings, Input tokens (with cached and
+                  cache-write counts) and Output tokens (with the reasoning
+                  share). When every call in the window is unpriced, the total
+                  card says <em>unpriced</em>.
                 </li>
                 <li>
-                  <Term>By session</Term> — table of the top-N priciest
-                  sessions, click-through to the session transcript so
-                  you can see what was being asked.
+                  <Term>Group by</Term> — Provider, Model (shown as{" "}
+                  <Code>provider/model</Code>, so the same model name under
+                  two providers stays apart), Call kind, Session or Job. The
+                  breakdown below the chips follows the choice.
+                </li>
+                <li>
+                  <Term>Recent calls</Term> — the latest 200 calls with model,
+                  input, output, cached, cache-write and reasoning tokens, and
+                  cost or <em>unpriced</em>.
                 </li>
               </ul>
+              <p>
+                Rows from before v1.0.5 have no provider recorded; they are
+                grouped under <Code>vertex</Code>, because every earlier call
+                was a Gemini call.
+              </p>
             </SubSection>
 
             <SubSection icon="discount" title="Cache savings">
               <p>
-                When Vertex prompt caching is on, cached input tokens
-                bill at ~25% of the standard rate.
-                The page shows two figures side by side:{" "}
-                <Term>actual spend</Term> (what you paid) and{" "}
-                <Term>without-cache spend</Term> (what you would have
-                paid if every cached token had billed at full rate). The
-                delta is your cumulative cache ROI — typically 30-60%
-                savings on long sessions with stable system prompts.
+                Cached input tokens bill at a fraction of the normal input
+                rate; Claude cache writes bill at a premium. Cached savings
+                is what caching saved net of that premium, computed from the
+                model&apos;s own prices, so it works for any provider that
+                reports cached tokens. Gemini needs the optional Vertex prompt
+                cache (see Chat) to show savings.
               </p>
             </SubSection>
 
+            <SubSection icon="info" title="What the totals leave out">
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>
+                  <Code>/compress</Code>, <Code>/plan</Code> and automatic
+                  compaction use the session&apos;s model but are not recorded,
+                  so their spend is not in these figures.
+                </li>
+                <li>
+                  A subagent&apos;s calls are recorded under the
+                  subagent&apos;s own session. They count in the cost page and
+                  in today&apos;s totals, but not in the parent session&apos;s
+                  figures or the turn-cost line the chat shows for the parent
+                  turn.
+                </li>
+                <li>
+                  Benchmark case costs come from the same figures, and the
+                  daily-budget hook counts every provider, naming any
+                  unpriced calls in its warning, so its total is a floor when
+                  some calls were unpriced.
+                </li>
+              </ul>
+            </SubSection>
+
             <Callout tone="warn">
-              Dollar estimates use public per-token list pricing baked
-              into <Code>lib/model-pricing.ts</Code>. They&apos;re a{" "}
-              <em>useful approximation</em>, not a billing source of
-              truth — your actual GCP invoice may differ due to
-              negotiated discounts, free-tier credits, or rate-card
-              updates that haven&apos;t propagated to the table.
+              Dollar figures use public per-token list prices, each with the
+              date it was last checked. They&apos;re a <em>useful
+              approximation</em>, not a billing source of truth: your invoice
+              may differ due to negotiated discounts, free credits, or price
+              changes since that date.
             </Callout>
           </Section>
 
@@ -5235,9 +5394,12 @@ session:s_4k21m
                   <Link href="/connectors" className="link">/connectors</Link>.
                 </li>
                 <li>
-                  <Term>Router preset model</Term> — optional. A model name
-                  to use for every case instead of the runtime default,
-                  which is how you benchmark a cheaper or stronger model.
+                  <Term>Router preset model</Term> — optional. Pick a model
+                  from the list (grouped by provider) to use for every case
+                  instead of the install default, which is how you benchmark
+                  a cheaper or stronger model or compare providers. A model
+                  that cannot run fails every case with{" "}
+                  <Code>MODEL_UNAVAILABLE</Code>.
                 </li>
                 <li>
                   <Term>Run benchmark</Term> — the button reads{" "}
@@ -5843,7 +6005,7 @@ POST   /api/agent/restore                 -- apply (with ?force=1 to overwrite)`
               {" "}<Link href="/profile" className="link">/profile</Link>{" "}for
               your UI password,{" "}
               <Link href="/providers" className="link">/providers</Link>{" "}
-              for Vertex / Gemini service-account JSON,{" "}
+              for model-provider credentials (Vertex, Anthropic, OpenAI),{" "}
               <Link href="/connectors" className="link">/connectors</Link>{" "}
               for per-connector instance creds. Each surface writes straight
               to its own store, with no merge logic and no surprise

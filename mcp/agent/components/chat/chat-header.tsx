@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { fetchApprovalGating } from "@/lib/api/approvals";
+import {
+  compareProviders,
+  lifecycleBadge,
+  providerName,
+  selectableChatModels,
+} from "@/lib/model-catalog";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -14,13 +20,19 @@ type ExportFormat = "yaml" | "json" | "markdown" | "events";
 export interface ModelOption {
   provider: string;
   model: string;
+  /** Canonical "provider/model" (the picker keys on it). */
+  ref?: string;
   displayName?: string;
+  kind?: string;
   contextWindow: number;
   supportsThinking: boolean;
   supportsTools: boolean;
-  // When true, hide from the dropdown. Source of truth is
-  // the /api/agent/models route; see lib/api/types.ts ModelInfo.wip.
-  wip?: boolean;
+  // The picker lists only chat models the registry marks selectable
+  // (GET /api/agent/models; see lib/api/types.ts ModelInfo).
+  selectable?: boolean;
+  /** "deprecated" earns a badge; the model stays selectable. */
+  availability?: string;
+  reason?: string | null;
 }
 
 export interface ChatHeaderProps {
@@ -393,19 +405,18 @@ function ModelSelectorDropdown({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  // Filter out WIP entries before grouping. The catalog
-  // route still returns them so /services can render them as
-  // "coming soon," but the chat dropdown stays operator-actionable —
-  // only models that route end-to-end appear here.
-  const pickable = models.filter((m) => !m.wip);
+  // Only chat models the registry marks selectable are offered: no
+  // embedding/image/voice, nothing retired, unconfigured or unreachable.
+  // Grouped by provider in a fixed order.
+  const pickable = selectableChatModels(models);
 
-  // Group models by provider
   const grouped = pickable.reduce<Record<string, ModelOption[]>>((acc, m) => {
     const key = m.provider;
     if (!acc[key]) acc[key] = [];
     acc[key].push(m);
     return acc;
   }, {});
+  const groups = Object.entries(grouped).sort(([a], [b]) => compareProviders(a, b));
 
   const formatContext = (ctx: number): string => {
     if (ctx >= 1000) return `${Math.round(ctx / 1000)}K`;
@@ -467,18 +478,24 @@ function ModelSelectorDropdown({
             border: "0.5px solid var(--glass-border)",
           }}
         >
-          {Object.entries(grouped).map(([provider, providerModels]) => (
+          {groups.length === 0 && (
+            <div className="px-3 py-2 text-xs text-on-surface-variant">
+              No models are available. Add a provider on the Providers page.
+            </div>
+          )}
+          {groups.map(([provider, providerModels]) => (
             <div key={provider}>
               <div className="px-3 py-1.5 text-[10px] font-label font-bold uppercase tracking-wider text-on-surface-variant/60">
-                {provider}
+                {providerName(provider)}
               </div>
               {providerModels.map((m) => {
                 const isSelected =
                   m.model === selectedModel && m.provider === selectedProvider;
                 return (
                   <button
-                    key={`${m.provider}/${m.model}`}
+                    key={m.ref ?? `${m.provider}/${m.model}`}
                     type="button"
+                    title={m.reason ?? undefined}
                     onClick={() => {
                       onModelChange(m.provider, m.model);
                       setOpen(false);
@@ -505,6 +522,11 @@ function ModelSelectorDropdown({
                       <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-on-surface-variant">
                         {formatContext(m.contextWindow)}
                       </span>
+                      {lifecycleBadge(m) && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-tertiary/10 text-tertiary">
+                          {lifecycleBadge(m)}
+                        </span>
+                      )}
                       {m.supportsThinking && (
                         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/10 text-primary/80">
                           think

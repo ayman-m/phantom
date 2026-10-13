@@ -223,7 +223,7 @@ Concretely:
   - For user preferences: "what's the operator's preferred log
     format?"
 
-The memory_search call is CHEAP (~50ms over local sqlite + Vertex
+The memory_search call is CHEAP (~50ms over local sqlite + the
 embedding cache). Skipping it because you already have the tech
 stack from a prior turn IS a hallucination risk — memory may have
 been updated by a scheduled job between turns, or by another
@@ -403,11 +403,18 @@ the embedder rank.
 
 ### Embedder mode
 
-knowledge_search uses the SAME Vertex \`text-embedding-004\` model
-as memory_search. Cache is shared per-process. If Vertex is
-unavailable (operator hasn't completed setup, or upstream outage),
-the call returns a 5xx — surface that to the operator clearly,
-don't paper over it. There is no local-ML fallback.
+knowledge_search uses the SAME embedder as memory_search. Cache is
+shared per-process. When a Vertex provider is configured the embedder
+is Vertex text embeddings (semantic matches). When none is configured
+(a Claude-only or OpenAI-only install) it is a hash-similarity
+stand-in: searches still return results, but the scores are NOT
+semantic matches, so say so when the ranking looks wrong, and tell the
+operator that semantic search needs a Vertex provider on /providers
+(chat is unaffected). health_status reports which one is live
+(\`embedder_mode\`: "vertex" or "stub"). If a configured Vertex
+embedder fails (upstream outage, rejected credentials), the call
+returns a 5xx — surface that to the operator clearly, don't paper
+over it.
 
 ### Difference from memory_search
 
@@ -1404,8 +1411,9 @@ mint an API key, rotate credentials, change the admin password, change
 the session lifetime, or similar — REFUSE politely and tell them where to do it themselves:
 
   > "I don't have access to credential-modifying tools — that's a
-  > deliberate safety boundary. To configure your Vertex provider,
-  > visit /providers and paste the service-account JSON yourself.
+  > deliberate safety boundary. To configure a model provider (Vertex
+  > AI, Anthropic or OpenAI), visit /providers and paste the
+  > service-account JSON or the API key yourself.
   > For per-connector instances, /instances. To mint or rotate API
   > keys, /settings/api-keys. To change your admin password,
   > /profile. To change how long a sign-in lasts (the session
@@ -1427,20 +1435,23 @@ the tool was never registered for you to call.`;
  * read-only context, plus the rule that model questions are answered from
  * it and never by calling a settings tool.
  *
- * Why it exists: a `/model <name>` command stores a per-session preference
+ * Why it exists: a \`/model <name>\` command stores a per-session preference
  * on the chat session (and the header dropdown overrides one turn). Neither
  * is a global setting. Without this block the agent did not know which model
  * it was running on, so asked "What model are you?" it reached for
- * \`settings_get\` / \`settings_update\` and wrote the global \`geminiModel\`.
- * The tool layer refuses that write too (settings_update / settings_reset
- * reject model-selection keys); this block stops the attempt at the source.
+ * \`settings_get\` / \`settings_update\` and wrote the install's default model
+ * setting. The tool layer refuses that write too (settings_update /
+ * settings_reset reject model-selection keys); this block stops the attempt
+ * at the source.
  *
- * \`effectiveModel\` is the resolved model for the turn (header override,
- * else session preference, else the runtime default). Undefined = not known
- * to the caller; the rule is still emitted.
+ * \`modelRef\` is the canonical reference of the model serving the turn
+ * ("provider/model", for example \`vertex/gemini-3.1-pro-preview\`): the header
+ * pick, else the session preference, else the install default, else the
+ * derived default. The wording is the same whichever provider serves the
+ * turn. Undefined = not known to the caller; the rule is still emitted.
  */
-export function renderModelContextBlock(effectiveModel?: string | null): string {
-  const model = typeof effectiveModel === 'string' ? effectiveModel.trim() : '';
+export function renderModelContextBlock(modelRef?: string | null): string {
+  const model = typeof modelRef === 'string' ? modelRef.trim() : '';
   const known = model
     ? `This turn is served by the model \`${model}\`. That is read-only
 context: the operator chose it for this session (the chat header, or the
@@ -1451,19 +1462,19 @@ header, the \`/model <name>\` command, or the install's default).`;
 
 ${known}
 
-- Questions about your model ("what model are you?", "which Gemini is
+- Questions about your model ("what model are you?", "which model is
   this?") are answered from the line above. Do NOT call \`settings_get\`,
   \`settings_update\`, \`settings_reset\` or any other tool to find out
   or to "confirm" which model you are. If no model name is given above,
   say you do not know which model is serving the turn and point the
   operator at the chat header or \`/model\`.
 - A per-session \`/model\` preference is NOT a global setting. You never
-  write it into \`geminiModel\` or any other setting, and you never
+  write it into \`defaultModel\` or any other setting, and you never
   change, clear or "sync" the install's default model as a side effect
   of anything else. The tools refuse model-selection keys.
 - If the operator explicitly asks you to change the install's DEFAULT
   model, tell them it is operator-only and not something you can do from
-  chat (it is set through the settings REST API,
+  chat (they set it with "Set as default" on the Models page, or with
   \`PUT /api/agent/settings\`); for just this chat, they use
   \`/model <name>\` or the header.`;
 }
@@ -1490,8 +1501,9 @@ ${known}
  * and bypass narration recipes so the agent's narration matches the
  * actual MCP-side gate behavior for the current session.
  *
- * `effectiveModel` is the model resolved for the turn; the "Model in use"
- * block states it as read-only context (see renderModelContextBlock).
+ * `modelRef` is the canonical ref of the model resolved for the turn; the
+ * "Model in use" block states it as read-only context (see
+ * renderModelContextBlock).
  *
  * Agent-credential-guardrail block always emitted, since
  * the tool-catalog removal is unconditional.
@@ -1508,7 +1520,7 @@ export function buildSystemPromptText(
   skills?: SkillSummary[] | null,
   approvalMode: ApprovalMode = 'manual',
   gatedTools?: readonly string[],
-  effectiveModel?: string | null,
+  modelRef?: string | null,
 ): string {
   const sections = [
     STABLE_SYSTEM_PROMPT_HEAD,
@@ -1518,7 +1530,7 @@ export function buildSystemPromptText(
   if (persona) sections.push(persona);
   const skillsBlock = renderSkillsBlock(skills || []);
   if (skillsBlock) sections.push(skillsBlock);
-  sections.push(renderModelContextBlock(effectiveModel));
+  sections.push(renderModelContextBlock(modelRef));
   sections.push(renderApprovalModeBlock(approvalMode, gatedTools));
   sections.push(renderAgentCredentialGuardrailBlock());
   sections.push(STABLE_SYSTEM_PROMPT_TAIL);

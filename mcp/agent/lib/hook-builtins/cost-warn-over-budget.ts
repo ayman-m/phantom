@@ -9,7 +9,12 @@
  *
  * Cost data source: the existing `chat_turn_cost` audit rows recorded
  * by the chat route on every turn. There is no dedicated cost table —
- * the hook reads the audit surface.
+ * the hook reads the audit surface (`{events, count, total}`) and sums it
+ * with lib/cost-rows.ts, the same reader the cost page and `/cost` use.
+ *
+ * A call to a model with no known price has a null cost. It is counted and
+ * named in the notification, never added to the total as $0 or a guess, so
+ * the total is a floor when any call was unpriced.
  *
  * Config:
  *   threshold_usd      — daily cost threshold (default $10.00). When
@@ -28,19 +33,11 @@
 
 import type { BuiltinHookSpec } from "./types";
 import { callMcpServer } from "@/lib/mcp-proxy";
+import { auditResponseRows, sumCostRows } from "@/lib/cost-rows";
 import { COST_WARNING_TOPIC } from "./notification-topics";
 import { publishHookNotification } from "./publish-notification";
 
 const LAST_WARNED_AT_BY_DAY = new Map<string, number>();
-
-interface AuditRow {
-  action?: string;
-  metadata?: { cost_usd?: number };
-}
-
-interface AuditResponse {
-  rows?: AuditRow[];
-}
 
 export const costWarnOverBudgetBuiltin: BuiltinHookSpec = {
   name: "cost-warn-over-budget",
@@ -115,16 +112,16 @@ export const costWarnOverBudgetBuiltin: BuiltinHookSpec = {
     // Read today's chat_turn_cost audit rows. Best-effort — a failed
     // read shouldn't crash the chat loop.
     let totalUsd = 0;
+    let unpricedCalls = 0;
     try {
       const sinceIso = `${dayKey}T00:00:00Z`;
-      const resp = await callMcpServer<AuditResponse>(
+      const resp = await callMcpServer<unknown>(
         `/api/v1/audit?action=chat_turn_cost&since=${encodeURIComponent(sinceIso)}&limit=10000`,
         { method: "GET" },
       );
-      for (const row of resp.rows ?? []) {
-        const cost = row.metadata?.cost_usd;
-        if (typeof cost === "number" && cost > 0) totalUsd += cost;
-      }
+      const totals = sumCostRows(auditResponseRows(resp));
+      totalUsd = totals.usd;
+      unpricedCalls = totals.unpricedCalls;
     } catch (err) {
       console.warn(
         "cost-warn-over-budget: failed to read audit log:",
@@ -151,10 +148,15 @@ export const costWarnOverBudgetBuiltin: BuiltinHookSpec = {
         `Cumulative chat_turn_cost since UTC ${dayKey}T00:00:00Z is ` +
         `$${totalUsd.toFixed(2)}, above your threshold of ` +
         `$${threshold.toFixed(2)}. Open /observability/cost for the ` +
-        `per-session breakdown. Suppressed for ${suppressHrs}h after this.`,
+        `per-provider and per-model breakdown. ` +
+        (unpricedCalls > 0
+          ? `${unpricedCalls} call${unpricedCalls === 1 ? "" : "s"} to models with no known price are not in this total. `
+          : "") +
+        `Suppressed for ${suppressHrs}h after this.`,
       day: dayKey,
       total_usd: totalUsd,
       threshold_usd: threshold,
+      unpriced_calls: unpricedCalls,
     });
     if (published) LAST_WARNED_AT_BY_DAY.set(dayKey, nowMs);
     return null; // non-decisional

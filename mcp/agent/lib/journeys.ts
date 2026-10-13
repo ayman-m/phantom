@@ -332,7 +332,8 @@ export const COMPONENT_META: Record<JourneyComponent, ComponentMeta> = {
     label: "Models",
     icon: "psychology",
     guide: "architecture",
-    anchor: "model-resolution",
+    // [v1.0.5] was "model-resolution", now a SubSection of #model-providers.
+    anchor: "model-providers",
   },
   jobs: {
     label: "Jobs",
@@ -3012,12 +3013,12 @@ export const JOURNEYS: Journey[] = [
     prompts: [
       {
         text: "/model",
-        note: "Shows current preference (or runtime default if none set).",
+        note: "Shows the model this session runs on, the session preference and the install default, with where each comes from.",
         newSession: true,
       },
       {
-        text: "/model gemini-2.5-pro",
-        note: "Set the override. The handler PATCHes session.metadata.preferred_model and emits model_preference_changed.",
+        text: "/model vertex/gemini-3.1-pro-preview",
+        note: "Set the override (any model on /models that shows as selectable works, for example anthropic/claude-sonnet-5-5 or openai/gpt-6-sol on an install with that provider). The handler checks the name against the model registry, PATCHes session.metadata.preferred_model with the canonical provider/model form and emits model_preference_changed.",
       },
       {
         text: "What model are you?",
@@ -3044,16 +3045,17 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Open a fresh chat session and send /model — get back 'No session override. Using runtime default: <name>'.",
-      "Send /model gemini-2.5-pro — the handler responds 'Set model preference to gemini-2.5-pro for this session. Takes effect on the next turn.'",
-      "Send /model again — now reports 'Current model preference: gemini-2.5-pro (session override)'.",
+      "Open a fresh chat session and send /model — get back the model this session runs on, 'Session preference: none' and the install default.",
+      "Send /model vertex/gemini-3.1-pro-preview (or any other selectable model) — the handler responds 'Set model preference to `vertex/gemini-3.1-pro-preview` for this session. Takes effect on the next turn.'",
+      "Send /model again — now reports that the session runs on that model (this session's /model preference), 'Session preference: `vertex/gemini-3.1-pro-preview`' and the install default.",
+      "Send /model not-a-real-model — the reply starts 'Not changed.', says why and lists models that would work; nothing is stored.",
       "Send any normal prompt. Open the wire-events panel — the model event payload shows override: true and override_source: 'session'.",
-      "Send /model auto — handler responds 'Cleared model override. Future turns will use the runtime default.'",
+      "Send /model auto — handler responds 'Cleared model override. Future turns will use the install default (`<model>`).'",
       "Header dropdown still wins: pick a different model from the dropdown, send a turn — override_source is now 'header'.",
       "Ask 'What model are you?' after /model — the reply names the session model, no settings tool call appears in the tool trace, and GET /api/agent/audit?action=settings_changed shows no new row.",
     ],
     expectedResult:
-      "Operator can pin a model to a session for the duration of the work. The preference survives reloads (it's persisted in session metadata, not local state). The header dropdown remains the highest-priority override for one-off turns. The session preference never changes the install's default model (geminiModel): the agent's settings tools refuse that key.",
+      "Operator can pin a model to a session for the duration of the work. The preference survives reloads (it's persisted in session metadata, not local state). The header dropdown remains the highest-priority override for one-off turns. The session preference never changes the install's default model (defaultModel): the agent's settings tools refuse that key.",
     verifyVia: [
       "GET /api/agent/sessions/{id} → session.metadata.preferred_model reflects the latest /model call.",
       "Audit log: GET /api/agent/audit?action=session_meta_changed&target=session:{id} (if the MCP audits PATCH; otherwise the model event payload is the verification.",
@@ -3124,7 +3126,7 @@ export const JOURNEYS: Journey[] = [
     category: "chat",
     title: "Verify Vertex prompt-caching is active (cyan dot)",
     summary:
-      "When the runtime is configured for Vertex (GOOGLE_APPLICATION_CREDENTIALS + PHANTOM_VERTEX_CACHE=1) and the system prompt is large enough to qualify, subsequent turns reuse the cached prompt. The model-selector chip shows a cyan dot for ~25% billing on cached portions.",
+      "Gemini models only. When the runtime is configured for Vertex (GOOGLE_APPLICATION_CREDENTIALS + PHANTOM_VERTEX_CACHE=1) and the system prompt is large enough to qualify, subsequent turns reuse the cached prompt. The model-selector chip shows a cyan dot for ~25% billing on cached portions.",
     difficulty: "intermediate",
     durationMin: 3,
     icon: "bolt",
@@ -3215,7 +3217,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Compute Vertex caching ROI from audit rows",
     summary:
-      "Each cache_hit event writes an audit row with savings_tokens_est = cached × 0.75 (the inverse of the 25% billing rate). Sum across a window to chart Vertex caching savings over time.",
+      "Gemini models only (Claude and OpenAI turns write cache_hit rows too, from their own cached-token counts). Each cache_hit event writes an audit row with savings_tokens_est = cached × 0.75 (the inverse of the 25% billing rate). Sum across a window to chart Vertex caching savings over time.",
     difficulty: "intermediate",
     durationMin: 4,
     icon: "savings",
@@ -3465,7 +3467,7 @@ export const JOURNEYS: Journey[] = [
     category: "chat",
     title: "Read your token + USD spend with /cost",
     summary:
-      "Get a quick session + today rollup of input/cached/output tokens and USD spend. /observability/cost has the full breakdown by model, by call kind, and recent-200 history.",
+      "Get a quick session + today rollup of input/cached/output tokens and USD spend. /observability/cost has the full breakdown by provider, model, call kind, session and job, and the recent-200 history.",
     difficulty: "starter",
     durationMin: 2,
     icon: "payments",
@@ -3477,7 +3479,7 @@ export const JOURNEYS: Journey[] = [
       },
       {
         text: "/cost",
-        note: "Aggregates chat_turn_cost audit rows for THIS session and today (UTC). Shows by-model breakdown when more than one model fired.",
+        note: "Aggregates chat_turn_cost audit rows for THIS session and today (UTC). Today is also broken down by provider and by model when more than one ran. A call to a model with no known price is named as unpriced, not added as $0.",
       },
     ],
     toolsExercised: [],
@@ -3486,24 +3488,25 @@ export const JOURNEYS: Journey[] = [
         method: "GET",
         path: "/api/agent/audit?action=chat_turn_cost&target=session:{id}",
         description:
-          "Returns per-Gemini-call cost rows for the session. Each row's metadata has input_tokens, cached_input_tokens, output_tokens, cost_usd, cost_components.cached_savings_usd. Sum to get the session total.",
+          "Returns per-model-call cost rows for the session. Each row's metadata has provider, model_ref, input_tokens, cached_input_tokens, cache_write_tokens, output_tokens, reasoning_tokens, priced, cost_usd (null when unpriced) and cost_components.cached_savings_usd. Sum the priced rows to get the session total.",
       },
     ],
     howToTest: [
       "Send the prompt above. Wait for the response. The Live telemetry panel normally shows no tool call for it.",
-      "Send /cost. Output: 'This session: $X.XXX (N calls)' with token totals. N counts model calls, not tool calls.",
-      "Visit /observability/cost. Window selector: Today / 7d / 30d / All. Hero stats: total cost, cached savings, input/output tokens.",
-      "By-model breakdown bar: see how spend distributes across models.",
-      "Click into the recent-200 table; click a session id to deep-link into that chat.",
+      "Send /cost. Output: a 'This session' block ('N calls') with input tokens (cached and written to cache), output tokens (reasoning) and 'Total: $X.XXX', then a 'Today (UTC)' block. N counts model calls, not tool calls. A total that includes calls without a price reads '$X + N unpriced calls'.",
+      "Visit /observability/cost. Window selector: Today / Last 7d / Last 30d / All time. Cards: Total cost, Unpriced calls, Cached savings, Input tokens, Output tokens.",
+      "Group by (Provider, Model, Call kind, Session, Job): see how spend distributes. Model rows read provider/model, so one model name under two providers stays apart.",
+      "Read the recent-200 table: each call shows its model, token columns (including cache writes and reasoning) and its cost, or 'unpriced'.",
+      "Compression, /plan and automatic compaction calls are not recorded, and a subagent's calls are recorded under the subagent's own session, so neither appears in this session's /cost figures.",
     ],
     expectedResult:
-      "Operators have actionable cost telemetry: per-session, per-day, by-model, with cached-savings ROI. Pricing source is Vertex AI public pricing (2026-05); lib/model-pricing.ts is the operator-editable rate table.",
+      "Operators have actionable cost telemetry: per-session, per-day, by provider and model, with cached-savings ROI. Prices come from the model registry (the per-model rates on /models, each with the date it was last checked); a model with no price is counted as unpriced and never billed at a guessed rate or at $0.",
     verifyVia: [
-      "GET /api/agent/audit?action=chat_turn_cost → rows include cost_usd + cost_components",
-      "Sum metadata.cost_components.cached_savings_usd across rows in a window for cumulative Vertex caching ROI",
+      "GET /api/agent/audit?action=chat_turn_cost → rows include provider, model_ref, priced, cost_usd + cost_components",
+      "Sum metadata.cost_components.cached_savings_usd across rows in a window for cumulative prompt-caching ROI",
     ],
-    related: ["chat-vertex-cache-hit-indicator", "observability-vertex-cache-savings"],
-    components: ["chat", "slash-commands", "cost", "vertex-cache", "audit"],
+    related: ["ops-cost-by-provider", "chat-vertex-cache-hit-indicator", "observability-vertex-cache-savings"],
+    components: ["chat", "slash-commands", "cost", "models", "vertex-cache", "audit"],
   },
 
   // ── Jobs: per-job permission policy ──────
@@ -3555,7 +3558,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Override the model for a specific job (cost tuning)",
     summary:
-      "/jobs/new + /jobs/[id] expose a per-job Model dropdown. Default is 'Router default' (use runtime default at dispatch). Override with a cheap model (e.g. gemini-2.5-flash) for routine/volume jobs to cut cost ~10×, or with a Pro variant for jobs that need real reasoning. The Extended-thinking toggle below is plumbed end-to-end (stored + dispatched); chat-route Gemini wiring picks it up automatically.",
+      "/jobs/new + /jobs/[id] expose a per-job Model dropdown. Default is 'Install default' (use the default model chosen on /models at dispatch). Override with a cheap model (for example Gemini 3.7 Flash or Claude Haiku 5.5) for routine/volume jobs to cut cost, or with a stronger model for jobs that need real reasoning. The Extended-thinking toggle below is stored and dispatched; each provider maps it to its own reasoning mode.",
     difficulty: "starter",
     durationMin: 4,
     icon: "tune",
@@ -3566,34 +3569,36 @@ export const JOURNEYS: Journey[] = [
         method: "GET",
         path: "/api/agent/models",
         description:
-          "Returns the available-models catalog (provider + model + displayName + supportsThinking + kind). The /jobs/new form fetches this on mount, filters to kind==='chat', and populates the Model dropdown.",
+          "Returns the model registry (ref + provider + model + displayName + supportsThinking + kind + selectable + availability). The /jobs/new form fetches this on mount, keeps the selectable chat models, and populates the Model dropdown, grouped by provider.",
       },
       {
         method: "POST",
         path: "/api/agent/jobs",
         description:
-          "Body adds model_id + thinking_enabled. Empty model_id ('') means 'use runtime default' — no override stored. PATCH on /api/agent/jobs/{name} uses sentinel semantics: omit model_id to preserve, '' to clear, string to set.",
+          "Body adds model_id + thinking_enabled. Empty model_id ('') means 'use the install default' — no override stored. A model_id the registry does not accept is a 400 with suggestions; an accepted one is stored as provider/model. PATCH on /api/agent/jobs/{name} uses sentinel semantics: omit model_id to preserve, '' to clear, string to set.",
       },
     ],
     howToTest: [
-      "Open /jobs/new. Confirm the Model dropdown appears in Section 01 right below the Bypass-approvals toggle, defaulting to 'Router default (no override)'.",
+      "Open /jobs/new. Confirm the Model dropdown appears in Section 01 right below the Bypass-approvals toggle, defaulting to 'Install default (no override)'.",
       "Open the dropdown. Confirm it lists the chat-kind models from your registered providers (with displayName + ' · thinking' suffix for models that support it).",
-      "Pick a cheap model (e.g. gemini-2.5-flash). Confirm the Extended-thinking toggle below force-disables with a tooltip 'This model doesn't support extended thinking'.",
+      "Pick a model whose entry lists no thinking support. Confirm the Extended-thinking toggle below force-disables with a tooltip 'This model doesn't support extended thinking'.",
       "Pick a pro model that supports thinking. Confirm the toggle re-enables; flip it on. The form's body now sends model_id=<pro-model> + thinking_enabled=true.",
       "Fill the rest of the form (a simple prompt action, every-5-minutes repeating, name 'test-flash-override'), save.",
       "Open /jobs/<id>. Confirm the Model dropdown is populated with the saved value + Thinking toggle reflects the saved state.",
-      "Wait for the next cron fire (~5min) OR open the job row's ⋯ menu and click 'Trigger Now'. Open /observability/cost. Confirm the cost row reflects the picked model's pricing — Flash costs visibly less than Pro for the same number of input/output tokens.",
+      "Wait for the next cron fire (~5min) OR open the job row's ⋯ menu and click 'Trigger Now'. Open /observability/cost, Group by Model. Confirm the job's calls are listed under the picked model's ref with that model's price (a model whose /models row says Unpriced is listed as 'unpriced' instead; pick a priced one such as anthropic/claude-haiku-5-5 and compare it with a flagship for the same number of tokens).",
       "Verify the dispatch body: trigger the job once with 'Trigger Now' and inspect the request via /observability/events — look for the chat_dispatch event with the model_id in metadata. (Alternatively check job_runs.result_json which preserves meta.model.)",
-      "Edit the job: clear the Model field back to 'Router default'. Save. Confirm next dispatch uses runtimeConfig.GEMINI_MODEL again (no override).",
-      "Chat with the agent: 'set the test-flash-override job to use gemini-2.5-flash with thinking off'. Confirm the agent calls jobs_update with the right model_id + thinking_enabled values.",
+      "Edit the job: clear the Model field back to 'Install default'. Save. Confirm the next dispatch uses the install default model again (no override).",
+      "Chat with the agent: 'set the test-flash-override job to use anthropic/claude-haiku-5-5 with thinking off'. Confirm the agent calls jobs_update with the right model_id + thinking_enabled values.",
+      "Negative: PATCH /api/agent/jobs/test-flash-override with {\"model_id\": \"not-a-real-model\"}. Confirm a 400 whose body names the field and lists models that would work, and that the job is unchanged.",
+      "Optional, with a second provider configured: pick one of its models for the job, trigger it, and confirm /observability/cost, grouped by Provider, shows the run under that provider.",
       "Open /help/user#model-routing to confirm the explainer renders + Callout about the thinking-wire caveat.",
     ],
     expectedResult:
-      "Operators tune per-job cost economics without changing the runtime default. Routine / volume jobs land on Flash; analysis jobs land on Pro. The runtime default stays sensible for interactive chat. /observability/cost surfaces the differential.",
+      "Operators tune per-job cost economics without changing the runtime default. Routine / volume jobs land on a small model; analysis jobs land on a stronger one. The install default stays sensible for interactive chat. /observability/cost, grouped by Model, surfaces the differential for priced models.",
     verifyVia: [
       "GET /api/agent/jobs/<name> → returns job with model_id + thinking_enabled fields populated",
       "GET /api/agent/audit?action=chat_dispatched → metadata.model_override reflects the per-job override when set",
-      "/observability/cost → per-model breakdown shows Flash vs Pro spend split by job",
+      "/observability/cost → Group by Model (or Job) shows the spend split between the job's model and the install default",
       "docker exec phantom_agent sqlite3 /app/data/jobs.db 'PRAGMA table_info(jobs)' → columns include model_id (TEXT) + thinking_enabled (INTEGER)",
     ],
     related: ["ops-install-builtin-hook"],
@@ -3786,7 +3791,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Quantify Vertex prompt-caching savings over time",
     summary:
-      "Sum chat_cache_hit savings_tokens_est × Vertex's per-token rate to get a defensible USD savings number for caching. Combine with chat_turn_cost rows for total spend.",
+      "Gemini models only. Sum chat_cache_hit savings_tokens_est × Vertex's per-token rate to get a defensible USD savings number for caching. Combine with chat_turn_cost rows for total spend.",
     difficulty: "intermediate",
     durationMin: 5,
     icon: "savings",
@@ -4988,14 +4993,14 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Choose the chat model: catalog, header dropdown and session override",
     summary:
-      "Browse the model catalog at /models, then pick the model for a turn from the chat header dropdown or pin one for the whole session with /model. Verify the resolution order — header > session > runtime default.",
+      "Browse the model registry at /models, then pick the model for a turn from the chat header dropdown or pin one for the whole session with /model. Verify the resolution order — header > session > install default > derived default — and that a model that cannot run fails loudly.",
     difficulty: "starter",
     durationMin: 3,
     icon: "psychology",
     prompts: [
       {
         text: "/model",
-        note: "Without args — shows the current session preference, or the runtime default when none is set.",
+        note: "Without args — shows the model this session runs on, the session preference and the install default.",
       },
     ],
     toolsExercised: [],
@@ -5012,20 +5017,277 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Open /models. The tabs read Chat, Embedding, Image and Voice; models are grouped under a provider header (for example Google Vertex AI). The catalog is read-only: there is no 'set as default' action.",
-      "Open a fresh chat and type /model. The reply says 'No session override. Using runtime default: <model>'.",
-      "Type /model gemini-2.5-flash. Reply confirms the session preference. Send a normal prompt and open Live telemetry: the `model` event shows override_source: 'session'.",
+      "Open /models. The tabs read Chat, Embedding, Image and Voice; models are grouped under a provider header (for example Google Vertex AI). Each chat model that chat can run on has a 'Set as default' button; the current default carries a Default badge (Default (derived) when no default is set and the first configured provider's recommended model serves).",
+      "Open a fresh chat and type /model. The reply names the model this session runs on, 'Session preference: none' and the install default with where it comes from.",
+      "Type /model vertex/gemini-3.7-flash. Reply confirms the session preference (a name the registry does not accept is refused with suggestions and nothing is stored). Send a normal prompt and open Live telemetry: the `model` event shows override_source: 'session'.",
       "Open the model dropdown in the chat header and pick a different model. Send another prompt: the `model` event now shows override_source: 'header' (the header wins over the session setting).",
-      "Type /model auto to clear the session override. With the header dropdown left on its default, the next turn's `model` event shows override_source: 'none' (the runtime default).",
+      "Type /model auto to clear the session override. With the header dropdown left on its default, the next turn's `model` event shows override_source: 'none' (the install default; 'derived' when no usable default is set).",
+      "Negative: type /model for a model of a provider you have not configured (for example openai/gpt-6-sol on a Gemini-only install). The reply starts 'Not changed.' and says that provider is not configured; nothing is stored.",
     ],
     expectedResult:
-      "The model for each turn resolves in a fixed order: header dropdown, then the session preference set with /model, then the runtime default. The chosen model and its source appear in every turn's `model` event in Live telemetry.",
+      "The model for each turn resolves in a fixed order: header dropdown, then the session preference set with /model, then the install default (or, when none is usable, the first configured provider's recommended model). A model that was named and cannot serve fails the turn with MODEL_UNAVAILABLE. The chosen model and its source appear in every turn's `model` event in Live telemetry.",
     verifyVia: [
       "GET /api/agent/sessions/{id} → metadata.preferred_model reflects the latest /model call (null after /model auto).",
       "Live telemetry `model` event: override_source is 'header', 'session' or 'none' as in the steps above.",
     ],
-    related: ["chat-set-session-model-preference"],
+    related: ["chat-set-session-model-preference", "ops-set-default-model", "chat-switch-provider-mid-session"],
     components: ["models", "slash-commands", "chat"],
+  },
+
+  // ── Model providers (v1.0.5) ──────────────────────────
+  {
+    id: "ops-configure-anthropic-provider",
+    category: "ops",
+    title: "Add Claude as a model provider with an API key",
+    summary:
+      "Paste an Anthropic API key on the Anthropic card of /providers, test it, save it, and watch the Claude models appear on /models and in the chat header. Nothing needs a restart, and Vertex is not required.",
+    difficulty: "starter",
+    durationMin: 4,
+    icon: "key",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "PUT",
+        path: "/api/agent/providers/config",
+        description:
+          "The Providers page save. Body: { value: { anthropicApiKey?, anthropicBaseUrl? } } (other providers' fields travel in the same body). Creates the anthropic provider instance or updates it, then drops the cached credentials and model list.",
+      },
+      {
+        method: "POST",
+        path: "/api/agent/providers/anthropic/test",
+        description:
+          "Test Connection. Body: { api_key?, base_url? }; an empty api_key or '***' means the saved key. Lists the models the key can see (no tokens spent) and always answers HTTP 200 with { status: 'success' | 'error', message, modelCount? }. Refused with 403 to API-key (bearer) callers.",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/models",
+        description:
+          "The model registry. After the save, the Anthropic rows move from availability 'not_configured' to 'available' (or 'unverified' while no live list has been fetched) with selectable: true.",
+      },
+    ],
+    howToTest: [
+      "Needs an Anthropic API key. Open /providers and find the 'Anthropic (Claude API)' card. Vertex does not have to be configured.",
+      "Paste the key (<your Anthropic API key>) into the API key field. Leave Base URL empty unless you reach Anthropic through a gateway. Save Changes stays off until something changed.",
+      "Click Test Connection. Expect a green result such as 'Connected. 7 models visible.' A wrong key gives a red result with Anthropic's message and no key echoed back.",
+      "Click Save Changes. The key field now reads '***'; the key is never shown again. Test Connection with the field left on '***' tests the saved key.",
+      "Type a new value into Base URL. Confirm the key field empties and Save Changes and Test Connection stay off until you type the key again (a saved key is only sent to the base URL it was saved with). Put the original value back and the saved key returns.",
+      "Negative: set Base URL to http://anthropic.example.test and test with a typed key. Expect the refusal 'The base URL must use https.' A base URL pointing at localhost, a link-local address or this install is refused too; a gateway on a private network (10.x, 192.168.x) is allowed.",
+      "Open /models. Under Anthropic you see Claude Opus 5.5, Sonnet 5.5, Haiku 5.5 and the others, with prices; the line under the provider name says when the live list was fetched. Models of providers you have not configured are greyed out.",
+      "Open a fresh chat. The header model dropdown now lists the Claude models. Pick Claude Sonnet 5.5 and send a short prompt. In Live telemetry the `model` event shows provider 'anthropic', ref 'anthropic/claude-sonnet-5-5' and override_source 'header'.",
+      "Open /observability/events and click the 'Provider tests' chip: one provider_test row per Test Connection, holding provider, ok and status, never the key. The 'Model list refreshes' chip shows the model-list fetch.",
+      "Host shell step: with an API key kept in your own gitignored .env, `curl -sk -o /dev/null -w '%{http_code}' -X POST -H \"Authorization: Bearer $PHANTOM_KEY\" https://localhost:3000/api/agent/providers/anthropic/test` returns 403: API keys can never reach the credential routes.",
+    ],
+    expectedResult:
+      "Claude models are selectable in the chat header, jobs, the benchmark and /model, without a restart. The key lives only in the ProviderStore; the browser, the chat and the audit log never see it.",
+    verifyVia: [
+      "GET /api/agent/models → rows with provider 'anthropic' show selectable: true",
+      "/observability/events → 'Provider tests' chip shows the provider_test row",
+      "The Live telemetry `model` event names provider 'anthropic' on a turn that used a Claude model",
+    ],
+    related: ["ops-configure-openai-provider", "ops-set-default-model", "chat-switch-provider-mid-session"],
+    components: ["models", "secrets", "chat", "audit"],
+  },
+
+  {
+    id: "ops-configure-openai-provider",
+    category: "ops",
+    title: "Add OpenAI as a model provider with an API key",
+    summary:
+      "Paste an OpenAI API key (plus an optional organization, project and base URL) on the OpenAI card of /providers, test it, save it, and use the GPT models in chat. Calls ask OpenAI not to store anything.",
+    difficulty: "starter",
+    durationMin: 4,
+    icon: "key",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "PUT",
+        path: "/api/agent/providers/config",
+        description:
+          "The Providers page save. Body: { value: { openaiApiKey?, openaiOrganization?, openaiProject?, openaiBaseUrl? } }. Creates or updates the openai provider instance and drops the cached credentials and model list.",
+      },
+      {
+        method: "POST",
+        path: "/api/agent/providers/openai/test",
+        description:
+          "Test Connection. Body: { api_key?, base_url?, organization?, project? }; an empty api_key or '***' means the saved key. Always HTTP 200 with { status, message, modelCount? }. Refused with 403 to API-key (bearer) callers.",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/models",
+        description:
+          "The model registry. OpenAI rows the key can see are selectable; ids the key lists that Phantom has no description for are shown as unverified and cannot be chosen.",
+      },
+    ],
+    howToTest: [
+      "Needs an OpenAI API key. Open /providers and find the 'OpenAI (Responses API)' card.",
+      "Paste the key (<your OpenAI API key>). Organization and Project are optional routing fields (org-... and proj_...). Base URL is optional; if you set one, include the /v1 part.",
+      "Click Test Connection. Expect 'Connected. N models visible.' Then Save Changes; the key field reads '***' afterwards.",
+      "Change Base URL and confirm the key field empties and must be typed again, exactly as on the Anthropic card. Changing only Organization or Project does not clear the key.",
+      "Open /models. Under OpenAI, GPT-6 Sol is marked as the provider's recommended model; a curated model your key cannot see shows 'Not visible to key' and cannot be chosen.",
+      "Open a fresh chat, pick GPT-6 Sol in the header dropdown and send a prompt that needs a tool (for example 'list my connectors'). The tool card appears as usual and the `model` event shows provider 'openai'.",
+      "Open /observability/cost after the turn, group by Provider: the call is listed under 'openai' with its cost, or as an unpriced call if the model has no price.",
+      "Host shell step: the same 403 check as for Claude — a bearer API key calling POST /api/agent/providers/openai/test is refused.",
+    ],
+    expectedResult:
+      "GPT models are selectable everywhere a model is chosen. Prompts leave the install for OpenAI with store disabled; the key never leaves the ProviderStore.",
+    verifyVia: [
+      "GET /api/agent/models → rows with provider 'openai' show selectable: true for the models the key sees",
+      "/observability/events → 'Provider tests' chip shows the provider_test row",
+      "/observability/cost grouped by Provider → an 'openai' bucket after a turn",
+    ],
+    related: ["ops-configure-anthropic-provider", "ops-set-default-model"],
+    components: ["models", "secrets", "chat", "cost", "audit"],
+  },
+
+  {
+    id: "ops-set-default-model",
+    category: "ops",
+    title: "Choose the install's default model",
+    summary:
+      "Press Set as default on /models to pick the model that serves every chat, job, subagent and benchmark case that does not name its own. Without one, Phantom derives it from the first provider you configured.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "star",
+    prompts: [
+      {
+        text: "Which model are you running on, and can you change the default model for me?",
+        note: "The agent answers from the model it is told is serving the turn, and says that only the operator changes the default (on /models). It calls no settings tool.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "PUT",
+        path: "/api/agent/settings",
+        description:
+          "Body: { updates: { defaultModel: 'provider/model' }, actor: 'operator' }. The ref is checked against the model registry and stored canonical; an unknown, retired or unconfigured model is a 400 with suggestions.",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/models",
+        description:
+          "The default row carries isDefault: true and defaultSource: 'default' (the setting serves) or 'derived' (no usable default is set, so the first configured provider's recommended model serves).",
+      },
+    ],
+    howToTest: [
+      "Open /models. Find the badge 'Default' or 'Default (derived)' on one chat model. A Claude-only or OpenAI-only install shows 'Default (derived)' on that provider's recommended model, because the fresh-install default names a Gemini model whose provider has no credentials.",
+      "Press 'Set as default' on a different chat model that is not greyed out. A dialog asks 'Make <model> the default model?' and says which things keep their own pick; confirm with Set as default. A 'Default model set' toast shows the ref.",
+      "The badge moves to that row and now reads 'Default'. Reload /models to confirm it persisted.",
+      "Open a fresh chat and type /model: it reports 'Install default: `provider/model` (set on the Models page).' Send a prompt and check the `model` event: override_source is 'none'.",
+      "Pick another model in the chat header for one turn: override_source is 'header' and the default is untouched.",
+      "Send the prompt above. The agent says it cannot change the default; GET /api/agent/audit?action=settings_changed shows no new row.",
+      "Negative: PUT /api/agent/settings with {\"updates\":{\"defaultModel\":\"not-a-model\"}}. Expect a 400 with the field name and a list of models that would work.",
+      "On an install whose default names a provider with no credentials (a fresh Claude-only install, whose default starts out as a Gemini model), the next turn that names no model runs on the derived default and /models shows 'Default (derived)'; a header or /model pick of the unconfigured provider's model fails with MODEL_UNAVAILABLE and nothing is swapped in.",
+    ],
+    expectedResult:
+      "One install-wide default, set in one place. Everything that names no model follows it; anything that names a model that cannot run fails loudly rather than being switched to the default.",
+    verifyVia: [
+      "GET /api/agent/models → exactly one row with isDefault: true",
+      "GET /api/agent/settings → effective.defaultModel holds the canonical provider/model ref",
+      "Live telemetry `model` event: override_source 'none' (default serves) or 'derived'",
+    ],
+    related: ["ops-switch-models", "chat-set-session-model-preference", "ops-configure-anthropic-provider"],
+    components: ["models", "settings", "chat"],
+  },
+
+  {
+    id: "chat-switch-provider-mid-session",
+    category: "chat",
+    title: "Switch to another provider's model in the middle of a session",
+    summary:
+      "Start a session on one provider's model, switch to a model of another provider with the chat header (or /model), and carry on in the same thread. History travels as plain text, so the new model sees what was said.",
+    difficulty: "intermediate",
+    durationMin: 5,
+    icon: "swap_horiz",
+    prompts: [
+      {
+        text: "For this conversation, the lab domain is example.test and the analyst on shift is Dana. Acknowledge in one line.",
+        note: "Turn 1, on the first provider's model.",
+        newSession: true,
+      },
+      {
+        text: "/model anthropic/claude-sonnet-5-5",
+        note: "Or pick the second provider's model in the header dropdown. Use any selectable model of a different provider than turn 1 (openai/gpt-6-sol or vertex/gemini-3.1-pro-preview work too).",
+      },
+      {
+        text: "What is the lab domain and who is on shift?",
+        note: "Turn 2, on the second provider. The answer comes from the replayed history, not from memory.",
+      },
+    ],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "PATCH",
+        path: "/api/agent/sessions/{id}",
+        description: "Stores the session preference written by /model (metadata.preferred_model, canonical provider/model).",
+      },
+    ],
+    howToTest: [
+      "Needs at least two providers configured (see ops-configure-anthropic-provider). Open a fresh chat and, in the header, pick a model of the first provider. Send the first prompt.",
+      "Open Live telemetry: the `model` event shows that model's provider and ref, with override_source 'header'.",
+      "Switch with /model anthropic/claude-sonnet-5-5 (reply: 'Set model preference to `anthropic/claude-sonnet-5-5` for this session. Takes effect on the next turn.'), or change the header dropdown to a model of the other provider (the header wins over /model).",
+      "Send the third prompt. The `model` event now shows the other provider, and the reply names example.test and Dana: the earlier messages were replayed to the new model.",
+      "Ask for a tool call (for example 'list my connectors'). The tool card appears and the tool name is the same one the first provider used: each provider gets the tool names in its own allowed form, and Phantom maps them back, so approvals and audit rows are identical.",
+      "Open /observability/cost grouped by Provider: the session's calls are split across two providers, each with its own price.",
+      "Negative: /model openai/gpt-6-sol on an install with no OpenAI key. The reply starts 'Not changed.' and says the OpenAI provider is not configured; the session keeps its model.",
+    ],
+    expectedResult:
+      "A session is not bound to the provider it started on. Switching changes only who answers the next turn; the conversation, tool calls, approvals and cost rows carry on, each call priced against its own model.",
+    verifyVia: [
+      "Live telemetry `model` events show two different providers in one session",
+      "/observability/cost grouped by Provider shows both buckets for the session",
+      "GET /api/agent/sessions/{id} → metadata.preferred_model holds the canonical ref after /model",
+    ],
+    related: ["chat-set-session-model-preference", "ops-switch-models", "ops-cost-by-provider"],
+    components: ["models", "slash-commands", "chat", "cost"],
+  },
+
+  {
+    id: "ops-cost-by-provider",
+    category: "ops",
+    title: "See what each provider and model costs, and find unpriced calls",
+    summary:
+      "Group /observability/cost by Provider or Model, read the Unpriced calls card, and use /cost in chat. A call to a model with no known price is counted and named, never added as $0.",
+    difficulty: "intermediate",
+    durationMin: 5,
+    icon: "payments",
+    prompts: [
+      {
+        text: "/cost",
+        note: "This session and today (UTC), with today broken down by provider and by model when more than one ran. Unpriced calls are named.",
+      },
+    ],
+    toolsExercised: [],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/audit?action=chat_turn_cost&since={iso}",
+        description:
+          "One row per model call. Metadata: provider, model_ref, input_tokens, cached_input_tokens, cache_write_tokens, output_tokens, reasoning_tokens, priced, cost_usd (null when unpriced), unpriced_reason, pricing_verified, request_id, finish. Rows from before v1.0.5 lack the new fields and read as provider 'vertex'.",
+      },
+    ],
+    howToTest: [
+      "Needs turns on at least two providers (see chat-switch-provider-mid-session). Open /observability/cost with the 7d window.",
+      "Cards: Total cost, Unpriced calls, Cached savings, Input tokens (with cached and cache-write counts), Output tokens (with the reasoning share).",
+      "Click Group by → Provider: one bucket per provider with dollars and call counts. Click Model: each row reads provider/model.",
+      "Pick a model whose /models row carries the 'Unpriced' badge (a model the live list added that Phantom has no price for) and run a turn on it. The Unpriced calls card goes up by the number of calls, the Total cost card does not move, and the Recent calls table shows 'unpriced' in the Cost column.",
+      "Send /cost in chat. Today's block reads '$X + N unpriced calls' (or 'unpriced (N calls, no known price)' when nothing was priced).",
+      "Open /observability/events → the 'Turn costs' chip: each chat_turn_cost row carries the provider and ref chips; a call without a price shows an unpriced marker.",
+      "Run /compress in a long session and a turn with a subagent. Confirm /compress adds no cost row, and the subagent's calls appear under the subagent's session id, not the parent's.",
+      "Optional: install the Cost warn over budget hook (/settings/hooks) with a low threshold, run a turn, and open /notifications: the warning counts every provider, and names unpriced calls if there were any.",
+    ],
+    expectedResult:
+      "Spend is attributable per provider and per model, unpriced calls are visible instead of hidden inside a total, and the dollar figures from different providers are comparable because each is computed from the model's own prices.",
+    verifyVia: [
+      "/observability/cost grouped by Provider → one bucket per provider that served a call",
+      "GET /api/agent/audit?action=chat_turn_cost → priced: false rows have cost_usd null",
+      "/cost in chat → totals match the cost page's Today window for the session",
+    ],
+    related: ["chat-cost-rollup", "ops-configure-openai-provider"],
+    components: ["cost", "models", "chat", "audit"],
   },
 
   // [v1.0.3] Retired: ops-rotate-connector-creds. Replaced by ops-override-connector-via-instances because the setup page and its API no longer exist; connector secrets are rotated from the instance Edit panel at /connectors.
@@ -5499,7 +5761,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Update Vertex service-account JSON via /providers",
     summary:
-      "/providers is the path for adding and updating the Vertex service-account JSON, project and region. Writes go directly to the MCP ProviderStore (PUT /api/agent/providers/{id}). The chat handler reads back via a 30-second cached resolver that's cache-busted on every successful PUT, so updates take effect within milliseconds.",
+      "/providers is the path for adding and updating the Vertex service-account JSON, project and region (Vertex is one of three optional model providers; the Anthropic and OpenAI cards have their own journeys). Writes go directly to the MCP ProviderStore (PUT /api/agent/providers/{id}). The chat handler reads back via a 30-second cached resolver that's cache-busted on every successful PUT, so updates take effect within milliseconds.",
     difficulty: "starter",
     durationMin: 2,
     icon: "psychology",
@@ -6683,8 +6945,8 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Operator-only step (writes settings): open any Phantom page signed in and open the browser devtools console.",
-      "Send a number for a text setting: `await (await fetch('/api/agent/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({updates:{geminiModel:42}})})).json()`. The response has `rejected: [{key:'geminiModel', reason:...}]` and an empty `applied`.",
-      "Read it back: `await (await fetch('/api/agent/settings')).json()`. `effective.geminiModel` is unchanged.",
+      "Send a number for a text setting: `await (await fetch('/api/agent/settings',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({updates:{defaultModel:42}})})).json()`. The response is HTTP 400 with `code: 'INVALID_MODEL'` and `field: 'defaultModel'`; nothing is written.",
+      "Read it back: `await (await fetch('/api/agent/settings')).json()`. `effective.defaultModel` is unchanged.",
       "Send a correctly typed value: same call with `{updates:{defaultLogFormat:'CEF'}}`. It is listed under `applied`.",
       "Clear it again: `{clear:['defaultLogFormat']}` → listed under `cleared`.",
     ],
@@ -7074,7 +7336,7 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Needs: a model provider configured, the xlog instance ('onboarding-install-xlog-connector') for the log-generation case, and some tolerance for token spend: every run sends real prompts.",
-      "Open /observability/bench (sidebar → Observability → Bench). The Run a benchmark box shows Manifest (path or bundled id) with phantom-soc-v1 as the placeholder, and an optional Router preset model.",
+      "Open /observability/bench (sidebar → Observability → Bench). The Run a benchmark box shows Manifest (path or bundled id) with phantom-soc-v1 as the placeholder, and an optional Router preset model dropdown (the install default, or any selectable chat model grouped by provider).",
       "Click Run benchmark. The button reads Running… until the run finishes, which can take several minutes; a new run appears in the list.",
       "Open the run. The top row shows Correctness, Avg Jaccard, Cost p50 / p95, Wall p50 / p95 and Cases (clean / total); the table lists each case with pass or fail, Jaccard, cost, wall time and any error.",
       "Run it a second time (optionally with a different Router preset model), then click Compare runs (top right of the list). Pick the first run as Base and the second as Head; the address becomes /observability/bench/compare?base=<run id>&head=<run id>, which you can bookmark.",
@@ -7086,7 +7348,7 @@ export const JOURNEYS: Journey[] = [
     verifyVia: [
       "The run id appears in the list and its detail page opens.",
       "The compare page loads directly from the bookmarked ?base=&head= address with both selectors filled in.",
-      "/observability/cost shows the tokens the run used.",
+      "/observability/cost shows the tokens the run used, and the run's Cost p50 / p95 are real figures.",
     ],
     related: ["chat-cost-rollup", "ops-set-job-model-override"],
     prerequisites: ["onboarding-install-xlog-connector"],

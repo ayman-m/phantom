@@ -5,8 +5,6 @@ Per spark-agents spec v1.2 §7.6, the runtime imports this module's
 `Provider` class, instantiates it once per configured provider
 instance, and uses it to:
 
-  - `list_models()` → enumerate the available model catalog (defaults
-    to the static spec.models[] from provider.yaml)
   - `chat(model_id, messages, **kwargs)` → run a chat completion
   - `embed(model_id, text)` → generate embeddings
 
@@ -74,20 +72,6 @@ class Provider:
             "Vertex provider initialized for project %s in %s",
             self._project_id, self._region,
         )
-
-    def list_models(self) -> list[dict[str, Any]]:
-        """Return the static model catalog from provider.yaml.
-
-        Override this when the connector/provider's actual API supports
-        runtime catalog enumeration — for Vertex, the model list is
-        relatively stable, so the static block in provider.yaml is the
-        primary source of truth. The runtime reads provider.yaml's
-        `spec.models` directly when this method isn't overridden, so
-        bundles can rely on the static declaration.
-        """
-        # The runtime reads spec.models from provider.yaml; this is a
-        # placeholder that signals "use the static catalog."
-        return []
 
     async def chat(self, model_id: str, messages: list[dict[str, Any]], **kwargs: Any) -> dict[str, Any]:
         """Phase-4 placeholder. Actual Gemini calls happen in the

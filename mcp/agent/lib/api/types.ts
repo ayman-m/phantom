@@ -167,37 +167,81 @@ export interface SkillDescriptor {
 }
 
 /** Interaction pattern supported by a model. */
-export type InteractionPattern =
-  | "streaming_api"
-  | "cli_tool"
-  | "async_job"
-  | "interactive_session";
+export type InteractionPattern = "streaming_api" | "async_job";
 
 /** Model kind — used to split /models into tabs (Chat, Embedding, Image, Voice). */
 export type ModelKind = "chat" | "embedding" | "image" | "voice";
 
-/** Available model capabilities for a provider. */
+/** Whether a model can be used right now, as the registry computed it. */
+export type ModelAvailability =
+  | "available"
+  | "unavailable"
+  | "unverified"
+  | "unpriced"
+  | "deprecated"
+  | "retired"
+  | "not_configured";
+
+/** USD per million tokens, as the registry holds it. */
+export interface ModelPricingInfo {
+  inputPerM: number;
+  outputPerM: number;
+  cacheReadPerM: number;
+  cacheWrite5mPerM?: number;
+  cacheWrite1hPerM?: number;
+  /** A prompt above `aboveInputTokens` pays these multiples on the whole request. */
+  longContext?: { aboveInputTokens: number; inputMult: number; outputMult: number };
+}
+
+/**
+ * One entry of GET /api/agent/models: a curated model merged with the
+ * provider's live list. `ref` ("provider/model") names it uniquely;
+ * `selectable` says whether chat can run on it.
+ */
 export interface ModelInfo {
   provider: string;
   model: string;
+  /** Canonical "provider/model". */
+  ref: string;
   displayName?: string;
+  /** 0 when unknown. */
   contextWindow: number;
   supportsThinking: boolean;
   supportsTools: boolean;
-  /** Classification from the gateway's classifyModel() — defaults to "chat" for unknowns. */
+  /** Defaults to "chat" for unknowns. */
   kind?: ModelKind;
-  /** Vertex-only: "GA", "PUBLIC_PREVIEW", etc. Gives the UI a signal for preview-tier badging. */
+  /** "GA", "PUBLIC_PREVIEW", "DEPRECATED" or "RETIRED". Gives the UI a signal for badging. */
   launchStage?: string;
-  createdAt?: string;
   interactionPatterns?: InteractionPattern[];
-  /**
-   * When true, the model is listed in the catalog but not
-   * yet wired through the chat-route. The chat header's model dropdown
-   * filters these out; the /services Models page surfaces them with a
-   * greyed-out "Coming soon" treatment so operators see the roadmap
-   * without being able to pick a model that would fail at send time.
-   */
-  wip?: boolean;
+  availability: ModelAvailability;
+  /** Chat can run on this model right now. */
+  selectable: boolean;
+  /** Why it is not selectable, or what to watch. */
+  reason?: string | null;
+  maxOutput?: number | null;
+  maxInput?: number | null;
+  tokenizerFactor?: number;
+  pricing?: ModelPricingInfo | null;
+  /** The price is known and still valid. */
+  priced?: boolean;
+  /** The date the price was last checked against the vendor. */
+  pricingVerified?: string | null;
+  pricingValidUntil?: string | null;
+  pricingNote?: string | null;
+  lifecycle?: { stage: string; retiresAt?: string };
+  /** When the live list that named this model was fetched. */
+  liveSeenAt?: string | null;
+  /** Where the facts came from: the provider's live list, the built-in table, or both. */
+  source?: "live" | "curated" | "live+curated";
+  providerState?: "not_configured" | "unchecked" | "live" | "stale" | "offline";
+  refreshError?: string | null;
+  /** The model chat uses when nothing else is chosen. */
+  isDefault?: boolean;
+  /** On the default row: "default" when the install setting serves, "derived" when no usable default is set. */
+  defaultSource?: "default" | "derived" | null;
+  recommended?: boolean;
+  /** Facts the built-in table could not confirm from an official source. */
+  unverified?: string[];
 }
 
 /** Structured platform log entry. */

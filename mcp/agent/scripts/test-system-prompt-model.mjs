@@ -31,19 +31,41 @@ function test(name, fn) {
 const policy = { localCategories: [], externalCategories: [], confirmLocalActions: "never" };
 
 test("the block states the model serving the turn", () => {
-  const block = renderModelContextBlock("gemini-2.5-pro");
-  assert.match(block, /served by the model `gemini-2\.5-pro`/);
+  const block = renderModelContextBlock("vertex/gemini-3.1-pro-preview");
+  assert.match(block, /served by the model `vertex\/gemini-3\.1-pro-preview`/);
 });
 
 test("model questions are answered from context, not via settings tools", () => {
-  const block = renderModelContextBlock("gemini-2.5-pro");
+  const block = renderModelContextBlock("vertex/gemini-3.1-pro-preview");
   assert.match(block, /Do NOT call `settings_get`,\s+`settings_update`/);
 });
 
 test("a session preference is never written into a global setting", () => {
-  const block = renderModelContextBlock("gemini-2.5-pro");
+  const block = renderModelContextBlock("vertex/gemini-3.1-pro-preview");
   assert.match(block, /per-session `\/model` preference is NOT a global setting/);
-  assert.match(block, /never\s+write it into `geminiModel`/);
+  assert.match(block, /never\s+write it into `defaultModel`/);
+});
+
+test("the wording is neutral about the provider and takes a canonical ref from any of them", () => {
+  for (const ref of ["vertex/gemini-3.1-pro-preview", "anthropic/claude-opus-5-5", "openai/gpt-6-sol"]) {
+    const block = renderModelContextBlock(ref);
+    assert.match(block, new RegExp("served by the model `" + ref.replace(/[./-]/g, "\\$&") + "`"));
+    // Nothing in the block assumes the model is a Gemini.
+    assert.doesNotMatch(block.split(ref).join(""), /Gemini|geminiModel/i);
+    assert.match(block, /"which model is\s+this\?"/);
+  }
+});
+
+test("the default-model rule points at the Models page and names the settings key defaultModel", () => {
+  const block = renderModelContextBlock("vertex/gemini-3.1-pro-preview");
+  assert.match(block, /"Set as default" on the Models page/);
+  assert.doesNotMatch(block, /geminiModel/);
+});
+
+test("the credential guardrail recipe names every model provider", () => {
+  const text = buildSystemPromptText(policy);
+  assert.match(text, /model provider \(Vertex\s+> AI, Anthropic or OpenAI\)/);
+  assert.doesNotMatch(text, /configure your Vertex provider/);
 });
 
 test("the rule is still emitted when the model is unknown", () => {
@@ -55,14 +77,26 @@ test("the rule is still emitted when the model is unknown", () => {
 });
 
 test("the full prompt carries the block, with the turn's model", () => {
-  const text = buildSystemPromptText(policy, null, [], "manual", undefined, "gemini-2.5-pro");
+  const text = buildSystemPromptText(policy, null, [], "manual", undefined, "vertex/gemini-3.1-pro-preview");
   assert.match(text, /## CRITICAL - Model in use/);
-  assert.match(text, /served by the model `gemini-2\.5-pro`/);
+  assert.match(text, /served by the model `vertex\/gemini-3\.1-pro-preview`/);
 });
 
 test("the full prompt without a model still carries the rule", () => {
   const text = buildSystemPromptText(policy);
   assert.match(text, /## CRITICAL - Model in use/);
+});
+
+test("the embedder wording is true on an install without Vertex", () => {
+  const text = buildSystemPromptText(policy);
+  // Embeddings are Vertex-only; without a Vertex provider search runs on a
+  // hash-similarity stand-in and does not fail. The prompt must say both, name
+  // no embedding model as a fact, and keep the 5xx advice for a failing Vertex.
+  assert.doesNotMatch(text, /text-embedding-004/);
+  assert.doesNotMatch(text, /no local-ML fallback/i);
+  assert.match(text, /hash-similarity\s+stand-in/);
+  assert.match(text, /Claude-only or OpenAI-only install/);
+  assert.match(text, /embedder_mode/);
 });
 
 if (failed) { console.log(failed + " failed"); process.exit(1); }

@@ -6,8 +6,8 @@ The two stores are parallel: same lifecycle (create/list/get/delete),
 same setup-form materialization pattern, same instance-gating
 semantics. They live in separate sqlite tables (different file)
 because their consumers are different — the embedded MCP gates tool
-ADVERTISEMENT on connector instances; the runtime's `models`
-capability gates the model catalog on provider instances.
+ADVERTISEMENT on connector instances; the agent's model registry reads
+provider instances for their credentials (it keeps the model catalog).
 
 Schema (`<data_root>/provider_instances.db`):
 
@@ -36,6 +36,8 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from usecase.secret_store import ForeignSecretRefError  # noqa: F401  (re-exported)
 
 logger = logging.getLogger("Phantom MCP")
 
@@ -67,6 +69,16 @@ class ProviderInstance:
                 and isinstance(ref_or_value, str)
                 and ref_or_value.startswith("/")
             ):
+                if not is_own_secret_ref(self.id, slot, ref_or_value):
+                    # A row written before the write-side check existed. Never
+                    # follow a reference into another owner's secret.
+                    logger.warning(
+                        "ProviderInstance %s/%s: slot %s holds a reference outside "
+                        "its own secret path; not resolving it.",
+                        self.provider_id, self.name, slot,
+                    )
+                    resolved[slot] = ""
+                    continue
                 try:
                     resolved[slot] = secret_store.read(ref_or_value)
                 except Exception as exc:
@@ -82,6 +94,26 @@ class ProviderInstance:
     @property
     def secrets(self) -> dict[str, Any]:
         return self.secret_refs
+
+
+def is_own_secret_ref(instance_id: str, slot: str, value: Any) -> bool:
+    """True when `value` is exactly this instance's own path for `slot`."""
+    from usecase.secret_store import provider_secret_path
+
+    return isinstance(value, str) and value == provider_secret_path(instance_id, slot)
+
+
+def _check_secret_input(instance_id: str, slot: Any, value: Any) -> None:
+    """Refuse a slot name or secret value that could reach another secret.
+
+    See `usecase.secret_store.check_secret_input`: the only "/"-prefixed value
+    accepted is this instance's own path for the slot (the update round trip).
+    """
+    from usecase.secret_store import check_secret_input, provider_secret_path
+
+    check_secret_input(
+        lambda s: provider_secret_path(instance_id, s), slot, value
+    )
 
 
 class ProviderStore:
@@ -155,14 +187,15 @@ class ProviderStore:
             raise ValueError("name must be a non-empty string")
         instance_id = str(uuid.uuid4())
         secrets_in = dict(secrets or {})
+        # Before anything is written. The id is new, so no "/" value can be this
+        # instance's own path: every one is refused.
+        for slot, value in secrets_in.items():
+            _check_secret_input(instance_id, slot, value)
 
         if self._secret_store is not None and secrets_in:
             persisted_secret_refs: dict[str, Any] = {}
             for slot, value in secrets_in.items():
                 if not isinstance(value, str):
-                    persisted_secret_refs[slot] = value
-                    continue
-                if value.startswith("/"):
                     persisted_secret_refs[slot] = value
                     continue
                 path = provider_secret_path(instance_id, slot)
@@ -290,6 +323,10 @@ class ProviderStore:
         new_secret_refs: dict[str, Any] = dict(existing.secret_refs)
         secrets_to_write: list[tuple[str, str]] = []  # (path, plaintext)
         if secrets is not None:
+            # Validate every slot first so a refusal leaves nothing half-applied.
+            for slot, value in secrets.items():
+                if value != "***":
+                    _check_secret_input(instance_id, slot, value)
             for slot, value in secrets.items():
                 if value == "***":
                     # Sentinel: keep the existing ref untouched.
@@ -298,7 +335,7 @@ class ProviderStore:
                     new_secret_refs[slot] = value
                     continue
                 if value.startswith("/"):
-                    # Already a SecretStore path — store verbatim.
+                    # This slot's own SecretStore path (checked above).
                     new_secret_refs[slot] = value
                     continue
                 if self._secret_store is not None:

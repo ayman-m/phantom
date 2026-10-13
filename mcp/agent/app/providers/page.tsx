@@ -10,18 +10,33 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *      at /api/v1/config{,/providers}. Phantom doesn't ship those
  *      routes; this page calls /api/agent/providers/config directly,
  *      which reads/writes the MCP-side ProviderStore.
- *   2. **Scope**: Vertex AI (Gemini) and Anthropic. A provider the chat
- *      path cannot use has no card here.
+ *   2. **Scope**: Vertex AI (Gemini), Anthropic and OpenAI. A provider the
+ *      chat path cannot use has no card here.
  *
- * The Anthropic card holds one credential, anthropicApiKey, stored by
- * lib/anthropic-credentials.ts. The chat route makes no Anthropic API
- * calls yet.
+ * The Anthropic card holds anthropicApiKey and an optional anthropicBaseUrl;
+ * the OpenAI card holds openaiApiKey and the optional openaiBaseUrl,
+ * openaiOrganization and openaiProject. They are stored by the config route
+ * and read back by lib/providers/credentials.ts. The model registry lists the
+ * models from them and the chat route calls the models with them. Test
+ * Connection asks the vendor's model list; the key field keeps the "***"
+ * sentinel so a saved key is tested without leaving the server. A saved key is
+ * only sent to the base URL it was saved with, so editing the base URL empties
+ * the key field and the key has to be typed again before saving.
  */
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface ProviderConfig {
   anthropicApiKey: string;
+  /** Anthropic — optional base URL for a gateway; empty means api.anthropic.com. Not a secret. */
+  anthropicBaseUrl: string;
+  openaiApiKey: string;
+  /** OpenAI — optional base URL, version segment included; empty means api.openai.com/v1. Not a secret. */
+  openaiBaseUrl: string;
+  /** OpenAI — optional organization id (org-...). Not a secret. */
+  openaiOrganization: string;
+  /** OpenAI — optional project id (proj_...). Not a secret. */
+  openaiProject: string;
   /** Google Vertex AI — service-account JSON blob (multi-line). Encrypted in Infisical. */
   vertexServiceAccountJson: string;
   /** Google Vertex AI — GCP project that owns the quotas. Not a secret. */
@@ -29,6 +44,27 @@ interface ProviderConfig {
   /** Google Vertex AI — region, defaults to us-central1. Gemini 3 auto-routes to global. */
   vertexLocation: string;
 }
+
+/** Which providers have a saved credential, as the server reports it. */
+interface ConfiguredProviders {
+  vertex: boolean;
+  anthropic: boolean;
+  openai: boolean;
+}
+
+/** The last Test Connection outcome in this browser session. */
+interface LastCheck {
+  provider: string;
+  ok: boolean;
+  at: number;
+}
+
+/** The providers whose card is an API key plus an optional base URL. */
+type KeyedProviderId = "anthropic" | "openai";
+type ProviderCardId = KeyedProviderId | "vertex";
+
+/** What the server returns in place of a saved key. */
+const SAVED_KEY_SENTINEL = "***";
 
 interface ConnectionStatus {
   provider: string;
@@ -38,6 +74,14 @@ interface ConnectionStatus {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
+const PROVIDER_LABEL: Record<string, string> = {
+  vertex: "Vertex AI",
+  anthropic: "Anthropic",
+  openai: "OpenAI",
+};
+
+const NONE_CONFIGURED: ConfiguredProviders = { vertex: false, anthropic: false, openai: false };
+
 const glassCard: React.CSSProperties = {
   background: "var(--glass-bg-strong)",
   backdropFilter: "blur(12px)",
@@ -46,12 +90,30 @@ const glassCard: React.CSSProperties = {
 
 const DEFAULT_PROVIDER_CONFIG: ProviderConfig = {
   anthropicApiKey: "",
+  anthropicBaseUrl: "",
+  openaiApiKey: "",
+  openaiBaseUrl: "",
+  openaiOrganization: "",
+  openaiProject: "",
   vertexServiceAccountJson: "",
   vertexProjectId: "",
   vertexLocation: "us-central1",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Which providers have a saved credential. Read from the server's own
+ * `configured` map (never from the form, which may hold unsaved typing).
+ */
+function extractConfigured(config: Record<string, unknown> | null): ConfiguredProviders {
+  const flags = (config?.configured ?? {}) as Record<string, unknown>;
+  return {
+    vertex: flags.vertexServiceAccountJson === true && flags.vertexProjectId === true,
+    anthropic: flags.anthropicApiKey === true,
+    openai: flags.openaiApiKey === true,
+  };
+}
 
 function extractProviderConfig(
   config: Record<string, unknown> | null,
@@ -62,6 +124,15 @@ function extractProviderConfig(
       typeof providers.anthropicApiKey === "string"
         ? providers.anthropicApiKey
         : "",
+    anthropicBaseUrl:
+      typeof providers.anthropicBaseUrl === "string"
+        ? providers.anthropicBaseUrl
+        : "",
+    openaiApiKey: typeof providers.openaiApiKey === "string" ? providers.openaiApiKey : "",
+    openaiBaseUrl: typeof providers.openaiBaseUrl === "string" ? providers.openaiBaseUrl : "",
+    openaiOrganization:
+      typeof providers.openaiOrganization === "string" ? providers.openaiOrganization : "",
+    openaiProject: typeof providers.openaiProject === "string" ? providers.openaiProject : "",
     vertexServiceAccountJson:
       typeof providers.vertexServiceAccountJson === "string"
         ? providers.vertexServiceAccountJson
@@ -199,6 +270,8 @@ export default function ProvidersSettingsPage() {
   const [connectionStatuses, setConnectionStatuses] = useState<
     Record<string, ConnectionStatus>
   >({});
+  const [configured, setConfigured] = useState<ConfiguredProviders>(NONE_CONFIGURED);
+  const [lastCheck, setLastCheck] = useState<LastCheck | null>(null);
   // Vertex SA JSON masking — defaults to hidden when there's saved
   // content. New entries (operator typing into an empty field) start
   // visible until the next save round.
@@ -215,6 +288,7 @@ export default function ProvidersSettingsPage() {
         const cfg = extractProviderConfig(data);
         setForm(cfg);
         initialForm.current = cfg;
+        setConfigured(extractConfigured(data));
       }
     } catch {
       // empty state — operator hasn't supplied creds yet
@@ -236,9 +310,44 @@ export default function ProvidersSettingsPage() {
     setError(null);
   }
 
-  function isProviderDirty(provider: "anthropic" | "vertex"): boolean {
+  /**
+   * Edit a base URL. A saved key (shown as the "***" sentinel) is only sent to
+   * the base URL it was saved with, so a changed base URL empties the key
+   * field: the operator types the key again, and Save stays off until then.
+   */
+  function updateBaseUrl(provider: KeyedProviderId, value: string) {
+    const urlField = provider === "anthropic" ? "anthropicBaseUrl" : "openaiBaseUrl";
+    const keyField = provider === "anthropic" ? "anthropicApiKey" : "openaiApiKey";
+    setForm((prev) => {
+      const keyIsSaved = initialForm.current[keyField] === SAVED_KEY_SENTINEL && prev[keyField] === SAVED_KEY_SENTINEL;
+      const moved = value.trim() !== initialForm.current[urlField].trim();
+      // Back at the saved URL with the key field emptied by an earlier edit:
+      // the saved key applies again.
+      const restore = initialForm.current[keyField] === SAVED_KEY_SENTINEL && prev[keyField] === "" && !moved;
+      return {
+        ...prev,
+        [urlField]: value,
+        ...(keyIsSaved && moved ? { [keyField]: "" } : {}),
+        ...(restore ? { [keyField]: SAVED_KEY_SENTINEL } : {}),
+      };
+    });
+    setError(null);
+  }
+
+  function isProviderDirty(provider: ProviderCardId): boolean {
     if (provider === "anthropic") {
-      return form.anthropicApiKey !== initialForm.current.anthropicApiKey;
+      return (
+        form.anthropicApiKey !== initialForm.current.anthropicApiKey ||
+        form.anthropicBaseUrl !== initialForm.current.anthropicBaseUrl
+      );
+    }
+    if (provider === "openai") {
+      return (
+        form.openaiApiKey !== initialForm.current.openaiApiKey ||
+        form.openaiBaseUrl !== initialForm.current.openaiBaseUrl ||
+        form.openaiOrganization !== initialForm.current.openaiOrganization ||
+        form.openaiProject !== initialForm.current.openaiProject
+      );
     }
     return (
       form.vertexServiceAccountJson !==
@@ -250,16 +359,30 @@ export default function ProvidersSettingsPage() {
 
   // ── Save (per-card) ─────────────────────────────────────────────────────
 
-  async function handleSaveProvider(provider: "anthropic" | "vertex") {
+  async function handleSaveProvider(provider: ProviderCardId) {
     setSavingProvider(provider);
     setError(null);
 
-    const payload = {
-      anthropicApiKey: form.anthropicApiKey,
-      vertexServiceAccountJson: form.vertexServiceAccountJson,
-      vertexProjectId: form.vertexProjectId,
-      vertexLocation: form.vertexLocation,
-    };
+    // Only this card's fields are sent, so saving one provider never
+    // touches the other.
+    const payload =
+      provider === "anthropic"
+        ? {
+            anthropicApiKey: form.anthropicApiKey,
+            anthropicBaseUrl: form.anthropicBaseUrl,
+          }
+        : provider === "openai"
+          ? {
+              openaiApiKey: form.openaiApiKey,
+              openaiBaseUrl: form.openaiBaseUrl,
+              openaiOrganization: form.openaiOrganization,
+              openaiProject: form.openaiProject,
+            }
+          : {
+              vertexServiceAccountJson: form.vertexServiceAccountJson,
+              vertexProjectId: form.vertexProjectId,
+              vertexLocation: form.vertexLocation,
+            };
 
     try {
       const r = await fetch("/api/agent/providers/config", {
@@ -268,10 +391,17 @@ export default function ProvidersSettingsPage() {
         body: JSON.stringify({ value: payload }),
       });
       if (r.ok) {
-        initialForm.current = { ...form };
+        await refreshSaved(provider);
       } else {
-        const data = (await r.json().catch(() => ({}))) as { error?: string };
-        setError(data.error || `Failed to save ${provider} configuration`);
+        const data = (await r.json().catch(() => ({}))) as {
+          error?: string;
+          mcp_sync?: Record<string, { error?: string } | undefined>;
+        };
+        setError(
+          data.error ||
+            data.mcp_sync?.[provider]?.error ||
+            `Failed to save ${provider} configuration`,
+        );
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : `Failed to save ${provider}`);
@@ -280,15 +410,56 @@ export default function ProvidersSettingsPage() {
     setSavingProvider(null);
   }
 
+  /**
+   * After a save, refresh what the page knows: the Active Backends tile follows
+   * what is really stored, and a saved key field returns to the "***"
+   * sentinel (the plaintext is not kept in the page). The other cards' unsaved
+   * edits are left alone.
+   */
+  async function refreshSaved(provider: ProviderCardId) {
+    try {
+      const r = await fetch("/api/agent/providers/config", { cache: "no-store" });
+      if (!r.ok) return;
+      const data = (await r.json()) as Record<string, unknown>;
+      const saved = extractProviderConfig(data);
+      setConfigured(extractConfigured(data));
+      const take = (keys: (keyof ProviderConfig)[]) => {
+        const patch: Partial<ProviderConfig> = {};
+        for (const k of keys) patch[k] = saved[k];
+        setForm((prev) => ({ ...prev, ...patch }));
+        initialForm.current = { ...initialForm.current, ...patch };
+      };
+      if (provider === "anthropic") {
+        take(["anthropicApiKey", "anthropicBaseUrl"]);
+      } else if (provider === "openai") {
+        take(["openaiApiKey", "openaiBaseUrl", "openaiOrganization", "openaiProject"]);
+      } else {
+        // The Vertex card keeps what was typed, so Test Connection can still
+        // use the pasted JSON; only its "saved" baseline moves.
+        initialForm.current = {
+          ...initialForm.current,
+          vertexServiceAccountJson: form.vertexServiceAccountJson,
+          vertexProjectId: form.vertexProjectId,
+          vertexLocation: form.vertexLocation,
+        };
+      }
+    } catch {
+      // The save succeeded; the next page load shows the stored state.
+    }
+  }
+
   // ── Connection test ──────────────────────────────────────────────────────
 
   /**
    * Whether the provider's credential fields are filled enough to save
    * or test.
    */
-  function hasTestableApiKey(provider: "anthropic" | "vertex"): boolean {
+  function hasTestableApiKey(provider: ProviderCardId): boolean {
     if (provider === "anthropic") {
-      return !!form.anthropicApiKey;
+      return !!form.anthropicApiKey.trim();
+    }
+    if (provider === "openai") {
+      return !!form.openaiApiKey.trim();
     }
     // Vertex requires ALL three fields filled before either Test or
     // Save activates — incomplete state would either fail at the
@@ -369,8 +540,10 @@ export default function ProvidersSettingsPage() {
       [provider]: { provider, status: "testing" },
     }));
 
-    // Build the body per provider. Anthropic uses a single
-    // api_key. Vertex uses service-account JSON + project ID +
+    // Build the body per provider. Anthropic and OpenAI send their api_key (the
+    // "***" sentinel means the saved key, resolved on the server) and the base
+    // URL; OpenAI adds its organization and project.
+    // Vertex uses service-account JSON + project ID +
     // optional location, validated via a JWT→OAuth2 exchange followed
     // by a ping of Vertex's publisher-models endpoint.
     let body: Record<string, string>;
@@ -392,7 +565,8 @@ export default function ProvidersSettingsPage() {
         location: form.vertexLocation || "us-central1",
       };
     } else {
-      const apiKey = form.anthropicApiKey;
+      const isOpenAi = provider === "openai";
+      const apiKey = (isOpenAi ? form.openaiApiKey : form.anthropicApiKey).trim();
       if (!apiKey) {
         setConnectionStatuses((prev) => ({
           ...prev,
@@ -404,20 +578,24 @@ export default function ProvidersSettingsPage() {
         }));
         return;
       }
-      body = { api_key: apiKey };
+      body = isOpenAi
+        ? {
+            api_key: apiKey,
+            base_url: form.openaiBaseUrl.trim(),
+            organization: form.openaiOrganization.trim(),
+            project: form.openaiProject.trim(),
+          }
+        : { api_key: apiKey, base_url: form.anthropicBaseUrl.trim() };
     }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
 
     try {
-      // Phantom doesn't yet ship a /api/agent/providers/{id}/test
-      // backend route. For Vertex specifically the only meaningful
-      // probe is the JWT→OAuth2 exchange, which the chat path does
-      // implicitly on every request. Until a dedicated probe route
-      // lands, we surface "Saved — validated at chat runtime" as
-      // a soft success: the form persisted, but the credential is
-      // proven only when the next message goes through.
+      // Each provider has its own probe route under
+      // /api/agent/providers/{id}/test. Vertex exchanges a JWT for an access
+      // token; Anthropic and OpenAI list their models. A route that does not exist for a
+      // provider (404) is reported as a soft success after save.
       const r = await fetch(
         `/api/agent/providers/${encodeURIComponent(provider)}/test`,
         {
@@ -431,6 +609,7 @@ export default function ProvidersSettingsPage() {
 
       if (r.ok) {
         const data = (await r.json().catch(() => ({}))) as { status?: string; message?: string };
+        setLastCheck({ provider, ok: data.status === "success", at: Date.now() });
         if (data.status === "success") {
           setConnectionStatuses((prev) => ({
             ...prev,
@@ -720,19 +899,24 @@ export default function ProvidersSettingsPage() {
                   </div>
                   <div>
                     <h3 className="font-headline text-lg font-bold text-on-surface">Anthropic (Claude API)</h3>
-                    <p className="text-xs text-on-surface-variant mt-0.5">
-                      API key
-                    </p>
+                    <div className="flex gap-2 mt-1">
+                      <ConnectionBadge status={connectionStatuses["anthropic"]} />
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-3 items-center">
-                  <span className="text-[10px] text-on-surface-variant/60 font-label">
-                    Not available yet
-                  </span>
                   <button
                     type="button"
-                    disabled
-                    title="Not available yet"
+                    disabled={
+                      !hasTestableApiKey("anthropic") ||
+                      connectionStatuses["anthropic"]?.status === "testing"
+                    }
+                    onClick={() => testConnection("anthropic")}
+                    title={
+                      hasTestableApiKey("anthropic")
+                        ? "Asks Anthropic for its model list, which costs no tokens. With a saved key, the key is read on the server."
+                        : "Enter an API key before testing."
+                    }
                     className="px-4 py-2 text-xs font-bold font-headline rounded bg-transparent border border-outline-variant/30 text-on-surface hover:bg-surface-bright transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Test Connection
@@ -741,7 +925,8 @@ export default function ProvidersSettingsPage() {
                     type="button"
                     disabled={
                       savingProvider !== null ||
-                      form.anthropicApiKey === initialForm.current.anthropicApiKey
+                      !hasTestableApiKey("anthropic") ||
+                      !isProviderDirty("anthropic")
                     }
                     onClick={() => handleSaveProvider("anthropic")}
                     className="px-6 py-2 text-xs font-bold font-headline rounded bg-primary-container text-on-primary-container hover:shadow-[0_0_15px_rgba(25,99,179,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
@@ -758,12 +943,178 @@ export default function ProvidersSettingsPage() {
                   value={form.anthropicApiKey}
                   onChange={(v) => updateField("anthropicApiKey", v)}
                   placeholder="sk-ant-api03-..."
-                  helpText="An Anthropic API key (sk-ant-api03-). Stored encrypted."
+                  helpText="An Anthropic API key (sk-ant-api03-). Stored encrypted; a saved key shows as dots and is never sent back to the browser."
                 />
+                <div className="space-y-2">
+                  <label
+                    htmlFor="anthropic-base-url"
+                    className="block text-[11px] font-bold text-on-surface-variant uppercase tracking-widest font-label"
+                  >
+                    Base URL (optional)
+                  </label>
+                  <div className="max-w-xl">
+                    <input
+                      id="anthropic-base-url"
+                      type="text"
+                      value={form.anthropicBaseUrl}
+                      onChange={(e) => updateBaseUrl("anthropic", e.target.value)}
+                      placeholder="https://api.anthropic.com"
+                      spellCheck={false}
+                      autoComplete="off"
+                      className="w-full bg-surface-container-lowest border-none rounded-lg px-4 py-3 text-sm font-mono text-on-surface focus:ring-1 focus:ring-primary/40 transition-all outline-none"
+                    />
+                  </div>
+                  <p className="text-[10px] text-on-surface-variant/60 font-label">
+                    Leave empty for <code className="font-mono">https://api.anthropic.com</code>. Use it to reach Claude
+                    through your own gateway. HTTPS only; this install&apos;s own services and link-local addresses are refused.
+                    Changing the base URL clears the saved key: type the key again, because a saved key is only sent
+                    to the base URL it was saved with.
+                  </p>
+                </div>
               </div>
             </div>
           </section>
 
+
+          {/* ── OpenAI Card ─────────────────────────────────────────────── */}
+          <section
+            className="rounded-xl overflow-hidden relative"
+            style={glassCard}
+          >
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-secondary to-tertiary" />
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-secondary/15 flex items-center justify-center text-secondary">
+                    <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>
+                      smart_toy
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="font-headline text-lg font-bold text-on-surface">OpenAI (Responses API)</h3>
+                    <div className="flex gap-2 mt-1">
+                      <ConnectionBadge status={connectionStatuses["openai"]} />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-3 items-center">
+                  <button
+                    type="button"
+                    disabled={
+                      !hasTestableApiKey("openai") ||
+                      connectionStatuses["openai"]?.status === "testing"
+                    }
+                    onClick={() => testConnection("openai")}
+                    title={
+                      hasTestableApiKey("openai")
+                        ? "Asks OpenAI for its model list, which costs no tokens. With a saved key, the key is read on the server."
+                        : "Enter an API key before testing."
+                    }
+                    className="px-4 py-2 text-xs font-bold font-headline rounded bg-transparent border border-outline-variant/30 text-on-surface hover:bg-surface-bright transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Test Connection
+                  </button>
+                  <button
+                    type="button"
+                    disabled={
+                      savingProvider !== null ||
+                      !hasTestableApiKey("openai") ||
+                      !isProviderDirty("openai")
+                    }
+                    onClick={() => handleSaveProvider("openai")}
+                    className="px-6 py-2 text-xs font-bold font-headline rounded bg-primary-container text-on-primary-container hover:shadow-[0_0_15px_rgba(25,99,179,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {savingProvider === "openai" ? "Saving..." : "Save Changes"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                <MaskedKeyInput
+                  id="openai-api-key"
+                  label="API Key"
+                  value={form.openaiApiKey}
+                  onChange={(v) => updateField("openaiApiKey", v)}
+                  placeholder="sk-proj-..."
+                  helpText="An OpenAI API key (sk-). Stored encrypted; a saved key shows as dots and is never sent back to the browser. A restricted key must be allowed to list models and to make model requests."
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="openai-organization"
+                      className="block text-[11px] font-bold text-on-surface-variant uppercase tracking-widest font-label"
+                    >
+                      Organization (optional)
+                    </label>
+                    <div className="max-w-xl">
+                      <input
+                        id="openai-organization"
+                        type="text"
+                        value={form.openaiOrganization}
+                        onChange={(e) => updateField("openaiOrganization", e.target.value)}
+                        placeholder="org-..."
+                        spellCheck={false}
+                        autoComplete="off"
+                        className="w-full bg-surface-container-lowest border-none rounded-lg px-4 py-3 text-sm font-mono text-on-surface focus:ring-1 focus:ring-primary/40 transition-all outline-none"
+                      />
+                    </div>
+                    <p className="text-[10px] text-on-surface-variant/60 font-label">
+                      Only needed when the key belongs to several organizations.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="openai-project"
+                      className="block text-[11px] font-bold text-on-surface-variant uppercase tracking-widest font-label"
+                    >
+                      Project (optional)
+                    </label>
+                    <div className="max-w-xl">
+                      <input
+                        id="openai-project"
+                        type="text"
+                        value={form.openaiProject}
+                        onChange={(e) => updateField("openaiProject", e.target.value)}
+                        placeholder="proj_..."
+                        spellCheck={false}
+                        autoComplete="off"
+                        className="w-full bg-surface-container-lowest border-none rounded-lg px-4 py-3 text-sm font-mono text-on-surface focus:ring-1 focus:ring-primary/40 transition-all outline-none"
+                      />
+                    </div>
+                    <p className="text-[10px] text-on-surface-variant/60 font-label">
+                      Only needed when the key belongs to several projects.
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="openai-base-url"
+                    className="block text-[11px] font-bold text-on-surface-variant uppercase tracking-widest font-label"
+                  >
+                    Base URL (optional)
+                  </label>
+                  <div className="max-w-xl">
+                    <input
+                      id="openai-base-url"
+                      type="text"
+                      value={form.openaiBaseUrl}
+                      onChange={(e) => updateBaseUrl("openai", e.target.value)}
+                      placeholder="https://api.openai.com/v1"
+                      spellCheck={false}
+                      autoComplete="off"
+                      className="w-full bg-surface-container-lowest border-none rounded-lg px-4 py-3 text-sm font-mono text-on-surface focus:ring-1 focus:ring-primary/40 transition-all outline-none"
+                    />
+                  </div>
+                  <p className="text-[10px] text-on-surface-variant/60 font-label">
+                    Leave empty for <code className="font-mono">https://api.openai.com/v1</code>. Include the{" "}
+                    <code className="font-mono">/v1</code> segment when you use your own gateway. HTTPS only; this
+                    install&apos;s own services and link-local addresses are refused. Changing the base URL clears the saved
+                    key: type the key again, because a saved key is only sent to the base URL it was saved with.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
 
         {/* ── Metadata Footer ─────────────────────────────────────────── */}
@@ -788,14 +1139,8 @@ export default function ProvidersSettingsPage() {
                 Active Backends
               </p>
               <p className="text-sm font-bold text-on-surface">
-                {
-                  [
-                    form.anthropicApiKey,
-                    form.vertexServiceAccountJson && form.vertexProjectId
-                      ? "vertex"
-                      : "",
-                  ].filter(Boolean).length
-                } Configured
+                {Object.values(configured).filter(Boolean).length} of{" "}
+                {Object.keys(configured).length} Configured
               </p>
             </div>
           </div>
@@ -805,9 +1150,13 @@ export default function ProvidersSettingsPage() {
             </span>
             <div>
               <p className="text-[10px] uppercase font-bold text-on-surface-variant tracking-widest">
-                Last Sync
+                Last Connection Test
               </p>
-              <p className="text-sm font-bold text-on-surface">Just Now</p>
+              <p className="text-sm font-bold text-on-surface">
+                {lastCheck
+                  ? `${PROVIDER_LABEL[lastCheck.provider] ?? lastCheck.provider} ${lastCheck.ok ? "connected" : "failed"} at ${new Date(lastCheck.at).toLocaleTimeString()}`
+                  : "Not run this session"}
+              </p>
             </div>
           </div>
         </div>

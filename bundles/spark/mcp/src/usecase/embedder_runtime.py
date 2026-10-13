@@ -44,6 +44,8 @@ import re
 import threading
 from typing import Any, Callable
 
+from usecase.provider_store import is_own_secret_ref
+
 logger = logging.getLogger("Phantom MCP")
 
 VERTEX_PROVIDER_ID = "vertex"
@@ -163,6 +165,11 @@ class EmbedderRuntime:
         resolved: dict[str, Any] = {}
         for slot, ref in inst.secret_refs.items():
             if isinstance(ref, str) and ref.startswith("/") and self._secret_store:
+                if not is_own_secret_ref(inst.id, slot, ref):
+                    # Not this slot's own path: never follow it into another secret.
+                    logger.warning("vertex secret for %s is a foreign reference; not resolving it", slot)
+                    resolved[slot] = ""
+                    continue
                 try:
                     resolved[slot] = self._secret_store.read(ref)
                 except Exception as exc:  # noqa: BLE001
@@ -375,8 +382,29 @@ class EmbedderRuntime:
             "Embedder is in stub mode: semantic search returns hash-similarity, not "
             "real embeddings, because no Vertex provider is configured. Add one on "
             "/providers (Google Vertex AI); it takes effect as soon as it is saved, "
-            "no restart."
+            "no restart. Chat does not depend on it."
         )
+
+    def is_fault(self) -> bool:
+        """True when `warning()` describes something broken, False when it only
+        describes the normal state of an install without Vertex.
+
+        Embeddings are Vertex-only, so an install that runs its chat on Claude
+        or OpenAI alone has no Vertex provider and stays on the stub on
+        purpose. That is a limit worth telling the operator about, not a fault,
+        and `health_status` must not report the install as unhealthy for it.
+        Still a fault: a Vertex embedder that is configured but cannot start
+        (`last_error`), a Vertex provider removed while its embedder is still
+        running on the old credentials (it degrades at the next restart), and a
+        bundle that declares no embedding provider.
+        """
+        if self.warning() is None:
+            return False
+        if self._embed_provider_id != "google":
+            return True
+        if self.last_error:
+            return True
+        return self.mode == MODE_VERTEX
 
 
 _runtime: EmbedderRuntime | None = None

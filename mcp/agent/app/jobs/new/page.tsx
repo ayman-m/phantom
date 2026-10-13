@@ -69,7 +69,11 @@ import type {
   ScheduleMode,
 } from "@/lib/job-form";
 import {
+  compareProviders,
   fetchModelCatalog,
+  refForStoredModel,
+  lifecycleBadge,
+  providerName,
   selectableChatModels,
 } from "@/lib/model-catalog";
 
@@ -323,9 +327,10 @@ function CreateJobPage() {
   // post-hoc review surfaces what ran without confirmation.
   const [bypassApprovals, setBypassApprovals] = useState(false);
   // Per-job model override.
-  //   - modelId: "" means "use runtime default" (no override).
-  //     Any non-empty value is the canonical model id sent as
-  //     body.model on the chat dispatch.
+  //   - modelId: "" means "use the install default" (no override).
+  //     Any non-empty value is a canonical model ref ("provider/model")
+  //     sent as body.model on the chat dispatch. A job saved before refs
+  //     existed holds a bare id; it is shown as the ref it resolves to.
   //   - thinkingEnabled: extended-thinking toggle. Dispatched as
   //     body.thinking = true, which the chat route maps to Gemini's
   //     thinkingConfig.
@@ -341,7 +346,14 @@ function CreateJobPage() {
   const [allowedTools, setAllowedTools] = useState<string>("");
   const [deniedTools, setDeniedTools] = useState<string>("");
   const [availableModels, setAvailableModels] = useState<
-    Array<{ provider: string; model: string; displayName?: string; supportsThinking: boolean }>
+    Array<{
+      provider: string;
+      model: string;
+      ref: string;
+      displayName?: string;
+      availability?: string;
+      supportsThinking: boolean;
+    }>
   >([]);
   // loading -> ready | error. The "no models registered" hint shows only
   // for a registry that loaded and is truly empty, never while the fetch
@@ -359,7 +371,9 @@ function CreateJobPage() {
           selectableChatModels(catalog).map((m) => ({
             provider: m.provider,
             model: m.model,
+            ref: m.ref ?? `${m.provider}/${m.model}`,
             displayName: m.displayName,
+            availability: m.availability,
             supportsThinking: Boolean(m.supportsThinking),
           })),
         );
@@ -372,6 +386,15 @@ function CreateJobPage() {
     })();
     return () => ctrl.abort();
   }, []);
+
+  // A job saved before refs existed holds a bare model id. Once the registry
+  // has loaded, show it as the canonical ref it resolves to, so saving the
+  // form writes the canonical form.
+  useEffect(() => {
+    if (modelsStatus !== "ready" || !modelId) return;
+    const ref = refForStoredModel(availableModels, modelId);
+    if (ref && ref !== modelId) setModelId(ref);
+  }, [availableModels, modelsStatus, modelId]);
 
   // "Run at" datetime — defaults to 1 hour from now (a sensible future
   // point that doesn't require the operator to fight the datetime-local
@@ -827,9 +850,8 @@ function CreateJobPage() {
                 </button>
               </div>
 
-              {/* Per-job model override. Default
-                  is "Router default" (empty string → no override → use
-                  runtimeConfig.GEMINI_MODEL). Operator picks a specific
+              {/* Per-job model override. Default is the install default
+                  (empty string → no override). Operator picks a specific
                   model when they want to override cost (flash) or
                   quality (pro + thinking) for this job's dispatches. */}
               <div className="py-2 border-t border-white/5 pt-4 space-y-3">
@@ -847,12 +869,14 @@ function CreateJobPage() {
                   </p>
                   <p className="text-[10px] text-on-surface-variant max-w-md">
                     Pick a specific model for this job&apos;s dispatches.
-                    Leave on <code className="font-mono text-[10px]">Router default</code> to
-                    use whatever the runtime is configured for at
+                    Leave on <code className="font-mono text-[10px]">Install default</code> to
+                    use the default model chosen on the Models page at
                     dispatch time. Override with a cheap model
-                    (e.g. <code className="font-mono text-[10px]">gemini-2.5-flash</code>) for
+                    (e.g. <code className="font-mono text-[10px]">vertex/gemini-3.7-flash</code>) for
                     routine / volume work, or a Pro variant when this
-                    job needs the deeper reasoning path.
+                    job needs the deeper reasoning path. If the model is
+                    retired or its provider is removed, the job fails with
+                    a clear error rather than running on another model.
                   </p>
                 </div>
                 <select
@@ -865,30 +889,41 @@ function CreateJobPage() {
                     // a payload the chat-route's Gemini wrapper will
                     // silently ignore.
                     if (next) {
-                      const spec = availableModels.find((m) => m.model === next);
+                      const spec = availableModels.find((m) => m.ref === next);
                       if (spec && !spec.supportsThinking) setThinkingEnabled(false);
                     }
                   }}
                   className="w-full px-3 py-2 rounded-xl text-sm bg-surface-container-low border border-white/10 text-on-surface"
                 >
-                  <option value="">Router default (no override)</option>
+                  <option value="">Install default (no override)</option>
                   {/* A job can be pinned to a model the registry no longer
                       lists (provider removed, model retired). Keep it
                       selectable so opening the form does not silently
                       drop the override. */}
                   {modelId &&
                     modelsStatus === "ready" &&
-                    !availableModels.some((m) => m.model === modelId) && (
+                    !availableModels.some((m) => m.ref === modelId) && (
                       <option value={modelId}>
                         {modelId} (not in the registry)
                       </option>
                     )}
-                  {availableModels.map((m) => (
-                    <option key={`${m.provider}/${m.model}`} value={m.model}>
-                      {m.displayName || m.model}
-                      {m.supportsThinking ? " · thinking" : ""}
-                    </option>
-                  ))}
+                  {/* The option value is the canonical ref, which is what the
+                      job stores and the dispatch sends. */}
+                  {[...new Set(availableModels.map((m) => m.provider))]
+                    .sort(compareProviders)
+                    .map((provider) => (
+                      <optgroup key={provider} label={providerName(provider)}>
+                        {availableModels
+                          .filter((m) => m.provider === provider)
+                          .map((m) => (
+                            <option key={m.ref} value={m.ref}>
+                              {m.displayName || m.model}
+                              {m.supportsThinking ? " · thinking" : ""}
+                              {lifecycleBadge(m) ? ` · ${lifecycleBadge(m)}` : ""}
+                            </option>
+                          ))}
+                      </optgroup>
+                    ))}
                 </select>
                 {modelsStatus === "ready" && availableModels.length === 0 && (
                   <p className="text-[10px] text-on-surface-variant/60 italic">
@@ -931,7 +966,7 @@ function CreateJobPage() {
                 </div>
                 {(() => {
                   const picked = modelId
-                    ? availableModels.find((m) => m.model === modelId)
+                    ? availableModels.find((m) => m.ref === modelId)
                     : undefined;
                   // Only disable when operator has picked a specific
                   // model AND that model lacks thinking support. "Router

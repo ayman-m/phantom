@@ -1,0 +1,1281 @@
+{
+  "provenance": {
+    "commit": "f6c50edf",
+    "file": "mcp/agent/app/api/chat/route.ts",
+    "blob": "42ee2461a1796364b7edc98c4eb9efd1e043e141",
+    "recorder": "scripts/fixtures/gemini-parity/record.mjs",
+    "stubs": "fetch, GoogleAuth, getOrCreateSystemPromptCache, buildSystemPromptText, getApprovalGating, setTimeout, Math.random (0.25)",
+    "note": "Request bodies are the exact JSON.stringify strings the original code produced. No real credential appears here."
+  },
+  "scenarios": [
+    {
+      "id": "main_thinking_off_apikey",
+      "note": "",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "main_thinking_on_apikey",
+      "note": "",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]},\"generationConfig\":{\"thinkingConfig\":{\"thinkingBudget\":-1,\"includeThoughts\":true}}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "main_force_tool_use_thinking_off",
+      "note": "leak recovery retry: thinking off, mode ANY",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]},\"toolConfig\":{\"functionCallingConfig\":{\"mode\":\"ANY\"}}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "main_force_tool_use_thinking_on",
+      "note": "key order generationConfig then toolConfig",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]},\"generationConfig\":{\"thinkingConfig\":{\"thinkingBudget\":-1,\"includeThoughts\":true}},\"toolConfig\":{\"functionCallingConfig\":{\"mode\":\"ANY\"}}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "main_followup_tool_results_directive",
+      "note": "replays raw thought parts with signature; tool results incl. stop directive",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"Reasoning about the query.\",\"thought\":true,\"thoughtSignature\":\"c2lnbmF0dXJlLXBhcml0eQ==\"},{\"text\":\"I will run the query now.\"},{\"functionCall\":{\"name\":\"xsiam.run_xql_query\",\"args\":{\"query\":\"dataset = okta_sso_raw | limit 5\",\"filters\":[{\"field\":\"outcome\",\"value\":\"FAILURE\"}]}},\"thoughtSignature\":\"c2lnLXBhcml0eS0y\"},{\"functionCall\":{\"name\":\"jobs_create\",\"args\":{\"name\":\"nightly\",\"cron\":\"0 2 * * *\"}}}]},{\"role\":\"user\",\"parts\":[{\"functionResponse\":{\"name\":\"xsiam.run_xql_query\",\"response\":{\"result\":\"{\\\"rows\\\":[1,2,3]}\"}}},{\"functionResponse\":{\"name\":\"jobs_create\",\"response\":{\"error\":\"permission denied\"}}},{\"functionResponse\":{\"name\":\"caldera_list_agents\",\"response\":{\"error\":\"Tool 'caldera_list_agents' is outside the subagent's scope.\",\"blocked_by\":\"subagent_scope\"}}},{\"functionResponse\":{\"name\":\"__system_stop_directive__\",\"response\":{\"stop_directive\":\"STOP retrying the query. Summarize for the operator what failed.\"}}}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]},\"generationConfig\":{\"thinkingConfig\":{\"thinkingBudget\":-1,\"includeThoughts\":true}}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "main_followup_thinking_off",
+      "note": "escalated empty-turn retry sends thinking off",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"Reasoning about the query.\",\"thought\":true,\"thoughtSignature\":\"c2lnbmF0dXJlLXBhcml0eQ==\"},{\"text\":\"I will run the query now.\"},{\"functionCall\":{\"name\":\"xsiam.run_xql_query\",\"args\":{\"query\":\"dataset = okta_sso_raw | limit 5\",\"filters\":[{\"field\":\"outcome\",\"value\":\"FAILURE\"}]}},\"thoughtSignature\":\"c2lnLXBhcml0eS0y\"},{\"functionCall\":{\"name\":\"jobs_create\",\"args\":{\"name\":\"nightly\",\"cron\":\"0 2 * * *\"}}}]},{\"role\":\"user\",\"parts\":[{\"functionResponse\":{\"name\":\"xsiam.run_xql_query\",\"response\":{\"result\":\"{\\\"rows\\\":[1,2,3]}\"}}},{\"functionResponse\":{\"name\":\"jobs_create\",\"response\":{\"error\":\"permission denied\"}}},{\"functionResponse\":{\"name\":\"caldera_list_agents\",\"response\":{\"error\":\"Tool 'caldera_list_agents' is outside the subagent's scope.\",\"blocked_by\":\"subagent_scope\"}}},{\"functionResponse\":{\"name\":\"__system_stop_directive__\",\"response\":{\"stop_directive\":\"STOP retrying the query. Summarize for the operator what failed.\"}}}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "budget_summary_empty_tools",
+      "note": "tools:[] while contents still hold tool turns; no generationConfig",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"Reasoning about the query.\",\"thought\":true,\"thoughtSignature\":\"c2lnbmF0dXJlLXBhcml0eQ==\"},{\"text\":\"I will run the query now.\"},{\"functionCall\":{\"name\":\"xsiam.run_xql_query\",\"args\":{\"query\":\"dataset = okta_sso_raw | limit 5\",\"filters\":[{\"field\":\"outcome\",\"value\":\"FAILURE\"}]}},\"thoughtSignature\":\"c2lnLXBhcml0eS0y\"},{\"functionCall\":{\"name\":\"jobs_create\",\"args\":{\"name\":\"nightly\",\"cron\":\"0 2 * * *\"}}}]},{\"role\":\"user\",\"parts\":[{\"functionResponse\":{\"name\":\"xsiam.run_xql_query\",\"response\":{\"result\":\"{\\\"rows\\\":[1,2,3]}\"}}},{\"functionResponse\":{\"name\":\"jobs_create\",\"response\":{\"error\":\"permission denied\"}}},{\"functionResponse\":{\"name\":\"caldera_list_agents\",\"response\":{\"error\":\"Tool 'caldera_list_agents' is outside the subagent's scope.\",\"blocked_by\":\"subagent_scope\"}}},{\"functionResponse\":{\"name\":\"__system_stop_directive__\",\"response\":{\"stop_directive\":\"STOP retrying the query. Summarize for the operator what failed.\"}}}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Tool budget reached. Summarize your findings so far for the operator, even if the investigation is incomplete. Do not call any more tools.\"}]}],\"tools\":[],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "summarize_apikey",
+      "note": "",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"user: hello\\nassistant: hi there\\nuser: list datasets\"}]}],\"tools\":[],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"Summarize the transcript in five bullet points.\"}]}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": "ok"
+      }
+    },
+    {
+      "id": "subagent_apikey",
+      "note": "",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"Reasoning about the query.\",\"thought\":true,\"thoughtSignature\":\"c2lnbmF0dXJlLXBhcml0eQ==\"},{\"text\":\"I will run the query now.\"},{\"functionCall\":{\"name\":\"xsiam.run_xql_query\",\"args\":{\"query\":\"dataset = okta_sso_raw | limit 5\",\"filters\":[{\"field\":\"outcome\",\"value\":\"FAILURE\"}]}},\"thoughtSignature\":\"c2lnLXBhcml0eS0y\"},{\"functionCall\":{\"name\":\"jobs_create\",\"args\":{\"name\":\"nightly\",\"cron\":\"0 2 * * *\"}}}]},{\"role\":\"user\",\"parts\":[{\"functionResponse\":{\"name\":\"xsiam.run_xql_query\",\"response\":{\"result\":\"{\\\"rows\\\":[1,2,3]}\"}}},{\"functionResponse\":{\"name\":\"jobs_create\",\"response\":{\"error\":\"permission denied\"}}},{\"functionResponse\":{\"name\":\"caldera_list_agents\",\"response\":{\"error\":\"Tool 'caldera_list_agents' is outside the subagent's scope.\",\"blocked_by\":\"subagent_scope\"}}},{\"functionResponse\":{\"name\":\"__system_stop_directive__\",\"response\":{\"stop_directive\":\"STOP retrying the query. Summarize for the operator what failed.\"}}}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"You are the parity subagent. Use only the tools you are given.\"}]}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "main_vertex_json_global",
+      "note": "gemini-3 resolves location global",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/global/publishers/google/models/gemini-3.1-pro-preview:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"Reasoning about the query.\",\"thought\":true,\"thoughtSignature\":\"c2lnbmF0dXJlLXBhcml0eQ==\"},{\"text\":\"I will run the query now.\"},{\"functionCall\":{\"name\":\"xsiam.run_xql_query\",\"args\":{\"query\":\"dataset = okta_sso_raw | limit 5\",\"filters\":[{\"field\":\"outcome\",\"value\":\"FAILURE\"}]}},\"thoughtSignature\":\"c2lnLXBhcml0eS0y\"},{\"functionCall\":{\"name\":\"jobs_create\",\"args\":{\"name\":\"nightly\",\"cron\":\"0 2 * * *\"}}}]},{\"role\":\"user\",\"parts\":[{\"functionResponse\":{\"name\":\"xsiam.run_xql_query\",\"response\":{\"result\":\"{\\\"rows\\\":[1,2,3]}\"}}},{\"functionResponse\":{\"name\":\"jobs_create\",\"response\":{\"error\":\"permission denied\"}}},{\"functionResponse\":{\"name\":\"caldera_list_agents\",\"response\":{\"error\":\"Tool 'caldera_list_agents' is outside the subagent's scope.\",\"blocked_by\":\"subagent_scope\"}}},{\"functionResponse\":{\"name\":\"__system_stop_directive__\",\"response\":{\"stop_directive\":\"STOP retrying the query. Summarize for the operator what failed.\"}}}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]},\"generationConfig\":{\"thinkingConfig\":{\"thinkingBudget\":-1,\"includeThoughts\":true}}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "main_vertex_json_us_central",
+      "note": "gemini-2.5 resolves location us-central1",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/us-central1/publishers/google/models/gemini-2.5-pro:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-2.5-pro"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "main_vertex_keyfile",
+      "note": "key file path: project id comes from the auth client",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/adc-project/locations/global/publishers/google/models/gemini-3.1-pro-preview:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": false,
+          "credentialsProjectId": null,
+          "keyFile": "/etc/parity/service-account.json",
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "summarize_vertex",
+      "note": "",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"user: hello\\nassistant: hi there\\nuser: list datasets\"}]}],\"tools\":[],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"Summarize the transcript in five bullet points.\"}]}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": "ok"
+      }
+    },
+    {
+      "id": "subagent_vertex",
+      "note": "",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/global/publishers/google/models/gemini-3.1-pro-preview:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"You are the parity subagent. Use only the tools you are given.\"}]}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "vertex_cache_swap",
+      "note": "cachedContent replaces systemInstruction, key placed last",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/global/publishers/google/models/gemini-3.1-pro-preview:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"Reasoning about the query.\",\"thought\":true,\"thoughtSignature\":\"c2lnbmF0dXJlLXBhcml0eQ==\"},{\"text\":\"I will run the query now.\"},{\"functionCall\":{\"name\":\"xsiam.run_xql_query\",\"args\":{\"query\":\"dataset = okta_sso_raw | limit 5\",\"filters\":[{\"field\":\"outcome\",\"value\":\"FAILURE\"}]}},\"thoughtSignature\":\"c2lnLXBhcml0eS0y\"},{\"functionCall\":{\"name\":\"jobs_create\",\"args\":{\"name\":\"nightly\",\"cron\":\"0 2 * * *\"}}}]},{\"role\":\"user\",\"parts\":[{\"functionResponse\":{\"name\":\"xsiam.run_xql_query\",\"response\":{\"result\":\"{\\\"rows\\\":[1,2,3]}\"}}},{\"functionResponse\":{\"name\":\"jobs_create\",\"response\":{\"error\":\"permission denied\"}}},{\"functionResponse\":{\"name\":\"caldera_list_agents\",\"response\":{\"error\":\"Tool 'caldera_list_agents' is outside the subagent's scope.\",\"blocked_by\":\"subagent_scope\"}}},{\"functionResponse\":{\"name\":\"__system_stop_directive__\",\"response\":{\"stop_directive\":\"STOP retrying the query. Summarize for the operator what failed.\"}}}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"generationConfig\":{\"thinkingConfig\":{\"thinkingBudget\":-1,\"includeThoughts\":true}},\"cachedContent\":\"cachedContents/parity-1\"}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [
+        {
+          "systemPromptText": "PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)",
+          "modelName": "gemini-3.1-pro-preview",
+          "projectId": "parity-project",
+          "location": "global",
+          "accessToken": "fake-access-token-parity"
+        }
+      ],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "vertex_cache_miss_inline",
+      "note": "helper returns null: systemInstruction stays inline",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/global/publishers/google/models/gemini-3.1-pro-preview:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [
+        {
+          "systemPromptText": "PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)",
+          "modelName": "gemini-3.1-pro-preview",
+          "projectId": "parity-project",
+          "location": "global",
+          "accessToken": "fake-access-token-parity"
+        }
+      ],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "vertex_cache_throws_inline",
+      "note": "helper throws: warn and inline",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/global/publishers/google/models/gemini-3.1-pro-preview:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [
+        {
+          "systemPromptText": "PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)",
+          "modelName": "gemini-3.1-pro-preview",
+          "projectId": "parity-project",
+          "location": "global",
+          "accessToken": "fake-access-token-parity"
+        }
+      ],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [
+        [
+          "vertex-cache: unexpected error, falling back to inline systemInstruction:",
+          "cache helper exploded"
+        ]
+      ],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "vertex_cache_flag_off_ignores_cache",
+      "note": "flag not \"1\": helper is never consulted",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/global/publishers/google/models/gemini-3.1-pro-preview:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "apikey_invalid_falls_back_to_vertex",
+      "note": "first request on the API key, second on Vertex",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        },
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/global/publishers/google/models/gemini-3.1-pro-preview:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "rate_limit_retry_then_ok",
+      "note": "two 429s then success: identical bodies, backoff sleeps 2250 then 4250",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        },
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        },
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [
+        2250,
+        4250
+      ],
+      "warns": [
+        [
+          "[chat] gemini-api-key:gemini-3.1-pro-preview hit 429; retry 1/5 in 2250ms"
+        ],
+        [
+          "[chat] gemini-api-key:gemini-3.1-pro-preview hit 429; retry 2/5 in 4250ms"
+        ]
+      ],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "rate_limit_vertex_retry_then_ok",
+      "note": "Vertex path retries too; label vertex:<model>@<location>",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        },
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/us-central1/publishers/google/models/gemini-2.5-flash:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-2.5-flash"
+      ],
+      "sleeps": [
+        2250
+      ],
+      "warns": [
+        [
+          "[chat] vertex:gemini-2.5-flash@us-central1 hit 429; retry 1/5 in 2250ms"
+        ]
+      ],
+      "result": {
+        "value": {
+          "candidates": [
+            {
+              "content": {
+                "role": "model",
+                "parts": [
+                  {
+                    "text": "ok"
+                  }
+                ]
+              },
+              "finishReason": "STOP"
+            }
+          ],
+          "usageMetadata": {
+            "promptTokenCount": 12,
+            "cachedContentTokenCount": 4,
+            "candidatesTokenCount": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "error_rate_limit_exhausted",
+      "note": "6 x 429: 5 retries then the original error is thrown",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        },
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        },
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        },
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        },
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        },
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [
+        2250,
+        4250,
+        8250,
+        16250,
+        32250
+      ],
+      "warns": [
+        [
+          "[chat] gemini-api-key:gemini-3.1-pro-preview hit 429; retry 1/5 in 2250ms"
+        ],
+        [
+          "[chat] gemini-api-key:gemini-3.1-pro-preview hit 429; retry 2/5 in 4250ms"
+        ],
+        [
+          "[chat] gemini-api-key:gemini-3.1-pro-preview hit 429; retry 3/5 in 8250ms"
+        ],
+        [
+          "[chat] gemini-api-key:gemini-3.1-pro-preview hit 429; retry 4/5 in 16250ms"
+        ],
+        [
+          "[chat] gemini-api-key:gemini-3.1-pro-preview hit 429; retry 5/5 in 32250ms"
+        ]
+      ],
+      "result": {
+        "thrown": "Gemini API error: 429 Resource exhausted"
+      }
+    },
+    {
+      "id": "error_apikey_500",
+      "note": "no retry on non-429",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "thrown": "Gemini API error: 500 internal boom"
+      }
+    },
+    {
+      "id": "error_vertex_500",
+      "note": "",
+      "requests": [
+        {
+          "url": "https://aiplatform.googleapis.com/v1/projects/parity-project/locations/global/publishers/google/models/gemini-3.1-pro-preview:generateContent",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer fake-access-token-parity"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [
+        {
+          "hasCredentials": true,
+          "credentialsProjectId": "parity-project",
+          "keyFile": null,
+          "scopes": [
+            "https://www.googleapis.com/auth/cloud-platform"
+          ]
+        }
+      ],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "thrown": "Vertex AI error: 500 internal boom"
+      }
+    },
+    {
+      "id": "error_apikey_other_400_no_fallback",
+      "note": "only an invalid-key error falls through to Vertex",
+      "requests": [
+        {
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent?key=FAKE-GEMINI-KEY-parity-0001",
+          "method": "POST",
+          "headers": {
+            "Content-Type": "application/json"
+          },
+          "body": "{\"contents\":[{\"role\":\"user\",\"parts\":[{\"text\":\"List the XSIAM datasets\"}]},{\"role\":\"model\",\"parts\":[{\"text\":\"There are three datasets.\"}]},{\"role\":\"user\",\"parts\":[{\"text\":\"Now query the Okta dataset for failed logins\"}]}],\"tools\":[{\"functionDeclarations\":[{\"name\":\"xsiam.run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"xsiam_run_xql_query\",\"description\":\"Run an XQL query\",\"parameters\":{\"type\":\"object\",\"properties\":{\"query\":{\"type\":\"string\",\"description\":\"XQL text\",\"minLength\":1},\"filters\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"field\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}},\"required\":[\"field\"]}},\"mode\":{\"description\":\"Execution mode (simplified)\",\"type\":\"object\"},\"options\":{\"type\":\"object\",\"properties\":{\"limit\":{\"type\":\"integer\"}}}},\"required\":[\"query\"]}},{\"name\":\"jobs_create\",\"description\":\"Create a scheduled job\",\"parameters\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"cron\":{\"type\":\"string\"}},\"required\":[\"name\"]}},{\"name\":\"no_schema_tool\",\"description\":\"\",\"parameters\":{}},{\"name\":\"tree_tool\",\"description\":\"Takes a recursive structure\",\"parameters\":{\"type\":\"object\",\"properties\":{\"root\":{\"type\":\"object\",\"properties\":{\"child\":{\"type\":\"object\",\"description\":\"Recursive reference to Node\"}}}}}},{\"name\":\"list_tool\",\"description\":\"Takes a list of variants\",\"parameters\":{\"type\":\"object\",\"properties\":{\"items\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"description\":\"Complex variant (simplified)\"},\"maxItems\":5}}}},{\"name\":\"subagent_create\",\"description\":\"Spawn a scoped subagent to perform a focused task. The subagent runs with its own system prompt and a curated tool subset.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"agent_name\":{\"type\":\"string\",\"description\":\"Name of the agent definition.\"},\"prompt\":{\"type\":\"string\",\"description\":\"The task for the subagent.\"}},\"required\":[\"agent_name\",\"prompt\"]}}]}],\"systemInstruction\":{\"role\":\"system\",\"parts\":[{\"text\":\"PARITY SYSTEM PROMPT (stands in for buildSystemPromptText output)\"}]}}"
+        }
+      ],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "thrown": "Gemini API error: 400 bad request, not a key problem"
+      }
+    },
+    {
+      "id": "error_placeholder_credential",
+      "note": "",
+      "requests": [],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "thrown": "GOOGLE_APPLICATION_CREDENTIALS private_key looks like a placeholder (4 chars between BEGIN/END markers; real keys are ~1600+ chars). Set GEMINI_API_KEY for direct API access, or replace with a real GCP service-account JSON."
+      }
+    },
+    {
+      "id": "error_no_provider_main",
+      "note": "",
+      "requests": [],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [
+        "gemini-3.1-pro-preview"
+      ],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "thrown": "No model provider is configured. Add a Vertex AI or Gemini API provider at /providers, then try again."
+      }
+    },
+    {
+      "id": "error_no_provider_subagent",
+      "note": "",
+      "requests": [],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "thrown": "No model provider is configured. Add a Vertex AI or Gemini API provider at /providers, then retry — the subagent uses the same provider as the main chat agent."
+      }
+    },
+    {
+      "id": "error_no_provider_summarize",
+      "note": "",
+      "requests": [],
+      "authCalls": [],
+      "cacheCalls": [],
+      "systemPromptModelArgs": [],
+      "sleeps": [],
+      "warns": [],
+      "result": {
+        "thrown": "No model provider is configured for the conversation summarizer. Add a Vertex AI or Gemini API provider at /providers."
+      }
+    }
+  ]
+}

@@ -17,10 +17,9 @@
  *  - AuthGate does not branch on a "setup needed" state — defaults
  *    are seeded by entrypoint.sh on first boot, login works
  *    immediately.
- *  - GEMINI_MODEL / defaultLogFormat
- *    fall back to env defaults; operator overrides via
- *    /settings/personality flow into settings_store and are read by
- *    the MCP side, not by this module.
+ *  - The default chat model is the `defaultModel` setting (a canonical
+ *    provider/model ref in the MCP settings store); lib/model-registry-server.ts
+ *    reads it. There is no model env var.
  *
  * # Layering
  *
@@ -39,7 +38,6 @@ export type RuntimeConfigValues = {
   MCP_TOKEN?: string;
   GOOGLE_APPLICATION_CREDENTIALS?: string;
   GEMINI_API_KEY?: string;
-  GEMINI_MODEL?: string;
   SSL_CERT_PEM?: string;
   SSL_KEY_PEM?: string;
   PHANTOM_TLS_VERIFY?: string;
@@ -57,8 +55,6 @@ export type EffectiveRuntimeConfig = RuntimeConfigValues & {
 };
 
 /* ─── Constants ────────────────────────────────────────────── */
-
-const DEFAULT_MODEL = "gemini-3.1-pro-preview";
 
 /** Bundle-internal coordination keys. Container env wins; never
  *  operator-typed. The embedded MCP reads MCP_TOKEN from the same
@@ -115,7 +111,6 @@ export async function getEffectiveRuntimeConfig(): Promise<EffectiveRuntimeConfi
     GOOGLE_APPLICATION_CREDENTIALS:
       vertexFromStore || get("GOOGLE_APPLICATION_CREDENTIALS"),
     GEMINI_API_KEY: get("GEMINI_API_KEY"),
-    GEMINI_MODEL: get("GEMINI_MODEL", DEFAULT_MODEL),
     SSL_CERT_PEM: get("SSL_CERT_PEM"),
     SSL_KEY_PEM: get("SSL_KEY_PEM"),
     PHANTOM_TLS_VERIFY: get("PHANTOM_TLS_VERIFY"),

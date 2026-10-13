@@ -170,9 +170,6 @@ def validate_manifest(bundle_dir: Path, manifest: dict) -> list[str]:
                         f"providers/{pid}/provider.yaml id={spec.get('id')!r} "
                         f"does not match manifest providers[].id={pid!r}"
                     )
-                models = (spec.get("spec") or {}).get("models") or []
-                if not isinstance(models, list):
-                    errors.append(f"providers/{pid}/provider.yaml: spec.models must be a list")
             except ValueError as exc:
                 errors.append(str(exc))
         except ValueError as exc:

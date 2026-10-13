@@ -33,6 +33,21 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "1.0.5",
+    date: "Unreleased", // set to the ISO publish date when v1.0.5 is tagged
+    title: "Model providers: Claude and OpenAI beside Vertex, with a live model registry and one default model.",
+    breaking: true,
+    highlights: [
+      "Run Phantom on Claude or OpenAI with an API key; Vertex is now optional.",
+      "A live model registry merges each provider's own model list with prices and availability badges.",
+      "One default model, set with Set as default on Models; GEMINI_MODEL and the ANTHROPIC_API_KEY variable are gone.",
+      "A model that cannot run fails the turn with MODEL_UNAVAILABLE instead of being swapped silently.",
+      "Cost is tracked per provider and model; calls with no known price show as unpriced, never $0.",
+      "New Test Connection buttons, audit chips for provider activity, and five journeys for the new flows.",
+      "An old geminiModel setting moves to the default model only if the catalog serves it; otherwise it is dropped and audited.",
+    ],
+  },
+  {
     version: "1.0.4",
     date: "Unreleased", // set to the ISO publish date when v1.0.4 is tagged
     title: "Hook, benchmark and status fixes, and documentation coverage.",

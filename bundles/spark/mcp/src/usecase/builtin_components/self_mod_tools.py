@@ -145,6 +145,16 @@ def settings_get() -> dict[str, Any]:
     current overrides, and the merged effective values.
 
     Returns {defaults, overridable, effective, overrides}.
+
+    `effective.defaultModel` is the install's default model, a canonical
+    "provider/model" ref (provider ids: vertex, anthropic, openai), for example
+    "anthropic/claude-sonnet-5-5". It is what a chat turn, job or subagent
+    uses when no model is picked for it. The operator sets it with "Set as
+    default" on /models; you cannot change it (see settings_update). If it names
+    a provider that has no credentials, chat uses the recommended model of the
+    first configured provider instead, which /models shows as "Default
+    (derived)". To say which model THIS conversation runs on, use the model
+    named in your system prompt, not this setting.
     """
     from usecase.settings_store import settings_store
     s = settings_store()
@@ -167,8 +177,9 @@ def personality_get() -> dict[str, Any]:
     `personalityMd` is the persona document rendered into your system
     prompt; `actionPolicy` is the local/external confirmation policy
     the chat route enforces. A blob saved by an older release may also
-    carry keys nothing reads any more (permissionLevel, defaultModel,
-    fallbackModel, maxConcurrentRuns, dailySummary, summaryTime,
+    carry keys nothing reads any more (permissionLevel, defaultModel
+    (the persona's old copy; the install default is the `defaultModel`
+    setting, read with settings_get), fallbackModel, maxConcurrentRuns, dailySummary, summaryTime,
     escalationThreshold, vertexCacheEnabled, autoCompactMinDropped,
     memoryMmrLambda, memoryTemporalDecayLambda); ignore them and do not
     offer to change them.
@@ -256,41 +267,78 @@ def instances_get(instance_id: str) -> dict[str, Any]:
 
 
 # ─────────────────────────────────────────────────────────────────
-# Providers — model providers (Vertex, future OpenAI etc).
+# Providers — model providers (Vertex, Anthropic, OpenAI).
 # Trigger phrases: "what models can I use?", "is Vertex configured?",
-# "list my LLM providers"
+# "is Claude set up?", "list my LLM providers"
 # ─────────────────────────────────────────────────────────────────
+
+
+# Config values the agent may read back. Vertex's project and region say which
+# Google project the install is wired to, which the agent needs to answer "is
+# Vertex configured?". Every other config key (an OpenAI organization or
+# project id, a gateway base URL, anything a later provider adds) is reported as
+# set or not, never as its value: the agent has no use for them, and an id or an
+# internal gateway host in a chat transcript is a disclosure.
+_PROVIDER_CONFIG_SHOWN: dict[str, tuple[str, ...]] = {"vertex": ("project_id", "region")}
+
+
+def _provider_view(p: Any) -> dict[str, Any]:
+    shown = _PROVIDER_CONFIG_SHOWN.get(p.provider_id, ())
+    return {
+        "id": p.id,
+        "name": p.name,
+        "provider_id": p.provider_id,
+        "config": {k: v for k, v in p.config.items() if k in shown},
+        "config_set": {
+            k: (v is not None and v != "")
+            for k, v in p.config.items()
+            if k not in shown
+        },
+        "secret_refs": dict(p.secret_refs),
+        "created_at": getattr(p, "created_at", None),
+        "updated_at": getattr(p, "updated_at", None),
+    }
 
 
 def providers_list(provider_id: str | None = None) -> dict[str, Any]:
     """List materialized provider instances. Secrets redacted (paths only).
 
-    Args:
-        provider_id: optional filter — "vertex", future "openai". Null = all.
+    The provider ids are "vertex" (Google Gemini models, service-account JSON),
+    "anthropic" (Claude models, API key) and "openai" (OpenAI models, API key).
+    A provider with no instance here is not configured, and its models are not
+    selectable on /models or in chat. This lists configuration only: it never
+    returns a key, and which models exist is on /models (GET /api/agent/models).
+    You cannot add, change or test a provider; send the operator to /providers.
 
-    Returns {providers: [{id, name, provider_id, config, secret_refs}], count}.
+    Settings other than Vertex's project_id and region are reported only as
+    set or not set (config_set), never as values: an OpenAI organization or
+    project id and a base URL are not shown to the agent. To tell the operator
+    whether a gateway base URL is in use, say "a custom base URL is set"
+    (config_set.base_url true); they can read the value on /providers.
+
+    Args:
+        provider_id: optional filter — "vertex", "anthropic" or "openai". Null = all.
+
+    Returns {providers: [{id, name, provider_id, config (vertex: project_id,
+             region; otherwise empty), config_set: {key: bool}, secret_refs,
+             created_at, updated_at}], count}.
     """
     from usecase.provider_store import provider_store
     s = provider_store()
     if s is None:
         return {"error": "provider store not initialized on this MCP runtime"}
     rows = s.list_for(provider_id) if provider_id else s.list_all()
-    out = []
-    for p in rows:
-        out.append({
-            "id": p.id,
-            "name": p.name,
-            "provider_id": p.provider_id,
-            "config": dict(p.config),
-            "secret_refs": dict(p.secret_refs),
-            "created_at": getattr(p, "created_at", None),
-            "updated_at": getattr(p, "updated_at", None),
-        })
+    out = [_provider_view(p) for p in rows]
     return {"providers": out, "count": len(out)}
 
 
 def providers_get(provider_instance_id: str) -> dict[str, Any]:
-    """Fetch one provider instance by id."""
+    """Fetch one provider instance by id.
+
+    Same shape and the same redaction as providers_list: Vertex's project_id and
+    region are values; every other setting (organization, project, base URL) is
+    only reported as set or not in config_set. Secrets are never returned.
+    """
     from usecase.provider_store import provider_store
     s = provider_store()
     if s is None:
@@ -298,17 +346,7 @@ def providers_get(provider_instance_id: str) -> dict[str, Any]:
     p = s.get(provider_instance_id)
     if p is None:
         return {"error": f"provider instance {provider_instance_id!r} not found"}
-    return {
-        "provider": {
-            "id": p.id,
-            "name": p.name,
-            "provider_id": p.provider_id,
-            "config": dict(p.config),
-            "secret_refs": dict(p.secret_refs),
-            "created_at": getattr(p, "created_at", None),
-            "updated_at": getattr(p, "updated_at", None),
-        },
-    }
+    return {"provider": _provider_view(p)}
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -634,6 +672,15 @@ def health_status() -> dict[str, Any]:
     whenever a Vertex provider is saved on /providers, so it never lags the
     stored configuration. Falls back to the PHANTOM_EMBEDDER_MODE env var only
     when no runtime is wired (unit tests, a docker-exec shell).
+
+    Embeddings (memory and knowledge-base search) are Vertex-only. On an
+    install that has no Vertex provider (chat on Claude or OpenAI alone) the
+    embedder is in stub mode, which returns hash-similarity scores instead of
+    semantic matches. That is reported in `embedder_warning` and
+    `embedder_mode: "stub"` but does NOT make `ok` false: `ok` is false only
+    for a fault, such as a configured Vertex embedder that cannot start. When
+    you relay this, say that memory and knowledge search are not semantic on
+    this install and that chat is unaffected; do not call the install unhealthy.
     """
     out: dict[str, Any] = {"ok": True}
 
@@ -653,8 +700,11 @@ def health_status() -> dict[str, Any]:
             else "Embedder mode could not be read from the running server."
         )
     if warning:
-        out["ok"] = False
         out["embedder_warning"] = warning
+        # Only a fault turns `ok` off. No Vertex provider is a normal state on
+        # a Claude-only or OpenAI-only install.
+        if rt is None or rt.is_fault():
+            out["ok"] = False
 
     # Cross-model embedding mismatches — rows in memory.db whose
     # stored vector was produced by a DIFFERENT embedder than the one
@@ -821,22 +871,35 @@ async def jobs_create(
             because once a job is bypassed it can do destructive work
             at 3am without the operator looking — match the operator's
             stated intent, don't infer it.
-        model_id: per-job model override.
+        model_id: per-job model override, a canonical model ref
+            "provider/model" (for example "vertex/gemini-3.7-flash",
+            "anthropic/claude-haiku-5-5" or "openai/gpt-6-luna"; the
+            provider ids are vertex, anthropic and openai).
             When set, the job's chat dispatches send `body.model =
-            <id>` so the chat route's resolveModelName picks it over
-            the runtime default (runtimeConfig.GEMINI_MODEL). Use
-            cheap models for high-volume / triage workloads
-            ("gemini-2.5-flash") and reserve the default for tasks
-            where quality matters. Concrete trigger phrases: "run
-            this job on flash", "use gemini-pro for the nightly
-            summary", "run this on the cheap model". Omit (default
-            None) to use whatever the runtime is configured for at
-            dispatch time.
+            <ref>` and the chat route runs the job on exactly that
+            model; omit it and the job runs on the install's default
+            model (set by the operator on /models). Use cheap models
+            for high-volume / triage workloads and reserve the default
+            for tasks where quality matters. Concrete trigger phrases:
+            "run this job on flash", "use gemini-pro for the nightly
+            summary", "run this on Claude", "run this on the cheap
+            model". The refs the
+            install accepts are listed by GET /api/agent/models (the
+            /models page); this tool does not check the value, but a
+            ref that is unknown, retired or whose provider is not
+            configured makes every dispatch FAIL with MODEL_UNAVAILABLE
+            (the run is marked failed and the job-run-failed
+            notification fires). Nothing is ever substituted. A bare id
+            such as "gemini-3.7-flash" still resolves when exactly one
+            configured provider offers it, but always write the
+            canonical ref. Omit (default None) to use the install
+            default.
         thinking_enabled: extended-thinking toggle.
             When true, the job's dispatch carries `body.thinking
             = true` so the model uses its extended-reasoning path
-            (Gemini's thinkingConfig — only honored on Pro variants;
-            flash models silently ignore). Set when the operator says
+            (each provider maps it to its own reasoning mode: Gemini
+            thinking, Claude thinking, OpenAI reasoning; a model with no
+            thinking mode silently ignores it). Set when the operator says
             "use deep thinking", "give it more reasoning room",
             "extended thinking for this job". Default false.
         permission_policy: per-job tool allowlist.
@@ -973,12 +1036,14 @@ async def jobs_update(
         model_id: per-job model override.
             Sentinel semantics: omit / None to preserve the current
             override; empty string "" to CLEAR the override (revert
-            to runtime default); any other string to set to that
-            model id. Example payloads: `{"model_id": "gemini-2.5-
-            flash"}` to switch to flash; `{"model_id": ""}` to
-            clear; omitting the field entirely leaves the existing
-            value untouched. See jobs_create for the full discussion
-            of when to set it.
+            to the install's default model); any other string to set
+            to that model ref. Example payloads:
+            `{"model_id": "vertex/gemini-3.7-flash"}` to switch to
+            flash; `{"model_id": ""}` to clear; omitting the field
+            entirely leaves the existing value untouched. Always a
+            canonical "provider/model" ref. See jobs_create for the
+            full discussion of when to set it and what happens when
+            the model is unavailable.
         thinking_enabled: toggle extended thinking on/off for this
             job's dispatches. Tri-state — omit to keep
             current, true / false to set. See jobs_create's docstring
@@ -1199,7 +1264,7 @@ def _protected_setting_rejection(key: str) -> dict[str, Any]:
         "reason": (
             f"'{key}' selects the model and is operator-only: the agent cannot "
             "change or clear it. The operator sets the default model outside "
-            "chat (settings REST API); a chat session's model is a per-session "
+            "chat (Set as default on /models, or the settings REST API); a chat session's model is a per-session "
             "preference (/model <name>) and never a global setting."
         ),
     }
@@ -1227,10 +1292,13 @@ async def settings_update(
     rejected — connector credentials and provider credentials are set by
     the operator on the Instances and Providers pages, not by the agent.
 
-    MODEL SELECTION IS NOT WRITABLE HERE. `geminiModel` (and any other
-    key whose name ends in "model") is operator-only: the operator sets
-    the global default model outside chat, over the settings REST API
-    (PUT /api/agent/settings). A call
+    MODEL SELECTION IS NOT WRITABLE HERE. `defaultModel`, the install's
+    default model (a canonical "provider/model" ref such as
+    "vertex/gemini-3.1-pro-preview"), and any other key whose name ends
+    in "model" is operator-only: the operator sets the default with the
+    "Set as default" action on /models (or the settings REST API,
+    PUT /api/agent/settings, which checks the ref against the model
+    registry). You can READ it with settings_get. A call
     naming such a key is refused with a `rejected[]` entry and changes
     nothing. A chat session's model is a per-session preference (header
     dropdown, or the operator's `/model <name>` command) and is NOT a
@@ -1445,7 +1513,7 @@ async def approvals_resolve(
 #   "delete the daily-soc-coverage job"            → jobs_delete
 #   "remove the legacy skill X"                    → skills_delete
 #   "reset my personality to defaults"             → personality_reset
-#   "clear the geminiModel override"               → settings_reset
+#   "clear the defaultModel override"              → settings_reset (refused for model keys)
 #
 # Deleting connector instances and providers is NOT here: those hold
 # credentials and are REST-only (usecase/credential_guardrail.py).
@@ -1576,7 +1644,7 @@ async def settings_reset(
 ) -> dict[str, Any]:
     """Clear runtime settings overrides. Waits for approval when the install gates it (destructive).
 
-    Model-selection keys (`geminiModel` and any key ending in "model")
+    Model-selection keys (`defaultModel` and any key ending in "model")
     are operator-only and are never cleared by this tool: naming one is
     refused, and clearing everything leaves them untouched. Both cases
     list them under `rejected[]`.
@@ -2509,12 +2577,15 @@ async def bench_run(
             "run the phantom-soc-v1 benchmark", "run the bench
             manifest at /tmp/my-bench.yaml".
         router_preset_model: Optional per-bench model override sent as
-            body.model on every dispatched case. Use "gemini-2.5-flash"
-            for a cheap-routing preset bench, "gemini-3.1-pro-preview"
-            for a thinking-on-by-default preset, or omit to use the
-            runtime default.
+            body.model on every dispatched case, a canonical "provider/
+            model" ref. Use "vertex/gemini-3.7-flash" for a cheap-routing
+            preset bench, "vertex/gemini-3.1-pro-preview" for a
+            thinking-on-by-default preset, or omit to use the install
+            default. A model that is unknown or unavailable fails each
+            case with MODEL_UNAVAILABLE; nothing is substituted.
         thinking_enabled: Pass through to body.thinking on every case.
-            Only honored on Pro models.
+            Honored by models that have a thinking or reasoning mode;
+            others ignore it.
 
     Returns: { "run_id": str, "summary": {...} } on success;
              { "error": str } on manifest-parse failure.

@@ -10,6 +10,9 @@
  * DELETE  → remove the instance row.
  */
 
+import { NextResponse } from 'next/server';
+
+import { instanceSecretsError } from '@/lib/instance-secrets';
 import { proxyToMcp } from '@/lib/mcp-proxy';
 
 export const dynamic = 'force-dynamic';
@@ -27,7 +30,12 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  return proxyToMcp(request, `/api/v1/instances/${encodeURIComponent(id)}`);
+  // A secret starting with "/" would be read by the MCP as a path to another
+  // stored secret; refuse it before it gets there.
+  const body = await request.text();
+  const error = instanceSecretsError(body);
+  if (error) return NextResponse.json({ error }, { status: 400 });
+  return proxyToMcp(request, `/api/v1/instances/${encodeURIComponent(id)}`, { body });
 }
 
 export async function DELETE(

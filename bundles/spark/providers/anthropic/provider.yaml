@@ -1,0 +1,32 @@
+# Anthropic Claude provider for the Phantom SOC simulation agent.
+#
+# Claude chat models over the Anthropic Messages API with a direct API key.
+# This file declares only what the /providers page collects: one optional
+# config field and one secret. The agent's own adapter
+# (mcp/agent/lib/providers/anthropic) makes the calls, reading these values
+# from the provider store per call, so there is no Python entrypoint here.
+# Which models exist is the agent's model registry
+# (mcp/agent/lib/providers/registry), merged with the live model list this
+# key can see.
+
+id: "anthropic"
+version: "1.0.0"
+description: "Anthropic Claude chat models (Messages API, direct API key)."
+
+configSchema:
+  type: "object"
+  properties:
+    base_url:
+      type: "string"
+      description: |
+        Optional base URL for an Anthropic-compatible gateway. HTTPS only;
+        loopback, link-local and this install's own service names are refused.
+        Empty means https://api.anthropic.com.
+      default: "https://api.anthropic.com"
+
+secretSlots:
+  - name: "api_key"
+    description: |
+      Anthropic API key (sk-ant-api03-...). Sent as a bearer token to the base
+      URL on every model call and when the Providers page tests the connection.
+    required: true

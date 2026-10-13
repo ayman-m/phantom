@@ -122,9 +122,36 @@ def test_boot_without_a_vertex_provider_is_stub_and_points_at_providers(world):
     assert world.runtime.mode == "stub"
     assert world.memory.store(key="k", value="v").embedding_model == "texthash-v1-768d"
     h = health_status()
-    assert h["embedder_mode"] == "stub" and h["ok"] is False
+    # v1.0.5: no Vertex provider is the normal state of a Claude-only or
+    # OpenAI-only install (embeddings are Vertex-only), so it is reported but
+    # does not make the install unhealthy. See the fault tests below.
+    assert h["embedder_mode"] == "stub" and h["ok"] is True
     assert "/providers" in h["embedder_warning"]
     assert "/setup" not in h["embedder_warning"]
+    assert "Chat does not depend on it" in h["embedder_warning"]
+    assert world.runtime.is_fault() is False
+
+
+def test_an_install_without_vertex_stays_healthy_after_other_providers_are_saved(world):
+    """Claude-only / OpenAI-only: chat runs on another provider, the embedder
+    stays on the stub on purpose, and nothing about that is a fault."""
+    for provider_id in ("anthropic", "openai"):
+        r = world.client.post(
+            "/api/v1/providers",
+            json={"provider_id": provider_id, "name": f"primary-{provider_id}", "config": {}, "secrets": {"api_key": "key-for-tests"}},
+        )
+        assert r.status_code == 201, r.text
+    assert world.runtime.mode == "stub"
+    h = health_status()
+    assert h["ok"] is True and h["embedder_mode"] == "stub"
+    assert "embedder_warning" in h, "the limit is still reported"
+
+
+def test_a_vertex_provider_that_cannot_start_is_still_a_fault(world):
+    FakeVertexProvider.fail = True
+    world.client.post("/api/v1/providers", json=VERTEX_BODY)
+    assert world.runtime.is_fault() is True
+    assert health_status()["ok"] is False
 
 
 def test_saving_a_vertex_provider_moves_memory_and_kb_off_the_stub_without_a_restart(world):
@@ -216,7 +243,7 @@ def test_other_providers_do_not_touch_the_embedder(world):
         json={"provider_id": "anthropic", "name": "a", "config": {}, "secrets": {"api_key": "x"}},
     )
     assert r.status_code == 201
-    assert "embedder_mode" not in r.json() and r.json()["requires_mcp_restart"] is True
+    assert "embedder_mode" not in r.json() and r.json()["requires_mcp_restart"] is False
     assert world.runtime.mode == "stub"
 
 
@@ -238,6 +265,9 @@ def test_a_bundle_without_an_embedding_provider_stays_stub_and_says_so(tmp_path,
     w.providers.create("vertex", "primary-vertex", VERTEX_BODY["config"], VERTEX_BODY["secrets"])
     assert w.runtime.refresh("test") == "stub"
     assert "embeddingProvider" in w.runtime.warning()
+    # A bundle that declares no embedding provider is a configuration fault.
+    assert w.runtime.is_fault() is True
+    assert health_status()["ok"] is False
     er.set_embedder_runtime(None)
     set_embedder(None)
 

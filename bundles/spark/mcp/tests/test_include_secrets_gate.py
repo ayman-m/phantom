@@ -48,7 +48,7 @@ def test_false_value_is_allowed():
 
 
 def test_loopback_caller_may_request_plaintext():
-    """backup / vertex-credentials / anthropic-credentials all run in-container."""
+    """backup / vertex-credentials / providers/credentials all run in-container."""
     for host in ("127.0.0.1", "::1", "localhost"):
         assert require_loopback_for_secrets(
             _Req({"include_secrets": "true"}, host)) is None, host

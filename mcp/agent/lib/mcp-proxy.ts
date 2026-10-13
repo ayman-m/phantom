@@ -68,7 +68,7 @@ export async function resolveMcp(): Promise<McpResolved | NextResponse> {
  *
  * Nothing legitimate is broken: no client or route obtains secrets through
  * this proxy. The three server-side readers (backup, vertex-credentials,
- * anthropic-credentials) each build their own URL against the MCP base with
+ * providers/credentials) each build their own URL against the MCP base with
  * MCP_TOKEN and never call proxyToMcp.
  */
 const FORBIDDEN_UPSTREAM_PARAMS = ["includesecrets"];

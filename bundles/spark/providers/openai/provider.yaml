@@ -1,0 +1,41 @@
+# OpenAI provider for the Phantom SOC simulation agent.
+#
+# OpenAI chat models over the Responses API with a direct API key. This file
+# declares only what the /providers page collects: three optional config fields
+# and one secret. The agent's own adapter (mcp/agent/lib/providers/openai) makes
+# the calls, reading these values from the provider store per call, so there is
+# no Python entrypoint here. Which models exist is the agent's model registry
+# (mcp/agent/lib/providers/registry), merged with the live model list this key
+# can see.
+
+id: "openai"
+version: "1.0.0"
+description: "OpenAI chat models (Responses API, direct API key)."
+
+configSchema:
+  type: "object"
+  properties:
+    base_url:
+      type: "string"
+      description: |
+        Optional base URL for an OpenAI-compatible gateway. It includes the
+        version segment. HTTPS only; loopback, link-local and this install's
+        own service names are refused. Empty means https://api.openai.com/v1.
+      default: "https://api.openai.com/v1"
+    organization:
+      type: "string"
+      description: |
+        Optional organization id (org-...), sent as the OpenAI-Organization
+        header. Only needed when the key belongs to several organizations.
+    project:
+      type: "string"
+      description: |
+        Optional project id (proj_...), sent as the OpenAI-Project header.
+        Only needed when the key belongs to several projects.
+
+secretSlots:
+  - name: "api_key"
+    description: |
+      OpenAI API key (sk-...). Sent as a bearer token to the base URL on every
+      model call and when the Providers page tests the connection.
+    required: true

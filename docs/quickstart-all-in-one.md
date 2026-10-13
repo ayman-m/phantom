@@ -36,7 +36,7 @@ For the deployment shape where the agent runs separately from xlog/caldera, see 
 - Docker Engine 24+ with `docker compose` v2.
 - ~12 GB free disk for images + volumes.
 - A web browser (the UI is served over HTTPS with a self-signed certificate).
-- (Recommended) A Gemini API key from [Google AI Studio](https://aistudio.google.com/) **OR** a GCP service-account JSON for Vertex AI.
+- (Recommended) An API key for a model provider: Anthropic (Claude) or OpenAI, **OR** a GCP service-account JSON for Vertex AI (Gemini). One is enough; none is tied to Google.
 - (Recommended) An XSIAM tenant with PAPI credentials + a webhook collector if you want to send simulated logs there.
 
 You don't need to install Caldera separately — this stack builds it from the pinned 5.3.0 source submodule.
@@ -95,7 +95,7 @@ echo "→ Open https://$(hostname):3000 in your browser"
 
 The UI uses a self-signed certificate that the stack generates on first boot; accept the browser warning. There is no setup form: sign in as `admin` with the `PHANTOM_DEFAULT_ADMIN_PASSWORD` from `.env`. The UI sends you to `/profile` to change it first. Then add, in order:
 
-1. **A model provider** at `/providers`: either a Gemini API key from Google AI Studio, or the Vertex AI project, region and service-account JSON.
+1. **A model provider** at `/providers`: an Anthropic API key, an OpenAI API key, or the Vertex AI project, region and service-account JSON. Any one is enough; press Test Connection, then Save Changes. Memory and knowledge-base search use Vertex embeddings, so without a Vertex provider they use a keyword-style stand-in (chat is unaffected).
 2. **A connector instance per service** at `/connectors` (Create Instance; the form is rendered from the connector's schema):
 
 | Connector | Fields |
@@ -156,7 +156,7 @@ curl -k -X POST https://localhost:8080/api/v1/api_keys \
 
 ### Update credentials later
 
-Each credential has its own page: `/profile` for your UI password, `/providers` for Vertex / Gemini, and `/connectors` for connector instance credentials (edit the instance). The stores update atomically; the replaced secret is deleted from the SecretStore. The audit log records every rotation with the operator who initiated it.
+Each credential has its own page: `/profile` for your UI password, `/providers` for the model providers (Vertex, Anthropic, OpenAI), and `/connectors` for connector instance credentials (edit the instance). The stores update atomically; the replaced secret is deleted from the SecretStore. The audit log records every rotation with the operator who initiated it.
 
 ### Backup before upgrades
 
@@ -236,7 +236,7 @@ Common causes:
 
 ### Smoke test reports T9.x or T10.x failures
 
-Both phases require connector instances + a Vertex provider. If you have not added them yet, the corresponding tools won't be advertised and these tests will be the first to fail. Add the missing provider at `/providers` and instances at `/connectors`, then rerun the smoke test.
+Both phases require connector instances + a model provider. If you have not added them yet, the corresponding tools won't be advertised and these tests will be the first to fail. Add the missing provider at `/providers` and instances at `/connectors`, then rerun the smoke test.
 
 ### "MCP_TOKEN is not configured" at the API surface
 

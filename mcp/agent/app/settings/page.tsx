@@ -67,7 +67,7 @@ const LAYER_GROUPS: LayerGroup[] = [
     services: [
       {
         name: "phantom-agent", icon: "smart_toy", language: "TypeScript / Next.js 15",
-        description: "Operator UI + chat orchestrator. Routes prompts through Vertex/Gemini, fans tool calls into the embedded MCP.",
+        description: "Operator UI + chat orchestrator. Routes prompts through the configured model provider (Gemini, Claude or OpenAI), fans tool calls into the embedded MCP.",
         layer: "Cognitive", port: ":3000", healthEndpoint: "/api/auth/status", probeId: "phantom-agent",
         envVars: [
           { key: "MCP_URL", value: "http://phantom-mcp:8080/api/v1/stream/mcp" },

@@ -2,7 +2,7 @@ import { apiRequest, listRequest } from "./client";
 import type { ApiRequestOptions } from "./client";
 import type { ModelInfo, ModelStats } from "./types";
 
-/** List available models from GET /api/v1/models. */
+/** List the model registry (the client rewrites /api/v1/* to /api/agent/*). */
 export function listModels(options?: ApiRequestOptions) {
   return listRequest<ModelInfo>("/api/v1/models", options);
 }

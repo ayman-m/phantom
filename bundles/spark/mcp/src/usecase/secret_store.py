@@ -92,7 +92,7 @@ import os
 import re
 import threading
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Callable, Iterable
 
 logger = logging.getLogger("Phantom MCP")
 
@@ -764,6 +764,40 @@ def connector_secret_path(instance_id: str, slot_name: str) -> str:
 def provider_secret_path(instance_id: str, slot_name: str) -> str:
     """Path convention for a provider instance's secret slot."""
     return f"{AGENT_SCOPE}/providers/{instance_id}/{slot_name}"
+
+
+class ForeignSecretRefError(ValueError):
+    """A secret value that is a SecretStore path other than the slot's own.
+
+    A value starting with "/" is stored verbatim as a reference that is later
+    resolved to its plaintext. Accepting an arbitrary one would let a writer
+    point an instance's credential slot at another secret (the admin password
+    hash, a different instance's key) and have it sent out as that credential.
+    Callers map this to HTTP 400, not to the 409 a name collision gets.
+    """
+
+
+def check_secret_input(
+    own_path_for: Callable[[str], str], slot: Any, value: Any
+) -> None:
+    """Refuse a slot name or secret value that could reach another secret.
+
+    A plaintext secret is always stored under the owner's own path, so the
+    only "/"-prefixed value that may come back in is that same path (the
+    update round trip). Anything else is refused whatever the slot is.
+    `own_path_for(slot)` returns the owner's path for a (valid) slot name.
+    """
+    if not isinstance(slot, str) or not slot or "/" in slot or slot in (".", ".."):
+        raise ForeignSecretRefError(f"invalid secret slot name {slot!r}")
+    if (
+        isinstance(value, str)
+        and value.startswith("/")
+        and value != own_path_for(slot)
+    ):
+        raise ForeignSecretRefError(
+            f"secret slot {slot!r} cannot be a path reference; "
+            "supply the secret value itself"
+        )
 
 
 def connector_prefix(instance_id: str) -> str:

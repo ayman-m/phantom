@@ -118,7 +118,7 @@ class CaseScore:
     case_id: str
     correctness: bool | None  # None = not scored (no expected_output_match)
     tool_call_jaccard: float  # 0..1
-    cost_usd: float
+    cost_usd: float | None  # None = no priced model call (unpriced), never 0.0
     wall_seconds: float
     wall_warning: bool  # exceeded case's max_wall_seconds
     error: str | None  # populated on infrastructure error (excluded from rates)
@@ -146,8 +146,8 @@ class BenchSummary:
     case_count: int
     correctness_rate: float  # cases with correctness=True / cases scored
     avg_tool_jaccard: float
-    cost_p50: float
-    cost_p95: float
+    cost_p50: float | None  # over the cases that had a price; None when none did
+    cost_p95: float | None
     wall_p50: float
     wall_p95: float
     infrastructure_errors: int
@@ -199,7 +199,7 @@ def score_case(
     case: BenchCase,
     actual_response: str,
     actual_tool_calls: list[str],
-    cost_usd: float,
+    cost_usd: float | None,
     wall_seconds: float,
     error: str | None = None,
 ) -> CaseScore:
@@ -239,7 +239,9 @@ def summarize(
     else:
         correctness_rate = 0.0
     jacc_values = [c.tool_call_jaccard for c in scored]
-    cost_values = [c.cost_usd for c in scored]
+    # Only priced cases: an unpriced case is not a free one, so it must not pull
+    # the percentiles toward zero. With none priced the percentile is None.
+    cost_values = [c.cost_usd for c in scored if c.cost_usd is not None]
     wall_values = [c.wall_seconds for c in scored]
     return BenchSummary(
         run_id=run_id,
@@ -249,8 +251,8 @@ def summarize(
         case_count=len(manifest.cases),
         correctness_rate=correctness_rate,
         avg_tool_jaccard=(sum(jacc_values) / len(jacc_values)) if jacc_values else 0.0,
-        cost_p50=percentile(cost_values, 50),
-        cost_p95=percentile(cost_values, 95),
+        cost_p50=percentile(cost_values, 50) if cost_values else None,
+        cost_p95=percentile(cost_values, 95) if cost_values else None,
         wall_p50=percentile(wall_values, 50),
         wall_p95=percentile(wall_values, 95),
         infrastructure_errors=infra_errors,

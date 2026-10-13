@@ -140,8 +140,7 @@ const SECTIONS: SectionDef[] = [
  { id: "api-keys", label: "API Keys", group: "Auth & Security", icon: "vpn_key" },
 
  // ── Models & Providers ─────────────────────────────────────────
- { id: "model-resolution", label: "Model Resolution", group: "Models & Providers", icon: "psychology" },
- { id: "provider-store", label: "Provider Store", group: "Models & Providers", icon: "outlet" },
+ { id: "model-providers", label: "Model Providers", group: "Models & Providers", icon: "psychology" },
 
  // ── Background & Async ─────────────────────────────────────────
  { id: "jobs-subsystem", label: "Jobs Subsystem", group: "Background & Async", icon: "schedule" },
@@ -408,8 +407,7 @@ export default function ArchitectureGuide() {
  <Approvals />
  <ApiKeys />
  {/* Models & Providers */}
- <ModelResolution />
- <ProviderStore />
+ <ModelProviders />
  {/* Background & Async */}
  <JobsSubsystem />
  <NotificationsFeed />
@@ -1413,10 +1411,12 @@ function ChatLifecycle() {
  </SubSection>
  <SubSection icon="settings_input_component" title="5. Tool catalog assembly">
  <p>
- <Code>getGeminiTools(mcpClient)</Code> lists MCP tools, sanitizes
- their schemas for Gemini, appends the synthetic{" "}
+ <Code>getTurnTools(mcpClient, …)</Code> lists MCP tools as
+ provider-neutral specs and appends the synthetic{" "}
  <Code>subagent_create</Code> tool spec. Cached for
- 5 minutes via in-process map.
+ 5 minutes via in-process map. Each adapter renders the specs for its
+ own wire format (schema sanitizing, tool-name codec); see{" "}
+ <Link href="#model-providers" className="link">Model Providers</Link>.
  </p>
  </SubSection>
  <SubSection id="permission-policies" icon="shield_lock" title="5b. Permission policies">
@@ -1472,47 +1472,57 @@ function ChatLifecycle() {
  </SubSection>
  <SubSection id="model-routing" icon="psychology" title="6. Model resolution chain">
  <p>
- <Code>effectiveRequestedModel = requestedModel ?? loadSessionPreferredModel(sessionId) ?? null</Code>
-. Header dropdown wins (operator override); session pref next
- (set via <Code>/model</Code> slash); runtime default is the
- fallback inside <Code>resolveModelName</Code>.
+ <Code>resolveChatModel</Code> (<Code>lib/providers/model-resolution.ts</Code>)
+ picks the model: request <Code>model</Code> (the header dropdown or a job&apos;s
+ override) → the session&apos;s <Code>/model</Code> preference → the install
+ default (settings key <Code>defaultModel</Code>, a canonical{" "}
+ <Code>provider/model</Code> ref) → the derived default (the recommended model
+ of the first configured provider, in the order vertex, anthropic, openai; used
+ when no default is set or its provider has no credentials). A model that was
+ named and is unknown, retired or unselectable ends the turn with a{" "}
+ <Code>MODEL_UNAVAILABLE</Code> error event and a{" "}
+ <Code>chat_model_rejected</Code> audit row; nothing is substituted.
  </p>
  <p style={{ marginTop: 8 }}>
  <strong>A per-session model is never a global setting.</strong>{" "}
- <Code>buildSystemPromptText(…, effectiveModel)</Code> adds a{" "}
+ <Code>buildSystemPromptText(…, modelRef)</Code> adds a{" "}
  <em>Model in use</em> block that states the resolved model as read-only
  context and forbids answering model questions through the settings
  tools. The tool layer enforces the same rule:{" "}
  <Code>settings_update</Code> and <Code>settings_reset</Code> refuse
- model-selection keys (<Code>geminiModel</Code>, or any key ending in{" "}
+ model-selection keys (<Code>defaultModel</Code>, or any key ending in{" "}
  <Code>model</Code>; list and predicate in{" "}
  <Code>usecase/settings_store.py</Code>) before the approval gate, and
  return them in <Code>rejected[]</Code>. The operator&apos;s REST surface{" "}
- (<Code>PUT /api/agent/settings</Code>) is unchanged.
+ (<Code>PUT /api/agent/settings</Code>) checks a <Code>defaultModel</Code>{" "}
+ against the model registry and stores it canonical.
  </p>
  <p style={{ marginTop: 8 }}>
  <strong>Per-job model override.</strong> When the scheduler
  dispatches a chat-action job, the request body includes{" "}
  <Code>body.model = job.model_id</Code> if the job has an
  override set. The chat route reads that field exactly the
- same way it reads the header-dropdown override — it shows up
- as <Code>requestedModel</Code> and flows into{" "}
- <Code>resolveModelName(modelOverride, runtimeConfig)</Code>{" "}
- with no new code path. Resolution chain in priority order:
- per-request <Code>body.model</Code> (operator header pick OR
- scheduler-driven job override) → session pref → runtime
- default → hardcoded fallback. Jobs persist their override in{" "}
- <Code>jobs.model_id TEXT</Code>; <Code>NULL</Code> means
- &ldquo;use the runtime default at dispatch time.&rdquo;
+ same way it reads the header-dropdown override, and it goes through
+ the same chain above with no new code path. Jobs persist their
+ override in <Code>jobs.model_id TEXT</Code>; <Code>NULL</Code> means
+ &ldquo;use the install default at dispatch time.&rdquo; The{" "}
+ <Code>/api/agent/jobs</Code> proxy checks <Code>model_id</Code>{" "}
+ against the registry when a job is saved (400 with suggestions) and
+ stores it canonical; the scheduler sends it verbatim, and a model that
+ cannot serve at dispatch ends the run with the{" "}
+ <Code>MODEL_UNAVAILABLE</Code> text (the usual job-run-failed
+ notification).
  </p>
  <p style={{ marginTop: 8 }}>
  The companion <Code>thinking_enabled</Code> column +{" "}
  <Code>body.thinking</Code> field is plumbed end-to-end: the
  scheduler adds <Code>thinking: true</Code> to the dispatch
- body when the job has it set, and the chat route maps it to
- the Gemini call&apos;s <Code>thinkingConfig</Code>{" "}
+ body when the job has it set, and the chat route hands it to
+ the adapter, which maps it to the model&apos;s own mode per the
+ registry&apos;s rules: Gemini <Code>thinkingConfig</Code>{" "}
  (<Code>thinkingBudget: -1</Code>,{" "}
- <Code>includeThoughts: true</Code>). Thinking is on by
+ <Code>includeThoughts: true</Code>), Claude adaptive or budgeted
+ thinking, OpenAI reasoning effort. Thinking is on by
  default: only an explicit <Code>thinking: false</Code> in the
  request body disables it, so a job with the toggle off still
  runs with the default. Models without thinking support ignore
@@ -1525,8 +1535,8 @@ function ChatLifecycle() {
  {" "}fetches the message history (300-message cap from MCP),
  token-budget-walks newest-to-oldest, and either truncates or
  (if auto-compaction hooks are wired) summarizes the dropped
- portion via Gemini and persists a checkpoint. Output is a list
- of <Code>GeminiContent</Code> messages.
+ portion with the session&apos;s model and persists a checkpoint.
+ Output is a list of provider-neutral <Code>TurnMessage</Code> values.
  </p>
  </SubSection>
  <SubSection icon="security" title="8. Context-window guard">
@@ -1537,22 +1547,23 @@ function ChatLifecycle() {
  <Code>chat_context_warning</Code> audit row.
  </p>
  </SubSection>
- <SubSection icon="rocket_launch" title="9. Initial Gemini call">
+ <SubSection icon="rocket_launch" title="9. Initial model call">
  <p>
- <Code>callGemini(contents, tools, runtimeConfig, actionPolicy, model)</Code>
- {" "}runs through the API-key path or falls through to Vertex.
- Prompt caching sits inside the Vertex path: if{" "}
+ <Code>callModel(request, options)</Code> hands the neutral request to
+ the adapter of the turn&apos;s resolved provider (see{" "}
+ <Link href="#model-providers" className="link">Model Providers</Link>).
+ For Gemini it runs through the API-key path or falls through to Vertex;
+ prompt caching sits inside the Vertex path: if{" "}
  <Code>PHANTOM_VERTEX_CACHE=1</Code>, the system prompt is
  cached and referenced via <Code>cachedContent</Code>.
  </p>
  </SubSection>
  <SubSection icon="sell" title="10. Cost recording">
  <p>
- <Code>extractAndRecordCost(response,...)</Code> reads{" "}
- <Code>usageMetadata</Code>, applies the per-model rate from{" "}
- <Code>lib/model-pricing.ts</Code>, writes a{" "}
- <Code>chat_turn_cost</Code> audit row with input/cached/output
- token counts and USD cost components. Returns the cost so
+ <Code>extractAndRecordCost(turn,...)</Code> reads the turn&apos;s
+ normalized usage, applies the per-model rate from the model registry,
+ writes a <Code>chat_turn_cost</Code> audit row with input/cached/output
+ token counts and USD cost components (null when the model is unpriced). Returns the cost so
  turn-totals can be summed across follow-up calls.
  </p>
  </SubSection>
@@ -1654,7 +1665,7 @@ function ToolDispatch() {
  <Section id="tool-dispatch" icon="build" title="Tool Dispatch Loop">
  <p>
  The tool-call loop is the most complex part of the chat-route.
- Per Gemini response with function calls, the loop:
+ Per model response with tool calls, the loop:
  </p>
  <SubSection icon="format_list_numbered" title="Per-tool steps">
  <ol className="list-decimal pl-5 space-y-1.5 text-sm">
@@ -1709,7 +1720,7 @@ function ToolDispatch() {
  <li>
  <Term>Result emission</Term>: <Code>tool_result</Code> SSE
  event + persistence + push to the parent&apos;s{" "}
- <Code>responseParts</Code> for the next Gemini call.
+ <Code>responseParts</Code> for the next model call.
  </li>
  </ol>
  </SubSection>
@@ -1932,7 +1943,11 @@ function Compaction() {
  checkpoint. The checkpoint is a system-role message with{" "}
  <Code>meta.kind=&apos;compaction-checkpoint&apos;</Code>;{" "}
  <Code>loadSessionHistory</Code> recognizes it and slices replay
- from the checkpoint forward.
+ from the checkpoint forward. Both paths summarize with the
+ session&apos;s model, whichever provider that is. The summary call
+ writes no <Code>chat_turn_cost</Code> row (listed under{" "}
+ <Link href="#model-providers" className="link">Model Providers</Link>
+ {" "}Implementation gap).
  </p>
  <SubSection icon="bolt" title="Manual /compress">
  <p>
@@ -1941,14 +1956,14 @@ function Compaction() {
  /compress message + earlier checkpoints, calls{" "}
  <Code>compactMessages(summarizable, summarizer)</Code>, persists
  the result. Empty-summarizable case fast-returns with text_delta
- + done (no Gemini call).
+ + done (no model call).
  </p>
  </SubSection>
  <SubSection icon="auto_mode" title="Auto budget-edge compaction">
  <p>
  When token-budget walking would drop at least{" "}
  <Code>AUTO_COMPACT_MIN_DROPPED</Code> messages (a fixed constant, 5, in{" "}
- <Code>app/api/chat/route.ts</Code>; no setting changes it), the dropped portion is summarized via Gemini and
+ <Code>app/api/chat/route.ts</Code>; no setting changes it), the dropped portion is summarized by the session&apos;s model and
  persisted as a checkpoint INSIDE the history-load function.
  Subsequent turns benefit from the checkpoint without
  re-summarizing.
@@ -1983,7 +1998,10 @@ function VertexCache() {
  return (
  <Section id="vertex-cache" icon="bolt" title="Vertex Prompt Caching">
  <p>
- adds Vertex <Code>cachedContents</Code> for the
+ This applies to Gemini models only. Claude and OpenAI requests use
+ their own request-level caching (see{" "}
+ <Link href="#model-providers" className="link">Model Providers</Link>
+ ). Gemini turns can add Vertex <Code>cachedContents</Code> for the
  stable system prompt. Cached input tokens bill at ~25% of the
  standard rate. The bundle&apos;s ~13K-token system prompt
  amortizes to a real cost win when an operator runs many turns
@@ -2140,9 +2158,8 @@ function ObservabilityOverview() {
  </li>
  <li>
  <Term><Link href="/observability/cost" className="link">/observability/cost</Link></Term>
- {" "}— per-model token cost rollup with by-session and by-day breakdowns. Vertex caching savings tile
- quantifies cache ROI.{" "}
- <Link href="#cost-tracking" className="link">Cost Tracking</Link> covers the pricing table + computation.
+ {" "}— token cost rollup grouped by provider, model, call kind, session or job, with an Unpriced calls card and a cached-savings tile.{" "}
+ <Link href="#cost-tracking" className="link">Cost Tracking</Link> covers the audit row and its readers; <Link href="#model-providers" className="link">Model Providers</Link> covers the pricing arithmetic.
  </li>
  <li>
  <Term><Link href="/observability/bench" className="link">/observability/bench</Link></Term>
@@ -2223,9 +2240,9 @@ Q: "Is XSIAM healthy?"
      probes table. If degraded, /observability/pipeline shows
      the upstream/downstream impact.
 
-Q: "Where is my Vertex spend coming from?"
-   → /observability/cost. By-model bar chart + by-session
-     drill-down. Cache-savings tile if PHANTOM_VERTEX_CACHE=1.
+Q: "Where is my model spend coming from?"
+   → /observability/cost. Group by provider, model, session or
+     job; the Unpriced calls card counts calls with no known price.
 
 Q: "How long are turns taking?"
    → /observability/traces (requires PHANTOM_OTEL=1). Per-turn
@@ -3191,11 +3208,11 @@ function PlanMode() {
  </p>
  <SubSection icon="block" title="Why no tools wired during planning">
  <p>
- <Code>callGemini()</Code> with empty tool catalog means the
+ <Code>summarizeText</Code> sends no tool catalog and forbids tool use, so the
  model can&apos;t accidentally execute mid-plan. The plan is
  PURE TEXT — even if the model produces a function call, the
  chat-route&apos;s tool dispatch loop never runs (planning
- uses <Code>summarizeViaGemini</Code> which doesn&apos;t loop).
+ uses <Code>summarizeViaModel</Code> which doesn&apos;t loop).
  </p>
  </SubSection>
  <SubSection icon="badge" title="Plan persistence">
@@ -4190,46 +4207,72 @@ function CostTracking() {
  return (
  <Section id="cost-tracking" icon="payments" title="Cost Tracking">
  <p>
- adds per-Gemini-call cost computation. Every
- callGemini() (initial + each follow-up) writes a{" "}
- <Code>chat_turn_cost</Code> audit row with input/cached/output
- token counts and USD breakdown by component. Per-turn totals
- accumulate and emit a single <Code>turn_cost</Code> SSE event
- at done time.
+ Every model call of a chat turn (the initial call, each tool-result
+ follow-up, the budget-exhausted summary, and each call of a subagent)
+ writes one <Code>chat_turn_cost</Code> audit row, built by{" "}
+ <Code>lib/cost-rows.ts</Code> from the call&apos;s normalized usage and
+ the registry&apos;s price for the exact <Code>provider/model</Code> (the
+ arithmetic is under{" "}
+ <Link href="#model-providers" className="link">Model Providers</Link>
+ ). Per-turn totals accumulate and one <Code>turn_cost</Code> SSE event is
+ emitted at done time: <Code>cost_usd</Code> is the sum over the priced
+ calls (null when none was priced), <Code>priced</Code> is false as soon as
+ any call was not, and <Code>unpriced_calls</Code> counts them.
  </p>
- <SubSection icon="price_check" title="Pricing table">
+ <SubSection icon="receipt_long" title="The audit row">
  <p>
- <Code>lib/model-pricing.ts:MODEL_PRICING_TABLE</Code> —
- hard-coded per-model rates from Vertex public pricing (2026-05).
- Cached input bills at ~25% of standard. Longest-prefix match
- so &ldquo;gemini-2.5-pro-preview-0514&rdquo; resolves to
- gemini-2.5-pro pricing. Unknown models fall through to a
- conservative gemini-2.5-pro-class fallback.
+ Kept as they always were: <Code>input_tokens</Code> (the whole prompt),{" "}
+ <Code>cached_input_tokens</Code> (the cache read),{" "}
+ <Code>uncached_input_tokens</Code>, <Code>output_tokens</Code>,{" "}
+ <Code>call_kind</Code> (initial, followup or budget_summary),{" "}
+ <Code>cost_usd</Code>, <Code>cost_components</Code> and{" "}
+ <Code>model</Code>. Added in v1.0.5: <Code>provider</Code>,{" "}
+ <Code>model_ref</Code>, <Code>cache_write_tokens</Code>,{" "}
+ <Code>cache_write_1h_tokens</Code>, <Code>reasoning_tokens</Code> (already
+ inside <Code>output_tokens</Code>, shown, never billed twice),{" "}
+ <Code>priced</Code>, <Code>unpriced_reason</Code>, <Code>long_context</Code>,{" "}
+ <Code>pricing_verified</Code>, <Code>request_id</Code> and{" "}
+ <Code>finish</Code>. A row written before v1.0.5 has none of the new
+ fields; every reader treats a missing <Code>provider</Code> as{" "}
+ <Code>vertex</Code> (every earlier row was a Gemini call), a missing{" "}
+ <Code>priced</Code> as priced when <Code>cost_usd</Code> is a number, and
+ missing token counts as zero.
  </p>
  </SubSection>
- <SubSection icon="calculate" title="Cost computation">
- <Pre>{`computeTurnCostUsd({inputTokens, cachedInputTokens, outputTokens, model}):
- pricing = resolveModelPricing(model)
- cached = max(0, cachedInputTokens)
- uncached = max(0, inputTokens - cached)
- inputUsd = (uncached / 1M) * pricing.inputPerM
- cachedInputUsd = (cached / 1M) * pricing.cachedInputPerM
- outputUsd = (outputTokens / 1M) * pricing.outputPerM
- uncachedHypotheticalInputUsd = ((uncached + cached) / 1M)
- * pricing.inputPerM
- return {
- usd: inputUsd + cachedInputUsd + outputUsd,
- components: { inputUsd, cachedInputUsd, outputUsd,
- uncachedHypotheticalInputUsd, pricing }
- }`}</Pre>
+ <SubSection icon="price_check" title="Pricing">
+ <p>
+ Rates live in the registry catalogues (<Code>lib/providers/registry/catalog-*.ts</Code>)
+ with the date each was last verified;{" "}
+ <Code>lib/model-pricing.ts</Code> keeps only the lookup and the dollar
+ formatting. There is no fallback rate: a model the registry does not
+ know, or one with no price, is unpriced.
+ </p>
  </SubSection>
  <SubSection icon="trending_up" title="Savings attribution">
  <p>
  <Code>cost_components.cached_savings_usd</Code> ={" "}
- <Code>uncachedHypotheticalInputUsd - (inputUsd + cachedInputUsd)</Code>
-. Sum across rows in a window for cumulative Vertex caching
- ROI. This is what /observability/cost shows as &ldquo;Cached
- savings&rdquo;.
+ <Code>uncachedHypotheticalInputUsd - (inputUsd + cacheReadUsd + cacheWriteUsd)</Code>
+ , so cache-write overhead is netted out and the figure can be negative.
+ Summed across rows it is what{" "}
+ <Code>/observability/cost</Code> shows as &ldquo;Cached savings&rdquo;. The{" "}
+ <Code>cache_hit</Code> SSE event and <Code>chat_cache_hit</Code> audit row
+ fire when any provider reports cache-read tokens; the saving they report
+ comes from the model&apos;s own cache-read price, and is left out when the
+ model is unpriced.
+ </p>
+ </SubSection>
+ <SubSection icon="dashboard" title="Readers">
+ <p>
+ One reader (<Code>readCostRow</Code>, <Code>sumCostRows</Code>) serves{" "}
+ <Code>/observability/cost</Code> (groups by provider, model ref, call
+ kind, session and job; an &ldquo;Unpriced calls&rdquo; card; cache-write
+ and reasoning columns), the <Code>/cost</Code> chat command (this session
+ and today by provider and model, naming unpriced calls instead of adding
+ them as zero), the Cost warn over budget hook (a floor when any call was
+ unpriced, with the unpriced calls named in the notification) and the
+ benchmark runner (sums the <Code>cost_usd</Code> of each case&apos;s{" "}
+ <Code>turn_cost</Code> events). Rows are read through{" "}
+ <Code>GET /api/v1/audit</Code>; there is no separate cost table.
  </p>
  </SubSection>
  </Section>
@@ -4577,7 +4620,7 @@ function Subagents() {
  <SubSection icon="filter_alt" title="Tool catalog filter">
  <p>
  <Code>filterToolsForAgent(parentTools, allowed, denied)</Code>{" "}
- filters the Gemini tool catalog through the agent&apos;s
+ filters the tool catalog through the agent&apos;s
  glob lists. Uses <Code>globMatch()</Code> from the hook
  framework (DRY). Empty allow list = all tools. Deny wins.
  Returns a tool catalog the model SEES — no defense-in-depth
@@ -4617,7 +4660,7 @@ function Subagents() {
  </li>
  <li>
  Run model loop with agent&apos;s system_prompt + scoped
- tools + max_turns. Each Gemini call records a{" "}
+ tools + max_turns. Each model call records a{" "}
  <Code>chat_turn_cost</Code> audit row tagged with the
  subagent&apos;s session id so cost rollups in{" "}
  <Link href="/observability/cost" className="link">
@@ -4754,7 +4797,7 @@ function SubstrateComposition() {
  universal queryable surface; cost rows are just one audit
  family. Subagent runs each write their own cost rows tagged
  with the subagent session id; the parent session&apos;s
- aggregate cost includes the subagents&apos; Gemini calls
+ aggregate cost includes the subagents&apos; model calls
  without special-casing.
  </li>
  <li>
@@ -5008,7 +5051,7 @@ function DesignDecisions() {
  <Decision title="Audit-row-driven cost rollups instead of a separate cost table">
  <p>
  Cost data is fundamentally event-shaped (one row per
- callGemini). A separate aggregations table would be
+ model call). A separate aggregations table would be
  redundant precomputation. Audit log is fast at SUM aggregation
  on indexed columns; for now /observability/cost does
  sum-in-the-browser for windows up to 5K rows. If audit grows
@@ -5611,17 +5654,19 @@ DIGEST_PHANTOM_BROWSER=sha256:...`}</Pre>
 
  <SubSection icon="settings" title="Provider configuration">
  <p>
- Phantom needs at least one configured LLM provider to drive
- the chat agent. <Code>/providers</Code> is the configuration
- surface for Vertex AI (GCP service account) and Gemini API
- keys. The page wires to:
+ Phantom needs at least one configured model provider to drive
+ the chat agent, and no single one is required. <Code>/providers</Code>{" "}
+ is the configuration surface for Vertex AI (GCP service account),
+ Anthropic (API key and optional base URL) and OpenAI (API key,
+ optional organization, project and base URL). The page wires to:
  </p>
- <Pre>{`POST   /api/agent/providers           -- create
-GET    /api/agent/providers           -- list (secrets redacted)
-PATCH  /api/agent/providers/{id}      -- update
-DELETE /api/agent/providers/{id}      -- delete
-PUT    /api/agent/providers/config    -- legacy single-default Vertex path
-POST   /api/agent/providers/vertex/test -- probe credentials`}</Pre>
+ <Pre>{`GET    /api/agent/providers           -- list (secrets redacted)
+GET    /api/agent/providers/config    -- the Providers page values (secrets as ***)
+PUT    /api/agent/providers/config    -- the Providers page save (all three cards)
+POST   /api/agent/providers/vertex/test     -- probe credentials
+POST   /api/agent/providers/anthropic/test  -- list models with the key
+POST   /api/agent/providers/openai/test     -- list models with the key
+POST   /api/agent/providers/vertex/verify   -- is one Gemini model enabled?`}</Pre>
  <p>
  Credentials write through to the SecretStore at{" "}
  <Code>/providers/&lt;id&gt;/auth</Code>. The UI never sees
@@ -5629,7 +5674,9 @@ POST   /api/agent/providers/vertex/test -- probe credentials`}</Pre>
  <Code>***</Code> in the secret slots. The agent has read-only
  MCP tools (<Code>providers_list</Code>,{" "}
  <Code>providers_get</Code>) but NO write tools — credential
- mutations are operator-only. See{" "}
+ mutations are operator-only. The full provider and model design is under{" "}
+ <Link href="#model-providers" className="link">Model Providers</Link>
+ . See{" "}
  <Link href="#secret-store" className="link">
  Secret Store
  </Link>{" "}
@@ -5937,6 +5984,14 @@ CREATE VIRTUAL TABLE memory_fts USING fts5(
  <Code>embedder_mode</Code>, <Code>embedder_model</Code>,{" "}
  <Code>embedder_warning</Code>: &ldquo;Vertex embedder could not start:
  &hellip;, check /providers&rdquo;, with key material redacted).
+ Embeddings are Vertex-only, so an install that runs its chat on Claude or
+ OpenAI alone has no Vertex provider and stays on the stub on purpose.
+ That is reported (<Code>embedder_mode: stub</Code> and an{" "}
+ <Code>embedder_warning</Code> that says chat does not depend on it) but
+ does not make <Code>health_status.ok</Code> false; only a fault does (a
+ Vertex embedder that is configured but cannot start, a Vertex provider
+ removed while its embedder still runs, a bundle that declares no
+ embedding provider).
  </p>
  <p>
  Every stored vector carries the <Code>embedding_model</Code> that wrote
@@ -6203,7 +6258,7 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
  to a <Code>SkillSummary</Code> shape. The chat handler runs
  it in parallel with the personality fetch (one extra MCP
  round-trip for the whole turn) and threads the registry to
- every <Code>callGemini</Code> site. <Code>renderSkillsBlock</Code>{" "}
+ every <Code>callModel</Code> site. <Code>renderSkillsBlock</Code>{" "}
  in <Code>lib/system-prompt.ts</Code> formats the block with
  explicit instructions on when to apply / how to compose
  foundation+scenario+validation skills.
@@ -8978,7 +9033,10 @@ function SecretStore() {
  <Code>lib/vertex-credentials.ts</Code> (30-second cache, cleared
  by <Code>/providers</Code> on save). The{" "}
  <Code>GOOGLE_APPLICATION_CREDENTIALS</Code> environment variable
- is only the fallback when no provider instance holds a key.
+ is only the fallback when no provider instance holds a key. Claude and
+ OpenAI keys come from their own provider instances through{" "}
+ <Code>lib/providers/credentials.ts</Code>, with no environment
+ fallback.
  </li>
  </ul>
  </SubSection>
@@ -9375,101 +9433,442 @@ CREATE UNIQUE INDEX idx_api_keys_hash ON api_keys(hash);`}</Pre>
 
 // ─── Models & Providers ────────────────────────────────────────────
 
-function ModelResolution() {
- return (
- <Section id="model-resolution" icon="psychology" title="Model Resolution">
- <p>
- Every chat turn picks one model. The pick respects four inputs
- in priority order; understanding the chain explains why the
- chosen model in the chat header sometimes differs from the
- default.
- </p>
- <SubSection icon="alt_route" title="Resolution chain">
- <ol className="list-decimal pl-5 space-y-1 text-sm">
- <li>
- <Term>Header dropdown</Term> — operator picked a model in
- the chat header. Wins everything.
- </li>
- <li>
- <Term>Session preference</Term> — set via{" "}
- <Code>/model &lt;name&gt;</Code> slash command. Persists
- in <Code>sessions.preferred_model</Code>.
- </li>
- <li>
- <Term>Workspace default</Term> — personality store key{" "}
- <Code>preferred_model</Code> for the active workspace.
- </li>
- <li>
- <Term>Bundle modelRequirements</Term> — declared in{" "}
- <Code>manifest.yaml</Code> (capability gates +{" "}
- <Code>preferFamily</Code>). The runtime picks the first
- available provider model satisfying the gates.
- </li>
- </ol>
- </SubSection>
- <SubSection icon="settings" title="Capability gates">
- <Pre>{`# manifest.yaml (excerpt)
-modelRequirements:
-  primary:
-    kind: chat
-    mustSupport: [streaming, tool_use]
-    contextWindowMin: 100000
-    preferFamily: [gemini-3, gemini-2.5, gpt-4o]
-  fallback:
-    kind: chat
-    mustSupport: [streaming, tool_use]
-    contextWindowMin: 32000`}</Pre>
- </SubSection>
- <SubSection icon="warning" title="Resolution failure modes">
- <p>
- If the resolved model isn&apos;t reachable (provider down,
- quota exhausted), the chat-route falls through to{" "}
- <Code>fallback</Code>. If both fail, the turn errors with a
- structured <Code>provider_unavailable</Code> response and the
- SSE stream emits a <Code>done</Code> event with{" "}
- <Code>error: true</Code>.
- </p>
- </SubSection>
- </Section>
-);
-}
+// [v1.0.5] Retired: the `ModelResolution` section (id `model-resolution`) and the
+// `ProviderStore` section (id `provider-store`). Both are replaced by
+// `ModelProviders` below (id `model-providers`) because the resolution chain, the
+// provider catalogue, the credential store and the model registry are one
+// subsystem. The old ids live on as SubSection anchors inside the new section, so
+// existing links to `#model-resolution` and `#provider-store` still land on the
+// text that replaced them. The old text described a workspace `preferred_model`
+// and a manifest `modelRequirements` resolver that never existed in code, and said
+// chat does not call Claude.
 
-function ProviderStore() {
+function ModelProviders() {
  return (
- <Section id="provider-store" icon="outlet" title="Provider Store">
+ <Section id="model-providers" icon="psychology" title="Model Providers">
  <p>
- Providers are LLM-vendor configurations: Vertex AI (the chat
- default) and Anthropic (optional; its API key is stored for the
- Claude API, which chat does not call yet). Only these two have a card on{" "}
- <Code>/providers</Code>. Each provider has
- zero or more instances — a configured copy with credentials
- bound. The shape mirrors the connector model exactly.
+ Chat, jobs, subagents, the benchmark and the compaction summaries all
+ reach a language model through one seam,{" "}
+ <Code>lib/providers/dispatch.ts</Code>. Three providers sit behind it:{" "}
+ <Term>vertex</Term> (Gemini models, Google service account),{" "}
+ <Term>anthropic</Term> (Claude models, API key, Messages API) and{" "}
+ <Term>openai</Term> (OpenAI models, API key, Responses API). None of the
+ three is required on its own; an install needs at least one. Which models
+ exist comes from one registry that merges a curated catalogue with each
+ provider&apos;s live model list. Which model serves a turn comes from one
+ chain with one install-wide default, the settings key{" "}
+ <Code>defaultModel</Code>.
  </p>
- <SubSection icon="dns" title="Default catalogue">
+
+ <SubSection icon="swap_horiz" title="The adapter seam">
+ <p>
+ The chat route builds a provider-neutral request (<Code>ModelRequest</Code>:
+ system text, ordered messages, tool specs, tool choice, thinking on or
+ off, and the purpose: chat, subagent, summarize, plan or budget summary)
+ and calls <Code>callModel</Code>, or <Code>summarizeText</Code> for the
+ tool-less one-shot. The adapter for the request&apos;s provider turns it
+ into the vendor&apos;s wire format and turns the answer back into one
+ neutral <Code>AssistantTurn</Code> (text, thinking, tool calls, finish
+ reason, normalized usage, and an opaque <Code>raw</Code> payload the loop
+ replays verbatim within the turn). Approvals, policy, hooks and audit see
+ only neutral values and canonical tool names.
+ </p>
  <ul className="list-disc pl-5 space-y-1 text-sm">
  <li>
- <Term>vertex</Term> — Vertex AI on GCP. Reads service-account
- JSON from the secret store. Project + location are config
- fields. Default for chat.
+ <Term>Tool names.</Term> A reversible codec (<Code>lib/providers/tool-names.ts</Code>)
+ maps the canonical MCP names to what each vendor accepts. Gemini gets the
+ catalogue unchanged. Claude (128 characters) and OpenAI (64) get alias
+ pairs collapsed to the flat alias, <Code>.</Code> encoded as{" "}
+ <Code>__</Code>, over-long names shortened with a hash, and a collision
+ is a hard error. A returned call decodes only if the request advertised
+ that name.
  </li>
  <li>
- <Term>anthropic</Term> — optional. Its API key is the secret
- slot on an instance created from{" "}
- <Code>/providers</Code>. Only <Code>api_key</Code> is ever read
- back; any other secret slot an older install still holds on the
- instance is ignored and never returned.
+ <Term>Thinking.</Term> The chat toggle becomes the model&apos;s own mode
+ per the registry&apos;s rules: Gemini thinking budget, Claude adaptive
+ or budgeted thinking (and, where a model cannot be told to stop
+ thinking, the lowest effort), OpenAI reasoning effort. No sampling
+ parameters (temperature and similar) are sent to any provider.
+ </li>
+ <li>
+ <Term>Forced and forbidden tool use.</Term> &ldquo;Must call a tool&rdquo;
+ maps to each vendor&apos;s setting where the registry allows it (Claude
+ only with thinking off), otherwise the call proceeds on auto and a{" "}
+ <Code>tool_choice_downgraded</Code> observation is recorded.
+ &ldquo;No tools&rdquo; keeps the tools on the wire for Claude and OpenAI
+ (their APIs reject tool results without them) and disables calling.
+ </li>
+ <li>
+ <Term>Prompt caching.</Term> Gemini uses the opt-in Vertex cached
+ content (see <Link href="#vertex-cache" className="link">Vertex Prompt Caching</Link>).
+ Claude requests carry <Code>cache_control</Code> on the system block and
+ at the top level. OpenAI requests carry a <Code>prompt_cache_key</Code>{" "}
+ derived by hash from the session, so a raw session id never leaves the
+ install.
+ </li>
+ <li>
+ <Term>Stored history is provider-neutral.</Term> Messages are saved as
+ plain user and assistant text, with tool output replayed as text, so a
+ session can change provider between turns. Structured parts (thinking
+ signatures, call ids) exist only inside one turn.
  </li>
  </ul>
  </SubSection>
- <SubSection icon="link" title="Provider → Model link">
+
+ <SubSection id="model-resolution" icon="alt_route" title="Model resolution chain">
  <p>
- The <Code>/models</Code> page renders models grouped by
- provider. Each model card lists capability flags (streaming,
- tool_use), context window, and default-or-not. Clicking a
- model sets it as the workspace default. Provider availability
- is derived from instance presence — an instance-less provider
- shows greyed-out.
+ <Code>resolveChatModel</Code> (<Code>lib/providers/model-resolution.ts</Code>)
+ picks the model for a turn. First hit wins:
  </p>
+ <ol className="list-decimal pl-5 space-y-1 text-sm">
+ <li>
+ <Term>Request</Term>: the chat header dropdown, a job&apos;s{" "}
+ <Code>model_id</Code>, a benchmark run&apos;s preset, a subagent
+ definition&apos;s model.
+ </li>
+ <li>
+ <Term>Session preference</Term>: set by <Code>/model &lt;name&gt;</Code>,
+ stored in the session&apos;s metadata as a canonical ref.
+ </li>
+ <li>
+ <Term>Install default</Term>: the settings key <Code>defaultModel</Code>,
+ a canonical <Code>provider/model</Code> ref. It replaced the earlier{" "}
+ <Code>geminiModel</Code> key (renamed in place when the settings store
+ opens, with a <Code>vertex/</Code> prefix, and only when its value is an
+ id in the Gemini catalog; any other value is dropped, logged and audited
+ so the default stays valid) and the{" "}
+ <Code>GEMINI_MODEL</Code> environment variable (removed). The manifest
+ default is <Code>vertex/gemini-3.1-pro-preview</Code>; the operator
+ changes it with <em>Set as default</em> on <Code>/models</Code>, which
+ goes through <Code>PUT /api/agent/settings</Code>. That route checks the
+ ref against the registry and stores it canonical. The agent cannot
+ write it: <Code>settings_update</Code> and <Code>settings_reset</Code>{" "}
+ refuse any key ending in <Code>model</Code>.
+ </li>
+ <li>
+ <Term>Derived default</Term>: the recommended model of the first
+ configured provider, in the fixed order vertex, anthropic, openai.
+ Used when no default is set, and also when the default names a provider
+ with no credentials (the manifest default on a Claude-only install).
+ This is read off observable evidence (which providers hold credentials),
+ not a runtime fallback. It looks at the first configured provider only,
+ so a prompt that carries security telemetry never moves to a different
+ vendor because the first one&apos;s recommended model is down.
+ </li>
+ </ol>
+ <p>
+ A bare id such as <Code>claude-sonnet-5-5</Code> is accepted as input and
+ resolves when exactly one configured provider offers it; otherwise it
+ fails as ambiguous and lists the qualified refs. Every write path stores
+ the canonical <Code>provider/model</Code> form.
+ </p>
+ <p>
+ <strong>Failure is loud.</strong> A model that was named (steps 1 to 3)
+ and is unknown, retired, ambiguous, not selectable or on an unconfigured
+ provider ends the turn with an SSE <Code>error</Code> event carrying{" "}
+ <Code>code: &quot;MODEL_UNAVAILABLE&quot;</Code>, the reason and the
+ refs that would work, and writes a <Code>chat_model_rejected</Code>{" "}
+ audit row. Nothing is substituted. A job run or bench case fails the same
+ way. The same check runs where a model is stored: the settings and jobs
+ proxies return 400 with suggestions, and <Code>/model</Code> refuses to
+ save an unusable name. The <Code>model</Code> SSE event reports{" "}
+ <Code>provider</Code>, <Code>ref</Code> and <Code>override_source</Code>{" "}
+ (<Code>header</Code>, <Code>session</Code>, <Code>none</Code> or{" "}
+ <Code>derived</Code>).
+ </p>
+ </SubSection>
+
+ <SubSection icon="inventory_2" title="Model registry">
+ <p>
+ <Code>lib/providers/registry/</Code> is the only model list. Every
+ entry has a canonical ref, kind, context window, output cap, thinking
+ rules, tool support, per-million-token prices with the date they were
+ last checked, and a lifecycle. The inputs, merged per provider:
+ </p>
+ <ul className="list-disc pl-5 space-y-1 text-sm">
+ <li>
+ <Term>Curated catalogue</Term> (<Code>catalog-vertex.ts</Code>,{" "}
+ <Code>catalog-anthropic.ts</Code>, <Code>catalog-openai.ts</Code>): owns
+ prices, how thinking is switched off, forced tool choice, and which model
+ is the provider&apos;s recommended one (today Gemini 3.1 Pro, Claude
+ Sonnet 5.5, GPT-6 Sol).
+ </li>
+ <li>
+ <Term>Live list</Term>, fetched with the provider&apos;s own credentials:
+ Anthropic <Code>GET /v1/models</Code> (paged) supplies context window,
+ output cap, thinking and effort capabilities and retirement dates; OpenAI{" "}
+ <Code>GET /models</Code> supplies ids and shutdown dates and filters the
+ curated table to what the key can see; Vertex has no usable list, so
+ its curated entries stand (with a Gemini API key present, the Gemini
+ list enriches the limits). A live-only Claude model is selectable but
+ unpriced; a live-only OpenAI id is shown as unverified and cannot be
+ chosen, because nothing describes its capabilities.
+ </li>
+ <li>
+ <Term>Availability</Term>, in priority order: retired, not configured,
+ unavailable (the key cannot see it), deprecated (within 30 days of
+ retirement; still selectable), unverified (no live proof), unpriced,
+ available. Retired models are left out of the served list unless asked
+ for. A model is selectable only when its provider has credentials and
+ this build can run it.
+ </li>
+ </ul>
+ <p>
+ <strong>Cache.</strong> Live lists are kept per provider for 10 minutes
+ under a key derived from a hash of the credential (never the credential).
+ The cache is stale-while-revalidate: once the 10 minutes have passed the
+ last good list (kept 24 hours) is served at once and the refresh runs in
+ the background, so a chat turn never waits on a vendor&apos;s model
+ list it already holds. A failed refresh is remembered for a minute so a
+ dead provider is not hammered, and concurrent refreshes share one
+ request, bounded by a 15 second deadline. With no live list at all the
+ curated entries are served as unverified (selectable for Vertex and
+ Anthropic). Each refresh writes{" "}
+ <Code>provider_models_refreshed</Code> or{" "}
+ <Code>provider_models_refresh_failed</Code> to the audit log. Saving
+ credentials on <Code>/providers</Code> drops the cache.
+ </p>
+ <p>
+ <strong>Consumers.</strong> <Code>GET /api/agent/models</Code> (a bare
+ JSON array, <Code>?include_retired=1</Code> to include retired entries)
+ feeds the <Code>/models</Code> pages, the chat header picker, the jobs
+ form and the bench form. Each element adds <Code>ref</Code>,{" "}
+ <Code>availability</Code>, <Code>selectable</Code>, <Code>reason</Code>,{" "}
+ <Code>pricing</Code>, <Code>lifecycle</Code>, <Code>liveSeenAt</Code>,{" "}
+ <Code>source</Code> and <Code>isDefault</Code> (with{" "}
+ <Code>defaultSource</Code> on the default row). Context caps and the
+ price lookup read the same registry, so there is no second table to
+ drift. The MCP&apos;s earlier <Code>GET /api/v1/models</Code> and the
+ provider-manifest model list were removed.
+ </p>
+ </SubSection>
+
+ <SubSection id="provider-store" icon="outlet" title="Provider store and credentials">
+ <p>
+ Each provider has zero or more instances in the MCP&apos;s ProviderStore
+ (<Code>providers.db</Code> plus SecretStore slots), shaped like connector
+ instances. Fresh installs have none.
+ </p>
+ <ul className="list-disc pl-5 space-y-1 text-sm">
+ <li>
+ <Term>vertex</Term>: secret <Code>serviceAccountJson</Code>; config{" "}
+ <Code>project_id</Code> and <Code>region</Code>. A Gemini API key
+ (<Code>GEMINI_API_KEY</Code>) is still read from the environment; it
+ has no store slot.
+ </li>
+ <li>
+ <Term>anthropic</Term>: secret <Code>api_key</Code>; optional config{" "}
+ <Code>base_url</Code> (default <Code>https://api.anthropic.com</Code>).
+ </li>
+ <li>
+ <Term>openai</Term>: secret <Code>api_key</Code>; optional config{" "}
+ <Code>organization</Code>, <Code>project</Code> and <Code>base_url</Code>{" "}
+ (default <Code>https://api.openai.com/v1</Code>, version segment included).
+ </li>
+ </ul>
+ <p>
+ The three ids are validated by the MCP on create and update; writes never
+ need an MCP restart. &ldquo;Configured&rdquo; means a stored instance with
+ a non-empty secret. The <Code>ANTHROPIC_API_KEY</Code> and{" "}
+ <Code>OPENAI_API_KEY</Code> variables are not read: the store is the
+ one home for these keys (the SecretStore&apos;s own environment overlay
+ applies to every secret path alike, as it does for any other secret). The three cards on{" "}
+ <Code>/providers</Code> write through the credential REST surface and
+ read back <Code>***</Code> in place of a secret. The agent&apos;s only
+ provider tools are the read-only <Code>providers_list</Code> and{" "}
+ <Code>providers_get</Code>, which return secret paths, never values, and show only Vertex&apos;s project and region as values: an organization, project or base URL is reported as set or not (<Code>config_set</Code>); see{" "}
+ <Link href="#secret-store" className="link">Secret Store</Link> and the
+ credential guardrail in the repository&apos;s contributor rules.
+ </p>
+ <p>
+ <strong>Connection tests.</strong>{" "}
+ <Code>POST /api/agent/providers/anthropic/test</Code> and{" "}
+ <Code>/openai/test</Code> sit beside <Code>/vertex/test</Code> under the
+ credential prefix, which API-key (bearer) callers are refused (403). Body:{" "}
+ <Code>api_key</Code> (empty or <Code>***</Code> means the saved key, resolved
+ on the server), <Code>base_url</Code>, and for OpenAI{" "}
+ <Code>organization</Code> and <Code>project</Code>. The test is a model-list
+ request, which costs no tokens, and always answers HTTP 200 with{" "}
+ <Code>{`{ status, message, modelCount? }`}</Code>. A saved key is only ever
+ sent to the base URL it was saved with: testing the saved key against a
+ different base URL is refused, and on the Providers page changing a saved
+ base URL clears the key field so the key must be typed again.{" "}
+ <Code>POST /api/agent/providers/vertex/verify</Code> checks that one Gemini
+ model is enabled for the credentials with a token-count request (no
+ generation). Each test writes a <Code>provider_test</Code> audit row holding
+ provider, outcome and HTTP status, never the key.
+ </p>
+ <p>
+ <strong>Outbound URL guard.</strong> A base URL is set by the operator and
+ the key travels to whatever host it names, so every provider call and
+ every model-list fetch goes through <Code>lib/providers/url-guard.ts</Code>:
+ https only; no embedded credentials, query or fragment; loopback and
+ link-local addresses (including IPv6 and IPv4-mapped forms and numeric
+ spellings), the install&apos;s own service names, single-label hosts, the
+ MCP host and the suffixes <Code>.local</Code>, <Code>.localhost</Code> and{" "}
+ <Code>.internal</Code> are refused; the resolved addresses are re-checked
+ at call time; redirects are never followed, so a 3xx cannot carry the key
+ elsewhere. Private ranges (10/8, 172.16/12, 192.168/16) stay allowed
+ because corporate model gateways live there. Error text carries a
+ vendor&apos;s JSON error message only, redacted of key-shaped strings,
+ never a raw body, header or URL.
+ </p>
+ </SubSection>
+
+ <SubSection icon="cable" title="Wires: agent to provider">
+ <Pre>{`phantom-agent (Next.js :3000, chat route)
+  --HTTPS--> api.anthropic.com   POST /v1/messages (stream)   GET /v1/models
+             Authorization: Bearer <key>, anthropic-version: 2023-06-01
+  --HTTPS--> api.openai.com/v1   POST /responses (stream, store:false)   GET /models
+             Authorization: Bearer <key>, optional OpenAI-Organization / OpenAI-Project
+  --HTTPS--> generativelanguage.googleapis.com   POST :generateContent   (key in the URL query)
+  --HTTPS--> aiplatform.googleapis.com           POST :generateContent   Bearer <OAuth token
+             minted from the service-account JSON>
+  --HTTPS--> embedded MCP (loopback :8080)  GET /api/v1/providers[/id]?include_secrets=true
+             Bearer MCP_TOKEN; loopback callers only`}</Pre>
+ <ul className="list-disc pl-5 space-y-1 text-sm">
+ <li>
+ <Term>Sync or stream.</Term> The Claude and OpenAI adapters stream
+ internally and assemble one turn; the route still emits its events after
+ the whole answer is in, because read-narration suppression must know a
+ turn&apos;s tool calls before it shows any text. Gemini calls are
+ non-streaming. The user sees the same SSE shape from all three.
+ </li>
+ <li>
+ <Term>Timeouts.</Term> Claude and OpenAI: a 120 second idle timer that
+ any network chunk (keep-alive pings included) resets, plus a 15 minute
+ overall deadline. Model-list fetches and connection tests: 8 seconds per
+ request. The credential read from the MCP: 8 seconds.
+ </li>
+ <li>
+ <Term>Retries.</Term> Claude and OpenAI: up to 3 retries, 1 second base,
+ doubling, 0 to 500 ms jitter. Retried: 429 (honouring{" "}
+ <Code>retry-after</Code> up to 60 seconds; a longer wait, or one that
+ would outlast the deadline, is surfaced instead), Claude 529 and 503,
+ OpenAI 408 and 409, 5xx, a dropped or broken stream, a retryable
+ mid-stream error. A retry is a fresh request and is safe because nothing
+ is handed on until the stream has been read to its end. Never retried: a
+ spend cap or usage limit (Anthropic&apos;s spend-limit error and its 400
+ &ldquo;reached your specified API usage limits&rdquo;, OpenAI&apos;s{" "}
+ <Code>insufficient_quota</Code>, including when it arrives as a 429), a
+ caller abort, the deadline. Gemini: the existing quota retry (5 retries,
+ 2 second base, doubling, 0 to 1 second jitter, matching 429 and
+ resource-exhausted text).
+ </li>
+ <li>
+ <Term>Failure mode.</Term> A provider error ends that turn with an SSE{" "}
+ <Code>error</Code> event naming the provider; it never switches the turn
+ to another provider. A provider with no stored credentials fails through
+ one path, <Code>PROVIDER_NOT_CONFIGURED</Code>, naming the provider.
+ </li>
+ <li>
+ <Term>Credentials.</Term> Read by the agent&apos;s server side from the
+ ProviderStore over loopback (<Code>lib/providers/credentials.ts</Code>)
+ and passed to the adapter as an explicit object; adapters never read the
+ environment. A 30 second cache is dropped when the Providers page saves;
+ an unreachable MCP reads as &ldquo;not configured&rdquo;. A provider
+ other than Vertex always uses its own stored credentials; the caller&apos;s
+ Google credentials are never handed to another vendor. Keys never reach
+ the browser or the chat.
+ </li>
+ <li>
+ <Term>Data handling.</Term> Prompts, tool output and attached context
+ leave the install for the vendor the turn runs on. OpenAI requests set{" "}
+ <Code>store: false</Code> and replay the conversation in full on every
+ call. Operators should read the chosen vendor&apos;s usage policy before
+ enabling a provider, because Phantom prompts can describe attack
+ telemetry.
+ </li>
+ <li>
+ <Term>Observations.</Term> A setting an adapter had to change, output
+ it had to drop (an unknown tool name, a truncated call) or a refusal is
+ reported through <Code>lib/providers/event-sink.ts</Code>: an SSE{" "}
+ <Code>debug</Code> event (shown in the Wire events panel only) and a{" "}
+ <Code>provider_event</Code> audit row. Each observation is written once
+ per call sink and carries names and counts, never credentials or message
+ text.
+ </li>
+ </ul>
+ </SubSection>
+
+ <SubSection icon="payments" title="Usage and cost">
+ <p>
+ Every adapter reports normalized usage: total input (cache reads and
+ writes included), cache read, cache write (and its one-hour share),
+ output, and reasoning tokens (already part of output). The cost of a
+ call is computed from the registry&apos;s price for the exact{" "}
+ <Code>provider/model</Code>:
+ </p>
+ <Pre>{`uncached input  = inputTotal - cacheRead - cacheWrite
+5-minute writes = cacheWrite - cacheWrite1h
+usd = uncached * inputPerM + cacheRead * cacheReadPerM
+    + (cacheWrite - cacheWrite1h) * cacheWrite5mPerM + cacheWrite1h * cacheWrite1hPerM
+    + output * outputPerM                       (per million tokens)
+long-context tier: above the model's threshold the whole request is
+scaled by its input and output multipliers.`}</Pre>
+ <p>
+ A model with no price, a promotional price past its end date, or a usage
+ shape the price table cannot cover (one-hour cache writes with no
+ one-hour price) is <Term>unpriced</Term>: the row carries{" "}
+ <Code>priced: false</Code> and <Code>cost_usd: null</Code>. Nothing is
+ ever billed at a guessed rate or at zero. The audit row, its fields and
+ the pages that read it are in{" "}
+ <Link href="#cost-tracking" className="link">Cost Tracking</Link>.
+ </p>
+ </SubSection>
+
+ <SubSection icon="build" title="Implementation gap">
+ <div className="rounded-lg border border-tertiary/30 bg-tertiary/5 p-3 text-sm">
+ <strong className="text-tertiary">Implementation gap</strong>
+ <ul className="list-disc pl-5 space-y-1 mt-2">
+ <li>
+ The Claude and OpenAI adapters are verified against recorded
+ stream fixtures and request-mapping tests only. They have not been run
+ against the live vendor APIs. Open questions
+ that need a live call: whether Claude reports cache usage in the
+ message-start event, the exact OpenAI stream field names, whether Claude
+ still requires the first message to be the user&apos;s, and whether it
+ rejects tool results when no tools are defined.
+ </li>
+ <li>
+ <Code>/compress</Code>, <Code>/plan</Code> and automatic compaction
+ call the session&apos;s model but write no <Code>chat_turn_cost</Code>{" "}
+ row, so their spend is missing from the cost page and from{" "}
+ <Code>/cost</Code>.
+ </li>
+ <li>
+ A subagent&apos;s calls write their own cost rows (tagged with the
+ subagent&apos;s session) but are not added to the parent turn&apos;s{" "}
+ <Code>turn_cost</Code> total.
+ </li>
+ <li>
+ Embeddings are Vertex-only. Memory and knowledge-base search use the
+ hash-similarity stand-in on an install without a Vertex provider (see
+ the embedder section of{" "}
+ <Link href="#setup-wiring" className="link">Setup &amp; First-Run Wiring</Link>
+ ). OpenAI embeddings, and Claude served through Vertex, are not built.
+ </li>
+ <li>
+ <Code>GEMINI_API_KEY</Code> is environment-only, with no ProviderStore
+ slot, and the Vertex card&apos;s stored <Code>region</Code> is not
+ consulted (the location is derived from the model name).
+ </li>
+ <li>
+ There is no provider-down fallback: when the provider that serves a
+ turn is unreachable the turn fails, and the operator picks another
+ model.
+ </li>
+ <li>
+ Stored history replays tool output as user-role text, a weaker
+ untrusted-content signal for Claude and OpenAI than structured tool
+ results. Fixing it needs stored call ids and structured tool rows.
+ </li>
+ <li>
+ Pricing in the catalogues is checked by hand and carries the date it
+ was last verified; it has to be re-verified at every release.
+ </li>
+ </ul>
+ </div>
  </SubSection>
  </Section>
 );
@@ -9540,6 +9939,7 @@ function JobsSubsystem() {
   source            TEXT NOT NULL DEFAULT 'manifest', -- manifest | runtime
   run_once          INTEGER NOT NULL DEFAULT 0,       -- auto-disable after first fire
   bypass_approvals  INTEGER NOT NULL DEFAULT 0,
+  model_id          TEXT,                             -- canonical 'provider/model'; NULL = install default
   description       TEXT NOT NULL DEFAULT '',        -- operator's note; '' when none
   last_fired_at     TEXT,
   last_status       TEXT,                             -- success | failure | skipped
@@ -9559,6 +9959,15 @@ job_runs (
   result       TEXT,                         -- JSON-serialized model reply / tool result
   error        TEXT
 );`}</Pre>
+ <p>
+ <Code>model_id</Code> is the per-job model override. The{" "}
+ <Code>/api/agent/jobs</Code> proxy checks it against the model registry
+ when a job is saved (400 with suggestions) and stores it canonical; the
+ scheduler sends it as <Code>body.model</Code>, and a model that cannot
+ serve at dispatch ends the run as failed with the{" "}
+ <Code>MODEL_UNAVAILABLE</Code> text. See{" "}
+ <Link href="#model-providers" className="link">Model Providers</Link>.
+ </p>
  <p>
  <Code>description</Code> is the operator&apos;s free-text note (the{" "}
  <Code>/jobs/new</Code> Description field, up to 2000 characters). It
@@ -9683,7 +10092,7 @@ job_runs (
  <Code>approvalMode</Code> parameter and inserts the block
  between the persona/skills blocks and the cached TAIL — the
  TAIL stays cacheable, only the ~50-token approval-mode block
- varies turn to turn. <Code>callGemini</Code> threads the same
+ varies turn to turn. The chat route threads the same
  value through every call site in a turn (initial, follow-up,
  budget-exhausted summary) so the narration is consistent
  across multi-tool conversations. The{" "}
@@ -10045,7 +10454,7 @@ function BenchmarkHarness() {
  <Code>expected_output_match</Code> against the final answer (
  <Code>null</Code> when the case sets none); tool-call Jaccard
  compares the set of tool names called with the expected set, order
- ignored; plus <Code>cost_usd</Code>, <Code>wall_seconds</Code>, a{" "}
+ ignored; plus <Code>cost_usd</Code> (<Code>null</Code> when no model call of the case had a price: shown as <em>unpriced</em>, never $0, and left out of the cost percentiles), <Code>wall_seconds</Code>, a{" "}
  <Code>wall_warning</Code> when the case exceeded its{" "}
  <Code>max_wall_seconds</Code>, and an <Code>error</Code> string for
  infrastructure failures. Cases with an error are excluded from the
@@ -10103,7 +10512,7 @@ function BenchmarkHarness() {
  <Code>/api/chat</Code> accepts that loopback bearer; the helper{" "}
  <Code>usecase/agent_internal_auth.py</Code> is shared with the job
  scheduler), collecting <Code>text_delta</Code>, <Code>tool_call</Code>,{" "}
- <Code>meta.cost_usd</Code> and <Code>done</Code>. Each case has a
+ <Code>turn_cost</Code> (the turn&apos;s priced <Code>cost_usd</Code>; a call with no price adds nothing, and a case with no priced turn keeps a null cost) and <Code>done</Code>. Each case has a
  300 s timeout; TLS verification is off for this loopback call. A
  failed case is recorded with its error and the run continues.
  </li>
@@ -10143,7 +10552,11 @@ function BenchmarkHarness() {
  <Code>{`{ manifest, router_preset_model?, thinking_enabled? }`}</Code>
  ; <Code>manifest</Code> is required (400 otherwise, and 400 for a
  manifest that cannot be loaded). The page sends only{" "}
- <Code>manifest</Code> and <Code>router_preset_model</Code>.
+ <Code>manifest</Code> and <Code>router_preset_model</Code>, picked from
+ the registry&apos;s selectable chat models as a canonical{" "}
+ <Code>provider/model</Code> ref. Each case sends it as the chat request&apos;s{" "}
+ <Code>model</Code>, so a model that cannot serve fails every case with{" "}
+ <Code>MODEL_UNAVAILABLE</Code> and nothing is substituted.
  </li>
  </ul>
  </SubSection>

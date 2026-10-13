@@ -526,9 +526,9 @@ const CONFIGURATION: ApiEndpoint[] = [
         status: "200",
         description: "Settings snapshot.",
         example: {
-          defaults: { geminiModel: "gemini-3.1-pro-preview", defaultScenario: "dark_secrets" },
-          overridable: ["geminiModel", "defaultScenario", "defaultLogFormat"],
-          effective: { geminiModel: "gemini-3.1-pro-preview" },
+          defaults: { defaultModel: "vertex/gemini-3.1-pro-preview", defaultScenario: "dark_secrets" },
+          overridable: ["defaultModel", "defaultScenario", "defaultLogFormat"],
+          effective: { defaultModel: "vertex/gemini-3.1-pro-preview" },
           overrides: [],
         },
       },
@@ -542,7 +542,9 @@ const CONFIGURATION: ApiEndpoint[] = [
     summary: "Bulk set / clear runtime overrides",
     description:
       "Set or clear keys in one call. Keys not in manifest.settings.overridable[] " +
-      "are rejected with a per-key reason in the response.",
+      "are rejected with a per-key reason in the response. defaultModel (the install's " +
+      "default chat model) must be a model the registry accepts; it is stored as the " +
+      "canonical provider/model ref.",
     body: {
       contentType: "application/json",
       schema: {
@@ -553,11 +555,11 @@ const CONFIGURATION: ApiEndpoint[] = [
           actor: { type: "string", description: "Optional audit actor." },
         },
       },
-      example: { updates: { geminiModel: "gemini-2.5-flash" }, clear: [], actor: "user:operator" },
+      example: { updates: { defaultModel: "vertex/gemini-3.7-flash" }, clear: [], actor: "user:operator" },
     },
     responses: [
       { status: "200", description: "{ applied, cleared, rejected }." },
-      { status: "400", description: "Malformed body." },
+      { status: "400", description: "Malformed body, or a defaultModel the registry rejects ({ error, code, field, suggestions })." },
     ],
     riskTier: "soft",
   },
@@ -670,33 +672,53 @@ const CONFIGURATION: ApiEndpoint[] = [
     responses: [{ status: "200", description: "Provider rows." }],
   },
   {
+    id: "providers-config-get",
+    category: "configuration",
+    method: "GET",
+    path: "/api/agent/providers/config",
+    summary: "Read the Providers page values (secrets redacted)",
+    description:
+      "The Vertex, Anthropic and OpenAI cards in one object. Secret fields (vertexServiceAccountJson, anthropicApiKey, openaiApiKey) come back as '***' when saved; project, region, base URLs, organization and project are returned in cleartext. Refused with 403 to API-key (bearer) callers, like every route under /api/agent/providers.",
+    responses: [
+      {
+        status: "200",
+        description: "{ providers: { ...redacted fields... }, configured: { vertex, anthropic, openai } }.",
+        example: {
+          providers: { anthropicApiKey: "***", anthropicBaseUrl: "", openaiApiKey: "", openaiOrganization: "", vertexProjectId: "my-project" },
+          configured: { vertex: false, anthropic: true, openai: false },
+        },
+      },
+    ],
+  },
+  {
     id: "providers-config",
     category: "configuration",
-    method: "POST",
+    method: "PUT",
     path: "/api/agent/providers/config",
-    summary: "Materialize or update a provider instance",
+    summary: "Save provider credentials (Vertex, Anthropic, OpenAI)",
     description:
-      "Operator submits creds (Vertex JSON, etc). Secrets land in the SecretStore (encrypted via PHANTOM_SECRET_KEK); the row stores paths.",
+      "What Save Changes on /providers sends. Each provider's fields are optional; a provider is created if it has no instance yet and updated otherwise. Secrets land in the SecretStore (encrypted via PHANTOM_SECRET_KEK); the row stores paths. A base URL must be https and pass the outbound-URL guard, and changing the base URL of a provider that already holds a key requires the key in the same request. The change takes effect at once: the credential and model-list caches are dropped. Refused with 403 to API-key (bearer) callers.",
     body: {
       contentType: "application/json",
       schema: {
         type: "object",
-        required: ["provider_id", "config"],
+        required: ["value"],
         properties: {
-          provider_id: { type: "string", example: "vertex" },
-          name: { type: "string", example: "primary-vertex" },
-          config: { type: "object" },
-          secret_refs: { type: "object" },
+          value: {
+            type: "object",
+            description:
+              "Any of: vertexProjectId, vertexLocation, vertexServiceAccountJson, anthropicApiKey, anthropicBaseUrl, openaiApiKey, openaiBaseUrl, openaiOrganization, openaiProject. An empty base URL, organization or project clears it; '***' keeps a saved secret.",
+          },
         },
       },
       example: {
-        provider_id: "vertex",
-        name: "primary-vertex",
-        config: { project_id: "my-project", region: "us-central1" },
-        secret_refs: { serviceAccountJson: "<paste JSON>" },
+        value: { anthropicApiKey: "<your Anthropic API key>", anthropicBaseUrl: "" },
       },
     },
-    responses: [{ status: "201", description: "Materialized." }, { status: "400", description: "Validation failure." }],
+    responses: [
+      { status: "200", description: "Saved; reports what was created or updated per provider." },
+      { status: "400", description: "Validation failure, or a base URL the guard refuses." },
+    ],
     riskTier: "credential",
   },
   {
@@ -704,9 +726,30 @@ const CONFIGURATION: ApiEndpoint[] = [
     category: "configuration",
     method: "GET",
     path: "/api/agent/models",
-    summary: "List available models from configured providers",
-    description: "Aggregates the model catalog from every materialized provider instance.",
-    responses: [{ status: "200", description: "Model list." }],
+    summary: "List the model registry",
+    description:
+      "A bare array of models: the built-in catalog merged with each provider's live model list (cached ten minutes, served stale while it refreshes in the background). Each element has provider, model, ref ('provider/model'), displayName, kind, contextWindow, supportsThinking, supportsTools, availability (available | unverified | unpriced | unavailable | deprecated | retired | not_configured), selectable, reason, pricing (per million tokens, null when unpriced), lifecycle, liveSeenAt, source and isDefault; the default row also carries defaultSource ('default' or 'derived'). Retired models are left out unless ?include_retired=1.",
+    queryParams: [
+      { name: "include_retired", type: "string", description: "1 to include retired models.", example: "1" },
+    ],
+    responses: [
+      {
+        status: "200",
+        description: "Model list.",
+        example: [
+          {
+            provider: "anthropic",
+            model: "claude-sonnet-5-5",
+            ref: "anthropic/claude-sonnet-5-5",
+            kind: "chat",
+            availability: "available",
+            selectable: true,
+            isDefault: true,
+            defaultSource: "derived",
+          },
+        ],
+      },
+    ],
   },
   {
     id: "manifest-get",
@@ -723,7 +766,7 @@ const CONFIGURATION: ApiEndpoint[] = [
         example: {
           name: "phantom-soc-simulation",
           version: "1.0.0",
-          runtime: { mode: "standalone-or-orchestrated", model: "gemini-3.1-pro-preview", setupRequired: false },
+          runtime: { mode: "standalone-or-orchestrated", setupRequired: false },
         },
       },
     ],
@@ -962,6 +1005,60 @@ const CONFIGURATION: ApiEndpoint[] = [
     responses: [{ status: "200", description: "OK" }],
   },
   {
+    id: "providers-anthropic-test-post",
+    category: "configuration",
+    method: "POST",
+    path: "/api/agent/providers/anthropic/test",
+    summary: "Test Anthropic (Claude) credentials",
+    description:
+      "Body { api_key?, base_url? }; an empty api_key or '***' tests the saved key, and only against the base URL it was saved with. Lists the models the key can see, which spends no tokens, and always answers HTTP 200 with { status: 'success' | 'error', message, modelCount? }. Writes a provider_test audit row (provider, ok, status; never the key). Refused with 403 to API-key (bearer) callers.",
+    body: {
+      contentType: "application/json",
+      schema: {
+        type: "object",
+        properties: {
+          api_key: { type: "string", description: "A key to test, or '***' for the saved one." },
+          base_url: { type: "string", description: "https URL; empty means https://api.anthropic.com." },
+        },
+      },
+      example: { api_key: "***" },
+    },
+    responses: [{ status: "200", description: "{ status, message, modelCount? }." }],
+  },
+  {
+    id: "providers-openai-test-post",
+    category: "configuration",
+    method: "POST",
+    path: "/api/agent/providers/openai/test",
+    summary: "Test OpenAI credentials",
+    description:
+      "Body { api_key?, base_url?, organization?, project? }; an empty api_key or '***' tests the saved key, and only against the base URL it was saved with. Organization and project in the body win over the saved ones. Lists the models the key can see (no tokens spent) and always answers HTTP 200 with { status, message, modelCount? }. Writes a provider_test audit row. Refused with 403 to API-key (bearer) callers.",
+    body: {
+      contentType: "application/json",
+      schema: {
+        type: "object",
+        properties: {
+          api_key: { type: "string", description: "A key to test, or '***' for the saved one." },
+          base_url: { type: "string", description: "https URL including the /v1 segment; empty means https://api.openai.com/v1." },
+          organization: { type: "string", description: "Optional org-... id." },
+          project: { type: "string", description: "Optional proj_... id." },
+        },
+      },
+      example: { api_key: "***" },
+    },
+    responses: [{ status: "200", description: "{ status, message, modelCount? }." }],
+  },
+  {
+    id: "providers-vertex-verify-post",
+    category: "configuration",
+    method: "POST",
+    path: "/api/agent/providers/vertex/verify",
+    summary: "Verify a Gemini model is enabled",
+    description:
+      "Body {model}. Asks Google for a token count on the model (no generation, no cost) and answers {status, message, via}. Refused to API keys, like every route under /api/agent/providers.",
+    responses: [{ status: "200", description: "OK" }],
+  },
+  {
     id: "restore-post",
     category: "configuration",
     method: "POST",
@@ -1027,6 +1124,8 @@ const OPERATIONS: ApiEndpoint[] = [
           action: { type: "object", description: "{type: chat|tool_call|log, ...}" },
           enabled: { type: "boolean" },
           run_once: { type: "boolean", description: "Auto-disable after first fire." },
+          model_id: { type: "string", description: "Optional per-job model, 'provider/model' (for example anthropic/claude-haiku-5-5). Checked against the model registry and stored canonical; omit or '' for the install default." },
+          thinking_enabled: { type: "boolean", description: "Ask the model for its reasoning mode (each provider maps it to its own)." },
           description: { type: "string", description: "Optional note on what the job is for (up to 2000 characters). Shown on /jobs and the job page." },
         },
       },
@@ -1042,7 +1141,7 @@ const OPERATIONS: ApiEndpoint[] = [
     },
     responses: [
       { status: "201", description: "Job created." },
-      { status: "400", description: "Validation error (invalid cron, name conflict, etc)." },
+      { status: "400", description: "Validation error (invalid cron, name conflict, or a model_id the registry rejects: { error, code, field, suggestions })." },
     ],
     riskTier: "soft",
   },
@@ -1076,6 +1175,7 @@ const OPERATIONS: ApiEndpoint[] = [
           timezone: { type: "string" },
           action: { type: "object" },
           enabled: { type: "boolean" },
+          model_id: { type: "string", description: "'provider/model'. Omit to keep, \"\" to clear (install default); anything else must resolve in the model registry (400 with suggestions otherwise)." },
           description: { type: "string", description: "Omit to keep the stored note; \"\" clears it." },
         },
       },
@@ -1549,8 +1649,21 @@ const OBSERVABILITY: ApiEndpoint[] = [
     path: "/api/agent/bench/runs",
     summary: "Create bench runs",
     description:
-      "Run the endpoint via the try-it-out form to see the response shape.",
-    responses: [{ status: "200", description: "OK" }],
+      "Runs a benchmark manifest against the chat route and returns when it finishes. Body { manifest, router_preset_model?, thinking_enabled? }; router_preset_model is a 'provider/model' ref sent as the model of every case (omit for the install default). A model that cannot run fails every case with MODEL_UNAVAILABLE. Case costs come from each turn's priced cost; calls with no price add nothing.",
+    body: {
+      contentType: "application/json",
+      schema: {
+        type: "object",
+        required: ["manifest"],
+        properties: {
+          manifest: { type: "string", description: "Bundled id or path." },
+          router_preset_model: { type: "string", description: "Optional 'provider/model'." },
+          thinking_enabled: { type: "boolean" },
+        },
+      },
+      example: { manifest: "phantom-soc-v1", router_preset_model: "anthropic/claude-haiku-5-5" },
+    },
+    responses: [{ status: "200", description: "Run id and summary." }, { status: "400", description: "Missing or unloadable manifest." }],
   },
   {
     id: "detections",

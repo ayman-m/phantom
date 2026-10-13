@@ -3,16 +3,19 @@
 Model providers have the same
 configuration lifecycle as tool connectors. This module exposes
 the same endpoints, just against `/api/v1/providers` and
-the `ProviderStore`.
+the `ProviderStore`. There is no model-catalog route: the agent's model
+registry owns the catalog.
 
   GET    /api/v1/providers                  → list all provider instances
   GET    /api/v1/providers?provider_id=X    → list instances for a provider
   POST   /api/v1/providers                  → create one instance
   GET    /api/v1/providers/{instance_id}    → fetch one
+  PUT    /api/v1/providers/{instance_id}    → partial update
   DELETE /api/v1/providers/{instance_id}    → delete one
-  GET    /api/v1/models                     → active model catalog
-                                              (union across configured providers;
-                                              what modelRequirements resolves against)
+
+The `provider_id` of an instance is one of `MODEL_PROVIDER_IDS`. The agent reads
+a provider's credentials from the store on every model call, so none of these
+writes needs a restart (`requires_mcp_restart` is always false).
 """
 
 from __future__ import annotations
@@ -27,10 +30,30 @@ from starlette.responses import JSONResponse
 
 from api.auth import require_bearer, require_loopback_for_secrets
 from usecase.audit_log import reset_current_actor, set_current_actor
-from usecase.provider_loader import list_active_models
-from usecase.provider_store import ProviderInstance, ProviderStore
+from usecase.provider_store import (
+    ForeignSecretRefError,
+    ProviderInstance,
+    ProviderStore,
+    is_own_secret_ref,
+)
 
 logger = logging.getLogger("Phantom MCP")
+
+# The model providers the agent has an adapter for. Anything else would be an
+# instance nothing reads, so it is refused rather than stored.
+MODEL_PROVIDER_IDS = ("vertex", "anthropic", "openai")
+
+
+def _unknown_provider_response(provider_id: str) -> JSONResponse:
+    return JSONResponse(
+        {
+            "error": (
+                f"unknown provider_id {provider_id!r}; "
+                f"expected one of {', '.join(MODEL_PROVIDER_IDS)}"
+            )
+        },
+        status_code=400,
+    )
 
 
 def _instance_to_dict(
@@ -69,6 +92,16 @@ def _instance_to_dict(
         secrets_out = {}
         for slot, ref_or_value in inst.secret_refs.items():
             if isinstance(ref_or_value, str) and ref_or_value.startswith("/"):
+                if not is_own_secret_ref(inst.id, slot, ref_or_value):
+                    # Never follow a reference into another owner's secret,
+                    # even from a row stored before writes were checked.
+                    logger.warning(
+                        "ProviderInstance %s/%s: slot %s holds a reference outside "
+                        "its own secret path; not resolving it.",
+                        inst.provider_id, inst.name, slot,
+                    )
+                    secrets_out[slot] = ""
+                    continue
                 try:
                     secrets_out[slot] = secret_store.read(ref_or_value)
                 except Exception as exc:
@@ -118,7 +151,7 @@ def _refresh_embedder(provider_id: str, reason: str) -> str | None:
 
 
 def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
-    """Register /api/v1/providers/* + /api/v1/models routes."""
+    """Register /api/v1/providers/* routes."""
 
     @mcp.custom_route("/api/v1/providers", methods=["GET"], include_in_schema=False)
     async def list_provider_instances(request: Request) -> JSONResponse:
@@ -153,6 +186,8 @@ def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
 
             if not isinstance(provider_id, str) or not provider_id:
                 return JSONResponse({"error": "provider_id is required (string)"}, status_code=400)
+            if provider_id not in MODEL_PROVIDER_IDS:
+                return _unknown_provider_response(provider_id)
             if not isinstance(name, str) or not name:
                 return JSONResponse({"error": "name is required (string)"}, status_code=400)
             if not isinstance(config_in, dict) or not isinstance(secrets_in, dict):
@@ -162,6 +197,8 @@ def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
 
             try:
                 instance = store.create(provider_id, name, config_in, secrets_in)
+            except ForeignSecretRefError as exc:
+                return JSONResponse({"error": str(exc)}, status_code=400)
             except ValueError as exc:
                 return JSONResponse({"error": str(exc)}, status_code=409)
 
@@ -177,9 +214,9 @@ def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
             return JSONResponse(
                 {
                     "instance": _instance_to_dict(instance),
-                    # A Vertex provider is live as soon as it is saved: the
-                    # embedder is rebuilt above and chat reads the store per turn.
-                    "requires_mcp_restart": provider_id != "vertex",
+                    # A provider is live as soon as it is saved: the embedder is
+                    # rebuilt above (Vertex) and chat reads the store per call.
+                    "requires_mcp_restart": False,
                     **({"embedder_mode": embedder_mode} if embedder_mode else {}),
                 },
                 status_code=201,
@@ -276,13 +313,24 @@ def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
                 return JSONResponse({"error": "config must be a JSON object"}, status_code=400)
             if secrets_in is not None and not isinstance(secrets_in, dict):
                 return JSONResponse({"error": "secrets must be a JSON object"}, status_code=400)
+            if "provider_id" in body:
+                return JSONResponse(
+                    {"error": "provider_id cannot be changed; delete and recreate the instance"},
+                    status_code=400,
+                )
+            current = store.get(instance_id)
+            if current is not None and current.provider_id not in MODEL_PROVIDER_IDS:
+                return _unknown_provider_response(current.provider_id)
 
-            updated = store.update(
-                instance_id,
-                name=name,
-                config=config_in,
-                secrets=secrets_in,
-            )
+            try:
+                updated = store.update(
+                    instance_id,
+                    name=name,
+                    config=config_in,
+                    secrets=secrets_in,
+                )
+            except ForeignSecretRefError as exc:
+                return JSONResponse({"error": str(exc)}, status_code=400)
             if updated is None:
                 return JSONResponse({"error": "not found"}, status_code=404)
 
@@ -327,39 +375,9 @@ def register_provider_routes(mcp: FastMCP, store: ProviderStore) -> None:
                 {
                     "deleted": True,
                     "id": instance_id,
-                    "requires_mcp_restart": True,
+                    "requires_mcp_restart": False,
                     **({"embedder_mode": embedder_mode} if embedder_mode else {}),
                 }
             )
         finally:
             reset_current_actor(actor_token)
-
-    @mcp.custom_route("/api/v1/models", methods=["GET"], include_in_schema=False)
-    async def list_models(request: Request) -> JSONResponse:
-        """Return the active model catalog — union across configured providers.
-
-        This is what the agent's `modelRequirements:` resolver picks
-        from. Empty when no providers are configured. Used by the
-        Next.js agent's settings-page model picker (later) and by
-        anything else that needs to know which models are available.
-        """
-        if (resp := require_bearer(request)) is not None:
-            return resp
-        models = list_active_models(store=store)
-        return JSONResponse(
-            {
-                "models": [
-                    {
-                        "provider_id": m.provider_id,
-                        "instance_name": m.instance_name,
-                        "id": m.model_id,
-                        "family": m.family,
-                        "kind": m.kind,
-                        "context_window": m.context_window,
-                        "supports": m.supports,
-                        **m.extra,
-                    }
-                    for m in models
-                ]
-            }
-        )

@@ -103,7 +103,7 @@ const NODES_DEF: Array<Omit<Node<NodeData>, "data"> & { data: NodeData }> = [
     id: "vertex",
     type: "phantomNode",
     position: { x: 840, y: 40 },
-    data: { label: "Vertex / Gemini", sub: "external LLM", status: "checking" },
+    data: { label: "Model provider", sub: "Gemini / Claude / OpenAI", status: "checking" },
     draggable: true,
   },
 
@@ -124,7 +124,7 @@ const NODES_DEF: Array<Omit<Node<NodeData>, "data"> & { data: NodeData }> = [
 const EDGES_DEF: Edge[] = [
   { id: "browser->agent", source: "browser", target: "agent", label: "HTTPS" },
   { id: "agent->mcp", source: "agent", target: "mcp", label: "Bearer + JSON" },
-  { id: "agent->vertex", source: "agent", target: "vertex", label: "OAuth2" },
+  { id: "agent->vertex", source: "agent", target: "vertex", label: "HTTPS" },
   { id: "mcp->audit", source: "mcp", target: "audit" },
   { id: "mcp->memory", source: "mcp", target: "memory" },
   { id: "mcp->secrets", source: "mcp", target: "secrets" },

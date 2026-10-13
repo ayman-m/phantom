@@ -36,6 +36,7 @@ from usecase.audit_log import audit_log, reset_current_actor, set_current_actor
 from usecase.connector_probes import PROBE_IMPLEMENTED, real_probe
 from usecase.connector_state import get_connector_state_store
 from usecase.instance_store import Instance, InstanceStore
+from usecase.secret_store import ForeignSecretRefError
 
 logger = logging.getLogger("Phantom MCP")
 
@@ -419,6 +420,8 @@ def register_instance_routes(mcp: FastMCP, store: InstanceStore) -> None:
                     secrets_in,
                     disabled_tools=disabled_tools_in,
                 )
+            except ForeignSecretRefError as exc:
+                return JSONResponse({"error": str(exc)}, status_code=400)
             except ValueError as exc:
                 return JSONResponse({"error": str(exc)}, status_code=409)
 
@@ -637,6 +640,8 @@ def register_instance_routes(mcp: FastMCP, store: InstanceStore) -> None:
             if update_kwargs:
                 try:
                     instance = store.update(instance_id, **update_kwargs)
+                except ForeignSecretRefError as exc:
+                    return JSONResponse({"error": str(exc)}, status_code=400)
                 except ValueError as exc:
                     msg = str(exc)
                     # Surface "active-instance-conflict" as 409 so the UI

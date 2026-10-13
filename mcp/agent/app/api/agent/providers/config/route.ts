@@ -7,16 +7,24 @@
  * (section "Setup Page Canonical Lifecycle Spec"), provider data
  * lives in ProviderStore (SecretStore-backed).
  *
- * The Anthropic credential (anthropicApiKey) is persisted: the PUT
- * upserts a "primary-anthropic" provider instance, and
- * lib/anthropic-credentials.ts reads it back.
+ * The Anthropic and OpenAI credentials are persisted the same way: the PUT
+ * upserts a "primary-anthropic" / "primary-openai" provider instance, and
+ * lib/providers/credentials.ts reads it back. A base URL passes the
+ * outbound-URL guard (lib/providers/url-guard.ts) before it is saved, and
+ * again on every call that uses it.
+ *
+ * A saved API key is only ever sent to the base URL it was saved with, so
+ * changing the base URL of a provider that already holds a key requires the
+ * key to be typed again in the same request. Otherwise a base URL pointing at
+ * a host the operator does not control would receive the stored key on the
+ * next call. This holds for every provider with a base URL.
  *
  *   GET /api/agent/providers/config
- *     → fetches vertex + anthropic instances from ProviderStore
+ *     → fetches vertex + anthropic + openai instances from ProviderStore
  *     → returns { providers: {...redacted view...}, configured: {...} }
  *
  *   PUT /api/agent/providers/config
- *     body { value: { vertex* fields, anthropic* fields } }
+ *     body { value: { vertex* fields, anthropic* fields, openai* fields } }
  *     → per provider: PUT update if instance exists, POST create otherwise
  *     → busts the per-provider chat-handler cache so the change is
  *       visible to the next chat dispatch immediately
@@ -26,18 +34,34 @@
  *   form.vertexLocation           → instance.config.region
  *   form.vertexServiceAccountJson → instance.secrets.serviceAccountJson
  *   form.anthropicApiKey          → instance.secrets.api_key
+ *   form.anthropicBaseUrl         → instance.config.base_url (empty clears it)
+ *   form.openaiApiKey             → instance.secrets.api_key
+ *   form.openaiBaseUrl            → instance.config.base_url (empty clears it)
+ *   form.openaiOrganization       → instance.config.organization (empty clears it)
+ *   form.openaiProject            → instance.config.project (empty clears it)
  */
 
 import { NextResponse } from "next/server";
 
 import { resolveMcp } from "@/lib/mcp-proxy";
+import { mcpBlockedHosts } from "@/lib/mcp-host";
 import { bustVertexCredsCache } from "@/lib/vertex-credentials";
-import { bustAnthropicCredsCache } from "@/lib/anthropic-credentials";
+import { normalizeBaseUrl } from "@/lib/providers/connection-test";
+import { bustProviderCredsCache } from "@/lib/providers/credentials";
+import { ProviderError } from "@/lib/providers/errors";
+import { ANTHROPIC_DEFAULT_BASE, isValidScopeId, OPENAI_DEFAULT_BASE } from "@/lib/providers/registry/live";
+import { bustModelRegistryCache } from "@/lib/providers/registry/registry";
+import { assertSafeBaseUrl } from "@/lib/providers/url-guard";
 
 export const dynamic = "force-dynamic";
 
 const PROVIDER_KEYS = [
   "anthropicApiKey",
+  "anthropicBaseUrl",
+  "openaiApiKey",
+  "openaiOrganization",
+  "openaiProject",
+  "openaiBaseUrl",
   "vertexServiceAccountJson",
   "vertexProjectId",
   "vertexLocation",
@@ -46,6 +70,7 @@ type ProviderKey = (typeof PROVIDER_KEYS)[number];
 
 const SENSITIVE_KEYS: ReadonlySet<ProviderKey> = new Set<ProviderKey>([
   "anthropicApiKey",
+  "openaiApiKey",
   "vertexServiceAccountJson",
 ]);
 
@@ -53,8 +78,46 @@ const REDACTED = "***";
 
 const VERTEX_PROVIDER_ID = "vertex";
 const VERTEX_DEFAULT_INSTANCE_NAME = "primary-vertex";
-const ANTHROPIC_PROVIDER_ID = "anthropic";
-const ANTHROPIC_DEFAULT_INSTANCE_NAME = "primary-anthropic";
+
+/**
+ * The model providers that are an API key plus an optional base URL (and, for
+ * OpenAI, an optional organization and project). One table drives the read,
+ * the validation and the upsert for all of them.
+ */
+interface KeyedProvider {
+  id: "anthropic" | "openai";
+  instanceName: string;
+  label: string;
+  defaultBase: string;
+  fields: {
+    apiKey: ProviderKey;
+    baseUrl: ProviderKey;
+    organization?: ProviderKey;
+    project?: ProviderKey;
+  };
+}
+
+const KEYED_PROVIDERS: readonly KeyedProvider[] = [
+  {
+    id: "anthropic",
+    instanceName: "primary-anthropic",
+    label: "Anthropic",
+    defaultBase: ANTHROPIC_DEFAULT_BASE,
+    fields: { apiKey: "anthropicApiKey", baseUrl: "anthropicBaseUrl" },
+  },
+  {
+    id: "openai",
+    instanceName: "primary-openai",
+    label: "OpenAI",
+    defaultBase: OPENAI_DEFAULT_BASE,
+    fields: {
+      apiKey: "openaiApiKey",
+      baseUrl: "openaiBaseUrl",
+      organization: "openaiOrganization",
+      project: "openaiProject",
+    },
+  },
+];
 
 interface McpProviderInstance {
   id: string;
@@ -66,6 +129,24 @@ interface McpProviderInstance {
 }
 
 /**
+ * Vet an operator-typed base URL before it is stored. Syntax, scheme and host
+ * rules, and the addresses it resolves to, are checked by the outbound-URL
+ * guard. A host that does not resolve right now is still accepted: the rules
+ * that can be judged without DNS have passed, and the guard runs again on
+ * every call.
+ */
+async function vetBaseUrl(raw: string): Promise<{ value: string } | { error: string }> {
+  try {
+    return { value: await assertSafeBaseUrl(raw, { blockedHosts: mcpBlockedHosts() }) };
+  } catch (err) {
+    if (err instanceof ProviderError && err.kind === "network") {
+      return { value: raw.replace(/\/+$/, "") };
+    }
+    return { error: err instanceof ProviderError ? err.message : "The base URL was not accepted." };
+  }
+}
+
+/**
  * Fetch the first vertex provider instance (the convention is one
  * primary-vertex per install). Returns null if none configured yet.
  */
@@ -74,13 +155,6 @@ async function fetchVertexInstance(
   token: string,
 ): Promise<McpProviderInstance | null> {
   return fetchFirstInstance(base, token, VERTEX_PROVIDER_ID);
-}
-
-async function fetchAnthropicInstance(
-  base: string,
-  token: string,
-): Promise<McpProviderInstance | null> {
-  return fetchFirstInstance(base, token, ANTHROPIC_PROVIDER_ID);
 }
 
 async function fetchFirstInstance(
@@ -225,6 +299,35 @@ async function upsertProviderInstance(
   return { success: true, action: "create", updated: created?.id };
 }
 
+/** Surface one keyed provider's stored instance in the redacted GET view. */
+function describeKeyedProvider(
+  def: KeyedProvider,
+  instance: McpProviderInstance | null,
+  providers: Partial<Record<ProviderKey, string>>,
+  configured: Partial<Record<ProviderKey, boolean>>,
+): void {
+  if (!instance) return;
+  // Only api_key is surfaced. Any other secret slot on the instance is ignored
+  // and never echoed; the MCP redacts it on its GET side already.
+  if (instance.secrets?.api_key !== undefined) {
+    providers[def.fields.apiKey] = REDACTED;
+    configured[def.fields.apiKey] = true;
+  }
+  const config: Array<[ProviderKey | undefined, string]> = [
+    [def.fields.baseUrl, "base_url"],
+    [def.fields.organization, "organization"],
+    [def.fields.project, "project"],
+  ];
+  for (const [field, configKey] of config) {
+    if (!field) continue;
+    const value = instance.config?.[configKey];
+    if (typeof value === "string" && value.length > 0) {
+      providers[field] = value;
+      configured[field] = true;
+    }
+  }
+}
+
 export async function GET() {
   const r = await resolveMcp();
   if (r instanceof NextResponse) return r;
@@ -232,12 +335,12 @@ export async function GET() {
   const providers: Partial<Record<ProviderKey, string>> = {};
   const configured: Partial<Record<ProviderKey, boolean>> = {};
 
-  // Read directly from ProviderStore — no setup.json fallback. Both
-  // provider lookups run in parallel; failure on either falls back to
-  // "not configured" without disturbing the other.
-  const [vertex, anthropic] = await Promise.all([
+  // Read directly from ProviderStore — no setup.json fallback. All provider
+  // lookups run in parallel; failure on one falls back to "not configured"
+  // without disturbing the others.
+  const [vertex, ...keyed] = await Promise.all([
     fetchVertexInstance(r.base, r.token).catch(() => null),
-    fetchAnthropicInstance(r.base, r.token).catch(() => null),
+    ...KEYED_PROVIDERS.map((def) => fetchFirstInstance(r.base, r.token, def.id).catch(() => null)),
   ]);
 
   if (vertex) {
@@ -260,17 +363,100 @@ export async function GET() {
     }
   }
 
-  if (anthropic) {
-    // Only api_key is surfaced. Any other secret slot on the instance
-    // is ignored and never echoed.
-    if (anthropic.secrets?.api_key !== undefined) {
-      providers.anthropicApiKey = REDACTED;
-      configured.anthropicApiKey = true;
-    }
-  }
+  KEYED_PROVIDERS.forEach((def, i) => describeKeyedProvider(def, keyed[i], providers, configured));
 
   // Spark page reads from `data.providers`. Wrap accordingly.
   return NextResponse.json({ providers, configured });
+}
+
+interface KeyedPatch {
+  configPatch: Record<string, string>;
+  secretsPatch: Record<string, string>;
+}
+
+/**
+ * Refuse a typed secret that the MCP store would read as a reference to another
+ * secret. A value starting with "/" is stored as a SecretStore path and later
+ * resolved to its plaintext, so a typed key of "/ui/auth/admin/password_hash"
+ * would be sent to the provider's base URL as the bearer token. An API key
+ * never starts with "/" or contains whitespace or a newline (a paste artefact
+ * that also breaks the Authorization header).
+ */
+function vetTypedKey(label: string, value: string): string | null {
+  const trimmed = value.trim();
+  if (trimmed.startsWith("/")) {
+    return `The ${label} API key cannot start with "/". Paste the key itself, not a path.`;
+  }
+  if (/\s/.test(trimmed)) {
+    return `The ${label} API key cannot contain spaces or line breaks. Paste only the key.`;
+  }
+  return null;
+}
+
+/**
+ * Turn one keyed provider's form fields into config and secret patches, or an
+ * error that stops the whole save.
+ *
+ * The redaction sentinel "***" means "leave the saved key alone". A field that
+ * is present is a change: a value sets it, an empty string clears it. The base
+ * URL is vetted by the outbound-URL guard, and changing it away from the saved
+ * one while a key is stored demands that the key is typed again in this same
+ * request.
+ */
+async function buildKeyedPatch(
+  def: KeyedProvider,
+  incoming: Partial<Record<ProviderKey, string>>,
+  existing: McpProviderInstance | null,
+): Promise<KeyedPatch | { error: string }> {
+  const configPatch: Record<string, string> = {};
+  const secretsPatch: Record<string, string> = {};
+
+  const typedKey = incoming[def.fields.apiKey];
+  if (typeof typedKey === "string" && typedKey !== "" && typedKey !== REDACTED) {
+    const keyError = vetTypedKey(def.label, typedKey);
+    if (keyError) return { error: keyError };
+    secretsPatch.api_key = typedKey.trim();
+  }
+
+  const typedBase = incoming[def.fields.baseUrl];
+  if (typeof typedBase === "string") {
+    const typed = typedBase.trim();
+    if (typed === "") {
+      configPatch.base_url = "";
+    } else {
+      const vetted = await vetBaseUrl(typed);
+      if ("error" in vetted) return { error: vetted.error };
+      configPatch.base_url = vetted.value;
+    }
+    const keyStored = existing?.secrets?.api_key !== undefined;
+    if (keyStored && secretsPatch.api_key === undefined) {
+      const savedBase = normalizeBaseUrl(String(existing?.config?.base_url ?? "") || def.defaultBase);
+      const nextBase = normalizeBaseUrl(configPatch.base_url || def.defaultBase);
+      if (savedBase !== nextBase) {
+        return {
+          error:
+            `Enter the ${def.label} API key again to change the base URL. ` +
+            "A saved key is only sent to the base URL it was saved with.",
+        };
+      }
+    }
+  }
+
+  const scoped: Array<[ProviderKey | undefined, string, string]> = [
+    [def.fields.organization, "organization", "organization"],
+    [def.fields.project, "project", "project"],
+  ];
+  for (const [field, configKey, noun] of scoped) {
+    if (!field) continue;
+    const value = incoming[field];
+    if (typeof value !== "string") continue;
+    const typed = value.trim();
+    if (typed !== "" && !isValidScopeId(typed)) {
+      return { error: `The ${def.label} ${noun} must be an identifier such as "${noun === "project" ? "proj_..." : "org-..."}".` };
+    }
+    configPatch[configKey] = typed;
+  }
+  return { configPatch, secretsPatch };
 }
 
 export async function PUT(request: Request) {
@@ -283,13 +469,12 @@ export async function PUT(request: Request) {
   if (r instanceof NextResponse) return r;
 
   // Build per-provider patches. Each provider's fields are scoped
-  // independently — the operator can supply a vertex-only update,
-  // an anthropic-only update, or both. The redaction sentinel "***"
-  // means "leave that secret alone" (form's pre-fill carries it
-  // through for already-set credentials); skip those values.
+  // independently — the operator can supply a vertex-only update, an
+  // anthropic-only update, or any mix. The redaction sentinel "***" means
+  // "leave that secret alone" (form's pre-fill carries it through for
+  // already-set credentials); skip those values.
   const vertexConfigPatch: Record<string, string> = {};
   const vertexSecretsPatch: Record<string, string> = {};
-  const anthropicSecretsPatch: Record<string, string> = {};
 
   // ── Vertex ─────────────────────────────────────────────────
   if (typeof incoming.vertexProjectId === "string" && incoming.vertexProjectId.trim()) {
@@ -303,40 +488,61 @@ export async function PUT(request: Request) {
     incoming.vertexServiceAccountJson !== "" &&
     incoming.vertexServiceAccountJson !== REDACTED
   ) {
+    // The MCP store reads a value starting with "/" as a path to another
+    // secret. The service-account JSON is an object, never a path.
+    if (incoming.vertexServiceAccountJson.trimStart().startsWith("/")) {
+      const error = 'The Vertex service account JSON cannot start with "/". Paste the JSON itself, not a file path.';
+      return NextResponse.json(
+        { ok: false, error, mcp_sync: { vertex: { success: false, error } } },
+        { status: 400 },
+      );
+    }
     vertexSecretsPatch.serviceAccountJson = incoming.vertexServiceAccountJson;
   }
 
-  // ── Anthropic ──────────────────────────────────────────────
-  if (
-    typeof incoming.anthropicApiKey === "string" &&
-    incoming.anthropicApiKey !== "" &&
-    incoming.anthropicApiKey !== REDACTED
-  ) {
-    anthropicSecretsPatch.api_key = incoming.anthropicApiKey.trim();
+  // The stored instances come first: the base-URL rule compares against them.
+  const [vertexExisting, ...keyedExisting] = await Promise.all([
+    fetchVertexInstance(r.base, r.token).catch(() => null),
+    ...KEYED_PROVIDERS.map((def) => fetchFirstInstance(r.base, r.token, def.id).catch(() => null)),
+  ]);
+
+  // ── Anthropic and OpenAI ───────────────────────────────────
+  // A rejected value stops the whole save.
+  const keyedPatches: KeyedPatch[] = [];
+  for (let i = 0; i < KEYED_PROVIDERS.length; i++) {
+    const def = KEYED_PROVIDERS[i];
+    const patch = await buildKeyedPatch(def, incoming, keyedExisting[i]);
+    if ("error" in patch) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: patch.error,
+          mcp_sync: { [def.id]: { success: false, error: patch.error } },
+        },
+        { status: 400 },
+      );
+    }
+    keyedPatches.push(patch);
   }
 
   // Short-circuit if nothing to do.
-  if (
+  const nothingToSave =
     Object.keys(vertexConfigPatch).length === 0 &&
     Object.keys(vertexSecretsPatch).length === 0 &&
-    Object.keys(anthropicSecretsPatch).length === 0
-  ) {
+    keyedPatches.every(
+      (p) => Object.keys(p.configPatch).length === 0 && Object.keys(p.secretsPatch).length === 0,
+    );
+  if (nothingToSave) {
     return NextResponse.json({
       ok: true,
       mcp_sync: { success: true, skipped: true, reason: "no-op (no fields to update)" },
     });
   }
 
-  // Fetch existing instances in parallel.
-  const [vertexExisting, anthropicExisting] = await Promise.all([
-    fetchVertexInstance(r.base, r.token).catch(() => null),
-    fetchAnthropicInstance(r.base, r.token).catch(() => null),
-  ]);
-
   // Process per-provider upserts in parallel. Failure on one doesn't
-  // abort the other — the response carries both results so the
+  // abort the others — the response carries every result so the
   // operator sees exactly which provider succeeded.
-  const [vertexResult, anthropicResult] = await Promise.all([
+  const [vertexResult, ...keyedResults] = await Promise.all([
     upsertProviderInstance(r.base, r.token, {
       providerId: VERTEX_PROVIDER_ID,
       name: VERTEX_DEFAULT_INSTANCE_NAME,
@@ -351,42 +557,52 @@ export async function PUT(request: Request) {
           "primary-vertex instance for the first time.",
       },
     }),
-    upsertProviderInstance(r.base, r.token, {
-      providerId: ANTHROPIC_PROVIDER_ID,
-      name: ANTHROPIC_DEFAULT_INSTANCE_NAME,
-      configPatch: {},
-      secretsPatch: anthropicSecretsPatch,
-      existing: anthropicExisting,
-      requiredOnCreate: {
-        // Anthropic needs its API key on first create. The MCP store
-        // fails if secrets is empty.
-        keys: ["api_key"],
-        failureReason:
-          "Anthropic provider is not yet configured. Supply an API " +
-          "key to create the primary-anthropic instance for the " +
-          "first time.",
-      },
-    }),
+    ...KEYED_PROVIDERS.map((def, i) =>
+      upsertProviderInstance(r.base, r.token, {
+        providerId: def.id,
+        name: def.instanceName,
+        configPatch: keyedPatches[i].configPatch,
+        secretsPatch: keyedPatches[i].secretsPatch,
+        existing: keyedExisting[i],
+        requiredOnCreate: {
+          // The API key is needed on first create. The MCP store fails if
+          // secrets is empty.
+          keys: ["api_key"],
+          failureReason:
+            `${def.label} provider is not yet configured. Supply an API ` +
+            `key to create the ${def.instanceName} instance for the first time.`,
+        },
+      }),
+    ),
   ]);
 
   // Bust per-provider caches so the next chat dispatch sees the
   // updated credentials immediately, not after the 30-second TTL.
+  // The model registry's cached live lists are keyed by credential, so a
+  // changed credential would miss them anyway; busting also drops a failure
+  // remembered under the old one, so a corrected key is tried at once.
   if (vertexResult.success && vertexResult.action !== "skipped") {
     bustVertexCredsCache();
+    bustProviderCredsCache("vertex");
+    bustModelRegistryCache("vertex");
   }
-  if (anthropicResult.success && anthropicResult.action !== "skipped") {
-    bustAnthropicCredsCache();
-  }
+  KEYED_PROVIDERS.forEach((def, i) => {
+    const result = keyedResults[i];
+    if (result.success && result.action !== "skipped") {
+      bustProviderCredsCache(def.id);
+      bustModelRegistryCache(def.id);
+    }
+  });
 
-  // Aggregate response. Any failure → HTTP 400 with both results so
+  // Aggregate response. Any failure → HTTP 400 with every result so
   // the form can surface per-provider errors. All success → 200.
-  const allSuccess = vertexResult.success && anthropicResult.success;
+  const allSuccess = vertexResult.success && keyedResults.every((result) => result.success);
   return NextResponse.json(
     {
       ok: allSuccess,
       mcp_sync: {
         vertex: vertexResult,
-        anthropic: anthropicResult,
+        ...Object.fromEntries(KEYED_PROVIDERS.map((def, i) => [def.id, keyedResults[i]])),
       },
     },
     { status: allSuccess ? 200 : 400 },

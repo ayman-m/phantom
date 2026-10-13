@@ -1032,7 +1032,7 @@ async def async_main(transport: str):
     register_observability_routes(mcp, events_store)
     logger.info(
         "Admin HTTP endpoints registered: /api/v1/instances/*, "
-        "/api/v1/providers/*, /api/v1/models, "
+        "/api/v1/providers/*, "
         "/api/v1/audit/*, /api/v1/approvals/*, /api/v1/sessions/*, "
         "/api/v1/memories/*, /api/v1/context, /api/v1/jobs/*, "
         "/api/v1/kbs/*, /api/v1/settings, /api/v1/api_keys, "
@@ -1109,14 +1109,13 @@ async def async_main(transport: str):
         )
         prov_summary = provider_summary(store=provider_store)
         logger.info(
-            "Active model provider catalog (per-provider model counts: %s)",
+            "Configured model providers (instances per provider: %s)",
             prov_summary,
         )
     else:
         logger.info(
             "MCP tool registration skipped (Spark-platform mode); "
-            "platform's connector-manager + /api/v1/models are the "
-            "active tool + model surfaces."
+            "platform's connector-manager is the active tool surface."
         )
 
     # Jobs scheduler. Wired AFTER tool registration so

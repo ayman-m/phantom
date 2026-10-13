@@ -1,10 +1,12 @@
 "use client";
 
+import type * as React from "react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { RetryButton } from "@/components/retry-button";
 import { fetchModelCatalog } from "@/lib/model-catalog";
+import { defaultSourceHint, setInstallDefaultModel } from "@/lib/set-default-model";
 import type {
   ModelInfo,
   InteractionPattern,
@@ -14,10 +16,10 @@ import type {
 /**
  * Phantom models page — ported from spark/services/ui's /models, with two
  * phantom-specific shifts:
- *   1. **Endpoints**: hits /api/agent/models (a static phantom-curated
- *      Vertex catalog) instead of Spark's gateway-side /api/v1/models.
- *      Default-model lookup against /api/v1/config is dropped; phantom
- *      doesn't track a "default model" concept yet.
+ *   1. **Endpoints**: hits /api/agent/models, the model registry (curated
+ *      catalog merged with each provider's live model list), instead of
+ *      Spark's gateway-side catalog. The default badge comes from the
+ *      registry's `isDefault`.
  *   2. **Mode**: Server Component → Client Component. Spark's version
  *      reads cookies via next/headers; phantom uses the standard auth
  *      cookie automatically attached to fetch(). Switching to a client
@@ -26,16 +28,15 @@ import type {
  */
 
 const KNOWN_PROVIDERS = [
+  { id: "vertex", label: "Google Vertex AI", icon: "diamond" },
   { id: "anthropic", label: "Anthropic", icon: "psychology" },
   { id: "openai", label: "OpenAI", icon: "smart_toy" },
-  { id: "openai-codex", label: "OpenAI (Codex CLI)", icon: "terminal" },
-  { id: "vertex", label: "Google Vertex AI", icon: "diamond" },
 ] as const;
 
 // ── Tabs ────────────────────────────────────────────────────────────────────
 //
 // The /models page splits its content across 5 tabs, each filtering the
-// same underlying /api/v1/models response by kind + interactionPattern.
+// same underlying /api/agent/models response by kind.
 // Tab state lives in the URL (`?tab=embedding`) so tabs are bookmarkable,
 // back-button aware, and the page can stay a Server Component.
 
@@ -52,7 +53,7 @@ const TABS: {
     label: "Chat",
     icon: "chat_bubble",
     emptyHint:
-      "No chat models discovered. Add credentials for Anthropic or Google Vertex AI in Providers.",
+      "No chat models discovered. Add credentials for Google Vertex AI, Anthropic or OpenAI in Providers.",
   },
   {
     id: "embedding",
@@ -102,9 +103,17 @@ type ProviderGroup = {
 };
 
 function formatContextWindow(tokens: number): string {
-  if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(0)}M`;
+  if (!tokens || tokens <= 0) return "—";
+  if (tokens >= 1_000_000) return `${+(tokens / 1_000_000).toFixed(2)}M`;
   if (tokens >= 1_000) return `${(tokens / 1_000).toFixed(0)}K`;
   return `${tokens}`;
+}
+
+/** "$4 / $20" per million input / output tokens, or null when unpriced. */
+function formatPriceLine(model: ModelInfo): string | null {
+  if (!model.priced || !model.pricing) return null;
+  const n = (v: number) => `$${+v.toFixed(4)}`;
+  return `${n(model.pricing.inputPerM)} / ${n(model.pricing.outputPerM)}`;
 }
 
 // Pattern badges: theme-aware tones rather than the M3 "fixed"
@@ -113,9 +122,7 @@ function formatContextWindow(tokens: number): string {
 // scaled to readable contrast on either background.
 const PATTERN_BADGE: Record<InteractionPattern, { label: string; color: string }> = {
   streaming_api: { label: "API", color: "bg-primary/10 text-primary border-primary/30" },
-  cli_tool: { label: "CLI", color: "bg-tertiary/10 text-tertiary border-tertiary/30" },
   async_job: { label: "Async", color: "bg-orange-500/10 text-orange-600 border-orange-500/30" },
-  interactive_session: { label: "Session", color: "bg-secondary/10 text-secondary border-secondary/30" },
 };
 
 function isValidTab(value: string | undefined): value is TabId {
@@ -130,6 +137,8 @@ export default function ModelsPage() {
   const [allModels, setAllModels] = useState<ModelInfo[]>([]);
   const [error, setError] = useState<{ message: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  // Bumped after the default changes so the list is fetched again.
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -154,16 +163,7 @@ export default function ModelsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  // Phantom doesn't yet expose a "default model" config; the badge is
-  // never rendered until the concept lands. Keep the prop on ModelRow
-  // so the rest of the rendering tree compiles unchanged. Typed via
-  // useState (not a literal null) so TS doesn't narrow the comparison
-  // branch to `never`.
-  const [defaultModel] = useState<{ model: string; provider: string } | null>(
-    null,
-  );
+  }, [reloadKey]);
 
   // Pre-compute tab counts once — shown as little badges on each tab
   // button. Cheaper than filtering the list 5 times.
@@ -184,9 +184,11 @@ export default function ModelsPage() {
   );
   const providerGroups = groupModelsByProvider(visibleModels);
 
-  const activeProviderCount = providerGroups.filter(
-    (g) => g.models.length > 0,
-  ).length;
+  const activeProviderCount = new Set(
+    allModels
+      .filter((m) => m.providerState !== "not_configured")
+      .map((m) => m.provider),
+  ).size;
 
   return (
     <div className="h-screen overflow-y-auto custom-scrollbar">
@@ -323,9 +325,17 @@ export default function ModelsPage() {
                       {group.icon}
                     </span>
                   </div>
-                  <h3 className="font-headline text-xl font-bold">
-                    {group.label}
-                  </h3>
+                  <div className="min-w-0">
+                    <h3 className="font-headline text-xl font-bold">
+                      {group.label}
+                    </h3>
+                    <p
+                      className="text-[11px] text-on-surface-variant truncate"
+                      title={providerStatusLine(group.models)}
+                    >
+                      {providerStatusLine(group.models)}
+                    </p>
+                  </div>
                   <span className="h-px flex-1 bg-outline-variant/20" />
                   <span className="text-xs font-label uppercase tracking-widest text-outline">
                     {group.models.length}{" "}
@@ -337,15 +347,15 @@ export default function ModelsPage() {
                 <div className="grid grid-cols-1 gap-4">
                   {group.models.map((model) => (
                     <ModelRow
-                      key={`${group.id}-${model.model}`}
+                      key={model.ref ?? `${group.id}-${model.model}`}
                       model={model}
                       activeTab={activeTab}
-                      isDefault={
-                        defaultModel !== null &&
-                        defaultModel.model === model.model &&
-                        (defaultModel.provider === "" ||
-                          defaultModel.provider === model.provider)
-                      }
+                      isDefault={Boolean(model.isDefault)}
+                      onSetDefault={async () => {
+                        if (await setInstallDefaultModel(model.ref, model.displayName || model.model)) {
+                          setReloadKey((k) => k + 1);
+                        }
+                      }}
                     />
                   ))}
                 </div>
@@ -400,14 +410,45 @@ function SummaryCard({
 }
 
 /* ── Model Row (vibrant glass card) ───────────── */
+
+/** Availability badge: tone and label for every non-"available" state. */
+const AVAILABILITY_BADGE: Record<string, { label: string; style: React.CSSProperties }> = {
+  deprecated: {
+    label: "Deprecated",
+    style: { background: "rgba(255, 175, 0, 0.15)", color: "#ffc94f", border: "1px solid rgba(255, 175, 0, 0.3)" },
+  },
+  unverified: {
+    label: "Unverified",
+    style: { background: "rgba(150, 150, 150, 0.18)", color: "#b9b9b9", border: "1px solid rgba(150, 150, 150, 0.3)" },
+  },
+  unpriced: {
+    label: "Unpriced",
+    style: { background: "rgba(150, 150, 150, 0.18)", color: "#b9b9b9", border: "1px solid rgba(150, 150, 150, 0.3)" },
+  },
+  unavailable: {
+    label: "Not visible to key",
+    style: { background: "rgba(255, 90, 90, 0.15)", color: "#ff8f8f", border: "1px solid rgba(255, 90, 90, 0.3)" },
+  },
+  not_configured: {
+    label: "Not configured",
+    style: { background: "rgba(150, 150, 150, 0.18)", color: "#b9b9b9", border: "1px solid rgba(150, 150, 150, 0.3)" },
+  },
+  retired: {
+    label: "Retired",
+    style: { background: "rgba(255, 90, 90, 0.15)", color: "#ff8f8f", border: "1px solid rgba(255, 90, 90, 0.3)" },
+  },
+};
+
 function ModelRow({
   model,
   activeTab,
   isDefault,
+  onSetDefault,
 }: {
   model: ModelInfo;
   activeTab: TabId;
   isDefault: boolean;
+  onSetDefault: () => void;
 }) {
   const href = `/models/${encodeURIComponent(model.model)}?provider=${encodeURIComponent(model.provider)}`;
   const patterns = model.interactionPatterns ?? [];
@@ -416,31 +457,24 @@ function ModelRow({
   // visually distinct row style without needing per-tab components.
   const rowIcon = iconForKind(model.kind, model.supportsThinking);
 
-  // WIP cards render greyed out and non-navigable. The
-  // detail page wouldn't add value while the chat path is gated. The
-  // outer wrapper becomes a <div> instead of a <Link> so there's no
-  // accidental click-through.
-  const wip = Boolean(model.wip);
-  const Wrapper = wip ? "div" : Link;
-  const wrapperProps = wip
-    ? ({} as Record<string, never>)
-    : { href };
+  // A model whose provider is not configured stays listed (the detail page
+  // shows what it would cost and what it can do) but reads as inactive.
+  const inactive = model.availability === "not_configured";
+  const badge = AVAILABILITY_BADGE[model.availability];
+  const price = formatPriceLine(model);
 
   return (
-    <Wrapper
-      {...(wrapperProps as { href: string })}
-      className={
-        wip
-          ? "block p-5 rounded-xl flex items-center justify-between opacity-50 cursor-not-allowed transition-all"
-          : "block p-5 rounded-xl flex items-center justify-between group cursor-pointer transition-all hover:shadow-[0_0_20px_rgba(25,99,179,0.1)]"
-      }
+    <Link
+      href={href}
+      className={`block p-5 rounded-xl flex items-center justify-between group cursor-pointer transition-all hover:shadow-[0_0_20px_rgba(25,99,179,0.1)] ${
+        inactive ? "opacity-60" : ""
+      }`}
       style={{
         background: "var(--glass-bg)",
         backdropFilter: "blur(12px)",
         border: "0.5px solid var(--glass-border)",
       }}
-      aria-disabled={wip || undefined}
-      title={wip ? "Coming soon — not yet wired through the chat route" : undefined}
+      title={model.reason ?? undefined}
     >
       {/* Left: Icon + Name */}
       <div className="flex items-center gap-6 flex-1 min-w-0">
@@ -450,7 +484,7 @@ function ModelRow({
           </span>
           <div
             className={
-              wip
+              inactive || !model.selectable
                 ? "absolute -top-1 -right-1 w-3 h-3 bg-outline rounded-full"
                 : "absolute -top-1 -right-1 w-3 h-3 bg-secondary rounded-full shadow-[0_0_8px_#7bdc7b]"
             }
@@ -462,42 +496,40 @@ function ModelRow({
               {model.displayName || model.model}
             </h4>
             {isDefault && (
-              <span className="px-2 py-0.5 rounded-md bg-primary-container text-[10px] font-bold uppercase tracking-wider text-on-primary-container">
-                Default
+              <span
+                className="px-2 py-0.5 rounded-md bg-primary-container text-[10px] font-bold uppercase tracking-wider text-on-primary-container"
+                title={defaultSourceHint(model.defaultSource)}
+              >
+                {model.defaultSource === "derived" ? "Default (derived)" : "Default"}
               </span>
             )}
-            {wip && (
+            {badge && (
               <span
                 className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
-                style={{
-                  background: "rgba(150, 150, 150, 0.18)",
-                  color: "#b9b9b9",
-                  border: "1px solid rgba(150, 150, 150, 0.3)",
-                }}
-                title="Coming soon — not yet wired through the chat route"
+                style={badge.style}
+                title={model.reason ?? undefined}
               >
-                Coming soon
+                {badge.label}
               </span>
             )}
-            {model.launchStage && model.launchStage !== "GA" && (
-              <span
-                className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
-                style={{
-                  background: "rgba(255, 175, 0, 0.15)",
-                  color: "#ffc94f",
-                  border: "1px solid rgba(255, 175, 0, 0.3)",
-                }}
-                title={`Launch stage: ${model.launchStage}`}
-              >
-                {model.launchStage.replace(/_/g, " ")}
-              </span>
-            )}
+            {model.launchStage &&
+              model.launchStage !== "GA" &&
+              model.launchStage !== "DEPRECATED" &&
+              model.launchStage !== "RETIRED" && (
+                <span
+                  className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
+                  style={{
+                    background: "rgba(255, 175, 0, 0.15)",
+                    color: "#ffc94f",
+                    border: "1px solid rgba(255, 175, 0, 0.3)",
+                  }}
+                  title={`Launch stage: ${model.launchStage}`}
+                >
+                  {model.launchStage.replace(/_/g, " ")}
+                </span>
+              )}
           </div>
-          {model.displayName && model.displayName !== model.model && (
-            <code className="text-xs text-outline font-mono">
-              {model.model}
-            </code>
-          )}
+          <code className="text-xs text-outline font-mono">{model.ref}</code>
         </div>
       </div>
 
@@ -507,14 +539,14 @@ function ModelRow({
         {patterns.length > 0 && (
           <div className="flex gap-1.5">
             {patterns.map((pattern) => {
-              const badge = PATTERN_BADGE[pattern];
-              if (!badge) return null;
+              const patternBadge = PATTERN_BADGE[pattern];
+              if (!patternBadge) return null;
               return (
                 <span
                   key={pattern}
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${badge.color}`}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${patternBadge.color}`}
                 >
-                  {badge.label}
+                  {patternBadge.label}
                 </span>
               );
             })}
@@ -551,6 +583,16 @@ function ModelRow({
           </>
         )}
 
+        {/* Price per million input / output tokens (chat only) */}
+        {activeTab === "chat" && (
+          <div className="text-right">
+            <div className="text-[10px] uppercase tracking-wider text-outline">
+              $ / M in / out
+            </div>
+            <span className="font-bold text-on-surface">{price ?? "—"}</span>
+          </div>
+        )}
+
         {/* Context window (only meaningful for chat/embedding) */}
         {activeTab !== "image" && activeTab !== "voice" && (
           <div className="text-right">
@@ -564,13 +606,30 @@ function ModelRow({
         )}
       </div>
 
-      {/* Right: Arrow (hidden on WIP rows since there's nothing to drill into) */}
-      {!wip && (
-        <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors ml-4 shrink-0">
-          arrow_forward
-        </span>
-      )}
-    </Wrapper>
+      {/* The default can be set from the list. The row is a link, so the
+          click must not navigate. A model that is already the install's own
+          default has nothing to set; a derived default can be pinned. */}
+      {(model.kind ?? "chat") === "chat" &&
+        model.selectable &&
+        !(isDefault && model.defaultSource === "default") && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onSetDefault();
+            }}
+            className="ml-4 shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold font-label uppercase tracking-wider text-primary border border-primary/30 hover:bg-primary/10 transition-colors"
+            aria-label={`Set ${model.displayName || model.model} as the default model`}
+          >
+            Set as default
+          </button>
+        )}
+
+      <span className="material-symbols-outlined text-outline group-hover:text-primary transition-colors ml-4 shrink-0">
+        arrow_forward
+      </span>
+    </Link>
   );
 }
 
@@ -628,6 +687,36 @@ function groupModelsByProvider(models: ModelInfo[]): ProviderGroup[] {
   return [...orderedGroups, ...extraGroups];
 }
 
+/** One line on where this provider's list came from and how fresh it is. */
+function providerStatusLine(models: ModelInfo[]): string {
+  const first = models[0];
+  if (!first) return "";
+  const when = models
+    .map((m) => m.liveSeenAt)
+    .filter((t): t is string => Boolean(t))
+    .sort()
+    .pop();
+  const time = when ? new Date(when).toLocaleTimeString() : "";
+  switch (first.providerState) {
+    case "live":
+      return `Live list fetched ${time}`;
+    case "stale":
+      return `Showing the list fetched ${time}. The provider could not be reached since${
+        first.refreshError ? `: ${first.refreshError}` : "."
+      }`;
+    case "offline":
+      return `Showing the built-in table. The provider could not be reached${
+        first.refreshError ? `: ${first.refreshError}` : "."
+      }`;
+    case "unchecked":
+      return "Built-in table. Use Verify on a model to confirm it is enabled.";
+    case "not_configured":
+      return "Not configured. Add credentials on the Providers page.";
+    default:
+      return "";
+  }
+}
+
 function sortModels(models: ModelInfo[]): ModelInfo[] {
   // GA first, then lexicographic descending so newer model versions
   // (gemini-3.x > gemini-2.5.x > gemini-2.0.x) sort to the top.
@@ -650,11 +739,3 @@ function formatProviderLabel(providerId: string): string {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
-
-interface DefaultModelRef {
-  model: string;
-  provider: string;
-}
-
-// getDefaultModel/getRecord were removed — phantom doesn't track a
-// "default model" workspace setting yet. Re-add when the concept lands.

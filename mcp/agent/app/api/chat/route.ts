@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
 import { PhantomMCPClient, MCPTool } from '@/lib/mcp-client';
-import { GoogleAuth } from 'google-auth-library';
 import { callMcpServer } from '@/lib/mcp-proxy';
 import { getEffectiveRuntimeConfig } from '@/lib/runtime-config';
 import type { EffectiveRuntimeConfig } from '@/lib/runtime-config';
@@ -19,8 +18,8 @@ import {
 } from '@/lib/system-prompt';
 // Live skills registry → <available_skills> block in the
 // system prompt. Fetched once per chat turn before we call into the
-// model loop, then threaded through callGemini to all downstream
-// model calls so the same registry view is consistent across the turn.
+// model loop, then threaded through the turn's single system prompt so the
+// same registry view is consistent across every model call in the turn.
 import { fetchSkillsForPrompt } from '@/lib/skills-registry';
 // Token-aware budgeting helpers.
 import { estimateMessageTokens, estimateTokens } from '@/lib/tokens';
@@ -36,9 +35,53 @@ import {
   isCompactionCheckpoint,
   type CompactionInputMessage,
 } from '@/lib/compaction';
-// Vertex context caching for the stable system
-// prompt. ~25% input-token billing on cached portions.
-import { getOrCreateSystemPromptCache } from '@/lib/vertex-cache';
+// Every model call goes through the provider-neutral dispatch in
+// lib/providers: the route builds neutral requests (TurnMessage[], ToolSpec[])
+// and the adapter for the resolved provider owns the wire format. Gemini's
+// payload assembly, schema conversion and transports (API key, Vertex AI incl.
+// the Vertex context-cache swap) live in lib/providers/gemini.
+import {
+  callModel,
+  capabilitiesFor,
+  credsFromRuntimeConfig,
+  estimateToolsJson,
+  summarizeText,
+  type DispatchDeps,
+} from '@/lib/providers/dispatch';
+// A model call cancelled because the client went away is not a failure: the
+// turn ends quietly and no failure row is written.
+import { isAbortedError } from '@/lib/providers/errors';
+import { mcpBlockedHosts } from '@/lib/mcp-host';
+import { createTurnAbort } from '@/lib/turn-abort';
+// Which model a turn runs on: header, session preference, the install default
+// (settings key `defaultModel`), else the derived default. A model that was
+// named and cannot be used fails the turn (MODEL_UNAVAILABLE); it is never
+// replaced by another.
+import {
+  describeInstallDefault,
+  interpretModelCommand,
+  renderModelStatus,
+  type ModelRejection,
+  type TurnModelResult,
+} from '@/lib/providers/model-resolution';
+import { createProviderEventSink } from '@/lib/providers/event-sink';
+import type { ModelEntry } from '@/lib/providers/registry/types';
+import { resolveModelForRequest } from '@/lib/model-registry-server';
+import {
+  reconcileToolResults,
+  requestBudgetSummary,
+  runModelLoop,
+  type LoopCall,
+} from '@/lib/providers/turn-loop';
+import type {
+  AssistantTurn,
+  FinishReason,
+  ModelRef,
+  ProviderEvent,
+  ToolResultItem,
+  ToolSpec,
+  TurnMessage,
+} from '@/lib/providers/types';
 // Slash command parse-and-dispatch framework.
 // Adding a new command becomes one entry in SLASH_COMMANDS below.
 import {
@@ -47,10 +90,21 @@ import {
   renderSlashHelp,
   type SlashCommand,
 } from '@/lib/slash-commands';
-// Per-turn cost computation. Reads
-// usageMetadata from each Gemini call, applies per-model pricing,
-// emits SSE event + audit row.
-import { computeTurnCostUsd, formatUsd } from '@/lib/model-pricing';
+// Per-turn cost accounting (lib/cost-rows.ts). Reads the normalized usage of
+// each model call, prices it with the registry's rates for the exact
+// provider/model, and writes one audit row per call plus one SSE event per turn.
+import {
+  addCallToTally,
+  auditResponseRows,
+  buildTurnCostMetadata,
+  cacheReadSavings,
+  newTurnTally,
+  renderCostSummary,
+  sumCostRows,
+  turnCostSummary,
+  type CallCost,
+  type CallKind,
+} from '@/lib/cost-rows';
 // Per-tool metadata (readOnly / destructive /
 // concurrencySafe / openWorld). Powers approval-card visuals and
 // future parallel-batch execution.
@@ -65,7 +119,7 @@ import type { RunStatusReason } from '@/lib/run-status';
 // Subagent runner. The model invokes
 // `subagent_create` as a synthetic tool; the chat-route intercepts,
 // resolves the agent definition from MCP, and runs a tightly-
-// scoped sub-loop. Reuses callGemini + the hook framework
+// scoped sub-loop. Reuses callModel + the hook framework
 // (PreToolUse/PostToolUse fire inside subagents too) + the task
 // registry (each subagent run is a task).
 import { globMatch } from '@/lib/hooks';
@@ -96,6 +150,8 @@ import type { HookEvent, HookPayload } from '@/lib/hooks';
  *   chat_compaction_failed   — summarizer errored or returned empty
  *   chat_context_warning     — guard fired at >=90% utilization
  *   chat_cache_hit           — Vertex cachedContents reused
+ *   chat_model_rejected      — the model a turn, command or subagent asked
+ *                              for cannot serve (MODEL_UNAVAILABLE)
  */
 async function safeAudit(
   action: string,
@@ -128,137 +184,112 @@ async function safeAudit(
 }
 
 /**
- * Sum chat_turn_cost audit rows.
- *
- * Used by the /cost slash command and (via re-import) the
- * /observability/cost page's API. Returns total tokens, total
- * USD, savings (cached vs hypothetical-uncached), and a by-model
- * breakdown.
+ * The sink a model call gets as `onEvent`: the adapter's non-fatal observations
+ * (a downgraded tool choice, a dropped tool call, a refusal, an unknown tool
+ * name) go to the SSE `debug` stream and the audit log, never into the thread.
+ * See lib/providers/event-sink.ts.
  */
-function sumCostRows(
-  rows: Array<{ metadata?: Record<string, unknown> }>,
-): {
-  calls: number;
-  input: number;
-  cached: number;
-  output: number;
-  usd: number;
-  savings: number;
-  byModel: Record<string, { usd: number; calls: number }>;
-} {
-  const out = {
-    calls: 0,
-    input: 0,
-    cached: 0,
-    output: 0,
-    usd: 0,
-    savings: 0,
-    byModel: {} as Record<string, { usd: number; calls: number }>,
-  };
-  for (const row of rows) {
-    const m = row.metadata ?? {};
-    const inputTokens = (m['input_tokens'] as number) ?? 0;
-    const cachedTokens = (m['cached_input_tokens'] as number) ?? 0;
-    const outputTokens = (m['output_tokens'] as number) ?? 0;
-    const usd = (m['cost_usd'] as number) ?? 0;
-    const savings =
-      ((m['cost_components'] as Record<string, number> | undefined)?.[
-        'cached_savings_usd'
-      ] ?? 0) || 0;
-    const model = (m['model'] as string) ?? 'unknown';
-    out.calls += 1;
-    out.input += inputTokens;
-    out.cached += cachedTokens;
-    out.output += outputTokens;
-    out.usd += usd;
-    out.savings += savings;
-    if (!out.byModel[model]) {
-      out.byModel[model] = { usd: 0, calls: 0 };
-    }
-    out.byModel[model].usd += usd;
-    out.byModel[model].calls += 1;
-  }
-  return out;
+function providerEventSink(args: {
+  ref: ModelRef;
+  purpose: Parameters<typeof createProviderEventSink>[0]['purpose'];
+  sessionId: string;
+  trigger: string | undefined;
+  sendEvent: ((kind: string, data: unknown) => void) | undefined;
+}) {
+  return createProviderEventSink({
+    ref: args.ref,
+    purpose: args.purpose,
+    sessionId: args.sessionId,
+    sendEvent: args.sendEvent,
+    audit: (action, row) =>
+      safeAudit(action, { target: row.target, status: row.status, metadata: row.metadata, trigger: args.trigger }),
+  });
 }
 
 /**
- * Extract Gemini usage metadata + record a
- * cost audit row. Best-effort; never blocks the stream.
+ * The model a turn, command or subagent asked for cannot serve. Writes the
+ * `chat_model_rejected` audit row and, when the caller has a stream, sends the
+ * `error` event the chat UI shows and a job run records as its failure:
+ * `code: 'MODEL_UNAVAILABLE'`, a message that says why, and refs that would
+ * work. The caller ends the stream; no `done` follows, so a scheduled job
+ * counts the run as failed.
+ */
+async function reportModelRejected(args: {
+  sessionId: string;
+  trigger: string | undefined;
+  rejection: ModelRejection;
+  surface: 'chat' | 'compress' | 'plan' | 'model_command' | 'subagent';
+  sendEvent: ((kind: string, data: unknown) => void) | undefined;
+}): Promise<void> {
+  const { rejection } = args;
+  args.sendEvent?.('error', {
+    error: rejection.message,
+    code: rejection.code,
+    reason: rejection.reason,
+    source: rejection.source,
+    requested: rejection.requested,
+    suggestions: rejection.suggestions,
+    ...(rejection.options ? { options: rejection.options } : {}),
+  });
+  await safeAudit('chat_model_rejected', {
+    target: `session:${args.sessionId}`,
+    status: 'failure',
+    metadata: {
+      requested: rejection.requested.slice(0, 200),
+      source: rejection.source,
+      reason: rejection.reason,
+      suggestions: rejection.suggestions,
+      surface: args.surface,
+    },
+    trigger: args.trigger,
+  });
+}
+
+/**
+ * Record a cost audit row from one model call. Best-effort; never blocks the
+ * stream. A call with no usage records nothing and returns null.
  *
- * Returns the computed cost so the caller can sum across follow-up
- * calls in a multi-tool turn (the chat-route accumulates and sends
- * a single `turn_cost` SSE event per turn at done time, rather than
- * a separate event per Gemini call).
+ * The row is built by lib/cost-rows.ts from the call's normalized usage and
+ * the registry's price for the exact `provider/model`; an unpriced model
+ * writes `cost_usd: null`. The returned `CallCost` lets the caller sum across
+ * the follow-up calls of a multi-tool turn (the chat route accumulates and
+ * sends a single `turn_cost` SSE event per turn at done time, rather than a
+ * separate event per model call).
  */
 function extractAndRecordCost(
-  response: unknown,
+  turn: Pick<AssistantTurn, 'usage' | 'requestId' | 'finish'>,
   args: {
     sessionId: string;
-    model: string;
+    ref: ModelRef;
     trigger: string | undefined;
-    /** 'initial' for the first callGemini in a turn; 'followup'
+    /** 'initial' for the first model call in a turn; 'followup'
      *  for tool-result follow-ups; 'budget_summary' for the
      *  partial-summary fallback that fires when the 20-turn loop
      *  exhausts without producing text. Surfaces in audit metadata
      *  so the operator can see how many round-trips a turn cost. */
-    callKind: 'initial' | 'followup' | 'budget_summary';
+    callKind: CallKind;
   },
-): { usd: number; inputTokens: number; cachedTokens: number; outputTokens: number } {
-  const usage = (response as { usageMetadata?: Record<string, unknown> })
-    .usageMetadata;
-  if (!usage) {
-    return { usd: 0, inputTokens: 0, cachedTokens: 0, outputTokens: 0 };
-  }
-  const inputTokens =
-    (usage['promptTokenCount'] as number | undefined) ?? 0;
-  const cachedTokens =
-    (usage['cachedContentTokenCount'] as number | undefined) ?? 0;
-  const outputTokens =
-    (usage['candidatesTokenCount'] as number | undefined) ?? 0;
-  const cost = computeTurnCostUsd({
-    inputTokens,
-    cachedInputTokens: cachedTokens,
-    outputTokens,
-    model: args.model,
+): CallCost | null {
+  if (!turn.usage) return null;
+  const record = buildTurnCostMetadata({
+    usage: turn.usage,
+    provider: args.ref.provider,
+    model: args.ref.model,
+    callKind: args.callKind,
+    requestId: turn.requestId,
+    finish: turn.finish,
   });
-  // Audit one row per Gemini call. Fine-grained (vs. one per
+  // Audit one row per model call. Fine-grained (vs. one per
   // turn) because a turn can rack up 5-10 calls when tools fire,
   // and operators want per-call cost breakdown for tool-cost
   // attribution. Not high-volume in absolute terms.
   void safeAudit('chat_turn_cost', {
     target: `session:${args.sessionId}`,
     status: 'success',
-    metadata: {
-      call_kind: args.callKind,
-      input_tokens: inputTokens,
-      cached_input_tokens: cachedTokens,
-      output_tokens: outputTokens,
-      uncached_input_tokens: inputTokens - cachedTokens,
-      cost_usd: Number(cost.usd.toFixed(6)),
-      cost_components: {
-        input_usd: Number(cost.components.inputUsd.toFixed(6)),
-        cached_input_usd: Number(cost.components.cachedInputUsd.toFixed(6)),
-        output_usd: Number(cost.components.outputUsd.toFixed(6)),
-        uncached_hypothetical_input_usd: Number(
-          cost.components.uncachedHypotheticalInputUsd.toFixed(6),
-        ),
-        cached_savings_usd: Number(
-          (
-            cost.components.uncachedHypotheticalInputUsd -
-            (cost.components.inputUsd + cost.components.cachedInputUsd)
-          ).toFixed(6),
-        ),
-      },
-      model: args.model,
-    },
+    metadata: record.metadata,
     trigger: args.trigger,
   });
-  return {
-    usd: cost.usd,
-    inputTokens,
-    cachedTokens,
-    outputTokens,
-  };
+  return record.call;
 }
 
 /**
@@ -279,7 +310,7 @@ const SUBAGENT_CREATE_TOOL = 'subagent_create';
  *    parent_id   — optional. The current session id; the chat-route
  *                  fills this in automatically from the loop
  *                  context if absent. */
-const SUBAGENT_CREATE_TOOL_SPEC = {
+const SUBAGENT_CREATE_TOOL_SPEC: ToolSpec = {
   name: SUBAGENT_CREATE_TOOL,
   description:
     'Spawn a scoped subagent to perform a focused task. The subagent ' +
@@ -290,7 +321,7 @@ const SUBAGENT_CREATE_TOOL_SPEC = {
     'directly. Available agent_name values come from /api/v1/' +
     'agent-definitions; common builtins: red-team-emulator, ' +
     'blue-team-validator, coverage-reporter.',
-  parameters: {
+  inputSchema: {
     type: 'object' as const,
     properties: {
       agent_name: {
@@ -310,13 +341,23 @@ const SUBAGENT_CREATE_TOOL_SPEC = {
   },
 };
 
+/**
+ * What the dispatcher needs beyond the request: the MCP host, which a provider
+ * base URL must never name. Every model call in this route passes it
+ * (scripts/test-chat-abort.mjs checks the sites), the same list the Providers
+ * page and the connection tests use.
+ */
+function modelDispatchDeps(): DispatchDeps {
+  return { blockedHosts: mcpBlockedHosts() };
+}
+
 /** Result of one subagent run, returned to the parent's tool-call
  *  loop as the tool result text. */
 interface SubagentRunResult {
   subagent_session_id: string;
   agent_name: string;
   agent_id: string;
-  status: 'completed' | 'max_turns_exceeded' | 'failed' | 'denied';
+  status: 'completed' | 'max_turns_exceeded' | 'failed' | 'denied' | 'cancelled';
   final_response: string;
   tool_calls_made: Array<{ tool: string; args: Record<string, unknown> }>;
   tool_calls_count: number;
@@ -329,35 +370,23 @@ interface SubagentRunResult {
  *  tools_allowed / tools_denied globs. Deny wins when both match.
  *  Empty allow list means "no restriction" (still subject to denies). */
 function filterToolsForAgent(
-  parentTools: Array<{ functionDeclarations: unknown }>,
+  parentTools: ToolSpec[],
   toolsAllowed: string[],
   toolsDenied: string[],
-): Array<{ functionDeclarations: unknown }> {
-  // The Gemini tool catalog is a list of {functionDeclarations: [...]}
-  // groups; each declaration has a `.name`. We need to filter the
-  // declarations within each group, dropping groups that end up
-  // empty.
+): ToolSpec[] {
   const allowGlob = toolsAllowed.length > 0
     ? toolsAllowed.join(',')
     : null;
   const denyGlob = toolsDenied.length > 0
     ? toolsDenied.join(',')
     : null;
-  const out: Array<{ functionDeclarations: unknown }> = [];
-  for (const group of parentTools) {
-    const decls = (group.functionDeclarations as Array<{ name?: string }>) ?? [];
-    const filtered = decls.filter((d) => {
-      const name = d.name;
-      if (!name) return false;
-      if (denyGlob && globMatch(name, denyGlob)) return false;
-      if (allowGlob && !globMatch(name, allowGlob)) return false;
-      return true;
-    });
-    if (filtered.length > 0) {
-      out.push({ functionDeclarations: filtered });
-    }
-  }
-  return out;
+  return parentTools.filter((tool) => {
+    const name = tool.name;
+    if (!name) return false;
+    if (denyGlob && globMatch(name, denyGlob)) return false;
+    if (allowGlob && !globMatch(name, allowGlob)) return false;
+    return true;
+  });
 }
 
 /**
@@ -370,7 +399,7 @@ function filterToolsForAgent(
  *   - Lifecycle hooks: SubagentStart fires before, SubagentEnd after.
  *     PreToolUse/PostToolUse fire INSIDE the subagent's tool loop too.
  *   - Tasks: each subagent run is a Task with progress.
- *   - Cost tracking: subagent's Gemini calls write
+ *   - Cost tracking: subagent's model calls write
  *     chat_turn_cost rows tagged with the subagent session id.
  *
  * Architecture note: the subagent gets its OWN MCP session
@@ -384,11 +413,14 @@ async function runSubagent(args: {
   parentSessionId: string;
   parentMessage: string;
   trigger: string | undefined;
-  parentTools: Array<{ functionDeclarations: unknown }>;
+  parentTools: ToolSpec[];
   runtimeConfig: EffectiveRuntimeConfig;
-  parentModel: string | undefined;
+  /** The parent turn's canonical model ref; a subagent without its own model runs on it. */
+  parentModel: string;
   mcpClient: PhantomMCPClient;
   sendEvent: (kind: string, data: unknown) => void;
+  /** Fires when the client goes away; cancels the subagent's model call. */
+  signal: AbortSignal;
 }): Promise<SubagentRunResult> {
   const startedAt = Date.now();
 
@@ -491,6 +523,35 @@ async function runSubagent(args: {
       error: `Agent '${args.agentName}' is disabled.`,
     };
   }
+
+  // The subagent's model: its definition's, else the parent turn's. One that
+  // cannot serve ends the run; nothing is substituted.
+  const subagentChoice = (
+    await resolveModelForRequest({ header: agentDef.model || args.parentModel }, args.runtimeConfig)
+  ).result;
+  if (!subagentChoice.ok) {
+    await reportModelRejected({
+      sessionId: args.parentSessionId,
+      trigger: args.trigger,
+      rejection: subagentChoice,
+      surface: 'subagent',
+      sendEvent: undefined,
+    });
+    return {
+      subagent_session_id: '',
+      agent_name: args.agentName,
+      agent_id: agentDef.id,
+      status: 'failed',
+      final_response: '',
+      tool_calls_made: [],
+      tool_calls_count: 0,
+      turns_used: 0,
+      duration_ms: Date.now() - startedAt,
+      error: `MODEL_UNAVAILABLE: ${subagentChoice.message}`,
+    };
+  }
+  const subagentRef = subagentChoice.ref;
+  const subagentModel = subagentRef.model;
 
   // Create a fresh MCP session for the subagent. parent_session_id
   // in metadata is the linkage that lets the chat UI render the
@@ -600,24 +661,38 @@ async function runSubagent(args: {
     agent_id: agentDef.id,
     prompt: args.prompt,
     max_turns: agentDef.max_turns,
-    tools_count: scopedTools.reduce(
-      (acc, g) =>
-        acc +
-        ((g.functionDeclarations as Array<unknown>)?.length ?? 0),
-      0,
-    ),
+    tools_count: scopedTools.length,
     task_id: taskId,
   });
 
   // Tool catalog scoped + system instruction overridden — run the loop.
-  const subagentSystem: GeminiSystemInstruction = {
-    role: 'system',
-    parts: [{ text: agentDef.system_prompt }],
-  };
-  const subagentContents: GeminiContent[] = [
-    { role: 'user', parts: [{ text: args.prompt }] },
-  ];
-  const subagentModel = agentDef.model ?? args.parentModel;
+  const subagentMessages: TurnMessage[] = [{ role: 'user', text: args.prompt }];
+  const subagentCreds = credsFromRuntimeConfig(args.runtimeConfig);
+  // Monotonic per-run call counter: adapters derive call ids from it.
+  let subagentCallStep = 0;
+  const subagentProviderEvents = providerEventSink({
+    ref: subagentRef,
+    purpose: 'subagent',
+    sessionId: subagentSessionId,
+    trigger: args.trigger,
+    sendEvent: args.sendEvent,
+  });
+  const callSubagentModel = () =>
+    callModel(
+      {
+        ref: subagentRef,
+        system: agentDef.system_prompt,
+        messages: subagentMessages,
+        tools: scopedTools,
+        // A scope that matches no tool sends an empty tool list, as it always has.
+        toolChoice: scopedTools.length === 0 ? 'none' : 'auto',
+        thinking: false,
+        purpose: 'subagent',
+        cacheKey: subagentSessionId,
+      },
+      { creds: subagentCreds, step: subagentCallStep++, onEvent: subagentProviderEvents, signal: args.signal },
+      modelDispatchDeps(),
+    );
   const finalText: string[] = [];
   const toolCallsMade: Array<{ tool: string; args: Record<string, unknown> }> = [];
   let turnsUsed = 0;
@@ -625,35 +700,20 @@ async function runSubagent(args: {
   let errorMessage: string | undefined;
 
   try {
-    let response = await callGeminiRaw(
-      subagentContents,
-      scopedTools,
-      args.runtimeConfig,
-      subagentSystem,
-      subagentModel,
-    );
+    let turn = await callSubagentModel();
 
-    // Track cost — per-Gemini-call rows tagged with subagent session.
-    extractAndRecordCost(response, {
+    // Track cost — per-model-call rows tagged with subagent session.
+    extractAndRecordCost(turn, {
       sessionId: subagentSessionId,
-      model: subagentModel ?? args.runtimeConfig.GEMINI_MODEL ?? 'unknown',
+      ref: subagentRef,
       trigger: args.trigger,
       callKind: 'initial',
     });
 
     for (let step = 0; step < agentDef.max_turns; step++) {
       turnsUsed = step + 1;
-      const candidate = response.candidates?.[0];
-      const parts: GeminiPart[] = candidate?.content?.parts || [];
-      const functionCalls: GeminiFunctionCall[] = [];
-      for (const part of parts) {
-        if (part.text) {
-          finalText.push(part.text);
-        }
-        if (part.functionCall) {
-          functionCalls.push(part.functionCall);
-        }
-      }
+      const functionCalls = turn.toolCalls;
+      finalText.push(...turn.text);
       if (functionCalls.length === 0) break;
 
       // Update task progress.
@@ -673,8 +733,8 @@ async function runSubagent(args: {
         ).catch(() => {});
       }
 
-      subagentContents.push({ role: 'model', parts });
-      const responseParts: GeminiPart[] = [];
+      subagentMessages.push({ role: 'assistant_turn', turn });
+      const responseItems: ToolResultItem[] = [];
       for (const call of functionCalls) {
         const toolName = call.name;
         const toolArgs = call.args || {};
@@ -698,13 +758,13 @@ async function runSubagent(args: {
             tool: toolName,
             reason,
           });
-          responseParts.push({
-            functionResponse: {
-              name: toolName,
-              response: {
-                error: reason,
-                blocked_by: 'subagent_scope',
-              },
+          responseItems.push({
+            kind: 'result',
+            callId: call.id,
+            name: toolName,
+            payload: {
+              error: reason,
+              blocked_by: 'subagent_scope',
             },
           });
           continue;
@@ -801,30 +861,29 @@ async function runSubagent(args: {
           result: resultText.slice(0, 500),
         });
 
-        responseParts.push({
-          functionResponse: {
-            name: toolName,
-            response: toolError
-              ? { error: toolError.message }
-              : { result: resultText },
-          },
+        responseItems.push({
+          kind: 'result',
+          callId: call.id,
+          name: toolName,
+          payload: toolError
+            ? { error: toolError.message }
+            : { result: resultText },
         });
       }
-      if (responseParts.length > 0) {
-        subagentContents.push({ role: 'user', parts: responseParts });
+      if (responseItems.length > 0) {
+        subagentMessages.push({
+          role: 'tool_results',
+          items: reconcileToolResults(functionCalls, responseItems, (message) =>
+            console.warn(`chat: subagent ${message}`),
+          ),
+        });
       }
 
       // Continue the loop.
-      response = await callGeminiRaw(
-        subagentContents,
-        scopedTools,
-        args.runtimeConfig,
-        subagentSystem,
-        subagentModel,
-      );
-      extractAndRecordCost(response, {
+      turn = await callSubagentModel();
+      extractAndRecordCost(turn, {
         sessionId: subagentSessionId,
-        model: subagentModel ?? args.runtimeConfig.GEMINI_MODEL ?? 'unknown',
+        ref: subagentRef,
         trigger: args.trigger,
         callKind: 'followup',
       });
@@ -833,21 +892,21 @@ async function runSubagent(args: {
     if (turnsUsed >= agentDef.max_turns) {
       // Check whether the FINAL response had text; if not, the
       // last turn was tools-only and we hit the cap mid-flight.
-      const lastCandidate = response.candidates?.[0];
-      const lastParts: GeminiPart[] = lastCandidate?.content?.parts || [];
-      const hasText = lastParts.some((p) => p.text);
-      if (!hasText) {
+      if (turn.text.length === 0) {
         status = 'max_turns_exceeded';
       } else {
         // Drain final text from the last turn.
-        for (const part of lastParts) {
-          if (part.text) finalText.push(part.text);
-        }
+        finalText.push(...turn.text);
       }
     }
   } catch (err) {
-    status = 'failed';
-    errorMessage = err instanceof Error ? err.message : String(err);
+    if (isAbortedError(err) || args.signal.aborted) {
+      status = 'cancelled';
+      errorMessage = 'cancelled: the client disconnected';
+    } else {
+      status = 'failed';
+      errorMessage = err instanceof Error ? err.message : String(err);
+    }
   }
 
   const finalResponse = finalText.join('').trim();
@@ -862,6 +921,8 @@ async function runSubagent(args: {
         content: finalResponse,
         meta: {
           model: subagentModel,
+          provider: subagentRef.provider,
+          model_ref: `${subagentRef.provider}/${subagentRef.model}`,
           subagent: true,
           parent_session_id: args.parentSessionId,
         },
@@ -883,8 +944,8 @@ async function runSubagent(args: {
           // explicit check would be a TS narrowing error.
           status:
             status === 'completed' ? 'succeeded'
-            : status === 'failed' ? 'failed'
-            : 'failed', // max_turns_exceeded
+            : status === 'cancelled' ? 'aborted'
+            : 'failed', // failed, max_turns_exceeded
           output: errorMessage ?? finalResponse,
         },
         headers: args.trigger
@@ -899,21 +960,25 @@ async function runSubagent(args: {
     status === 'completed'
       ? 'chat_subagent_completed'
       : 'chat_subagent_failed';
-  void safeAudit(auditAction, {
-    target: `session:${subagentSessionId}`,
-    status: status === 'completed' ? 'success' : 'failure',
-    durationMs: Date.now() - startedAt,
-    metadata: {
-      parent_session_id: args.parentSessionId,
-      agent_name: args.agentName,
-      agent_id: agentDef.id,
-      turns_used: turnsUsed,
-      tool_calls_count: toolCallsMade.length,
-      max_turns_exceeded: status === 'max_turns_exceeded',
-      error: errorMessage,
-    },
-    trigger: args.trigger,
-  });
+  // A cancelled run (the client closed the browser) is not a failure, so it
+  // writes no failure row; the task row above is marked aborted instead.
+  if (status !== 'cancelled') {
+    void safeAudit(auditAction, {
+      target: `session:${subagentSessionId}`,
+      status: status === 'completed' ? 'success' : 'failure',
+      durationMs: Date.now() - startedAt,
+      metadata: {
+        parent_session_id: args.parentSessionId,
+        agent_name: args.agentName,
+        agent_id: agentDef.id,
+        turns_used: turnsUsed,
+        tool_calls_count: toolCallsMade.length,
+        max_turns_exceeded: status === 'max_turns_exceeded',
+        error: errorMessage,
+      },
+      trigger: args.trigger,
+    });
+  }
 
   // SubagentEnd hook (non-decisional).
   void fireHookEvent(
@@ -956,45 +1021,6 @@ async function runSubagent(args: {
     duration_ms: Date.now() - startedAt,
     error: errorMessage,
   };
-}
-
-/** Lightweight Gemini caller used by the subagent runner — separate
- *  from `callGemini` because the subagent has its own
- *  systemInstruction (the agent's system_prompt) instead of the
- *  full ActionPolicy-based one the main chat-route uses. */
-async function callGeminiRaw(
-  contents: GeminiContent[],
-  tools: Array<{ functionDeclarations: unknown }>,
-  runtimeConfig: EffectiveRuntimeConfig,
-  systemInstruction: GeminiSystemInstruction,
-  modelOverride?: string,
-) {
-  const payload: GeminiCallPayload = {
-    contents,
-    tools,
-    systemInstruction,
-    // No maxOutputTokens cap; Gemini uses model's natural max.
-  };
-  const modelName = resolveModelName(modelOverride, runtimeConfig);
-  if (runtimeConfig.GEMINI_API_KEY) {
-    try {
-      return await callGeminiWithApiKey(payload, runtimeConfig, modelName);
-    } catch (error) {
-      if (
-        runtimeConfig.GOOGLE_APPLICATION_CREDENTIALS &&
-        isInvalidGeminiApiKeyError(error)
-      ) {
-        return callGeminiWithVertex(payload, runtimeConfig, modelName);
-      }
-      throw error;
-    }
-  }
-  if (runtimeConfig.GOOGLE_APPLICATION_CREDENTIALS) {
-    return callGeminiWithVertex(payload, runtimeConfig, modelName);
-  }
-  throw new Error(
-    'No model provider is configured. Add a Vertex AI or Gemini API provider at /providers, then retry — the subagent uses the same provider as the main chat agent.',
-  );
 }
 
 /**
@@ -1396,10 +1422,11 @@ async function fetchSessionMessagesWithCache(
  * The chat handler resolves the effective model as:
  *   header-dropdown override (requestedModel)
  *   ?? session.metadata.preferred_model
- *   ?? runtimeConfig.GEMINI_MODEL
+ *   ?? the install default (settings key `defaultModel`)
+ *   ?? the derived default (first configured provider's recommended model)
  *
  * Returns undefined when no preference is set (or the fetch fails —
- * the resolution chain just falls through to the runtime default).
+ * the resolution chain just falls through to the install default).
  */
 interface PreferredModelCacheEntry {
   value: string | undefined;
@@ -1519,8 +1546,39 @@ function invalidateSessionPreferredModelCache(sessionId: string): void {
   preferredModelCache.delete(sessionId);
 }
 
+/** What a slash command needs to know about the session's model. */
+interface SessionModelState {
+  result: TurnModelResult;
+  entries: ModelEntry[];
+  /** The session's stored `/model` preference, as written. */
+  session: string | undefined;
+  installDefault: string | undefined;
+}
+
+/**
+ * Resolve the model a slash command runs on: header, session preference,
+ * install default, derived default. The same chain a normal turn uses.
+ */
+async function resolveSessionModel(args: {
+  sessionId: string;
+  isNewSession: boolean;
+  trigger: string | undefined;
+  requestedModel: string | undefined;
+  requestedProvider: string | undefined;
+  runtimeConfig: EffectiveRuntimeConfig;
+}): Promise<SessionModelState> {
+  const session = args.isNewSession
+    ? undefined
+    : await loadSessionPreferredModel(args.sessionId, args.trigger);
+  const { result, entries, installDefault } = await resolveModelForRequest(
+    { header: args.requestedModel, headerProvider: args.requestedProvider, session },
+    args.runtimeConfig,
+  );
+  return { result, entries, session, installDefault };
+}
+
 /** Fetch the prior persisted messages for a session and convert them to
- *  Gemini-compatible content blocks. Returns [] if the session is
+ *  provider-neutral messages. Returns [] if the session is
  *  brand-new or the fetch fails (best-effort — a missing history
  *  shouldn't block the turn).
  *
@@ -1578,7 +1636,7 @@ async function loadSessionHistory(
   trigger: string | undefined,
   modelName: string | undefined,
   hooks?: AutoCompactionHooks,
-): Promise<GeminiContent[]> {
+): Promise<TurnMessage[]> {
   // Cached fetch with fallback. Pure data-shape conversion
   // happens below.
   const fetched = await fetchSessionMessagesWithCache(sessionId, trigger);
@@ -1588,7 +1646,7 @@ async function loadSessionHistory(
   // checkpoint message; if present, slice the replay from it forward.
   // The checkpoint's content is the summary, persisted as role=system
   // with meta.kind=compaction-checkpoint. We render it as a single
-  // user-role observation so Gemini's user/model alternation stays
+  // user-role observation so the user/assistant alternation stays
   // valid and the model treats the summary as "what happened before
   // this turn." Anything BEFORE the checkpoint is conceptually
   // already-summarized and gets dropped from replay; the disk
@@ -1728,6 +1786,9 @@ async function loadSessionHistory(
           summary_chars: result.summary.length,
         });
       } catch (err) {
+        // The client went away mid-summary: end the turn, do not fall back to
+        // truncation or report a compaction failure.
+        if (isAbortedError(err)) throw err;
         // Fallback. Summarizer failure shouldn't block
         // the chat turn. Log + emit a `failed` event + fall through
         // to the hard-truncation behavior (the
@@ -1743,13 +1804,10 @@ async function loadSessionHistory(
     }
 
     const slice = raw.slice(firstKeptIdx);
-    const contents: GeminiContent[] = [];
+    const contents: TurnMessage[] = [];
 
     if (checkpointText) {
-      contents.push({
-        role: 'user',
-        parts: [{ text: checkpointText }],
-      });
+      contents.push({ role: 'user', text: checkpointText });
     }
 
     // Tool rows (rendered via renderMessageForReplay) are
@@ -1759,10 +1817,7 @@ async function loadSessionHistory(
     let pendingToolNotes: string[] = [];
     const flushToolNotes = () => {
       if (pendingToolNotes.length === 0) return;
-      contents.push({
-        role: 'user',
-        parts: [{ text: pendingToolNotes.join('\n') }],
-      });
+      contents.push({ role: 'user', text: pendingToolNotes.join('\n') });
       pendingToolNotes = [];
     };
 
@@ -1776,10 +1831,9 @@ async function loadSessionHistory(
       // Non-tool: flush any pending tool notes before us so they
       // appear in the right narrative position, then emit.
       flushToolNotes();
-      const geminiRole = m.role === 'assistant' ? 'model' : 'user';
       contents.push({
-        role: geminiRole,
-        parts: [{ text: rendered.text }],
+        role: m.role === 'assistant' ? 'assistant' : 'user',
+        text: rendered.text,
       });
     }
     // Trailing tool notes (rare — turn ended mid-tool) still flushed.
@@ -1797,56 +1851,22 @@ async function loadSessionHistory(
   }
 }
 
-const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const VERTEX_API_BASE = 'https://aiplatform.googleapis.com/v1';
-
-type GeminiFunctionCall = {
-  name: string;
-  args?: Record<string, unknown>;
-};
-
-type GeminiPart = {
-  text?: string;
-  // Set to `true` by Gemini when the part is reasoning output
-  // (engaged by generationConfig.thinkingConfig.includeThoughts = true).
-  // The chat route emits these via the SSE `thinking` event instead of
-  // `text_delta`, and they're excluded from the saved `.content` so the
-  // operator's transcript shows reasoning collapsed-by-default and the
-  // final answer cleanly.
-  thought?: boolean;
-  functionCall?: GeminiFunctionCall;
-  functionResponse?: {
-    name: string;
-    response: Record<string, unknown>;
-  };
-};
-
-type GeminiSystemInstruction = {
-  role: 'system';
-  parts: Array<{ text: string }>;
-};
-
-type GeminiContent = {
-  role: 'user' | 'model';
-  parts: GeminiPart[];
-};
-
 type DebugStep = {
   time: string;
   stage: string;
   detail: string;
 };
 
-type GeminiToolSet = Array<{ functionDeclarations: unknown }>;
-
-// Cache the BASE declarations (MCP tools only). The synthetic
+// Cache the BASE tool specs (MCP tools only). The synthetic
 // `subagent_create` tool is appended per-request based on the operator's
 // `chat_subagents_enabled` preference. Caching the full set including
 // subagent_create would make toggling impossible without a TTL-based
-// cache flush.
-let cachedBaseDecls: unknown[] | null = null;
-let cachedBaseDeclsAt = 0;
-let cachedBaseDeclsCount = 0;
+// cache flush. The spec objects are never mutated, and each adapter caches
+// its rendered form per spec object (Gemini's sanitized declarations), so
+// keeping the same objects across requests keeps the per-call cost low.
+let cachedBaseTools: ToolSpec[] | null = null;
+let cachedBaseToolsAt = 0;
+let cachedBaseToolsCount = 0;
 
 /**
  * Read the operator's `chat_subagents_enabled` preference from operator-state.
@@ -1889,13 +1909,15 @@ async function readSubagentsEnabled(): Promise<boolean> {
 // narrate, e.g. after an approval-gated jobs_create where the post-
 // approval response is sometimes a bare functionCall with no text).
 //
-// Distinguishes three Gemini finishReason cases:
-//   STOP       — the model chose to stop (most common when text is empty
-//                after tools succeed). We summarize what ran.
-//   MAX_TOKENS — output got truncated. We say so explicitly so the
-//                operator knows to ask a smaller question.
-//   SAFETY     — content was blocked. Surface that vs. silent.
-//   RECITATION — same family; surface explicitly.
+// Distinguishes the finish reasons that matter (neutral FinishReason):
+//   stop / tool_use  — the model chose to stop (most common when text is
+//                      empty after tools succeed). We summarize what ran.
+//   max_tokens       — output got truncated. We say so explicitly so the
+//                      operator knows to ask a smaller question.
+//   safety           — content was blocked. Surface that vs. silent.
+//   recitation       — same family; surface explicitly.
+//   refusal          — the model declined; context_exceeded — the history
+//                      no longer fits. Neither occurs on Gemini today.
 /**
  * Pre-tool-call preamble synthesis.
  *
@@ -1982,7 +2004,7 @@ function formatToolPreamble(
 
 function synthesizeFallbackText(
   toolCalls: Array<{ tool: string; args: Record<string, unknown>; result: string; error?: string }>,
-  finishReason: string | undefined,
+  finish: FinishReason | undefined,
 ): string {
   // Tool-flow specific: certain tool names map cleanly to "X happened"
   // confirmations. Operators care most about whether the side-effecting
@@ -2008,15 +2030,21 @@ function synthesizeFallbackText(
 
   // Truncation / safety prefixes — these go FIRST so the operator sees
   // the limit cause before the recap.
-  if (finishReason === 'MAX_TOKENS') {
+  if (finish === 'max_tokens') {
     if (sideEffects.length > 0) {
       const list = sideEffects.map((tc) => `\`${tc.tool}\``).join(', ');
       return `✓ Completed ${list} but my reply was cut off by the token limit. Ask me to summarize what was done if you need more detail.`;
     }
     return '⚠ My response hit the token limit before I could finish. Try a more focused request.';
   }
-  if (finishReason === 'SAFETY' || finishReason === 'RECITATION') {
-    return `⚠ My response was blocked (\`${finishReason}\`). Try rephrasing your request.`;
+  if (finish === 'safety' || finish === 'recitation') {
+    return `⚠ My response was blocked (\`${finish.toUpperCase()}\`). Try rephrasing your request.`;
+  }
+  if (finish === 'refusal') {
+    return '⚠ The model declined to answer. Try rephrasing your request.';
+  }
+  if (finish === 'context_exceeded') {
+    return '⚠ This conversation no longer fits the model\'s context window. Run /compress or start a new chat, then try again.';
   }
 
   // Normal STOP-with-no-text case: model finished cleanly but had nothing
@@ -2152,151 +2180,37 @@ async function pollForNewApproval({
   }
 }
 
-const UNSUPPORTED_GEMINI_SCHEMA_KEYS = new Set([
-  '$id',
-  '$schema',
-  'additionalItems',
-  'additionalProperties',
-  'const',
-  'contains',
-  'default',
-  'dependentRequired',
-  'dependentSchemas',
-  'else',
-  'examples',
-  'exclusiveMaximum',
-  'exclusiveMinimum',
-  'if',
-  'maxProperties',
-  'minProperties',
-  'not',
-  'pattern',
-  'patternProperties',
-  'propertyNames',
-  'then',
-  'title',
-  'unevaluatedItems',
-  'unevaluatedProperties',
-]);
-
-function sanitizeSchema(
-  schema: Record<string, unknown>,
-  defs: Record<string, unknown> = {},
-  depth = 0,
-  processing: Set<string> = new Set()
-): Record<string, unknown> {
-  if (depth > 10) {
-    return { type: 'object', description: 'Complex schema (truncated)' };
-  }
-
-  const localSchema = { ...schema };
-
-  for (const key of UNSUPPORTED_GEMINI_SCHEMA_KEYS) {
-    delete localSchema[key];
-  }
-
-  if ('$defs' in localSchema && typeof localSchema.$defs === 'object' && localSchema.$defs) {
-    Object.assign(defs, localSchema.$defs as Record<string, unknown>);
-    delete localSchema.$defs;
-  }
-
-  if ('definitions' in localSchema && typeof localSchema.definitions === 'object' && localSchema.definitions) {
-    Object.assign(defs, localSchema.definitions as Record<string, unknown>);
-    delete localSchema.definitions;
-  }
-
-  if ('$ref' in localSchema && typeof localSchema.$ref === 'string') {
-    const ref = localSchema.$ref;
-    const refName = ref.split('/').pop() || ref;
-    delete localSchema.$ref;
-
-    if (processing.has(refName)) {
-      return { type: 'object', description: `Recursive reference to ${refName}` };
-    }
-
-    const resolved = defs[refName];
-    if (resolved && typeof resolved === 'object') {
-      processing.add(refName);
-      const merged = sanitizeSchema(resolved as Record<string, unknown>, defs, depth + 1, new Set(processing));
-      processing.delete(refName);
-      return merged;
-    }
-
-    return { type: 'string', description: `Reference to ${refName}` };
-  }
-
-  const complexKeys = ['oneOf', 'anyOf', 'allOf'] as const;
-  let hasComplex = false;
-  for (const key of complexKeys) {
-    if (key in localSchema) {
-      delete localSchema[key];
-      hasComplex = true;
-    }
-  }
-
-  if (hasComplex) {
-    return {
-      ...localSchema,
-      type: 'object',
-      description: `${(localSchema.description as string) || 'Complex variant'} (simplified)`,
-    };
-  }
-
-  if (typeof localSchema.properties === 'object' && localSchema.properties) {
-    const props = localSchema.properties as Record<string, unknown>;
-    for (const [key, value] of Object.entries(props)) {
-      if (value && typeof value === 'object') {
-        props[key] = sanitizeSchema(value as Record<string, unknown>, defs, depth + 1, new Set(processing));
-      }
-    }
-  }
-
-  if (typeof localSchema.items === 'object' && localSchema.items) {
-    localSchema.items = sanitizeSchema(
-      localSchema.items as Record<string, unknown>,
-      defs,
-      depth + 1,
-      new Set(processing)
-    );
-  }
-
-  return localSchema;
-}
-
-async function getGeminiTools(
+async function getTurnTools(
   mcpClient: PhantomMCPClient,
   runtimeConfig: EffectiveRuntimeConfig,
   logDebug: (stage: string, detail: string) => void,
   subagentsEnabled: boolean,
-): Promise<GeminiToolSet> {
+): Promise<ToolSpec[]> {
   const parsedToolCacheTtl = Number(runtimeConfig.MCP_TOOL_CACHE_TTL_MS || 300000);
   const mcpToolCacheTtlMs = Number.isFinite(parsedToolCacheTtl) && parsedToolCacheTtl > 0
     ? parsedToolCacheTtl
     : 300000;
   const now = Date.now();
 
-  // Base declarations are cached (TTL-bound). The synthetic
+  // Base specs are cached (TTL-bound). The synthetic
   // `subagent_create` tool is appended PER REQUEST based on
   // `subagentsEnabled` so the toggle takes effect immediately on the
   // next turn without waiting for cache eviction.
-  let baseDecls = cachedBaseDecls;
-  if (baseDecls && now - cachedBaseDeclsAt < mcpToolCacheTtlMs) {
-    logDebug('mcp', `Loaded ${cachedBaseDeclsCount} cached base tool schemas`);
+  let baseTools = cachedBaseTools;
+  if (baseTools && now - cachedBaseToolsAt < mcpToolCacheTtlMs) {
+    logDebug('mcp', `Loaded ${cachedBaseToolsCount} cached base tool schemas`);
   } else {
     const mcpTools = await mcpClient.listTools();
     logDebug('mcp', `Loaded ${mcpTools.length} tools from MCP`);
-    baseDecls = mcpTools.map((tool: MCPTool) => {
-      const rawSchema = (tool.inputSchema || {}) as Record<string, unknown>;
-      return {
-        name: tool.name,
-        description: tool.description || '',
-        parameters: sanitizeSchema(rawSchema),
-      };
-    });
-    cachedBaseDecls = baseDecls;
-    cachedBaseDeclsAt = now;
-    cachedBaseDeclsCount = baseDecls.length;
-    logDebug('mcp', `Cached ${cachedBaseDeclsCount} base tool schemas`);
+    baseTools = mcpTools.map((tool: MCPTool): ToolSpec => ({
+      name: tool.name,
+      description: tool.description || '',
+      inputSchema: (tool.inputSchema || {}) as Record<string, unknown>,
+    }));
+    cachedBaseTools = baseTools;
+    cachedBaseToolsAt = now;
+    cachedBaseToolsCount = baseTools.length;
+    logDebug('mcp', `Cached ${cachedBaseToolsCount} base tool schemas`);
   }
 
   // Append the synthetic `subagent_create`
@@ -2306,373 +2220,22 @@ async function getGeminiTools(
   // Gated by the operator's `chat_subagents_enabled`
   // preference. When false, the spec is omitted and the model
   // sees a catalog without subagent_create.
-  const declarations = subagentsEnabled
-    ? [...baseDecls, SUBAGENT_CREATE_TOOL_SPEC]
-    : [...baseDecls];
+  const tools = subagentsEnabled
+    ? [...baseTools, SUBAGENT_CREATE_TOOL_SPEC]
+    : [...baseTools];
 
   logDebug(
     'mcp',
-    `Tool catalog: ${declarations.length} schemas` +
+    `Tool catalog: ${tools.length} schemas` +
       (subagentsEnabled ? ' (incl. subagent_create)' : ' (subagents disabled)'),
   );
-  return [{ functionDeclarations: declarations }];
-}
-
-type GeminiCallPayload = {
-  contents: GeminiContent[];
-  tools: Array<{ functionDeclarations: unknown }>;
-  systemInstruction?: GeminiSystemInstruction;
-  // GenerationConfig is optional with no default fields. A hardcoded
-  // `maxOutputTokens` (e.g. 4096) would cap Gemini's output at a small
-  // fraction of the model's natural ceiling (~65K tokens for
-  // gemini-3.1-pro-preview), and multi-step responses with rich
-  // tool-output narration would truncate mid-sentence. The caller can
-  // override via an optional explicit maxOutputTokens; default = unset
-  // = let Gemini use the model max.
-  generationConfig?: {
-    maxOutputTokens?: number;
-    // Extended thinking. When the caller passes `thinking: true`,
-    // callGemini sets thinkingConfig here with `thinkingBudget: -1`
-    // (Gemini's "use what you need" signal). Models without thinking
-    // support ignore it.
-    thinkingConfig?: {
-      thinkingBudget: number;
-      includeThoughts?: boolean;
-    };
-  };
-  // Forced function-calling. mode:'ANY' makes Gemini MUST
-  // return a functionCall part (no text-only / thought-only turn). Used by
-  // the leaked-tool-call recovery path: when a thinking model
-  // serializes a large tool call as `thought` text instead of a structured
-  // functionCall (dropping it + ending the turn), we retry with mode:'ANY'
-  // + thinking off to force a clean structured call.
-  toolConfig?: {
-    functionCallingConfig: {
-      mode: 'AUTO' | 'ANY' | 'NONE';
-    };
-  };
-};
-
-function resolveVertexLocation(modelName: string) {
-  if (modelName.toLowerCase().includes('gemini-3') || modelName.toLowerCase().includes('experimental')) {
-    return 'global';
-  }
-  return 'us-central1';
-}
-
-/**
- * Detect placeholder / sample / fake GCP service-account credentials.
- *
- * Without this guard, the GoogleAuth client downstream attempts a JWT
- * sign() on a fake `private_key`, Node's OpenSSL decoder throws
- * `error:1E08010C:DECODER routines::unsupported`, and that bubbles to
- * the operator as a cryptic Node error. Job runs in particular emit
- * a `job-run-failed` notification on every fire — noisy and unhelpful.
- *
- * We catch the obvious shapes pre-flight and turn the failure into a
- * clear operator-actionable message. The detection is intentionally
- * conservative — false positives would block legitimate operators with
- * unusual but valid keys, so we only flag patterns where the input
- * could not possibly authenticate.
- *
- * Returns a reason string when placeholder is detected, or null when
- * the credentials at least pass surface-level validity checks (a real
- * key could still fail at sign-time for other reasons; that's the auth
- * library's job to surface with its own errors).
- */
-// Module-internal — Next.js 15's `route.ts` files reject arbitrary
-// exports as "does not match the required types of a Next.js Route."
-// Only HTTP-method handlers (GET / POST / etc.) and the documented
-// route-config exports (dynamic / runtime / revalidate / etc.) are
-// allowed. Keep this helper local; if it ever needs unit tests, move
-// it to `lib/chat-credentials.ts` and import from there.
-function detectPlaceholderCredential(
-  credentials: Record<string, unknown> | null,
-): string | null {
-  if (!credentials) return null;
-
-  // Required structural fields that any real GCP service-account JSON has.
-  // Missing any of these is a hard placeholder signal.
-  const required = ['type', 'project_id', 'private_key', 'client_email'] as const;
-  for (const field of required) {
-    if (typeof credentials[field] !== 'string' || !(credentials[field] as string).trim()) {
-      return `GOOGLE_APPLICATION_CREDENTIALS missing required field: ${field}`;
-    }
-  }
-
-  const privateKey = String(credentials.private_key);
-  // Real PKCS#8 RSA keys start with `-----BEGIN PRIVATE KEY-----` and
-  // contain a base64 blob of ~1500-2000 chars. A real key body is at
-  // least ~600 chars between the BEGIN/END markers (smaller P-256/P-384
-  // keys aren't used by GCP service accounts as of writing).
-  if (!privateKey.includes('BEGIN PRIVATE KEY') && !privateKey.includes('BEGIN RSA PRIVATE KEY')) {
-    return 'GOOGLE_APPLICATION_CREDENTIALS private_key is not in PEM format';
-  }
-  // Strip the markers + newlines and check the base64 body length.
-  const body = privateKey
-    .replace(/-----BEGIN [A-Z ]+ KEY-----/g, '')
-    .replace(/-----END [A-Z ]+ KEY-----/g, '')
-    .replace(/[\r\n\\]/g, '')
-    .trim();
-  // Real GCP keys' base64 body is ~1600+ chars. Anything less is fake.
-  // We also catch the literal string "fake" which is the most common
-  // placeholder value in sample env files.
-  if (body.length < 200 || /^fake$/i.test(body) || /^placeholder/i.test(body)) {
-    return (
-      'GOOGLE_APPLICATION_CREDENTIALS private_key looks like a placeholder ' +
-      `(${body.length} chars between BEGIN/END markers; real keys are ~1600+ chars). ` +
-      'Set GEMINI_API_KEY for direct API access, or replace with a real GCP service-account JSON.'
-    );
-  }
-  // Common sample client_email patterns — the `@y.com` style we saw in
-  // the wild, plus `@example.com`, `@test.com`.
-  const clientEmail = String(credentials.client_email);
-  if (
-    /^[^@]+@y\.com$/i.test(clientEmail) ||
-    /@example\.com$/i.test(clientEmail) ||
-    /@test\.com$/i.test(clientEmail)
-  ) {
-    return (
-      `GOOGLE_APPLICATION_CREDENTIALS client_email looks like a placeholder (${clientEmail}). ` +
-      'Replace with a real GCP service-account JSON or use GEMINI_API_KEY instead.'
-    );
-  }
-  return null;
-}
-
-function parseCredentialsInput(input: string) {
-  const trimmed = input.trim();
-  if (!trimmed) {
-    return { credentials: null, keyFile: null };
-  }
-
-  if (trimmed.startsWith('{')) {
-    // The downstream GoogleAuth library accepts the parsed JSON as
-    // `any` — we keep it loose here so existing call sites (project_id,
-    // client_email lookups) don't need extra type assertions.
-    let parsed: ReturnType<typeof JSON.parse>;
-    try {
-      parsed = JSON.parse(trimmed);
-    } catch (error) {
-      throw new Error(`GOOGLE_APPLICATION_CREDENTIALS JSON parse failed: ${String(error)}`);
-    }
-    // Placeholder guard. See detectPlaceholderCredential
-    // above for the rationale. Throwing here means callGeminiWithVertex
-    // never reaches the GoogleAuth code path, so the OpenSSL decoder
-    // error never surfaces. The operator (or scheduled job) sees a
-    // clean message instead.
-    const placeholderReason = detectPlaceholderCredential(
-      typeof parsed === 'object' && parsed !== null ? parsed : null,
-    );
-    if (placeholderReason) {
-      throw new Error(placeholderReason);
-    }
-    return { credentials: parsed, keyFile: null };
-  }
-
-  return { credentials: null, keyFile: trimmed };
-}
-
-/**
- * Vertex/Gemini quota retry wrapper.
- *
- * Vertex projects hit per-minute quota under bursty agent load
- * (multiple 5-min-cron jobs overlapping with chat traffic). Without a
- * retry, a 429 / RESOURCE_EXHAUSTED would bubble straight to the operator as
- * `Gemini API error: 429 ...` and to scheduled jobs as
- * `RuntimeError: chat error event: Vertex AI error: 429`.
- *
- * This wrapper retries 429-class errors with exponential backoff +
- * jitter. Other errors propagate immediately so real bugs aren't masked.
- *
- * Pattern ported from our blackhat-noc Slack bot's
- * `send_message_with_backoff` — same shape, same numbers (initial 2s,
- * x2 each retry, 0–1s jitter, max 5 retries).
- */
-async function withRateLimitRetry<T>(
-  fn: () => Promise<T>,
-  opts: { maxRetries?: number; initialDelayMs?: number; label?: string } = {},
-): Promise<T> {
-  const maxRetries = opts.maxRetries ?? 5;
-  let delayMs = opts.initialDelayMs ?? 2000;
-  let attempt = 0;
-  while (true) {
-    try {
-      return await fn();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      const isRateLimit =
-        msg.includes('429') ||
-        msg.includes('RESOURCE_EXHAUSTED') ||
-        msg.includes('Resource exhausted') ||
-        msg.toLowerCase().includes('rate limit');
-      if (!isRateLimit || attempt >= maxRetries) {
-        throw err;
-      }
-      attempt += 1;
-      const jitterMs = Math.floor(Math.random() * 1000);
-      const sleepMs = delayMs + jitterMs;
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[chat] ${opts.label ?? 'gemini'} hit 429; retry ${attempt}/${maxRetries} in ${sleepMs}ms`,
-      );
-      await new Promise((r) => setTimeout(r, sleepMs));
-      delayMs *= 2; // exponential
-    }
-  }
-}
-
-async function callGeminiWithApiKey(
-  payload: GeminiCallPayload,
-  runtimeConfig: EffectiveRuntimeConfig,
-  modelName: string,
-) {
-  if (!runtimeConfig.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY is required for the Gemini API call.');
-  }
-
-  return withRateLimitRetry(
-    async () => {
-      const response = await fetch(
-        `${GEMINI_API_BASE}/models/${encodeURIComponent(modelName)}:generateContent?key=${runtimeConfig.GEMINI_API_KEY}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        },
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Gemini API error: ${response.status} ${errorText}`);
-      }
-
-      return response.json();
-    },
-    { label: `gemini-api-key:${modelName}` },
-  );
-}
-
-async function callGeminiWithVertex(
-  payload: GeminiCallPayload,
-  runtimeConfig: EffectiveRuntimeConfig,
-  modelName: string,
-) {
-  if (!runtimeConfig.GOOGLE_APPLICATION_CREDENTIALS) {
-    throw new Error('GOOGLE_APPLICATION_CREDENTIALS is required for Vertex AI.');
-  }
-
-  const { credentials, keyFile } = parseCredentialsInput(runtimeConfig.GOOGLE_APPLICATION_CREDENTIALS);
-  const auth = new GoogleAuth({
-    credentials: credentials || undefined,
-    keyFile: keyFile || undefined,
-    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-  });
-
-  const projectId =
-    credentials?.project_id || (await auth.getProjectId());
-
-  if (!projectId) {
-    throw new Error('Vertex AI requires a project_id in GOOGLE_APPLICATION_CREDENTIALS.');
-  }
-
-  const location = resolveVertexLocation(modelName);
-  const accessToken = await auth.getAccessToken();
-
-  if (!accessToken) {
-    throw new Error('Failed to obtain Vertex AI access token.');
-  }
-
-  // ── Vertex context caching for the system prompt ───
-  //
-  // Try to swap the inline systemInstruction for a cached resource
-  // reference. Cached input tokens are billed at ~25% — for a 13k
-  // system prompt sent on every turn, that's the kind of saving
-  // that makes a difference at scale.
-  //
-  // OPT-IN VIA ENV: gated behind `PHANTOM_VERTEX_CACHE=1`. Some
-  // preview-channel models (e.g. gemini-3.1-pro-preview) accept the
-  // cachedContents create call but reject subsequent
-  // generateContent requests that reference the cache. Rather than
-  // enable globally and discover edge cases per-model, the helper is
-  // off by default and an operator turns it on once they've validated
-  // that their model+region combination supports it. Direct API key path is
-  // unaffected either way (caching only touches Vertex).
-  let requestPayload: GeminiCallPayload | (Omit<GeminiCallPayload, 'systemInstruction'> & { cachedContent: string }) = payload;
-  const cacheEnabled = process.env.PHANTOM_VERTEX_CACHE === '1';
-  const systemPromptText =
-    payload.systemInstruction?.parts
-      ?.map((p) => ('text' in p && p.text) || '')
-      .join('') ?? '';
-  if (cacheEnabled && systemPromptText) {
-    try {
-      const cacheName = await getOrCreateSystemPromptCache({
-        systemPromptText,
-        modelName,
-        projectId,
-        location,
-        accessToken,
-      });
-      if (cacheName) {
-        // Vertex rejects payloads that include BOTH cachedContent
-        // and a matching systemInstruction. Drop the inline copy
-        // when we're referencing the cache.
-        const { systemInstruction: _omit, ...rest } = payload;
-        void _omit;
-        requestPayload = { ...rest, cachedContent: cacheName };
-      }
-    } catch (err) {
-      // Belt-and-suspenders: any unexpected error from the cache
-      // helper falls through to the inline path. The helper itself
-      // already returns null on most failure modes, but if a
-      // helper-level invariant ever throws, we don't want it to
-      // poison the chat turn.
-      console.warn(
-        'vertex-cache: unexpected error, falling back to inline systemInstruction:',
-        err instanceof Error ? err.message : err,
-      );
-    }
-  }
-
-  return withRateLimitRetry(
-    async () => {
-      const response = await fetch(
-        `${VERTEX_API_BASE}/projects/${encodeURIComponent(projectId)}/locations/${location}` +
-          `/publishers/google/models/${encodeURIComponent(modelName)}:generateContent`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify(requestPayload),
-        },
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Vertex AI error: ${response.status} ${errorText}`);
-      }
-
-      return response.json();
-    },
-    { label: `vertex:${modelName}@${location}` },
-  );
-}
-
-function isInvalidGeminiApiKeyError(error: unknown) {
-  return (
-    error instanceof Error &&
-    (error.message.includes('API_KEY_INVALID') || error.message.includes('API key not valid'))
-  );
+  return tools;
 }
 
 /**
  * Operator-tunable routing policy. The chat handler
  * fetches it once per request from /api/v1/personality and passes it
- * to callGemini so the per-turn system prompt reflects the operator's
+ * into the turn's system prompt so it reflects the operator's
  * current configuration. Falls back to sensible defaults when the
  * personality store doesn't yet have the field (older blobs that
  * pre-date this commit).
@@ -2731,179 +2294,35 @@ async function fetchActionPolicy(): Promise<ActionPolicy> {
 
 
 /**
- * Resolve which model to actually call.
+ * One-shot summarization for /compress, /plan and auto-compaction. No tools,
+ * no system memory/KB instructions, no chat history, no thinking: just the
+ * summarization prompt + transcript, answered with text on the given model
+ * (else the install default).
  *
- * Priority: per-request override (from chat header dropdown) →
- * runtime config (env) → hardcoded fallback.
- *
- * The per-request override must be honored: ignoring it would make
- * every request use `runtimeConfig.GEMINI_MODEL || 'gemini-3.1-pro-preview'`
- * regardless of the dropdown selection. This helper does the resolution
- * and is the only place model-name selection happens.
+ * Deliberately not a parameterization of the chat turn, which sets up the
+ * full agent persona and fetches MCP tools: inlining that would inflate the
+ * compaction request to ~15kb of system prompt for no benefit and waste
+ * tokens that should be going to the summary.
  */
-function resolveModelName(
-  modelOverride: string | undefined,
-  runtimeConfig: EffectiveRuntimeConfig,
-): string {
-  return modelOverride || runtimeConfig.GEMINI_MODEL || 'gemini-3.1-pro-preview';
-}
-
-/**
- * Minimal Gemini call for one-shot summarization
- * (/compress). No tools, no system memory/KB instructions, no chat
- * history — just the summarization prompt + transcript. Returns the
- * model's text reply.
- *
- * Lives alongside callGemini() rather than being a parameterization of
- * it because the use case is genuinely different: callGemini sets up
- * the full agent persona, fetches MCP tools, etc; this one wants the
- * lightest possible call. Inlining via callGemini would inflate the
- * compaction request to ~15kb of system prompt for no benefit and
- * waste tokens that should be going to the summary.
- */
-async function summarizeViaGemini(
+function summarizeViaModel(
   systemInstructionText: string,
   userContent: string,
   runtimeConfig: EffectiveRuntimeConfig,
-  modelOverride?: string,
+  modelRef: ModelRef,
+  purpose: 'summarize' | 'plan' = 'summarize',
+  onEvent?: (event: ProviderEvent) => void,
+  // Every call site passes the request's signal (scripts/test-chat-abort.mjs
+  // checks each one); a missing signal would let a closed browser keep paying
+  // for the call.
+  signal?: AbortSignal,
 ): Promise<string> {
-  const payload: GeminiCallPayload = {
-    contents: [{ role: 'user', parts: [{ text: userContent }] }],
-    tools: [],
-    systemInstruction: {
-      role: 'system',
-      parts: [{ text: systemInstructionText }],
-    },
-    // No maxOutputTokens cap on the partial-summary fallback
-    // path either. The summary is supposed to recap a full
-    // tool-budget-exhausted investigation; a small cap would defeat
-    // its purpose.
-  };
-  const modelName = resolveModelName(modelOverride, runtimeConfig);
-  let result: { candidates?: Array<{ content?: { parts?: GeminiPart[] } }> };
-  if (runtimeConfig.GEMINI_API_KEY) {
-    try {
-      result = await callGeminiWithApiKey(payload, runtimeConfig, modelName);
-    } catch (error) {
-      if (
-        runtimeConfig.GOOGLE_APPLICATION_CREDENTIALS &&
-        isInvalidGeminiApiKeyError(error)
-      ) {
-        result = await callGeminiWithVertex(payload, runtimeConfig, modelName);
-      } else {
-        throw error;
-      }
-    }
-  } else if (runtimeConfig.GOOGLE_APPLICATION_CREDENTIALS) {
-    result = await callGeminiWithVertex(payload, runtimeConfig, modelName);
-  } else {
-    throw new Error(
-      'No model provider is configured for the conversation summarizer. Add a Vertex AI or Gemini API provider at /providers.',
-    );
-  }
-  const parts = result.candidates?.[0]?.content?.parts ?? [];
-  return parts
-    .map((p) => ('text' in p && p.text) || '')
-    .join('')
-    .trim();
-}
-
-async function callGemini(
-  contents: GeminiContent[],
-  tools: Array<{ functionDeclarations: unknown }>,
-  runtimeConfig: EffectiveRuntimeConfig,
-  actionPolicy: ActionPolicy,
-  modelOverride?: string,
-  // Operator-defined persona markdown. Threaded through so
-  // the system prompt can include the operator's persona block. Null
-  // / empty → no persona block (no-op). See system-prompt.ts.
-  personalityMd?: string | null,
-  // Live skills registry, injected as <available_skills>
-  // block in the system prompt. The model uses these to decide
-  // which skill (if any) to apply for the user's request, then
-  // calls skills_read to pull the full body. Empty / undefined →
-  // no skills block in the prompt this turn.
-  skillsForPrompt?: SkillSummary[] | null,
-  // Session approval mode. Selects the narration recipe in
-  // the system prompt's approval-mode block so the agent's promises
-  // about cards/gating match the MCP-side bypass header attached to
-  // this turn's MCP calls. Default 'manual' = card-promising recipe.
-  approvalMode: ApprovalMode = 'manual',
-  // Extended thinking. When true, sets
-  // generationConfig.thinkingConfig.thinkingBudget = -1 so the model
-  // uses its extended-reasoning path (models without thinking support
-  // ignore it). Defaults to false (no thinking config); the POST
-  // handler passes true unless the request says `thinking: false`.
-  thinking: boolean = false,
-  // When true, set toolConfig.functionCallingConfig.mode='ANY'
-  // so Gemini is forced to emit a structured functionCall (no text-only or
-  // thought-only turn). Used by the leaked-tool-call recovery retry in the
-  // chat parts loop. Default false = normal AUTO behavior
-  // (model freely decides text answer vs tool call).
-  forceToolUse: boolean = false,
-) {
-  // What the install gates, read from the manifest: the prompt names
-  // those tools (or says none are gated) instead of promising a card
-  // for every mutation. Undefined = manifest unreadable.
-  const gating = await getApprovalGating();
-  const systemInstruction: GeminiSystemInstruction = {
-    role: 'system',
-    parts: [
-      {
-        text: buildSystemPromptText(
-          actionPolicy,
-          personalityMd,
-          skillsForPrompt,
-          approvalMode,
-          gating.known ? gating.gated : undefined,
-          resolveModelName(modelOverride, runtimeConfig),
-        ),
-      },
-    ],
-  };
-
-  const payload: GeminiCallPayload = {
-    contents,
-    tools,
-    systemInstruction,
-    // No maxOutputTokens cap; Gemini uses model's natural max.
-    ...(thinking
-      ? {
-          generationConfig: {
-            thinkingConfig: {
-              thinkingBudget: -1, // -1 = "use what you need" (Gemini API).
-              includeThoughts: true,
-            },
-          },
-        }
-      : {}),
-    // Force a structured functionCall on the recovery retry.
-    ...(forceToolUse
-      ? { toolConfig: { functionCallingConfig: { mode: 'ANY' as const } } }
-      : {}),
-  };
-
-  const modelName = resolveModelName(modelOverride, runtimeConfig);
-
-  if (runtimeConfig.GEMINI_API_KEY) {
-    try {
-      return await callGeminiWithApiKey(payload, runtimeConfig, modelName);
-    } catch (error) {
-      if (runtimeConfig.GOOGLE_APPLICATION_CREDENTIALS && isInvalidGeminiApiKeyError(error)) {
-        return callGeminiWithVertex(payload, runtimeConfig, modelName);
-      }
-      throw error;
-    }
-  }
-
-  if (runtimeConfig.GOOGLE_APPLICATION_CREDENTIALS) {
-    return callGeminiWithVertex(payload, runtimeConfig, modelName);
-  }
-
-  // Operator-friendly message (no internal env-var names). Operators
-  // configure providers at /providers post-login.
-  throw new Error(
-    'No model provider is configured. Add a Vertex AI or Gemini API provider at /providers, then try again.',
+  return summarizeText(
+    modelRef,
+    systemInstructionText,
+    userContent,
+    purpose,
+    { creds: credsFromRuntimeConfig(runtimeConfig), onEvent, signal },
+    modelDispatchDeps(),
   );
 }
 
@@ -2999,7 +2418,16 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
     name: 'compress',
     description: 'Summarize prior turns into a checkpoint to free up context budget.',
     handler: async (ctx) => {
-      const { sessionId, trigger, runtimeConfig, requestedModel, sendEvent, controller } = ctx;
+      const { sessionId, trigger, runtimeConfig, sendEvent, controller } = ctx;
+      // The summary is written by the session's own model.
+      const sessionModel = (await ctx.resolveSessionModel()).result;
+      if (!sessionModel.ok) {
+        await reportModelRejected({
+          sessionId, trigger, rejection: sessionModel, surface: 'compress', sendEvent,
+        });
+        controller.close();
+        return;
+      }
       // PreCompact hook fire-site. A hook may
       // veto compaction (e.g. "audit policy: don't compact this
       // session, the full transcript is needed").
@@ -3097,8 +2525,11 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
           return;
         }
 
+        const compressProviderEvents = providerEventSink({
+          ref: sessionModel.ref, purpose: 'summarize', sessionId, trigger, sendEvent,
+        });
         const result = await compactMessages(summarizable, (instructions, transcript) =>
-          summarizeViaGemini(instructions, transcript, runtimeConfig, requestedModel),
+          summarizeViaModel(instructions, transcript, runtimeConfig, sessionModel.ref, 'summarize', compressProviderEvents, ctx.signal),
         );
 
         if (!result) throw new Error('summarizer returned empty');
@@ -3174,6 +2605,11 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
           messages_summarized: result.messagesSummarized,
         });
       } catch (err) {
+        if (isAbortedError(err) || ctx.signal.aborted) {
+          // The client closed the browser: nothing to report, no failure row.
+          controller.close();
+          return;
+        }
         console.error(
           `chat: /compress failed for ${sessionId}:`,
           err instanceof Error ? err.message : err,
@@ -3325,34 +2761,9 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
           sessionRowsP,
           todayRowsP,
         ]);
-        const sessionTotals = sumCostRows(sessionData?.events ?? []);
-        const todayTotals = sumCostRows(todayData?.events ?? []);
-        const lines: string[] = [
-          '**Cost summary**',
-          '',
-          `**This session** (${sessionTotals.calls} call${sessionTotals.calls === 1 ? '' : 's'}):`,
-          `  • Input tokens: ${sessionTotals.input.toLocaleString()} (${sessionTotals.cached.toLocaleString()} cached)`,
-          `  • Output tokens: ${sessionTotals.output.toLocaleString()}`,
-          `  • Total: **${formatUsd(sessionTotals.usd)}**${sessionTotals.savings > 0 ? ` (saved ${formatUsd(sessionTotals.savings)} via Vertex caching)` : ''}`,
-          '',
-          `**Today (UTC)** (${todayTotals.calls} call${todayTotals.calls === 1 ? '' : 's'} across all sessions):`,
-          `  • Input tokens: ${todayTotals.input.toLocaleString()} (${todayTotals.cached.toLocaleString()} cached)`,
-          `  • Output tokens: ${todayTotals.output.toLocaleString()}`,
-          `  • Total: **${formatUsd(todayTotals.usd)}**${todayTotals.savings > 0 ? ` (saved ${formatUsd(todayTotals.savings)} via Vertex caching)` : ''}`,
-        ];
-        if (Object.keys(todayTotals.byModel).length > 1) {
-          lines.push('', '**Today by model:**');
-          for (const [model, m] of Object.entries(todayTotals.byModel).sort(
-            (a, b) => b[1].usd - a[1].usd,
-          )) {
-            lines.push(`  • \`${model}\`: ${formatUsd(m.usd)} (${m.calls} call${m.calls === 1 ? '' : 's'})`);
-          }
-        }
-        lines.push(
-          '',
-          '_Pricing source: Vertex AI public pricing as of 2026-05. Per-call audit rows in [/observability/events](/observability/events) (filter `action:chat_turn_cost`). Full rollups in [/observability/cost](/observability/cost)._',
-        );
-        sendEvent('text_delta', { text: lines.join('\n') });
+        const sessionTotals = sumCostRows(auditResponseRows(sessionData));
+        const todayTotals = sumCostRows(auditResponseRows(todayData));
+        sendEvent('text_delta', { text: renderCostSummary(sessionTotals, todayTotals) });
         sendEvent('done', { session_id: sessionId });
       } catch (err) {
         sendEvent('error', {
@@ -3492,7 +2903,6 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
         sessionId,
         trigger,
         runtimeConfig,
-        requestedModel,
         sendEvent,
         controller,
       } = ctx;
@@ -3507,17 +2917,28 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
         controller.close();
         return;
       }
+      const sessionModel = (await ctx.resolveSessionModel()).result;
+      if (!sessionModel.ok) {
+        await reportModelRejected({
+          sessionId, trigger, rejection: sessionModel, surface: 'plan', sendEvent,
+        });
+        controller.close();
+        return;
+      }
       sendEvent('plan_started', { session_id: sessionId, prompt });
       try {
         // The planning system prompt instructs the model to enumerate
         // its anticipated tool calls in a structured form. We use a
         // separate summarizer-style call (no tools wired) so the
         // model can't accidentally execute anything mid-plan.
-        const planText = await summarizeViaGemini(
+        const planText = await summarizeViaModel(
           PLAN_MODE_INSTRUCTIONS,
           prompt,
           runtimeConfig,
-          requestedModel,
+          sessionModel.ref,
+          'plan',
+          providerEventSink({ ref: sessionModel.ref, purpose: 'plan', sessionId, trigger, sendEvent }),
+          ctx.signal,
         );
         if (!planText) {
           throw new Error('plan generation returned empty');
@@ -3565,13 +2986,18 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
           metadata: {
             source_prompt: prompt,
             plan_chars: planText.length,
-            model:
-              requestedModel || runtimeConfig.GEMINI_MODEL,
+            model: sessionModel.canonical,
+            provider: sessionModel.ref.provider,
+            model_ref: sessionModel.canonical,
           },
           trigger,
         });
         sendEvent('done', { session_id: sessionId });
       } catch (err) {
+        if (isAbortedError(err) || ctx.signal.aborted) {
+          controller.close();
+          return;
+        }
         console.error(
           `chat: /plan failed for ${sessionId}:`,
           err instanceof Error ? err.message : err,
@@ -3598,34 +3024,53 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
   // Persist a per-session preferred model. Persists into
   // session.metadata.preferred_model via PATCH; the chat handler
   // reads it on subsequent turns via loadSessionPreferredModel.
-  //   /model            → show the current preference (or runtime default)
+  //   /model            → report the session's model, preference, install default
   //   /model auto       → clear the preference
-  //   /model <name>     → set to <name> (e.g., gemini-2.5-pro)
+  //   /model <name>     → check <name> against the registry, store its
+  //                       canonical ref (e.g. vertex/gemini-3.7-flash)
+  // A name the registry does not accept is refused with suggestions and
+  // nothing is stored.
   {
     name: 'model',
     argHint: '<name>',
     description: 'Override the model for this session. `/model auto` clears.',
     handler: async (ctx) => {
-      const { args, sessionId, trigger, runtimeConfig, sendEvent, controller } = ctx;
-      const arg = args.trim();
+      const { args, sessionId, trigger, sendEvent, controller } = ctx;
+      const state = await ctx.resolveSessionModel();
+      const command = interpretModelCommand(args, state.entries);
 
-      // No-arg: report the current preference.
-      if (arg === '') {
-        const current = await loadSessionPreferredModel(sessionId, trigger);
+      if (command.kind === 'show') {
         sendEvent('text_delta', {
-          text: current
-            ? `Current model preference: \`${current}\` (session override)`
-            : `No session override. Using runtime default: \`${runtimeConfig.GEMINI_MODEL}\``,
+          text: renderModelStatus(
+            { session: state.session, installDefault: state.installDefault, header: ctx.requestedModel },
+            state.entries,
+          ),
         });
         sendEvent('done', { session_id: sessionId });
         controller.close();
         return;
       }
 
-      // `/model auto` or `/model default` clears the override.
-      const clearing = arg.toLowerCase() === 'auto' || arg.toLowerCase() === 'default';
-      const newValue = clearing ? null : arg;
+      if (command.kind === 'reject') {
+        sendEvent('text_delta', { text: command.message });
+        void safeAudit('chat_model_rejected', {
+          target: `session:${sessionId}`,
+          status: 'failure',
+          metadata: {
+            requested: args.trim().slice(0, 200),
+            source: 'session',
+            reason: 'MODEL_COMMAND_REFUSED',
+            suggestions: command.suggestions,
+            surface: 'model_command',
+          },
+          trigger,
+        });
+        sendEvent('done', { session_id: sessionId });
+        controller.close();
+        return;
+      }
 
+      const newValue = command.kind === 'clear' ? null : command.canonical;
       try {
         await callMcpServer(
           `/api/v1/sessions/${encodeURIComponent(sessionId)}`,
@@ -3640,10 +3085,13 @@ const SLASH_COMMANDS: readonly SlashCommand[] = [
           session_id: sessionId,
           preferred_model: newValue,
         });
+        const installDefault = describeInstallDefault(state.installDefault, state.entries);
         sendEvent('text_delta', {
-          text: clearing
-            ? `Cleared model override. Future turns will use the runtime default (\`${runtimeConfig.GEMINI_MODEL}\`).`
-            : `Set model preference to \`${arg}\` for this session. Takes effect on the next turn.`,
+          text: command.kind === 'clear'
+            ? `Cleared model override. Future turns will use the install default (${
+                installDefault.ref ? `\`${installDefault.ref}\`` : 'currently unavailable'
+              }).`
+            : `Set model preference to \`${command.canonical}\` for this session. Takes effect on the next turn.`,
         });
         sendEvent('done', { session_id: sessionId });
       } catch (err) {
@@ -3769,7 +3217,17 @@ export async function POST(request: NextRequest) {
   // also gets a stable origin in audit + approvals tables.
   let trigger = request.headers.get('x-phantom-trigger') || undefined;
 
+  // One signal for the whole turn, fired when the client goes away: by the
+  // request's own signal or by the response stream being cancelled (see
+  // lib/turn-abort.ts). Every model call below takes `turnSignal`, and an abort
+  // ends the turn quietly.
+  const turnAbort = createTurnAbort(request.signal);
+  const turnSignal = turnAbort.signal;
+
   const stream = new ReadableStream({
+    cancel() {
+      turnAbort.cancel();
+    },
     async start(controller) {
       // SSE wire format aligned with Spark's parseSSEEvent (lib/api/chat.ts):
       // each frame is a named event with a JSON-encoded `data:` line.
@@ -3806,7 +3264,7 @@ export async function POST(request: NextRequest) {
           permission_policy?: unknown;
           // Extended thinking. The scheduler attaches `thinking: true`
           // when the job's thinking_enabled is set; the route threads
-          // it into callGemini's generationConfig.thinkingConfig.
+          // it into the model request's `thinking` flag.
           thinking?: unknown;
         };
         // Normalize the policy through the validator. Bad shapes
@@ -3820,8 +3278,8 @@ export async function POST(request: NextRequest) {
         // the toggle on and omits the field otherwise, so an
         // unset field also gets the default.
         //
-        // Effect: callGemini sets generationConfig.thinkingConfig.
-        // thinkingBudget = -1 ("use what you need") + includeThoughts
+        // Effect (Gemini): the request carries generationConfig.thinkingConfig
+        // with thinkingBudget = -1 ("use what you need") + includeThoughts
         // = true. Models with thinking support engage their
         // extended-reasoning path with an auto budget; models without
         // it ignore the setting. The marginal cost is the output-side
@@ -3971,6 +3429,16 @@ export async function POST(request: NextRequest) {
             runtimeConfig,
             requestedModel,
             requestedProvider,
+            resolveSessionModel: () =>
+              resolveSessionModel({
+                sessionId,
+                isNewSession,
+                trigger,
+                requestedModel,
+                requestedProvider,
+                runtimeConfig,
+              }),
+            signal: turnSignal,
             sendEvent,
             controller,
           });
@@ -4051,33 +3519,64 @@ export async function POST(request: NextRequest) {
           // badge accordingly.
           sendEvent('approval_mode', { mode: 'bypass' });
         }
-        const tools = await getGeminiTools(
+        // Resolve the model for this turn before anything is fetched for it.
+        // Priority chain:
+        //   1. Header / request body (`model`, optionally qualified by
+        //      `provider`) — the operator or the job picked this model.
+        //   2. Session preference (set via /model <name> on a prior
+        //      turn, persisted in session.metadata.preferred_model).
+        //   3. The install default (settings key `defaultModel`).
+        //   4. The derived default: the recommended model of the first
+        //      configured provider (vertex, anthropic, openai).
+        //
+        // The session pref is only read when no header model was sent, so the
+        // header always wins, and not on brand-new sessions (nothing to read
+        // yet; the round-trip matters on the cold-start path). A model that was
+        // named at 1-3 and cannot serve ENDS the turn with MODEL_UNAVAILABLE:
+        // there is no fallback to another model, so a retired or unconfigured
+        // model is never silently swapped for one the operator did not choose.
+        const sessionModelPref: string | undefined =
+          requestedModel || isNewSession
+            ? undefined
+            : await loadSessionPreferredModel(sessionId, trigger);
+        const { result: turnModel } = await resolveModelForRequest(
+          { header: requestedModel, headerProvider: requestedProvider, session: sessionModelPref },
+          runtimeConfig,
+        );
+        if (!turnModel.ok) {
+          await reportModelRejected({
+            sessionId, trigger, rejection: turnModel, surface: 'chat', sendEvent,
+          });
+          controller.close();
+          return;
+        }
+        const modelRef = turnModel.ref;
+        // Adapter observations (a downgraded tool choice, a dropped tool call, a
+        // refusal) for this turn's model calls and for auto-compaction's summary.
+        const turnProviderEvents = providerEventSink({
+          ref: modelRef, purpose: 'chat', sessionId, trigger, sendEvent,
+        });
+        const compactionProviderEvents = providerEventSink({
+          ref: modelRef, purpose: 'summarize', sessionId, trigger, sendEvent,
+        });
+        // header / session picks displace the install default; `override` and
+        // the ref handed to subagents keep that meaning.
+        const effectiveRequestedModel: string | undefined =
+          turnModel.source === 'header' || turnModel.source === 'session'
+            ? turnModel.canonical
+            : undefined;
+        // `none` is the install default serving, as it always was; `derived`
+        // means no usable default was set and the first configured provider's
+        // recommended model serves.
+        const overrideSource: 'header' | 'session' | 'none' | 'derived' =
+          turnModel.source === 'default' ? 'none' : turnModel.source;
+
+        const tools = await getTurnTools(
           mcpClient,
           runtimeConfig,
           logDebug,
           subagentsEnabled,
         );
-
-        // Resolve the effective model for this
-        // turn. Priority chain:
-        //   1. Header-dropdown override (requestedModel) — operator
-        //      explicitly picked this model for this turn.
-        //   2. Session preference (set via /model <name> on a prior
-        //      turn, persisted in session.metadata.preferred_model).
-        //   3. Runtime default (runtimeConfig.GEMINI_MODEL) — applied
-        //      as a fallback inside resolveModelName / computeInputBudget
-        //      when this value is undefined.
-        //
-        // We only consult the session pref when the operator didn't
-        // pass a header override, so the header always wins. The
-        // session pref also doesn't fire on brand-new sessions —
-        // there's nothing to read yet, and saving the round-trip
-        // matters on the cold-start path.
-        const effectiveRequestedModel: string | undefined =
-          requestedModel ??
-          (isNewSession
-            ? undefined
-            : await loadSessionPreferredModel(sessionId, trigger));
 
         // Build conversation context from prior persisted
         // messages so Gemini sees the running thread, not just the
@@ -4091,10 +3590,10 @@ export async function POST(request: NextRequest) {
         //  2. The persist may have failed silently (safePersist swallows
         //     errors), in which case history won't have the current
         //     message — we manually append.
-        // Pass the resolved model name so the history
-        // walk knows the input-token budget. effectiveRequestedModel
-        // already collapses header-override + session-pref + default.
-        const historyModelName = effectiveRequestedModel || runtimeConfig.GEMINI_MODEL;
+        // Pass the resolved model so the history walk knows the
+        // input-token budget. turnModel already collapses header,
+        // session preference, install default and derived default.
+        const historyModelName = turnModel.canonical;
         const history = isNewSession
           ? []
           : await loadSessionHistory(sessionId, trigger, historyModelName, {
@@ -4104,12 +3603,7 @@ export async function POST(request: NextRequest) {
               // for amortization, and surface activity to live
               // telemetry.
               summarize: (instructions, transcript) =>
-                summarizeViaGemini(
-                  instructions,
-                  transcript,
-                  runtimeConfig,
-                  effectiveRequestedModel,
-                ),
+                summarizeViaModel(instructions, transcript, runtimeConfig, modelRef, 'summarize', compactionProviderEvents, turnSignal),
               persistCheckpoint: async (
                 summary,
                 coversUntil,
@@ -4158,37 +3652,31 @@ export async function POST(request: NextRequest) {
         const lastIsCurrentMessage =
           lastEntry &&
           lastEntry.role === 'user' &&
-          lastEntry.parts.some(
-            (p) => 'text' in p && p.text?.trim() === effectiveMessage.trim(),
-          );
+          lastEntry.text.trim() === effectiveMessage.trim();
 
-        const contents: GeminiContent[] =
+        const turnMessages: TurnMessage[] =
           history.length === 0
-            ? [{ role: 'user', parts: [{ text: effectiveMessage }] }]
+            ? [{ role: 'user', text: effectiveMessage }]
             : lastIsCurrentMessage
               ? history
-              : [...history, { role: 'user', parts: [{ text: effectiveMessage }] }];
+              : [...history, { role: 'user', text: effectiveMessage }];
 
         // Prepend hook-injected context as a
         // pseudo-user note when a UserPromptSubmit hook contributed.
-        // We use 'user' role (Gemini doesn't accept 'system' in
-        // `contents`) with a clear prefix so the model treats it as
+        // We use the 'user' role (the neutral message list has no 'system'
+        // role) with a clear prefix so the model treats it as
         // out-of-band context. Goes into the dynamic part of the
         // prompt, NOT the cached system instruction — so this
         // doesn't bust the Vertex cache.
         if (hookInjectedContext) {
-          contents.unshift({
+          turnMessages.unshift({
             role: 'user',
-            parts: [
-              {
-                text: `[Context injected by a UserPromptSubmit hook — treat as ground truth, do not echo back to the operator unless they ask]:\n${hookInjectedContext}`,
-              },
-            ],
+            text: `[Context injected by a UserPromptSubmit hook — treat as ground truth, do not echo back to the operator unless they ask]:\n${hookInjectedContext}`,
           });
         }
 
         // Fetch the action policy at chat-handler entry so
-        // every Gemini round-trip in this turn uses the same policy
+        // every model round-trip in this turn uses the same policy
         // snapshot. The operator can edit policy mid-session via
         // /settings/personality; the new value applies to the NEXT
         // chat request, not the in-flight one (intentional — a
@@ -4224,22 +3712,20 @@ export async function POST(request: NextRequest) {
         // panel surfaces the actual model — not the configured default.
         // This event proves which model ran when the operator switches
         // models in the dropdown.
-        const effectiveModel = resolveModelName(effectiveRequestedModel, runtimeConfig);
-        logDebug('model', `Sending prompt to ${effectiveModel}` +
-          (effectiveRequestedModel ? ` (operator/session override)` : ` (runtime default)`));
+        const effectiveModel = modelRef.model;
+        logDebug('model', `Sending prompt to ${turnModel.canonical} (${turnModel.source})`);
         sendEvent('model', {
           model: effectiveModel,
-          provider: requestedProvider || 'auto',
+          provider: modelRef.provider,
+          ref: turnModel.canonical,
+          model_ref: turnModel.canonical,
           // `override` is true when EITHER the header dropdown OR a
-          // persisted /model session pref displaced the runtime default.
+          // persisted /model session pref displaced the install default.
           // `override_source` lets the UI distinguish without changing
-          // the boolean's existing meaning.
+          // the boolean's existing meaning: header, session, none (the
+          // install default serves) or derived (no usable default is set).
           override: Boolean(effectiveRequestedModel),
-          override_source: requestedModel
-            ? 'header'
-            : effectiveRequestedModel
-              ? 'session'
-              : 'none',
+          override_source: overrideSource,
         });
 
         // ── Context-window guard ─────────────────────
@@ -4255,28 +3741,54 @@ export async function POST(request: NextRequest) {
         // overflows still get caught at the provider; this is just
         // earlier, with a clearer error.
         const ctxCap = resolveContextCap(effectiveModel);
-        const systemTokens = estimateTokens(
-          // Include approvalMode so the budgeting estimate
-          // matches the prompt callGemini will actually send. The
-          // bypass block is the longer of the two variants, so a
-          // mode-blind estimate would under-count by ~50 tokens in
-          // bypass sessions.
-          buildSystemPromptText(
-            actionPolicy,
-            personalityMd,
-            skillsForPrompt,
-            approvalMode,
-            await getApprovalGating().then((g) => (g.known ? g.gated : undefined)),
-            effectiveModel,
-          ),
+        // The system prompt and the tool catalog are built ONCE per turn and
+        // reused by every model call in it (retries and follow-ups included),
+        // so the estimate below measures exactly what is sent. Some providers
+        // bind earlier thinking blocks to the system prompt and tools that
+        // preceded them, so they must not change mid-turn. approvalMode is
+        // part of the prompt: the bypass block is the longer variant, so a
+        // mode-blind estimate would under-count by ~50 tokens in bypass
+        // sessions. What the install gates is read from the manifest: the
+        // prompt names those tools (or says none are gated) instead of
+        // promising a card for every mutation. Undefined = manifest unreadable.
+        const approvalGating = await getApprovalGating();
+        const systemText = buildSystemPromptText(
+          actionPolicy,
+          personalityMd,
+          skillsForPrompt,
+          approvalMode,
+          approvalGating.known ? approvalGating.gated : undefined,
+          turnModel.canonical,
         );
-        const toolsTokens = estimateTokens(JSON.stringify(tools ?? []));
-        const contentsTokens = contents.reduce((acc, msg) => {
-          const text = msg.parts
-            .map((p) => ('text' in p && p.text) || '')
-            .join('');
-          return acc + estimateMessageTokens(text);
-        }, 0);
+        const systemTokens = estimateTokens(systemText);
+        const modelCapabilities = capabilitiesFor(modelRef);
+        const turnCreds = credsFromRuntimeConfig(runtimeConfig);
+        const callTurnModel: LoopCall = (messages, options) =>
+          callModel(
+            {
+              ref: modelRef,
+              system: systemText,
+              messages,
+              tools,
+              toolChoice: options.toolChoice,
+              thinking: options.thinking,
+              purpose: options.toolChoice === 'none' ? 'budget_summary' : 'chat',
+              // Providers that route prompt-cache lookups by key hash it; the
+              // session id itself never leaves the install.
+              cacheKey: sessionId,
+            },
+            { creds: turnCreds, step: options.step, onEvent: turnProviderEvents, signal: turnSignal },
+            modelDispatchDeps(),
+          );
+        const toolsTokens = estimateTokens(estimateToolsJson(modelRef, tools));
+        const contentsTokens = turnMessages.reduce(
+          (acc, msg) =>
+            acc +
+            estimateMessageTokens(
+              msg.role === 'user' || msg.role === 'assistant' ? msg.text : '',
+            ),
+          0,
+        );
         // There is no `maxOutputTokens` cap below, so the
         // model can output up to its natural ceiling (~65,536 for
         // gemini-3.1-pro-preview). We reserve THAT much room in the
@@ -4338,72 +3850,80 @@ export async function POST(request: NextRequest) {
               tokens_cap: ctxCap,
               utilization: Number(utilization.toFixed(4)),
               model: effectiveModel,
+              provider: modelRef.provider,
+              model_ref: turnModel.canonical,
             },
             trigger,
           });
         }
 
-        let response = await callGemini(contents, tools, runtimeConfig, actionPolicy, effectiveRequestedModel, personalityMd, skillsForPrompt, approvalMode, turnThinking);
+        const initialTurn = await callTurnModel(turnMessages, {
+          step: 0,
+          thinking: turnThinking,
+          toolChoice: 'auto',
+        });
         logDebug('model', 'Received initial response');
 
-        // Record cost for the initial Gemini
-        // call. Subsequent tool-result follow-ups (in the for-loop
-        // below) record their own rows. We accumulate the total in
-        // `turnTotalCostUsd` and emit a single turn_cost SSE event
+        // Record cost for the initial model
+        // call. Subsequent tool-result follow-ups (the loop below) record
+        // their own rows. We accumulate the total in
+        // `turnTally` and emit a single turn_cost SSE event
         // at done time so the chat UI can show "this turn cost $X"
         // without having to sum events.
-        let turnTotalCostUsd = 0;
-        let turnTotalTokens = { input: 0, cached: 0, output: 0 };
+        const turnTally = newTurnTally();
         {
-          const c = extractAndRecordCost(response, {
+          const c = extractAndRecordCost(initialTurn, {
             sessionId,
-            model: effectiveModel,
+            ref: modelRef,
             trigger,
             callKind: 'initial',
           });
-          turnTotalCostUsd += c.usd;
-          turnTotalTokens.input += c.inputTokens;
-          turnTotalTokens.cached += c.cachedTokens;
-          turnTotalTokens.output += c.outputTokens;
+          if (c) addCallToTally(turnTally, c);
         }
 
-        // Surface cache hits to live telemetry. Vertex
-        // returns `usageMetadata.cachedContentTokenCount` on any
-        // response that referenced a cached resource. Zero / absent
-        // means we sent the inline system prompt (cache create
-        // failed or wasn't tried — direct API key path doesn't use
-        // caching at all). Operators see this in the live-telemetry
-        // panel as proof the optimization is engaged.
-        const usage = (response as { usageMetadata?: Record<string, unknown> })
-          .usageMetadata;
-        const cachedTokens =
-          (usage?.['cachedContentTokenCount'] as number | undefined) ?? 0;
-        if (cachedTokens > 0) {
-          const promptTokens =
-            (usage?.['promptTokenCount'] as number | undefined) ?? 0;
+        // Surface cache hits to live telemetry. Any provider that
+        // reports cache-read tokens on a response (Gemini cached
+        // content, Claude cache reads, OpenAI cached tokens) lands here;
+        // zero / absent means the prompt was billed in full. Operators
+        // see this in the live-telemetry panel as proof the optimization
+        // is engaged.
+        const cachedTokens = initialTurn.usage?.cacheRead ?? 0;
+        if (cachedTokens > 0 && initialTurn.usage) {
+          const promptTokens = initialTurn.usage.inputTotal;
+          // What the hit saved comes from the model's own registry price
+          // (null when the model is unpriced), not a fixed factor.
+          const saved = cacheReadSavings({
+            usage: initialTurn.usage,
+            provider: modelRef.provider,
+            model: modelRef.model,
+          });
           sendEvent('cache_hit', {
             cached_tokens: cachedTokens,
             prompt_tokens: promptTokens,
-            // promptTokenCount includes cached + uncached input;
+            // The prompt token count includes cached + uncached input;
             // subtract to surface what we actually paid full-price
             // for this turn.
             full_price_input_tokens: promptTokens - cachedTokens,
+            savings_usd_est: saved?.usd ?? null,
             model: effectiveModel,
+            provider: modelRef.provider,
+            model_ref: turnModel.canonical,
           });
-          // Durable cache-hit audit row with
-          // token-savings stats so operators can chart Vertex caching
-          // ROI over time. cached_tokens is what billed at ~25%;
-          // savings_tokens approximates "what we'd otherwise have
-          // paid full price for" (cached × 0.75, the inverse of the
-          // 25% billing rate).
+          // Durable cache-hit audit row so operators can chart prompt
+          // caching ROI over time, per provider. `savings_tokens_est` is
+          // the cached tokens' worth of full-price input that the
+          // cache-read discount saved (null for an unpriced model).
           void safeAudit('chat_cache_hit', {
             target: `session:${sessionId}`,
             metadata: {
               cached_tokens: cachedTokens,
               prompt_tokens: promptTokens,
               full_price_input_tokens: promptTokens - cachedTokens,
-              savings_tokens_est: Math.floor(cachedTokens * 0.75),
+              savings_tokens_est: saved?.tokensEquivalent ?? null,
+              savings_usd_est: saved?.usd ?? null,
               model: effectiveModel,
+              provider: modelRef.provider,
+              model_ref: turnModel.canonical,
             },
             trigger,
           });
@@ -4411,14 +3931,6 @@ export async function POST(request: NextRequest) {
 
         let finalText: string[] = [];
         let toolCalls: Array<{ tool: string; args: Record<string, unknown>; result: string; error?: string }> = [];
-
-        // Track whether the loop exited because we ran out of
-        // tool-call budget (vs. clean break with no further function
-        // calls). If exhausted AND finalText is empty after the loop,
-        // we'll fire one more no-tools call asking the model to
-        // summarize what it learned so the operator gets SOMETHING
-        // instead of a silent dead-end.
-        let exhaustedBudget = true;
 
         // Per-turn xdr_run_xql_query consecutive-failure counter.
         // The skill prompt says "max 3 iterations" but that's advisory,
@@ -4431,27 +3943,6 @@ export async function POST(request: NextRequest) {
         // and breaks out of the thrash loop.
         let xdrConsecutiveFailures = 0;
         const XDR_FAIL_CAP = 3;
-
-        // Leaked-tool-call recovery counter.
-        // Gemini thinking models occasionally serialize a LARGE pending
-        // tool call (e.g. phantom_create_data_worker with a ~3,900-token
-        // schema_override) as `thought` text instead of a structured
-        // functionCall part. The call is then dropped and the turn ends
-        // silently — the operator sees the plan but no tool runs. When we
-        // detect that (a thought part carrying Gemini's `default_api`
-        // function-call marker, with zero structured functionCalls this
-        // turn), we retry the SAME turn with forced function-calling
-        // (toolConfig mode:'ANY') + thinking off so the model emits a clean
-        // structured call. Bounded so a pathological double-leak can't loop.
-        let leakRecoveryAttempts = 0;
-        const MAX_LEAK_RECOVERY = 2;
-        // Bound the genuinely-empty-turn auto-retry.
-        // At most two retries so the second can ESCALATE rather
-        // than just repeat: attempt 1 is identical (intermittent case),
-        // attempt 2 drops thinking (deterministic large/awkward-argument
-        // case). See the escalation comment at the retry site.
-        let emptyTurnRetries = 0;
-        const MAX_EMPTY_TURN_RETRIES = 2;
 
         // Turn-scoped memo for idempotent reads. Declared
         // OUTSIDE the step loop so a catalog/schema/knowledge result fetched in
@@ -4484,147 +3975,49 @@ export async function POST(request: NextRequest) {
           return Number.isFinite(n) && n >= 5 && n <= 200 ? n : 30;
         })();
 
-        for (let step = 0; step < MAX_AGENT_TURNS; step++) {
-          const candidate = response.candidates?.[0];
-          const parts: GeminiPart[] = candidate?.content?.parts || [];
-
-          // Suppress read-tool narration in the chat stream.
-          // Models habitually emit "I'll call `log_destinations_list`." as
-          // response text right before a tool call. Every call + its result
-          // is already in the live telemetry, so that prose only duplicates
-          // what the operator already sees. Pre-scan this turn's tool calls:
-          // if the turn makes calls and ALL of them are non-gated (read /
-          // auto-approved), drop the accompanying text parts — they're pure
-          // narration. Gated calls keep their text (the why-line for the
-          // approval card); plain-answer turns (no calls) keep their text.
-          // Deterministic: does NOT depend on the model obeying a
-          // "don't narrate" system-prompt rule (which it ignores — a
-          // prompt carve-out alone does not suppress this).
-          const turnCalls: GeminiFunctionCall[] = parts
-            .filter((p) => p.functionCall)
-            .map((p) => p.functionCall as GeminiFunctionCall);
+        // Present one model turn to the operator: thinking goes out as its own
+        // event, and the turn's text goes out as answer text unless it is pure
+        // read-tool narration.
+        const presentTurn = async (turn: AssistantTurn): Promise<void> => {
+            // Suppress read-tool narration in the chat stream.
+            // Models habitually emit "I'll call `log_destinations_list`." as
+            // response text right before a tool call. Every call + its result
+            // is already in the live telemetry, so that prose only duplicates
+            // what the operator already sees. Pre-scan this turn's tool calls:
+            // if the turn makes calls and ALL of them are non-gated (read /
+            // auto-approved), drop the accompanying text parts — they're pure
+            // narration. Gated calls keep their text (the why-line for the
+            // approval card); plain-answer turns (no calls) keep their text.
+            // Deterministic: does NOT depend on the model obeying a
+            // "don't narrate" system-prompt rule (which it ignores — a
+            // prompt carve-out alone does not suppress this).
           let suppressReadNarration = false;
-          if (turnCalls.length > 0) {
+          if (turn.toolCalls.length > 0) {
             const gatedFlags = await Promise.all(
-              turnCalls.map((c) => isToolGated(c.name).catch(() => false)),
+              turn.toolCalls.map((c) => isToolGated(c.name).catch(() => false)),
             );
             suppressReadNarration = gatedFlags.every((g) => g === false);
           }
-
-          const functionCalls: GeminiFunctionCall[] = [];
-          // Track whether a tool call leaked into the thinking
-          // channel this turn (Gemini serialized it as `thought` text
-          // rather than a structured functionCall). `default_api` is
-          // Gemini's function-call namespace marker and never appears in
-          // legitimate reasoning prose.
-          let leakedToolCallInThought = false;
-          for (const part of parts) {
-            if (part.text) {
-              if (part.thought === true) {
-                // Reasoning part. Stream as `thinking` so the
-                // UI's ThinkingSection picks it up and renders collapsed
-                // above the answer. Excluded from finalText so the saved
-                // .content stays the clean answer-only transcript.
-                sendEvent('thinking', { text: part.text });
-                if (!leakedToolCallInThought && /default_api/.test(part.text)) {
-                  leakedToolCallInThought = true;
-                }
-              } else if (suppressReadNarration) {
-                // Read-tool narration; drop it (the call is
-                // already shown in the live telemetry). Not pushed to
-                // finalText so the saved transcript stays clean too.
-              } else {
-                finalText.push(part.text);
-                // Spark's hook switches on `event.type === 'text_delta'`.
-                sendEvent('text_delta', { text: part.text });
-              }
-            }
-            if (part.functionCall) {
-              functionCalls.push(part.functionCall);
-            }
+          for (const text of turn.thinking) {
+            // Reasoning is streamed as `thinking` so the UI's ThinkingSection
+            // renders it collapsed above the answer. It is excluded from
+            // finalText, so the saved .content stays the clean answer-only transcript.
+            sendEvent('thinking', { text });
           }
-
-          if (functionCalls.length === 0) {
-            // The model INTENDED a tool call but serialized it
-            // into its thinking channel instead of emitting a structured
-            // functionCall (large-argument calls trigger this on Gemini
-            // thinking models). Retry the SAME turn once with forced
-            // function-calling (toolConfig mode:'ANY') + thinking off so
-            // Gemini emits a clean structured call, then re-process via
-            // `continue`. Bounded by MAX_LEAK_RECOVERY so a pathological
-            // double-leak can't loop. `contents` here is still the
-            // pre-turn state (the leaked response hasn't been appended
-            // yet), so the retry re-attempts the identical turn.
-            if (leakedToolCallInThought && leakRecoveryAttempts < MAX_LEAK_RECOVERY) {
-              leakRecoveryAttempts++;
-              logDebug(
-                'model',
-                `Tool call leaked into thinking channel; retrying with forced function-calling (attempt ${leakRecoveryAttempts}/${MAX_LEAK_RECOVERY})`,
-              );
-              response = await callGemini(
-                contents,
-                tools,
-                runtimeConfig,
-                actionPolicy,
-                effectiveRequestedModel,
-                personalityMd,
-                skillsForPrompt,
-                approvalMode,
-                false, // thinking off — force the model to commit to the call
-                true, // forceToolUse — toolConfig.functionCallingConfig.mode = 'ANY'
-              );
-              continue;
-            }
-            // Genuinely empty turn: no tool calls AND no
-            // text produced anywhere this turn. An intermittent model hiccup
-            // that otherwise surfaces "I didn't generate a response this turn"
-            // and forces the user to retry by hand. Re-
-            // invoke the SAME turn once (normal config) before giving up —
-            // `contents` is still the pre-turn state, so this re-attempts
-            // identically. Bounded by MAX_EMPTY_TURN_RETRIES.
-            //
-            // An identical re-issue only recovers an INTERMITTENT empty
-            // turn. A DETERMINISTIC one repeats forever: for example a
-            // phantom_create_data_worker call whose observables_dict carries
-            // an escaped-JSON string literal (such as `properties.log` or any
-            // `_raw_json` source) can return an empty turn on every identical
-            // attempt, while the same call with plain scalar values succeeds.
-            // This has the same root cause as the leaked-tool-call case above —
-            // Gemini choking on a large/awkward argument — but it does NOT
-            // trip the leak detector, because there is no `thought` part at
-            // all to carry the `default_api` marker.
-            //
-            // So escalate instead of repeating: attempt 1 re-issues
-            // identically (cheap, fixes the intermittent case), attempt 2
-            // re-issues with THINKING OFF, which is the half of the leak
-            // recovery that addresses the choke. Deliberately NOT forcing
-            // toolConfig mode:'ANY' here: there is no evidence a
-            // tool was intended, and forcing a call would invent one on a
-            // genuinely conversational turn.
-            if (finalText.length === 0 && emptyTurnRetries < MAX_EMPTY_TURN_RETRIES) {
-              emptyTurnRetries++;
-              const escalate = emptyTurnRetries > 1;
-              logDebug(
-                'model',
-                `Empty model turn (no text, no tool calls); auto-retrying (attempt ${emptyTurnRetries}/${MAX_EMPTY_TURN_RETRIES}${escalate ? ', thinking off' : ''})`,
-              );
-              response = await callGemini(
-                contents,
-                tools,
-                runtimeConfig,
-                actionPolicy,
-                effectiveRequestedModel,
-                personalityMd,
-                skillsForPrompt,
-                approvalMode,
-                escalate ? false : turnThinking,
-              );
-              continue;
-            }
-            logDebug('model', 'No tool calls requested');
-            exhaustedBudget = false;
-            break;
+          if (suppressReadNarration) return; // dropped: the call is already in the live telemetry
+          for (const text of turn.text) {
+            finalText.push(text);
+            // Spark's hook switches on `event.type === 'text_delta'`.
+            sendEvent('text_delta', { text });
           }
+        };
+
+        // Run one turn's tool calls and return their results in call order.
+        // The loop (lib/providers/turn-loop.ts) has already added the turn to
+        // the message list and will check that every call got a result.
+        const executeToolCalls = async (turn: AssistantTurn): Promise<ToolResultItem[]> => {
+          const functionCalls = turn.toolCalls;
+          const responseItems: ToolResultItem[] = [];
 
           // Server-side fallback preamble.
           //
@@ -4664,9 +4057,6 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          contents.push({ role: 'model', parts });
-
-          const responseParts: GeminiPart[] = [];
           for (const call of functionCalls) {
             const toolName = call.name;
             let toolArgs = call.args || {};
@@ -4693,15 +4083,15 @@ export async function POST(request: NextRequest) {
                 status: 'denied_by_policy',
                 reason,
               });
-              responseParts.push({
-                functionResponse: {
-                  name: toolName,
-                  response: {
-                    error: reason,
-                    denied_by_policy: true,
-                    matched_list: policyEval.matchedList,
-                    matched_pattern: policyEval.matchedPattern,
-                  },
+              responseItems.push({
+                kind: 'result',
+                callId: call.id,
+                name: toolName,
+                payload: {
+                  error: reason,
+                  denied_by_policy: true,
+                  matched_list: policyEval.matchedList,
+                  matched_pattern: policyEval.matchedPattern,
                 },
               });
               toolCalls.push({
@@ -4759,11 +4149,11 @@ export async function POST(request: NextRequest) {
                   status: 'error',
                   error: deniedMsg,
                 });
-                responseParts.push({
-                  functionResponse: {
-                    name: toolName,
-                    response: { error: deniedMsg, denied_by: 'operator_preference' },
-                  },
+                responseItems.push({
+                  kind: 'result',
+                  callId: call.id,
+                  name: toolName,
+                  payload: { error: deniedMsg, denied_by: 'operator_preference' },
                 });
                 continue;
               }
@@ -4788,11 +4178,11 @@ export async function POST(request: NextRequest) {
                   status: 'error',
                   error: errMsg,
                 });
-                responseParts.push({
-                  functionResponse: {
-                    name: toolName,
-                    response: { error: errMsg },
-                  },
+                responseItems.push({
+                  kind: 'result',
+                  callId: call.id,
+                  name: toolName,
+                  payload: { error: errMsg },
                 });
                 continue;
               }
@@ -4811,9 +4201,10 @@ export async function POST(request: NextRequest) {
                 trigger,
                 parentTools: tools,
                 runtimeConfig,
-                parentModel: effectiveRequestedModel,
+                parentModel: turnModel.canonical,
                 mcpClient,
                 sendEvent,
+                signal: turnSignal,
               });
               const resultText = JSON.stringify({
                 status: subResult.status,
@@ -4837,11 +4228,11 @@ export async function POST(request: NextRequest) {
                 result: resultText,
                 error: subResult.error,
               });
-              responseParts.push({
-                functionResponse: {
-                  name: toolName,
-                  response: { result: resultText },
-                },
+              responseItems.push({
+                kind: 'result',
+                callId: call.id,
+                name: toolName,
+                payload: { result: resultText },
               });
               continue;
             }
@@ -4889,13 +4280,13 @@ export async function POST(request: NextRequest) {
                 result: '',
                 error: hookReason,
               });
-              responseParts.push({
-                functionResponse: {
-                  name: toolName,
-                  response: {
-                    error: hookReason,
-                    blocked_by: 'pre_tool_use_hook',
-                  },
+              responseItems.push({
+                kind: 'result',
+                callId: call.id,
+                name: toolName,
+                payload: {
+                  error: hookReason,
+                  blocked_by: 'pre_tool_use_hook',
                 },
               });
               continue;
@@ -5170,11 +4561,11 @@ export async function POST(request: NextRequest) {
                 result: '',
                 error: errMsg,
               });
-              responseParts.push({
-                functionResponse: {
-                  name: toolName,
-                  response: { error: errMsg },
-                },
+              responseItems.push({
+                kind: 'result',
+                callId: call.id,
+                name: toolName,
+                payload: { error: errMsg },
               });
               continue;
             }
@@ -5229,13 +4620,11 @@ export async function POST(request: NextRequest) {
               result: resultText,
             });
 
-            responseParts.push({
-              functionResponse: {
-                name: toolName,
-                response: {
-                  result: resultText,
-                },
-              },
+            responseItems.push({
+              kind: 'result',
+              callId: call.id,
+              name: toolName,
+              payload: { result: resultText },
             });
 
             // Track consecutive xdr_run_xql_query failures
@@ -5276,82 +4665,70 @@ export async function POST(request: NextRequest) {
               // can fold it into its next decision. The counter is
               // reset to 0 here so a single STOP fires per breach.
               if (xdrConsecutiveFailures >= XDR_FAIL_CAP) {
-                responseParts.push({
-                  functionResponse: {
-                    name: '__system_stop_directive__',
-                    response: {
-                      stop_directive: (
-                        `You have run xdr_run_xql_query ${XDR_FAIL_CAP} ` +
-                        `times in a row without a SUCCESS response. The ` +
-                        `build_xql_query skill's iteration loop caps at ` +
-                        `${XDR_FAIL_CAP} iterations for exactly this case ` +
-                        `— more retries won't converge; the underlying ` +
-                        `issue needs operator clarification, not more ` +
-                        `synthesis. STOP retrying xdr_run_xql_query right ` +
-                        `now. Summarize for the operator: (a) the user's ` +
-                        `original question, (b) the synthesized query ` +
-                        `text you last tried, (c) the specific error ` +
-                        `message from XDR, (d) one or two concrete ` +
-                        `clarifying questions you'd need answered to make ` +
-                        `progress (e.g. "which tenant dataset has this ` +
-                        `field?", "what's the canonical name for X in ` +
-                        `your environment?"). Do NOT call ` +
-                        `xdr_run_xql_query again in this turn.`
-                      ),
-                    },
-                  },
+                responseItems.push({
+                  kind: 'directive',
+                  text: (
+                    `You have run xdr_run_xql_query ${XDR_FAIL_CAP} ` +
+                    `times in a row without a SUCCESS response. The ` +
+                    `build_xql_query skill's iteration loop caps at ` +
+                    `${XDR_FAIL_CAP} iterations for exactly this case ` +
+                    `— more retries won't converge; the underlying ` +
+                    `issue needs operator clarification, not more ` +
+                    `synthesis. STOP retrying xdr_run_xql_query right ` +
+                    `now. Summarize for the operator: (a) the user's ` +
+                    `original question, (b) the synthesized query ` +
+                    `text you last tried, (c) the specific error ` +
+                    `message from XDR, (d) one or two concrete ` +
+                    `clarifying questions you'd need answered to make ` +
+                    `progress (e.g. "which tenant dataset has this ` +
+                    `field?", "what's the canonical name for X in ` +
+                    `your environment?"). Do NOT call ` +
+                    `xdr_run_xql_query again in this turn.`
+                  ),
                 });
                 xdrConsecutiveFailures = 0; // one STOP per breach
               }
             }
           }
+          return responseItems;
+        };
 
-          if (responseParts.length > 0) {
-            contents.push({
-              role: 'user',
-              parts: responseParts,
-            });
-          }
-
-          logDebug('model', 'Sending tool results to model');
-          // Use the same operator-selected model for follow-up calls
-          // so the entire turn — initial prompt and tool round-trips —
-          // runs on one model. Mixing models within a turn would
-          // confuse the assistant's continuation logic.
-          response = await callGemini(
-            contents,
-            tools,
-            runtimeConfig,
-            actionPolicy,
-            effectiveRequestedModel,
-            personalityMd,
-            skillsForPrompt,
-            approvalMode,
-            turnThinking,
-          );
-          logDebug('model', 'Received follow-up response');
-          // Record cost for the follow-up.
-          {
-            const c = extractAndRecordCost(response, {
+        const loop = await runModelLoop({
+          initial: initialTurn,
+          messages: turnMessages,
+          maxTurns: MAX_AGENT_TURNS,
+          turnThinking,
+          capabilities: modelCapabilities,
+          nextCallStep: 1, // the initial call used step 0
+          call: callTurnModel,
+          presentTurn,
+          hasFinalText: () => finalText.length > 0,
+          executeToolCalls,
+          onFollowup: (turn) => {
+            // Record cost for the follow-up.
+            const c = extractAndRecordCost(turn, {
               sessionId,
-              model: effectiveModel,
+              ref: modelRef,
               trigger,
               callKind: 'followup',
             });
-            turnTotalCostUsd += c.usd;
-            turnTotalTokens.input += c.inputTokens;
-            turnTotalTokens.cached += c.cachedTokens;
-            turnTotalTokens.output += c.outputTokens;
-          }
-        }
+            if (c) addCallToTally(turnTally, c);
+          },
+          note: (message) => logDebug('model', message),
+          warn: (message) => console.warn(`chat: ${message}`),
+        });
+        // The last turn the model returned. When the loop ran out of turns it
+        // was never processed; the drain below recovers its text.
+        const lastTurn = loop.lastTurn;
+        const exhaustedBudget = loop.exhaustedBudget;
 
         // Drain the last unprocessed response on
         // budget exhaustion.
         //
-        // The for-loop above processes a candidate's text + functionCalls
-        // at the TOP of each iteration. When the loop dispatches tools
-        // in iteration N, it calls callGemini() at the BOTTOM — and the
-        // response from THAT call is what iteration N+1 would normally
+        // The tool loop processes a turn's text + tool calls at the TOP of
+        // each iteration. When it dispatches tools in iteration N, it calls
+        // the model at the BOTTOM — and the response from THAT call is what
+        // iteration N+1 would normally
         // process. If iteration N is the last allowed iteration
         // (step = MAX_AGENT_TURNS - 1), N+1 never runs, and the
         // response is silently dropped.
@@ -5373,15 +4750,11 @@ export async function POST(request: NextRequest) {
         // response also lacks text, the budget-summary fallback below
         // handles the "still nothing to show" case.
         if (exhaustedBudget) {
-          const finalCandidate = response.candidates?.[0];
-          const finalParts: GeminiPart[] = finalCandidate?.content?.parts || [];
           let recoveredChars = 0;
-          for (const part of finalParts) {
-            if (part.text) {
-              finalText.push(part.text);
-              sendEvent('text_delta', { text: part.text });
-              recoveredChars += part.text.length;
-            }
+          for (const text of lastTurn.text) {
+            finalText.push(text);
+            sendEvent('text_delta', { text });
+            recoveredChars += text.length;
           }
           if (recoveredChars > 0) {
             logDebug(
@@ -5409,50 +4782,30 @@ export async function POST(request: NextRequest) {
             `Tool budget exhausted (${toolCalls.length} tool calls, 0 text); ` +
               `firing summary fallback`,
           );
-          contents.push({
-            role: 'user',
-            parts: [{
-              text:
-                'Tool budget reached. Summarize your findings so far for the ' +
-                'operator, even if the investigation is incomplete. Do not ' +
-                'call any more tools.',
-            }],
-          });
           try {
-            // Pass `[]` for tools — model can't call more even if it
+            // Tool choice 'none': the model can't call more even if it
             // wants to. Belt-and-suspenders against a model that
-            // ignores the prompt instruction.
-            const summary = await callGemini(
-              contents,
-              [],
-              runtimeConfig,
-              actionPolicy,
-              effectiveRequestedModel,
-              personalityMd,
-              skillsForPrompt,
-              approvalMode,
-            );
-            const summaryParts: GeminiPart[] =
-              summary.candidates?.[0]?.content?.parts || [];
-            for (const part of summaryParts) {
-              if (part.text) {
-                finalText.push(part.text);
-                sendEvent('text_delta', { text: part.text });
-              }
+            // ignores the prompt instruction. (Gemini renders that as an
+            // empty tool list.)
+            const summary = await requestBudgetSummary({
+              messages: turnMessages,
+              call: callTurnModel,
+              step: loop.nextCallStep,
+            });
+            for (const text of summary.text) {
+              finalText.push(text);
+              sendEvent('text_delta', { text });
             }
             finalResponse = finalText.join('\n').trim();
             // Cost record for the summary call (separate from the
             // turn's main accounting).
             const c = extractAndRecordCost(summary, {
               sessionId,
-              model: effectiveModel,
+              ref: modelRef,
               trigger,
               callKind: 'budget_summary',
             });
-            turnTotalCostUsd += c.usd;
-            turnTotalTokens.input += c.inputTokens;
-            turnTotalTokens.cached += c.cachedTokens;
-            turnTotalTokens.output += c.outputTokens;
+            if (c) addCallToTally(turnTally, c);
           } catch (err) {
             logDebug(
               'model',
@@ -5485,15 +4838,11 @@ export async function POST(request: NextRequest) {
           // recap instead, then PERSIST it so a session reload doesn't
           // show a blank assistant turn.
           //
-          // We pull `finishReason` off the last candidate to
-          // distinguish "model just chose silence" (STOP) from
-          // truncation (MAX_TOKENS) from safety blocks (SAFETY) — the
-          // last two warrant different operator advice.
-          const lastCandidate = response.candidates?.[0] as
-            | { finishReason?: string }
-            | undefined;
-          const finishReason = lastCandidate?.finishReason;
-          finalResponse = synthesizeFallbackText(toolCalls, finishReason);
+          // We pull the finish reason off the last turn to
+          // distinguish "model just chose silence" (stop) from
+          // truncation (max_tokens) from safety blocks (safety,
+          // recitation) — the last two warrant different operator advice.
+          finalResponse = synthesizeFallbackText(toolCalls, lastTurn.finish);
           sendEvent('text_delta', { text: finalResponse });
         }
 
@@ -5526,12 +4875,9 @@ export async function POST(request: NextRequest) {
             meta: {
               model: effectiveModel,
               model_override: Boolean(effectiveRequestedModel),
-              model_override_source: requestedModel
-                ? 'header'
-                : effectiveRequestedModel
-                  ? 'session'
-                  : 'none',
-              provider: requestedProvider || 'auto',
+              model_override_source: overrideSource,
+              provider: modelRef.provider,
+              model_ref: turnModel.canonical,
             },
           }, trigger);
         }
@@ -5581,13 +4927,15 @@ export async function POST(request: NextRequest) {
         // chat UI can render "this turn cost $X.XX" inline. The
         // per-call audit rows already landed; this is just the
         // turn-level summary.
+        // `cost_usd` is null when no call of the turn had a price, and
+        // `priced` is false when any call did not, so a partial figure is
+        // never read as the whole bill.
         sendEvent('turn_cost', {
           session_id: sessionId,
-          cost_usd: Number(turnTotalCostUsd.toFixed(6)),
-          input_tokens: turnTotalTokens.input,
-          cached_input_tokens: turnTotalTokens.cached,
-          output_tokens: turnTotalTokens.output,
+          ...turnCostSummary(turnTally),
           model: effectiveModel,
+          provider: modelRef.provider,
+          model_ref: turnModel.canonical,
         });
 
         // RunEnd hook fire-site. Non-decisional;
@@ -5630,6 +4978,13 @@ export async function POST(request: NextRequest) {
           duration_ms: Date.now() - turnStartedAt,
         });
       } catch (error) {
+        if (isAbortedError(error) || turnSignal.aborted) {
+          // The client closed the browser and the model call was cancelled.
+          // Not a failure: no error event (nobody is listening), no failure
+          // audit row. The stream still closes in `finally`.
+          console.info('Chat turn cancelled: the client disconnected.');
+          return;
+        }
         console.error('Chat API error:', error);
         // Spark's hook reads error event.data as a plain string into the
         // assistant bubble, so emit a string here (not a JSON object).

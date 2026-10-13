@@ -141,7 +141,7 @@ def require_loopback_for_secrets(request: Request) -> JSONResponse | None:
     So this is defence in depth, not the primary control. It stops a
     NEW proxy route from silently re-opening the same hole, and it costs the
     legitimate callers nothing: backup, vertex-credentials and
-    anthropic-credentials all run inside the agent container and reach the
+    providers/credentials all run inside the agent container and reach the
     MCP over localhost.
     """
     if request.query_params.get("include_secrets", "").lower() != "true":

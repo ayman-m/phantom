@@ -26,7 +26,6 @@ Routes that are intentionally unauthenticated (Prometheus exposition, MCP JSON-R
 | `GET` | `/api/v1/providers` | List provider instances (Vertex, etc.). |
 | `POST` | `/api/v1/providers` | Create a new provider instance. |
 | `DELETE` | `/api/v1/providers/{id}` | Delete a provider instance. |
-| `GET` | `/api/v1/models` | Active model catalog merged from all provider instances. |
 
 ## Settings (manifest.settings runtime overrides)
 

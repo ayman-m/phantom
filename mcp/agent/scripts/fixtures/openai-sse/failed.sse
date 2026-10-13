@@ -1,0 +1,9 @@
+event: response.created
+data: {"type":"response.created","sequence_number":0,"response":{"id":"resp_fixture_1","object":"response","model":"gpt-6-sol","status":"in_progress","output":[]}}
+
+event: response.some_future_event
+data: {"type":"response.some_future_event","sequence_number":1,"anything":true}
+
+event: response.failed
+data: {"type":"response.failed","sequence_number":2,"response":{"id":"resp_fixture_1","object":"response","model":"gpt-6-sol","status":"failed","output":[],"error":{"code":"server_error","message":"The server had an error while processing your request."}}}
+

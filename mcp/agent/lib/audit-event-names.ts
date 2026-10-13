@@ -37,15 +37,32 @@ export const AUDIT_EVENT_NAME_ALIASES: Record<string, string> = {
   // Context guard.
   chat_context_warning: "agent.context.warning",
 
-  // Vertex caching.
+  // Prompt caching (any provider; the row names the provider and model_ref).
   chat_cache_hit: "agent.model.cache.hit",
 
   // Plan mode.
   chat_plan_proposed: "agent.plan.proposed",
   chat_plan_failed: "agent.plan.failed",
 
-  // Cost tracking.
+  // Cost tracking: one row per model call, with provider, model_ref, cache-write
+  // and reasoning tokens, and a priced flag (cost_usd is null when unpriced).
   chat_turn_cost: "agent.model.cost",
+
+  // Model registry: one row per live model-list fetch per provider.
+  provider_models_refreshed: "agent.provider.models.refreshed",
+  provider_models_refresh_failed: "agent.provider.models.refresh_failed",
+
+  // Provider connection test (the Providers page): {provider, ok, status}, never a key.
+  provider_test: "agent.provider.test",
+
+  // A model provider's non-fatal observation during a call: a downgraded tool
+  // choice, a dropped tool call, an unknown tool name, a refusal. Also sent as
+  // the SSE `debug` event.
+  provider_event: "agent.provider.event",
+
+  // A named model cannot serve (unknown, retired, provider not configured).
+  // The turn, command, job run or subagent ends with MODEL_UNAVAILABLE.
+  chat_model_rejected: "agent.model.rejected",
 
   // Task registry.
   task_created: "agent.task.created",

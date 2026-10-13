@@ -10,6 +10,7 @@ import {
 } from "@/lib/observability-query";
 import { QueryBar } from "@/components/observability/query-bar";
 import { listJobs } from "@/lib/api/jobs";
+import { readCostRow } from "@/lib/cost-rows";
 
 /**
  * Events page — paginated query against the phantom MCP's audit log.
@@ -41,6 +42,36 @@ const glassStyle = {
 } as const;
 
 const PAGE_SIZE = 50;
+
+/**
+ * The model chips on a row: the provider and `provider/model` ref of the call
+ * an audit row describes. Rows that carry them (turn cost, cache hits, model
+ * rejections, persisted assistant messages) show them as given. A
+ * `chat_turn_cost` row written before the provider fields existed is a Gemini
+ * call, so it reads `vertex` with a note that the label is inferred. An
+ * unpriced call says so.
+ */
+function modelChips(e: AuditEvent): {
+  provider: string;
+  ref: string;
+  inferred: boolean;
+  unpriced: boolean;
+} | null {
+  const m = e.metadata ?? {};
+  if (e.action === "chat_turn_cost") {
+    const row = readCostRow(e);
+    return {
+      provider: row.provider,
+      ref: row.modelRef,
+      inferred: typeof m["provider"] !== "string",
+      unpriced: !row.priced,
+    };
+  }
+  const provider = typeof m["provider"] === "string" ? m["provider"] : null;
+  const ref = typeof m["model_ref"] === "string" ? m["model_ref"] : null;
+  if (!provider && !ref) return null;
+  return { provider: provider ?? ref?.split("/")[0] ?? "", ref: ref ?? "", inferred: false, unpriced: false };
+}
 
 export default function EventsPage() {
   const router = useRouter();
@@ -213,6 +244,13 @@ export default function EventsPage() {
               icon: "build",
               query: "action:tool_call",
             },
+            // One row per model call, with the provider and provider/model ref
+            // beside it; the totals by provider are on /observability/cost.
+            {
+              label: "Turn costs",
+              icon: "payments",
+              query: "action:chat_turn_cost",
+            },
             // Action-type chips for the audit surfaces. Each one corresponds to a specific behavior
             // operators want to audit at-a-glance.
             {
@@ -246,6 +284,36 @@ export default function EventsPage() {
               label: "Data source refreshes",
               icon: "sync",
               query: "action:data_sources_refreshed",
+            },
+            // Live model-list fetches from the model providers (one row per
+            // fetch; a failure keeps the built-in table in use).
+            {
+              label: "Model list refreshes",
+              icon: "model_training",
+              query: "action:provider_models_refreshed",
+            },
+            {
+              label: "Failed model list refreshes",
+              icon: "cloud_off",
+              query: "action:provider_models_refresh_failed",
+            },
+            // A turn, command, job run or subagent asked for a model that
+            // cannot serve (unknown, retired, provider not configured).
+            {
+              label: "Model rejected",
+              icon: "block",
+              query: "action:chat_model_rejected",
+            },
+            // Connection tests from the Providers page (no key in the row).
+            {
+              label: "Provider tests",
+              icon: "network_check",
+              query: "action:provider_test",
+            },
+            {
+              label: "Provider notes",
+              icon: "info",
+              query: "action:provider_event",
             },
           ] as const
         ).map((chip) => {
@@ -310,7 +378,42 @@ export default function EventsPage() {
                 <div className="col-span-2 font-mono text-[11px] text-on-surface-variant/80">{e.ts}</div>
                 <div className="col-span-2 truncate">{e.actor ?? "—"}</div>
                 <div className="col-span-2 font-mono font-semibold text-primary truncate">{e.action}</div>
-                <div className="col-span-3 font-mono text-[11px] text-on-surface-variant truncate">{e.target ?? "—"}</div>
+                <div className="col-span-3 min-w-0">
+                  <div className="font-mono text-[11px] text-on-surface-variant truncate">{e.target ?? "—"}</div>
+                  {(() => {
+                    const chips = modelChips(e);
+                    if (!chips) return null;
+                    return (
+                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                        {chips.provider && (
+                          <span
+                            className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-mono text-primary"
+                            title={chips.inferred ? "Provider inferred: this row predates the provider field, and every earlier call was Gemini." : "Provider"}
+                          >
+                            {chips.provider}
+                            {chips.inferred ? " (inferred)" : ""}
+                          </span>
+                        )}
+                        {chips.ref && (
+                          <span
+                            className="max-w-full truncate rounded-full bg-white/5 px-1.5 py-0.5 text-[10px] font-mono text-on-surface-variant"
+                            title={chips.ref}
+                          >
+                            {chips.ref}
+                          </span>
+                        )}
+                        {chips.unpriced && (
+                          <span
+                            className="rounded-full bg-secondary/15 px-1.5 py-0.5 text-[10px] font-mono text-secondary"
+                            title="No known price for this model; the call is not in any dollar total."
+                          >
+                            unpriced
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
                 <div className="col-span-1">
                   <span className={cn(
                     "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider",

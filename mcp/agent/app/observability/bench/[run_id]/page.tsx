@@ -11,12 +11,13 @@
 
 import { useCallback, useEffect, useState, use } from "react";
 import Link from "next/link";
+import { formatBenchCost, formatBenchCostPair } from "@/lib/bench-cost";
 
 interface CaseScore {
   case_id: string;
   correctness: boolean | null;
   tool_call_jaccard: number;
-  cost_usd: number;
+  cost_usd: number | null; // null = unpriced
   wall_seconds: number;
   wall_warning: boolean;
   error: string | null;
@@ -36,8 +37,8 @@ interface RunDetail {
     case_count: number;
     correctness_rate: number;
     avg_tool_jaccard: number;
-    cost_p50: number;
-    cost_p95: number;
+    cost_p50: number | null;
+    cost_p95: number | null;
     wall_p50: number;
     wall_p95: number;
     infrastructure_errors: number;
@@ -153,7 +154,7 @@ export default function BenchRunDetailPage({
               />
               <Metric
                 label="Cost p50 / p95"
-                value={`$${run.summary.cost_p50.toFixed(4)} / $${run.summary.cost_p95.toFixed(4)}`}
+                value={formatBenchCostPair(run.summary.cost_p50, run.summary.cost_p95)}
               />
               <Metric
                 label="Wall p50 / p95"
@@ -202,7 +203,7 @@ export default function BenchRunDetailPage({
                         {c.tool_call_jaccard.toFixed(2)}
                       </td>
                       <td className="px-4 py-3 font-mono text-on-surface-variant">
-                        ${c.cost_usd.toFixed(4)}
+                        {formatBenchCost(c.cost_usd)}
                       </td>
                       <td className="px-4 py-3 font-mono text-on-surface-variant">
                         {c.wall_seconds.toFixed(1)}s

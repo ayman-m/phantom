@@ -1,0 +1,6 @@
+event: response.created
+data: {"type":"response.created","sequence_number":0,"response":{"id":"resp_fixture_1","object":"response","model":"gpt-6-sol","status":"in_progress","output":[]}}
+
+event: error
+data: {"type":"error","sequence_number":1,"code":"rate_limit_exceeded","message":"Rate limit reached for gpt-6-sol. Please try again in 1s.","param":null}
+

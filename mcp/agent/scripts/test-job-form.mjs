@@ -26,7 +26,7 @@ const {
   parseCronSchedule,
   uniqueCopyName,
 } = await import("../lib/job-form.ts");
-const { parseModelCatalog, selectableChatModels } = await import("../lib/model-catalog.ts");
+const { parseModelCatalog, selectableChatModels, lifecycleBadge, providerName, compareProviders, refForStoredModel } = await import("../lib/model-catalog.ts");
 
 let failed = 0;
 function test(name, fn) {
@@ -228,16 +228,17 @@ test("an empty name or an out-of-range interval disables Create", () => {
 // ── Model registry ──────────────────────────────────────────────────────
 
 // Mirrors /api/agent/models for a Vertex-only install: 7 chat, 2 embedding,
-// 2 image, 1 voice = 12 models on /models.
+// 2 image, 1 voice = 12 models on /models. Every chat model the registry
+// marks selectable carries `selectable: true`; the others do not.
 const registry = [
   ...["gemini-3.7-flash", "gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-3.0-pro",
       "gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.5-flash-lite"]
-    .map((model) => ({ provider: "vertex", model, kind: "chat", supportsThinking: true })),
-  { provider: "vertex", model: "gemini-embedding-001", kind: "embedding" },
-  { provider: "vertex", model: "text-embedding-005", kind: "embedding" },
-  { provider: "vertex", model: "imagen-4.0-generate-preview", kind: "image" },
-  { provider: "vertex", model: "imagen-3.0-generate-002", kind: "image" },
-  { provider: "vertex", model: "chirp-3-hd", kind: "voice" },
+    .map((model) => ({ provider: "vertex", model, ref: `vertex/${model}`, kind: "chat", supportsThinking: true, selectable: true, availability: "available" })),
+  { provider: "vertex", model: "gemini-embedding-001", kind: "embedding", selectable: false },
+  { provider: "vertex", model: "text-embedding-005", kind: "embedding", selectable: false },
+  { provider: "vertex", model: "imagen-4.0-generate-preview", kind: "image", selectable: false },
+  { provider: "vertex", model: "imagen-3.0-generate-002", kind: "image", selectable: false },
+  { provider: "vertex", model: "chirp-3-hd", kind: "voice", selectable: false },
 ];
 
 test("the route's bare array parses as the registry (the job form once read .models and saw nothing)", () => {
@@ -255,12 +256,49 @@ test("the picker lists the 7 chat models and nothing else", () => {
   assert.ok(picked.every((m) => m.kind === "chat"));
 });
 
-test("coming-soon (wip) entries are not selectable, entries without a kind are", () => {
+test("only models the registry marks selectable are offered; an entry without the flag is not", () => {
   const picked = selectableChatModels([
-    { provider: "anthropic", model: "claude-x", kind: "chat", wip: true },
-    { provider: "vertex", model: "no-kind" },
+    { provider: "anthropic", model: "claude-x", kind: "chat", selectable: false, availability: "not_configured" },
+    { provider: "openai", model: "gpt-x", kind: "chat", selectable: false, availability: "unavailable" },
+    { provider: "vertex", model: "no-flag", kind: "chat" },
+    { provider: "vertex", model: "ok", kind: "chat", selectable: true },
+    { provider: "vertex", model: "no-kind", selectable: true },
   ]);
-  assert.deepEqual(picked.map((m) => m.model), ["no-kind"]);
+  assert.deepEqual(picked.map((m) => m.model), ["ok", "no-kind"]);
+});
+
+test("a deprecated model is still offered, with a badge", () => {
+  const dep = { provider: "vertex", model: "gemini-2.5-pro", kind: "chat", selectable: true, availability: "deprecated" };
+  assert.deepEqual(selectableChatModels([dep]), [dep]);
+  assert.equal(lifecycleBadge(dep), "deprecated");
+  assert.equal(lifecycleBadge({ ...dep, availability: "available" }), "");
+});
+
+test("providers are named and ordered for the pickers", () => {
+  assert.equal(providerName("vertex"), "Google Gemini");
+  assert.equal(providerName("openai"), "OpenAI");
+  assert.equal(providerName("mystery"), "mystery");
+  assert.deepEqual(["openai", "mystery", "vertex", "anthropic"].sort(compareProviders), ["vertex", "anthropic", "openai", "mystery"]);
+});
+
+test("a stored bare model id shows as the canonical ref it resolves to; a ref stays itself", () => {
+  const picked = selectableChatModels(parseModelCatalog(registry));
+  assert.equal(refForStoredModel(picked, "gemini-3.5-flash"), "vertex/gemini-3.5-flash");
+  assert.equal(refForStoredModel(picked, "Gemini-3.5-Flash"), "vertex/gemini-3.5-flash");
+  assert.equal(refForStoredModel(picked, "vertex/gemini-3.5-flash"), "vertex/gemini-3.5-flash");
+});
+
+test("an unknown, retired or ambiguous stored model is left as written, never guessed", () => {
+  const picked = selectableChatModels(parseModelCatalog(registry));
+  assert.equal(refForStoredModel(picked, "gemini-9"), null);
+  assert.equal(refForStoredModel(picked, "openai/gemini-3.5-flash"), null);
+  assert.equal(refForStoredModel(picked, ""), null);
+  const twin = [
+    { provider: "vertex", model: "claude-x", ref: "vertex/claude-x" },
+    { provider: "anthropic", model: "claude-x", ref: "anthropic/claude-x" },
+  ];
+  assert.equal(refForStoredModel(twin, "claude-x"), null);
+  assert.equal(refForStoredModel(twin, "anthropic/claude-x"), "anthropic/claude-x");
 });
 
 test("a truly empty registry selects nothing", () => {

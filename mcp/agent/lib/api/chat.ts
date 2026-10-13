@@ -90,11 +90,14 @@ export interface ChatSSEEvent {
      */
     | "context_warning"
     /**
-     * Vertex cachedContents hit. Fired when
-     * Vertex reports `usageMetadata.cachedContentTokenCount > 0`,
-     * meaning the system-prompt cache was reused on this turn (~25%
-     * input-token billing on the cached portion). The chat UI surfaces
-     * this as a cyan dot on the model-selector chip.
+     * Prompt-cache hit, from any provider. Fired when the first model call
+     * of a turn reports cache-read tokens (Gemini cached content, Claude
+     * cache reads, OpenAI cached tokens), meaning the cached part of the
+     * prompt was billed at the cache-read rate. The payload carries
+     * `cached_tokens`, `prompt_tokens`, `full_price_input_tokens`,
+     * `savings_usd_est` (null for an unpriced model), `model`, `provider` and
+     * `model_ref`. The chat UI surfaces this as a cyan dot on the
+     * model-selector chip.
      */
     | "cache_hit"
     /**
@@ -128,10 +131,12 @@ export interface ChatSSEEvent {
      */
     | "connector_auth_required"
     /**
-     * Per-turn cost summary. Fires once per
-     * turn at done time with input/cached/output token totals and
-     * USD cost. Per-call audit rows already landed under
-     * action:chat_turn_cost.
+     * Per-turn cost summary. Fires once per turn at done time with
+     * input / cached / cache-write / reasoning / output token totals and the
+     * USD cost of the priced calls (`cost_usd` is null when no call had a
+     * price; `priced` is false and `unpriced_calls` > 0 when any did not),
+     * plus `model`, `provider` and `model_ref`. Per-call audit rows already
+     * landed under action:chat_turn_cost.
      */
     | "turn_cost"
     /**
@@ -145,7 +150,14 @@ export interface ChatSSEEvent {
     | "subagent_tool_call"
     | "subagent_tool_result"
     | "subagent_tool_blocked"
-    | "subagent_completed";
+    | "subagent_completed"
+    /**
+     * A model provider's non-fatal observation (a tool choice it had to
+     * downgrade, a tool call it dropped, a refusal). Carries `stage`,
+     * `detail` and the structured fields; shown only in the Wire events
+     * panel, never in the thread. See lib/providers/event-sink.ts.
+     */
+    | "debug";
   data: string;
   id: number;
 }

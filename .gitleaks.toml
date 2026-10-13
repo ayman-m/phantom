@@ -52,6 +52,7 @@ paths = [
   '''mcp/agent/lib/tls-cert\.ts$''',
   '''mcp/agent/tls-proxy\.js$''',
   '''mcp/agent/app/api/chat/route\.ts$''',
+  '''mcp/agent/lib/providers/gemini/transport\.ts$''',
   '''xlog/main\.py$''',
 ]
 regexes = ['''^-----BEGIN[A-Z ]*PRIVATE KEY-----["'` )]''']

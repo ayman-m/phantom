@@ -57,9 +57,63 @@ DEFAULT_DATA_ROOT = Path("/app/data")
 # builtin_components/self_mod_tools.py); the REST surface
 # (PUT /api/v1/settings) is unaffected, so the operator can still change the
 # default model there. A key counts as model-selection when it is
-# `geminiModel` or any key whose name ends in "model" (a future
+# `defaultModel` or any key whose name ends in "model" (a future
 # `fallbackModel` is covered without a code change).
-AGENT_PROTECTED_SETTINGS: frozenset[str] = frozenset({"geminiModel"})
+AGENT_PROTECTED_SETTINGS: frozenset[str] = frozenset({"defaultModel"})
+
+# The install's default model is one canonical ref, "provider/model", held in
+# the `defaultModel` setting. It replaced `geminiModel`, which held a bare
+# Gemini id that no code read. A stored `geminiModel` override is renamed on
+# store init (see `_migrate_renamed_settings`); the rename is deleted, not
+# shimmed: after it runs nothing reads the old key.
+RENAMED_SETTINGS: dict[str, str] = {"geminiModel": "defaultModel"}
+
+
+# The Gemini chat ids the agent's catalog serves
+# (mcp/agent/lib/providers/registry/catalog-vertex.ts). The old `geminiModel`
+# value is carried over only when it is one of these: an id the catalog does not
+# know would make every turn fail with MODEL_UNKNOWN until the operator noticed.
+# tests/test_settings_store.py compares this tuple with the catalog file, so a
+# catalog change that is not mirrored here fails there.
+KNOWN_VERTEX_CHAT_MODEL_IDS: tuple[str, ...] = (
+    "gemini-3.8-flash",
+    "gemini-3.7-flash",
+    "gemini-3.5-flash",
+    "gemini-3.1-pro-preview",
+    "gemini-3.0-pro",
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+)
+
+
+def _canonical_default_model(value: Any) -> Any:
+    """A bare Gemini id from the old key becomes a `vertex/` ref.
+
+    A value that already names a provider (contains "/") is left alone, and so
+    is anything that is not a string (it cannot have been written through the
+    type check, so there is nothing sensible to prefix).
+    """
+    if isinstance(value, str) and value.strip() and "/" not in value:
+        return f"vertex/{value.strip()}"
+    return value
+
+
+def _is_servable_default(raw: Any, canonical: Any) -> bool:
+    """True when a migrated `geminiModel` value names a model the catalog serves.
+
+    A bare id, or one prefixed `vertex/`, must be a known Vertex chat id. A
+    value prefixed with another provider (Claude and OpenAI ids come from live
+    lists this module cannot see) is left to the model registry to judge.
+    """
+    if not isinstance(raw, str) or not raw.strip() or not isinstance(canonical, str):
+        return False
+    provider, sep, model = raw.strip().partition("/")
+    if not sep:
+        return provider in KNOWN_VERTEX_CHAT_MODEL_IDS
+    if provider == "vertex":
+        return model in KNOWN_VERTEX_CHAT_MODEL_IDS
+    return True
 
 
 def is_agent_protected_setting(key: object) -> bool:
@@ -131,6 +185,7 @@ class SqliteSettingsStore:
         self._lock = threading.Lock()
         self._audit = audit_log
         self._init_schema()
+        self._migrate_renamed_settings()
 
     @staticmethod
     def _resolve_data_root() -> Path:
@@ -152,6 +207,65 @@ class SqliteSettingsStore:
                 )
                 """
             )
+
+    def _migrate_renamed_settings(self) -> None:
+        """Move an override stored under a retired key to its new key.
+
+        One transaction, so a crash leaves either the old row or the new one.
+        Idempotent: with no old row it does nothing. An existing row under the
+        new key wins (the operator already set it with the new UI), and the old
+        row is dropped either way. `updated_at` and `updated_by` carry over.
+        The new key must be overridable, otherwise the row stays where it is.
+
+        A `geminiModel` value that is not a known catalog id (a typo, a retired
+        or private id) is NOT carried over: `defaultModel` stays at the manifest
+        default, the old row is dropped, and the drop is logged and audited so
+        the operator can see what was discarded and re-pick on /models.
+        """
+        for old_key, new_key in RENAMED_SETTINGS.items():
+            if new_key not in self._overridable:
+                continue
+            migrated: tuple[Any, Any] | None = None
+            dropped: tuple[Any] | None = None
+            with self._lock, sqlite3.connect(self._db_path) as conn:
+                conn.row_factory = sqlite3.Row
+                old = conn.execute(
+                    "SELECT value_json, updated_at, updated_by FROM setting_overrides WHERE key = ?",
+                    (old_key,),
+                ).fetchone()
+                if old is None:
+                    continue
+                exists = conn.execute(
+                    "SELECT 1 FROM setting_overrides WHERE key = ?", (new_key,),
+                ).fetchone()
+                raw = json.loads(old["value_json"])
+                value = _canonical_default_model(raw)
+                if not exists and not _is_servable_default(raw, value):
+                    dropped = (raw,)
+                elif not exists:
+                    conn.execute(
+                        "INSERT INTO setting_overrides (key, value_json, updated_at, updated_by) "
+                        "VALUES (?, ?, ?, ?)",
+                        (new_key, json.dumps(value), old["updated_at"], old["updated_by"]),
+                    )
+                    migrated = (raw, value)
+                conn.execute("DELETE FROM setting_overrides WHERE key = ?", (old_key,))
+            if dropped is not None:
+                logger.warning(
+                    "Settings migration: %s=%r is not a model in the catalog; "
+                    "%s stays at its default. Pick a default on /models.",
+                    old_key, dropped[0], new_key,
+                )
+                self._record_audit(
+                    "settings_changed", key=new_key, old=dropped[0], new=None,
+                    cleared=True, actor="migration", migrated_from=old_key,
+                    note="value is not a known model id; not migrated",
+                )
+            if migrated is not None:
+                self._record_audit(
+                    "settings_changed", key=new_key, old=migrated[0], new=migrated[1],
+                    actor="migration", migrated_from=old_key,
+                )
 
     # ─────────────────────────────────────────────────────────────
     # Read paths

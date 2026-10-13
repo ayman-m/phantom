@@ -20,6 +20,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { formatBenchCost } from "@/lib/bench-cost";
+import {
+  compareProviders,
+  fetchModelCatalog,
+  lifecycleBadge,
+  providerName,
+  selectableChatModels,
+  type CatalogModel,
+} from "@/lib/model-catalog";
 
 interface RunRow {
   run_id: string;
@@ -33,7 +42,7 @@ interface RunSummary extends RunRow {
   summary?: {
     correctness_rate: number;
     avg_tool_jaccard: number;
-    cost_p50: number;
+    cost_p50: number | null;
     wall_p50: number;
     case_count: number;
     infrastructure_errors: number;
@@ -53,6 +62,17 @@ export default function BenchPage() {
   const [running, setRunning] = useState(false);
   const [manifest, setManifest] = useState("phantom-soc-v1");
   const [routerPreset, setRouterPreset] = useState("");
+  // The models a run may be pinned to: the registry's selectable chat models.
+  const [models, setModels] = useState<CatalogModel[]>([]);
+  useEffect(() => {
+    const ctrl = new AbortController();
+    void fetchModelCatalog(ctrl.signal)
+      .then((catalog) => setModels(selectableChatModels(catalog)))
+      .catch(() => {
+        // The dropdown then offers only the runtime default.
+      });
+    return () => ctrl.abort();
+  }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -169,13 +189,28 @@ export default function BenchPage() {
               <label className="text-xs font-label text-on-surface-variant/80">
                 Router preset model (optional)
               </label>
-              <input
-                type="text"
+              {/* The option value is the canonical ref the run dispatches with. */}
+              <select
                 value={routerPreset}
                 onChange={(e) => setRouterPreset(e.target.value)}
-                placeholder="(runtime default)"
-                className="w-full px-3 py-2 rounded-xl text-sm bg-surface-container-low border border-white/10 text-on-surface font-mono"
-              />
+                className="w-full px-3 py-2 rounded-xl text-sm bg-surface-container-low border border-white/10 text-on-surface"
+              >
+                <option value="">(install default)</option>
+                {[...new Set(models.map((m) => m.provider))]
+                  .sort(compareProviders)
+                  .map((provider) => (
+                    <optgroup key={provider} label={providerName(provider)}>
+                      {models
+                        .filter((m) => m.provider === provider)
+                        .map((m) => (
+                          <option key={m.ref ?? `${m.provider}/${m.model}`} value={m.ref ?? `${m.provider}/${m.model}`}>
+                            {m.displayName || m.model}
+                            {lifecycleBadge(m) ? ` · ${lifecycleBadge(m)}` : ""}
+                          </option>
+                        ))}
+                    </optgroup>
+                  ))}
+              </select>
             </div>
             <div className="flex items-end">
               <button
@@ -253,7 +288,7 @@ export default function BenchPage() {
                     />
                     <Metric
                       label="Cost p50"
-                      value={`$${row.summary.cost_p50.toFixed(4)}`}
+                      value={formatBenchCost(row.summary.cost_p50)}
                     />
                     <Metric
                       label="Wall p50"

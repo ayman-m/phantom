@@ -103,6 +103,27 @@ def load_manifest(manifest_ref: str) -> BenchManifest:
     return BenchManifest.model_validate(body)
 
 
+def turn_cost_usd(data: Any) -> float | None:
+    """USD a `turn_cost` SSE event reports for one chat turn, or None.
+
+    The agent sends `cost_usd` as the sum over the turn's priced model calls,
+    or null when no call had a known price (an unpriced model). None means "no
+    price": it is stored and shown as unpriced, never as $0, so a run on an
+    unpriced model cannot pass for a free one. An absent, negative, NaN or
+    non-numeric figure is also None; the run never fails on it and never
+    invents a rate.
+    """
+    if not isinstance(data, dict):
+        return None
+    cost = data.get("cost_usd")
+    if isinstance(cost, bool) or not isinstance(cost, (int, float)):
+        return None
+    cost = float(cost)
+    if cost != cost or cost < 0:
+        return None
+    return cost
+
+
 def _chat_headers() -> dict[str, str]:
     """Headers for the loopback /api/chat call. Without the bearer the
     agent middleware answers 401 no_session_cookie and every case scores as
@@ -122,9 +143,10 @@ async def _dispatch_case(
     case: BenchCase,
     router_preset_model: str | None,
     thinking_enabled: bool,
-) -> tuple[str, list[str], float, float, str | None]:
+) -> tuple[str, list[str], float | None, float, str | None]:
     """Fire one case against the agent's /api/chat endpoint. Returns
     (final_response, tool_call_names, cost_usd, wall_seconds, error).
+    `cost_usd` is None when no turn of the case had a priced model call.
 
     On infrastructure error (HTTP non-200, timeout, agent unreachable),
     `error` is populated and the other fields are best-effort. Score
@@ -143,7 +165,7 @@ async def _dispatch_case(
 
     text_parts: list[str] = []
     tool_calls: list[str] = []
-    cost_usd = 0.0
+    cost_usd: float | None = None
     started_at = time.time()
     last_error: str | None = None
 
@@ -160,7 +182,7 @@ async def _dispatch_case(
                 if resp.status_code != 200:
                     text = (await resp.aread()).decode(errors="replace")
                     last_error = f"agent /api/chat returned {resp.status_code}: {text[:200]}"
-                    return ("", [], 0.0, time.time() - started_at, last_error)
+                    return ("", [], None, time.time() - started_at, last_error)
                 event_type: str | None = None
                 async for raw_line in resp.aiter_lines():
                     line = raw_line.rstrip("\r")
@@ -185,10 +207,12 @@ async def _dispatch_case(
                             name = data.get("tool") or data.get("name")
                             if isinstance(name, str):
                                 tool_calls.append(name)
-                        elif event_type == "meta" and isinstance(data, dict):
-                            c = data.get("cost_usd")
-                            if isinstance(c, (int, float)) and c > 0:
-                                cost_usd = float(c)
+                        elif event_type == "turn_cost":
+                            # Cost rides the per-turn `turn_cost` event; the
+                            # `meta` event (run id, session) carries none.
+                            turn_cost = turn_cost_usd(data)
+                            if turn_cost is not None:
+                                cost_usd = (cost_usd or 0.0) + turn_cost
                         elif event_type == "done":
                             break
     except Exception as exc:  # noqa: BLE001
@@ -241,9 +265,10 @@ async def run_manifest(
         )
         case_scores.append(score)
         logger.info(
-            "BenchRunner case=%s correctness=%s jaccard=%.2f cost=$%.4f wall=%.1fs%s",
+            "BenchRunner case=%s correctness=%s jaccard=%.2f cost=%s wall=%.1fs%s",
             case.id, score.correctness, score.tool_call_jaccard,
-            score.cost_usd, score.wall_seconds,
+            "unpriced" if score.cost_usd is None else f"${score.cost_usd:.4f}",
+            score.wall_seconds,
             f" error={error}" if error else "",
         )
 
@@ -265,11 +290,11 @@ async def run_manifest(
             store = BenchRunStore()
         store.record(summary, router_preset=router_preset_model)
         logger.info(
-            "BenchRunner recorded run %s: correctness=%.1f%% avg_jaccard=%.2f cost_p50=$%.4f wall_p50=%.1fs",
+            "BenchRunner recorded run %s: correctness=%.1f%% avg_jaccard=%.2f cost_p50=%s wall_p50=%.1fs",
             run_id,
             summary.correctness_rate * 100,
             summary.avg_tool_jaccard,
-            summary.cost_p50,
+            "unpriced" if summary.cost_p50 is None else f"${summary.cost_p50:.4f}",
             summary.wall_p50,
         )
 

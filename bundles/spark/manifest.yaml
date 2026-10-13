@@ -75,20 +75,9 @@ runtime:
 # COGNITIVE LAYER
 # ─────────────────────────────────────────────────────────────────
 
-modelRequirements:
-  primary:
-    kind: "chat"
-    mustSupport: ["streaming", "tool_use"]
-    contextWindowMin: 100000
-    preferFamily: ["gemini-3", "gemini-2.5", "gpt-4o"]
-  fallback:
-    kind: "chat"
-    mustSupport: ["streaming", "tool_use"]
-    contextWindowMin: 32000
-    preferFamily: ["gemini-2.5", "gpt-4o-mini"]
-  embedding:
-    kind: "embedding"
-    contextWindowMin: 8000
+# [v1.0.5] Retired: modelRequirements (capability gates + preferFamily). Nothing
+# ever read it; the install default is the `defaultModel` setting and the model
+# list is the agent's registry (mcp/agent/lib/providers/registry).
 
 sessions:
   policy: "persistent"
@@ -273,14 +262,24 @@ toolConnectors:
     required: false
 
 # Model providers (per spec v1.2 §7.6). Parallel to toolConnectors[]
-# but contributes models the modelRequirements: resolver picks from,
-# rather than tools the agent calls. At least one provider instance
-# must be configured for the agent to have an LLM to talk to.
+# but holds the credentials of a model vendor, rather than tools the
+# agent calls. Which models exist is the agent's model registry
+# (mcp/agent/lib/providers/registry), not this file. At least one
+# provider instance (vertex, anthropic or openai) must be configured for
+# the agent to have an LLM to talk to; none of the three is required on its own.
 providers:
   - id: "vertex"
     path: "./providers/vertex/"
     version: "1.0.0"
-    required: true               # agent needs a configured LLM provider
+    required: false              # optional: Gemini models appear once a service account is saved
+  - id: "anthropic"
+    path: "./providers/anthropic/"
+    version: "1.0.0"
+    required: false              # optional: Claude models appear once a key is saved
+  - id: "openai"
+    path: "./providers/openai/"
+    version: "1.0.0"
+    required: false              # optional: OpenAI models appear once a key is saved
 
 # Tool allow/deny. Connector tools are namespaced as `<id>/<tool>`;
 # built-in tools (memory_*, knowledge_*, sessions_*, skills_*) are
@@ -558,7 +557,9 @@ requiredSecrets:
 
 settings:
   defaults:
-    geminiModel: "gemini-3.1-pro-preview"
+    # Canonical model ref "provider/model" (the registry on /models lists the valid ones).
+    # Set it on /models; the agent cannot change it.
+    defaultModel: "vertex/gemini-3.1-pro-preview"
     defaultLogDestination: "XSIAM_WEBHOOK"
     setupUiUser: "phantom"
     defaultLogFormat: "JSON"
@@ -566,7 +567,7 @@ settings:
     requireHumanApprovalForOperations: true
     coverageReportFormat: "json"
   overridable:
-    - "geminiModel"
+    - "defaultModel"
     - "defaultLogDestination"
     - "setupUiUser"
     - "defaultLogFormat"
@@ -654,6 +655,10 @@ audit:
     # input/cached/output tokens + USD breakdown by component.
     # /observability/cost aggregates these.
     - "chat_turn_cost"
+    # Model registry live lists. One row per model-list fetch from a model
+    # provider; a failure keeps the built-in table in use.
+    - "provider_models_refreshed"
+    - "provider_models_refresh_failed"
     # Plugin lifecycle. Plugins are
     # filesystem-discovered under bundles/spark/plugins/; this
     # event lands when an operator clicks Reload (or the loader
@@ -822,8 +827,8 @@ setup:
 
   # v1.2 §7.6 — model provider instance materialization. The setup
   # form prompts for vertex project + region + service account JSON;
-  # on submit the runtime materializes a provider instance the
-  # modelRequirements: resolver can pick from.
+  # on submit the runtime materializes a provider instance holding
+  # those credentials.
   bindsProviders:
     - providerId: "vertex"
       template:
