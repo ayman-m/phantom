@@ -93,16 +93,21 @@ done
 echo "→ Open https://$(hostname):3000 in your browser"
 ```
 
-The UI uses a self-signed certificate that the stack generates on first boot; accept the browser warning. There is no setup form: sign in as `admin` with the `PHANTOM_DEFAULT_ADMIN_PASSWORD` from `.env`. The UI sends you to `/profile` to change it first. Then add, in order:
+The UI uses a self-signed certificate that the stack generates on first boot; accept the browser warning. There is no setup form: sign in as `admin`. The installer prints the password when it finishes; you can also read it on the host with `sudo grep '^PHANTOM_DEFAULT_ADMIN_PASSWORD=' /opt/phantom/.env` (`/opt/phantom/.env` also holds the other generated credentials; `sudo cat` shows them all). The UI sends you to `/profile` to change the password first. Then, in order:
 
 1. **A model provider** at `/providers`: an Anthropic API key, an OpenAI API key, or the Vertex AI project, region and service-account JSON. Any one is enough; press Test Connection, then Save Changes. Memory and knowledge-base search use Vertex embeddings, so without a Vertex provider they use a keyword-style stand-in (chat is unaffected).
-2. **A connector instance per service** at `/connectors` (Create Instance; the form is rendered from the connector's schema):
+2. **Install the connectors you need** at `/connectors`, **Marketplace** tab. Every connector starts as available but not installed; open its card and press **Install Connector**.
+3. **A connector instance per service** at `/connectors`, **Instances** tab (Create Instance; the form is rendered from the connector's schema):
 
 | Connector | Fields |
 |---|---|
-| **caldera** | `baseUrl` `http://caldera:8888` (the compose-service hostname); `redUser`; secrets `apiKey` (the `CALDERA_API_KEY` from `.env`) and `redPassword` (`CALDERA_RED_PASSWORD`) |
-| **xlog** | `baseUrl` `https://xlog:8000` (xlog serves HTTPS on the compose network); secret `apiToken` (the `XLOG_API_KEY` from `.env`); optional `webhookEndpoint` and `defaultLogFormat` |
-| **xsiam** | `api_url` (your tenant's PAPI URL), `api_id` and `playgroundId`; secret `api_key` (the PAPI Authorization header value); optional `webhookEndpoint` and secret `webhookKey` (the XSIAM HTTP collector for synthetic logs) |
+| **caldera** | `baseUrl` `http://caldera:8888` (the compose-service hostname); secret `apiKey` (the `CALDERA_API_KEY` from `.env`) |
+| **xlog** | `baseUrl` `https://xlog:8000` (xlog serves HTTPS on the compose network); secret `apiToken` (the `XLOG_API_KEY` from `.env`) |
+| **web** | `cdp_url` `http://phantom-browser:9222` (already the default) |
+| **xsiam** | `api_url` (your tenant's API URL, no path), `api_id` and `playgroundId`; secret `api_key` (a **Standard** API key, see below); optional `webhookEndpoint` and secret `webhookKey` (the XSIAM HTTP collector for synthetic logs) |
+| **cortex-xdr** | `api_url`, `api_id`; secret `api_key` (a **Standard** API key, see below) |
+
+**Cortex XSIAM and XDR need a Standard API key.** In the Cortex console open **Settings > Configurations > Integrations > API Keys**, choose **New Key**, and set **Security Level** to **Standard**. Do not choose Advanced: Phantom sends the key and its ID as plain `Authorization` and `x-xdr-auth-id` headers and does not compute the per-request signature an Advanced key requires, so every call would be refused. Paste the key value into `api_key`, the key's **ID** into `api_id`, and the **Copy API URL** value into `api_url` (for example `https://api-<tenant>.xdr.<region>.paloaltonetworks.com`; the connector adds `/public_api/v1`). A `401` means the key or ID is wrong; a `403` with `Datasets not found` means the dataset does not exist.
 
 Each instance is stored in the InstanceStore, its secrets in the SecretStore, and the tool registry reloads when you save it. Every connector runs as its own container, started by `phantom-updater` on the first save, so the first instance of each connector waits for an image pull.
 

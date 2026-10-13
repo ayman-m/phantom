@@ -247,7 +247,7 @@ services:
   #
   # Then create a `web` connector instance via the /connectors UI in
   # the agent (the connector_loader is instance-gated — tools don't
-  # advertise until at least one instance exists). Take it down again
+  # advertise until at least one enabled instance exists). Take it down again
   # with: `docker compose --profile browser stop phantom-browser`.
   #
   # Internal-network only: no host port published. Reachable from the

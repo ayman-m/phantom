@@ -3,7 +3,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useNotificationsStore } from "@/lib/stores/notifications";
-import { instanceStatusFromState, type InstanceStatus } from "@/lib/instance-status";
+import {
+  instanceStatusFromState,
+  testOutcome,
+  toolNote,
+  type InstanceStatus,
+  type TestOutcome,
+} from "@/lib/instance-status";
+import {
+  buildCreatePayload,
+  buildEditPayload,
+  invalidNumbers,
+  isUndeclaredSecret,
+  missingRequired,
+  seedEditValues,
+} from "@/lib/connector-form";
+import { ConfigFormFields, type ConfigParam } from "@/components/connector-config-form";
 import { confirmAction } from "@/lib/stores/confirm";
 import Link from "next/link";
 import {
@@ -45,64 +60,6 @@ interface ToolDef {
   outputPath?: string;
 }
 
-interface ConfigParam {
-  display: string;
-  name: string;
-  // Supports "array" for list-of-string fields like the
-  // web connector's allowed_domains. Renders as a chip-list editor
-  // (one chip per entry, add/remove buttons) — much friendlier than
-  // a raw JSON-array <input>. The form's value for an array field is
-  // a JSON-stringified array (matches the existing string-only
-  // `configValues: Record<string, string>` shape so we don't have to
-  // refactor every consumer).
-  //
-  // Widget taxonomy. Every field type must be in this union AND handled
-  // by renderConfigField; a type missing from the switch would fall
-  // through and return undefined, rendering a label with no input. The
-  // full widget vocabulary, codified here AND in renderConfigField:
-  //
-  //   text     → short text input (default for unknown types too)
-  //   url      → text input + inputMode="url" hint
-  //   string   → text input (alias for "text"; legacy synthetic-card
-  //              types kept working by treating them as plain text)
-  //   number   → text input + inputMode="numeric" hint
-  //   password → masked input with eye toggle (synonym of "secret")
-  //   secret   → masked input with eye toggle (existing — kept for
-  //              backwards-compat with persisted call sites)
-  //   textarea → multiline <textarea> for long strings (e.g. JSON
-  //              service-account blobs, PEM certs)
-  //   select   → single-select <select> when options[] is present
-  //   radio    → radio button group for 2-3 options
-  //   multi_select → chip-list with dropdown selector for array fields
-  //                  with an enum of allowed options
-  //   boolean  → toggle switch
-  //   array    → free-form chip-list editor (no enum)
-  //
-  // Adding a new variant? Update this union AND the renderConfigField
-  // switch in the same change. Silent drift between the two is the
-  // bug this rule prevents; keep both edits in the same diff.
-  type:
-    | "text"
-    | "url"
-    | "string"
-    | "number"
-    | "password"
-    | "secret"
-    | "textarea"
-    | "select"
-    | "radio"
-    | "multi_select"
-    | "boolean"
-    | "array";
-  required: boolean;
-  defaultValue?: string;
-  options?: string[];
-  /** Per-field help text rendered under the input. The
-   *  setup-screen pulls description from the configSchema; the
-   *  connectors-page InstanceModal didn't surface it before this
-   *  change. Optional so existing fields without docs stay clean. */
-  description?: string;
-}
 
 interface VersionEntry {
   version: string;
@@ -118,6 +75,10 @@ interface InstanceDef {
   connectorIcon: string;
   connectorIconBg: string;
   status: InstanceStatus;
+  /** The server's connector state (connected | failed | needs-auth | pending | disabled). */
+  connState: string;
+  /** The last failure recorded for the connector, if any. */
+  lastError: string | null;
   enabled: boolean;
   is_channel: boolean;
   config: Record<string, string>;
@@ -242,6 +203,8 @@ function mapApiInstance(
     // The server reports connection health as `state` (connector_state.db);
     // it survives a reload, unlike the per-session result of a Test click.
     status: instanceStatusFromState(inst.state),
+    connState: inst.state ?? "pending",
+    lastError: inst.last_error ?? null,
     enabled: inst.enabled,
     is_channel: inst.is_channel,
     config: inst.config,
@@ -2107,7 +2070,8 @@ function InstancesTab({
   onCreateInstance: () => void;
   allConnectors: ConnectorDefinition[];
   instances: InstanceDef[];
-  onTestInstance: (instanceId: string) => Promise<void>;
+  /** Resolves to what the test meant, or null when the request itself failed. */
+  onTestInstance: (instanceId: string) => Promise<TestOutcome | null>;
   onRefreshData: () => void;
 }) {
   // Edit instance state
@@ -2115,12 +2079,29 @@ function InstancesTab({
   const [editName, setEditName] = useState("");
   const [editConfig, setEditConfig] = useState<Record<string, string>>({});
   const [editSaving, setEditSaving] = useState(false);
-  const [editFeedback, setEditFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [editFeedback, setEditFeedback] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
   const [editTestStatus, setEditTestStatus] = useState<"idle" | "testing" | "success" | "error">("idle");
 
   // Test button visual feedback state
   const [testingId, setTestingId] = useState<string | null>(null);
-  const [testResult, setTestResult] = useState<{ id: string; ok: boolean } | null>(null);
+  const [testResult, setTestResult] = useState<{ id: string; kind: TestOutcome["kind"] } | null>(null);
+  const runTest = useCallback(
+    async (instanceId: string) => {
+      setTestingId(instanceId);
+      let kind: TestOutcome["kind"] = "failed";
+      try {
+        const outcome = await onTestInstance(instanceId);
+        if (outcome) kind = outcome.kind;
+      } catch {
+        // the toast raised by the handler already says why
+      } finally {
+        setTestingId(null);
+        setTestResult({ id: instanceId, kind });
+        setTimeout(() => setTestResult(null), 2000);
+      }
+    },
+    [onTestInstance],
+  );
 
   // Delete instance state (two-click pattern)
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -2131,52 +2112,75 @@ function InstancesTab({
   // Assign workspace dialog state
   const [assigningInstanceId, setAssigningInstanceId] = useState<string | null>(null);
 
-  const startEdit = useCallback((inst: InstanceDef) => {
-    setEditingInstance(inst);
-    setEditName(inst.name);
-    // Merge config + masked secret slots so the dialog surfaces every
-    // slot the operator filled out at setup time. Secret values arrive
-    // as "***" from the server (redacted); the existing isSecret
-    // detection in the form renders them with a lock icon and a
-    // password-style input. Rotation isn't supported via this dialog
-    // yet.
-    setEditConfig({ ...inst.config, ...inst.secrets });
-    setEditFeedback(null);
-  }, []);
+  // The connector card declares every field and secret slot of the form.
+  // Edit renders from it, so a field left empty when the instance was
+  // created can be filled in later; a connector with no declared fields
+  // (one that was uploaded without a config schema) falls back to the keys
+  // the instance already has.
+  const editParams = useMemo<ConfigParam[]>(
+    () =>
+      editingInstance
+        ? (allConnectors.find((c) => c.id === editingInstance.connectorId)?.config ?? [])
+        : [],
+    [editingInstance, allConnectors],
+  );
+  const editConnectorName = editingInstance?.connectorName ?? "";
+  const editSetSecrets = useMemo(
+    () => Object.keys(editingInstance?.secrets ?? {}),
+    [editingInstance],
+  );
+  // The visible required fields still empty. A hidden field is never
+  // required, and a secret the server already holds counts as filled.
+  const editMissing = useMemo(
+    () => missingRequired(editParams, editConfig, editSetSecrets),
+    [editParams, editConfig, editSetSecrets],
+  );
+  // A number field holding text such as "30s" would make the connector fail
+  // when it reads it, so Save waits until it is a number or empty.
+  const editBadNumbers = useMemo(
+    () => invalidNumbers(editParams, editConfig),
+    [editParams, editConfig],
+  );
+  // Saved keys the card does not declare; they keep the plain key-list inputs.
+  const editExtraKeys = useMemo(() => {
+    const declared = new Set(editParams.map((p) => p.name));
+    return Object.keys(editConfig).filter((k) => !declared.has(k));
+  }, [editParams, editConfig]);
+
+  const startEdit = useCallback(
+    (inst: InstanceDef) => {
+      const params = allConnectors.find((c) => c.id === inst.connectorId)?.config ?? [];
+      setEditingInstance(inst);
+      setEditName(inst.name);
+      // Every declared field and secret slot, then what the instance saved.
+      // Stored secrets arrive redacted ("***"): the dialog shows a placeholder
+      // and sends the sentinel back unless the operator types a new value.
+      setEditConfig(
+        seedEditValues(inst.connectorId, params, { config: inst.config, secrets: inst.secrets }),
+      );
+      setEditFeedback(null);
+    },
+    [allConnectors],
+  );
+
+  // What Save and the dry-run Test Connection both send, so a test probes
+  // exactly what Save would store (the destination mode's hidden side
+  // included). The server replaces `config` wholesale and merges `secrets`
+  // per slot, with "***" meaning keep.
+  const editPayload = useCallback(() => {
+    if (!editingInstance) return { config: {}, secrets: {} };
+    return buildEditPayload(editParams, editConfig, {
+      config: editingInstance.config,
+      secrets: editingInstance.secrets ?? {},
+    });
+  }, [editingInstance, editParams, editConfig]);
 
   const handleEditSave = useCallback(async () => {
     if (!editingInstance) return;
     setEditSaving(true);
     setEditFeedback(null);
     try {
-      // editConfig is the merged {config + secrets} dict the dialog
-      // edits. We split it back into config / secrets buckets for the
-      // PATCH body — server treats them differently (config = plain
-      // JSON, secrets = SecretStore writes with "***" sentinel for
-      // unchanged slots).
-      const splitConfig: Record<string, string> = {};
-      const splitSecrets: Record<string, string> = {};
-      const isSecretSlot = (k: string) =>
-        Object.prototype.hasOwnProperty.call(
-          editingInstance.secrets ?? {},
-          k,
-        ) || /key|token|secret|password|credential/i.test(k);
-
-      for (const [key, value] of Object.entries(editConfig)) {
-        if (isSecretSlot(key)) {
-          // Send "***" verbatim if the user didn't touch the field —
-          // backend recognizes it as the no-change sentinel. Empty
-          // string also means "no change" (input was blanked but never
-          // re-typed) — same treatment.
-          if (value === "***" || value === "****" || value === "") {
-            splitSecrets[key] = "***";
-          } else {
-            splitSecrets[key] = value;
-          }
-        } else {
-          splitConfig[key] = value;
-        }
-      }
+      const { config: splitConfig, secrets: splitSecrets } = editPayload();
 
       const result = await updateInstance(editingInstance.id, {
         name: editName,
@@ -2186,7 +2190,7 @@ function InstancesTab({
         // {secrets: {...}} for rotation.
         ...({ secrets: splitSecrets } as Partial<{
           name: string;
-          config: Record<string, string>;
+          config: Record<string, unknown>;
           enabled: boolean;
           is_channel: boolean;
         }>),
@@ -2203,7 +2207,7 @@ function InstancesTab({
     } finally {
       setEditSaving(false);
     }
-  }, [editingInstance, editName, editConfig, onRefreshData]);
+  }, [editingInstance, editName, editPayload, onRefreshData]);
 
   // Delete handler
   const handleDelete = useCallback(async (instanceId: string) => {
@@ -2507,36 +2511,33 @@ function InstancesTab({
                     <div className="flex items-center gap-4">
                       {statusDot(inst.status)}
 
-                      {/* Agent availability indicator — explains whether
-                          the connector's tools are exposed to the chat
-                          agent. Tools are advertised when both:
-                          (a) the instance is enabled AND (b) the connector
-                          state is "connected". */}
-                      {inst.status === "connected" && inst.enabled ? (
-                        <div
-                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-                          style={{ background: "rgba(3, 115, 33, 0.1)", border: "0.5px solid rgba(123, 220, 123, 0.15)" }}
-                          title="The agent can call this connector's tools from chat"
-                        >
-                          <span className="material-symbols-outlined text-xs text-secondary">smart_toy</span>
-                          <span className="text-[10px] font-medium text-secondary">Tools available to agent</span>
-                        </div>
-                      ) : (
-                        <div
-                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
-                          style={{ background: "rgba(140, 145, 157, 0.08)", border: "0.5px solid rgba(140, 145, 157, 0.12)" }}
-                          title={
-                            !inst.enabled
-                              ? "Instance is disabled — re-enable to advertise tools"
-                              : "Connector not connected — run Test Connection or check the upstream"
-                          }
-                        >
-                          <span className="material-symbols-outlined text-xs text-on-surface-variant/50">smart_toy</span>
-                          <span className="text-[10px] font-medium text-on-surface-variant/50">
-                            {inst.enabled ? "Tools paused (not connected)" : "Tools paused (disabled)"}
-                          </span>
-                        </div>
-                      )}
+                      {/* Agent availability indicator: the agent can use an
+                          instance's tools whenever it is enabled. The connector
+                          state only says whether the connection is known good,
+                          untested or failing (see lib/instance-status.ts). */}
+                      {(() => {
+                        const note = toolNote({ enabled: inst.enabled, state: inst.connState, lastError: inst.lastError });
+                        const style =
+                          note.tone === "ok"
+                            ? { background: "rgba(3, 115, 33, 0.1)", border: "0.5px solid rgba(123, 220, 123, 0.15)" }
+                            : note.tone === "warn"
+                              ? { background: "rgba(129, 92, 0, 0.12)", border: "0.5px solid rgba(251, 188, 48, 0.2)" }
+                              : { background: "rgba(140, 145, 157, 0.08)", border: "0.5px solid rgba(140, 145, 157, 0.12)" };
+                        const tint =
+                          note.tone === "ok"
+                            ? "text-secondary"
+                            : note.tone === "warn"
+                              ? "text-tertiary"
+                              : note.tone === "neutral"
+                                ? "text-on-surface-variant"
+                                : "text-on-surface-variant/50";
+                        return (
+                          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={style} title={note.title}>
+                            <span className={`material-symbols-outlined text-xs ${tint}`}>smart_toy</span>
+                            <span className={`text-[10px] font-medium ${tint}`}>{note.label}</span>
+                          </div>
+                        );
+                      })()}
 
                       {/* Channel toggle (only for connectors with ingestion enabled) */}
                       {inst.ingestionEnabled && (
@@ -2568,26 +2569,19 @@ function InstancesTab({
                             style={{ background: "rgba(167, 200, 255, 0.1)", border: "0.5px solid rgba(167, 200, 255, 0.2)" }}
                             title="Test Connection"
                             disabled={testingId === inst.id}
-                            onClick={async (e) => {
+                            onClick={(e) => {
                               e.stopPropagation();
-                              setTestingId(inst.id);
-                              try {
-                                await onTestInstance(inst.id);
-                                setTestResult({ id: inst.id, ok: true });
-                              } catch {
-                                setTestResult({ id: inst.id, ok: false });
-                              } finally {
-                                setTestingId(null);
-                                setTimeout(() => setTestResult(null), 2000);
-                              }
+                              void runTest(inst.id);
                             }}
                           >
                             {testingId === inst.id ? (
                               <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-                            ) : testResult?.id === inst.id && testResult.ok ? (
+                            ) : testResult?.id === inst.id && testResult.kind === "passed" ? (
                               <span className="material-symbols-outlined text-sm text-secondary">check_circle</span>
-                            ) : testResult?.id === inst.id && !testResult.ok ? (
+                            ) : testResult?.id === inst.id && testResult.kind === "failed" ? (
                               <span className="material-symbols-outlined text-sm text-error">error</span>
+                            ) : testResult?.id === inst.id && testResult.kind === "no_test" ? (
+                              <span className="material-symbols-outlined text-sm text-on-surface-variant">info</span>
                             ) : null}
                             {testingId === inst.id ? "Testing..." : "Test Connection"}
                           </button>
@@ -2599,38 +2593,31 @@ function InstancesTab({
                             aria-label="Test Connection"
                             title="Test Connection"
                             disabled={testingId === inst.id}
-                            onClick={async (e) => {
+                            onClick={(e) => {
                               e.stopPropagation();
-                              setTestingId(inst.id);
-                              try {
-                                await onTestInstance(inst.id);
-                                setTestResult({ id: inst.id, ok: true });
-                              } catch {
-                                setTestResult({ id: inst.id, ok: false });
-                              } finally {
-                                setTestingId(null);
-                                setTimeout(() => setTestResult(null), 2000);
-                              }
+                              void runTest(inst.id);
                             }}
                           >
                             <span
                               className={`material-symbols-outlined text-xl ${
                                 testingId === inst.id
                                   ? "animate-spin"
-                                  : testResult?.id === inst.id && testResult.ok
+                                  : testResult?.id === inst.id && testResult.kind === "passed"
                                     ? "text-secondary"
-                                    : testResult?.id === inst.id && !testResult.ok
+                                    : testResult?.id === inst.id && testResult.kind === "failed"
                                       ? "text-error"
                                       : ""
                               }`}
                             >
                               {testingId === inst.id
                                 ? "progress_activity"
-                                : testResult?.id === inst.id && testResult.ok
+                                : testResult?.id === inst.id && testResult.kind === "passed"
                                   ? "check_circle"
-                                  : testResult?.id === inst.id && !testResult.ok
+                                  : testResult?.id === inst.id && testResult.kind === "failed"
                                     ? "error"
-                                    : "play_circle"}
+                                    : testResult?.id === inst.id && testResult.kind === "no_test"
+                                      ? "info"
+                                      : "play_circle"}
                             </span>
                           </button>
                         )}
@@ -2835,7 +2822,9 @@ function InstancesTab({
                   className={`p-3 rounded-lg text-sm ${
                     editFeedback.type === "success"
                       ? "bg-secondary/10 text-secondary border border-secondary/20"
-                      : "bg-error/10 text-error border border-error/20"
+                      : editFeedback.type === "info"
+                        ? "bg-surface-container text-on-surface-variant border border-outline-variant/30"
+                        : "bg-error/10 text-error border border-error/20"
                   }`}
                 >
                   {editFeedback.message}
@@ -2862,7 +2851,7 @@ function InstancesTab({
                     Save. Secrets you don't touch round-trip the redaction
                     sentinel and the backend treats that as "leave that
                     slot alone." */}
-                {Object.values(editConfig).some((v) => v === "***" || v === "****") && (
+                {editSetSecrets.length > 0 && (
                   <div
                     className="flex items-start gap-2 rounded-xl px-3 py-2.5 text-[11px] text-on-surface-variant"
                     style={{
@@ -2872,14 +2861,24 @@ function InstancesTab({
                   >
                     <span className="material-symbols-outlined text-[14px] text-primary mt-0.5">info</span>
                     <span>
-                      Secrets are masked by the server (<code className="font-mono text-[10px]">***</code>).
-                      To rotate, type the new value over the placeholder and Save.
-                      Slots you don&apos;t edit keep their existing value.
+                      Saved secrets are never shown. To replace one, type the
+                      new value over the placeholder and Save. Secrets you
+                      don&apos;t edit keep their value.
                     </span>
                   </div>
                 )}
-                {Object.entries(editConfig).map(([key, value]) => {
-                  const isSecret = /key|token|secret|password|credential/i.test(key);
+                {editParams.length > 0 && (
+                  <ConfigFormFields
+                    params={editParams}
+                    values={editConfig}
+                    onChange={(name, value) => setEditConfig((prev) => ({ ...prev, [name]: value }))}
+                    connectorName={editConnectorName}
+                    setSecrets={editSetSecrets}
+                  />
+                )}
+                {editExtraKeys.map((key) => {
+                  const value = editConfig[key] ?? "";
+                  const isSecret = isUndeclaredSecret(key, editingInstance.secrets ?? {});
                   const isMasked = isSecret && (value === "****" || value === "***");
                   return (
                     <div key={key} className="space-y-1">
@@ -2902,6 +2901,17 @@ function InstancesTab({
                     </div>
                   );
                 })}
+                {editMissing.length > 0 && (
+                  <p className="text-[11px] text-error px-1">
+                    Fill in {editMissing.map((p) => p.display).join(", ")} to save.
+                  </p>
+                )}
+                {editBadNumbers.length > 0 && (
+                  <p className="text-[11px] text-error px-1">
+                    {editBadNumbers.map((p) => p.display).join(", ")}{" "}
+                    {editBadNumbers.length === 1 ? "must be a number" : "must be numbers"} to save.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -2918,12 +2928,14 @@ function InstancesTab({
                 className={`mx-6 mb-2 p-3 rounded-lg text-sm shrink-0 ${
                   editFeedback.type === "success"
                     ? "bg-secondary/10 text-secondary border border-secondary/20"
-                    : "bg-error/10 text-error border border-error/20"
+                    : editFeedback.type === "info"
+                      ? "bg-surface-container text-on-surface-variant border border-outline-variant/30"
+                      : "bg-error/10 text-error border border-error/20"
                 }`}
               >
                 <div className="flex items-start gap-2">
                   <span className="material-symbols-outlined text-base mt-0.5">
-                    {editFeedback.type === "success" ? "check_circle" : "error"}
+                    {editFeedback.type === "success" ? "check_circle" : editFeedback.type === "info" ? "info" : "error"}
                   </span>
                   <span className="flex-1">{editFeedback.message}</span>
                   <button
@@ -2956,22 +2968,7 @@ function InstancesTab({
                   // the form values instead.
                   setEditTestStatus("testing");
                   try {
-                    const splitConfig: Record<string, string> = {};
-                    const splitSecrets: Record<string, string> = {};
-                    const isSecretSlot = (k: string) =>
-                      Object.prototype.hasOwnProperty.call(
-                        editingInstance.secrets ?? {}, k,
-                      ) || /key|token|secret|password|credential/i.test(k);
-                    for (const [key, value] of Object.entries(editConfig)) {
-                      if (isSecretSlot(key)) {
-                        splitSecrets[key] =
-                          value === "***" || value === "****" || value === ""
-                            ? "***"
-                            : value;
-                      } else {
-                        splitConfig[key] = value;
-                      }
-                    }
+                    const { config: splitConfig, secrets: splitSecrets } = editPayload();
                     const result = await testInstance(editingInstance.id, {
                       config: splitConfig,
                       secrets: splitSecrets,
@@ -2996,24 +2993,24 @@ function InstancesTab({
                         type: "error",
                         message: `Could not reach the test endpoint: ${result.error?.message ?? result.error?.code ?? "unknown error"}`,
                       });
-                    } else if (!result.data.probe_implemented) {
-                      setEditTestStatus("idle");
-                      setEditFeedback({
-                        type: "success",
-                        message: "Probe not wired for this connector — call a tool from chat to verify.",
-                      });
-                    } else if (result.data.ok) {
-                      setEditTestStatus("success");
-                      setEditFeedback({
-                        type: "success",
-                        message: "Probe succeeded — credentials are valid (this was a dry-run; click Save to persist).",
-                      });
                     } else {
-                      setEditTestStatus("error");
-                      setEditFeedback({
-                        type: "error",
-                        message: `Probe failed: ${result.data.error ?? "unknown"}`,
-                      });
+                      // One outcome for the card and the dialog (lib/instance-status.ts).
+                      // A pass says what it proved; for the sender connectors that is
+                      // reachability only, so it never claims the credentials are valid.
+                      const outcome = testOutcome(result.data);
+                      if (outcome.kind === "no_test") {
+                        setEditTestStatus("idle");
+                        setEditFeedback({ type: "info", message: outcome.message });
+                      } else if (outcome.kind === "passed") {
+                        setEditTestStatus("success");
+                        setEditFeedback({
+                          type: "success",
+                          message: `${outcome.message} (Dry run: nothing was saved. Click Save to persist.)`,
+                        });
+                      } else {
+                        setEditTestStatus("error");
+                        setEditFeedback({ type: "error", message: outcome.message });
+                      }
                     }
                   } catch (e) {
                     setEditTestStatus("error");
@@ -3073,7 +3070,7 @@ function InstancesTab({
                 <button
                   type="button"
                   onClick={handleEditSave}
-                  disabled={editSaving || !editName.trim()}
+                  disabled={editSaving || !editName.trim() || editMissing.length > 0 || editBadNumbers.length > 0}
                   className="px-6 py-2.5 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
                   style={{
                     background: "linear-gradient(to right, #1963b3, #2D8DF0)",
@@ -3100,7 +3097,6 @@ function CreateInstancePanel({ onClose, allConnectors, onCreated }: { onClose: (
   const [showConnectorDropdown, setShowConnectorDropdown] = useState(false);
   const [connectorSearch, setConnectorSearch] = useState("");
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
-  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   // Per-instance tool selection at create time.
   // Default = empty set = all tools enabled. Operator can untick tools
   // they don't want exposed to the agent for this instance. Resets when
@@ -3164,27 +3160,19 @@ function CreateInstancePanel({ onClose, allConnectors, onCreated }: { onClose: (
     });
   }, [selectedConnector]);
 
-  const visibleConfig = useMemo(
-    () => (selectedConnector ? selectedConnector.config.filter(() => true) : []),
-    [selectedConnector],
-  );
-
-  // visibleConfig is the only list rendered. There is no schema signal
-  // to drive "advanced" classification; a real Advanced section would
-  // need a schema-level flag (widget: "advanced" or
-  // properties.<name>.x-advanced: true), not slice positions.
+  // The form shows the fields whose showWhen rule holds for the current
+  // values (ConfigFormFields applies it), and only those can be required.
+  // There is no schema signal to drive "advanced" classification; a real
+  // Advanced section would need a schema-level flag, not slice positions.
 
   const allRequiredFilled = useMemo(() => {
     if (!instanceName.trim() || !selectedConnector) return false;
-    // Also accept defaultValue as a satisfaction of required — handles
-    // any race where the useEffect above hasn't yet seeded configValues
-    // (initial render before the effect commits). Defense-in-depth: the
-    // POST body still gets the default through the seed effect; this
-    // just keeps the button enable-state in sync with what the user
-    // sees on screen.
-    return selectedConnector.config
-      .filter((p) => p.required)
-      .every((p) => (configValues[p.name] ?? p.defaultValue ?? "").trim());
+    // A default counts as a value (the form shows it), which also covers any
+    // race where the useEffect above hasn't yet seeded configValues.
+    return (
+      missingRequired(selectedConnector.config, configValues).length === 0 &&
+      invalidNumbers(selectedConnector.config, configValues).length === 0
+    );
   }, [instanceName, selectedConnector, configValues]);
 
   const [saving, setSaving] = useState(false);
@@ -3193,27 +3181,13 @@ function CreateInstancePanel({ onClose, allConnectors, onCreated }: { onClose: (
     if (!selectedConnector || !instanceName.trim()) return;
     setSaving(true);
     try {
-      // Split form values into config vs secrets
-      // buckets by the ConfigParam.type discriminator. Passing every form
-      // value (including `type:"secret"` ones like api_key) via `config`
-      // would write the api_key into the instance row's plaintext
-      // config_json column instead of SecretStore, and the connector
-      // probe, which reads secrets only from SecretStore, would report
-      // "api_key is not configured". The config/secrets split mirrors the same regex
-      // discipline the edit-dialog handler uses (lines ~1918-1923),
-      // but driven by the schema (param.type) rather than a regex on
-      // the key name — schema is authoritative.
-      const configBucket: Record<string, string> = {};
-      const secretsBucket: Record<string, string> = {};
-      for (const param of selectedConnector.config) {
-        const value = configValues[param.name];
-        if (value === undefined || value === "") continue;
-        if (param.type === "secret" || param.type === "password") {
-          secretsBucket[param.name] = value;
-        } else {
-          configBucket[param.name] = value;
-        }
-      }
+      // Secrets go to the SecretStore bucket, everything else to config (the
+      // schema's param.type decides, not the key name). Only the fields that
+      // show are sent; a hidden destination mode's fields never reach the server.
+      const { config: configBucket, secrets: secretsBucket } = buildCreatePayload(
+        selectedConnector.config,
+        configValues,
+      );
 
       const result = await createInstance({
         name: instanceName.trim(),
@@ -3226,11 +3200,10 @@ function CreateInstancePanel({ onClose, allConnectors, onCreated }: { onClose: (
       });
       if (result.ok) {
         // Close on success. There is no in-modal Test Connection panel:
-        // it would mislead operators when the connector has no wired
-        // probe (e.g. cortex-docs returns probe_implemented=false,
-        // which would read as "Could not reach the service. Verify your
-        // credentials." even though the create itself succeeded). The
-        // probe works post-create from the instance card on /connectors.
+        // the connector container is still starting right after create (its
+        // image may need pulling), so a test here would report it as
+        // unreachable even though the create itself succeeded. Test
+        // Connection runs from the instance card on /connectors.
         onCreated();
         onClose();
       }
@@ -3243,120 +3216,6 @@ function CreateInstancePanel({ onClose, allConnectors, onCreated }: { onClose: (
     setConfigValues((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  const toggleSecret = useCallback((name: string) => {
-    setShowSecrets((prev) => ({ ...prev, [name]: !prev[name] }));
-  }, []);
-
-  // Chip-list editor for `type: "array"` config fields.
-  // The form's value model is `Record<string, string>` (everything
-  // serialized for the eventual JSON.stringify when POSTing the
-  // instance), so this component reads/writes a JSON-stringified
-  // array. Empty string and unparseable JSON both decode to []. Add
-  // via Enter on the input or the + button; remove via × on each
-  // chip. Comma-separated paste is split into multiple chips.
-  function ChipListField({
-    param,
-    value,
-    onChange,
-  }: {
-    param: ConfigParam;
-    value: string;
-    onChange: (name: string, value: string) => void;
-  }) {
-    let parsed: string[] = [];
-    try {
-      const decoded = value ? JSON.parse(value) : [];
-      if (Array.isArray(decoded)) {
-        parsed = decoded.filter((v): v is string => typeof v === "string");
-      }
-    } catch {
-      parsed = [];
-    }
-    const [draft, setDraft] = useState("");
-    const commitDraft = () => {
-      const trimmed = draft.trim();
-      if (!trimmed) return;
-      // Comma-separated paste expands into multiple chips. Whitespace
-      // around each entry is trimmed; empty entries dropped.
-      const additions = trimmed
-        .split(",")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0 && !parsed.includes(s));
-      if (additions.length === 0) {
-        setDraft("");
-        return;
-      }
-      onChange(param.name, JSON.stringify([...parsed, ...additions]));
-      setDraft("");
-    };
-    const removeAt = (idx: number) => {
-      const next = parsed.filter((_, i) => i !== idx);
-      onChange(param.name, JSON.stringify(next));
-    };
-
-    return (
-      <div className="space-y-2">
-        {/* Existing chips. Empty list shows nothing — the input below
-            is enough affordance. */}
-        {parsed.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {parsed.map((entry, idx) => (
-              <span
-                key={`${entry}-${idx}`}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-primary/15 text-primary border border-primary/25"
-              >
-                <span className="font-mono">{entry}</span>
-                <button
-                  type="button"
-                  onClick={() => removeAt(idx)}
-                  className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
-                  aria-label={`Remove ${entry}`}
-                >
-                  <span className="material-symbols-outlined text-[14px]">
-                    close
-                  </span>
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                commitDraft();
-              }
-            }}
-            onBlur={commitDraft}
-            placeholder={
-              param.defaultValue ||
-              `e.g., intel.example.com, .vendor.com (comma-separated for many)`
-            }
-            className="flex-1 bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all outline-none text-on-surface placeholder:text-outline"
-            style={{ border: "0.5px solid var(--glass-border)" }}
-          />
-          <button
-            type="button"
-            onClick={commitDraft}
-            disabled={!draft.trim()}
-            className="px-4 py-3 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs uppercase tracking-widest font-label disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            Add
-          </button>
-        </div>
-        {param.description && (
-          <p className="text-[11px] text-on-surface-variant px-1 leading-relaxed">
-            {param.description}
-          </p>
-        )}
-      </div>
-    );
-  }
-
   // Blue bar section heading matching the HTML design
   function PanelSection({ title }: { title: string }) {
     return (
@@ -3367,279 +3226,6 @@ function CreateInstancePanel({ onClose, allConnectors, onCreated }: { onClose: (
     );
   }
 
-  function renderConfigField(param: ConfigParam) {
-    const value = configValues[param.name] ?? param.defaultValue ?? "";
-
-    // Widget vocabulary — every case in
-    // the ConfigParam.type union must be handled here, or the field
-    // would render as a label-only ghost because the function
-    // implicitly returns undefined. The default branch below catches any
-    // drift between the union and the renderer.
-    switch (param.type) {
-      // ─── Short text input (with inputMode hints for url / numeric) ───
-      // Text / url / string / number all share the same plain
-      // <input> renderer. The inputMode hint flips mobile keyboards
-      // appropriately and is a strong a11y signal for desktop AT, but
-      // doesn't gate desktop typing — so the URL field stays free-form
-      // enough to accept "localhost:3001" or http://internal hostnames.
-      case "text":
-      case "url":
-      case "string":
-      case "number": {
-        const inputMode =
-          param.type === "url"
-            ? "url"
-            : param.type === "number"
-              ? "numeric"
-              : "text";
-        return (
-          <input
-            type="text"
-            inputMode={inputMode}
-            value={value}
-            onChange={(e) => handleConfigChange(param.name, e.target.value)}
-            className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all outline-none text-on-surface placeholder:text-outline"
-            style={{ border: "0.5px solid var(--glass-border)" }}
-            placeholder={param.defaultValue ?? `Enter ${param.display.toLowerCase()}`}
-          />
-        );
-      }
-      // ─── Masked input with eye-toggle reveal ─────────────────────────
-      // "password" is a synonym for "secret" so connector
-      // authors can use the more conventional name. Both go through
-      // identical rendering. The eye toggle uses showSecrets[param.name]
-      // — keyed by name so multiple masked fields on the same form
-      // toggle independently.
-      case "secret":
-      case "password":
-        return (
-          <div className="relative">
-            <input
-              type={showSecrets[param.name] ? "text" : "password"}
-              value={value}
-              onChange={(e) => handleConfigChange(param.name, e.target.value)}
-              className="w-full bg-surface-container-highest border-none rounded-xl px-4 pr-12 py-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all outline-none text-on-surface placeholder:text-outline"
-              style={{ border: "0.5px solid var(--glass-border)" }}
-              placeholder={`Enter ${param.display.toLowerCase()}`}
-            />
-            <button
-              type="button"
-              onClick={() => toggleSecret(param.name)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
-              aria-label={showSecrets[param.name] ? "Hide value" : "Show value"}
-            >
-              <span className="material-symbols-outlined text-lg">
-                {showSecrets[param.name] ? "visibility_off" : "visibility"}
-              </span>
-            </button>
-          </div>
-        );
-      // ─── Multiline <textarea> for long strings ───────────────────────
-      // For JSON service-account blobs, PEM certs, multi-line
-      // tokens. Auto-resizes via rows={4} initial + the existing
-      // resize-y CSS. Doesn't include a syntax-highlighting layer (kept
-      // simple — operators paste raw values; validation happens at
-      // Test Connection time).
-      case "textarea":
-        return (
-          <textarea
-            value={value}
-            onChange={(e) => handleConfigChange(param.name, e.target.value)}
-            rows={4}
-            className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all outline-none text-on-surface placeholder:text-outline font-mono resize-y"
-            style={{ border: "0.5px solid var(--glass-border)" }}
-            placeholder={`Enter ${param.display.toLowerCase()}`}
-          />
-        );
-      case "boolean":
-        return (
-          <div className="flex items-center justify-between p-4 rounded-xl" style={{ background: "var(--glass-bg)" }}>
-            <div>
-              <div className="text-sm font-medium text-on-surface">{param.display}</div>
-              <div className="text-xs text-on-surface-variant mt-0.5">
-                {value === "true" ? "Enabled" : "Disabled"} — toggle to change
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleConfigChange(param.name, value === "true" ? "false" : "true")}
-              className="relative inline-flex items-center"
-              aria-label={`Toggle ${param.display}`}
-            >
-              <div
-                className={`w-11 h-6 rounded-full transition-all ${
-                  value === "true" ? "bg-primary/40" : "bg-surface-container-highest"
-                }`}
-              >
-                <div
-                  className={`absolute top-[2px] w-5 h-5 rounded-full transition-all ${
-                    value === "true"
-                      ? "left-[22px] bg-primary"
-                      : "left-[2px] bg-outline"
-                  }`}
-                />
-              </div>
-            </button>
-          </div>
-        );
-      case "select":
-        return (
-          <div className="relative">
-            <select
-              value={value}
-              onChange={(e) => handleConfigChange(param.name, e.target.value)}
-              className="w-full appearance-none bg-surface-container-highest border-none rounded-xl px-4 py-3 pr-10 text-sm focus:ring-1 focus:ring-primary/40 transition-all outline-none text-on-surface"
-              style={{ border: "0.5px solid var(--glass-border)" }}
-            >
-              <option value="" disabled>Select {param.display.toLowerCase()}</option>
-              {param.options?.map((opt) => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-3.5 pointer-events-none text-on-surface-variant text-lg">
-              expand_more
-            </span>
-          </div>
-        );
-      // ─── Radio button group ──────────────────────────────────────────
-      // When a select-style field has 2-3 options and connector
-      // authors want them VISIBLE at a glance instead of hidden behind a
-      // dropdown click. options[] required; falls through to plain text
-      // input when options aren't declared (defensive against
-      // misconfigured synthetic cards).
-      case "radio":
-        if (!param.options || param.options.length === 0) {
-          return (
-            <p className="text-xs text-error italic">
-              radio field missing options[] — falling back to plain text. Fix the connector card.
-            </p>
-          );
-        }
-        return (
-          <div className="flex flex-wrap gap-2">
-            {param.options.map((opt) => {
-              const checked = value === opt;
-              return (
-                <label
-                  key={opt}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm cursor-pointer transition-all ${
-                    checked
-                      ? "bg-primary/10 text-primary"
-                      : "bg-surface-container-highest text-on-surface hover:bg-surface-variant/50"
-                  }`}
-                  style={{
-                    border: checked
-                      ? "0.5px solid rgba(167, 200, 255, 0.4)"
-                      : "0.5px solid var(--glass-border)",
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name={param.name}
-                    value={opt}
-                    checked={checked}
-                    onChange={() => handleConfigChange(param.name, opt)}
-                    className="appearance-none w-4 h-4 rounded-full border border-outline checked:border-primary checked:bg-primary checked:shadow-[inset_0_0_0_3px_var(--m3-surface-container)] transition-all"
-                  />
-                  <span>{opt}</span>
-                </label>
-              );
-            })}
-          </div>
-        );
-      // ─── Multi-select chip list ──────────────────────────────────────
-      // Bridges the gap between "array" (free-form chips, any
-      // string) and "select" (single value). When the connector has an
-      // explicit enum of valid choices but operators can pick multiple,
-      // this renders a checkbox-style chip group + the selection serializes
-      // as a JSON array string matching configValues' string-only shape.
-      // Falls through to a warning if options[] isn't declared.
-      case "multi_select": {
-        if (!param.options || param.options.length === 0) {
-          return (
-            <p className="text-xs text-error italic">
-              multi_select field missing options[] — fix the connector card to declare allowed values.
-            </p>
-          );
-        }
-        let selected: string[] = [];
-        try {
-          const parsed = JSON.parse(value || "[]");
-          if (Array.isArray(parsed)) selected = parsed.map(String);
-        } catch {
-          selected = [];
-        }
-        const toggle = (opt: string) => {
-          const next = selected.includes(opt)
-            ? selected.filter((s) => s !== opt)
-            : [...selected, opt];
-          handleConfigChange(param.name, JSON.stringify(next));
-        };
-        return (
-          <div className="flex flex-wrap gap-2">
-            {param.options.map((opt) => {
-              const isOn = selected.includes(opt);
-              return (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => toggle(opt)}
-                  className={`px-3 py-2 rounded-full text-xs transition-all ${
-                    isOn
-                      ? "bg-primary/15 text-primary"
-                      : "bg-surface-container-highest text-on-surface-variant hover:bg-surface-variant/50"
-                  }`}
-                  style={{
-                    border: isOn
-                      ? "0.5px solid rgba(167, 200, 255, 0.4)"
-                      : "0.5px solid var(--glass-border)",
-                  }}
-                >
-                  {isOn && <span className="material-symbols-outlined text-xs mr-1 align-middle">check</span>}
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
-        );
-      }
-      case "array":
-        // Chip-list editor for list-of-string fields. The
-        // value is a JSON-stringified array (see `configValues`'s
-        // string-only shape). Empty / unparseable input → empty list.
-        // Add via Enter or the Add button; remove via the × on each
-        // chip. Used by the web connector's allowed_domains to
-        // present "vetted browsing hosts" as concrete chips instead
-        // of a raw JSON blob the operator has to format correctly.
-        return <ChipListField param={param} value={value} onChange={handleConfigChange} />;
-      // ─── Default: unknown type → fall back to plain text + warn ────
-      // Belt-and-suspenders. If a future field type lands in
-      // the union without a matching switch case, we render SOMETHING
-      // (a text input) rather than a label-only ghost, and surface the
-      // gap to the operator so they can report it. The TypeScript union
-      // makes this branch unreachable at compile time, but the
-      // ConfigParam values come from JSON.parse'd API responses where
-      // an out-of-band string could slip through.
-      default: {
-        const unknownType = (param as { type?: string }).type ?? "unset";
-        return (
-          <>
-            <input
-              type="text"
-              value={value}
-              onChange={(e) => handleConfigChange(param.name, e.target.value)}
-              className="w-full bg-surface-container-highest border-none rounded-xl px-4 py-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all outline-none text-on-surface placeholder:text-outline"
-              style={{ border: "0.5px solid var(--glass-border)" }}
-              placeholder={`Enter ${param.display.toLowerCase()}`}
-            />
-            <p className="text-[10px] text-error italic mt-1">
-              unknown widget type &quot;{unknownType}&quot; — rendered as text input. Update the connector card to use a supported widget.
-            </p>
-          </>
-        );
-      }
-    }
-  }
 
   return (
     <>
@@ -3854,45 +3440,21 @@ function CreateInstancePanel({ onClose, allConnectors, onCreated }: { onClose: (
           </section>
 
           {/* Dynamic Configuration Form */}
-          {/* One unified Configuration section: every field renders in
-              declaration order (no positional "advanced" split, which
-              would hide required fields such as cortex-xdr's api_id), with the label, the input widget (text / password /
-              textarea / select / radio / multi_select / boolean / array
-              per param.type), and a small parameter-name footnote. Boolean
-              fields skip the explicit label since their card-style widget
-              shows the display name inline. */}
+          {/* One unified Configuration section: every field that shows
+              renders in declaration order (no positional "advanced" split,
+              which would hide required fields such as cortex-xdr's api_id).
+              The widgets, the footnotes and the showWhen rule live in
+              components/connector-config-form.tsx, shared with Edit. */}
           {selectedConnector && (
             <section className="space-y-6">
               <PanelSection title="Configuration" />
 
-              <div className="grid gap-6">
-                {visibleConfig.map((param) => {
-                  // Boolean fields render as card-style toggles with their
-                  // own inline label — no separate <label> element above.
-                  if (param.type === "boolean") {
-                    return (
-                      <div key={param.name}>
-                        {renderConfigField(param)}
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <div key={param.name} className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest font-label text-on-surface-variant">
-                        {param.display}
-                        {param.required && <span className="text-error ml-1">*</span>}
-                      </label>
-                      {renderConfigField(param)}
-                      <p className="text-[10px] text-on-surface-variant/60 italic ml-1">
-                        {param.type === "secret" || param.type === "password"
-                          ? `Encrypted credentials for ${selectedConnector.name}`
-                          : `Parameter: ${param.name}`}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
+              <ConfigFormFields
+                params={selectedConnector.config}
+                values={configValues}
+                onChange={handleConfigChange}
+                connectorName={selectedConnector.name}
+              />
             </section>
           )}
 
@@ -4046,9 +3608,8 @@ function CreateInstancePanel({ onClose, allConnectors, onCreated }: { onClose: (
               Create Instance; the operator clicks the per-instance Test
               Connection button on /connectors after the new instance
               card renders. This avoids a dual-action flow and a
-              misleading "Could not reach the service" message for
-              connectors with no wired probe (cortex-docs,
-              cortex-content, etc). */}
+              misleading "unreachable" result while the new connector
+              container is still starting. */}
         </div>
 
         {/* ── Sticky Footer ───────────────────────────────────── */}
@@ -4573,38 +4134,44 @@ export default function ConnectorsPage() {
   );
 
   const handleTestInstance = useCallback(
-    async (instanceId: string) => {
-      // Backend response is {instance, probe_implemented,
-      // ok, error, is_auth_error, connector_state}. Read the
-      // connector_state.state to derive the UI status — the test endpoint
-      // already updated it server-side via record_success/record_failure.
+    async (instanceId: string): Promise<TestOutcome | null> => {
+      // Backend response is {instance, probe_implemented, ok, error,
+      // is_auth_error, message, connector_state}. The test endpoint already
+      // wrote connector_state server-side (record_success / record_failure),
+      // so the badge follows the outcome without a refetch.
       const result = await testInstance(instanceId);
-      if (!result.ok) return;
-
-      const cs = result.data.connector_state;
-      let newStatus: InstanceStatus;
-      if (!result.data.probe_implemented) {
-        // For connectors without a wired probe (xsiam) the state is
-        // unchanged — keep whatever was there. Don't claim success.
-        newStatus = instanceStatusFromState(cs?.state);
-      } else if (result.data.ok) {
-        newStatus = "connected";
-      } else {
-        newStatus = "error";
+      if (!result.ok) {
+        addToast({
+          variant: "error",
+          title: "Could not run the test",
+          description: result.error?.message ?? result.error?.code ?? "The test endpoint did not answer.",
+        });
+        return null;
       }
+
+      const outcome = testOutcome(result.data);
+      const cs = result.data.connector_state;
+      addToast({
+        variant: outcome.kind === "passed" ? "success" : outcome.kind === "failed" ? "error" : "info",
+        title: outcome.kind === "passed" ? "Connection test passed" : outcome.kind === "failed" ? "Connection test failed" : "No built-in test",
+        description: outcome.message,
+      });
       setInstances((prev) =>
         prev.map((inst) =>
           inst.id === instanceId
             ? {
                 ...inst,
-                status: newStatus,
+                status: outcome.status,
+                connState: cs?.state ?? inst.connState,
+                lastError: outcome.kind === "failed" ? (result.data.error ?? null) : outcome.kind === "passed" ? null : inst.lastError,
                 enabled: cs ? cs.state !== "disabled" : inst.enabled,
               }
             : inst,
         ),
       );
+      return outcome;
     },
-    [],
+    [addToast],
   );
 
   // Phantom is single-tenant standalone — there are no workspaces to

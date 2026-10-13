@@ -44,17 +44,17 @@ configSchema:
   type: "object"
   # api_url/api_id/api_key are the same field names as the Cortex XDR
   # connector: both products auth identically (same Cortex platform).
-  # The connector code and the probe also read the papiUrl/papiAuthId/
-  # papiAuthHeader names at dispatch time (papi* names first, then a
+  # The connector code and the probe also accept the legacy papiUrl/
+  # papiAuthId/papiAuthHeader names (after the uniform names, then a
   # fallback to env vars).
   required: ["api_url", "api_id"]
   properties:
     api_url:
       type: "string"
-      description: "Cortex XSIAM PAPI base URL (e.g. https://api-yourtenant.xdr.us.paloaltonetworks.com/papi/v1)."
+      description: "Cortex XSIAM API URL, the 'Copy API URL' value on the API Keys page (e.g. https://api-yourtenant.xdr.us.paloaltonetworks.com). Do not add a path; the connector appends /public_api/v1."
     api_id:
       type: "string"
-      description: "Cortex XSIAM PAPI auth id (the X-Auth-ID header value)."
+      description: "Cortex XSIAM API key ID: the ID column next to your Standard key on Settings → Configurations → API Keys (sent as the x-xdr-auth-id header)."
     playgroundId:
       type: "string"
       description: "Issue/war-room id used as the remote execution context for PAPI calls. XSIAM-specific (no Cortex XDR equivalent)."
@@ -65,7 +65,7 @@ configSchema:
 
 secretSlots:
   - name: "api_key"
-    description: "Cortex XSIAM PAPI Authorization header value (full header content, including any 'Bearer' prefix)."
+    description: "Cortex XSIAM API key value. Create it as a Standard key (Settings → Configurations → API Keys → New Key → Security Level 'Standard'); do NOT choose Advanced, the connector sends the key as a plain Authorization header and does not compute the signature an Advanced key needs. Paste the raw key, no 'Bearer' prefix."
     required: true
   - name: "webhookKey"
     description: "Optional XSIAM webhook Authorization header value (raw, NOT 'Bearer' — see app/schema.py _get_webhook_headers). XSIAM-specific."

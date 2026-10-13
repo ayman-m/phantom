@@ -33,6 +33,18 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "1.0.6",
+    date: "Unreleased", // set to the ISO publish date when v1.0.6 is tagged
+    title: "Connector setup: Test Connection for every connector and the HTTP Sender destination switch.",
+    highlights: [
+      "Test Connection works for all nine connectors and says what it checked and what it did not.",
+      "The Edit dialog shows every field and secret slot, so a field left empty can be filled in later.",
+      "HTTP Sender asks for a destination first: XSIAM HTTP collector, Cribl integration or both.",
+      "Connector forms list the settings each connector reads; lists and numbers save as real values.",
+      "A disabled instance now pauses its tools; enable any instance you still rely on.",
+    ],
+  },
+  {
     version: "1.0.5",
     date: "Unreleased", // set to the ISO publish date when v1.0.5 is tagged
     title: "Model providers: Claude and OpenAI beside Vertex, with a live model registry and one default model.",
@@ -43,7 +55,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       "One default model, set with Set as default on Models; GEMINI_MODEL and the ANTHROPIC_API_KEY variable are gone.",
       "A model that cannot run fails the turn with MODEL_UNAVAILABLE instead of being swapped silently.",
       "Cost is tracked per provider and model; calls with no known price show as unpriced, never $0.",
-      "New Test Connection buttons, audit chips for provider activity, and five journeys for the new flows.",
       "An old geminiModel setting moves to the default model only if the catalog serves it; otherwise it is dropped and audited.",
     ],
   },

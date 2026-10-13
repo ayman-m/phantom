@@ -1,19 +1,21 @@
 #!/usr/bin/env node
 /**
- * Behaviour test for lib/instance-status.ts (how /connectors maps the server's
- * connector `state` onto the instance badge, so the result of the last probe
- * survives a page reload).
+ * Behaviour test for lib/instance-status.ts: how /connectors maps the server's
+ * connector `state` onto the instance badge (so the result of the last probe
+ * survives a page reload), what the "tools available" note says, and what a
+ * Test Connection press means.
  *
  *   node scripts/test-instance-status.mjs   (npm run test:instance-status)
  */
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 if (!process.features.typescript) {
   console.log("skip: this Node cannot import .ts directly (needs type stripping)");
   process.exit(0);
 }
 
-const { instanceStatusFromState } = await import("../lib/instance-status.ts");
+const { instanceStatusFromState, toolNote, testOutcome, NO_BUILT_IN_TEST } = await import("../lib/instance-status.ts");
 
 let failed = 0;
 function test(name, fn) {
@@ -34,6 +36,85 @@ test("pending, disabled, missing and unknown values show as not tested", () => {
   for (const v of ["pending", "disabled", "", undefined, null, 7, "weird"]) {
     assert.equal(instanceStatusFromState(v), "not_tested");
   }
+});
+
+// ── the "tools available" note ──────────────────────────────────────────────
+// The agent can call an enabled instance's tools whatever its connector state is
+// (connector_loader.py registers tools on install + instance, never on state).
+
+test("every state of an enabled instance has its tools available", () => {
+  for (const state of ["connected", "pending", "failed", "needs-auth", "disabled", undefined, "weird"]) {
+    assert.equal(toolNote({ enabled: true, state }).available, true, String(state));
+  }
+});
+
+test("a never-tested instance says 'not tested yet', neutral, and never 'paused'", () => {
+  for (const state of ["pending", undefined, null, "weird"]) {
+    const n = toolNote({ enabled: true, state });
+    assert.equal(n.label, "Tools available · not tested yet");
+    assert.equal(n.tone, "neutral");
+    assert.doesNotMatch(n.label + n.title, /paused|not connected/i);
+  }
+});
+
+test("a connected instance is plainly available", () => {
+  const n = toolNote({ enabled: true, state: "connected" });
+  assert.equal(n.label, "Tools available to agent");
+  assert.equal(n.tone, "ok");
+});
+
+test("failed and needs-auth warn but still say the tools are available", () => {
+  const failing = toolNote({ enabled: true, state: "failed", lastError: "cannot connect to x:9222" });
+  assert.equal(failing.label, "Tools available · connection failing");
+  assert.equal(failing.tone, "warn");
+  assert.match(failing.title, /cannot connect to x:9222/);
+  assert.match(failing.title, /can call this connector's tools/);
+  const auth = toolNote({ enabled: true, state: "needs-auth" });
+  assert.equal(auth.label, "Tools available · credentials rejected");
+  assert.equal(auth.tone, "warn");
+});
+
+test("only a disabled instance is paused, whatever its state", () => {
+  for (const state of ["connected", "pending", "failed", "needs-auth"]) {
+    const n = toolNote({ enabled: false, state });
+    assert.equal(n.label, "Tools paused (disabled)");
+    assert.equal(n.available, false);
+    assert.equal(n.tone, "paused");
+  }
+});
+
+// ── what a Test Connection press means ──────────────────────────────────────
+
+test("a passing probe is connected and shows what it proved", () => {
+  const o = testOutcome({ probe_implemented: true, ok: true, message: "the collector is reachable; the key is NOT verified" });
+  assert.deepEqual(o, { kind: "passed", status: "connected", message: "the collector is reachable; the key is NOT verified" });
+  assert.equal(testOutcome({ probe_implemented: true, ok: true }).message, "Connection OK.");
+});
+
+test("a failing probe is an error and carries the reason", () => {
+  const o = testOutcome({ probe_implemented: true, ok: false, error: "HTTP 401 from XSIAM" });
+  assert.equal(o.kind, "failed");
+  assert.equal(o.status, "error");
+  assert.equal(o.message, "Test failed: HTTP 401 from XSIAM");
+  assert.equal(testOutcome({ probe_implemented: true, ok: false }).message, "Test failed: unknown error");
+});
+
+test("a connector with no probe says so plainly and keeps its badge", () => {
+  const none = testOutcome({ probe_implemented: false, connector_state: { state: "pending" } });
+  assert.equal(none.kind, "no_test");
+  assert.equal(none.status, "not_tested");
+  assert.equal(none.message, NO_BUILT_IN_TEST);
+  assert.equal(NO_BUILT_IN_TEST, "This connector has no built-in test.");
+  const kept = testOutcome({ probe_implemented: false, message: "x", connector_state: { state: "connected" } });
+  assert.equal(kept.status, "connected");
+  assert.equal(kept.message, "x");
+});
+
+test("the connectors page no longer claims tools are paused for a connector that is not connected", () => {
+  const page = readFileSync(new URL("../app/connectors/page.tsx", import.meta.url), "utf8");
+  assert.doesNotMatch(page, /Tools paused \(not connected\)/);
+  assert.doesNotMatch(page, /Probe not wired for this connector/);
+  assert.match(page, /toolNote\(/);
 });
 
 if (failed) { console.log(failed + " failed"); process.exit(1); }

@@ -18,6 +18,7 @@
 import { NextResponse } from "next/server";
 
 import { toolsFromSpec } from "@/lib/connector-spec";
+import { BUNDLE_CONFIG, type BundleConfigField } from "@/lib/bundle-connector-config";
 
 export const dynamic = "force-dynamic";
 
@@ -33,15 +34,6 @@ interface Tool {
     defaultValue?: string;
   }>;
   outputPath?: string;
-}
-
-interface ConfigField {
-  display: string;
-  name: string;
-  type: string;
-  required: boolean;
-  defaultValue?: string;
-  options?: string[];
 }
 
 interface MarketplaceConnector {
@@ -64,7 +56,7 @@ interface MarketplaceConnector {
   reliability: string;
   authType: string;
   tools: Tool[];
-  config: ConfigField[];
+  config: BundleConfigField[];
   versions: Array<{ version: string; date: string; changes: string[] }>;
   setupGuide: string;
   dockerImage: string;
@@ -136,16 +128,7 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
         args: [],
       },
     ],
-    config: [
-      // Field name matches bundles/spark/connectors/xlog/connector.yaml
-      // (configSchema.properties.baseUrl); display name stays "xlog URL".
-      // The default is https: xlog serves HTTPS on port 8000
-      // unconditionally (mounts /tls/cert.pem from the shared phantom_tls
-      // volume; uses TLS via priority-1 in its _resolve_ssl_args), so an
-      // http URL fails at probe time with "Empty reply from server".
-      { display: "xlog URL", name: "baseUrl", type: "url", required: true, defaultValue: "https://xlog:8000" },
-      { display: "API Token", name: "apiToken", type: "secret", required: true },
-    ],
+    config: BUNDLE_CONFIG["xlog"],
     versions: [{ version: "1.0.0", date: "", changes: ["Initial release."] }],
     setupGuide:
       "Set XLOG_URL to your xlog service (default https://xlog:8000) and XLOG_API_KEY to the matching bearer token.",
@@ -208,16 +191,7 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
         args: [],
       },
     ],
-    config: [
-      // Field name matches the canonical bundles/spark/connectors/caldera/
-      // connector.yaml (configSchema.properties.baseUrl); a mismatch
-      // would leave the connector with "caldera instance has no baseUrl
-      // configured." Display name stays "Caldera URL".
-      { display: "Caldera URL", name: "baseUrl", type: "url", required: true, defaultValue: "http://caldera:8888" },
-      { display: "API Key", name: "apiKey", type: "secret", required: true },
-      { display: "Red user", name: "redUser", type: "string", required: false, defaultValue: "red" },
-      { display: "Red password", name: "redPassword", type: "secret", required: false },
-    ],
+    config: BUNDLE_CONFIG["caldera"],
     versions: [{ version: "1.0.0", date: "", changes: ["Initial release."] }],
     setupGuide:
       "Provision a Caldera 5.3 instance, create an API key under Settings, and supply CALDERA_URL + CALDERA_API_KEY.",
@@ -275,15 +249,7 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
         ],
       },
     ],
-    config: [
-      // Field names (api_url/api_key/api_id) match the Cortex XDR connector.
-      // Connector code + probe also accept the older papiUrl/papiAuthHeader/
-      // papiAuthId pair at read time.
-      { display: "API URL", name: "api_url", type: "url", required: true },
-      { display: "API key", name: "api_key", type: "secret", required: true },
-      { display: "API ID", name: "api_id", type: "string", required: true },
-      { display: "Playground ID", name: "playgroundId", type: "string", required: true },
-    ],
+    config: BUNDLE_CONFIG["xsiam"],
     versions: [{ version: "1.0.0", date: "", changes: ["Initial release."] }],
     setupGuide:
       "In XSIAM, create a PAPI key with detection-read + remote-script-exec scopes, then supply CORTEX_MCP_PAPI_* env values.",
@@ -367,50 +333,7 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
         args: [{ name: "session_id", type: "string", description: "Page handle.", required: true }],
       },
     ],
-    config: [
-      {
-        display: "CDP URL",
-        name: "cdp_url",
-        type: "text",
-        required: true,
-        defaultValue: "http://phantom-browser:9222",
-      },
-      {
-        display: "Default timeout (ms)",
-        name: "default_timeout_ms",
-        type: "text",
-        required: false,
-        defaultValue: "30000",
-      },
-      {
-        display: "User-Agent override",
-        name: "user_agent",
-        type: "text",
-        required: false,
-      },
-      {
-        display: "Allowed Domains",
-        name: "allowed_domains",
-        type: "array",
-        required: false,
-        defaultValue: "[]",
-      },
-      {
-        display: "Block resource types",
-        name: "block_resource_types",
-        type: "array",
-        required: false,
-        defaultValue: "[]",
-      },
-      {
-        display: "Default extractor mode",
-        name: "extractor_mode",
-        type: "select",
-        required: false,
-        defaultValue: "readable",
-        options: ["readable", "body", "markdown"],
-      },
-    ],
+    config: BUNDLE_CONFIG["web"],
     versions: [{ version: "1.0.0", date: "", changes: ["Initial release."] }],
     setupGuide:
       "1) Bring up the sidecar: `docker compose --profile browser up -d phantom-browser`. 2) Click 'Add instance', leave cdp_url as the default. 3) Set Allowed Domains to your vetted threat-intel + vendor-doc hosts (use `.example.com` to match all subdomains). 4) Save. The agent will see web.* tools on its next refresh.",
@@ -517,7 +440,7 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
         ],
       },
     ],
-    config: [],
+    config: BUNDLE_CONFIG["cortex-docs"],
     versions: [{ version: "1.0.0", date: "", changes: ["Initial release."] }],
     setupGuide:
       "1) Click 'Add instance' on the cortex-docs row. 2) There is nothing to configure: the Cortex documentation is public and needs no credentials. 3) Save. The agent will see cortex-docs.* tools on the next refresh and the cortex_xql_query_authoring skill becomes operational.",
@@ -636,7 +559,7 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
         ],
       },
     ],
-    config: [],
+    config: BUNDLE_CONFIG["cortex-content"],
     setupGuide:
       "No setup required. The Cortex content catalog is bundled with Phantom and read from local files — no configuration, no network, no credentials.",
     versions: [{ version: "1.0.0", date: "", changes: ["Initial release."] }],
@@ -647,7 +570,7 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
     ingestion: {
       enabled: false,
       mode: "pull",
-      description: "Pack content fetched on demand per tool call; cached locally for 24h by default.",
+      description: "Pack content is read on demand from the catalog bundled with Phantom.",
     },
     topAgents: [{ name: "phantom-soc-simulation", color: "#1963b3" }],
   },
@@ -673,7 +596,7 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
     installCount: 0,
     status: "installed",
     reliability: "stable",
-    authType: "XDR Advanced API Key + auth-id",
+    authType: "XDR Standard API Key + auth-id",
     tools: [
       {
         name: "get_cases_and_issues",
@@ -721,14 +644,10 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
     // Unified api_url / api_id / api_key field names, matching the XSIAM
     // connector. Both connectors share the same Cortex Public API auth
     // model — operators don't translate.
-    config: [
-      { display: "API URL", name: "api_url", type: "url", required: true },
-      { display: "API key", name: "api_key", type: "secret", required: true },
-      { display: "API ID", name: "api_id", type: "string", required: true },
-    ],
+    config: BUNDLE_CONFIG["cortex-xdr"],
     versions: [{ version: "1.0.0", date: "", changes: ["Initial release."] }],
     setupGuide:
-      "1) In the Cortex XDR console, navigate to Settings → Configurations → API Keys. 2) Generate a key with 'Advanced' security level (required for x-xdr-auth-id header path). 3) Copy the api_id (integer next to the key), api_key (long alphanumeric — paste raw, no 'Bearer' prefix), and api_url (format: https://api-yourtenant.xdr.us.paloaltonetworks.com). 4) Click 'Add instance' on the Cortex XDR card. 5) Paste, save. 6) Click 'Test Connection' on the new instance card — green check means creds valid. 7) Try natural-language queries via chat: 'show me unresolved high-severity incidents in the last 24h', 'pull the alerts from incident <id>', 'run XQL to count process events on hostname X yesterday'. The agent picks the right tool (get_cases_and_issues / get_incident_extra_data / run_xql_query) automatically based on your question.",
+      "1) In the Cortex XDR console, navigate to Settings → Configurations → API Keys. 2) Generate a key with the 'Standard' security level (the connector sends the key as a plain Authorization header; an Advanced key needs a signed request it does not compute). 3) Copy the api_id (integer next to the key), api_key (long alphanumeric — paste raw, no 'Bearer' prefix), and api_url (format: https://api-yourtenant.xdr.us.paloaltonetworks.com). 4) Click 'Add instance' on the Cortex XDR card. 5) Paste, save. 6) Click 'Test Connection' on the new instance card — green check means creds valid. 7) Try natural-language queries via chat: 'show me unresolved high-severity incidents in the last 24h', 'pull the alerts from incident <id>', 'run XQL to count process events on hostname X yesterday'. The agent picks the right tool (get_cases_and_issues / get_incident_extra_data / run_xql_query) automatically based on your question.",
     dockerImage: "ghcr.io/ayman-m/phantom-connector-cortex-xdr-oss:latest",
     runtime: "python",
     sdkLanguage: "Python",
@@ -743,8 +662,9 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
 
   // ── http-sender (ships in the release as a bundle connector) ──
   // Tools are overlaid live from connectors/http-sender/connector.yaml (see
-  // loadLiveTools below); the config[] here must match that file's configSchema
-  // + secretSlots, because the Add-instance form is built from it.
+  // loadLiveTools below); the config[] (lib/bundle-connector-config.ts) must
+  // match that file's configSchema + secretSlots, because the Add-instance
+  // and Edit forms are built from it.
   {
     id: "http-sender",
     name: "HTTP Sender",
@@ -767,24 +687,10 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
     reliability: "stable",
     authType: "Collector API key (+ Cribl token, optional)",
     tools: [],
-    config: [
-      { display: "Collector URL", name: "collectorUrl", type: "url", required: true },
-      { display: "Vendor (as set on the collector)", name: "vendor", type: "string", required: true },
-      { display: "Product (as set on the collector)", name: "product", type: "string", required: true },
-      { display: "Collector API key", name: "collectorKey", type: "secret", required: true },
-      { display: "Additional destinations (JSON array)", name: "additionalDestinations", type: "string", required: false },
-      { display: "Additional destination keys (JSON object)", name: "additionalKeys", type: "secret", required: false },
-      { display: "Cribl endpoint URL", name: "criblUrl", type: "url", required: false },
-      { display: "Cribl token", name: "criblToken", type: "secret", required: false },
-      { display: "Cribl integration name", name: "criblIntegration", type: "string", required: false, defaultValue: "phantom-http-sender" },
-      { display: "User domain for generated identities", name: "userDomain", type: "string", required: false, defaultValue: "phantom-lab.example" },
-      { display: "DNS suffix for Windows computer names", name: "windowsDnsSuffix", type: "string", required: false, defaultValue: "phantom.lab" },
-      { display: "Verify the collector's TLS certificate", name: "verifyTls", type: "boolean", required: false, defaultValue: "true" },
-      { display: "Request timeout (seconds)", name: "timeoutSeconds", type: "number", required: false, defaultValue: "15" },
-    ],
+    config: BUNDLE_CONFIG["http-sender"],
     versions: [{ version: "1.0.0", date: "", changes: ["Initial release."] }],
     setupGuide:
-      "1) In Cortex, open Settings → Data Sources & Integrations → Custom Collectors and add an HTTP Log Collector: Log Format JSON, plus the Vendor and Product of the source you want to simulate. Use Save & Generate Token and copy the URL and the key (the key is shown once). 2) Click 'Add instance' on the HTTP Sender card, paste the collector URL, the vendor, the product and the key. More collectors go in 'Additional destinations' with their keys in 'Additional destination keys'. 3) For native Analytics treatment, create a Cribl collector in the same place, paste its endpoint URL and token, and each Cribl source appears as a cribl_<source> destination. 4) Ask the agent to run list_destinations, then send_test_event to a destination: it sends one identifiable event and says whether Cortex accepted it. 5) Ask for a scenario, for example 'send a benign Okta baseline' and then 'run the Okta password-spray scenario', or open a Cortex Analytics trigger skill that names this connector. The collector decides the dataset, so check where the test event landed before trusting a name.",
+      "1) In Cortex, open Settings → Data Sources & Integrations → Custom Collectors and add an HTTP Log Collector: Log Format JSON, plus the Vendor and Product of the source you want to simulate. Use Save & Generate Token and copy the URL and the key (the key is shown once). 2) Click 'Create Instance' and pick the HTTP Sender, then choose the Destination: 'XSIAM HTTP collector' (paste the collector URL, the vendor, the product and the key; more collectors go in 'Additional destinations' with their keys in 'Additional destination keys'), 'Cribl integration' (see the next step) or 'Both'. The form shows only the fields of the destination you chose. 3) For native Analytics treatment, create a Cribl collector in the same place, choose 'Cribl integration' (or 'Both'), paste its endpoint URL and token, and each Cribl source appears as a cribl_<source> destination. 4) Ask the agent to run list_destinations, then send_test_event to a destination: it sends one identifiable event and says whether Cortex accepted it. 5) Ask for a scenario, for example 'send a benign Okta baseline' and then 'run the Okta password-spray scenario', or open a Cortex Analytics trigger skill that names this connector. The collector decides the dataset, so check where the test event landed before trusting a name.",
     dockerImage: "ghcr.io/ayman-m/phantom-connector-http-sender-oss:latest",
     runtime: "python",
     sdkLanguage: "Python",
@@ -820,16 +726,7 @@ const PHANTOM_CONNECTORS: MarketplaceConnector[] = [
     reliability: "stable",
     authType: "Client certificate (mutual TLS)",
     tools: [],
-    config: [
-      { display: "Subscription Manager URL", name: "subscriptionManagerUrl", type: "string", required: true },
-      { display: "Client certificate bundle (PFX, base64)", name: "clientPfx", type: "secret", required: true },
-      { display: "Client certificate password", name: "clientPfxPassword", type: "secret", required: true },
-      { display: "Sender computer name", name: "senderComputerName", type: "string", required: false, defaultValue: "phantom-wec-sender.phantom.lab" },
-      { display: "Domain NetBIOS name", name: "domainNetbios", type: "string", required: false, defaultValue: "PHANTOM" },
-      { display: "Domain DNS suffix", name: "domainDns", type: "string", required: false, defaultValue: "phantom.lab" },
-      { display: "Hosts in the synthetic domain", name: "hostCount", type: "number", required: false, defaultValue: "32" },
-      { display: "Request timeout (seconds)", name: "timeoutSeconds", type: "number", required: false, defaultValue: "30" },
-    ],
+    config: BUNDLE_CONFIG["wec-sender"],
     versions: [{ version: "1.0.0", date: "", changes: ["Initial release."] }],
     setupGuide:
       "1) In the Cortex console, create a Windows Event Collector configuration on your Broker VM (the applet must be enabled, and TCP 5986 must be reachable from where Phantom runs). It gives you the Subscription Manager value, a client certificate bundle (PFX) and its password. 2) Base64-encode the PFX on one line: base64 < client.pfx | tr -d '\\n'. 3) Click 'Add instance' on the WEC Sender card and paste the Subscription Manager value, the base64 text and the password. The certificate and password are stored as secrets and never pass through the chat. 4) Ask the agent to run list_subscriptions: a list of subscriptions means the certificate and the route work. 5) Run send_test_event, then a scenario, for example 'run the Windows password-spray scenario', or open a Cortex Analytics trigger skill that names this connector.",

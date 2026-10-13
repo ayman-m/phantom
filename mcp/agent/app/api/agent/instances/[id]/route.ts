@@ -4,9 +4,10 @@
  * GET     → fetch instance + its derived enabled/state (sourced from
  *           connector_state since instance↔connector is 1:1 in
  *           single-tenant Phantom).
- * PATCH   → partial update; currently `{enabled: bool}` is the only
- *           supported field. Toggles connector_state.disabled and
- *           gates tool advertisement accordingly.
+ * PATCH   → partial update (name, config, secrets, disabled_tools,
+ *           enabled). `{enabled: false}` pauses the instance: the MCP
+ *           reloads its tool registry and the connector's tools are no
+ *           longer offered to the agent until it is enabled again.
  * DELETE  → remove the instance row.
  */
 

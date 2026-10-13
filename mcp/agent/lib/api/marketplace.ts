@@ -47,7 +47,13 @@ export interface MarketplaceConnector {
     required: boolean;
     defaultValue?: string;
     options?: string[];
+    /** Words shown for each option value (see components/connector-config-form.tsx). */
+    optionLabels?: Record<string, string>;
     description?: string;
+    /** Show only while the value of `field` is one of `in` (lib/connector-form.ts). */
+    showWhen?: { field: string; in: string[] };
+    /** When hidden, Edit sends the field empty (it would keep a hidden mode's routing alive). */
+    clearWhenHidden?: boolean;
   }>;
   versions: Array<{ version: string; date: string; changes: string[] }>;
   setupGuide: string;
@@ -150,6 +156,8 @@ export interface ConnectorInstance {
   status?: string;
   /** Connection health of the connector: connected | failed | needs-auth | pending | disabled. */
   state?: string;
+  /** The last failure recorded for the connector (null when it has not failed). */
+  last_error?: string | null;
   enabled: boolean;
   is_channel: boolean;
   workspace_ids: string[];
@@ -164,7 +172,8 @@ export interface ConnectorInstance {
 export async function createInstance(data: {
   name: string;
   connector_id: string;
-  config: Record<string, string>;
+  // JSON values: array, boolean and number fields go as real JSON (lib/connector-form.ts).
+  config: Record<string, unknown>;
   /**
    * Per-instance secret slots — separate from
    * `config` because the backend writes these into SecretStore
@@ -221,7 +230,8 @@ export async function updateInstance(
   id: string,
   data: Partial<{
     name: string;
-    config: Record<string, string>;
+    // JSON values: the edit dialog sends an unchanged saved value back as stored.
+    config: Record<string, unknown>;
     enabled: boolean;
     is_channel: boolean;
     // Per-instance disabled-tools list. Send the full
@@ -251,6 +261,9 @@ export async function deleteInstance(id: string) {
 export interface InstanceTestResult {
   instance: ConnectorInstance;
   probe_implemented: boolean;
+  // What the test proved (and, for the sender connectors, did not), or "This
+  // connector has no built-in test." when probe_implemented=false.
+  message?: string | null;
   // Present when probe_implemented=true:
   ok?: boolean;
   error?: string | null;
@@ -280,7 +293,7 @@ export interface InstanceTestResult {
 export async function testInstance(
   id: string,
   overrides?: {
-    config?: Record<string, string>;
+    config?: Record<string, unknown>;
     secrets?: Record<string, string>;
     dry_run?: boolean;
   },

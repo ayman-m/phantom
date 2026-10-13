@@ -17,7 +17,9 @@ without `_raw` (`okta_sso`, `proofpoint_email_security`).
 
 1. In XSIAM: Settings > Data Sources & Integrations > Custom Collectors > HTTP Log Collector. Log Format **JSON**,
    set Vendor and Product, **Save & Generate Token**, copy the URL and the key (shown once).
-2. In Phantom: Connectors > http-sender > Create instance.
+2. In Phantom: Connectors > http-sender > Create instance. The form starts with a **Destination** switch (`destinationMode`: `http`,
+   `cribl` or `both`) that shows only the fields of the kind you choose; the connector itself ignores the value. The fields
+   below are the HTTP collector kind (required for `http` and `both`).
    - `collectorUrl`, `vendor`, `product` and the `collectorKey` secret: the primary destination.
    - `additionalDestinations` (optional), more collectors as JSON:
      `[{"url": "https://api-<tenant>/logs/v1/event", "vendor": "Proofpoint", "product": "Email Security"}]`
@@ -63,7 +65,9 @@ When **both** `criblUrl` and `criblToken` are set, one destination per Cribl sou
 `cribl_okta_sso`, `cribl_azure_ad_signins`, `cribl_azure_ad_audit`, `cribl_azure_event_hub`, `cribl_aws_audit`,
 `cribl_gcp_cloud_logging`, `cribl_windows_events`, `cribl_proofpoint_tap` (the source's UUID and dataset are in `src/cribl.py`).
 `list_destinations` shows them (`mode: cribl`, `source`, `dataset`, `host`) and reports a problem when only one of the two is set.
-The existing HTTP destinations and the required fields are unchanged; the primary stays the default destination.
+The existing HTTP destinations are unchanged; the primary stays the default destination. An instance can have only the Cribl
+fields: with no collector URL, vendor or product it has no primary and `list_destinations` reports that as a problem, while the
+`cribl_<source>` destinations work. In the form, choose `cribl` (or `both`) in the **Destination** switch to show these fields.
 
 **Wire.** `POST` to `criblUrl` with `Authorization: <token>`, `Source-Identifier: <uuid>`, `Format: json`,
 `Integration-Identifier: <name>`. The body is NDJSON, 300 events per request, and **each line is wrapped

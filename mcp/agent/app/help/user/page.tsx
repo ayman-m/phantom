@@ -2852,6 +2852,85 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
               </p>
             </SubSection>
 
+            <SubSection
+              id="instance-edit-destination"
+              icon="edit_note"
+              title="Editing an instance, and the http-sender destination switch (v1.0.6)"
+            >
+              <p>
+                <strong>Edit shows every field.</strong> The pencil on an
+                instance row opens the same fields as the creation form,
+                filled with what the instance has saved. A field you left
+                empty when you created the instance is there too, so you can
+                fill it in later. A saved secret shows a dot placeholder
+                instead of its value; type a new value over it to replace it,
+                or leave it alone to keep it. A field marked with a red
+                asterisk must have a value before <strong>Save Changes</strong>{" "}
+                is enabled, and <strong>Test Connection</strong> in the dialog
+                tests exactly what Save would store.
+              </p>
+              <p>
+                <strong>http-sender: choose the destination first.</strong>{" "}
+                The HTTP sender can send to an XSIAM HTTP Log Collector, to the
+                Cribl integration, or to both, and its form starts with a{" "}
+                <Term>Destination</Term> switch:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>
+                  <Term>XSIAM HTTP collector</Term> (the default) shows the
+                  collector URL, vendor, product and the collector key, plus
+                  the optional additional destinations and their keys. All
+                  four of the first group are required.
+                </li>
+                <li>
+                  <Term>Cribl integration</Term> shows the Cribl endpoint URL
+                  and token (both required), the integration name and the DNS
+                  suffix for Windows computer names. No collector, vendor,
+                  product or key is needed.
+                </li>
+                <li>
+                  <Term>Both</Term> shows all of them, and the instance has the
+                  collector destination and the <Code>cribl_&lt;source&gt;</Code>{" "}
+                  destinations.
+                </li>
+              </ul>
+              <p>
+                The user domain, the TLS check and the timeout show in every
+                mode. Saving clears what the other choice would have used, so
+                an old value cannot keep sending:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>
+                  Saving with <Term>Cribl integration</Term> empties the
+                  collector URL, the vendor, the product and the list of
+                  additional destinations.
+                </li>
+                <li>
+                  Saving with <Term>XSIAM HTTP collector</Term> empties the
+                  Cribl endpoint URL.
+                </li>
+                <li>
+                  <Term>Both</Term> clears nothing.
+                </li>
+              </ul>
+              <p>
+                Switching back does not restore what was cleared; type it
+                again. Saved keys and tokens are never cleared by switching:
+                the collector key, the additional destination keys and the
+                Cribl token stay stored, so{" "}
+                <Code>list_destinations</Code> can still report a leftover
+                key or token until you replace it. An instance saved without a
+                Destination opens in the mode that matches its settings: a
+                collector URL or additional destinations plus a Cribl URL with a
+                saved Cribl token is{" "}
+                <Term>Both</Term>, a Cribl URL with a saved token alone is{" "}
+                <Term>Cribl integration</Term>, anything else is{" "}
+                <Term>XSIAM HTTP collector</Term>. Only one http-sender
+                instance can be active at a time, so to add Cribl to an
+                existing instance, edit it and choose <Term>Both</Term>.
+              </p>
+            </SubSection>
+
             <SubSection icon="cable" title="The three connectors">
               <ul className="list-disc pl-5 space-y-1.5 text-sm">
                 <li>
@@ -2876,6 +2955,44 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
               </ul>
             </SubSection>
 
+            <SubSection icon="key" title="Cortex API keys (xsiam and cortex-xdr)">
+              <p>
+                Both connectors need a <Term>Standard</Term> API key. In
+                the Cortex console open <Term>Settings</Term> →{" "}
+                <Term>Configurations</Term> → <Term>Integrations</Term> →{" "}
+                <Term>API Keys</Term>, choose <Term>New Key</Term> and set{" "}
+                <Term>Security Level</Term> to <Term>Standard</Term>.
+                Do not choose Advanced: the connectors send the key and
+                its ID as plain <Code>Authorization</Code> and{" "}
+                <Code>x-xdr-auth-id</Code> headers and do not compute the
+                per-request signature an Advanced key needs, so every
+                call would be refused.
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>
+                  <Code>api_key</Code> — the key value, pasted raw
+                  (no <Code>Bearer</Code> prefix).
+                </li>
+                <li>
+                  <Code>api_id</Code> — the <Term>ID</Term> shown next to
+                  the key in the API Keys table.
+                </li>
+                <li>
+                  <Code>api_url</Code> — the <Term>Copy API URL</Term>{" "}
+                  value, for example{" "}
+                  <Code>https://api-&lt;tenant&gt;.xdr.&lt;region&gt;.paloaltonetworks.com</Code>.
+                  Leave the path off; the connector adds{" "}
+                  <Code>/public_api/v1</Code>.
+                </li>
+              </ul>
+              <p>
+                A <Code>401</Code> means the key or its ID is wrong. A{" "}
+                <Code>403</Code> with <Code>Datasets not found</Code>{" "}
+                means the dataset does not exist, not that the key is
+                rejected.
+              </p>
+            </SubSection>
+
             <SubSection icon="lock" title="Secret storage">
               <p>
                 Per-instance credentials live encrypted at rest under a
@@ -2884,6 +3001,86 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 them as <Code>***</Code> on read. Rotating a credential
                 writes a new envelope; the old one is GC&apos;d on the
                 next sweep.
+              </p>
+            </SubSection>
+
+            <SubSection icon="network_check" title="Test Connection and the status labels (v1.0.6)">
+              <p>
+                Every connector has a <Term>Test Connection</Term> button
+                (the play icon on an instance row, or the button inside
+                the Edit dialog). It checks the connector&apos;s container
+                first, then the service behind it, and it only ever
+                reads: <strong>it never sends an event</strong>. The row
+                shows a <Term>Connected</Term> or <Term>Error</Term>{" "}
+                badge, and a message says what was checked or why it
+                failed. Testing inside the Edit dialog is a dry run on
+                the values you typed; nothing is saved or recorded until
+                you click Save.
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>
+                  <Code>xsiam</Code> and <Code>cortex-xdr</Code> — one
+                  read-only call with your API key and ID. A{" "}
+                  <Code>401</Code> means the key or ID is wrong (or an
+                  Advanced key was used); a <Code>403</Code> other than{" "}
+                  <Code>Datasets not found</Code> means the key&apos;s role
+                  cannot make the call.
+                </li>
+                <li>
+                  <Code>xlog</Code> and <Code>caldera</Code> — reach the
+                  service and check the API token or key.
+                </li>
+                <li>
+                  <Code>web</Code> — asks the browser sidecar for its
+                  DevTools description. If it fails, start the sidecar:{" "}
+                  <Code>docker compose --profile browser up -d phantom-browser</Code>.
+                </li>
+                <li>
+                  <Code>cortex-docs</Code> and <Code>cortex-content</Code> —
+                  reach the public docs site and read the bundled catalog.
+                </li>
+                <li>
+                  <Code>http-sender</Code> — checks your collector URL,
+                  vendor, product and that a key is saved, then makes one
+                  plain request to the collector URL. An instance that
+                  has only the Cribl integration is checked the same way:
+                  the Cribl endpoint must be an https URL ending in{" "}
+                  <Code>/logs/v1/integrated/cribl/data</Code>, the token
+                  must be saved, and one plain request goes to it. Any HTTP
+                  answer, even a 401 or 404, counts as reachable. It does{" "}
+                  <strong>not</strong> check the collector key or the Cribl
+                  token, and it does not contact additional destinations
+                  (or, when a collector is configured, the Cribl endpoint).
+                  Ask the agent to run <Code>send_test_event</Code> for the
+                  end-to-end check.
+                </li>
+                <li>
+                  <Code>wec-sender</Code> — checks the Subscription
+                  Manager value and that the certificate and password are
+                  saved, then opens a TCP connection to the broker port
+                  (5986 by default) and closes it. It does{" "}
+                  <strong>not</strong> check the certificate or the
+                  WS-Management exchange. Ask the agent to run{" "}
+                  <Code>list_subscriptions</Code>, which is read-only.
+                </li>
+                <li>
+                  A connector you uploaded has no built-in test; the
+                  button says <em>This connector has no built-in test.</em>{" "}
+                  and the badge stays Not Tested. Call one of its tools
+                  from chat to check it.
+                </li>
+              </ul>
+              <p>
+                The note beside each instance says whether the agent can
+                use its tools. Tools are available whenever the instance
+                is <Term>enabled</Term>, tested or not:{" "}
+                <em>Tools available to agent</em> (last test passed),{" "}
+                <em>Tools available · not tested yet</em>,{" "}
+                <em>Tools available · connection failing</em> or{" "}
+                <em>credentials rejected</em> (the last test or tool call
+                failed; hover for the reason). Only a disabled instance
+                shows <em>Tools paused (disabled)</em>: its tools refuse to
+                run until you enable it again.
               </p>
             </SubSection>
 
@@ -2902,11 +3099,12 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 <Code>CALDERA_API_KEY</Code> in{" "}
                 <Code>/opt/phantom/.env</Code>. The caldera instance on{" "}
                 <Link href="/connectors" className="link">/connectors</Link>{" "}
-                holds the credentials Phantom uses to call caldera; saving
-                it does not change caldera&apos;s own login. To rotate the
-                login, change the values in <Code>.env</Code>, recreate the
-                caldera container, then update the instance&apos;s secrets
-                to match.
+                holds the API key Phantom uses to call caldera (the
+                instance has no field for the red user or its password);
+                saving it does not change caldera&apos;s own login. To rotate
+                the key, change <Code>CALDERA_API_KEY</Code> in{" "}
+                <Code>.env</Code>, recreate the caldera container, then
+                update the instance&apos;s <Code>apiKey</Code> to match.
               </p>
             </SubSection>
 
@@ -2959,11 +3157,12 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
             </p>
 
             <SubSection icon="account_tree" title="The five states">
-              <Pre>{`enabled         ── healthy + reachable; tools dispatch normally
-disabled        ── operator-paused; tools refuse to dispatch
-failed          ── last probe returned an error; auto-retried with backoff
-auth_required   ── 401 / token-expired; needs operator credential refresh
-probed          ── transient state during an in-flight probe`}</Pre>
+              <Pre>{`connected       ── the last test or tool call succeeded
+pending         ── never tested yet (tools are still available)
+failed          ── the last test or tool call failed (tools are still available)
+needs-auth      ── 401 / credentials rejected (tools are still available)
+disabled        ── set with the Disable button on this page: a label only; the
+                   instance switch on /connectors is what pauses the tools`}</Pre>
               <p>
                 State transitions write{" "}
                 <Code>connector_enabled</Code>,{" "}
@@ -3004,11 +3203,15 @@ probed          ── transient state during an in-flight probe`}</Pre>
             </SubSection>
 
             <Callout tone="info">
-              Disabled instances are <em>operator-paused</em>, not broken —
-              tools just refuse to dispatch. Use this when running
+              A disabled <em>instance</em> (the switch on its{" "}
+              <Link href="/connectors" className="link">/connectors</Link>{" "}
+              row) is <em>operator-paused</em>, not broken: its tools
+              refuse to run straight away and drop out of the agent&apos;s
+              catalogue at the next restart. Use this when running
               maintenance on a downstream system you don&apos;t want the
-              agent calling. Re-enable from the same page; nothing else
-              changes.
+              agent calling. Re-enable it from the same row; nothing else
+              changes. The Disable button on this page only marks the
+              connector&apos;s state; it does not pause the tools.
             </Callout>
           </Section>
 
@@ -3896,8 +4099,15 @@ probed          ── transient state during an in-flight probe`}</Pre>
                 </li>
                 <li>
                   In Connectors, open the <strong>http-sender</strong>{" "}
-                  instance, put the URL in <Code>criblUrl</Code> and the token
-                  in the <Code>criblToken</Code> secret field, and save. The
+                  instance (or create it), set <Term>Destination</Term> to{" "}
+                  <Term>Cribl integration</Term> (or <Term>Both</Term> to keep a
+                  collector too), put the URL in <Code>criblUrl</Code> and the
+                  token in the <Code>criblToken</Code> secret field, and save.
+                  See{" "}
+                  <a href="#instance-edit-destination" className="link">
+                    the destination switch
+                  </a>
+                  . The
                   token is entered there only; the agent never sees it. The
                   destinations <Code>cribl_okta_sso</Code>,{" "}
                   <Code>cribl_aws_audit</Code>,{" "}

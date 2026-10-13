@@ -196,8 +196,8 @@ Then add what the agent needs, in order:
 
 | Connector | Fields |
 |---|---|
-| **caldera** | `baseUrl` `http://<machine-b>:8888`; `redUser`; secrets `apiKey` (the red-team API key baked into Caldera at its first boot) and `redPassword` |
-| **xlog** | `baseUrl` `https://<machine-b>:8000`; optional `webhookEndpoint` and `defaultLogFormat`; secret `apiToken` (the token xlog enforces) and optional `webhookKey` |
+| **caldera** | `baseUrl` `http://<machine-b>:8888`; secret `apiKey` (the red-team API key baked into Caldera at its first boot) |
+| **xlog** | `baseUrl` `https://<machine-b>:8000`; secret `apiToken` (the token xlog enforces) |
 | **xsiam** | `api_url`, `api_id`, `playgroundId`; secret `api_key` (the PAPI Authorization header value); optional `webhookEndpoint` and secret `webhookKey` (the XSIAM HTTP collector for synthetic logs) |
 
 Each instance is stored in the InstanceStore (secrets in the

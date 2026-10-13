@@ -11,7 +11,8 @@ Tool catalog (alphabetical):
   xdr_run_xql_query          POST /xql/start_xql_query + poll — synchronous XQL execution with bounded wait
 
 Auth model (same as XSIAM, same Cortex platform):
-  Authorization: <api_key>       — advanced API key from XDR console
+  Authorization: <api_key>       — Standard API key from the XDR console
+                                   (plain header; an Advanced key needs a signed nonce and is not supported)
   x-xdr-auth-id: <api_id>        — integer key identifier
   Content-Type:  application/json
 

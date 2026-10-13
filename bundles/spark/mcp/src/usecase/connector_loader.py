@@ -1,10 +1,10 @@
-"""Bundle-aware tool registry — instance-gated.
+"""Bundle-aware tool registry — gated on an enabled instance.
 
 Reads the bundle at boot:
   - manifest.yaml → toolConnectors[]
   - connectors/<id>/connector.yaml → spec.tools[] + runtimeMapping
 
-For each connector that has ≥1 instance in `data_root/instances.db`,
+For each connector that has ≥1 ENABLED instance in `data_root/instances.db`,
 registers the connector's tools with names `<id>.<tool>` (and legacy
 `<functionPrefix><tool>` aliases when MCP_LEGACY_TOOL_NAMES=true).
 Every registered callable is wrapped in a closure that sets a
@@ -651,6 +651,29 @@ def _translate_keys(connector_id: str, source: dict[str, Any]) -> dict[str, Any]
     return {table.get(k, k): v for k, v in source.items()}
 
 
+class InstanceDisabledError(RuntimeError):
+    """A tool call reached a connector whose instance the operator has disabled."""
+
+
+def _refuse_if_instance_disabled(instance: Instance) -> None:
+    """Refuse the call when the operator has disabled the instance.
+
+    Read fresh on every call: the wrapper holds the Instance captured at
+    registration, and a disable arrives later through PATCH. Registration
+    drops a disabled connector's tools at the next reload or restart; this
+    makes the pause take effect immediately for tools the catalogue still lists.
+    """
+    from usecase.instance_store import instance_store  # noqa: PLC0415
+
+    current_store = instance_store()
+    current = current_store.get(instance.id) if current_store is not None else None
+    if current is not None and not current.enabled:
+        raise InstanceDisabledError(
+            f"connector instance {instance.name!r} ({instance.connector_id}) is disabled; "
+            "enable it on /connectors to use its tools"
+        )
+
+
 def _wrap_with_instance(
     fn: Callable,
     instance: Instance,
@@ -829,6 +852,7 @@ def _wrap_with_instance(
             status = "success"
             error: str | None = None
             try:
+                _refuse_if_instance_disabled(instance)
                 # Gate on human approval BEFORE running.
                 approval_id = _gate_request(args, kwargs)
                 if approval_id is not None:
@@ -875,6 +899,7 @@ def _wrap_with_instance(
         status = "success"
         error: str | None = None
         try:
+            _refuse_if_instance_disabled(instance)
             approval_id = _gate_request(args, kwargs)
             if approval_id is not None:
                 bus = approvals_bus()
@@ -928,9 +953,9 @@ def _connector_registrations(
     """Wrap one connector's tools for registration. Shared by bundle and user
     connectors so the two cannot drift apart. Returns the registrations and the
     label for the "Advertising connectors" log line."""
-    # Phantom uses a single instance per connector. Use the first
-    # (typically only) instance for the wrap.
-    primary = store.list_for(cid)[0]
+    # Phantom allows a single ENABLED instance per connector. Use it for the
+    # wrap; the callers only get here for connectors that have one.
+    primary = next(i for i in store.list_for(cid) if i.enabled)
 
     # Per-instance disabled-tools filter. Operators
     # disable individual tools via the /connectors Tools tab; we
@@ -1024,7 +1049,9 @@ def iter_registrations(
     # connector's tools to advertise. See connector_loader module
     # header for why there is no auto-migrate.
     declared_ids = {entry.get("id") for entry in tool_connectors if isinstance(entry.get("id"), str)}
-    configured_ids = store.configured_connector_ids()
+    # Only an ENABLED instance advertises tools: disabling the instance on
+    # /connectors pauses the connector for the agent.
+    configured_ids = store.configured_connector_ids(enabled_only=True)
 
     advertised: list[str] = []
     skipped: list[str] = []
@@ -1058,7 +1085,7 @@ def iter_registrations(
         yield from regs
 
     # User-uploaded connectors. Same gate as bundle connectors: they advertise
-    # tools only while they have an instance. Two differences: no legacy flat aliases
+    # tools only while they have an enabled instance. Two differences: no legacy flat aliases
     # (an upload must never shadow a built-in tool name), and a broken upload is logged
     # and skipped instead of raising, so it cannot stop every other connector's tools.
     for ref in user_connectors(exclude_ids=declared_ids):
@@ -1206,7 +1233,7 @@ def tool_summary(store: InstanceStore | None = None) -> dict[str, int]:
     summary: dict[str, int] = {}
     if store is None:
         store = InstanceStore()
-    configured = store.configured_connector_ids()
+    configured = store.configured_connector_ids(enabled_only=True)
     root = _bundle_root()
     manifest = _load_yaml(root / "manifest.yaml")
     for entry in manifest.get("toolConnectors") or []:

@@ -17,14 +17,8 @@
 #   - Scripts (XSOAR automation scripts)
 #   - Classifiers / IncidentFields / IncidentTypes / Layouts
 #
-# Fetch path:
-#   - File contents → raw.githubusercontent.com (CDN, no rate limit)
-#   - Directory listings → api.github.com (anonymous 60/hr; auth'd
-#     5000/hr via optional GITHUB_TOKEN env var on the agent container)
-#
-# Cache: 24h TTL by default, file-backed under
-# /app/data/cortex-content-cache/ (volume-survives, operator-pinned via
-# the configurable `cacheTtlSeconds` below).
+# Source: the catalog baked into the image under baked/ (read from local files; the
+# instance has no settings and needs no credentials).
 #
 # Why this connector exists: without a reference for what a canonical XDM
 # data-model parser looks like for a given data source, the chat agent has
@@ -59,36 +53,13 @@ runtimeMapping:
 
 executionMode: "persistent"
 
+# No per-instance settings and no secrets: the catalog is bundled with Phantom and read from
+# local files (see src/_baked_client.py), so nothing is fetched from GitHub at run time.
 configSchema:
   type: "object"
-  properties:
-    githubRepo:
-      type: "string"
-      description: "GitHub owner/name of the content repo. Defaults to demisto/content (the public XSOAR + XSIAM marketplace repo Palo Alto maintains). Override only when testing against a fork or mirror."
-      default: "demisto/content"
-    githubBranch:
-      type: "string"
-      description: "Branch to fetch from. Defaults to master."
-      default: "master"
-    cacheTtlSeconds:
-      type: "integer"
-      description: "How long fetched directory listings + file contents are reused before re-fetching from GitHub. Defaults to 86400 (24 hours). Operator can lower for development against a freshly-updated mirror or raise to reduce GitHub API hits."
-      default: 86400
-    requestTimeoutSeconds:
-      type: "integer"
-      description: "Per-request HTTP timeout when calling the GitHub API or raw.githubusercontent.com. 30 seconds is generous; lower if the operator's network is reliably fast and they want faster failure."
-      default: 30
+  properties: {}
 
-# Optional GITHUB_TOKEN — raises the api.github.com rate limit from
-# 60/hr (anonymous) to 5000/hr (authenticated). Most flows are well
-# within 60/hr because raw file contents go via the CDN (no API limit);
-# the API hits are directory listings and pack metadata. The connector
-# works fully without a token — the slot is here so operators with
-# heavy refresh schedules or large content-pack inventories can opt in.
-secretSlots:
-  - name: "githubToken"
-    description: "Personal access token (no scopes required for public repo reads). When set, lifts api.github.com rate limit from 60/hr to 5000/hr."
-    optional: true
+secretSlots: []
 
 spec:
   tools:

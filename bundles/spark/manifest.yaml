@@ -206,12 +206,8 @@ toolConnectors:
   # packs from the public demisto/content GitHub repository. Surfaces
   # ModelingRules (XDM data-model parsers), ParsingRules (raw-log
   # normalization), and CorrelationRules (XQL alert queries) per
-  # pack. Stdlib-only (urllib + json); no credentials required
-  # because the demisto/content repo is public. Operators can
-  # optionally set the `githubToken` connector secret to lift the
-  # anonymous 60/hr api.github.com rate limit to 5000/hr — most
-  # flows are well under 60/hr because file contents go via
-  # raw.githubusercontent.com (CDN, no rate limit).
+  # pack. Reads the catalog baked into the image; no credentials and
+  # no network are needed.
   #
   # Primary use case: when the agent authors / updates XDM data
   # models for the operator's tenant, it can fetch the canonical
@@ -793,10 +789,8 @@ setup:
         name: "primary-caldera"
         config:
           baseUrl: "${setup.calderaBaseUrl}"
-          redUser: "${setup.calderaRedUser}"
         secretRefs:
           apiKey: "${setup.calderaApiKey}"
-          redPassword: "${setup.calderaRedPassword}"
     - connectorId: "xsiam"
       template:
         name: "primary-xsiam"
@@ -820,10 +814,8 @@ setup:
         name: "primary-xlog"
         config:
           baseUrl: "${setup.xlogBaseUrl}"
-          webhookEndpoint: "${setup.xlogWebhookEndpoint}"
         secretRefs:
           apiToken: "${setup.xlogApiToken}"
-          webhookKey: "${setup.xlogWebhookKey}"
 
   # v1.2 §7.6 — model provider instance materialization. The setup
   # form prompts for vertex project + region + service account JSON;

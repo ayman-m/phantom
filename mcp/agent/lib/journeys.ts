@@ -1220,7 +1220,7 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Prerequisite: the HTTP data source (e.g. Okta, HTTP pill) is installed from /data-sources → Browse, and its content pack is installed on the Cortex tenant.",
-      "In Cortex, create an HTTP Log Collector for the vendor; then in /connectors add an http-sender instance with the collector URL and key (the key is entered in the form only).",
+      "In Cortex, create an HTTP Log Collector for the vendor; then in /connectors press Create Instance, pick http-sender, leave Destination on 'XSIAM HTTP collector' and enter the collector URL, vendor, product and key (the key is entered in the form only). To use the Cribl integration instead, choose 'Cribl integration' (or 'Both') and enter the Cribl endpoint URL and token.",
       "Open chat → paste 'Send 20 Okta sign-in events over HTTP'.",
       "Watch tool calls — http-sender.list_destinations, then optionally send_test_event, then generate_events. No phantom_create_data_worker call should appear.",
       "Wait 5 to 7 minutes, then query the dataset in XSIAM (e.g. dataset = okta_sso_raw | limit 10) and check the datamodel for xdm.* fields.",
@@ -3763,7 +3763,7 @@ export const JOURNEYS: Journey[] = [
         method: "POST",
         path: "/api/agent/connectors/{id}/probe",
         description:
-          "Operator-triggered re-probe: resets state to pending, next tool call re-evaluates.",
+          "Operator-triggered read-only test of the connector (its first instance): records connected, failed or needs-auth from the result. A connector without a built-in test is reset to pending instead.",
       },
     ],
     howToTest: [
@@ -3772,17 +3772,62 @@ export const JOURNEYS: Journey[] = [
       "Watch the chat: a connector_auth_required SSE event fires.",
       "Visit /observability/connectors. The xsiam connector shows state='needs-auth' with the last_error truncated.",
       "Update the credential: at /connectors → Instances, click the Edit Instance icon on the XSIAM instance, enter the new api_key (secret) and save.",
-      "Click 'Reauth' on the /observability/connectors row. State flips to 'pending'.",
-      "Send the same prompt again. Tool succeeds. State flips to 'connected'.",
+      "Click 'Reauth' on the /observability/connectors row. It runs the connector's read-only test with the new key: the state flips to 'connected', or stays 'needs-auth' with the reason.",
+      "Send the same prompt again. The tool succeeds and the state stays 'connected'.",
     ],
     expectedResult:
       "Auth expiration is diagnosable from the agent UI without parsing tool errors. Operators have a one-click Reauth path; the chat-route's success-recording transitions the state back automatically once auth works.",
     verifyVia: [
       "GET /api/agent/audit?action=connector_auth_required → row with metadata.from_state='connected', to_state='needs-auth', error",
-      "After Reauth + successful tool call: GET /api/agent/connectors/xsiam → state='connected', consecutive_failures=0",
+      "After Reauth with a working key: GET /api/agent/connectors/xsiam → state='connected', consecutive_failures=0",
     ],
     related: ["chat-load-history-with-telemetry"],
     components: ["connectors", "audit", "pipeline"],
+  },
+
+  // ── Test Connection for every connector ───────────────
+  {
+    id: "connectors-test-connection-every-connector",
+    category: "connectors",
+    title: "Test Connection on any connector, and read what it proves",
+    summary:
+      "Every bundle connector has a read-only Test Connection. It checks the connector container, then the service behind it, and says what it did and did not verify. The sender connectors prove reachability only; an uploaded connector says it has no built-in test.",
+    difficulty: "starter",
+    durationMin: 4,
+    icon: "network_check",
+    prompts: [
+      {
+        text: "Run the http-sender send_test_event tool against the primary destination and give me the XQL that proves the event landed.",
+        note: "The explicit end-to-end check for http-sender. Test Connection only proves the collector URL answers; this sends one identifiable event.",
+      },
+    ],
+    toolsExercised: ["http-sender.send_test_event"],
+    apis: [
+      {
+        method: "POST",
+        path: "/api/agent/instances/{id}/test",
+        description:
+          "Operator-only. Runs the connector's read-only probe (container /health first, then the upstream) and records connected, failed or needs-auth. Body {config?, secrets?, dry_run?}; overrides default to a dry run that records nothing. Returns {probe_implemented, ok, error, message, is_auth_error, dry_run, connector_state}; probe_implemented is false (with a plain message) for a connector that has no built-in test.",
+      },
+    ],
+    howToTest: [
+      "Needs: at least one installed connector with an instance (xlog or cortex-docs is enough). The http-sender steps need a Cortex HTTP Log Collector URL and key.",
+      "Open /connectors → Instances. A new instance reads 'Not Tested' and its note says 'Tools available · not tested yet': the agent can already use its tools.",
+      "Click Test Connection on the row. A toast says what the test checked and the badge reads Connected. Hover the 'Tools available to agent' note.",
+      "Break the instance on purpose (Edit Instance, change the URL or token, Test Connection inside the dialog). The dialog reports the reason, for example 'HTTP 401 ... API key or ID was rejected'. Nothing is saved or recorded: it is a dry run. Cancel the edit.",
+      "On a real failure (stop the xlog container, then press Test Connection on its row) the badge reads Error and the note reads 'Tools available · connection failing'; hover it for the last error.",
+      "Create an http-sender instance (collector URL, vendor, product, collector key) and click Test Connection. The message says the collector is reachable, that the collector key was NOT verified and that no event was sent. Paste the prompt above for the real end-to-end check.",
+      "Disable an instance with its toggle. Its note reads 'Tools paused (disabled)'. Ask the agent to use one of its tools: the call is refused with 'is disabled' until you enable the instance again.",
+    ],
+    expectedResult:
+      "Test Connection never leaves a row silently untested: every bundle connector answers, a pass says exactly what was verified, a sender connector says what it could not verify without sending an event, and only a disabled instance is described as paused.",
+    verifyVia: [
+      "POST /api/agent/instances/<id>/test → probe_implemented:true, ok:true and a message for every bundle connector; an uploaded connector returns probe_implemented:false and 'This connector has no built-in test.'",
+      "GET /api/agent/connectors/<id> → state matches the badge after a persisted test; a dry run from the Edit dialog leaves it unchanged.",
+      "/observability/events (audit) shows no tool_call or send row for a Test Connection press on http-sender or wec-sender.",
+    ],
+    related: ["ops-recover-connector-needs-auth"],
+    components: ["connectors", "mcp"],
   },
 
   // ── Vertex caching ROI deep dive ─────────────────────
@@ -5547,7 +5592,7 @@ export const JOURNEYS: Journey[] = [
       "The per-instance-container lifecycle exercises four moving parts: agent (creates instance), phantom-updater (starts the container), the per-instance connector container (loads instance config + secrets via SecretStoreReader, registers tools with FastMCP), and the agent's tool-dispatch loader (synthesizes proxy callables that forward to the container's MCP). The routing happens under the hood.",
     verifyVia: [
       "`docker ps` shows phantom-connector-web-<name> running.",
-      "GET /api/agent/instances/<id>/test → probes the connector's /health endpoint and reports container_running:true.",
+      "POST /api/agent/instances/<id>/test → ok:true; the message says the browser sidecar is reachable and ends 'The connector container is up.'",
       "GET /api/agent/audit?target_prefix=tool:web. → tool calls show the same shape as in-process connector calls; the proxy is transparent at the audit layer.",
       "Boot log: 'web (primary, 10 tools)' confirms the connector advertises its tools after the container_url propagates.",
     ],
@@ -5839,7 +5884,7 @@ export const JOURNEYS: Journey[] = [
     howToTest: [
       "Operator-only step (changes a credential): open /connectors → Instances tab and pick an instance. A fresh install has none, so create the xlog instance first ('onboarding-install-xlog-connector').",
       "Click the Edit Instance icon on the instance row. The Edit Instance dialog opens with the current config; secret fields show the masked placeholder `***`.",
-      "Change a config field (for example set defaultLogFormat to CEF on the xlog instance, and set it back afterwards) and leave the secret fields untouched.",
+      "Change a config field (for example the xlog URL, and set it back afterwards) and leave the secret fields untouched.",
       "To rotate a secret, type the new value over the masked placeholder (for the xlog instance, the API Token; the value is the XLOG_API_KEY line in /opt/phantom/.env — a host shell step). Click Test Connection: it is a dry run and nothing is saved yet.",
       "Click Save Changes. The dialog closes and the instance row stays connected.",
       "Paste the prompt above in a chat. The tool call succeeds with the new config and secret — no restart needed.",
@@ -6212,7 +6257,7 @@ export const JOURNEYS: Journey[] = [
       "Needs: a host shell to read the xlog token. Host shell step: run `grep XLOG_API_KEY /opt/phantom/.env` and keep the value for step 3. It is a credential: you type it into the instance form yourself, and never paste it into chat.",
       "Open /connectors → Marketplace tab, click the xlog card and click Install Connector.",
       "Switch to the Instances tab and click Create Instance. Pick xlog, give it a name (for example `primary-xlog`), leave baseUrl at its default (https://xlog:8000), paste the token into the API Token secret field, leave the webhook fields empty, and click Create Instance. The connector image is pulled when the instance is created, which can take a minute.",
-      "Click the Test Connection icon on the new instance row. It reports success. If it fails with an authentication error, the token does not match XLOG_API_KEY.",
+      "Click the Test Connection icon on the new instance row. A toast reports 'xlog is reachable and accepted the API token' and the badge reads Connected. If it fails with HTTP 401 (token rejected), the token does not match XLOG_API_KEY.",
       "Open /log-destinations and click New Destination. Name it `lab-syslog`, choose Type Syslog, set host 127.0.0.1, port 5514, protocol udp, and click Save. UDP needs no listener for the simulation journeys to run.",
       "Open /data-sources → Browse, search `fortigate`, click the Fortinet card, click the FortiGate row (not the Install button) and click Install data source in the drawer footer.",
       "Open a chat and paste the prompt above. Both lists come back without errors.",
@@ -7002,8 +7047,8 @@ export const JOURNEYS: Journey[] = [
     howToTest: [
       "Needs: a Cortex XSIAM Broker VM with the Windows Event Collector applet enabled, the Subscription Manager value and the client certificate bundle (PFX, as base64 text) with its password issued by the Cortex console, and a network route from the Phantom host to the broker on TCP 5986.",
       "Open /connectors → Marketplace tab, click the wec-sender card and Install Connector.",
-      "Instances tab → Create Instance → wec-sender. Paste the Subscription Manager value exactly as issued, paste the base64 PFX into the clientPfx secret field and the password into clientPfxPassword (secret fields; operator-only), then Create Instance. Click Test Connection on the row.",
-      "In a chat paste prompt 1. The reply lists the collector's subscriptions.",
+      "Instances tab → Create Instance → wec-sender. Paste the Subscription Manager value exactly as issued, paste the base64 PFX into the clientPfx secret field and the password into clientPfxPassword (secret fields; operator-only), then Create Instance. Click Test Connection on the row: it reports that TCP 5986 on the broker accepts connections and says plainly that the certificate and the WS-Management exchange are NOT verified (no event is sent).",
+      "In a chat paste prompt 1. The reply lists the collector's subscriptions; this read-only call is the real check of the certificate and the route.",
       "Paste prompt 2. Run the XQL the agent returns in Cortex; the test event is found in microsoft_windows_raw with `_collector_type = \"WEC\"`.",
       "Paste prompt 3. Run `dataset = microsoft_windows_raw | filter _collector_type = \"WEC\" | comp count()` in Cortex and watch the count grow.",
     ],
@@ -7698,7 +7743,7 @@ export const JOURNEYS: Journey[] = [
     ],
     apis: [],
     howToTest: [
-      "Prerequisites: an http-sender instance (see the simulate-http-data-source journey). This route also needs the Cribl settings: in /connectors, edit the http-sender instance and set criblUrl and the criblToken secret (operator-only; the agent cannot read or write them). Ask the agent to run http-sender.list_destinations and confirm cribl_gcp_cloud_logging shows ready: true.",
+      "Prerequisites: an http-sender instance (see the simulate-http-data-source journey). This route also needs the Cribl settings: in /connectors, edit the http-sender instance, set Destination to 'Cribl integration' (or 'Both' to keep a collector too) and fill in criblUrl and the criblToken secret (operator-only; the agent cannot read or write them). Ask the agent to run http-sender.list_destinations and confirm cribl_gcp_cloud_logging shows ready: true.",
       "Without those settings the call is refused with a clear message and nothing is sent. You can check this on Phantom alone: that refusal is the correct behaviour on an instance without Cribl.",
       "Open a new chat, open the Live Telemetry panel and paste the prompt.",
       "Confirm one http-sender.generate_events call with exactly profile and scenario. The result should show sent 4, batch_status [200], destination cribl_gcp_cloud_logging, dataset google_cloud_logging_raw and four sample_ids.",

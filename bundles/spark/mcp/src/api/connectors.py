@@ -279,13 +279,12 @@ def register_connector_routes(
         include_in_schema=False,
     )
     async def probe_connector(request: Request) -> JSONResponse:
-        """Run a real health probe (xlog, caldera) and update state
-        accordingly. For connectors without a wired probe (e.g. xsiam),
-        falls back to the legacy reset-to-pending behavior so the next
-        tool call re-evaluates.
-
-        The simple cases actually probe and transition to "connected" /
-        "failed" / "needs-auth" based on the upstream response.
+        """Run the connector's read-only health probe and update state
+        accordingly: "connected" / "failed" / "needs-auth" from the
+        outcome (usecase/connector_probes.py; all nine bundle connectors
+        have one). A connector without a probe (an operator-uploaded
+        one) falls back to the legacy reset-to-pending behavior so the
+        next tool call re-evaluates.
         """
         if (resp := require_bearer(request)) is not None:
             return resp
@@ -313,7 +312,13 @@ def register_connector_routes(
                     else None
                 )
                 ok, err, is_auth = await _real_probe(
-                    cid, config=cfg, secrets=sec
+                    cid,
+                    config=cfg,
+                    secrets=sec,
+                    # With an instance, also check its connector container;
+                    # without one the probe falls back to env defaults.
+                    container_url=first_inst.container_url if first_inst else None,
+                    check_container=first_inst is not None,
                 )
                 if ok:
                     new_state = state_store.record_success(cid)

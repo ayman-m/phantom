@@ -48,25 +48,18 @@ executionMode: "persistent"
 # manifest's setup.bindsInstances[].template.config block.
 configSchema:
   type: "object"
-  required: ["baseUrl", "redUser"]
+  required: ["baseUrl"]
   properties:
     baseUrl:
       type: "string"
       description: "Caldera server base URL (e.g. http://caldera:8888)."
       default: "http://caldera:8888"
-    redUser:
-      type: "string"
-      description: "Red team username for authenticated calls."
-      default: "red"
 
 # Named secret slots; the manifest's setup.bindsInstances[].secretRefs
 # binds these to setup-supplied paths under data_root.
 secretSlots:
   - name: "apiKey"
     description: "Caldera REST API key (X-API-Key header)."
-    required: true
-  - name: "redPassword"
-    description: "Red team password for browser-flow operations."
     required: true
 
 # Tool catalog. Tool names DROP the `caldera_` prefix that the legacy

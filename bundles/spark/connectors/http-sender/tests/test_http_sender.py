@@ -554,10 +554,15 @@ def test_tool_names_and_arguments_match_the_manifest():
 def test_the_manifest_carries_no_provider_specific_defaults():
     props = manifest()["configSchema"]["properties"]
     assert props["vendor"]["default"] == "" and props["product"]["default"] == ""
-    assert {"collectorUrl", "vendor", "product"} == set(manifest()["configSchema"]["required"])
+    # Which fields an instance needs depends on its destination kind (destinationMode, which the connector
+    # ignores and only the Add-instance form uses), so the schema requires none of them itself.
+    assert not manifest()["configSchema"].get("required")
+    mode = props["destinationMode"]
+    assert mode["enum"] == ["http", "cribl", "both"] and mode["default"] == "http"
     # a bundle connector declares no `image`: the updater derives it from the release digest pin, and an
     # explicit one would make the agent pass an image_ref that bypasses the pin
     assert manifest()["id"] == "http-sender" and manifest()["version"] == "1.0.0" and "image" not in manifest()
     slots = {s["name"]: s for s in manifest()["secretSlots"]}
-    assert slots["collectorKey"]["required"] and not slots["additionalKeys"]["required"]
+    assert not slots["collectorKey"]["required"] and "HTTP collector" in slots["collectorKey"]["description"]
+    assert not slots["additionalKeys"]["required"]
     assert "criblToken" in slots and not slots["criblToken"]["required"]  # Cribl mode is optional

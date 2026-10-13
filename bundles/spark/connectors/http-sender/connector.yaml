@@ -45,8 +45,15 @@ executionMode: "persistent"
 
 configSchema:
   type: "object"
-  required: ["collectorUrl", "vendor", "product"]
+  # Nothing is required here: which fields an instance needs depends on the kind of destination it uses
+  # (destinationMode), and the connector works with either kind alone. The Add-instance form enforces the
+  # per-mode requirements (the card in mcp/agent/app/api/marketplace/connectors/route.ts must match this file).
   properties:
+    destinationMode:
+      type: "string"
+      enum: ["http", "cribl", "both"]
+      description: "Which kind of destination this instance sends to: http (an XSIAM HTTP Log Collector: collectorUrl, vendor, product and the collectorKey secret), cribl (the Cribl integration: criblUrl and the criblToken secret) or both. The connector ignores this value; it only decides which fields the Add-instance form shows and requires."
+      default: "http"
     collectorUrl:
       type: "string"
       widget: "url"
@@ -93,8 +100,8 @@ configSchema:
 
 secretSlots:
   - name: "collectorKey"
-    description: "The primary collector's API key, shown once by Save & Generate Token. Sent as the raw Authorization header (no Bearer prefix)."
-    required: true
+    description: "The primary collector's API key, shown once by Save & Generate Token. Sent as the raw Authorization header (no Bearer prefix). Required for the HTTP collector destination (destinationMode http or both); not used for Cribl alone."
+    required: false
   - name: "additionalKeys"
     description: 'Keys for the additional destinations, as a JSON object keyed by destination name, e.g. {"proofpoint_email_security": "<key>"}. Leave empty when there are none.'
     required: false

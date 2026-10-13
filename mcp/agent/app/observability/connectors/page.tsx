@@ -197,10 +197,11 @@ export default function ConnectorsHealthPage() {
               </h1>
             </div>
             <p className="text-sm text-on-surface-variant ml-9 max-w-2xl">
-              Per-connector lifecycle state. Click Probe to retry a
-              failed connector, Disable to stop tools from calling
-              into it, or Reauth (when shown) to refresh expired
-              credentials. Auto-refreshes every {REFRESH_MS / 1000}s.
+              Per-connector lifecycle state. Click Probe to run a
+              connector&apos;s read-only test again, Disable to mark it
+              disabled (the instance switch on /connectors is what
+              pauses its tools), or Reauth (when shown) to re-test
+              after you fix its credentials. Auto-refreshes every {REFRESH_MS / 1000}s.
             </p>
           </div>
           <button
@@ -582,7 +583,7 @@ function ConnectorRowCard({
               onClick={() => onAction(id, "probe")}
               aria-label="Probe connector"
               className="p-1.5 rounded hover:bg-white/5 text-on-surface-variant hover:text-on-surface transition-colors disabled:opacity-50"
-              title="Probe (re-test on next tool call)"
+              title="Probe (run the connector's read-only test now)"
             >
               <span className="material-symbols-outlined text-base">
                 refresh
@@ -594,7 +595,7 @@ function ConnectorRowCard({
               onClick={() => onAction(id, "disable")}
               aria-label="Disable connector"
               className="p-1.5 rounded hover:bg-error/10 text-on-surface-variant hover:text-error transition-colors disabled:opacity-50"
-              title="Disable (stop calling tools from this connector)"
+              title="Mark disabled (the instance switch on /connectors pauses the tools)"
             >
               <span className="material-symbols-outlined text-base">
                 block

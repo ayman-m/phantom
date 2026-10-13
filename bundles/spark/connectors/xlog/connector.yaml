@@ -47,22 +47,11 @@ configSchema:
       type: "string"
       description: "Xlog service base URL (e.g. https://xlog:8000). xlog serves HTTPS unconditionally (TLS via the shared phantom_tls volume); the connector verify=False's the self-signed cert against compose-internal hostnames. Operators with a custom xlog deployment behind their own TLS reverse proxy override this via the /instances form."
       default: "https://xlog:8000"
-    webhookEndpoint:
-      type: "string"
-      description: "Default sink for generated logs when create_data_worker omits a destination (typically the operator's XSIAM webhook URL)."
-      default: ""
-    defaultLogFormat:
-      type: "string"
-      description: "Default wire format ('JSON' | 'CEF' | 'KV' | 'RAW') when not specified per-call."
-      default: "JSON"
 
 secretSlots:
   - name: "apiToken"
     description: "Xlog service API token (sent as Authorization header on every connector call)."
     required: true
-  - name: "webhookKey"
-    description: "Default webhook Authorization header value (raw, NOT 'Bearer') for the configured webhookEndpoint."
-    required: false
 
 spec:
   tools:

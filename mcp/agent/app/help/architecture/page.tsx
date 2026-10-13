@@ -649,7 +649,7 @@ container_url         = http://phantom-connector-<connector>-<instance>:9000
  </li>
  <li>
  <Term>External connectors</Term>: per-instance credentials in
- the SecretStore (XSIAM PAPI auth header, CALDERA red user,
+ the SecretStore (XSIAM PAPI auth header, CALDERA API key,
  web connector cdp_url, etc). The connector state machine{" "}
  (<a href="#connector-state" className="link">below</a>)
  tracks per-instance lifecycle (connected / failed /
@@ -4152,8 +4152,31 @@ function ConnectorState() {
  (auth vs other) and transitions the connector accordingly. The
  UI surfaces this via a Reauth chip when needs-auth.
  </p>
+ <p>
+ The state records how the last test or tool call went. It does
+ not gate tool advertisement: <Code>iter_registrations</Code>{" "}
+ (<Code>connector_loader.py</Code>) registers a connector&apos;s
+ tools whenever the connector is installed and has an enabled
+ <em>enabled</em> instance, whatever its state. A{" "}
+ <Code>pending</Code> connector (never tested) and a{" "}
+ <Code>failed</Code> one both expose their tools; the{" "}
+ <Code>/connectors</Code> note beside the instance says &quot;not
+ tested yet&quot; or &quot;connection failing&quot; and only a
+ disabled instance says its tools are paused. Disabling an
+ instance (<Code>PATCH /api/v1/instances/&#123;id&#125;</Code> with{" "}
+ <Code>enabled: false</Code>) reloads the registry, so the connector
+ is no longer registered, and the wrapper in{" "}
+ <Code>_wrap_with_instance</Code> re-reads the instance on every call
+ and refuses a disabled one (<Code>InstanceDisabledError</Code>);
+ FastMCP keeps a listed tool until the next restart, which is why the
+ refusal is at the call. The connector-level{" "}
+ <Code>POST /api/v1/connectors/&#123;id&#125;/disable</Code> (the
+ Disable button on <Code>/observability/connectors</Code>) only sets
+ this state to <Code>disabled</Code>; nothing reads that state to
+ gate tools.
+ </p>
  <SubSection icon="auto_mode" title="State machine">
- <Pre>{`pending → connected (first successful call)
+ <Pre>{`pending → connected (first successful call, or a passing Test Connection)
  → failed (transport error)
  → needs-auth (401/403)
  → disabled (operator)
@@ -4166,6 +4189,108 @@ failed → connected, needs-auth, disabled
 needs-auth → connected (after reauth + success)
  → disabled
 disabled → pending (operator re-enables)`}</Pre>
+ </SubSection>
+ <SubSection icon="network_check" title="Test Connection probes">
+ <p>
+ Every bundle connector has a probe in{" "}
+ <Code>bundles/spark/mcp/src/usecase/connector_probes.py</Code>
+ {" "}(<Code>PROBE_IMPLEMENTED</Code>; a unit test pins the set to
+ the connector directories). A probe runs when the operator presses
+ Test Connection, unprompted by the agent, so it is read-only: it
+ never sends an event, a log line or a WS-Management request. The
+ sender connectors prove reachability only and say what they did not
+ verify.
+ </p>
+ <p>
+ <strong>Wiring.</strong> Browser → <Code>POST
+ /api/agent/instances/&#123;id&#125;/test</Code> (Next.js, session
+ cookie, forwarded by <Code>proxyToMcp</Code>, 15 s timeout, no
+ retry) → embedded MCP <Code>POST /api/v1/instances/&#123;id&#125;/test</Code>{" "}
+ (loopback, bearer <Code>MCP_TOKEN</Code>, synchronous). The MCP
+ first calls the instance&apos;s connector container,{" "}
+ <Code>GET &lt;container_url&gt;/health</Code> on port 9000 (plain
+ HTTP on the compose network, no auth, 3 s; an instance with no{" "}
+ <Code>container_url</Code> fails as &quot;container has not
+ started&quot;), then the connector&apos;s upstream (5 s per request,
+ 12 s for the whole probe so it finishes inside the proxy&apos;s 15
+ s). Nothing is retried. The probe never raises: a timeout, DNS,
+ TLS or HTTP failure becomes <Code>ok:false</Code> with a one-line
+ reason, and 401/403 are marked <Code>is_auth_error</Code>. A test of
+ the persisted instance records the result in{" "}
+ <Code>connector_state</Code> (<Code>connected</Code>,{" "}
+ <Code>failed</Code> or <Code>needs-auth</Code>); a dry run from the
+ edit dialog (form values as overrides) records nothing. A
+ connector without a probe answers <Code>probe_implemented: false</Code>{" "}
+ with &quot;This connector has no built-in test.&quot; and writes
+ nothing. TLS: the compose-internal callees (xlog, caldera, the
+ browser sidecar, connector containers) follow{" "}
+ <Code>PHANTOM_TLS_VERIFY</Code>; Cortex, the Cortex docs and an
+ HTTP collector are always verified (http-sender follows its own{" "}
+ <Code>verifyTls</Code>), as the connectors do.
+ </p>
+ <table className="w-full text-xs my-3 border-collapse">
+ <thead>
+ <tr style={{ borderBottom: "1px solid var(--glass-border)" }}>
+ <th className="text-left py-2 px-2 font-label uppercase tracking-wider text-on-surface-variant">Connector</th>
+ <th className="text-left py-2 px-2 font-label uppercase tracking-wider text-on-surface-variant">What the probe sends</th>
+ <th className="text-left py-2 px-2 font-label uppercase tracking-wider text-on-surface-variant">Passes when / not verified</th>
+ </tr>
+ </thead>
+ <tbody>
+ <tr style={{ borderBottom: "0.5px solid var(--glass-border)" }}>
+ <td className="py-2 px-2 align-top"><Code>xlog</Code></td>
+ <td className="py-2 px-2 align-top"><Code>GET /health</Code>, then <Code>GET /api/v1/worker-rates</Code> with the API token (a read-only snapshot).</td>
+ <td className="py-2 px-2 align-top">Both answer 200. <Code>/health</Code> alone is not enough: it is the one path xlog serves without a token. 401 = token rejected; 503 = xlog has no token set.</td>
+ </tr>
+ <tr style={{ borderBottom: "0.5px solid var(--glass-border)" }}>
+ <td className="py-2 px-2 align-top"><Code>caldera</Code></td>
+ <td className="py-2 px-2 align-top"><Code>GET /api/v2/health</Code> with the <Code>KEY</Code> header.</td>
+ <td className="py-2 px-2 align-top">200; 401 = key rejected.</td>
+ </tr>
+ <tr style={{ borderBottom: "0.5px solid var(--glass-border)" }}>
+ <td className="py-2 px-2 align-top"><Code>xsiam</Code></td>
+ <td className="py-2 px-2 align-top"><Code>POST /public_api/v1/xql/get_datasets</Code> with an empty body, <Code>Authorization</Code> + <Code>x-xdr-auth-id</Code> (a Standard key, plain header). The URL is normalised exactly as the connector does (append <Code>/public_api/v1</Code> only when missing).</td>
+ <td className="py-2 px-2 align-top">200, or 403 <Code>Datasets not found</Code> (the key authenticated). 401 = key or ID rejected; any other 403 = the key&apos;s role lacks permission.</td>
+ </tr>
+ <tr style={{ borderBottom: "0.5px solid var(--glass-border)" }}>
+ <td className="py-2 px-2 align-top"><Code>cortex-xdr</Code></td>
+ <td className="py-2 px-2 align-top"><Code>POST /public_api/v1/incidents/get_incidents</Code> for one row, same headers and URL rule.</td>
+ <td className="py-2 px-2 align-top">200 (also proves the role can read incidents). 401/403 as for xsiam; 402 = licence.</td>
+ </tr>
+ <tr style={{ borderBottom: "0.5px solid var(--glass-border)" }}>
+ <td className="py-2 px-2 align-top"><Code>cortex-docs</Code></td>
+ <td className="py-2 px-2 align-top"><Code>GET /cortex-xsiam.md</Code> on the public docs site.</td>
+ <td className="py-2 px-2 align-top">200 only.</td>
+ </tr>
+ <tr style={{ borderBottom: "0.5px solid var(--glass-border)" }}>
+ <td className="py-2 px-2 align-top"><Code>cortex-content</Code></td>
+ <td className="py-2 px-2 align-top">Reads the baked catalog manifest in the agent image.</td>
+ <td className="py-2 px-2 align-top">Manifest present and the container answers <Code>/health</Code>. NOT verified: the connector container&apos;s own copy of the catalog (its <Code>/health</Code> only says the process is alive).</td>
+ </tr>
+ <tr style={{ borderBottom: "0.5px solid var(--glass-border)" }}>
+ <td className="py-2 px-2 align-top"><Code>web</Code></td>
+ <td className="py-2 px-2 align-top"><Code>GET &lt;cdp_url&gt;/json/version</Code> (a <Code>ws://</Code> URL is read as <Code>http://</Code>; the host is resolved first because Chromium rejects a hostname in the Host header, as the connector does).</td>
+ <td className="py-2 px-2 align-top">200 with a Chrome DevTools description. Failure names the sidecar (compose profile <Code>browser</Code>).</td>
+ </tr>
+ <tr style={{ borderBottom: "0.5px solid var(--glass-border)" }}>
+ <td className="py-2 px-2 align-top"><Code>http-sender</Code></td>
+ <td className="py-2 px-2 align-top">Config check (https <Code>collectorUrl</Code>, vendor, product, <Code>collectorKey</Code> slot present), then ONE unauthenticated <Code>GET</Code> to <Code>collectorUrl</Code>: no body, no key, <Code>verifyTls</Code> and <Code>timeoutSeconds</Code> honoured. Additional destinations and Cribl are reported, never contacted. An instance with only <Code>criblUrl</Code> (no collector URL, vendor or product) is probed the same way against the Cribl endpoint instead: https, path ending in <Code>/logs/v1/integrated/cribl/data</Code>, <Code>criblToken</Code> slot present, ONE unauthenticated <Code>GET</Code>, no token sent.</td>
+ <td className="py-2 px-2 align-top">Any HTTP answer (even 401/404/405): DNS, TCP, TLS and HTTP work. NOT verified: the collector key (or the Cribl token), the vendor/product pairing. <Code>send_test_event</Code> is the explicit end-to-end check.</td>
+ </tr>
+ <tr>
+ <td className="py-2 px-2 align-top"><Code>wec-sender</Code></td>
+ <td className="py-2 px-2 align-top">Config check (parseable <Code>subscriptionManagerUrl</Code>, <Code>clientPfx</Code> and <Code>clientPfxPassword</Code> slots present), then a bare TCP connect to host:port (default 5986). No TLS handshake, no WS-Management request.</td>
+ <td className="py-2 px-2 align-top">The port accepts a connection. NOT verified: the client certificate, its CA, the route through the collector. <Code>list_subscriptions</Code> (read-only) is the end-to-end check.</td>
+ </tr>
+ </tbody>
+ </table>
+ <p>
+ A probe runs in the agent container; the connector&apos;s tools run
+ in the connector container. The container check narrows that gap
+ but a network path that works from one may not from the other
+ (for example a proxy only the connector container uses); the
+ connector&apos;s own tool call is the final word.
+ </p>
  </SubSection>
  <SubSection icon="track_changes" title="Auth classification">
  <p>
@@ -4184,7 +4309,14 @@ disabled → pending (operator re-enables)`}</Pre>
  </li>
  <li>
  <Code>POST /api/v1/connectors/{`{id}`}/disable | enable | probe</Code>{" "}
- — operator actions.
+ — operator actions. <Code>probe</Code> runs the connector&apos;s
+ read-only probe (below) against its first instance and records
+ the result; a connector without a probe (an uploaded one) is reset
+ to <Code>pending</Code>.
+ </li>
+ <li>
+ <Code>POST /api/v1/instances/{`{id}`}/test</Code> — Test
+ Connection for one instance (see Test Connection probes above).
  </li>
  <li>
  <Code>POST /api/v1/connectors/{`{id}`}/_record_success | _record_failure</Code>{" "}
@@ -6460,7 +6592,7 @@ POST /api/v1/instances → instances.py checks marketplace_store.is_installed
                        → otherwise InstanceStore.create writes row
                        → phantom-updater starts per-instance container
                        → MCP's iter_registrations re-runs
-                       → tools now advertise
+                       → tools now advertise (while the instance is enabled)
             ↓
 Agent's tool catalogue: <id>/<tool_name> entries appear`}</Pre>
  <p>
@@ -6468,8 +6600,8 @@ Agent's tool catalogue: <id>/<tool_name> entries appear`}</Pre>
  (see <Code>bundles/spark/mcp/src/api/instances.py</Code>).
  Tool registration runs at the loader (see{" "}
  <Code>iter_registrations</Code> — only connectors with
- instances get their tools registered). The combination produces
- strict semantics: install + instance → tools. Either missing →
+ an enabled instance get their tools registered). The combination produces
+ strict semantics: install + enabled instance → tools. Either missing →
  no tools.
  </p>
  </SubSection>
@@ -6505,7 +6637,7 @@ Agent's tool catalogue: <id>/<tool_name> entries appear`}</Pre>
  wins a collision). Four consumers use it:
  </p>
  <ul className="list-disc pl-6 space-y-1">
- <li><strong>Tool registration</strong> — <Code>iter_registrations</Code> advertises an uploaded connector&apos;s tools as <Code>&lt;id&gt;.&lt;tool&gt;</Code> while it has an instance, honouring the per-instance <Code>disabled_tools</Code> list and the human-approval list. Uploaded connectors get <strong>no</strong> legacy flat aliases, so an upload can never shadow a built-in tool name. A broken upload is logged and skipped; it never stops other connectors&apos; tools from registering.</li>
+ <li><strong>Tool registration</strong> — <Code>iter_registrations</Code> advertises an uploaded connector&apos;s tools as <Code>&lt;id&gt;.&lt;tool&gt;</Code> while it has an enabled instance, honouring the per-instance <Code>disabled_tools</Code> list and the human-approval list. Uploaded connectors get <strong>no</strong> legacy flat aliases, so an upload can never shadow a built-in tool name. A broken upload is logged and skipped; it never stops other connectors&apos; tools from registering.</li>
  <li><strong>Tool counts</strong> — <Code>tool_summary</Code> counts them the same way.</li>
  <li><strong>State list</strong> — <Code>GET /api/v1/connectors</Code> and <Code>/{"{id}"}</Code> include them, and every row carries <Code>origin</Code> (<Code>bundle</Code> | <Code>user</Code> | <Code>orphaned</Code>). <Code>in_manifest</Code> stays true only for bundle connectors.</li>
  <li><strong>Tools panel</strong> — <Code>GET /api/v1/connectors/&lt;id&gt;/tools</Code> resolves uploaded connectors too; it answers 404 only when the id is in neither place.</li>
@@ -8534,11 +8666,13 @@ function CalderaConnector() {
  <SubSection icon="settings_input_component" title="Authentication">
  <p>
  CALDERA exposes <Code>red</Code> and <Code>blue</Code> users
- plus a per-user API key. The connector authenticates as the
- red user (<Code>CALDERA_RED_USER</Code> +{" "}
- <Code>CALDERA_RED_PASSWORD</Code>) for operation control and
- uses the API key for query calls. Compose hard-fails the
- stack if those env vars are missing.
+ plus a per-user API key. The connector authenticates with the
+ API key (<Code>CALDERA_API_KEY</Code>, the instance&apos;s{" "}
+ <Code>apiKey</Code> secret) for every call; it has no red user or
+ password setting. The red user&apos;s own web login
+ (<Code>CALDERA_RED_USER</Code> + <Code>CALDERA_RED_PASSWORD</Code>)
+ is written into Caldera&apos;s config from <Code>.env</Code> at start.
+ Compose hard-fails the stack if those env vars are missing.
  </p>
  </SubSection>
  <SubSection icon="lan" title="Network shape">
@@ -9188,7 +9322,7 @@ function SecretStore() {
  <Code>/agents/phantom/connectors/&lt;instance_id&gt;/&lt;slot&gt;</Code>{" "}
  &mdash; per-connector-instance secrets (xsiam{" "}
  <Code>apiToken</Code>, caldera{" "}
- <Code>redPassword</Code>, etc.)
+ <Code>apiKey</Code>, etc.)
  </li>
  <li>
  <Code>/agents/phantom/providers/&lt;instance_id&gt;/&lt;slot&gt;</Code>{" "}

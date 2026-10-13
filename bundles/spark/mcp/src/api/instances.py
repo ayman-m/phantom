@@ -33,7 +33,7 @@ from starlette.responses import JSONResponse
 
 from api.auth import require_bearer, require_loopback_for_secrets
 from usecase.audit_log import audit_log, reset_current_actor, set_current_actor
-from usecase.connector_probes import PROBE_IMPLEMENTED, real_probe
+from usecase.connector_probes import PROBE_IMPLEMENTED, probe as run_probe
 from usecase.connector_state import get_connector_state_store
 from usecase.instance_store import Instance, InstanceStore
 from usecase.secret_store import ForeignSecretRefError
@@ -66,10 +66,12 @@ def _instance_to_dict(
     """
     cs_store = get_connector_state_store()
     state = "pending"
+    last_error: str | None = None
     if cs_store is not None:
         cs = cs_store.get(inst.connector_id)
         if cs is not None:
             state = cs.state
+            last_error = cs.last_error
     if redact_secrets:
         secrets_out: dict[str, Any] = {k: "***" for k in inst.secrets}
     elif secret_store is not None:
@@ -85,6 +87,9 @@ def _instance_to_dict(
         "created_at": inst.created_at,
         "enabled": inst.enabled,
         "state": state,
+        # The last probe/tool failure for the connector (None when it has
+        # not failed). Lets /connectors say why a connection is failing.
+        "last_error": last_error,
         # container_url exists on the Instance dataclass (set by
         # phantom-updater's _agent_set_container_url callback for
         # style:container connectors). The instances_list +
@@ -549,9 +554,10 @@ def register_instance_routes(mcp: FastMCP, store: InstanceStore) -> None:
         """Partial update for an instance.
 
         Honored body fields:
-          * enabled: bool         — toggles connector_state.disabled
-                                    (instance↔connector is 1:1 in
-                                    single-tenant Phantom)
+          * enabled: bool         — enables or pauses the instance. A
+                                    disabled instance's tools are not
+                                    offered to the agent (the tool
+                                    registry is reloaded on change).
           * name: str             — rename
           * config: dict          — replace the config blob
           * secrets: dict         — rotate one or more secret slots
@@ -656,6 +662,20 @@ def register_instance_routes(mcp: FastMCP, store: InstanceStore) -> None:
                 if instance is None:
                     return JSONResponse(
                         {"error": "not found"}, status_code=404
+                    )
+
+            if "enabled" in update_kwargs:
+                # Enabling or disabling the instance changes which connectors
+                # the agent is offered tools for; re-run the registration so
+                # the catalogue follows without a restart.
+                try:
+                    from usecase.connector_loader import reload_tools_now  # noqa: PLC0415
+                    reload_tools_now()
+                except Exception as exc:  # noqa: BLE001 - the row IS updated
+                    logger.warning(
+                        "instance %s: enabled=%s stored but tool reload failed: %s. "
+                        "The tool catalogue follows after an agent restart.",
+                        instance_id, update_kwargs["enabled"], exc,
                     )
 
             if disabled_tools_change is not None:
@@ -802,12 +822,21 @@ def register_instance_routes(mcp: FastMCP, store: InstanceStore) -> None:
                             connection-history. Default true if any
                             override is present, false otherwise.
 
-        For connectors without a wired probe (xsiam) returns the
-        current state unchanged with a `probe_implemented: false`
-        flag so the UI can render an explanatory message.
+        Every bundle connector has a read-only probe
+        (usecase/connector_probes.py: it never sends an event; the
+        sender connectors prove reachability only). It first checks the
+        instance's connector container (`GET <container_url>/health`),
+        then the connector's upstream. A connector without a probe (an
+        operator-uploaded one) returns the current state unchanged with
+        `probe_implemented: false` and a `message` saying it has no
+        built-in test, so the UI can say so instead of staying silent.
 
         The probe reads instance.config + resolved secrets, so changing
         instance config changes the probe outcome.
+
+        Response (probe run): {instance, probe_implemented: true, ok,
+        error, is_auth_error, message, dry_run, connector_state}.
+        `message` is what a pass proved (and, for senders, did not).
         """
         if (resp := require_bearer(request)) is not None:
             return resp
@@ -851,13 +880,15 @@ def register_instance_routes(mcp: FastMCP, store: InstanceStore) -> None:
             cid = instance.connector_id
 
             if cid not in PROBE_IMPLEMENTED:
-                # No real probe — return current state with a flag so
-                # the UI doesn't claim the test "passed" misleadingly.
+                # No built-in probe (an operator-uploaded connector): return
+                # the current state with a flag and a plain message so the UI
+                # never claims the test "passed" and never stays silent.
                 current = cs_store.get(cid) if cs_store else None
                 return JSONResponse(
                     {
                         "instance": _instance_to_dict(instance),
                         "probe_implemented": False,
+                        "message": "This connector has no built-in test.",
                         "connector_state": (
                             current.to_dict() if current else None
                         ),
@@ -884,9 +915,14 @@ def register_instance_routes(mcp: FastMCP, store: InstanceStore) -> None:
                     else:
                         effective_secrets[slot] = value
 
-            ok, err, is_auth = await real_probe(
-                cid, config=effective_config, secrets=effective_secrets
+            result = await run_probe(
+                cid,
+                config=effective_config,
+                secrets=effective_secrets,
+                container_url=instance.container_url,
+                check_container=True,
             )
+            ok, err, is_auth = result.ok, result.error, result.is_auth_error
 
             # Only write to connector_state when probing the persisted
             # config — a dry-run shouldn't pollute the connection
@@ -907,6 +943,7 @@ def register_instance_routes(mcp: FastMCP, store: InstanceStore) -> None:
                     "ok": ok,
                     "error": err,
                     "is_auth_error": is_auth,
+                    "message": result.message,
                     "dry_run": dry_run,
                     "connector_state": current.to_dict() if current else None,
                 }

@@ -701,10 +701,18 @@ class InstanceStore:
             ).fetchone()
         return row is not None
 
-    def configured_connector_ids(self) -> set[str]:
-        """Return the set of connector_ids that have ≥1 instance."""
+    def configured_connector_ids(self, *, enabled_only: bool = False) -> set[str]:
+        """Return the set of connector_ids that have ≥1 instance.
+
+        With `enabled_only`, only connectors with ≥1 ENABLED instance: those are
+        the ones whose tools the agent is offered (a disabled instance is
+        operator-paused).
+        """
+        sql = "SELECT DISTINCT connector_id FROM instances"
+        if enabled_only:
+            sql += " WHERE enabled = 1"
         with self._lock, self._conn() as c:
-            rows = c.execute("SELECT DISTINCT connector_id FROM instances").fetchall()
+            rows = c.execute(sql).fetchall()
         return {r[0] for r in rows}
 
     @staticmethod

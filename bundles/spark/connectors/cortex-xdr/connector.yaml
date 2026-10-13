@@ -36,7 +36,7 @@ runtimeMapping:
 executionMode: "persistent"
 
 # Cortex XDR API auth model:
-#   Authorization:   <api_key>          (advanced API key from XDR console)
+#   Authorization:   <api_key>          (Standard API key from XDR console; sent as a plain header)
 #   x-xdr-auth-id:   <api_id>           (key identifier — the integer in front of the key)
 #   Content-Type:    application/json
 #
@@ -64,7 +64,7 @@ configSchema:
 
 secretSlots:
   - name: "api_key"
-    description: "Cortex XDR Authorization header value — the Advanced API Key from the XDR console (Settings → Configurations → API Keys → Generate Key → 'Advanced' security level). Do NOT include a 'Bearer' prefix — paste the raw key value."
+    description: "Cortex XDR Authorization header value — a Standard API key from the XDR console (Settings → Configurations → API Keys → New Key → Security Level 'Standard'). Do NOT choose Advanced: the connector sends the key as a plain header and does not compute the signature an Advanced key needs. Do NOT include a 'Bearer' prefix — paste the raw key value."
     required: true
 
 spec:

@@ -53,8 +53,25 @@ You need a Linux host (Ubuntu, Debian, RHEL, Fedora, Rocky, AlmaLinux or openSUS
 
 1. Download `phantom-installer` from the [GitHub Releases](https://github.com/ayman-m/phantom/releases) page for the version you want.
 2. Run it on the host with `sudo ./phantom-installer`. It installs to `/opt/phantom`, generates the secrets and a first admin password, pulls the images and starts the stack.
-3. Open `https://<host>:3000`, sign in as `admin`, change the password, and add a model provider on the Providers page.
-4. Create the log generator's connector instance: on **Connectors**, choose the **Instances** tab and **Create Instance**, pick `xlog`, and paste the API token. The installer generated that token as `XLOG_API_KEY` in `/opt/phantom/.env`; read it on the host with `sudo grep '^XLOG_API_KEY=' /opt/phantom/.env`. Leave the URL at `https://xlog:8000`, then press **Test Connection**. The admin password is in the same file as `PHANTOM_DEFAULT_ADMIN_PASSWORD` if you missed the install banner.
+3. Open `https://<host>:3000` and accept the browser warning (the stack generates a self-signed certificate). Sign in as `admin`. The password is printed at the end of a successful install; if you closed the terminal, read it on the host with `sudo grep '^PHANTOM_DEFAULT_ADMIN_PASSWORD=' /opt/phantom/.env`. Phantom sends you to **Profile** to change it first.
+
+#### First setup, in this order
+
+1. **Configure a model provider** on **Providers**: an Anthropic API key, an OpenAI API key, or a Vertex AI service account. One is enough. Press **Test Connection**, then **Save Changes**.
+2. **Install the connectors you need** on **Connectors**, **Marketplace** tab. A fresh install lists every connector as available but not installed; open a card and press **Install Connector**.
+3. **Create one instance per connector** on **Connectors**, **Instances** tab, **Create Instance**. The installer generated the credentials for the services that ship in the stack, and you read them on the host from `/opt/phantom/.env` (`sudo cat /opt/phantom/.env`, or `sudo grep` for one line):
+
+| Connector | Fields | Where the value comes from |
+|---|---|---|
+| `xlog` | URL `https://xlog:8000`; secret `apiToken` | `XLOG_API_KEY` in `.env` |
+| `caldera` | URL `http://caldera:8888`; secret `apiKey` | `CALDERA_API_KEY` in `.env` |
+| `web` | `cdp_url` `http://phantom-browser:9222` | the default is already filled in |
+| `xsiam`, `cortex-xdr` | `api_url`, `api_id`; secret `api_key` | created in your own Cortex tenant, see below |
+| `http-sender` | **Destination** first: *XSIAM HTTP collector* (`collectorUrl`, `vendor`, `product`; secret `collectorKey`), *Cribl integration* (`criblUrl`; secret `criblToken`) or *Both* | created in your own Cortex tenant (Settings, Data Sources & Integrations) |
+
+Press **Test Connection** on each instance. The first instance of a connector waits for its image to pull.
+
+**Cortex XSIAM and Cortex XDR: create a Standard API key.** In the Cortex console go to **Settings > Configurations > Integrations > API Keys** and choose **New Key**, then set **Security Level** to **Standard**. Do not choose Advanced. Phantom authenticates with the key value and the key ID as plain headers, and an Advanced key needs a per-request signature that Phantom does not compute, so every call would fail with an authentication error. Copy the key value into `api_key` and the **ID** shown in the keys table into `api_id`. Set `api_url` to the API URL of your tenant (`https://api-<tenant>.xdr.<region>.paloaltonetworks.com`, the **Copy API URL** button on the same page); the connector adds the path itself. Give the key a role that allows what you want Phantom to do, for example read access for queries. A `403` with `Datasets not found` means the dataset does not exist, not that the key is wrong; a wrong key returns `401`.
 
 The images are public packages on GitHub Container Registry. Pulling them needs **no account, token or key**:
 
