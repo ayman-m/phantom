@@ -33,6 +33,14 @@
  *                          saved metric bookmarks): every key with its
  *                          value. Not a secret, not platform catalogue
  *                          (see lib/operator-state-backup.ts).
+ *   - hooks.json           the operator's hooks (Settings -> Hooks) from
+ *                          hooks.db: every hook, disabled ones included.
+ *                          Operator configuration, not a credential, but
+ *                          secret values inside a hook (literal env and
+ *                          header values, a builtin's secret-ref fields,
+ *                          secret-looking plugin config keys) are STRIPPED
+ *                          and listed under `redacted` (see
+ *                          lib/hooks-backup.ts).
  *
  * Auth: cookie session check at the route level. A backup with
  * cleartext secrets must not be reachable to anonymous callers.
@@ -55,6 +63,8 @@ import { NextResponse } from "next/server";
 import JSZip from "jszip";
 
 import { PhantomMCPClient } from "@/lib/mcp-client";
+import { listBuiltinHooks } from "@/lib/hook-builtins";
+import { HOOKS_FILE, buildHooksSection } from "@/lib/hooks-backup";
 import {
   OPERATOR_STATE_FILE,
   buildOperatorStateSection,
@@ -449,6 +459,38 @@ export async function GET() {
       sectionCounts.operator_state = 0;
     }
 
+    // ── Section 9: Hooks ─────────────────────────────────────────────
+    // hooks.db is the one home; GET /api/v1/hooks with no filter returns
+    // every hook, disabled ones included. Secret values are stripped from
+    // each hook (lib/hooks-backup.ts) and the stripped paths travel in
+    // `redacted`, so restore can disable the hook and name what to re-enter.
+    try {
+      const builtinSecretKeys = (name: string): string[] =>
+        (listBuiltinHooks().find((b) => b.name === name)?.configFields ?? [])
+          .filter((f) => f.type === "secret-ref")
+          .map((f) => f.key);
+      const hooksSection = buildHooksSection(
+        await mcpJson<unknown>("/api/v1/hooks"),
+        builtinSecretKeys,
+      );
+      zip.file(HOOKS_FILE, JSON.stringify(hooksSection, null, 2));
+      sectionCounts.hooks = hooksSection.count;
+      const stripped = Object.keys(hooksSection.redacted).length;
+      if (stripped) {
+        warnings.push(
+          `hooks: secret values were left out of ${stripped} hook${
+            stripped === 1 ? "" : "s"
+          } (listed under redacted in ${HOOKS_FILE}); restore brings them ` +
+            "back disabled until the values are entered again.",
+        );
+      }
+    } catch (e) {
+      warnings.push(
+        `hooks skipped: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      sectionCounts.hooks = 0;
+    }
+
     // ── Manifest (last so section_counts is fully populated) ─────────
     const manifest = {
       schema_version: SCHEMA_VERSION,
@@ -466,6 +508,7 @@ export async function GET() {
         "knowledge",
         "data_sources",
         "operator_state",
+        "hooks",
       ],
       section_counts: sectionCounts,
       warning:
@@ -480,6 +523,7 @@ export async function GET() {
         "knowledge",
         "data_sources",
         "operator_state",
+        "hooks",
         "jobs",
       ],
       restore_notes: [
@@ -496,6 +540,13 @@ export async function GET() {
         "Operator state (tested-journey marks, metric bookmarks) is " +
           "exported key by key; restore keeps a key the destination " +
           "already holds unless overwrite is chosen.",
+        "Hooks are exported with every definition, disabled ones " +
+          "included, but secret values are left out (literal env and " +
+          "header values, a builtin's secret-ref fields, secret-looking " +
+          "plugin config keys; secret:<ENV_NAME> references are kept). " +
+          "A hook that lost values is restored disabled, and the " +
+          "hooks.json redacted map names the fields. An http hook's URL " +
+          "and a command's text are kept as written.",
       ],
       ...(warnings.length ? { backup_warnings: warnings } : {}),
     };

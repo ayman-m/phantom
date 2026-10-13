@@ -17,10 +17,10 @@
  *                          warned within this many minutes (default
  *                          5). Prevents banner-spam during a busy
  *                          turn cluster.
- *   notify_category      — operator-readable category tag stamped on
- *                          the notification ("context-warning" by
- *                          default). Lets operators filter their
- *                          notifications page by it.
+ *
+ * The notification goes to the fixed `context-warning` topic (declared in
+ * bundles/spark/manifest.yaml). Older stored configs may still carry a
+ * `notify_category` key; validateConfig drops it.
  *
  * Why a notification rather than a chat banner: notifications are the
  * existing operator-attention surface; banners would require a new
@@ -34,7 +34,8 @@
  */
 
 import type { BuiltinHookSpec } from "./types";
-import { callMcpServer } from "@/lib/mcp-proxy";
+import { CONTEXT_WARNING_TOPIC } from "./notification-topics";
+import { publishHookNotification } from "./publish-notification";
 
 const SESSION_LAST_WARNED_AT = new Map<string, number>();
 
@@ -75,17 +76,6 @@ export const preCompactContextWarningBuiltin: BuiltinHookSpec = {
         "disable suppression (every PreCompact fires a notification).",
       required: false,
     },
-    {
-      key: "notify_category",
-      label: "Notification category tag",
-      type: "string",
-      defaultValue: "context-warning",
-      helper:
-        "Stamped on the published notification so operators can filter " +
-        "their /notifications page.",
-      placeholder: "context-warning",
-      required: false,
-    },
   ] as const,
   validateConfig(raw) {
     if (raw && typeof raw !== "object") {
@@ -118,14 +108,9 @@ export const preCompactContextWarningBuiltin: BuiltinHookSpec = {
       out.suppress_repeat_minutes = repeat;
     }
 
-    const category = cfg.notify_category;
-    if (category === undefined) {
-      out.notify_category = "context-warning";
-    } else if (typeof category !== "string" || !category.trim()) {
-      return { ok: false, error: "notify_category must be a non-empty string" };
-    } else {
-      out.notify_category = category.trim();
-    }
+    // `notify_category` is not read: the topic is fixed. Hooks saved before
+    // that field was removed still carry it, so it is ignored here (and so
+    // absent from the stored config the next time the hook is saved).
 
     return { ok: true, config: out };
   },
@@ -149,37 +134,26 @@ export const preCompactContextWarningBuiltin: BuiltinHookSpec = {
       return null; // No-op; the operator was warned recently.
     }
 
-    // Publish the notification via MCP. Best-effort — a notification
-    // failure shouldn't cause the dispatcher to fail the whole hook
-    // result (the chat route's compaction proceeds either way).
-    const category = config.notify_category as string;
-    try {
-      await callMcpServer<{ id?: string }>("/api/v1/notifications", {
-        method: "POST",
-        body: {
-          topic: category,
-          payload: {
-            severity: "info",
-            title: "Chat context filling up — compaction imminent",
-            body:
-              `Session ${sessionId} is at ${payload.kind === "manual" ? "manual-compact" : "auto-compact"} ` +
-              `threshold with ${messageCount} messages. Earlier turns ` +
-              `will be summarized + replaced. Save anything you need ` +
-              `to memory via the memory_store tool before continuing.`,
-            session_id: sessionId,
-            kind: payload.kind,
-            message_count: messageCount,
-            threshold_pct: config.threshold_pct,
-          },
-        },
-      });
-      SESSION_LAST_WARNED_AT.set(sessionId, nowMs);
-    } catch (err) {
-      console.warn(
-        "pre-compact-context-warning: failed to publish notification:",
-        err instanceof Error ? err.message : err,
-      );
-    }
+    // Publish the notification via MCP. Best-effort: a failure is logged
+    // (never thrown) so the chat route's compaction proceeds either way.
+    const published = await publishHookNotification(
+      "pre-compact-context-warning",
+      CONTEXT_WARNING_TOPIC,
+      {
+        severity: "info",
+        title: "Chat context filling up — compaction imminent",
+        body:
+          `Session ${sessionId} is at ${payload.kind === "manual" ? "manual-compact" : "auto-compact"} ` +
+          `threshold with ${messageCount} messages. Earlier turns ` +
+          `will be summarized + replaced. Save anything you need ` +
+          `to memory via the memory_store tool before continuing.`,
+        session_id: sessionId,
+        kind: payload.kind,
+        message_count: messageCount,
+        threshold_pct: config.threshold_pct,
+      },
+    );
+    if (published) SESSION_LAST_WARNED_AT.set(sessionId, nowMs);
 
     // Non-decisional — the hook doesn't veto compaction, just warns.
     // (Could be extended later to allow `decision: 'deny'` for an

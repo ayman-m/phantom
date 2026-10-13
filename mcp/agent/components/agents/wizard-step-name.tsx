@@ -19,16 +19,10 @@ export const AGENT_TEMPLATES: AgentTemplate[] = [
     label: "Coder",
     icon: "code",
     model: "claude-sonnet-4-20250514",
-    tools: [
-      "spawn_subagent",
-      "claude_code_start",
-      "claude_code_status",
-      "claude_code_output",
-      "claude_code_cancel",
-    ],
+    tools: ["spawn_subagent"],
     systemPrompt:
       "You are a coding assistant. You write clean, well-tested code following the project's conventions. You use tools to run code, read files, and execute shell commands as needed.",
-    description: "AI coding assistant with Claude Code tools",
+    description: "AI coding assistant",
   },
   {
     id: "researcher",

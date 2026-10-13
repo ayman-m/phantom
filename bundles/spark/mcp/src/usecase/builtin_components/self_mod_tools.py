@@ -161,9 +161,17 @@ def settings_get() -> dict[str, Any]:
 
 
 def personality_get() -> dict[str, Any]:
-    """The agent's current persona — sliders + free-form markdown.
+    """The agent's current persona — free-form markdown plus the action policy.
 
-    Returns {personality, updated_at, updated_by, version}.
+    Returns {personality, updated_at, updated_by, version}. The blob's
+    `personalityMd` is the persona document rendered into your system
+    prompt; `actionPolicy` is the local/external confirmation policy
+    the chat route enforces. A blob saved by an older release may also
+    carry keys nothing reads any more (permissionLevel, defaultModel,
+    fallbackModel, maxConcurrentRuns, dailySummary, summaryTime,
+    escalationThreshold, vertexCacheEnabled, autoCompactMinDropped,
+    memoryMmrLambda, memoryTemporalDecayLambda); ignore them and do not
+    offer to change them.
 
     The persona document is operator-tunable at runtime via the
     /settings/personality UI page or the Tier-2 `personality_update`
@@ -1075,14 +1083,16 @@ async def personality_update(blob: dict[str, Any]) -> dict[str, Any]:
         blob: the full new personality. MUST be a dict matching the
             shape returned by `personality_get` — agent should fetch
             current, modify, then update with the full new object
-            (read-modify-write). Partial/unknown keys are accepted but
-            unused fields are silently dropped on next read.
+            (read-modify-write). Unknown keys are accepted and stored,
+            but only `personalityMd` and `actionPolicy` have any effect.
 
     Returns {personality, updated_at, updated_by, version}.
 
     Trigger phrases: "always answer in three bullet points",
-    "be more concise", "raise your proactivity", "update the
-    personality so you cite simulation IDs more aggressively".
+    "be more concise", "update the personality so you cite
+    simulation IDs more aggressively". Tone and working style go in
+    `personalityMd` as markdown; there are no tone, proactivity,
+    model or permission fields to set.
     """
     from usecase.builtin_components._approval_gate import gate_and_execute
     from usecase.personality_store import personality_store
@@ -1119,9 +1129,8 @@ async def personality_patch(updates: dict[str, Any]) -> dict[str, Any]:
 
         personality_patch({"personalityMd": "...new markdown..."})
 
-    is safe and won't wipe the other fields (actionPolicy, model,
-    notifications, etc.) the way a naive
-    `personality_update({"personalityMd": "..."})` would.
+    is safe and won't wipe the other field (actionPolicy) the way a
+    naive `personality_update({"personalityMd": "..."})` would.
 
     Args:
         updates: keys to set/replace. A shallow merge — top-level keys

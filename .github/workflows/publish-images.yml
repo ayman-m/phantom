@@ -1,0 +1,93 @@
+name: Publish images
+
+# Publishes a Phantom release to GHCR, run by hand (workflow_dispatch only):
+#   gh workflow run publish-images.yml -R ayman-m/phantom -f tag=X.Y.Z[-rcN] -f base_tag=A.B.C
+#
+# - phantom-agent-oss is built from this checkout (mcp/agent/Dockerfile, repo-root context, no build args)
+#   and pushed as <tag>.
+# - The other fourteen images are not rebuilt: <tag> is added to the image that <base_tag> already points
+#   at, so their digests stay identical to <base_tag>.
+# - Only <tag> is ever written. `latest` and X.Y are never touched, and a released (non -rcN) version
+#   is never overwritten. The guards live in .github/scripts/publish-images.sh and are tested by
+#   .github/scripts/test-publish-images.sh, which runs first.
+#
+# No stored secret: the job logs in to GHCR with the run's GITHUB_TOKEN, on a GitHub-hosted runner. That
+# works only after each package grants this repository write access (BUILDING.md, "Publishing images").
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version to publish: X.Y.Z or X.Y.Z-rcN (never latest, never X.Y)"
+        required: true
+        type: string
+      base_tag:
+        description: "Already-published X.Y.Z whose images the unchanged services are retagged from"
+        required: true
+        default: "1.0.3"
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: publish-images
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish ${{ inputs.tag }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read # checkout
+      packages: write # push the agent image, add tags to the other fourteen
+    env:
+      TAG: ${{ inputs.tag }}
+      BASE_TAG: ${{ inputs.base_tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate inputs and run context
+        # Fails before any login or build: bad tag, tag == base_tag, wrong repository, or a ref other than main.
+        run: bash .github/scripts/publish-images.sh validate
+
+      - name: Test the release guards
+        run: bash .github/scripts/test-publish-images.sh
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Preflight (writes nothing)
+        # No released tag is overwritten, base_tag exists on all 15 packages, and the digests of
+        # base_tag, latest and X.Y are recorded to be compared after the run.
+        run: bash .github/scripts/publish-images.sh preflight "$RUNNER_TEMP/before.tsv"
+
+      - name: Build and push phantom-agent-oss
+        id: agent
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: mcp/agent/Dockerfile
+          pull: true
+          push: true
+          # Single image manifest, as the earlier releases: no provenance or SBOM attestation index.
+          provenance: false
+          sbom: false
+          tags: ghcr.io/ayman-m/phantom-agent-oss:${{ inputs.tag }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/ayman-m/phantom
+
+      - name: Add the tag to the fourteen unchanged images
+        run: bash .github/scripts/publish-images.sh retag
+
+      - name: Verify and write the summary
+        env:
+          AGENT_DIGEST: ${{ steps.agent.outputs.digest }}
+        run: bash .github/scripts/publish-images.sh verify "$RUNNER_TEMP/before.tsv"

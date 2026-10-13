@@ -120,6 +120,27 @@ python3 tooling/validate/validate_all.py
 
 `PYTHONPATH=$PWD/src` is required for the MCP and updater suites. Keep `mcp[cli]` below 2: version 2 changes the client API that a few tests and the codebase-search check use. These are the same steps as `.github/workflows/ci.yml`.
 
+## Publishing images (maintainers)
+
+The published images come from this repository, built by [`.github/workflows/publish-images.yml`](.github/workflows/publish-images.yml). It runs only when a maintainer starts it, on a GitHub-hosted runner, and logs in to GHCR with the run's own `GITHUB_TOKEN`. No secret is stored anywhere.
+
+**What a run does.** `phantom-agent-oss` is built from the checkout (`mcp/agent/Dockerfile`, repo-root context, no build args) and pushed as `<tag>`. The other fourteen images are not rebuilt: `<tag>` is added to the image that `base_tag` already points at, so their digests are identical to `base_tag`'s. The job summary lists all fifteen digests.
+
+**Guards.** The run refuses to start unless `tag` is `X.Y.Z` or `X.Y.Z-rcN` (so never `latest` and never `X.Y`), `base_tag` is `X.Y.Z`, the two differ, and it runs on `main` of `ayman-m/phantom`. Before anything is written it checks that `base_tag` exists on all fifteen packages and that `<tag>` exists on none of them, unless `<tag>` ends in `-rcN`, which may be published again. Only `<tag>` is ever written. It records the digests of `base_tag`, `latest` and `X.Y` first and re-reads them at the end; any change fails the run. The logic is in [`.github/scripts/publish-images.sh`](.github/scripts/publish-images.sh) and its tests in `.github/scripts/test-publish-images.sh` (plain bash with a stub `docker`; the workflow runs them first).
+
+**One-time setup.** A job can push to a package only if the package lets this repository in. For each of the fifteen packages, open the package from the Packages tab of the `ayman-m` profile, choose **Package settings**, go to **Manage Actions access**, choose **Add Repository**, pick `ayman-m/phantom`, and set the role to **Write**. The packages:
+
+`phantom-agent-oss`, `phantom-xlog-oss`, `phantom-caldera-oss`, `phantom-updater-oss`, `phantom-browser-oss`, `phantom-connector-runtime-oss`, `phantom-connector-xlog-oss`, `phantom-connector-xsiam-oss`, `phantom-connector-caldera-oss`, `phantom-connector-web-oss`, `phantom-connector-cortex-docs-oss`, `phantom-connector-cortex-content-oss`, `phantom-connector-cortex-xdr-oss`, `phantom-connector-http-sender-oss`, `phantom-connector-wec-sender-oss`.
+
+**Run it.** Publish a candidate first, check it, then the final version:
+
+```bash
+gh workflow run publish-images.yml -R ayman-m/phantom -f tag=1.0.4-rc1 -f base_tag=1.0.3
+gh run watch -R ayman-m/phantom
+```
+
+**Limits.** The workflow has not been run yet. The agent image carries the `org.opencontainers.image.source` label that links the package to this repository; the fourteen retagged images keep whatever labels they were built with. If a run fails after the agent push but before every retag, a release candidate can simply be re-run, but a final version is never overwritten: publish the next patch version instead. Caldera is not rebuilt here; a new Caldera image needs the build-time overlay of the Phantom plugin and `default.yml`.
+
 ## Known rough edges
 
 - `bundles/spark/connectors/web/Dockerfile` installs `playwright>=1.48.0` and `trafilatura>=2.0.0` in a `RUN pip install` line without quotes, so the shell reads `>=...` as a redirect. The packages install, but the version floors are not applied and files named `=1.48.0` and `=2.0.0` are written into the image.

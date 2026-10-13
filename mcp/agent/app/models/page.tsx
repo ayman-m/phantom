@@ -27,7 +27,6 @@ import type {
 
 const KNOWN_PROVIDERS = [
   { id: "anthropic", label: "Anthropic", icon: "psychology" },
-  { id: "anthropic-cli", label: "Anthropic (Claude Code)", icon: "terminal" },
   { id: "openai", label: "OpenAI", icon: "smart_toy" },
   { id: "openai-codex", label: "OpenAI (Codex CLI)", icon: "terminal" },
   { id: "vertex", label: "Google Vertex AI", icon: "diamond" },
@@ -40,7 +39,7 @@ const KNOWN_PROVIDERS = [
 // Tab state lives in the URL (`?tab=embedding`) so tabs are bookmarkable,
 // back-button aware, and the page can stay a Server Component.
 
-type TabId = "chat" | "cli" | "embedding" | "image" | "voice";
+type TabId = "chat" | "embedding" | "image" | "voice";
 
 const TABS: {
   id: TabId;
@@ -54,13 +53,6 @@ const TABS: {
     icon: "chat_bubble",
     emptyHint:
       "No chat models discovered. Add credentials for Anthropic or Google Vertex AI in Providers.",
-  },
-  {
-    id: "cli",
-    label: "CLI",
-    icon: "terminal",
-    emptyHint:
-      "No CLI agents connected. Configure a Claude Code setup-token in Providers.",
   },
   {
     id: "embedding",
@@ -87,16 +79,8 @@ const TABS: {
 
 /**
  * Decide which tab a model belongs in. One model → exactly one tab.
- *
- * CLI takes precedence over chat — a Claude Code chat model with the
- * cli_tool interaction pattern appears under CLI, not Chat, because
- * the two surfaces have different operational characteristics
- * (subscription billing vs. API billing, different latency profiles).
  */
 function tabForModel(model: ModelInfo): TabId {
-  const patterns = model.interactionPatterns ?? [];
-  if (patterns.includes("cli_tool")) return "cli";
-
   switch (model.kind ?? "chat") {
     case "embedding":
       return "embedding";
@@ -185,7 +169,6 @@ export default function ModelsPage() {
   // button. Cheaper than filtering the list 5 times.
   const tabCounts: Record<TabId, number> = {
     chat: 0,
-    cli: 0,
     embedding: 0,
     image: 0,
     voice: 0,
@@ -538,10 +521,10 @@ function ModelRow({
           </div>
         )}
 
-        {/* Capability icons — only show for chat / cli tabs; other
+        {/* Capability icons — only show for the chat tab; other
             tabs (embedding, image, voice) have different capability
             dimensions that we haven't modeled yet. */}
-        {(activeTab === "chat" || activeTab === "cli") && (
+        {activeTab === "chat" && (
           <>
             {model.supportsThinking && (
               <div
@@ -568,7 +551,7 @@ function ModelRow({
           </>
         )}
 
-        {/* Context window (only meaningful for chat/cli/embedding) */}
+        {/* Context window (only meaningful for chat/embedding) */}
         {activeTab !== "image" && activeTab !== "voice" && (
           <div className="text-right">
             <div className="text-[10px] uppercase tracking-wider text-outline">

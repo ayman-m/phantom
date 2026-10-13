@@ -51,6 +51,7 @@ const SECTIONS: SectionDef[] = [
   { id: "authentication", label: "Authentication", group: "Welcome", icon: "lock_person" },
   { id: "profile", label: "Your Profile", group: "Welcome", icon: "person" },
   { id: "upgrades", label: "Upgrading Phantom", group: "Welcome", icon: "system_update" },
+  { id: "about-releases", label: "What's New & Release History", group: "Welcome", icon: "new_releases" },
   { id: "ui-tour", label: "Operator UI Tour", group: "Welcome", icon: "tour" },
 
   { id: "chat", label: "Chat", group: "Command", icon: "chat_bubble" },
@@ -78,7 +79,9 @@ const SECTIONS: SectionDef[] = [
   { id: "obs-pipeline", label: "Pipeline Health", group: "Observability", icon: "account_tree" },
   { id: "obs-metrics", label: "Metrics & Traces", group: "Observability", icon: "monitoring" },
   { id: "obs-logs", label: "Logs & Events", group: "Observability", icon: "terminal" },
+  { id: "obs-runtime-events", label: "Runtime Events", group: "Observability", icon: "sensors" },
   { id: "cost-ux", label: "Cost Rollup", group: "Observability", icon: "payments" },
+  { id: "obs-bench", label: "Benchmark Runs", group: "Observability", icon: "speed" },
   { id: "obs-activity", label: "Live Activity", group: "Observability", icon: "history_toggle_off" },
   { id: "detection-inventory", label: "Detection Inventory", group: "Observability", icon: "dashboard" },
 
@@ -820,13 +823,17 @@ curl -b /tmp/cookies.txt -k https://localhost:3001/api/agent/memory`}</Pre>
 
             <SubSection icon="visibility" title="Auditing image versions">
               <p>
-                Two operator surfaces show running image digests:
+                Two operator surfaces show what is running:
               </p>
               <ul className="list-disc pl-5 space-y-1 text-sm">
                 <li>
-                  <Term>About modal:</Term> click the version chip in
-                  the sidebar, expand &quot;Image versions&quot; — shows
-                  PHANTOM_VERSION + 5 stack-tier digests.
+                  <Term>About menu:</Term> the About row at the bottom of
+                  the sidebar opens a dialog with the running version
+                  (see{" "}
+                  <Link href="#about-releases" className="link">
+                    What&apos;s New &amp; Release History
+                  </Link>
+                  ). It does not list image digests.
                 </li>
                 <li>
                   <Term>Observability panel:</Term>{" "}
@@ -904,6 +911,65 @@ sudo ./phantom-installer`}
                   the value made it through.
                 </li>
               </ul>
+            </SubSection>
+          </Section>
+
+          <Section
+            id="about-releases"
+            icon="new_releases"
+            title="What's New & Release History"
+          >
+            <p>
+              The <Term>About</Term> row at the bottom of the sidebar (the
+              info icon, above your profile) opens a small menu with three
+              items: <Term>About</Term>, <Term>What&apos;s new</Term> and{" "}
+              <Term>Release history</Term>. The release notes are bundled
+              with the app, so they open without internet access.
+            </p>
+
+            <SubSection icon="info" title="About">
+              <p>
+                A dialog showing the product name, the running version, a
+                short description of Phantom, a few useful links and the
+                source repository. If the running version has no release
+                notes bundled with it (a development build), the dialog
+                says so under the version.
+              </p>
+            </SubSection>
+
+            <SubSection icon="auto_awesome" title="What's new">
+              <p>
+                <Link href="/about/whats-new" className="link">
+                  /about/whats-new
+                </Link>{" "}
+                opens in a new browser tab. The heading shows the running
+                version and its release notes appear first, highlighted.
+                The notes of the other releases follow, newest first, so
+                when you upgrade across several versions you can read what
+                changed in between. On a development build with no notes
+                of its own, the page says so and shows the most recent
+                bundled release instead.
+              </p>
+            </SubSection>
+
+            <SubSection icon="history" title="Release history">
+              <p>
+                <Link href="/about/history" className="link">
+                  /about/history
+                </Link>{" "}
+                also opens in a new tab. It lists every bundled release,
+                newest first, with the release count at the top. The entry
+                that matches your running version carries a{" "}
+                <Term>Running</Term> badge, so you can see where you sit on
+                the timeline.
+              </p>
+              <p>
+                Each entry shows the version, its date, a one-line title
+                and a short list of highlights. Releases with security
+                fixes or breaking changes carry a <Term>Security</Term> or{" "}
+                <Term>Breaking</Term> badge. For the long-form write-up of
+                a release, see <Code>CHANGELOG.md</Code> in the repository.
+              </p>
             </SubSection>
           </Section>
 
@@ -1059,11 +1125,8 @@ sudo ./phantom-installer`}
                 <Code>context_warning</Code> event and the chat input shows
                 a yellow banner with a one-click <Code>/compress</Code>{" "}
                 action. Second, when token-budgeted history walking would
-                drop more than ~5 prior messages (tunable in{" "}
-                <Link href="/settings/personality" className="link">
-                  Personality &rarr; Tuning
-                </Link>
-                ), the dropped portion is summarized into a checkpoint
+                drop 5 or more prior messages, the dropped portion is
+                summarized into a checkpoint
                 automatically — the operator sees the &ldquo;auto-compacted
                 N messages&rdquo; divider in the message thread.
               </p>
@@ -1077,11 +1140,10 @@ sudo ./phantom-installer`}
                 at ~25% of the standard rate. The model selector chip
                 shows a small amber dot when the previous turn registered
                 a cache hit; hover for the cached/prompt token ratio.
-                Disable per session via{" "}
-                <Link href="/settings/personality" className="link">
-                  Personality &rarr; Tuning &rarr; Vertex prompt caching
-                </Link>
-                .
+                Caching is off unless the <Code>PHANTOM_VERTEX_CACHE=1</Code>{" "}
+                environment variable is set on the{" "}
+                <Code>phantom-agent</Code> service; the installer does not
+                set it and no page in the UI turns it on or off.
               </p>
             </SubSection>
 
@@ -1998,18 +2060,8 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 </li>
               </ul>
               <p className="mt-2">
-                Defaults are configured in{" "}
-                <Link
-                  href="/settings/personality"
-                  className="link"
-                >
-                  Personality &rarr; Tuning
-                </Link>
-                . For one-off tuning, use the <Term>Advanced</Term>{" "}
-                disclosure on{" "}
-                <Link href="/memory" className="link">/memory</Link> —
-                lambda overrides apply to the next search and reset on
-                close.
+                Both values are built in (λ = 0.7 for MMR, 0.01 for
+                decay); no setting changes them.
               </p>
             </SubSection>
 
@@ -2062,6 +2114,53 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                   <Code>status: SUCCESS</Code> when executed.
                 </li>
               </ul>
+            </SubSection>
+
+            <SubSection icon="travel_explore" title="Browsing a knowledge base">
+              <p>
+                The index at{" "}
+                <Link href="/knowledge" className="link">/knowledge</Link>{" "}
+                shows one card per loaded knowledge base: its name, the
+                number of entries, how long ago it was last loaded and a{" "}
+                <Term>read-only</Term> tag. <Term>Refresh</Term> re-reads
+                the list. If nothing is loaded yet the page says so; refresh
+                again in a moment. Click a card to open the knowledge base.
+              </p>
+              <p>
+                The detail page (<Code>/knowledge/&lt;name&gt;</Code>) has
+                exactly two tabs:
+              </p>
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>
+                  <Term>Entries</Term> — every entry in the knowledge base,
+                  with its title, category and id. The filter box matches
+                  on title, id, category and metadata; the category chips
+                  narrow the list to one category (<Term>All</Term> clears
+                  it), and a counter shows how many entries match. Click an
+                  entry to read it in a dialog: the full text rendered as
+                  Markdown (query blocks are syntax-highlighted), with the
+                  entry&apos;s metadata in a collapsible block.
+                </li>
+                <li>
+                  <Term>Try search</Term> — a playground for the same
+                  semantic search the agent uses. Type a plain-language
+                  question (for example &ldquo;find C2 beaconing
+                  examples&rdquo;), pick how many results to return (top 3,
+                  5, 10 or 20) and press Enter or <Term>Search</Term>. Each
+                  result shows its similarity score; the line above the
+                  results shows how many matched and how long the search
+                  took. Click a result to read the entry.
+                </li>
+              </ul>
+              <p>
+                Knowledge bases are read-only here: there is no Import tab
+                and no Settings tab, and entries cannot be created, edited
+                or deleted from the UI. Search ranking is only meaningful
+                once a Vertex provider is configured on{" "}
+                <Link href="/providers" className="link">/providers</Link>;
+                until then the offline stand-in embedder is in use, and{" "}
+                <Code>health_status</Code> reports which one is live.
+              </p>
             </SubSection>
 
             <SubSection icon="search" title="How the agent uses the KB">
@@ -2517,7 +2616,7 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
             <p>
               <Link href="/models" className="link">/models</Link> shows every
               model the agent can route to, grouped by interaction kind
-              (Chat, CLI, Embedding, Image, Voice). Each model card lists
+              (Chat, Embedding, Image, Voice). Each model card lists
               its provider, capability flags (streaming, tool_use), and
               context window. The active tab uses the same green-active
               treatment as the sidebar.
@@ -2527,7 +2626,11 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
               credentials. Vertex AI is the default — saving the Vertex
               form writes the service-account JSON into the secret store, and
               the bundle&apos;s <Code>requiredSecrets</Code> declares
-              where it lands.
+              where it lands. The Anthropic (Claude API) card takes a single
+              API key, stored encrypted; the Claude models it adds to{" "}
+              <Link href="/models" className="link">/models</Link> are
+              listed but not yet selectable in chat, and its Test Connection
+              button is disabled.
             </p>
 
             <SubSection icon="route" title="Resolution logic">
@@ -4973,6 +5076,67 @@ session:s_4k21m
             </SubSection>
           </Section>
 
+          <Section id="obs-runtime-events" icon="sensors" title="Runtime Events">
+            <p>
+              <Link href="/observability/runtime-events" className="link">
+                /observability/runtime-events
+              </Link>{" "}
+              (sidebar, Observability, Runtime events) is the short list of
+              high-signal events Phantom records about its own work: a
+              simulation started or finished, a validation completed, a
+              coverage report generated, a Caldera operation created, or a
+              tool call that failed. It is the page to open for &ldquo;what
+              did Phantom do today?&rdquo;. For the full who-did-what trail
+              (every setting change, every tool call) use{" "}
+              <Link href="/observability/events" className="link">
+                Events
+              </Link>{" "}
+              instead.
+            </p>
+
+            <SubSection icon="dashboard" title="Reading the page">
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>
+                  <Term>Summary cards</Term> — one card per event name with
+                  its count. Click a card to show only that event; click it
+                  again to clear the filter. With no events recorded the
+                  row reads &ldquo;No runtime events recorded yet&rdquo;.
+                </li>
+                <li>
+                  <Term>Filter box</Term> — type an event name exactly (for
+                  example <Code>rt.tool.failed</Code>); the browser suggests
+                  the names Phantom declares. Empty shows all events.
+                </li>
+                <li>
+                  <Term>Table</Term> — newest first, up to 100 rows, with
+                  When, Event, Actor and Payload columns. The payload is
+                  shown as JSON and cut off after 200 characters.
+                </li>
+                <li>
+                  <Term>Refresh</Term> — the page does not update by itself;
+                  press Refresh to re-read it.
+                </li>
+              </ul>
+            </SubSection>
+
+            <SubSection icon="list" title="Event names">
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li><Code>rt.simulation.started</Code>, <Code>rt.simulation.completed</Code></li>
+                <li><Code>rt.validation.completed</Code></li>
+                <li><Code>rt.coverage.generated</Code></li>
+                <li><Code>rt.caldera.operation_created</Code></li>
+                <li>
+                  <Code>rt.tool.failed</Code> — a tool call raised an error;
+                  the payload carries the tool name, the error and the
+                  duration. A good first stop when a chat turn went wrong.
+                </li>
+              </ul>
+              <p className="text-sm">
+                Runtime events are kept for 7 days.
+              </p>
+            </SubSection>
+          </Section>
+
           {/* Cost rollup operator UX. */}
           <Section id="cost-ux" icon="payments" title="Cost Rollup">
             <p>
@@ -5045,6 +5209,116 @@ session:s_4k21m
             </Callout>
           </Section>
 
+          <Section id="obs-bench" icon="speed" title="Benchmark Runs">
+            <p>
+              <Link href="/observability/bench" className="link">
+                /observability/bench
+              </Link>{" "}
+              (sidebar, Observability, Bench) measures how well the agent
+              handles a fixed set of prompts, and keeps every run so you
+              can compare one against another after you change the model,
+              the routing or a skill. A benchmark sends each test case to
+              the chat as a real prompt, so <strong>every run spends model
+              tokens</strong> (see{" "}
+              <Link href="#cost-ux" className="link">Cost Rollup</Link>).
+            </p>
+
+            <SubSection icon="play_arrow" title="Run a benchmark">
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>
+                  <Term>Manifest</Term> — the bundled id or a path to a
+                  manifest file. The field starts with the bundled id{" "}
+                  <Code>phantom-soc-v1</Code>, a three-case sample: create
+                  syslog logs with the xlog tool, check platform health,
+                  and answer a question without calling any tool. The
+                  first case needs the xlog instance from{" "}
+                  <Link href="/connectors" className="link">/connectors</Link>.
+                </li>
+                <li>
+                  <Term>Router preset model</Term> — optional. A model name
+                  to use for every case instead of the runtime default,
+                  which is how you benchmark a cheaper or stronger model.
+                </li>
+                <li>
+                  <Term>Run benchmark</Term> — the button reads{" "}
+                  <Code>Running…</Code> and the page waits until the whole
+                  run has finished, which can take several minutes. The
+                  new run then appears at the top of the list. You can also
+                  ask in chat: <em>&ldquo;Run the phantom-soc-v1
+                  benchmark&rdquo;</em>.
+                </li>
+              </ul>
+            </SubSection>
+
+            <SubSection icon="format_list_bulleted" title="The run list and a run's detail">
+              <p>
+                Each past run (the latest 50) is a card with its id, start
+                time, manifest and, when one was set, the router preset
+                model, plus five figures: <Term>Correctness</Term>,{" "}
+                <Term>Avg Jaccard</Term>, <Term>Cost p50</Term>,{" "}
+                <Term>Wall p50</Term> and <Term>Cases</Term> (cases that ran
+                cleanly out of the total). Click a card to open the run.
+                The detail page repeats the figures (cost and wall time as
+                p50 / p95) and lists every case:
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>
+                  <Term>Correctness</Term> — pass when the agent&apos;s
+                  answer contains the case&apos;s expected text (ignoring
+                  upper and lower case); <Code>n/a</Code> when the case has
+                  no expected text.
+                </li>
+                <li>
+                  <Term>Jaccard</Term> — how closely the tools the agent
+                  called match the tools the case expects, from 0 to 1.
+                  The order of the calls does not matter.
+                </li>
+                <li>
+                  <Term>Cost</Term> and <Term>Wall</Term> — dollars and
+                  seconds for that case. A warning mark on Wall means the
+                  case took longer than its own time limit.
+                </li>
+                <li>
+                  <Term>Error</Term> — filled when the case could not run
+                  at all (for example the chat endpoint was unreachable or
+                  timed out). Such cases are left out of the rates.
+                </li>
+              </ul>
+            </SubSection>
+
+            <SubSection icon="compare_arrows" title="Compare two runs">
+              <p>
+                <Term>Compare runs</Term> (top right of the list) opens{" "}
+                <Code>/observability/bench/compare</Code>. Pick a{" "}
+                <Term>Base</Term> run and a <Term>Head</Term> run from the
+                two dropdowns (the latest 100 runs). The choice is kept in
+                the address as <Code>?base=&lt;run id&gt;&amp;head=&lt;run
+                id&gt;</Code>, so you can bookmark or share a comparison.
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>
+                  <Term>Aggregate metric deltas</Term> — six cards
+                  (correctness rate, average Jaccard, cost p50 and p95,
+                  wall p50 and p95) showing base, head, and the change. A
+                  change of 10% or more is green when the head is better
+                  and red when it is worse; anything smaller stays grey.
+                </li>
+                <li>
+                  <Term>Per-case diff</Term> — one row per case with the
+                  pass/fail change (labelled <Code>FIXED</Code> or{" "}
+                  <Code>REGRESSED</Code> when it flips) and the change in
+                  Jaccard, cost and wall time. Use it to find which case
+                  moved an aggregate.
+                </li>
+              </ul>
+              <p className="text-sm">
+                Useful pairings: the same manifest on two models, the same
+                manifest before and after an upgrade, or before and after
+                you change a skill.
+              </p>
+            </SubSection>
+          </Section>
+
           <Section
             id="obs-activity"
             icon="history_toggle_off"
@@ -5106,9 +5380,12 @@ session:s_4k21m
               is where the agent&apos;s voice and behavior live.
               Click <Term>Operator</Term> at the bottom of the
               sidebar, then <Term>Personality</Term> in the settings
-              tab strip. The page is split into two panels:{" "}
-              <Term>Persona</Term> (free-form system-prompt content)
-              and <Term>Tuning</Term> (typed behavior knobs).
+              tab strip. The page has two parts:{" "}
+              <Term>Action Policy</Term> (when the agent asks first) and{" "}
+              <Term>Advanced</Term> (the persona document). It holds
+              nothing else: model choice lives on{" "}
+              <Link href="/models" className="link">Models</Link>, not
+              here.
             </p>
 
             <SubSection icon="shield" title="Action policy — when the agent asks first">
@@ -5154,39 +5431,21 @@ session:s_4k21m
               </p>
             </SubSection>
 
-            <SubSection icon="record_voice_over" title="Persona panel — who the agent is">
+            <SubSection icon="record_voice_over" title="Persona document — who the agent is">
               <p>
-                Three free-form fields shape every system prompt the
-                agent ever sends:
+                The <Term>Advanced</Term> section holds one free-form
+                markdown document, <Code>Personality.md</Code>. It is
+                the whole persona: name, tone and standing
+                instructions all go in it, for example{" "}
+                <em>&ldquo;Always cite the XQL dataset name when
+                reporting query results&rdquo;</em> or{" "}
+                <em>&ldquo;Before destructive operations, name the
+                target system in plain English&rdquo;</em>. There are
+                no separate tone or reasoning sliders, so the document
+                cannot contradict itself.
               </p>
-              <ul className="list-disc pl-5 space-y-1.5 text-sm">
-                <li>
-                  <Term>Name</Term> — what the agent calls itself
-                  when it introduces. Examples:{" "}
-                  <em>&ldquo;SOC analyst assistant&rdquo;</em>,{" "}
-                  <em>&ldquo;Red-team operator&rdquo;</em>,{" "}
-                  <em>&ldquo;Detection engineer&rdquo;</em>. Appears
-                  in the chat header chip.
-                </li>
-                <li>
-                  <Term>Tone</Term> — voice instructions:{" "}
-                  <em>concise, factual</em> vs{" "}
-                  <em>verbose, narrative</em> vs{" "}
-                  <em>tactical, command-only</em>. Threaded into
-                  the system-prompt persona block.
-                </li>
-                <li>
-                  <Term>Instructions</Term> — system-prompt-style
-                  guidance the operator wants the agent to follow
-                  every turn. Things like{" "}
-                  <em>&ldquo;Always cite the XQL dataset name when
-                  reporting query results&rdquo;</em> or{" "}
-                  <em>&ldquo;Before destructive operations, name the
-                  target system in plain English&rdquo;</em>.
-                </li>
-              </ul>
               <p className="text-sm">
-                Persona content prepends a <Code>## PERSONA</Code>{" "}
+                The document is added as a <Code>## PERSONA</Code>{" "}
                 block to the system prompt for every chat turn. The
                 TAIL of the system prompt (skills inventory + tool
                 catalog) stays cacheable for Vertex prompt caching;
@@ -5195,108 +5454,57 @@ session:s_4k21m
               </p>
             </SubSection>
 
-            <SubSection icon="tune" title="Tuning panel — behavior knobs">
+            <SubSection icon="save" title="Saving and Reset Defaults">
               <p>
-                Four sliders / toggles that modulate chat-route and
-                memory-store behavior without redeploying:
+                Edits save by themselves a moment after you stop
+                changing something — there is no Save button, and the
+                indicator at the top right reads <Term>Saving</Term>,
+                then <Term>Saved</Term>, or the error if the save
+                failed. Saving from the page asks for no approval.
               </p>
-              <ul className="list-disc pl-5 space-y-2 text-sm">
-                <li>
-                  <Term>Vertex prompt caching</Term> — when ON,
-                  Phantom uses Vertex&apos;s{" "}
-                  <Code>cachedContents</Code> API to cache the
-                  system-prompt TAIL across turns. Saves 30-60% on
-                  input tokens after the first turn. Default ON if
-                  the <Code>PHANTOM_VERTEX_CACHE=1</Code> env var is
-                  set at boot; OFF otherwise. Toggle here to turn it
-                  off per-workspace without redeploying.
-                </li>
-                <li>
-                  <Term>Auto-compaction threshold</Term> — when
-                  loading session history at the start of a turn,
-                  Phantom token-budget-walks oldest-to-newest until
-                  the cap fits. If the walk drops ≥ N prior messages,
-                  auto-compaction kicks in and summarizes the dropped
-                  portion via Gemini. Default 5; chatty workflows
-                  can dial down to 2-3 to compact early; one-shot
-                  workflows can dial up to suppress.
-                </li>
-                <li>
-                  <Term>Memory MMR λ</Term> — Maximal Marginal
-                  Relevance weight in the memory-store ranking
-                  pipeline. Higher λ favors relevance over diversity
-                  (returns tighter matches); lower λ favors diversity
-                  (returns a spread of related-but-different memories).
-                  Default 0.7. Lower it if memory results feel
-                  repetitive.
-                </li>
-                <li>
-                  <Term>Memory temporal decay λ</Term> — exponential
-                  decay applied to memory-row recency in ranking.
-                  Higher λ favors fresh memories aggressively; lower
-                  λ treats old + new equally. Default 0.05 (half-life
-                  ~14 days). Raise it for fast-moving incident
-                  response contexts; lower it for long-running
-                  knowledge bases.
-                </li>
-              </ul>
               <p className="text-sm">
-                Slider drags auto-save after a short debounce — no
-                explicit Save button. The auto-save fires a tier-2
-                approval card the first time per session; subsequent
-                drags in the same session reuse the approval already
-                granted.
-              </p>
-            </SubSection>
-
-            <SubSection icon="history" title="History + reset">
-              <p>
-                Every save snapshots the prior blob into{" "}
-                <Code>personality_history</Code>. The page&apos;s{" "}
-                <Term>History</Term> drawer shows the last N
-                snapshots with diff highlights — click a row to
-                preview the prior state, or click{" "}
-                <Term>Restore</Term> to write it back (itself a
-                tier-2 approval-gated write).
-              </p>
-              <p>
-                <Term>Reset to default</Term> at the bottom of the
-                page is a tier-3 destructive action — it requires
-                an approval card AND types the literal word{" "}
-                <Code>RESET</Code> into a confirmation field. The
-                snapshot happens BEFORE the reset, so you can always
-                restore from history afterwards.
+                <Term>Reset Defaults</Term> at the top right puts the
+                built-in persona document and the built-in action
+                policy back, and saves them. It asks nothing first.
+                The page has no history view, but every save keeps
+                the previous version on the server (the last 20).
+                Each save writes a <Code>personality_changed</Code>{" "}
+                audit row.
               </p>
             </SubSection>
 
             <SubSection icon="smart_toy" title="Asking the agent to update the persona">
               <p>
                 The chat agent has tools to read and update the
-                personality blob directly. Examples:
+                personality blob directly. Tone, name and standing
+                instructions all live in the persona document, so
+                these requests change <Code>personalityMd</Code>.
+                Examples:
               </p>
               <ul className="list-disc pl-5 space-y-1 text-sm">
                 <li>
-                  &ldquo;Set the agent name to &lsquo;Detection
-                  engineer&rsquo; and the tone to &lsquo;tactical,
-                  command-only&rsquo;.&rdquo; → calls{" "}
-                  <Code>personality_patch</Code>, surfaces an approval
-                  card with the diff.
+                  &ldquo;From now on answer in tactical, command-only
+                  sentences.&rdquo; → calls{" "}
+                  <Code>personality_patch</Code> with a new{" "}
+                  <Code>personalityMd</Code>.
                 </li>
                 <li>
                   &ldquo;What instructions are configured?&rdquo; →
-                  calls <Code>personality_get</Code> (tier-1, no
-                  approval).
+                  calls <Code>personality_get</Code> (read-only).
                 </li>
                 <li>
                   &ldquo;Reset the personality to default.&rdquo; →
-                  calls <Code>personality_reset</Code> (tier-3
-                  destructive), surfaces a stronger approval card.
+                  calls <Code>personality_reset</Code> (destructive).
                 </li>
               </ul>
               <p className="text-sm">
-                Each call writes an audit row (<Code>personality_set</Code>,{" "}
-                <Code>personality_reset</Code>, etc.) — browse them
-                in <Link href="/observability/events" className="link">
+                The update and reset tools apply at once unless the
+                install lists them for approval (the list is empty by
+                default); when it does, an approval card shows the
+                change first. Each write records a{" "}
+                <Code>personality_changed</Code> audit row — browse
+                them in{" "}
+                <Link href="/observability/events" className="link">
                 /observability/events
                 </Link>{" "}
                 with the <em>Personality</em> filter chip.
@@ -5333,7 +5541,7 @@ session:s_4k21m
               <ul className="list-disc pl-5 space-y-1.5 text-sm">
                 <li>
                   <Term>Personality</Term> — single-row blob (persona
-                  fields + tuning knobs)
+                  document and action policy)
                 </li>
                 <li>
                   <Term>Instances + secrets</Term> — every connector
@@ -5368,7 +5576,27 @@ session:s_4k21m
                   tested and your saved metric bookmarks, so your
                   progress follows you to a new install
                 </li>
+                <li>
+                  <Term>Hooks</Term> — every hook from{" "}
+                  <Link href="/settings/hooks" className="link">
+                    /settings/hooks
+                  </Link>
+                  , disabled ones included (matcher, transport, priority,
+                  failure policy). Secret values inside a hook are{" "}
+                  <em>not</em> in the zip: a literal value in a command
+                  hook&apos;s environment or an HTTP hook&apos;s headers, a
+                  builtin&apos;s secret field (such as the Slack approval auth
+                  header value) and secret-looking plugin settings are left
+                  out. References written as{" "}
+                  <Code>secret:ENV_NAME</Code> are kept, so set that variable
+                  on the destination.
+                </li>
               </ul>
+              <p className="text-sm text-on-surface-variant">
+                An HTTP hook&apos;s URL and a command hook&apos;s command line
+                are kept exactly as written, so do not put a token in
+                either: use a <Code>secret:ENV_NAME</Code> header instead.
+              </p>
               <p className="text-sm text-on-surface-variant">
                 Log destinations are not in the zip: recreate them on
                 the destination from <Code>/log-destinations</Code>.
@@ -5406,6 +5634,7 @@ session:s_4k21m
   Knowledge             — (no-op; image-baked)
   Data sources          7 user uploads + 12 install picks
   Operator state        ✓ present (tested journeys, bookmarks)
+  Hooks                 ✓ present (secret values left out)
   Jobs                  6 runtime jobs (last in restore order)
 
   ☐ Overwrite existing entries (force)`}</Pre>
@@ -5443,6 +5672,14 @@ session:s_4k21m
                   <Term>Workflow state</Term> (each key is written
                   back; a key the destination already has is kept
                   unless you overwrite)
+                </li>
+                <li>
+                  <Term>Hooks</Term> (a hook whose id the destination
+                  already has is kept unless you overwrite; a hook that
+                  lost secret values is restored <em>disabled</em> and
+                  listed under <Term>Warnings</Term> with the fields to
+                  enter again in Settings → Hooks, and it is never allowed
+                  to replace a working hook, even with Overwrite)
                 </li>
                 <li>
                   <Term>Jobs</Term> last — runtime jobs that

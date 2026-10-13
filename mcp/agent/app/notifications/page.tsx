@@ -19,6 +19,7 @@ import { notify } from "@/lib/stores/notifications";
 // Title, description and the click target come from the payload via
 // lib/notification-display.ts. Topic conventions:
 //   job-run-*  → job card (success = system tab, failed = alerts tab)
+//   cost-warning / context-warning → warning card (alerts tab)
 //   approval:* → approval card (orange-ish)
 //   error:*    → error variant (red)
 //   security:* → security variant (red, shield icon)
@@ -32,8 +33,11 @@ function adaptNotif(row: NotificationRow): Notification {
   const isChannel = topic.startsWith("channel");
   const display = describeNotification(row);
   const isJob = topic === "job-run-completed" || topic === "job-run-failed";
+  const isWarning = display.tone === "warning";
   const inferredType: Notification["type"] = isApproval
     ? "approval"
+    : isWarning
+    ? "warning"
     : isJob
     ? display.tone === "failure"
       ? "error"
@@ -47,6 +51,8 @@ function adaptNotif(row: NotificationRow): Notification {
     : "config";
   const icon = isApproval
     ? "verified_user"
+    : isWarning
+    ? "warning"
     : isJob
     ? display.tone === "failure"
       ? "error"
@@ -59,6 +65,8 @@ function adaptNotif(row: NotificationRow): Notification {
     ? "cable"
     : "info";
   const palette = isApproval
+    ? { iconBg: "bg-tertiary-container/30", iconColor: "text-tertiary" }
+    : isWarning
     ? { iconBg: "bg-tertiary-container/30", iconColor: "text-tertiary" }
     : isJob && display.tone === "success"
     ? { iconBg: "bg-secondary-container/30", iconColor: "text-secondary" }
@@ -92,7 +100,7 @@ type FilterTab = "all" | "unread" | "approvals" | "alerts" | "system";
 
 interface Notification {
   id: string;
-  type: "approval" | "error" | "success" | "security" | "config" | "member" | "job" | "offline" | "connector" | "resolved";
+  type: "approval" | "error" | "success" | "security" | "config" | "member" | "warning" | "job" | "offline" | "connector" | "resolved";
   title: string;
   description: string;
   timestamp: string;
@@ -127,7 +135,7 @@ function matchesTab(n: Notification, tab: FilterTab): boolean {
   if (tab === "all") return true;
   if (tab === "unread") return !n.read;
   if (tab === "approvals") return n.type === "approval" || n.type === "resolved";
-  if (tab === "alerts") return n.type === "error" || n.type === "security" || n.type === "job" || n.type === "offline" || n.type === "connector";
+  if (tab === "alerts") return n.type === "error" || n.type === "security" || n.type === "warning" || n.type === "job" || n.type === "offline" || n.type === "connector";
   if (tab === "system") return n.type === "config" || n.type === "member" || n.type === "success";
   return true;
 }

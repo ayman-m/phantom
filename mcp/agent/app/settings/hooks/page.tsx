@@ -509,6 +509,14 @@ function HookEditor({
         setError(`Built-in '${builtinTransport.name}' is not available in this image.`);
         return;
       }
+      // A built-in only runs on the events it declares. Registration is
+      // the one place that can refuse a mismatch, so refuse it here.
+      if (spec.compatibleEvents.length > 0 && !spec.compatibleEvents.includes(draft.event)) {
+        setError(
+          `Built-in '${spec.displayName}' runs only on ${spec.compatibleEvents.join(" or ")}. Change the Event or pick a different built-in.`,
+        );
+        return;
+      }
       // Pre-check required fields client-side. The agent-side
       // validateConfig is still the source of truth for the full
       // shape (URL parsing, etc.); this just gives the operator
@@ -754,6 +762,7 @@ function HookEditor({
             transport={draft.transport}
             builtins={builtins}
             builtinsLoading={builtinsLoading}
+            event={draft.event}
             onPickSpec={(spec) =>
               updateTransport({
                 type: "builtin",
@@ -956,10 +965,12 @@ function BuiltinConfigSection({
   transport,
   builtins,
   builtinsLoading,
+  event,
   onPickSpec,
   onConfigChange,
 }: {
   transport: Extract<HookRow["transport"], { type: "builtin" }>;
+  event: HookEvent;
   builtins: BuiltinSpecMeta[];
   builtinsLoading: boolean;
   onPickSpec: (spec: BuiltinSpecMeta) => void;
@@ -1001,6 +1012,16 @@ function BuiltinConfigSection({
           ))}
         </select>
       </Field>
+
+      {selectedSpec &&
+        selectedSpec.compatibleEvents.length > 0 &&
+        !selectedSpec.compatibleEvents.includes(event) && (
+          <p className="text-xs text-error">
+            {selectedSpec.displayName} runs only on{" "}
+            {selectedSpec.compatibleEvents.join(" or ")}. Change the Event or
+            pick a different built-in.
+          </p>
+        )}
 
       {selectedSpec && (
         <>

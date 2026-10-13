@@ -2,7 +2,7 @@
  * Restore endpoint — accepts a zip produced by GET /api/agent/backup
  * and applies each section to the destination's stores in dependency
  * order: personality → instances+secrets → skills → memory → knowledge
- * (no-op) → data sources → operator state → jobs.
+ * (no-op) → data sources → operator state → hooks → jobs.
  *
  * The body is multipart/form-data with field name "file" (the zip).
  * Optional query params:
@@ -33,6 +33,12 @@
  *      step (compare counts), not a write.
  *   5b. Operator state (tested-journey marks, metric bookmarks) is
  *      independent key-value data, written key by key.
+ *   5c. Hooks (Settings -> Hooks) are operator configuration; a hook
+ *      with the same id on the destination is kept unless force. Secret
+ *      values are not in the zip (lib/hooks-backup.ts), so a hook that
+ *      lost any is written disabled, with a warning naming the fields.
+ *      They come before jobs so a policy hook is in place before a
+ *      restored job can fire tool calls.
  *   6. Jobs last because runtime jobs may reference connector tools
  *      (e.g. phantom_create_data_worker) which need their instance
  *      enabled before the first cron tick.
@@ -42,6 +48,9 @@ import { NextResponse } from "next/server";
 
 import JSZip from "jszip";
 
+import { getBuiltinHook } from "@/lib/hook-builtins";
+import { HOOKS_FILE, planHooksRestore } from "@/lib/hooks-backup";
+import { validateHook } from "@/lib/hooks";
 import { PhantomMCPClient } from "@/lib/mcp-client";
 import {
   OPERATOR_STATE_FILE,
@@ -113,6 +122,15 @@ function operatorStateEntryCount(file: unknown): number {
       ? (file as { entries?: unknown }).entries
       : undefined;
   return Array.isArray(entries) ? entries.length : 0;
+}
+
+/** How many hooks hooks.json holds (for the skipped count). */
+function hooksEntryCount(file: unknown): number {
+  const hooks =
+    file !== null && typeof file === "object"
+      ? (file as { hooks?: unknown }).hooks
+      : undefined;
+  return Array.isArray(hooks) ? hooks.length : 0;
 }
 
 async function _resolveMcp(): Promise<McpResolved | NextResponse> {
@@ -268,6 +286,7 @@ export async function POST(request: Request) {
         ).length,
         data_sources_installed: !!zip.file("data_sources/installed.json"),
         operator_state: !!zip.file(OPERATOR_STATE_FILE),
+        hooks: !!zip.file(HOOKS_FILE),
       },
       restore_order: [
         "personality",
@@ -277,6 +296,7 @@ export async function POST(request: Request) {
         "knowledge",
         "data_sources",
         "operator_state",
+        "hooks",
         "jobs",
       ],
       force,
@@ -833,6 +853,82 @@ export async function POST(request: Request) {
     }
     summary.applied.operator_state = applied;
     summary.skipped.operator_state = plan.skipped;
+  }
+
+  // ── 6c. Hooks — POST each hook (the store upserts on the id); keep
+  //        the destination's own unless force; hooks that lost secret
+  //        values come back disabled (lib/hooks-backup.ts) ───────────
+  const hooksFile = await readJsonFile<unknown>(HOOKS_FILE);
+  // Skipped as a whole when the destination's hooks cannot be listed.
+  const existingHookIds =
+    hooksFile !== undefined
+      ? await existingOrSkip(
+          "hooks",
+          "hooks",
+          hooksEntryCount(hooksFile),
+          () => getJson("/api/v1/hooks"),
+          (b) =>
+            keysFromList(b, "hooks", (h) =>
+              typeof h.id === "string" ? h.id : null,
+            ),
+        )
+      : null;
+  if (hooksFile !== undefined && existingHookIds) {
+    const plan = planHooksRestore(hooksFile, existingHookIds, force);
+    const lostSecrets = new Set(plan.disabledForSecrets);
+    summary.warnings.push(...plan.warnings);
+    let applied = 0;
+    let skipped = plan.skipped;
+    for (const hook of plan.posts) {
+      // The MCP only checks the shape. The agent-side validator also checks
+      // that a builtin still exists in this image and that its config is
+      // valid, so a hook this install could not run is reported, not stored.
+      // A hook that lost secret values is expected to fail the config check
+      // (a required value is gone), so only its builtin name is checked.
+      const transport = hook.transport as { type?: string; name?: string };
+      const usable = lostSecrets.has(hook.id)
+        ? transport.type !== "builtin" ||
+          (typeof transport.name === "string" &&
+            getBuiltinHook(transport.name) !== undefined)
+        : validateHook(hook) !== null;
+      if (!usable) {
+        skipped += 1;
+        summary.warnings.push(
+          `hooks: ${String(hook.name ?? hook.id)} (${hook.id}) not restored: ` +
+            "this install cannot run it (unknown builtin or invalid definition).",
+        );
+        continue;
+      }
+      try {
+        const resp = await fetch(`${mcp.base}/api/v1/hooks`, {
+          method: "POST",
+          headers: auth,
+          body: JSON.stringify(hook),
+          signal: AbortSignal.timeout(15000),
+        });
+        if (resp.ok || resp.status === 201) {
+          applied += 1;
+        } else {
+          const body = await resp.text().catch(() => "");
+          summary.errors.push(
+            `hook ${hook.id} POST returned HTTP ${resp.status}: ${body.slice(0, 200)}`,
+          );
+        }
+      } catch (e) {
+        summary.errors.push(
+          `hook ${hook.id} restore failed: ${
+            e instanceof Error ? e.message : String(e)
+          }`,
+        );
+      }
+    }
+    if (plan.invalid) {
+      summary.warnings.push(
+        `hooks: ${plan.invalid} unusable entr${plan.invalid === 1 ? "y" : "ies"} ignored`,
+      );
+    }
+    summary.applied.hooks = applied;
+    summary.skipped.hooks = skipped;
   }
 
   // ── 7. Jobs — POST each runtime job last (so connectors exist) ───

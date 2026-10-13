@@ -154,8 +154,10 @@ const SECTIONS: SectionDef[] = [
  { id: "settings-tuning", label: "Settings Tuning", group: "Operability", icon: "tune" },
  { id: "personality", label: "Personality Store", group: "Operability", icon: "psychology_alt" },
  { id: "cost-tracking", label: "Cost Tracking", group: "Operability", icon: "payments" },
+ { id: "benchmark-harness", label: "Benchmark Harness", group: "Operability", icon: "speed" },
  { id: "pipeline-health", label: "Pipeline Health Probes", group: "Operability", icon: "monitor_heart" },
  { id: "logs-events-traces", label: "Logs / Events / Traces", group: "Operability", icon: "stacked_line_chart" },
+ { id: "about-release-notes", label: "About & Release Notes", group: "Operability", icon: "new_releases" },
  { id: "polish", label: "Resilience & Polish", group: "Operability", icon: "auto_awesome" },
 
  // ── Composition ────────────────────────────────────────────────
@@ -418,8 +420,10 @@ export default function ArchitectureGuide() {
  <SettingsTuning />
  <Personality />
  <CostTracking />
+ <BenchmarkHarness />
  <PipelineHealth />
  <LogsEventsTraces />
+ <AboutReleaseNotes />
  <Polish />
  {/* Composition */}
  <SubstrateComposition />
@@ -1329,9 +1333,9 @@ function DataRoots() {
  </li>
  <li>
  <Code>personality.db</Code> — Single-row personality store
- with a last-N-versions history table. Holds the system-prompt
- customizations plus tuning fields (compaction threshold,
- cache toggle, memory-rank lambdas).
+ with a last-N-versions history table. Holds the persona
+ document and the action policy, the two things the chat route
+ reads.
  </li>
  {/* [v1.0.3] Retired: the setup.json free-form key/value bullet. Nothing
  writes setup.json any more (the first-run setup page was removed);
@@ -1942,9 +1946,9 @@ function Compaction() {
  </SubSection>
  <SubSection icon="auto_mode" title="Auto budget-edge compaction">
  <p>
- When token-budget walking would drop more than{" "}
- <Code>autoCompactMinDropped</Code> messages (default 5; the
- Personality &rarr; Tuning slider adjusts), the dropped portion is summarized via Gemini and
+ When token-budget walking would drop at least{" "}
+ <Code>AUTO_COMPACT_MIN_DROPPED</Code> messages (a fixed constant, 5, in{" "}
+ <Code>app/api/chat/route.ts</Code>; no setting changes it), the dropped portion is summarized via Gemini and
  persisted as a checkpoint INSIDE the history-load function.
  Subsequent turns benefit from the checkpoint without
  re-summarizing.
@@ -2143,7 +2147,8 @@ function ObservabilityOverview() {
  <li>
  <Term><Link href="/observability/bench" className="link">/observability/bench</Link></Term>
  {" "}— benchmark run history with per-run scored output + side-by-side compare view across runs.
- Tracks agent quality regression as the bundle or prompt changes.
+ Tracks agent quality regression as the bundle or prompt changes.{" "}
+ <Link href="#benchmark-harness" className="link">Benchmark Harness</Link> covers the runner, storage and endpoints.
  </li>
  <li>
  <Term><Link href="/observability/detections" className="link">/observability/detections</Link></Term>
@@ -2360,8 +2365,11 @@ function BackupRestore() {
 ├── skills/<category>/...  every skill MD, preserves dir structure
 ├── knowledge/<kb>/...     KB doc content (read-only at runtime)
 ├── data_sources/...       user uploads + install set
-└── operator_state.json    operator_state.db: every key + value
-                           (tested journeys, metric bookmarks)`}</Pre>
+├── operator_state.json    operator_state.db: every key + value
+│                          (tested journeys, metric bookmarks)
+└── hooks.json             hooks.db: every hook (disabled included) with
+                           secret values stripped; a "redacted"
+                           map lists hook id -> removed field paths`}</Pre>
  </SubSection>
  <SubSection icon="data_object" title="API surface">
  <ul className="list-disc pl-6 space-y-1.5">
@@ -2375,7 +2383,7 @@ function BackupRestore() {
  <Code>/api/v1/personality</Code>,{" "}
  <Code>/api/v1/memories</Code>, <Code>/api/v1/jobs</Code>,{" "}
  <Code>/api/v1/kbs</Code>, <Code>/api/v1/operator-state</Code>,
- and the <Code>skills_list_all</Code>{" "}
+ <Code>/api/v1/hooks</Code>, and the <Code>skills_list_all</Code>{" "}
  + <Code>skills_read</Code> MCP tools. Per-section try/catch —
  a failing endpoint emits a <Code>backup_warnings[]</Code>{" "}
  entry rather than killing the whole backup.
@@ -2425,6 +2433,19 @@ function BackupRestore() {
  <Code>force</Code>.
  </li>
  <li>
+ <strong>Hooks</strong> — operator configuration in{" "}
+ <Code>hooks.db</Code> (its one storage home); each hook is{" "}
+ <Code>POST /api/v1/hooks</Code> with its original id, which the
+ store upserts.{" "}
+ <Code>lib/hooks-backup.ts</Code> decides what to write: a hook
+ whose id the destination holds is kept unless <Code>force</Code>;
+ every written hook passes the agent-side{" "}
+ <Code>validateHook</Code> (an unknown builtin or invalid config is
+ reported, not stored). They land before jobs so a restored
+ PreToolUse policy hook is in place before a restored job can fire
+ tool calls.
+ </li>
+ <li>
  <strong>Jobs</strong> — last because runtime jobs may
  reference connector tools (e.g.{" "}
  <Code>phantom_create_data_worker</Code>) that need their
@@ -2453,6 +2474,34 @@ function BackupRestore() {
  <Code>phantom_session</Code> cookie before any handler fires —
  secrets never reach an unauthenticated caller.
  </p>
+ <p>
+ <strong>Hooks are the exception: no secret values travel.</strong>{" "}
+ A hook is operator configuration, not a SecretStore value, but its
+ definition can still hold a literal secret. The backup strips
+ (<Code>stripHookSecrets</Code> in{" "}
+ <Code>lib/hooks-backup.ts</Code>): every value of{" "}
+ <Code>transport.env</Code> / <Code>transport.headers</Code> that
+ is not a <Code>secret:&lt;ENV_NAME&gt;</Code> reference; the config
+ fields a builtin declares as <Code>secret-ref</Code> (read from the
+ registry in <Code>lib/hook-builtins/</Code>, e.g. the Slack approval
+ auth header value); and secret-looking keys inside a plugin
+ transport&rsquo;s config (a key-name heuristic, because the agent
+ cannot see a plugin&rsquo;s schema). <Code>secret:</Code> references
+ are env-var names and are kept. Not strippable without breaking the
+ hook, so left as written: an http hook&rsquo;s URL, a builtin&rsquo;s
+ webhook URL, and a command&rsquo;s text (residual risk; the zip is
+ already treated as sensitive). Removed paths are recorded per hook
+ in <Code>hooks.json</Code> under <Code>redacted</Code>.
+ </p>
+ <p>
+ On restore a hook that lost any value is written{" "}
+ <strong>disabled</strong> (a blocking PreToolUse hook missing its
+ auth header would otherwise deny every call it matches) and a
+ warning names the hook and the fields to enter again in{" "}
+ <Code>/settings/hooks</Code>. Such a hook never replaces an
+ existing destination hook, even under <Code>force</Code>, because
+ the replacement would erase the destination&rsquo;s working value.
+ </p>
  </SubSection>
  <SubSection icon="bug_report" title="Idempotence + collision policy">
  <p>
@@ -2467,7 +2516,7 @@ function BackupRestore() {
  </p>
  <p>
  Every section that skips collisions (instances, skills, user
- data sources, installed data sources, workflow state, jobs)
+ data sources, installed data sources, workflow state, hooks, jobs)
  first lists what the destination holds. If that listing fails
  (the MCP is down, answers an error status, or returns an
  unexpected body) the destination is <strong>not</strong>{" "}
@@ -2486,35 +2535,42 @@ function SettingsTuning() {
  return (
  <Section id="settings-tuning" icon="tune" title="Settings & Tuning">
  <p>
- Phantom exposes a handful of operator-tunable knobs that
- modulate chat-route and memory-store behavior:{" "}
- <Code>vertexCacheEnabled</Code>,{" "}
- <Code>autoCompactMinDropped</Code>,{" "}
- <Code>memoryMmrLambda</Code>,{" "}
- <Code>memoryTemporalDecayLambda</Code>. They live alongside
- the persona fields in the{" "}
+ The persona document and the action policy are the only
+ operator-editable behavior of the chat route; they live in the{" "}
  <Link href="#personality" className="link">Personality store</Link>{" "}
- (single-row blob with per-edit history) and round-trip via{" "}
- <Code>/api/agent/personality</Code>.
+ and round-trip via <Code>/api/agent/personality</Code>. The
+ chat and memory values below are fixed in code or in the
+ container environment. No stored setting changes them, and the
+ personality page has no control for them.
  </p>
- <SubSection icon="info" title="Default-load behavior">
+ <SubSection icon="compress" title="Auto-compaction threshold">
  <p>
- Defaults are synthesized client-side via{" "}
- <Code>DEFAULT_CONFIG</Code> at first GET — they don&apos;t
- appear in the persisted blob until the operator clicks Save.
- The auto-save fires after any slider drag so the writeback
- happens organically.
+ <Code>AUTO_COMPACT_MIN_DROPPED = 5</Code> in{" "}
+ <Code>app/api/chat/route.ts</Code>: when the token-budget walk
+ would drop five or more prior messages, the dropped portion is
+ summarized into a checkpoint (see{" "}
+ <Link href="#compaction" className="link">Compaction</Link>).
+ Changing it is a code change.
  </p>
  </SubSection>
- <SubSection icon="link" title="Server-side wiring">
+ <SubSection icon="bolt" title="Vertex prompt caching">
  <p>
- <Term>vertexCacheEnabled</Term> is consulted by the chat-route
- alongside the <Code>PHANTOM_VERTEX_CACHE</Code> env var.{" "}
- <Term>autoCompactMinDropped</Term> threads into the
- compaction pipeline as the trigger threshold (drop ≥ N
- prior messages → summarize via Gemini). The MMR + temporal-
- decay lambdas thread into the memory store&apos;s ranking
- pipeline.
+ Opt-in through the <Code>PHANTOM_VERTEX_CACHE=1</Code>{" "}
+ environment variable on the <Code>phantom-agent</Code> service,
+ read in <Code>app/api/chat/route.ts</Code>. The installer does
+ not set it; with it unset the system prompt is sent inline. The
+ variable is the only switch.
+ </p>
+ </SubSection>
+ <SubSection icon="memory" title="Memory ranking">
+ <p>
+ <Code>memory_store.search</Code> ranks with maximal marginal
+ relevance (<Code>mmr_lambda</Code>, default 0.7) and exponential
+ temporal decay (<Code>temporal_decay_lambda</Code>, default
+ 0.01). Both are parameter defaults in{" "}
+ <Code>bundles/spark/mcp/src/usecase/memory_store.py</Code>; the
+ REST route and the <Code>memory_search</Code> tool do not pass
+ them, so the defaults always apply.
  </p>
  </SubSection>
  </Section>
@@ -2528,12 +2584,12 @@ function Personality() {
  <Section id="personality" icon="psychology_alt" title="Personality Store">
  <p>
  Phantom&apos;s agent personality lives in a single-row store
- separate from manifest-driven settings. It captures both
- free-form persona content (name, tone, system-prompt
- instructions) AND a small set of behavior knobs the operator
- can dial without redeploying. The store is the single source
- of truth for what the chat agent feels like — every chat turn
- reads from it at system-prompt-assembly time.
+ separate from manifest-driven settings. The blob holds the
+ persona document (<Code>personalityMd</Code>, free-form
+ markdown) and the action policy (<Code>actionPolicy</Code>).
+ The store is the single source of truth for what the chat
+ agent feels like — every chat turn reads the persona document
+ and the action policy from it at system-prompt-assembly time.
  </p>
  <SubSection icon="storage" title="Storage — personality.db">
  <p>
@@ -2543,29 +2599,30 @@ function Personality() {
  across all sessions, and concurrent edits are operator-
  visible (last-writer-wins with audit-row history).
  </p>
- <Pre>{`personality (single row)
-  ┌─────────────────────────────────────────────────────────────┐
-  │ Persona content (free-form)                                 │
-  │   name           TEXT     -- e.g. "SOC analyst assistant"  │
-  │   tone           TEXT     -- e.g. "concise, factual"        │
-  │   instructions   TEXT     -- system-prompt-style guidance   │
-  │                                                             │
-  │ Behavior knobs (typed)                                      │
-  │   vertexCacheEnabled         BOOLEAN                        │
-  │   autoCompactMinDropped      INTEGER                        │
-  │   memoryMmrLambda            REAL                           │
-  │   memoryTemporalDecayLambda  REAL                           │
-  │                                                             │
-  │ Audit shadow                                                │
-  │   updated_at     TEXT NOT NULL                              │
-  │   updated_by     TEXT     -- operator | agent              │
-  │   version        INTEGER  -- monotonic per save             │
-  └─────────────────────────────────────────────────────────────┘
+ <Pre>{`personality (single row, id = 1)
+  blob_json    TEXT NOT NULL   -- the document below, as JSON
+  updated_at   TEXT NOT NULL
+  updated_by   TEXT            -- operator | agent | migration | bootstrap
+  version      INTEGER         -- monotonic per save
 
-personality_history (per-edit snapshots)
-  ┌─────────────────────────────────────────────────────────────┐
-  │ id, snapshotted_at, snapshot_json, reason                   │
-  └─────────────────────────────────────────────────────────────┘`}</Pre>
+blob_json keys read at runtime
+  personalityMd    TEXT    -- persona markdown, rendered as ## PERSONA
+  actionPolicy     OBJECT  -- localCategories[], externalCategories[],
+                           -- askWhenUnsure, confirmLocalActions,
+                           -- confirmExternalActions
+
+personality_history (per-edit snapshots, last 20)
+  version, blob_json, updated_at, updated_by`}</Pre>
+ <p className="text-sm text-on-surface-variant">
+ The store never validates keys. A blob saved by an earlier
+ release that still carries keys nothing reads (permission
+ level, default and fallback model, concurrent-run cap, daily
+ summary, escalation threshold, the tone and reasoning sliders,
+ and the four caching, compaction and memory-ranking knobs
+ the page once showed) loads without error; the page and the chat route ignore those
+ keys, and the next save from the page writes the blob without
+ them.
+ </p>
  <p className="text-sm text-on-surface-variant">
  Every save writes a row to{" "}
  <Code>personality_history</Code> with the prior blob. Reset
@@ -2578,17 +2635,17 @@ personality_history (per-edit snapshots)
  <SubSection icon="api" title="REST surface">
  <Pre>{`GET    /api/v1/personality              -- current single-row blob
 PUT    /api/v1/personality              -- full replace
+GET    /api/v1/personality/defaults     -- the bundle default document
 POST   /api/v1/personality/reset        -- snapshot + reset to bundle default
 GET    /api/v1/personality/history      -- prior snapshots (newest first)
 
 GET    /api/agent/personality           -- Next.js proxy, gated by session cookie
-PUT    /api/agent/personality           -- same`}</Pre>
+PUT    /api/agent/personality           -- same
+GET    /api/agent/personality/defaults  -- same`}</Pre>
  <p>
- PUT validates against{" "}
- <Code>personality.schema.json</Code> before write (string-
- length caps on persona fields, range caps on numeric knobs).
- Rejected blobs return HTTP 400 with field-level errors;
- nothing is persisted.
+ PUT requires a JSON object under the <Code>personality</Code>{" "}
+ key and rejects anything else with HTTP 400; it does not
+ check the keys inside the blob.
  </p>
  </SubSection>
 
@@ -2598,18 +2655,47 @@ PUT    /api/agent/personality           -- same`}</Pre>
  </p>
  <ul className="list-disc pl-6 space-y-1 text-sm">
  <li><Code>personality_get()</Code> — Tier 1 (read-only). No approval card.</li>
- <li><Code>personality_update(spec)</Code> — Tier 2. Tool-dispatch loop renders an approval card; the operator sees the diff before commit.</li>
+ <li><Code>personality_update(spec)</Code> — Tier 2. When the install gates it (<Code>approvals.humanRequired[]</Code>, empty by default) the tool-dispatch loop renders an approval card and the operator sees the diff before commit; otherwise it applies at once.</li>
  <li><Code>personality_patch(fields)</Code> — Tier 2. Partial update; same approval surface as <Code>personality_update</Code>.</li>
- <li><Code>personality_reset()</Code> — Tier 3 destructive. Snapshots the current blob to history, then writes the bundle default back to the single row.</li>
+ <li><Code>personality_reset()</Code> — Tier 3 destructive. Snapshots the current blob to history, then writes the bundle default back to the single row. Same approval surface.</li>
  </ul>
  <p className="text-sm text-on-surface-variant">
  Tier-3 destructive tools live behind the{" "}
  <Link href="#approvals" className="link">
  approvals + tier system
  </Link>
- . The agent narrates the reset in the approval card so the
- operator sees what&apos;s about to disappear before signing
- off.
+ . On an install that gates the tool, the agent narrates the
+ reset in the approval card so the operator sees what&apos;s
+ about to disappear before signing off.
+ </p>
+ </SubSection>
+
+ <SubSection icon="restart_alt" title="Defaults — one canonical home">
+ <p>
+ <Code>DEFAULT_PERSONALITY</Code> in{" "}
+ <Code>personality_store.py</Code> is the canonical default
+ document. It seeds a fresh install, is what{" "}
+ <Code>personality_reset</Code> and{" "}
+ <Code>POST /api/v1/personality/reset</Code> write back, and is
+ served by <Code>GET /api/v1/personality/defaults</Code>. The
+ personality page holds no defaults of its own: it loads that
+ document next to the stored blob (a key the stored blob lacks
+ takes the default) and its Reset Defaults button applies it,
+ saving through the normal debounced PUT. Nothing renders, and
+ nothing can auto-save, until both loads succeed.
+ </p>
+ <p className="text-sm text-on-surface-variant">
+ The one other copy is the chat route&apos;s fallback for when
+ the store is unreachable or a stored blob lacks a field,{" "}
+ <Code>DEFAULT_ACTION_POLICY</Code> in{" "}
+ <Code>lib/system-prompt.ts</Code>. Both default external
+ categories are <Code>xlog</Code>, <Code>caldera</Code>,{" "}
+ <Code>xsiam</Code>, <Code>simulations</Code>,{" "}
+ <Code>http-sender</Code> and <Code>wec-sender</Code>, and{" "}
+ <Code>scripts/test-personality-defaults.mjs</Code> fails if the
+ two lists drift. An install that already has a stored row keeps
+ the categories it has; a default change reaches it only through
+ Reset Defaults.
  </p>
  </SubSection>
 
@@ -2617,13 +2703,10 @@ PUT    /api/agent/personality           -- same`}</Pre>
  <p>
  At each chat turn the chat-route calls{" "}
  <Code>buildSystemPromptText(personality, approvalMode, …)</Code>{" "}
- in <Code>lib/system-prompt.ts</Code>. The persona fields
- (<Code>name</Code>, <Code>tone</Code>,{" "}
- <Code>instructions</Code>) prepend a dedicated{" "}
- <Code>## PERSONA</Code> block to the system prompt; the
- behavior knobs are read by their respective subsystems (chat-
- route for cache + compaction; memory store for ranking
- lambdas). The TAIL of the system prompt stays cacheable for
+ in <Code>lib/system-prompt.ts</Code>. <Code>personalityMd</Code> prepends a dedicated{" "}
+ <Code>## PERSONA</Code> block to the system prompt, and{" "}
+ <Code>actionPolicy</Code> becomes the action-policy block of
+ the system instruction. The TAIL of the system prompt stays cacheable for
  Vertex prompt caching — only the persona block + the
  approval-mode block vary per session.
  </p>
@@ -2634,9 +2717,7 @@ PUT    /api/agent/personality           -- same`}</Pre>
  Every mutation writes an audit row + a history snapshot:
  </p>
  <ul className="list-disc pl-6 space-y-1 text-sm">
- <li><Code>personality_set</Code> — write succeeded. Metadata: <Code>actor</Code>, <Code>version</Code>, <Code>changed_fields[]</Code>.</li>
- <li><Code>personality_set_rejected</Code> — schema validation failed. Metadata: <Code>errors[]</Code>.</li>
- <li><Code>personality_reset</Code> — reset succeeded. Metadata: prior <Code>version</Code>, history row id.</li>
+ <li><Code>personality_changed</Code> — every write, including a reset. Metadata: <Code>version</Code>, <Code>keys_changed[]</Code>. The actor is recorded on the event.</li>
  </ul>
  <p className="text-sm text-on-surface-variant">
  The history table is browsable via{" "}
@@ -2654,10 +2735,9 @@ PUT    /api/agent/personality           -- same`}</Pre>
  <li><Code>bundles/spark/mcp/src/usecase/personality_store.py</Code> — single-row CRUD, history shadow</li>
  <li><Code>bundles/spark/mcp/src/api/personality.py</Code> — REST routes</li>
  <li><Code>bundles/spark/mcp/src/usecase/builtin_components/self_mod_tools.py</Code> — MCP tool registrations</li>
- <li><Code>mcp/agent/app/api/agent/personality/route.ts</Code> — Next.js proxy</li>
- <li><Code>mcp/agent/app/settings/personality/page.tsx</Code> — UI page (Persona + Tuning panels)</li>
+ <li><Code>mcp/agent/app/api/agent/personality/route.ts</Code> and <Code>.../defaults/route.ts</Code> — Next.js proxies</li>
+ <li><Code>mcp/agent/app/settings/personality/page.tsx</Code> — UI page (Action Policy and the persona editor); <Code>lib/personality-config.ts</Code> lays a stored blob over the defaults</li>
  <li><Code>mcp/agent/lib/system-prompt.ts</Code> — system-prompt assembly</li>
- <li><Code>bundles/spark/mcp/schemas/personality.schema.json</Code> — JSON Schema</li>
  </ul>
  </SubSection>
  </Section>
@@ -7760,7 +7840,7 @@ Agent MCP tools (catalog-side):
  <SubSection icon="restore" title="Backup + restore — data sources travel">
  <p>
  The backup zip captures personality, instances, memory, jobs,
- skills, knowledge, data sources and operator state. The data-sources section
+ skills, knowledge, data sources, operator state and hooks. The data-sources section
  is split into two manifests:
  </p>
  <Pre>{`backup.zip
@@ -7778,7 +7858,8 @@ Agent MCP tools (catalog-side):
 └── knowledge/...
 
 Restore order (manifest.json restore_order):
-  personality → instances → skills → memory → knowledge → data_sources → jobs
+  personality → instances → skills → memory → knowledge → data_sources →
+  operator_state → hooks → jobs
 
   Rationale: data_sources before jobs because runtime jobs may reference
   installed data sources via the simulate-vendor-logs skill (which
@@ -9358,8 +9439,8 @@ function ProviderStore() {
  <Section id="provider-store" icon="outlet" title="Provider Store">
  <p>
  Providers are LLM-vendor configurations: Vertex AI (the chat
- default) and Anthropic (optional; its credentials feed the Claude
- Code CLI endpoint). Only these two have a card on{" "}
+ default) and Anthropic (optional; its API key is stored for the
+ Claude API, which chat does not call yet). Only these two have a card on{" "}
  <Code>/providers</Code>. Each provider has
  zero or more instances — a configured copy with credentials
  bound. The shape mirrors the connector model exactly.
@@ -9372,9 +9453,11 @@ function ProviderStore() {
  fields. Default for chat.
  </li>
  <li>
- <Term>anthropic</Term> — optional. Its API key and CLI key are
- secret slots on an instance created from{" "}
- <Code>/providers</Code>.
+ <Term>anthropic</Term> — optional. Its API key is the secret
+ slot on an instance created from{" "}
+ <Code>/providers</Code>. Only <Code>api_key</Code> is ever read
+ back; any other secret slot an older install still holds on the
+ instance is ignored and never returned.
  </li>
  </ul>
  </SubSection>
@@ -9710,14 +9793,24 @@ function NotificationsFeed() {
  coverage tools.
  </li>
  <li>
- <Term>Hooks</Term> — the built-in cost-warning and
- pre-compact hooks publish through{" "}
- <Code>POST /api/v1/notifications</Code>.
+ <Term>Hooks</Term> — the built-in cost-warn-over-budget
+ hook (RunEnd) publishes <Code>cost-warning</Code> and the
+ pre-compact-context-warning hook (PreCompact) publishes{" "}
+ <Code>context-warning</Code>, both through{" "}
+ <Code>POST /api/v1/notifications</Code>. Each built-in has one
+ fixed topic (constants in{" "}
+ <Code>lib/hook-builtins/notification-topics.ts</Code>), not a
+ setting. A failed publish is logged by the agent with the MCP
+ status and never interrupts the chat turn.
  </li>
  </ul>
  <p>
  Only topics declared in the manifest&apos;s notification list can
- be published; an undeclared topic is rejected.
+ be published; an undeclared topic is rejected with a 400. The
+ list includes <Code>cost-warning</Code> and{" "}
+ <Code>context-warning</Code> (both warning severity) for the
+ built-in hooks, and a test fails if a topic a built-in publishes
+ is not declared there.
  </p>
  </SubSection>
  <SubSection icon="check" title="Read state, paging and the date filter">
@@ -9910,6 +10003,224 @@ job:weekly-coverage         // job name`}</Pre>
  invented names cannot grow the label set. Built-in actions that{" "}
  <Code>agent_batch_propose</Code> runs by direct function call
  are counted by <Code>phantom_batch_actions_total</Code> instead.
+ </p>
+ </SubSection>
+ </Section>
+);
+}
+
+function BenchmarkHarness() {
+ return (
+ <Section id="benchmark-harness" icon="speed" title="Benchmark Harness">
+ <p>
+ The benchmark harness measures the agent against a fixed corpus of
+ prompts so a change to the model, the routing or a skill can be
+ compared with an earlier run. It lives in the embedded MCP and is
+ surfaced at <Code>/observability/bench</Code>
+ {" "}(<Code>/observability/bench/[run_id]</Code> for one run,{" "}
+ <Code>/observability/bench/compare</Code> for two). Each run replays
+ the corpus through the real chat route, so every run spends model
+ tokens and shows up in <Code>/observability/cost</Code>.
+ </p>
+
+ <SubSection icon="description" title="Manifest, scoring, storage">
+ <ul className="list-disc pl-5 space-y-1.5 text-sm">
+ <li>
+ <Term>Manifest</Term> — YAML with <Code>id</Code>,{" "}
+ <Code>version</Code>, <Code>description</Code> and{" "}
+ <Code>cases[]</Code>. A case has an <Code>id</Code>, a{" "}
+ <Code>prompt</Code>, an optional{" "}
+ <Code>expected_output_match</Code>, an ordered{" "}
+ <Code>expected_tool_calls</Code> list and a{" "}
+ <Code>max_wall_seconds</Code> (default 120). A manifest reference is
+ either a file path or a bundled id; the bundled corpus is{" "}
+ <Code>phantom-soc-v1</Code>{" "}
+ (<Code>usecase/bench_cases/phantom-soc-v1.yaml</Code>): three cases,{" "}
+ <Code>generate-syslog</Code>, <Code>platform-health</Code> and{" "}
+ <Code>conversational-no-tool</Code>.
+ </li>
+ <li>
+ <Term>Per-case score</Term> (<Code>usecase/benchmark.py</Code>):
+ correctness is a case-insensitive substring test of{" "}
+ <Code>expected_output_match</Code> against the final answer (
+ <Code>null</Code> when the case sets none); tool-call Jaccard
+ compares the set of tool names called with the expected set, order
+ ignored; plus <Code>cost_usd</Code>, <Code>wall_seconds</Code>, a{" "}
+ <Code>wall_warning</Code> when the case exceeded its{" "}
+ <Code>max_wall_seconds</Code>, and an <Code>error</Code> string for
+ infrastructure failures. Cases with an error are excluded from the
+ rates.
+ </li>
+ <li>
+ <Term>Run summary</Term>: case count, correctness rate, average
+ Jaccard, cost p50 / p95, wall p50 / p95, the infrastructure-error
+ count and the case list.
+ </li>
+ <li>
+ <Term>Storage</Term>: <Code>BenchRunStore</Code> writes{" "}
+ <Code>benchmark_runs.db</Code> (SQLite, table{" "}
+ <Code>benchmark_runs</Code>: <Code>run_id</Code>,{" "}
+ <Code>manifest_id</Code>, <Code>started_at</Code>,{" "}
+ <Code>completed_at</Code>, <Code>summary_json</Code>,{" "}
+ <Code>router_preset</Code>) under <Code>PHANTOM_DATA_ROOT</Code>{" "}
+ (default <Code>/app/data</Code>), next to the other stores. A run id
+ looks like <Code>bench_&lt;epoch&gt;_&lt;8 hex&gt;</Code>.
+ </li>
+ </ul>
+ </SubSection>
+
+ <SubSection icon="cable" title="Wiring">
+ <ul className="list-disc pl-5 space-y-1.5 text-sm">
+ <li>
+ <Term>Browser to phantom-agent</Term>: the page calls{" "}
+ <Code>/api/agent/bench/runs</Code> and{" "}
+ <Code>/api/agent/bench/runs/{`{run_id}`}</Code> on port 3000 (via the
+ TLS proxy). The middleware gate applies like any{" "}
+ <Code>/api/agent/**</Code> route: session cookie, or an API key
+ with <Code>agent:read</Code> for the GETs and{" "}
+ <Code>agent:write</Code> for the POST. Synchronous.
+ </li>
+ <li>
+ <Term>phantom-agent to embedded MCP</Term>: the two route files
+ forward to <Code>/api/v1/bench/runs[/{`{run_id}`}]</Code> on the MCP
+ (port 8080) with <Code>Authorization: Bearer MCP_TOKEN</Code>. They
+ call <Code>fetch</Code> directly (the base URL comes from{" "}
+ <Code>deriveMcpBaseUrl(MCP_URL)</Code>) rather than going through{" "}
+ <Code>lib/mcp-proxy.ts</Code>. No timeout is set and there is no
+ retry; the MCP&apos;s status and body pass through unchanged. A
+ missing <Code>MCP_TOKEN</Code> returns 503 and an unusable MCP URL
+ returns 500. Synchronous.
+ </li>
+ <li>
+ <Term>MCP to phantom-agent (the run itself)</Term>:{" "}
+ <Code>POST /api/v1/bench/runs</Code> awaits the whole run before it
+ answers (201 with <Code>run_id</Code> and <Code>summary</Code>), so
+ the browser request stays open for the length of the corpus. The
+ runner takes the cases one after another and, for each, streams{" "}
+ <Code>POST {`{PHANTOM_AGENT_INTERNAL_URL}`}/api/chat</Code> as server-sent
+ events with the header <Code>X-Phantom-Trigger: bench</Code> and{" "}
+ <Code>Authorization: Bearer MCP_TOKEN</Code> (the middleware gate on{" "}
+ <Code>/api/chat</Code> accepts that loopback bearer; the helper{" "}
+ <Code>usecase/agent_internal_auth.py</Code> is shared with the job
+ scheduler), collecting <Code>text_delta</Code>, <Code>tool_call</Code>,{" "}
+ <Code>meta.cost_usd</Code> and <Code>done</Code>. Each case has a
+ 300 s timeout; TLS verification is off for this loopback call. A
+ failed case is recorded with its error and the run continues.
+ </li>
+ <li>
+ <Term>Chat tool</Term>: <Code>bench_run</Code>{" "}
+ (<Code>self_mod_tools.py</Code>) calls the same runner, through{" "}
+ <Code>gate_and_execute</Code> at the soft risk tier, so it follows
+ the install&apos;s approval policy. The REST POST above calls the
+ runner directly with no approval step.
+ </li>
+ <li>
+ <Term>Compare</Term>: there is no compare endpoint. The compare
+ page fetches the two run details and diffs them in the browser; the
+ 10% green / red threshold on the aggregate cards is a constant in
+ that page, not a stored regression flag.
+ </li>
+ </ul>
+ </SubSection>
+
+ <SubSection icon="http" title="Endpoints">
+ <ul className="list-disc pl-5 space-y-1 text-sm">
+ <li>
+ <Code>GET /api/agent/bench/runs?limit=N</Code>: recent runs,{" "}
+ <Code>{`{ runs, count }`}</Code>. The proxy sends 20 when{" "}
+ <Code>limit</Code> is absent; the MCP itself applies no cap when it
+ is absent or not positive. The list page asks for 50 and the
+ compare selectors for 100. The list page then reads each run&apos;s
+ detail to fill its summary figures.
+ </li>
+ <li>
+ <Code>GET /api/agent/bench/runs/{`{run_id}`}</Code>:{" "}
+ <Code>{`{ run: { run_id, manifest_id, started_at, completed_at, router_preset, summary } }`}</Code>
+ ; 404 when unknown.
+ </li>
+ <li>
+ <Code>POST /api/agent/bench/runs</Code>: body{" "}
+ <Code>{`{ manifest, router_preset_model?, thinking_enabled? }`}</Code>
+ ; <Code>manifest</Code> is required (400 otherwise, and 400 for a
+ manifest that cannot be loaded). The page sends only{" "}
+ <Code>manifest</Code> and <Code>router_preset_model</Code>.
+ </li>
+ </ul>
+ </SubSection>
+
+ <div className="rounded-lg border border-tertiary/30 bg-tertiary/5 p-3 mt-3 text-sm">
+ <strong className="text-tertiary">Implementation gap</strong>{" "}
+ (found by reading the code; not yet confirmed on a running install).
+ <ul className="list-disc pl-5 space-y-1 mt-2">
+ <li>
+ The runner defaults <Code>PHANTOM_AGENT_INTERNAL_URL</Code> to{" "}
+ <Code>https://phantom-agent:8080</Code>, which is the MCP&apos;s own
+ port. The entrypoint overrides it to{" "}
+ <Code>http://127.0.0.1:3001</Code> only on the TLS path; the job
+ scheduler&apos;s default is <Code>http://localhost:3000</Code>.
+ </li>
+ <li>
+ There is no bench scheduling job, CLI or release-gating regression
+ flag; the bench is run on demand from the page or from chat.
+ </li>
+ </ul>
+ </div>
+ </Section>
+);
+}
+
+function AboutReleaseNotes() {
+ return (
+ <Section id="about-release-notes" icon="new_releases" title="About &amp; Release Notes">
+ <p>
+ The sidebar&apos;s About row (<Code>components/about/version-menu.tsx</Code>)
+ opens a popover with three items: an About dialog and two pages that
+ open in a new tab, <Code>/about/whats-new</Code> and{" "}
+ <Code>/about/history</Code>. All three read one source,{" "}
+ <Code>lib/release-notes.ts</Code>, an array of entries (newest first)
+ bundled into the UI image, so none of them needs network access.
+ </p>
+
+ <SubSection icon="cable" title="Wiring">
+ <ul className="list-disc pl-5 space-y-1.5 text-sm">
+ <li>
+ <Term>Release text</Term>: compiled into the browser bundle. There
+ is no call to GitHub and no MCP involvement. Each entry has{" "}
+ <Code>version</Code> (bare semver), <Code>date</Code>,{" "}
+ <Code>title</Code>, <Code>highlights[]</Code> and optional{" "}
+ <Code>categories</Code> / <Code>security</Code> /{" "}
+ <Code>breaking</Code> flags, rendered by one shared component{" "}
+ (<Code>components/about/release-entry.tsx</Code>).
+ </li>
+ <li>
+ <Term>Running version</Term>: the About dialog and both pages call{" "}
+ <Code>GET /api/agent/version</Code> (browser to phantom-agent, port
+ 3000, session cookie via the middleware gate), which returns{" "}
+ <Code>PHANTOM_VERSION</Code> from the container environment (set by
+ the installer from <Code>/opt/phantom/.env</Code>) and the stack
+ digests. No MCP hop, no retry. If the call fails the version shows
+ as unknown: the pages still render and simply lose the match.
+ </li>
+ <li>
+ <Term>Matching</Term>: the running version is matched against the
+ entries&apos; <Code>version</Code>. <Code>/about/whats-new</Code>{" "}
+ shows the matching entry highlighted first (the newest entry when
+ there is no match) and every other entry after it;{" "}
+ <Code>/about/history</Code> lists all entries and marks the match
+ with a Running badge. The dialog adds a development-build note when
+ nothing matches.
+ </li>
+ </ul>
+ </SubSection>
+
+ <SubSection icon="rule" title="Authoring contract">
+ <p>
+ Every CHANGELOG entry needs a matching entry at the top of{" "}
+ <Code>lib/release-notes.ts</Code> in the same change (three to seven
+ highlights). An entry for a release that is not yet tagged uses{" "}
+ <Code>date: &quot;Unreleased&quot;</Code> until the tag is cut. Because
+ the pages show every non-matching entry, an unreleased entry also
+ appears on an older running image.
  </p>
  </SubSection>
  </Section>

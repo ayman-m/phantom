@@ -8,6 +8,35 @@ Each release section is written in operator language, not git-shortlog language.
 
 ---
 
+## [v1.0.4] — Unreleased — *Hook, benchmark and status fixes, and documentation coverage*
+
+A patch release from a second page-by-page walkthrough: the pages the first one did not reach (Services, Hooks, Benchmark and the About and Observability pages) now have fixes and documentation.
+
+**Fixed.**
+
+- **Caldera shows its real status on Services.** The health check looked Caldera up under a setting that never existed, so Caldera always showed as unknown on `/settings` (and in the pipeline view) even when it was up. It now checks the address in `CALDERA_URL`, which the compose file already sets (default `http://caldera:8888`), so Caldera reports healthy or unreachable like the other services.
+- **Benchmark runs work.** Every case of a benchmark run failed with a 401 because the runner called the chat endpoint without credentials. It now authenticates the same way scheduled jobs do, so runs score real results.
+- **A built-in hook can only be saved on an event it supports.** The form previously accepted, for example, the Cost warn over budget hook on the user-prompt event, where it could never do its job. It now refuses the combination and says which events the built-in runs on.
+- **The cost and context warnings from the built-in hooks now reach `/notifications`.** The Cost warn over budget hook (RunEnd) and the Pre-compact context warning hook (PreCompact) fired and left their `hook_dispatched` audit rows, but the notification they publish was rejected because its topic was not declared in the manifest, so the operator never saw a warning. The topics `cost-warning` and `context-warning` (warning severity) are now declared, and the warnings show in the Alerts tab with a warning icon, the title and the details.
+  - **The notification category setting is gone.** Each built-in publishes to one fixed topic; a free-text category could only ever name an undeclared topic. Hooks saved earlier keep working: the old `notify_category` value is ignored.
+  - **A failed publish is no longer silent.** The agent logs it as an error with the MCP's status and message, and the chat turn is not interrupted.
+  - **The cost threshold helper is clearer.** Setting **Daily cost threshold (USD)** to 0 means no threshold: the warning fires on the first turn of each repeat window whatever the spend.
+- **Backups now include your hooks.** `hooks.json` joins the backup zip (disabled hooks too) and restore puts them back under their original ids, after operator state and before jobs. A hook whose id already exists on the destination is kept and counted as skipped; Overwrite replaces it. If the destination's hooks cannot be listed, restore skips the section rather than writing blind.
+  - **Secrets are left out.** Literal values in a command hook's `env`, an HTTP hook's `headers`, and a built-in's secret fields are not written to the zip; `secret:ENV_NAME` references are kept. A hook that lost a value is restored **disabled**, with a warning naming the fields, and never replaces an existing destination hook. A hook's URL and a command hook's text are kept as written, so treat the zip as sensitive.
+  - **Log destinations are still not in the backup**; recreate them by hand after a restore.
+- **The Claude Code CLI integration is removed.** Phantom no longer runs the Claude Code binary: the hidden chat route, the CLI token field on `/providers`, the stored CLI token slot, the unused `@anthropic-ai/sdk` package and the CLI install in the agent image are gone. It could not be used in line with Anthropic's terms, and it started a process that inherited the container's environment. The Anthropic card on `/providers` keeps the API key field; calling Claude through the API is planned for a later release. A CLI token saved earlier is ignored.
+- **The Personality page shows only what is used.** Permission Level, Default Model, Fallback Model, Max Concurrent Runs, Daily Summary, Summary Time and Escalation Threshold were stored but nothing read them, so they are removed along with the "Spark" wording. The page now holds the `Personality.md` editor and the action policy. Personality saved by an earlier release still loads; the unused keys drop out on the next save.
+  - **The Tuning panel is gone too.** Its four knobs (Vertex cache, auto-compact minimum, MMR and temporal-decay lambdas) were never read; the fixed defaults still apply.
+  - **One home for the defaults.** The page now loads the default persona and action policy from the server (`GET /api/agent/personality/defaults`), so Reset Defaults and `personality_reset` agree, and the default policy treats `http-sender` and `wec-sender` as external. Existing installs keep their stored policy until Reset Defaults.
+
+**Documentation.**
+
+- **User guide (`/help/user`).** New sections: **Benchmark Runs** (`#obs-bench`: running a benchmark, the run list and detail pages, comparing two runs), **Runtime Events** (`#obs-runtime-events`) and **What's New & Release History** (`#about-releases`: the About menu, `/about/whats-new`, `/about/history`). The **Knowledge Bases** section (`#knowledge`) now explains browsing a knowledge base: the Entries tab, Try search, and the fact that there are no Import or Settings tabs. The upgrade section no longer says the About dialog lists image digests; it shows the running version, and the digests are on `/observability/connectors`.
+- **Architecture page (`/help/architecture`).** New sections **Benchmark Harness** (`#benchmark-harness`: manifest and scoring, storage in `benchmark_runs.db`, the wires between browser, agent, MCP and chat route, the `/api/agent/bench` endpoints, and the known gaps) and **About & Release Notes** (`#about-release-notes`: `lib/release-notes.ts` as the single source for the About dialog, `/about/whats-new` and `/about/history`).
+- **Journeys.** New journey **Read the observability overview page** (`observability-overview-landing`). **Run the phantom-soc-v1 benchmark and compare runs** (`bench-run-benchmark`) now covers the compare page: the shareable `?base=&head=` address, the 10% green and red rule, the FIXED / REGRESSED labels and the two extra API calls.
+
+---
+
 ## [v1.0.3] — 2026-10-12 — *Session lifetime, walkthrough fixes and corrected help pages*
 
 A patch release by operator decision: one new setting, plus the fixes from a page-by-page walkthrough of v1.0.2 (jobs, chat, notifications, tasks, settings, skills) and an audit of the help pages and journey catalog against what the product actually does.

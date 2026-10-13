@@ -71,16 +71,6 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends nodejs \
   && rm -rf /var/lib/apt/lists/*
 
-# Bake Claude Code CLI into the image so /api/chat/cli's first
-# invocation doesn't pay the npx download cost. Auth flows through
-# ANTHROPIC_API_KEY / CLAUDE_CODE_OAUTH_TOKEN at runtime (resolved
-# by lib/anthropic-credentials.ts from ProviderStore + env fallback).
-# Pinning the version keeps image-digest stability across rebuilds —
-# operators upgrading get a deliberate version bump, not a surprise
-# from an upstream npm publish.
-RUN npm install -g @anthropic-ai/claude-code@^1.0.0 \
-  && npm cache clean --force
-
 WORKDIR /app
 
 # Bring Python deps in (installed via --user → /root/.local).

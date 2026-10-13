@@ -176,8 +176,7 @@ export default function MemoryPage() {
     try {
       // Only include the lambda overrides when
       // the operator dialed them; sending undefined lets the
-      // memory_store fall back to the operator's configured defaults
-      // (or the source-level fallback if none are set).
+      // memory_store use its built-in defaults.
       const body: Record<string, unknown> = { query: q, scope, limit: 50 };
       if (advanced.mmrLambda != null) body.mmr_lambda = advanced.mmrLambda;
       if (advanced.temporalDecayLambda != null) {

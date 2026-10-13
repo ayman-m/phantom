@@ -26,7 +26,6 @@ interface ToolGroup {
 
 const GROUP_CONFIG: Record<string, { icon: string; iconColor: string }> = {
   orchestration: { icon: "hub", iconColor: "text-primary" },
-  "code-execution": { icon: "terminal", iconColor: "text-secondary" },
   session: { icon: "forum", iconColor: "text-tertiary" },
   sandbox: { icon: "shield", iconColor: "text-error" },
 };
@@ -43,19 +42,6 @@ const BUILTIN_GROUPS: ToolGroup[] = [
       { name: "fan_out", description: "Dispatch the same task to multiple agents in parallel", group: "orchestration", inputSchema: {} },
       { name: "fan_in", description: "Collect and merge results from fan_out runs", group: "orchestration", inputSchema: {} },
       { name: "consensus", description: "Run a task on N agents and return majority-agreed result", group: "orchestration", inputSchema: {} },
-    ],
-  },
-  {
-    name: "Code Execution",
-    icon: "terminal",
-    iconColor: "text-secondary",
-    tools: [
-      { name: "claude_code_start", description: "Launch a Claude Code process with a prompt", group: "code-execution", inputSchema: {} },
-      { name: "claude_code_status", description: "Check whether a running Claude Code process has finished", group: "code-execution", inputSchema: {} },
-      { name: "claude_code_output", description: "Retrieve stdout/stderr from a Claude Code process", group: "code-execution", inputSchema: {} },
-      { name: "claude_code_cancel", description: "Terminate a running Claude Code process", group: "code-execution", inputSchema: {} },
-      { name: "claude_code_cleanup", description: "Remove a finished Claude Code process and its resources", group: "code-execution", inputSchema: {} },
-      { name: "claude_code_sessions", description: "List all active Claude Code processes for this agent", group: "code-execution", inputSchema: {} },
     ],
   },
   {

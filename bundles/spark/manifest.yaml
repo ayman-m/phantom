@@ -693,6 +693,14 @@ notifications:
     # loop without polling /api/agent/*.
     - { name: "approval-requested",   severity: "warning",  target: "user:operator" }
     - { name: "marketplace-install",  severity: "info",     target: "user:operator" }
+    # Published by the built-in hooks (mcp/agent/lib/hook-builtins/):
+    # cost-warn-over-budget (RunEnd) and pre-compact-context-warning
+    # (PreCompact). The topic is fixed per built-in; the store rejects any
+    # topic that is not declared here, so a new built-in topic is added in
+    # this list and in hook-builtins/notification-topics.ts together
+    # (tests/test_hook_builtin_topics.py enforces it).
+    - { name: "cost-warning",         severity: "warning",  target: "user:operator" }
+    - { name: "context-warning",      severity: "warning",  target: "user:operator" }
 
 api:
   exposes: true

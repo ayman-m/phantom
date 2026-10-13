@@ -195,9 +195,6 @@ export default function ChatPage() {
     currentModel,
     currentProvider,
     setModel,
-    // chatRoute is exposed by useChat (derived from
-    // overrideProvider) but not destructured here. Selecting
-    // claude-code from the model dropdown drives the route.
   } = useChat();
 
   // Right-side debug panel — defaults to closed; persisted in
@@ -1044,9 +1041,6 @@ export default function ChatPage() {
           // from session.metadata.approval_mode; writes via PATCH.
           approvalMode={approvalMode}
           onApprovalModeChange={handleApprovalModeChange}
-          // Claude Code selection flows through the model
-          // dropdown. chatRoute
-          // is derived in useChat for the send-time URL switch.
         />
 
         <div className="flex-1 overflow-hidden">

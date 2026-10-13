@@ -8,6 +8,8 @@
  *   - job-run-completed / job-run-failed  -> { job_name, summary, error, ... }
  *     (usecase/job_scheduler.py post-run hook)
  *   - coverage-cycle                      -> { title, body, ... }
+ *   - cost-warning / context-warning      -> { title, body, ... }
+ *     (published by the built-in hooks, hook-builtins/); shown as warnings
  *   - anything else                       -> free-form; we look for the common
  *     keys title / summary / body / message.
  *
@@ -35,7 +37,7 @@ export interface NotificationDisplay {
   /** In-app route the row opens on click, when the payload names a target. */
   href?: string;
   /** Coarse status used to pick the icon and colour. */
-  tone: "success" | "failure" | "neutral";
+  tone: "success" | "failure" | "warning" | "neutral";
   read: boolean;
 }
 
@@ -48,6 +50,9 @@ function asRecord(v: unknown): Record<string, unknown> {
 function str(v: unknown): string {
   return typeof v === "string" ? v.trim() : "";
 }
+
+/** Topics the built-in hooks publish (hook-builtins/notification-topics.ts). */
+const WARNING_TOPICS = new Set(["cost-warning", "context-warning"]);
 
 /** "simulation-complete" -> "Simulation complete". */
 export function humanizeTopic(topic: string): string {
@@ -85,7 +90,7 @@ export function describeNotification(row: NotificationRow): NotificationDisplay 
     title: str(payload.title) || humanizeTopic(topic),
     description: fallbackDescription,
     href: jobName ? `/jobs/${encodeURIComponent(jobName)}` : undefined,
-    tone: "neutral",
+    tone: WARNING_TOPICS.has(topic) ? "warning" : "neutral",
     read,
   };
 }

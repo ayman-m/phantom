@@ -15,10 +15,7 @@
 
 import { NextResponse } from "next/server";
 import { getEffectiveRuntimeConfig } from "@/lib/runtime-config";
-import {
-  resolveAnthropicApiKey,
-  resolveAnthropicCliKey,
-} from "@/lib/anthropic-credentials";
+import { resolveAnthropicApiKey } from "@/lib/anthropic-credentials";
 
 export const dynamic = "force-dynamic";
 
@@ -183,8 +180,7 @@ const VERTEX_MODELS: ModelInfo[] = [
 
 // Anthropic / Claude catalog. It lets the /models page
 // surface Claude entries when an Anthropic provider is configured
-// (either anthropicApiKey for the streaming API path, or anthropicCliKey
-// for the Claude Code CLI shell-out at /api/chat/cli).
+// (anthropicApiKey).
 //
 // Every Anthropic entry ships with `wip: true`. The
 // chat header's model dropdown filters wip entries out (operators
@@ -234,23 +230,6 @@ const ANTHROPIC_MODELS: ModelInfo[] = [
     launchStage: "GA",
     wip: true,
   },
-  // ── CLI / Claude Code shell-out path ────────────────────────────
-  // The Claude Code CLI uses its own runtime to pick the model; this
-  // entry represents the routing target on the agent side. Operators
-  // pair it with their Pro / Max subscription via anthropicCliKey
-  // (device-code OAuth token).
-  {
-    provider: "anthropic-cli",
-    model: "claude-code",
-    displayName: "Claude Code (CLI shell-out)",
-    kind: "chat",
-    contextWindow: 1_000_000,
-    supportsThinking: true,
-    supportsTools: true,
-    interactionPatterns: ["cli_tool", "interactive_session"],
-    launchStage: "GA",
-    wip: true,
-  },
 ];
 
 export async function GET() {
@@ -273,15 +252,10 @@ export async function GET() {
   // configured, so the catalog must not be Vertex-only.
   //
   // Anthropic credential resolution mirrors `lib/anthropic-credentials.ts`:
-  // either an explicit API key OR a Pro/Max OAuth token (the device-code
-  // path from the providers page) unlocks BOTH the streaming-API entries
-  // and the CLI shell-out entry, because the resolver's fallback chain
-  // is symmetric (api_key falls back to OAuth, cli_key falls back to
-  // api_key).
-  const [cfg, anthropicApiKey, anthropicCliKey] = await Promise.all([
+  // an API key (provider store, else the ANTHROPIC_API_KEY env var).
+  const [cfg, anthropicApiKey] = await Promise.all([
     getEffectiveRuntimeConfig(),
     resolveAnthropicApiKey(),
-    resolveAnthropicCliKey(),
   ]);
   const vertexConfigured = Boolean(
     cfg.GOOGLE_APPLICATION_CREDENTIALS &&
@@ -290,7 +264,7 @@ export async function GET() {
   const geminiKeyConfigured = Boolean(
     cfg.GEMINI_API_KEY && cfg.GEMINI_API_KEY.trim(),
   );
-  const anthropicConfigured = Boolean(anthropicApiKey || anthropicCliKey);
+  const anthropicConfigured = Boolean(anthropicApiKey);
 
   const models: ModelInfo[] = [
     ...(vertexConfigured || geminiKeyConfigured ? VERTEX_MODELS : []),

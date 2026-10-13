@@ -41,10 +41,10 @@ def test_put_bumps_version_and_archives(tmp_path: Path) -> None:
     v1 = s.get()
     assert v1 is not None and v1.version == 1  # bootstrap seeded as v1
 
-    new_blob = {**DEFAULT_PERSONALITY, "responseStyle": "concise"}
+    new_blob = {**DEFAULT_PERSONALITY, "personalityMd": "# Concise\n"}
     v2 = s.put(new_blob, actor="user:operator")
     assert v2.version == 2
-    assert v2.blob["responseStyle"] == "concise"
+    assert v2.blob["personalityMd"] == "# Concise\n"
     assert v2.updated_by == "user:operator"
 
     # History should now contain v1 (the seeded default).
@@ -58,7 +58,7 @@ def test_history_caps_at_keep_window(tmp_path: Path) -> None:
     # Put HISTORY_KEEP + 5 versions; oldest 5 should fall off.
     for i in range(HISTORY_KEEP + 5):
         s.put(
-            {**DEFAULT_PERSONALITY, "proactivity": i},
+            {**DEFAULT_PERSONALITY, "personalityMd": f"# v{i}\n"},
             actor=f"actor-{i}",
         )
     hist = s.history(limit=HISTORY_KEEP + 100)
@@ -67,7 +67,7 @@ def test_history_caps_at_keep_window(tmp_path: Path) -> None:
 
 def test_reset_to_default_returns_seed_doc(tmp_path: Path) -> None:
     s = SqlitePersonalityStore(data_root=tmp_path)
-    s.put({**DEFAULT_PERSONALITY, "responseStyle": "concise"}, actor="op")
+    s.put({**DEFAULT_PERSONALITY, "personalityMd": "# Edited\n"}, actor="op")
     p = s.reset_to_default(actor="user:operator")
     assert p.blob == DEFAULT_PERSONALITY
     assert p.updated_by == "user:operator"
@@ -83,7 +83,7 @@ def test_migration_from_setup_json(tmp_path: Path) -> None:
     """Simulate the legacy state: agent UI saved personality into
     setup.json as a stringified JSON blob under values.personality.
     First boot of the store should pick that up and persist as v1."""
-    legacy_blob = {**DEFAULT_PERSONALITY, "responseStyle": "detailed", "proactivity": 90}
+    legacy_blob = {**DEFAULT_PERSONALITY, "personalityMd": "# Legacy\n"}
     setup_path = tmp_path / "setup.json"
     setup_path.write_text(
         json.dumps({
@@ -106,7 +106,7 @@ def test_migration_is_idempotent(tmp_path: Path) -> None:
     """Second boot should NOT re-run migration (the row already
     exists). Test by constructing two stores back-to-back; the
     second's get() should still match what the first wrote."""
-    legacy_blob = {**DEFAULT_PERSONALITY, "proactivity": 42}
+    legacy_blob = {**DEFAULT_PERSONALITY, "personalityMd": "# Legacy 42\n"}
     (tmp_path / "setup.json").write_text(
         json.dumps({"values": {"personality": json.dumps(legacy_blob)}}),
         encoding="utf-8",
@@ -195,8 +195,6 @@ def test_personality_without_action_policy_round_trips(tmp_path: Path) -> None:
     at read time on the consumer side."""
     s = SqlitePersonalityStore(data_root=tmp_path)
     legacy_blob = {
-        "responseStyle": "concise",
-        "proactivity": 50,
         "personalityMd": "# Custom\n\nLegacy personality without policy.\n",
     }
     saved = s.put(legacy_blob, actor="user:operator")
@@ -205,7 +203,7 @@ def test_personality_without_action_policy_round_trips(tmp_path: Path) -> None:
     # The exact blob round-trips — no implicit injection of defaults
     # at storage time (only at read-with-default time on the consumer).
     assert "actionPolicy" not in fetched.blob
-    assert fetched.blob["responseStyle"] == "concise"
+    assert fetched.blob["personalityMd"].startswith("# Custom")
 
 
 # ─── personality_patch merge semantics ────────────────────
@@ -225,13 +223,13 @@ def test_personality_patch_merges_shallowly(tmp_path: Path) -> None:
 
     The bug this protects against is the agent doing a naive
     personality_update({"personalityMd": "..."}) and wiping
-    actionPolicy / responseStyle / etc.
+    actionPolicy.
     """
     s = SqlitePersonalityStore(data_root=tmp_path)
     initial = {
         "personalityMd": "# Original\n",
         "actionPolicy": {"askWhenUnsure": True},
-        "responseStyle": "balanced",
+        "operatorNote": "kept",
     }
     s.put(initial, actor="user:operator")
 
@@ -246,7 +244,7 @@ def test_personality_patch_merges_shallowly(tmp_path: Path) -> None:
     assert final["personalityMd"] == "# Updated by agent\n"
     # Untouched keys preserved (would be wiped by a naive PUT).
     assert final["actionPolicy"] == {"askWhenUnsure": True}
-    assert final["responseStyle"] == "balanced"
+    assert final["operatorNote"] == "kept"
 
 
 def test_personality_patch_overwrites_nested_fields_at_top_level(
@@ -284,3 +282,63 @@ def test_personality_patch_overwrites_nested_fields_at_top_level(
     assert final["actionPolicy"] == {"askWhenUnsure": False}
     # personalityMd untouched — outside the patch.
     assert final["personalityMd"] == "# Hi\n"
+
+
+# ─── Dead keys from earlier releases ─────────────────────────────
+
+DEAD_KEYS = (
+    "permissionLevel",
+    "defaultModel",
+    "fallbackModel",
+    "maxConcurrentRuns",
+    "dailySummary",
+    "summaryTime",
+    "escalationThreshold",
+    "responseStyle",
+    "proactivity",
+    "confidence",
+    "logicDepth",
+    "planningDepth",
+    "delegationStyle",
+)
+
+
+def test_default_personality_carries_only_consumed_keys() -> None:
+    """Nothing reads the keys earlier releases stored for permission
+    level, models, concurrency, notifications or tone. The seed must
+    not recreate them."""
+    for key in DEAD_KEYS:
+        assert key not in DEFAULT_PERSONALITY, key
+    assert {"personalityMd", "actionPolicy"} <= set(DEFAULT_PERSONALITY)
+
+
+def test_blob_with_dead_keys_loads_and_round_trips(tmp_path: Path) -> None:
+    """An install upgraded from an earlier release has a stored blob
+    with the dead keys. It must load without error (the store never
+    validates keys), keep the live fields intact, and still accept a
+    put that drops the dead keys."""
+    legacy = {
+        "permissionLevel": 40,
+        "defaultModel": "gemini-3.1-pro-preview",
+        "fallbackModel": "gemini-2.5-flash",
+        "maxConcurrentRuns": 3,
+        "dailySummary": True,
+        "summaryTime": "09:00",
+        "escalationThreshold": 60,
+        "responseStyle": "balanced",
+        "personalityMd": "# Kept\n",
+        "actionPolicy": DEFAULT_PERSONALITY["actionPolicy"],
+    }
+    (tmp_path / "setup.json").write_text(
+        json.dumps({"values": {"personality": json.dumps(legacy)}}),
+        encoding="utf-8",
+    )
+    s = SqlitePersonalityStore(data_root=tmp_path)
+    loaded = s.get_or_default()
+    assert loaded.blob == legacy
+    assert loaded.blob["personalityMd"] == "# Kept\n"
+
+    cleaned = {k: v for k, v in loaded.blob.items() if k not in DEAD_KEYS}
+    saved = s.put(cleaned, actor="user:operator")
+    assert not set(DEAD_KEYS) & set(saved.blob)
+    assert s.get_or_default().blob == cleaned

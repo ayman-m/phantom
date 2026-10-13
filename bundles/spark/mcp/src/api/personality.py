@@ -8,6 +8,7 @@ agent-side `setup.json:values.personality`.
 
   GET  /api/v1/personality          → {personality, updated_at, updated_by, version}
   PUT  /api/v1/personality          → replace blob; body = {personality: {...}}
+  GET  /api/v1/personality/defaults → the bundle default document (no store read)
   POST /api/v1/personality/reset    → reset to bundle default
   GET  /api/v1/personality/history  → recent versions for diff rendering
 
@@ -28,7 +29,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from api.auth import require_bearer
-from usecase.personality_store import SqlitePersonalityStore
+from usecase.personality_store import SqlitePersonalityStore, default_personality
 
 logger = logging.getLogger("Phantom MCP")
 
@@ -80,6 +81,19 @@ def register_personality_routes(
         except (TypeError, ValueError) as exc:
             return JSONResponse({"error": str(exc)}, status_code=400)
         return JSONResponse(updated.to_dict())
+
+    @mcp.custom_route(
+        "/api/v1/personality/defaults",
+        methods=["GET"],
+        include_in_schema=False,
+    )
+    async def personality_defaults(request: Request) -> JSONResponse:
+        """The bundle default document. The personality page fills keys a
+        stored blob lacks from it and uses it for Reset Defaults, so the
+        UI carries no copy of its own."""
+        if (resp := require_bearer(request)) is not None:
+            return resp
+        return JSONResponse({"personality": default_personality()})
 
     @mcp.custom_route(
         "/api/v1/personality/reset",

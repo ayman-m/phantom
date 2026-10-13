@@ -2257,6 +2257,12 @@ export const JOURNEYS: Journey[] = [
         description: "Snapshot of the persona including the actionPolicy block.",
       },
       {
+        method: "GET",
+        path: "/api/agent/personality/defaults",
+        description:
+          "The built-in default persona document. The page lays the stored persona over it and applies it on Reset Defaults.",
+      },
+      {
         method: "PUT",
         path: "/api/agent/personality",
         description:
@@ -2264,8 +2270,9 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Visit /settings/personality. Confirm the new 'Action Policy' section is visible between 'Autonomy & Permissions' and 'Thinking & Reasoning'.",
+      "Visit /settings/personality. Confirm the 'Action Policy' section is the first panel, with the persona editor ('Advanced') below. There is no permission-level, model, concurrency or notification control on this page.",
       "Verify the defaults: askWhenUnsure=ON, confirmLocalActions=approve-card, confirmExternalActions=off (a persona that was stored by an earlier configuration may still read soft). The localCategories chip list includes jobs/settings/personality/etc; externalCategories includes xlog/caldera/xsiam/simulations/http-sender/wec-sender.",
+      "Remove one external category chip, then click Reset Defaults (top right). The chip list returns to the defaults, including http-sender and wec-sender, the Saved indicator appears, and a reload keeps them.",
       "Open a fresh chat. Paste the deliberately-ambiguous prompt #1. The agent must ASK with two numbered options labeled (LOCAL · jobs_create with run_once) and (EXTERNAL · xlog.create_data_worker). It must NOT call a tool yet.",
       "Reply with prompt #2 ('a' or 'option a' or similar). The agent now calls jobs_create with run_once=true. If the install gates jobs_create a green approval card appears below the chat (click Approve); otherwise the job is created at once. It fires once and auto-disables.",
       "First set External to Soft in /settings/personality. Then send prompt #3 ('stream firewall logs continuously for the next 3 hours'). With confirmExternalActions=soft, the request is long-running, so the agent should announce 'About to call xlog.create_data_worker — fire it?' and wait. Reply 'yes' / 'go'. Tool fires. (A small, explicit request such as 'send 20 firewall logs now' does not need this step: the agent sends them and reports what it sent.)",
@@ -3143,7 +3150,6 @@ export const JOURNEYS: Journey[] = [
     ],
     howToTest: [
       "Host shell step (needs Vertex AI configured at /providers): the installer does not set PHANTOM_VERTEX_CACHE, so add `PHANTOM_VERTEX_CACHE=1` to the phantom-agent service's environment in /opt/phantom/docker-compose.yml, recreate the container (`docker compose up -d phantom-agent`) and confirm with `docker exec phantom_agent printenv PHANTOM_VERTEX_CACHE`. Without it no cache_hit event ever fires.",
-      "Open Settings → Personality → Tuning → 'Vertex prompt caching' should be ON (or set it to ON).",
       "Open a fresh chat session. Send turn 1 (any short prompt).",
       "Open the wire-events panel. The first turn does NOT fire cache_hit (cache is being created).",
       "Send turn 2. The wire-events panel shows a cache_hit event (bolt icon, tertiary tint).",
@@ -3156,7 +3162,7 @@ export const JOURNEYS: Journey[] = [
       "GET /api/agent/audit?action=chat_cache_hit → rows accumulate. Sum metadata.savings_tokens_est for cumulative ROI.",
       "If you NEVER see cache_hit: check 1) PHANTOM_VERTEX_CACHE=1, 2) GOOGLE_APPLICATION_CREDENTIALS is valid, 3) the model supports cachedContents (some preview models reject the cachedContent reference even after accepting cachedContents.create — caching is gated behind the env flag for that reason).",
     ],
-    related: ["observability-vertex-cache-savings", "settings-toggle-vertex-cache"],
+    related: ["observability-vertex-cache-savings"],
     components: ["chat", "vertex-cache", "models"],
   },
 
@@ -3305,7 +3311,7 @@ export const JOURNEYS: Journey[] = [
         method: "POST",
         path: "/api/agent/memory/search",
         description:
-          "When mmr_lambda or temporal_decay_lambda are present in the body, they override the server's operator-configured defaults for THIS query only. Missing fields fall through to defaults.",
+          "In the request body, mmr_lambda and temporal_decay_lambda are currently ignored by the server; the built-in defaults (MMR 0.7, decay 0.01) always apply.",
       },
     ],
     howToTest: [
@@ -3321,7 +3327,7 @@ export const JOURNEYS: Journey[] = [
       "Click 'Advanced search controls' again to close — the overrides reset to 'default' so the next default search isn't affected.",
     ],
     expectedResult:
-      "Single-query tuning. Operator can dial down decay to confirm 'is this row in memory at all?' or dial down MMR to widen the result topology, all without touching the global defaults in /settings/personality. The close-resets behavior prevents accidentally leaving a tuning experiment running.",
+      "Single-query tuning. Operator can dial down decay to confirm 'is this row in memory at all?' or dial down MMR to widen the result topology, all without touching the built-in defaults. The close-resets behavior prevents accidentally leaving a tuning experiment running.",
     verifyVia: [
       "POST /api/agent/memory/search body now includes mmr_lambda and/or temporal_decay_lambda when overrides are set; falls back to defaults when not.",
       "Browser devtools → Network → /api/agent/memory/search → request body confirms the override fields are present only when the slider was moved.",
@@ -3330,89 +3336,8 @@ export const JOURNEYS: Journey[] = [
     components: ["memory", "settings"],
   },
 
-  {
-    id: "settings-tune-auto-compact-threshold",
-    category: "ops",
-    title: "Lower the auto-compact threshold to compact more aggressively",
-    summary:
-      "Auto-compaction defaults to firing when token-budget walking would drop ≥5 prior messages. Operators on chatty sessions can dial this down to 2-3 to compact early; quiet workflows can dial it up to suppress.",
-    difficulty: "intermediate",
-    durationMin: 3,
-    icon: "tune",
-    prompts: [],
-    toolsExercised: [],
-    apis: [
-      {
-        method: "GET",
-        path: "/api/agent/personality",
-        description:
-          "Returns the persisted AgentConfig blob. The tuning fields (vertexCacheEnabled, autoCompactMinDropped, memoryMmrLambda, memoryTemporalDecayLambda) live alongside the personality fields.",
-      },
-      {
-        method: "PUT",
-        path: "/api/agent/personality",
-        description:
-          "Debounced auto-save (600ms after last change). Slider drags don't flood the MCP.",
-      },
-    ],
-    howToTest: [
-      "Open /settings/personality.",
-      "Scroll to the 'Tuning' section (icon: tune; subtitle: 'Chat + memory knobs').",
-      "Find the 'Auto-compact threshold' slider. Default value: '5 messages'.",
-      "Drag the slider to 2 — the value indicator updates live.",
-      "Wait ~1 second for the auto-save indicator (top-right of the page) to flip to 'Saved'.",
-      "Reload the page — the slider stays at 2 (persisted).",
-      "Open browser devtools → Network → reload → look at GET /api/agent/personality — the response payload includes autoCompactMinDropped: 2.",
-      "(Optional, requires server-side wiring): drive a session with 4-5 messages and confirm auto-compaction now fires earlier than it would at the default of 5.",
-    ],
-    expectedResult:
-      "Slider persistence works. The setting is stored, but the chat route does not read autoCompactMinDropped: auto-compaction still uses its built-in threshold.",
-    verifyVia: [
-      "GET /api/agent/personality → personality.autoCompactMinDropped reflects the latest slider position.",
-      "Auto-save indicator: 'Saving…' during the 600ms debounce, 'Saved' after the PUT lands; 'Error' if it fails.",
-    ],
-    related: ["settings-toggle-vertex-cache", "chat-compact-long-session"],
-    components: ["settings", "compaction", "context-budget"],
-  },
-
-  {
-    id: "settings-toggle-vertex-cache",
-    category: "ops",
-    title: "Toggle Vertex prompt caching on/off",
-    summary:
-      "Vertex prompt caching is gated behind PHANTOM_VERTEX_CACHE=1 + a per-workspace toggle. The UI surfaces the toggle so operators don't have to redeploy to change the gate's state.",
-    difficulty: "starter",
-    durationMin: 2,
-    icon: "bolt",
-    prompts: [],
-    toolsExercised: [],
-    apis: [
-      {
-        method: "PUT",
-        path: "/api/agent/personality",
-        description:
-          "Updates the personality blob with the new vertexCacheEnabled value.",
-      },
-    ],
-    howToTest: [
-      "Open /settings/personality → 'Tuning' section.",
-      "Find the 'Vertex prompt caching' toggle (top of the section).",
-      "Read the description: 'Cache the stable system prompt with Vertex cachedContents API. Cached input tokens bill at ~25% of standard rate. Off by default until per-model support stabilizes.'",
-      "Click the toggle — it slides on (background flips from outline grey to primary blue).",
-      "Auto-save indicator flips to 'Saved' after ~1s.",
-      "Reload — toggle stays on.",
-      "Host shell step (needs PHANTOM_VERTEX_CACHE=1 in the phantom-agent environment, as in 'chat-vertex-cache-hit-indicator'): send a chat turn with a Vertex model — check the wire-events panel for cache_hit on the second turn. The toggle itself persists without the variable; only the cache_hit signal depends on it.",
-      "Click the toggle off again — turning the cache off should stop new cache_hit events from firing on subsequent turns.",
-    ],
-    expectedResult:
-      "Per-operator opt-in. Lets operators experiment with caching on a per-deploy basis without changing container env vars. Combined with the cache-hit indicator on the model chip, the operator gets a clean closed loop: enable here, see the cyan dot in chat, query savings in /observability/events.",
-    verifyVia: [
-      "GET /api/agent/personality → personality.vertexCacheEnabled reflects the toggle state.",
-      "Audit log: GET /api/agent/audit?action=settings_changed → row written when the personality blob updates (if MCP audits PUT /api/agent/personality).",
-    ],
-    related: ["chat-vertex-cache-hit-indicator", "settings-tune-auto-compact-threshold"],
-    components: ["settings", "vertex-cache"],
-  },
+  // [v1.0.4] Retired: settings-tune-auto-compact-threshold. No replacement: the Personality page no longer has an auto-compact slider because the chat route never read it; the threshold is the fixed constant AUTO_COMPACT_MIN_DROPPED (5) in app/api/chat/route.ts.
+  // [v1.0.4] Retired: settings-toggle-vertex-cache. No replacement: the Personality page no longer has a Vertex caching toggle because the chat route never read it; caching is switched only by the PHANTOM_VERTEX_CACHE=1 environment variable, which chat-vertex-cache-hit-indicator walks through.
 
   // ─────────────────────────────────────────────────────────────────
   // PLATFORM FEATURE JOURNEYS
@@ -3895,7 +3820,7 @@ export const JOURNEYS: Journey[] = [
       "Cumulative cached_tokens / cumulative input_tokens > 0.5 = caching is engaged on most turns",
       "Cumulative savings_tokens_est × $1.875/Mtok (gemini-3.1-pro-preview cached input rate × 0.75 inverse) ≈ savings_usd",
     ],
-    related: ["chat-vertex-cache-hit-indicator", "settings-toggle-vertex-cache"],
+    related: ["chat-vertex-cache-hit-indicator"],
     components: ["cost", "vertex-cache", "audit"],
   },
 
@@ -5087,7 +5012,7 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Open /models. The tabs read Chat, CLI, Embedding, Image and Voice; models are grouped under a provider header (for example Google Vertex AI). The catalog is read-only: there is no 'set as default' action.",
+      "Open /models. The tabs read Chat, Embedding, Image and Voice; models are grouped under a provider header (for example Google Vertex AI). The catalog is read-only: there is no 'set as default' action.",
       "Open a fresh chat and type /model. The reply says 'No session override. Using runtime default: <model>'.",
       "Type /model gemini-2.5-flash. Reply confirms the session preference. Send a normal prompt and open Live telemetry: the `model` event shows override_source: 'session'.",
       "Open the model dropdown in the chat header and pick a different model. Send another prompt: the `model` event now shows override_source: 'header' (the header wins over the session setting).",
@@ -5099,7 +5024,7 @@ export const JOURNEYS: Journey[] = [
       "GET /api/agent/sessions/{id} → metadata.preferred_model reflects the latest /model call (null after /model auto).",
       "Live telemetry `model` event: override_source is 'header', 'session' or 'none' as in the steps above.",
     ],
-    related: ["chat-set-session-model-preference", "settings-toggle-vertex-cache"],
+    related: ["chat-set-session-model-preference"],
     components: ["models", "slash-commands", "chat"],
   },
 
@@ -5788,7 +5713,7 @@ export const JOURNEYS: Journey[] = [
     category: "ops",
     title: "Backup + restore round-trip via /settings/backup-restore",
     summary:
-      "Download a complete-state zip via /settings/backup-restore → Backup, then restore it to a different deployment (or the same one after a reset) and verify every operator-owned section round-trips. The zip carries personality, connector instances + cleartext secrets, runtime jobs, memory entries (no embeddings), all skill MD files, knowledge bundle docs, data sources, and your workflow state (journeys marked tested, metric bookmarks). Restore order is dependency-aware (personality → instances+secrets → skills → memory → knowledge no-op → data sources → workflow state → jobs).",
+      "Download a complete-state zip via /settings/backup-restore → Backup, then restore it to a different deployment (or the same one after a reset) and verify every operator-owned section round-trips. The zip carries personality, connector instances + cleartext secrets, runtime jobs, memory entries (no embeddings), all skill MD files, knowledge bundle docs, data sources, your workflow state (journeys marked tested, metric bookmarks), and your hooks (secret values inside a hook are left out; a hook that lost one is restored disabled). Restore order is dependency-aware (personality → instances+secrets → skills → memory → knowledge no-op → data sources → workflow state → hooks → jobs).",
     difficulty: "intermediate",
     durationMin: 8,
     icon: "save",
@@ -5821,10 +5746,11 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Open /settings/backup-restore. Click Download backup (.zip). Browser saves phantom-backup-<timestamp>.zip — open it locally to inspect: manifest.json with section_counts, personality.json, instances.json (cleartext secrets visible — never commit or share this file; treat the whole zip as a secret), memory.json (no embedding fields), jobs.json (runtime jobs only), skills/ tree, knowledge/ tree, operator_state.json (the journeys you marked tested and your saved metric bookmarks).",
+      "Open /settings/backup-restore. Click Download backup (.zip). Browser saves phantom-backup-<timestamp>.zip — open it locally to inspect: manifest.json with section_counts, personality.json, instances.json (cleartext secrets visible — never commit or share this file; treat the whole zip as a secret), memory.json (no embedding fields), jobs.json (runtime jobs only), skills/ tree, knowledge/ tree, operator_state.json (the journeys you marked tested and your saved metric bookmarks), hooks.json (one entry per hook, disabled ones included; a \"redacted\" map lists any secret value that was left out).",
       "Operator-only step (restore overwrites live state, so start with the preview, which writes nothing): on the same deployment, Restore section → file picker → select the zip → Preview restore plan. The plan shows manifest version, section counts, and the restore order. Click Apply restore. Check the result: the applied counts match what was in the zip (personality: 1, instances: N, etc), no errors. Skipped counts may be non-zero if entries already exist.",
       "Workflow state: before the backup, mark a journey tested on /help/journeys (the tick persists on the server). After restoring onto a deployment where it is not marked, reload /help/journeys: the mark is back. The restore result lists operator_state under applied; a deployment that already has a tested_journeys key keeps its own unless you tick Overwrite.",
-      "Tick the \"Overwrite existing entries (force)\" checkbox and re-run Apply restore. Now the skipped counts go to zero — every entry is overwritten in place.",
+      "Hooks: before the backup, create two hooks in /settings/hooks. Hook A: an HTTP webhook with no header, or a header written as secret:SOME_ENV. Hook B: an HTTP webhook with a literal header such as Authorization = Bearer test-value. Download the backup and open hooks.json: both hooks are listed, A is unchanged, B has no Authorization header and the redacted map names transport.headers.Authorization (the literal value appears nowhere in the zip), and the download reports a backup warning about B. Operator-only step (restore overwrites live state): delete both hooks in /settings/hooks, then Preview restore plan (hooks shows present) and Apply restore. The result lists hooks under applied (2). Back in /settings/hooks: hook A is back exactly as it was, hook B is back DISABLED and the Warnings list names it and transport.headers.Authorization. Enter the header value again and enable B. Re-run Apply restore without Overwrite: hooks shows 2 skipped and neither hook changes. Tick Overwrite and re-run: A is replaced by the backup copy, but B is still skipped with a warning, because replacing it would erase the header you just re-entered.",
+      "Tick the \"Overwrite existing entries (force)\" checkbox and re-run Apply restore. Now the skipped counts go to zero — every entry is overwritten in place (a hook that lost secret values stays skipped, as in the Hooks step).",
       "Needs: a second host. Cross-deployment test: install Phantom on a second VM with a DIFFERENT PHANTOM_SECRET_KEK. Upload the zip there → Apply restore. Confirm the connector instances come back functional (probe them via /connectors or trigger a tool call). The KEK mismatch is fine — the destination re-encrypts under its own KEK on restore.",
       "Caveat verification: confirm memory.json has no `embedding` field on any entry. Confirm knowledge docs in the zip do NOT actually overwrite the destination's KB content (the manifest section_counts.knowledge will be 0 in the restore result; warnings[] will say \"X knowledge doc(s) ignored — knowledge bundles are image-baked\").",
       "Negative: upload a corrupt zip (truncate the file) → Preview returns 400 \"not a valid zip\". Upload a zip with no manifest.json → 400 \"missing manifest.json\". Upload a zip with schema_version: 999 → 400 \"unsupported schema_version\".",
@@ -6589,18 +6515,18 @@ export const JOURNEYS: Journey[] = [
       },
     ],
     howToTest: [
-      "Open /settings/hooks and click Add hook. Set Name `cost-watch`, Event RunEnd, and Transport Built-in (in-process, no subprocess) (new hooks start on HTTP webhook, so change it). In the Built-in field pick Cost warn over budget, set Daily cost threshold (USD) to 0 so it fires on the next turn, and click Create.",
+      "Open /settings/hooks and click Add hook. Set Name `cost-watch`, Event RunEnd, and Transport Built-in (in-process, no subprocess) (new hooks start on HTTP webhook, so change it). In the Built-in field pick Cost warn over budget, set Daily cost threshold (USD) to 0 (no threshold: the warning fires on the first turn of each repeat window whatever the spend, and the next one comes after the suppress window, 1 hour by default), and click Create.",
       "Add a second hook: Name `mem-inject`, Event UserPromptSubmit, Transport Built-in, Built-in Memory auto-inject, defaults, Create.",
       "Add a third: Name `compact-warn`, Event PreCompact, Transport Built-in, Built-in Pre-compact context warning, defaults, Create.",
-      "Store a memory (for example ask the agent to remember that the syslog broker is 10.20.30.40), then paste the prompt above. In /observability/events, find a hook_dispatched row for UserPromptSubmit and another for RunEnd. Open /notifications: a cost warning appears.",
-      "In a session with a few turns, send `/compress`. A hook_dispatched row for PreCompact appears.",
+      "Store a memory (for example ask the agent to remember that the syslog broker is 10.20.30.40), then paste the prompt above. In /observability/events, find a hook_dispatched row for UserPromptSubmit and another for RunEnd. Open /notifications: a Daily chat cost crossed threshold warning appears, in the Alerts tab.",
+      "In a session with a few turns, send `/compress`. A hook_dispatched row for PreCompact appears, and /notifications shows a Chat context filling up warning.",
       "Back on /settings/hooks, switch each hook off (or delete it) when done.",
     ],
     expectedResult:
-      "All three hooks save, fire inside the agent with no external receiver, and leave hook_dispatched audit rows. The cost warning appears as a notification. A built-in saved for an event it does not support is rejected.",
+      "All three hooks save, fire inside the agent with no external receiver, and leave hook_dispatched audit rows. The cost warning and the context warning each appear as a notification (topics cost-warning and context-warning, which are fixed and not a setting). A built-in saved for an event it does not support is rejected.",
     verifyVia: [
       "/observability/events → action hook_dispatched, with the hook names in the per-hook decisions.",
-      "/notifications shows the cost warning.",
+      "/notifications shows the cost warning and the context warning.",
       "/settings/hooks lists the three hooks with a built-in badge.",
     ],
     related: ["ops-install-builtin-hook", "ops-manage-hooks", "chat-compact-long-session"],
@@ -6768,7 +6694,6 @@ export const JOURNEYS: Journey[] = [
       "The 207 status and the `rejected` list for the mismatched call.",
       "GET /api/agent/settings → effective values unchanged after the rejected call.",
     ],
-    related: ["settings-toggle-vertex-cache", "settings-tune-auto-compact-threshold"],
     components: ["settings", "audit"],
   },
 
@@ -7063,6 +6988,57 @@ export const JOURNEYS: Journey[] = [
     components: ["audit"],
   },
   {
+    id: "observability-overview-landing",
+    category: "ops",
+    title: "Read the observability overview page",
+    summary:
+      "Start at /observability for a one-screen view of the platform: metric series, recent events, the busiest metrics, and shortcuts into the detail pages.",
+    difficulty: "starter",
+    durationMin: 3,
+    icon: "space_dashboard",
+    prompts: [
+      {
+        text: "What jobs are scheduled?",
+        note: "Any chat turn writes events (for example chat_turn_cost), so the Recent events list has something new to show.",
+        newSession: true,
+      },
+    ],
+    toolsExercised: ["jobs_list"],
+    apis: [
+      {
+        method: "GET",
+        path: "/api/agent/metrics",
+        description: "Prometheus text; the page parses it for the Metric series tile and the Top metrics list.",
+      },
+      {
+        method: "GET",
+        path: "/api/agent/audit?limit=10",
+        description: "The latest 10 audit events; the page shows the first 8 under Recent events.",
+      },
+    ],
+    howToTest: [
+      "Open /observability (sidebar → Observability → Overview). The heading reads Observability with four tiles under it: Metric series, Audit events, Services and Traces.",
+      "Metric series is the number of series the platform exposes. Audit events counts the recent events the page loaded (at most 10, shown with a +), not a lifetime total. Services and Traces are fixed labels, not live readings: use /settings and /observability/pipeline for service state.",
+      "Paste the prompt above in a chat, then reload the overview. Recent events lists the newest events with time, action, target and actor; click All → to open /observability/events.",
+      "Top metrics lists up to six of the largest non-zero series with their labels; click All → to open /observability/metrics.",
+      "In the Drill-in row click Pipeline, then use the browser's back button. The row links to Metrics, Traces, Logs, Events and Pipeline; the other observability pages (Runtime events, Detections, Connectors, Cost, Bench, Plugins) are reached from the sidebar.",
+    ],
+    expectedResult:
+      "The page loads both panels without an error banner, the lists match what the Events and Metrics pages show, and each shortcut opens the matching page.",
+    verifyVia: [
+      "The newest rows under Recent events also appear at the top of /observability/events.",
+      "GET /api/agent/audit?limit=10 returns the same events the panel lists.",
+      "A red banner at the top of the page means the audit call failed; the status code is shown in it.",
+    ],
+    related: [
+      "observability-logs-runtime-events",
+      "activity-live-feed",
+      "ops-read-metrics-traces",
+      "bench-run-benchmark",
+    ],
+    components: ["audit", "pipeline"],
+  },
+  {
     id: "bench-run-benchmark",
     category: "ops",
     title: "Run the phantom-soc-v1 benchmark and compare runs",
@@ -7085,18 +7061,31 @@ export const JOURNEYS: Journey[] = [
         path: "/api/agent/bench/runs",
         description: "Past benchmark runs with correctness, cost and wall-time summaries.",
       },
+      {
+        method: "GET",
+        path: "/api/agent/bench/runs/{run_id}",
+        description: "One run: manifest, router preset, the five aggregate figures and the per-case scores. The detail and compare pages read this.",
+      },
+      {
+        method: "POST",
+        path: "/api/agent/bench/runs",
+        description: "Start a run: body {manifest, router_preset_model?}. The request stays open until the run finishes, then returns the run id and summary.",
+      },
     ],
     howToTest: [
       "Needs: a model provider configured, the xlog instance ('onboarding-install-xlog-connector') for the log-generation case, and some tolerance for token spend: every run sends real prompts.",
       "Open /observability/bench (sidebar → Observability → Bench). The Run a benchmark box shows Manifest (path or bundled id) with phantom-soc-v1 as the placeholder, and an optional Router preset model.",
-      "Click Run benchmark. The button reads Running… until the run finishes; a new run appears in the list.",
-      "Open the run. Hero figures show Correctness, Avg Jaccard, Cost p50, Wall p50 and Cases; the table lists each case with pass or fail.",
-      "Run it a second time (optionally with a different Router preset model), then click Compare runs, pick the first run as the base and the second as the head, and read the deltas.",
+      "Click Run benchmark. The button reads Running… until the run finishes, which can take several minutes; a new run appears in the list.",
+      "Open the run. The top row shows Correctness, Avg Jaccard, Cost p50 / p95, Wall p50 / p95 and Cases (clean / total); the table lists each case with pass or fail, Jaccard, cost, wall time and any error.",
+      "Run it a second time (optionally with a different Router preset model), then click Compare runs (top right of the list). Pick the first run as Base and the second as Head; the address becomes /observability/bench/compare?base=<run id>&head=<run id>, which you can bookmark.",
+      "Read the Aggregate metric deltas: six cards (correctness rate, average Jaccard, cost p50 and p95, wall p50 and p95). A change of 10% or more shows green when the head is better and red when it is worse; smaller changes stay grey.",
+      "Read the Per-case diff table: a case whose pass/fail result changed is labelled FIXED or REGRESSED, next to its Jaccard, cost and wall-time changes.",
     ],
     expectedResult:
-      "Each run is recorded with correctness, tool-call overlap, cost and wall-time figures, and two runs can be compared side by side.",
+      "Each run is recorded with correctness, tool-call overlap, cost and wall-time figures, and two runs can be compared side by side, with the aggregate cards and per-case rows coloured by whether the head improved on the base.",
     verifyVia: [
       "The run id appears in the list and its detail page opens.",
+      "The compare page loads directly from the bookmarked ?base=&head= address with both selectors filled in.",
       "/observability/cost shows the tokens the run used.",
     ],
     related: ["chat-cost-rollup", "ops-set-job-model-override"],

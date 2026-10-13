@@ -17,7 +17,6 @@ type DefaultStatus = "idle" | "saving" | "saved" | "error";
 
 /** Normalize CLI provider IDs back to the base provider for API calls. */
 function resolveBaseProvider(provider: string): string {
-  if (provider === "anthropic-cli") return "anthropic";
   if (provider === "openai-codex") return "openai";
   return provider;
 }

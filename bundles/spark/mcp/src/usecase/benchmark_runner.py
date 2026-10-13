@@ -47,6 +47,7 @@ from typing import Any
 import httpx
 import yaml
 
+from usecase.agent_internal_auth import internal_chat_bearer
 from usecase.benchmark import (
     BenchCase,
     BenchManifest,
@@ -102,6 +103,21 @@ def load_manifest(manifest_ref: str) -> BenchManifest:
     return BenchManifest.model_validate(body)
 
 
+def _chat_headers() -> dict[str, str]:
+    """Headers for the loopback /api/chat call. Without the bearer the
+    agent middleware answers 401 no_session_cookie and every case scores as
+    an infrastructure error."""
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "text/event-stream",
+        "X-Phantom-Trigger": "bench",
+    }
+    bearer = internal_chat_bearer()
+    if bearer:
+        headers["Authorization"] = bearer
+    return headers
+
+
 async def _dispatch_case(
     case: BenchCase,
     router_preset_model: str | None,
@@ -139,11 +155,7 @@ async def _dispatch_case(
                 "POST",
                 chat_endpoint,
                 json=body,
-                headers={
-                    "Content-Type": "application/json",
-                    "Accept": "text/event-stream",
-                    "X-Phantom-Trigger": "bench",
-                },
+                headers=_chat_headers(),
             ) as resp:
                 if resp.status_code != 200:
                     text = (await resp.aread()).decode(errors="replace")

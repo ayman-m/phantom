@@ -246,9 +246,11 @@ export default function BackupRestorePage() {
             <strong className="text-on-surface">Contents:</strong> personality
             blob, connector instances + cleartext secrets, memory entries
             (without embeddings), runtime job definitions, all skill MD
-            files, knowledge bundle docs, and your workflow state (journeys
-            marked tested, saved metric bookmarks). Manifest jobs are NOT
-            included — they reseed from manifest.yaml at boot.
+            files, knowledge bundle docs, your workflow state (journeys
+            marked tested, saved metric bookmarks), and your hooks (from
+            Settings → Hooks; secret values inside a hook are left out, and
+            a hook that lost one is restored disabled). Manifest jobs are
+            NOT included — they reseed from manifest.yaml at boot.
           </p>
           <p className="text-warning">
             <span className="material-symbols-outlined text-[14px] align-text-bottom mr-1">
@@ -461,7 +463,7 @@ export default function BackupRestorePage() {
           <li>
             <strong className="text-on-surface">Restore is order-aware</strong>
             : personality → instances+secrets → skills → memory → knowledge
-            (no-op) → data sources → workflow state → jobs. Job restores after connectors so a runtime
+            (no-op) → data sources → workflow state → hooks → jobs. Job restores after connectors so a runtime
             job referencing <code className="font-mono">phantom_create_data_worker</code>
             doesn&rsquo;t fail-closed at first cron tick.
           </li>

@@ -313,21 +313,6 @@ export interface UseChatReturn {
   subagents: SubagentActivity[];
   sendMessage: (text: string) => void;
   resetChat: () => void;
-  /**
-   * Chat route is DERIVED from the selected model's
-   * `provider`. `anthropic-cli` (the Claude Code shell-out target
-   * surfaced in the model dropdown) → `claude-code` → POSTs
-   * to /api/chat/cli; everything else → `default` → POSTs to
-   * /api/chat (Gemini chat-route + tool-call loop).
-   *
-   * There is no separate toggle, so there's only one place to express
-   * the choice — the model dropdown — and two affordances can't
-   * disagree.
-   *
-   * Exposed as a read-only computed field for telemetry / debug
-   * consumers. No setter — operators change route by changing model.
-   */
-  chatRoute: "default" | "claude-code";
   /** Wipe just the right-panel telemetry without resetting the chat
    * (useful on long-running sessions where the event stream gets noisy). */
   clearTelemetry: () => void;
@@ -369,14 +354,6 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
   // Live subagent activity tracker.
   const [subagents, setSubagents] = useState<SubagentActivity[]>([]);
 
-  // chatRoute is DERIVED from overrideProvider, not
-  // independent state. anthropic-cli (claude-code model) → cli route;
-  // anything else → streaming. See UseChatReturn['chatRoute'] for the
-  // full reasoning. The chatRouteRef below keeps the same shape so
-  // sendMessage's snapshot logic at line ~696 doesn't need to change.
-  const chatRoute: "default" | "claude-code" =
-    overrideProvider === "anthropic-cli" ? "claude-code" : "default";
-
   // Refs to avoid stale closures inside the async sendMessage callback.
   const abortRef = useRef<AbortController | null>(null);
   const streamingRef = useRef(false);
@@ -384,14 +361,12 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
   const optionsRef = useRef(options);
   const overrideModelRef = useRef<string | undefined>(undefined);
   const overrideProviderRef = useRef<string | undefined>(undefined);
-  const chatRouteRef = useRef<"default" | "claude-code">("default");
 
   // Keep refs in sync with state/props so sendMessage always reads the latest.
   sessionRef.current = sessionId;
   optionsRef.current = options;
   overrideModelRef.current = overrideModel;
   overrideProviderRef.current = overrideProvider;
-  chatRouteRef.current = chatRoute;
 
   // Remove the stale `chat-route-mode` localStorage key once. Route
   // selection flows from the model dropdown's persistence path, so
@@ -681,38 +656,21 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // Snapshot chatRoute for this turn. If the
-    // operator toggles mid-stream the toggle should affect the NEXT
-    // send, not this one. Without the snapshot the SSE dispatch could
-    // switch dispatchers mid-flight.
-    const requestRoute = chatRouteRef.current;
-
-    // Build request body. Shape depends on the route:
-    //   default     → /api/chat — { message, session_id?, model?, provider? }
-    //   claude-code → /api/chat/cli — { prompt }
-    //                 (Claude Code runs its own tool loop; no
-    //                 session_id, no per-turn model override.)
+    // Request body: { message, session_id?, model?, provider? }.
     // Read from optionsRef to avoid stale closure over initial empty options.
     const currentOptions = optionsRef.current;
-    let url: string;
-    let body: Record<string, string>;
-    if (requestRoute === "claude-code") {
-      url = "/api/chat/cli";
-      body = { prompt: text };
-    } else {
-      url = "/api/chat";
-      body = { message: text };
-      if (sessionRef.current) {
-        body.session_id = sessionRef.current;
-      }
-      const effectiveModel = overrideModelRef.current || currentOptions?.defaultModel;
-      const effectiveProvider = overrideProviderRef.current || currentOptions?.defaultProvider;
-      if (effectiveModel) {
-        body.model = effectiveModel;
-      }
-      if (effectiveProvider) {
-        body.provider = effectiveProvider;
-      }
+    const url = "/api/chat";
+    const body: Record<string, string> = { message: text };
+    if (sessionRef.current) {
+      body.session_id = sessionRef.current;
+    }
+    const effectiveModel = overrideModelRef.current || currentOptions?.defaultModel;
+    const effectiveProvider = overrideProviderRef.current || currentOptions?.defaultProvider;
+    if (effectiveModel) {
+      body.model = effectiveModel;
+    }
+    if (effectiveProvider) {
+      body.provider = effectiveProvider;
     }
 
     // Placeholder assistant message that we'll append deltas into.
@@ -793,11 +751,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
             const event: ChatSSEEvent | null = parseSSEEvent(block);
             if (!event) continue;
 
-            if (requestRoute === "claude-code") {
-              handleCliSSEEvent(event);
-            } else {
-              handleSSEEvent(event);
-            }
+            handleSSEEvent(event);
           }
         }
 
@@ -805,11 +759,7 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
         if (buffer.trim()) {
           const event = parseSSEEvent(buffer);
           if (event) {
-            if (requestRoute === "claude-code") {
-              handleCliSSEEvent(event);
-            } else {
-              handleSSEEvent(event);
-            }
+            handleSSEEvent(event);
           }
         }
       } catch (err: unknown) {
@@ -832,160 +782,6 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
         abortRef.current = null;
       }
     })();
-
-    /**
-     * Dispatcher for /api/chat/cli SSE events. The
-     * /api/chat/cli endpoint streams `claude-code --print
-     * --output-format json` as five event types:
-     *   meta        — { provider, started_at } (telemetry only)
-     *   output      — parsed JSON; .result is the assistant text
-     *   output_raw  — { line } for non-JSON stdout (usually
-     *                 Claude Code's permission prompts or warnings)
-     *   done        — { exit_code, duration_ms, timed_out,
-     *                 stderr_tail }; non-zero exit surfaces the tail
-     *   error       — { message } transport failure
-     *
-     * The tool-call / approval / compaction / cache / subagent
-     * events from the Gemini path are NEVER emitted on this route;
-     * we ignore unknown types silently. The wire-event log still
-     * mirrors every event so the debug panel works for both modes.
-     */
-    function handleCliSSEEvent(event: ChatSSEEvent): void {
-      const ts = new Date().toISOString();
-      const flatPreview = event.data.replace(/\s+/g, " ").slice(0, 240);
-      setEvents((prev) => {
-        const next = [...prev, { ts, type: event.type, preview: flatPreview }];
-        return next.length > MAX_EVENT_LOG
-          ? next.slice(next.length - MAX_EVENT_LOG)
-          : next;
-      });
-
-      switch (event.type) {
-        case "meta":
-          // Informational; no UI mutation needed.
-          break;
-        case "output": {
-          // Claude Code's --output-format json emits a single object
-          // whose .result field is the model's answer. Parse
-          // defensively — if .result isn't a string, fall back to
-          // pretty-printing so the operator sees SOMETHING rather
-          // than silent emptiness.
-          try {
-            const parsed = JSON.parse(event.data) as Record<string, unknown>;
-            const result = parsed.result;
-            const text =
-              typeof result === "string"
-                ? result
-                : JSON.stringify(parsed, null, 2);
-            setMessages((prev) => {
-              const updated = [...prev];
-              const last = updated[updated.length - 1];
-              if (last && last.role === "assistant") {
-                updated[updated.length - 1] = { ...last, content: text };
-              }
-              return updated;
-            });
-          } catch {
-            // Non-JSON; emit the raw payload so the operator sees the
-            // actual bytes rather than dropping silently.
-            setMessages((prev) => {
-              const updated = [...prev];
-              const last = updated[updated.length - 1];
-              if (last && last.role === "assistant") {
-                updated[updated.length - 1] = {
-                  ...last,
-                  content: `${last.content ?? ""}${event.data}`,
-                };
-              }
-              return updated;
-            });
-          }
-          break;
-        }
-        case "output_raw": {
-          // Non-JSON line — typically a Claude Code permission prompt
-          // or pre-init log line. Append as a quoted diagnostic block
-          // so it doesn't mix into the eventual result text.
-          try {
-            const parsed = JSON.parse(event.data) as { line?: string };
-            if (typeof parsed.line === "string" && parsed.line.length > 0) {
-              setMessages((prev) => {
-                const updated = [...prev];
-                const last = updated[updated.length - 1];
-                if (last && last.role === "assistant") {
-                  const prefix = last.content ? `${last.content}\n` : "";
-                  updated[updated.length - 1] = {
-                    ...last,
-                    content: `${prefix}> ${parsed.line}`,
-                  };
-                }
-                return updated;
-              });
-            }
-          } catch {
-            /* malformed output_raw payload — non-fatal. */
-          }
-          break;
-        }
-        case "done": {
-          // Final accounting event. If non-zero exit or timeout,
-          // surface the stderr tail so the operator knows WHY the
-          // turn failed. On success the assistant content was
-          // already set by the preceding `output` event.
-          try {
-            const parsed = JSON.parse(event.data) as {
-              exit_code?: number;
-              timed_out?: boolean;
-              stderr_tail?: string;
-            };
-            const failed =
-              (parsed.exit_code != null && parsed.exit_code !== 0) ||
-              parsed.timed_out === true;
-            if (failed) {
-              const reason = parsed.timed_out
-                ? "Claude Code timed out."
-                : `Claude Code exited with code ${parsed.exit_code}.`;
-              const tail = parsed.stderr_tail
-                ? `\n\nstderr tail:\n${parsed.stderr_tail}`
-                : "";
-              setMessages((prev) => {
-                const updated = [...prev];
-                const last = updated[updated.length - 1];
-                if (last && last.role === "assistant") {
-                  const prefix = last.content ? `${last.content}\n\n` : "";
-                  updated[updated.length - 1] = {
-                    ...last,
-                    content: `${prefix}${reason}${tail}`,
-                  };
-                }
-                return updated;
-              });
-            }
-          } catch {
-            /* malformed done — non-fatal. */
-          }
-          break;
-        }
-        case "error": {
-          try {
-            const parsed = JSON.parse(event.data) as { message?: string };
-            const msg = parsed.message ?? "Claude Code transport error.";
-            setMessages((prev) => {
-              const updated = [...prev];
-              const last = updated[updated.length - 1];
-              if (last && last.role === "assistant") {
-                updated[updated.length - 1] = { ...last, content: msg };
-              }
-              return updated;
-            });
-          } catch {
-            /* malformed error — non-fatal. */
-          }
-          break;
-        }
-        // Other event types are not emitted on /api/chat/cli; ignored.
-      }
-    }
 
     /** Dispatch a single SSE event to the appropriate handler. */
     function handleSSEEvent(event: ChatSSEEvent): void {
@@ -1600,6 +1396,5 @@ export function useChat(options?: UseChatOptions): UseChatReturn {
     currentModel: overrideModel || options?.defaultModel,
     currentProvider: overrideProvider || options?.defaultProvider,
     setModel,
-    chatRoute,
   };
 }

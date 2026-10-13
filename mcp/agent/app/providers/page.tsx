@@ -13,20 +13,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
  *   2. **Scope**: Vertex AI (Gemini) and Anthropic. A provider the chat
  *      path cannot use has no card here.
  *
- * Anthropic credentials feed two paths:
- *   - anthropicApiKey is the fallback credential for the same CLI shell-out
- *     when anthropicCliKey is empty (lib/anthropic-credentials.ts). The chat
- *     route makes no direct Anthropic API calls.
- *   - anthropicCliKey is consumed by POST /api/chat/cli (Claude Code CLI
- *     shell-out). Either field accepts an OAuth token (sk-ant-oat01-...)
- *     or an API key (sk-ant-api03-...) — Claude Code CLI handles both.
+ * The Anthropic card holds one credential, anthropicApiKey, stored by
+ * lib/anthropic-credentials.ts. The chat route makes no Anthropic API
+ * calls yet.
  */
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface ProviderConfig {
   anthropicApiKey: string;
-  anthropicCliKey: string;
   /** Google Vertex AI — service-account JSON blob (multi-line). Encrypted in Infisical. */
   vertexServiceAccountJson: string;
   /** Google Vertex AI — GCP project that owns the quotas. Not a secret. */
@@ -51,7 +46,6 @@ const glassCard: React.CSSProperties = {
 
 const DEFAULT_PROVIDER_CONFIG: ProviderConfig = {
   anthropicApiKey: "",
-  anthropicCliKey: "",
   vertexServiceAccountJson: "",
   vertexProjectId: "",
   vertexLocation: "us-central1",
@@ -67,10 +61,6 @@ function extractProviderConfig(
     anthropicApiKey:
       typeof providers.anthropicApiKey === "string"
         ? providers.anthropicApiKey
-        : "",
-    anthropicCliKey:
-      typeof providers.anthropicCliKey === "string"
-        ? providers.anthropicCliKey
         : "",
     vertexServiceAccountJson:
       typeof providers.vertexServiceAccountJson === "string"
@@ -248,10 +238,7 @@ export default function ProvidersSettingsPage() {
 
   function isProviderDirty(provider: "anthropic" | "vertex"): boolean {
     if (provider === "anthropic") {
-      return (
-        form.anthropicApiKey !== initialForm.current.anthropicApiKey ||
-        form.anthropicCliKey !== initialForm.current.anthropicCliKey
-      );
+      return form.anthropicApiKey !== initialForm.current.anthropicApiKey;
     }
     return (
       form.vertexServiceAccountJson !==
@@ -269,7 +256,6 @@ export default function ProvidersSettingsPage() {
 
     const payload = {
       anthropicApiKey: form.anthropicApiKey,
-      anthropicCliKey: form.anthropicCliKey,
       vertexServiceAccountJson: form.vertexServiceAccountJson,
       vertexProjectId: form.vertexProjectId,
       vertexLocation: form.vertexLocation,
@@ -297,11 +283,8 @@ export default function ProvidersSettingsPage() {
   // ── Connection test ──────────────────────────────────────────────────────
 
   /**
-   * Test Connection only validates pay-per-token API keys. CLI / OAuth
-   * refresh tokens (the Anthropic CLI Token) can't be
-   * probed without rotating them as a side effect, so their validation
-   * happens at runtime when the CLI actually runs. This helper returns
-   * true only when an API key is filled for the provider.
+   * Whether the provider's credential fields are filled enough to save
+   * or test.
    */
   function hasTestableApiKey(provider: "anthropic" | "vertex"): boolean {
     if (provider === "anthropic") {
@@ -736,17 +719,20 @@ export default function ProvidersSettingsPage() {
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-headline text-lg font-bold text-on-surface">Anthropic</h3>
+                    <h3 className="font-headline text-lg font-bold text-on-surface">Anthropic (Claude API)</h3>
                     <p className="text-xs text-on-surface-variant mt-0.5">
-                      Claude API + Claude Code CLI
+                      API key
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-center">
+                  <span className="text-[10px] text-on-surface-variant/60 font-label">
+                    Not available yet
+                  </span>
                   <button
                     type="button"
                     disabled
-                    title="Connection test is not available for Anthropic."
+                    title="Not available yet"
                     className="px-4 py-2 text-xs font-bold font-headline rounded bg-transparent border border-outline-variant/30 text-on-surface hover:bg-surface-bright transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Test Connection
@@ -755,8 +741,7 @@ export default function ProvidersSettingsPage() {
                     type="button"
                     disabled={
                       savingProvider !== null ||
-                      (form.anthropicApiKey === initialForm.current.anthropicApiKey &&
-                       form.anthropicCliKey === initialForm.current.anthropicCliKey)
+                      form.anthropicApiKey === initialForm.current.anthropicApiKey
                     }
                     onClick={() => handleSaveProvider("anthropic")}
                     className="px-6 py-2 text-xs font-bold font-headline rounded bg-primary-container text-on-primary-container hover:shadow-[0_0_15px_rgba(25,99,179,0.3)] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
@@ -766,22 +751,14 @@ export default function ProvidersSettingsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 <MaskedKeyInput
                   id="anthropic-api-key"
                   label="API Key"
                   value={form.anthropicApiKey}
                   onChange={(v) => updateField("anthropicApiKey", v)}
                   placeholder="sk-ant-api03-..."
-                  helpText="Used for Claude models when no CLI token is set. Accepts an API key (sk-ant-api03-) or a Max OAuth token (sk-ant-oat01-). Stored encrypted."
-                />
-                <MaskedKeyInput
-                  id="anthropic-cli-key"
-                  label="CLI Token (Claude Code)"
-                  value={form.anthropicCliKey}
-                  onChange={(v) => updateField("anthropicCliKey", v)}
-                  placeholder="sk-ant-oat01-... or sk-ant-api03-..."
-                  helpText="Used by the Claude Code CLI shell-out endpoint at POST /api/chat/cli. Accepts a Max OAuth token (sk-ant-oat01-) or an API key (sk-ant-api03-)."
+                  helpText="An Anthropic API key (sk-ant-api03-). Stored encrypted."
                 />
               </div>
             </div>

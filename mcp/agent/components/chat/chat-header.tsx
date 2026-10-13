@@ -81,10 +81,6 @@ export interface ChatHeaderProps {
    */
   approvalMode?: "manual" | "bypass";
   onApprovalModeChange?: (mode: "manual" | "bypass") => void;
-  // There is no Claude Code toggle: chatRoute is derived
-  // from the selected model's `provider` in useChat (anthropic-cli →
-  // CLI shell-out at /api/chat/cli, else → default Gemini chat-route).
-  // Operators select claude-code in the model dropdown.
 }
 
 // ─── Approval Mode Dropdown ────────────────────────────────────────
@@ -831,9 +827,6 @@ export function ChatHeader({
             onChange={onApprovalModeChange}
           />
         )}
-        {/* Selecting `claude-code` in the model dropdown
-            (provider="anthropic-cli") drives the routing. See useChat's derivation
-            of `chatRoute` from `overrideProvider`. */}
         {/* Subagent toggle. Defaults ON. Operator can disable
             while testing chat flows where they want deterministic
             single-agent execution. State persists to operator_state.db

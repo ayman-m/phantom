@@ -38,6 +38,32 @@ export interface ActionPolicy {
   confirmExternalActions: 'approve-card' | 'soft' | 'off';
 }
 
+// The policy the chat route falls back to when the personality store cannot
+// be reached or a stored blob lacks a field. The canonical defaults live in
+// the MCP (DEFAULT_PERSONALITY in bundles/spark/mcp/src/usecase/
+// personality_store.py, which also seeds a fresh install and feeds the
+// personality page's Reset Defaults);
+// scripts/test-personality-defaults.mjs fails when the two disagree.
+export const DEFAULT_ACTION_POLICY: ActionPolicy = {
+  localCategories: [
+    'jobs',
+    'settings',
+    'personality',
+    'instances',
+    'providers',
+    'approvals',
+    'notifications',
+    'skills',
+    'api-keys',
+    'memory',
+    'knowledge',
+  ],
+  externalCategories: ['xlog', 'caldera', 'xsiam', 'simulations', 'http-sender', 'wec-sender'],
+  askWhenUnsure: true,
+  confirmLocalActions: 'approve-card',
+  confirmExternalActions: 'off',
+};
+
 // An `approve-card` cadence cannot be honoured when the install's
 // approval list is empty: no tool waits for a card, so promising one is
 // the same false narration the approval-mode block warns about. The

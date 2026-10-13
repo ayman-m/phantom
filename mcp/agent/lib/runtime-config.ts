@@ -52,6 +52,7 @@ export type RuntimeConfigValues = {
 export type EffectiveRuntimeConfig = RuntimeConfigValues & {
   MCP_URL: string;
   XLOG_URL: string;
+  CALDERA_URL: string;
   MCP_TOOL_CACHE_TTL_MS: string;
 };
 
@@ -129,6 +130,9 @@ export async function getEffectiveRuntimeConfig(): Promise<EffectiveRuntimeConfi
     // Operator overrides via InstanceStore (preferred) and the env
     // var (compose) still win when set.
     XLOG_URL: xlogFromStore || clean(process.env.XLOG_URL) || "https://xlog:8000",
+    // Compose sets CALDERA_URL on the agent; the default is the same
+    // compose-internal address, so /api/agent/health always probes Caldera.
+    CALDERA_URL: clean(process.env.CALDERA_URL) || "http://caldera:8888",
     MCP_TOOL_CACHE_TTL_MS: clean(process.env.MCP_TOOL_CACHE_TTL_MS) || "300000",
   };
 }

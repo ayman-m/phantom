@@ -12,6 +12,7 @@ import { classifyRiskTier, getApprovalGating, isToolGated } from '@/lib/approval
 // stays internal to the system-prompt module.
 import {
   buildSystemPromptText,
+  DEFAULT_ACTION_POLICY,
   type ActionPolicy,
   type ApprovalMode,
   type SkillSummary,
@@ -2676,28 +2677,9 @@ function isInvalidGeminiApiKeyError(error: unknown) {
  * personality store doesn't yet have the field (older blobs that
  * pre-date this commit).
  */
-// ActionPolicy interface + renderActionPolicyBlock + the static system
-// prompt text all live in lib/system-prompt.ts (a clean cache boundary,
-// and the static narrative stays out of route.ts).
-const DEFAULT_ACTION_POLICY: ActionPolicy = {
-  localCategories: [
-    'jobs',
-    'settings',
-    'personality',
-    'instances',
-    'providers',
-    'approvals',
-    'notifications',
-    'skills',
-    'api-keys',
-    'memory',
-    'knowledge',
-  ],
-  externalCategories: ['xlog', 'caldera', 'xsiam', 'simulations', 'http-sender', 'wec-sender'],
-  askWhenUnsure: true,
-  confirmLocalActions: 'approve-card',
-  confirmExternalActions: 'off',
-};
+// ActionPolicy interface + DEFAULT_ACTION_POLICY + renderActionPolicyBlock
+// + the static system prompt text all live in lib/system-prompt.ts (a clean
+// cache boundary, and the static narrative stays out of route.ts).
 
 /**
  * Returns the two pieces of personality the system prompt

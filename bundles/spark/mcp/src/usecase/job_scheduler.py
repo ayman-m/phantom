@@ -1280,8 +1280,8 @@ class CroniterJobScheduler:
         # The bearer that authenticates this loopback to the
         # middleware-gated /api/chat. Same MCP_TOKEN the agent uses to reach
         # the embedded MCP; read from the canonical pydantic-settings source.
-        from config.config import get_config  # noqa: PLC0415
-        mcp_token = (get_config().mcp_token or "").strip()
+        from usecase.agent_internal_auth import internal_chat_bearer  # noqa: PLC0415
+        chat_bearer = internal_chat_bearer()
 
         text_parts: list[str] = []
         tool_calls: list[dict[str, Any]] = []
@@ -1303,8 +1303,8 @@ class CroniterJobScheduler:
         # Present MCP_TOKEN so the middleware gate on /api/chat accepts
         # this internal call. Without it every scheduled prompt job would
         # 401 with no_session_cookie.
-        if mcp_token:
-            request_headers["Authorization"] = f"Bearer {mcp_token}"
+        if chat_bearer:
+            request_headers["Authorization"] = chat_bearer
         else:
             logger.warning(
                 "JobScheduler %s: MCP_TOKEN unset — /api/chat call will 401 "

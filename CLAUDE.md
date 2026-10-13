@@ -31,6 +31,26 @@ Phantom is a **defensive security tool**. It exists to build and validate detect
 - **The targets are lab and POV tenants the operator controls**, such as a lab tenant and a lab domain. Hosts, users, IPs and domains in generated events are fictitious personas or lab assets.
 - **Success is measured defensively**: a Cortex analytics/BIOC/correlation alert fires on the synthetic data, and the finding becomes a reusable skill, data-source schema or detection rule.
 
+## Public repository hygiene (MANDATORY before every push)
+
+This repository is public. Anything committed to it is visible to everyone, permanently, including through forks, caches and history. **Never commit anything confidential or customer-specific, ever.** That includes:
+
+- customer, partner or prospect names, tenant names and URLs, domains, hostnames, user names, e-mail addresses and IP addresses that belong to a real organisation;
+- data copied from a customer environment, a proof-of-value or a support case: logs, alerts, screenshots, rule or case exports, ticket text;
+- credentials of any kind: API keys, tokens, service-account JSON, passwords, certificates and private keys, `.env` files, key files and webhook URLs that carry a secret;
+- internal planning, risk or review notes, private issue or chat transcripts, and anything marked internal or confidential.
+
+Use fictitious personas, example domains and reserved address ranges in examples, fixtures, skills, journeys, docs and tests. If real data helped you discover something, record the finding in generic terms only.
+
+**Before you push (any branch, any remote), do all of these and fix every hit first:**
+
+1. Review the full diff you are about to push (`git diff <remote>/<branch>..HEAD`, including renamed and binary files, screenshots and images) for the categories above.
+2. Run the maintainer's denylist and secret scans against the tree and the diff, as the release process requires. A hit is a stop, not a warning to review later.
+3. Confirm that no file under a path ignored by git was force-added by accident, and that fixtures and recordings contain only synthetic data.
+4. Never push private history. Only a cleaned tree goes to the public repository.
+
+If something confidential was committed or pushed, do not try to hide it with a follow-up commit. Stop, tell the maintainer, and rotate any exposed secret immediately.
+
 ## Contained-release discipline (MANDATORY)
 
 **One concept = one release.** Even when the operator asks for multiple unrelated changes in one turn, split them into separate contained releases. Each release has:
@@ -44,6 +64,8 @@ When you finish a release that touched the architecture or user-guide pages, tel
 ## Releases
 
 Releases are tagged `vX.Y.Z`, and **all images ship together at that one version** (monorepo release invariant). A release publishes code and docs together: see [Documentation discipline](#documentation-discipline-mandatory--every-release). The install contract (one compose file, one env-file format, one install location) lives in [`installer/CLAUDE.md`](installer/CLAUDE.md), and the container-lifecycle daemon is described in [`updater/CLAUDE.md`](updater/CLAUDE.md).
+
+Images are published from the public repo `ayman-m/phantom` by `.github/workflows/publish-images.yml` (manual dispatch, GitHub-hosted runner, `GITHUB_TOKEN`, no stored secret); see [`BUILDING.md`](BUILDING.md) "Publishing images". Publish an `-rcN` tag before every final tag.
 
 ## Agent credential guardrail (MANDATORY)
 

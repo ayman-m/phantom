@@ -63,6 +63,29 @@ test("another topic uses payload.title and payload.body", () => {
   assert.equal(d.tone, "neutral");
 });
 
+test("the built-in hook warnings show the payload title, the body, and the warning tone", () => {
+  const cost = describeNotification({
+    id: "w1",
+    topic: "cost-warning",
+    payload: { title: "Daily chat cost crossed threshold \u2014 $12.34 so far", body: "details" },
+  });
+  assert.equal(cost.title, "Daily chat cost crossed threshold \u2014 $12.34 so far");
+  assert.equal(cost.description, "details");
+  assert.equal(cost.tone, "warning");
+  const ctx = describeNotification({
+    id: "w2",
+    topic: "context-warning",
+    payload: { title: "Chat context filling up \u2014 compaction imminent", body: "Session s1 ..." },
+  });
+  assert.equal(ctx.title, "Chat context filling up \u2014 compaction imminent");
+  assert.equal(ctx.tone, "warning");
+});
+
+test("a hook warning without a payload title falls back to the humanized topic", () => {
+  assert.equal(describeNotification({ id: "w3", topic: "cost-warning", payload: {} }).title, "Cost warning");
+  assert.equal(describeNotification({ id: "w4", topic: "context-warning" }).title, "Context warning");
+});
+
 test("an unknown topic gets a humanized title and the payload summary", () => {
   const d = describeNotification({ id: "n5", topic: "simulation-complete", payload: { summary: "Done" } });
   assert.equal(d.title, "Simulation complete");

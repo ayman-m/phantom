@@ -79,12 +79,7 @@ export async function GET() {
     probe('xlog-api', `${runtimeConfig.XLOG_URL.replace(/\/$/, '')}/health`),
     probe('phantom-mcp', mcpPingUrl(runtimeConfig.MCP_URL)),
     probe('phantom-agent', `${selfBase.replace(/\/$/, '')}/api/auth/status`),
-    probe(
-      'caldera',
-      runtimeConfig.calderaBaseUrl
-        ? `${runtimeConfig.calderaBaseUrl.replace(/\/$/, '')}/`
-        : '',
-    ),
+    probe('caldera', `${runtimeConfig.CALDERA_URL.replace(/\/$/, '')}/`),
   ]);
 
   const failed = probes.filter((result) => result.status === 'failed');

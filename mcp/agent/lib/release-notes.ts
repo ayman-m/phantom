@@ -33,6 +33,22 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "1.0.4",
+    date: "Unreleased", // set to the ISO publish date when v1.0.4 is tagged
+    title: "Hook, benchmark and status fixes, and documentation coverage.",
+    highlights: [
+      "Claude Code CLI integration removed; the Anthropic card keeps only the API key field.",
+      "Backups now include your hooks; secret values are left out and the hook restores disabled.",
+      "Personality page drops eleven settings nothing used; it keeps the persona editor and action policy.",
+      "Caldera now shows its real status on Services instead of always reading unknown.",
+      "Benchmark runs now work: every case used to fail with a 401 from the chat endpoint.",
+      "Built-in hooks can only be saved on events they support.",
+      "Cost and context warnings from the built-in hooks now appear on Notifications.",
+      "New user-guide sections for Benchmark Runs, Runtime Events and What's New; the Knowledge Bases guide covers browsing.",
+      "The architecture page gains Benchmark Harness and About & Release Notes sections; a new observability overview journey.",
+    ],
+  },
+  {
     version: "1.0.3",
     date: "2026-10-12",
     title: "Session lifetime, walkthrough fixes and corrected help pages.",

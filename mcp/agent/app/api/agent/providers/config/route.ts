@@ -7,10 +7,9 @@
  * (section "Setup Page Canonical Lifecycle Spec"), provider data
  * lives in ProviderStore (SecretStore-backed).
  *
- * Anthropic credentials (anthropicApiKey + anthropicCliKey) are
- * persisted: the PUT upserts a "primary-anthropic" provider instance,
- * and the chat-route CLI shell-out (/api/chat/cli) picks the
- * credential up via lib/anthropic-credentials.ts.
+ * The Anthropic credential (anthropicApiKey) is persisted: the PUT
+ * upserts a "primary-anthropic" provider instance, and
+ * lib/anthropic-credentials.ts reads it back.
  *
  *   GET /api/agent/providers/config
  *     → fetches vertex + anthropic instances from ProviderStore
@@ -27,7 +26,6 @@
  *   form.vertexLocation           → instance.config.region
  *   form.vertexServiceAccountJson → instance.secrets.serviceAccountJson
  *   form.anthropicApiKey          → instance.secrets.api_key
- *   form.anthropicCliKey          → instance.secrets.cli_key
  */
 
 import { NextResponse } from "next/server";
@@ -40,7 +38,6 @@ export const dynamic = "force-dynamic";
 
 const PROVIDER_KEYS = [
   "anthropicApiKey",
-  "anthropicCliKey",
   "vertexServiceAccountJson",
   "vertexProjectId",
   "vertexLocation",
@@ -49,7 +46,6 @@ type ProviderKey = (typeof PROVIDER_KEYS)[number];
 
 const SENSITIVE_KEYS: ReadonlySet<ProviderKey> = new Set<ProviderKey>([
   "anthropicApiKey",
-  "anthropicCliKey",
   "vertexServiceAccountJson",
 ]);
 
@@ -123,7 +119,7 @@ interface ProviderSyncResult {
  *
  * `requiredOnCreate` lists fields that MUST be present on the first
  * create (vertex needs project_id + region + serviceAccountJson;
- * anthropic only needs one credential). When non-empty + missing,
+ * anthropic only needs its API key). When non-empty + missing,
  * the result reports a 400 reason so the operator sees what's
  * needed.
  */
@@ -139,12 +135,6 @@ async function upsertProviderInstance(
     requiredOnCreate?: {
       keys: string[];
       failureReason: string;
-      // "all" (default) means every listed key must be present;
-      // "any" means at least one. Anthropic uses "any" because either
-      // api_key (direct API) or cli_key (Pro/Max device-code OAuth) is
-      // sufficient on first create. Vertex uses "all" because the SA
-      // JSON, project_id, and region must all land in the same instance.
-      mode?: "all" | "any";
     };
   },
 ): Promise<ProviderSyncResult> {
@@ -202,21 +192,10 @@ async function upsertProviderInstance(
   // caller declared any.
   if (requiredOnCreate) {
     const merged = { ...configPatch, ...secretsPatch };
-    const mode = requiredOnCreate.mode ?? "all";
-    if (mode === "all") {
-      // Vertex shape: every required key must be present.
-      const missing = requiredOnCreate.keys.filter((k) => !merged[k]);
-      if (missing.length > 0) {
-        return { success: false, error: requiredOnCreate.failureReason };
-      }
-    } else {
-      // "any" shape (Anthropic): at least one of the listed keys must
-      // be present. Anthropic saves with only cli_key (the Pro/Max
-      // device-code OAuth token) must succeed even when api_key is absent.
-      const present = requiredOnCreate.keys.some((k) => !!merged[k]);
-      if (!present) {
-        return { success: false, error: requiredOnCreate.failureReason };
-      }
+    // Every required key must be present.
+    const missing = requiredOnCreate.keys.filter((k) => !merged[k]);
+    if (missing.length > 0) {
+      return { success: false, error: requiredOnCreate.failureReason };
     }
   }
 
@@ -282,16 +261,11 @@ export async function GET() {
   }
 
   if (anthropic) {
-    // Two independent secret slots: api_key (used by the chat-route's
-    // future callAnthropic API path) and cli_key (used by the Claude
-    // Code CLI shell-out at /api/chat/cli). Either or both can be set.
+    // Only api_key is surfaced. Any other secret slot on the instance
+    // is ignored and never echoed.
     if (anthropic.secrets?.api_key !== undefined) {
       providers.anthropicApiKey = REDACTED;
       configured.anthropicApiKey = true;
-    }
-    if (anthropic.secrets?.cli_key !== undefined) {
-      providers.anthropicCliKey = REDACTED;
-      configured.anthropicCliKey = true;
     }
   }
 
@@ -340,13 +314,6 @@ export async function PUT(request: Request) {
   ) {
     anthropicSecretsPatch.api_key = incoming.anthropicApiKey.trim();
   }
-  if (
-    typeof incoming.anthropicCliKey === "string" &&
-    incoming.anthropicCliKey !== "" &&
-    incoming.anthropicCliKey !== REDACTED
-  ) {
-    anthropicSecretsPatch.cli_key = incoming.anthropicCliKey.trim();
-  }
 
   // Short-circuit if nothing to do.
   if (
@@ -391,23 +358,18 @@ export async function PUT(request: Request) {
       secretsPatch: anthropicSecretsPatch,
       existing: anthropicExisting,
       requiredOnCreate: {
-        // Anthropic needs at least one credential on first create —
-        // either api_key (for API use) or cli_key (for CLI shell-out
-        // via Pro/Max device-code OAuth). The MCP store fails if
-        // secrets is empty, but accepting only ONE is the intended
-        // semantic.
-        keys: ["api_key", "cli_key"],
-        mode: "any",
+        // Anthropic needs its API key on first create. The MCP store
+        // fails if secrets is empty.
+        keys: ["api_key"],
         failureReason:
-          "Anthropic provider is not yet configured. Supply either an " +
-          "API key (for direct API use) or a Claude Code CLI key (for " +
-          "the /api/chat/cli shell-out endpoint) to create the " +
-          "primary-anthropic instance for the first time.",
+          "Anthropic provider is not yet configured. Supply an API " +
+          "key to create the primary-anthropic instance for the " +
+          "first time.",
       },
     }),
   ]);
 
-  // Bust per-provider caches so the next chat / CLI dispatch sees the
+  // Bust per-provider caches so the next chat dispatch sees the
   // updated credentials immediately, not after the 30-second TTL.
   if (vertexResult.success && vertexResult.action !== "skipped") {
     bustVertexCredsCache();

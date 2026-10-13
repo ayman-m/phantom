@@ -568,7 +568,7 @@ const CONFIGURATION: ApiEndpoint[] = [
     path: "/api/agent/personality",
     summary: "Get the agent's persona document",
     description:
-      "Single-row persona — operator-defined markdown plus operational settings (action policy, model defaults, notifications). Stored in MCP-side personality.db; the agent's chat-route system instruction reads `personalityMd` into the prompt and uses `actionPolicy` for safety classification.",
+      "Single-row persona — operator-defined markdown plus the action policy. Stored in MCP-side personality.db; the agent's chat-route system instruction reads `personalityMd` into the prompt and uses `actionPolicy` for safety classification.",
     responses: [
       {
         status: "200",
@@ -581,11 +581,37 @@ const CONFIGURATION: ApiEndpoint[] = [
               confirmLocalActions: "approve-card",
               confirmExternalActions: "off",
             },
-            defaultModel: "gemini-3.1-pro-preview",
           },
           updated_at: "2026-05-06T10:00:00Z",
           updated_by: "user:operator",
           version: 3,
+        },
+      },
+    ],
+  },
+  {
+    id: "personality-defaults",
+    category: "configuration",
+    method: "GET",
+    path: "/api/agent/personality/defaults",
+    summary: "Get the default persona document",
+    description:
+      "The bundle default (`personalityMd` plus `actionPolicy`), independent of what is stored. The personality page fills any key a stored blob lacks from it and uses it for Reset Defaults, so the page carries no copy of the defaults.",
+    responses: [
+      {
+        status: "200",
+        description: "Default persona document.",
+        example: {
+          personality: {
+            personalityMd: "# Phantom Personality\n\nYou are Phantom, a continuous SOC simulation agent. ...\n",
+            actionPolicy: {
+              localCategories: ["jobs", "settings", "personality"],
+              externalCategories: ["xlog", "caldera", "xsiam", "simulations", "http-sender", "wec-sender"],
+              askWhenUnsure: true,
+              confirmLocalActions: "approve-card",
+              confirmExternalActions: "off",
+            },
+          },
         },
       },
     ],

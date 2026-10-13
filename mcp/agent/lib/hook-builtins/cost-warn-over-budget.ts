@@ -14,16 +14,22 @@
  * Config:
  *   threshold_usd      — daily cost threshold (default $10.00). When
  *                        the cumulative cost since UTC midnight
- *                        exceeds this, a notification fires.
+ *                        exceeds this, a notification fires. 0 means
+ *                        no threshold: the first turn of each window
+ *                        fires regardless of cost.
  *   suppress_repeat_hours — re-warn cadence after a threshold crossing
  *                        (default 1 hour). Prevents the same daily
  *                        crossing from spamming every chat turn.
- *   notify_category    — operator-filterable category tag (default
- *                        "cost-warning").
+ *
+ * The notification goes to the fixed `cost-warning` topic (declared in
+ * bundles/spark/manifest.yaml). Older stored configs may still carry a
+ * `notify_category` key; validateConfig drops it.
  */
 
 import type { BuiltinHookSpec } from "./types";
 import { callMcpServer } from "@/lib/mcp-proxy";
+import { COST_WARNING_TOPIC } from "./notification-topics";
+import { publishHookNotification } from "./publish-notification";
 
 const LAST_WARNED_AT_BY_DAY = new Map<string, number>();
 
@@ -54,8 +60,9 @@ export const costWarnOverBudgetBuiltin: BuiltinHookSpec = {
       defaultValue: 10,
       helper:
         "Fire when cumulative cost since UTC midnight exceeds this. " +
-        "Set to 0 to disable threshold (notification still fires once " +
-        "per suppress_repeat_hours regardless — useful for visibility).",
+        "Set to 0 to warn on the first turn of each repeat window " +
+        "regardless of cost (the next one comes after the suppress " +
+        "window below).",
       required: false,
     },
     {
@@ -69,16 +76,6 @@ export const costWarnOverBudgetBuiltin: BuiltinHookSpec = {
         "Don't re-warn within this window even if the threshold is " +
         "still crossed. Prevents per-turn spam on a busy day. Set 0 " +
         "to warn on every turn over threshold.",
-      required: false,
-    },
-    {
-      key: "notify_category",
-      label: "Notification category tag",
-      type: "string",
-      defaultValue: "cost-warning",
-      helper:
-        "Stamped on the notification so operators can filter their " +
-        "/notifications page by it.",
       required: false,
     },
   ] as const,
@@ -101,18 +98,15 @@ export const costWarnOverBudgetBuiltin: BuiltinHookSpec = {
       return { ok: false, error: "suppress_repeat_hours must be a number in [0, 24]" };
     } else out.suppress_repeat_hours = suppress;
 
-    const cat = cfg.notify_category;
-    if (cat === undefined) out.notify_category = "cost-warning";
-    else if (typeof cat !== "string" || !cat.trim()) {
-      return { ok: false, error: "notify_category must be a non-empty string" };
-    } else out.notify_category = cat.trim();
+    // `notify_category` is not read: the topic is fixed. Hooks saved before
+    // that field was removed still carry it, so it is ignored here (and so
+    // absent from the stored config the next time the hook is saved).
 
     return { ok: true, config: out };
   },
   async handle(_payload, config) {
     const threshold = config.threshold_usd as number;
     const suppressHrs = config.suppress_repeat_hours as number;
-    const category = config.notify_category as string;
 
     // UTC-midnight day key. Suppression is per-day so a new day's
     // first crossing fires even if yesterday's already warned.
@@ -149,33 +143,20 @@ export const costWarnOverBudgetBuiltin: BuiltinHookSpec = {
       return null;
     }
 
-    // Fire notification (best-effort).
-    try {
-      await callMcpServer("/api/v1/notifications", {
-        method: "POST",
-        body: {
-          topic: category,
-          payload: {
-            severity: "warn",
-            title: `Daily chat cost crossed threshold — $${totalUsd.toFixed(2)} so far`,
-            body:
-              `Cumulative chat_turn_cost since UTC ${dayKey}T00:00:00Z is ` +
-              `$${totalUsd.toFixed(2)}, above your threshold of ` +
-              `$${threshold.toFixed(2)}. Open /observability/cost for the ` +
-              `per-session breakdown. Suppressed for ${suppressHrs}h after this.`,
-            day: dayKey,
-            total_usd: totalUsd,
-            threshold_usd: threshold,
-          },
-        },
-      });
-      LAST_WARNED_AT_BY_DAY.set(dayKey, nowMs);
-    } catch (err) {
-      console.warn(
-        "cost-warn-over-budget: failed to publish notification:",
-        err instanceof Error ? err.message : err,
-      );
-    }
+    // Fire notification (best-effort; a failure is logged, never thrown).
+    const published = await publishHookNotification("cost-warn-over-budget", COST_WARNING_TOPIC, {
+      severity: "warn",
+      title: `Daily chat cost crossed threshold — $${totalUsd.toFixed(2)} so far`,
+      body:
+        `Cumulative chat_turn_cost since UTC ${dayKey}T00:00:00Z is ` +
+        `$${totalUsd.toFixed(2)}, above your threshold of ` +
+        `$${threshold.toFixed(2)}. Open /observability/cost for the ` +
+        `per-session breakdown. Suppressed for ${suppressHrs}h after this.`,
+      day: dayKey,
+      total_usd: totalUsd,
+      threshold_usd: threshold,
+    });
+    if (published) LAST_WARNED_AT_BY_DAY.set(dayKey, nowMs);
     return null; // non-decisional
   },
 };

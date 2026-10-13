@@ -145,19 +145,7 @@ export interface ChatSSEEvent {
     | "subagent_tool_call"
     | "subagent_tool_result"
     | "subagent_tool_blocked"
-    | "subagent_completed"
-    /**
-     * Emitted by /api/chat/cli (Claude Code shell-out
-     * endpoint), NOT by the main /api/chat route. The CLI route
-     * streams stdout from `claude-code --print --output-format json`;
-     * each parseable line becomes an `output` event carrying the
-     * parsed JSON, and each non-parseable line becomes `output_raw`
-     * with the line text. The chat-route's tool-call pipeline is not
-     * involved on this path. The chat UI picks between the two
-     * routes from a single sendMessage call site.
-     */
-    | "output"
-    | "output_raw";
+    | "subagent_completed";
   data: string;
   id: number;
 }

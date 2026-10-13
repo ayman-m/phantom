@@ -54,6 +54,7 @@ non-secret (no credentials live here) so the diff is safe to log.
 
 from __future__ import annotations
 
+import copy
 import json
 import logging
 import sqlite3
@@ -73,23 +74,25 @@ HISTORY_KEEP = 20  # cap personality_history at the last 20 versions
 #   1. The store is empty (first boot, no migration found).
 #   2. The operator explicitly resets via personality_reset (Tier 3).
 #
-# Mirrors the DEFAULT_CONFIG of the agent UI's personality page
-# (mcp/agent/app/settings/personality/page.tsx).
-# Keeping the canonical default in the MCP avoids drift between the UI
-# and the runtime that actually consumes the values.
+# This is the one canonical home of the defaults. The personality page
+# (mcp/agent/app/settings/personality/page.tsx) carries no copy: it reads
+# them from GET /api/v1/personality/defaults for first load and for its
+# Reset Defaults button. The one other copy is the chat route's fallback
+# for when this store is unreachable (DEFAULT_ACTION_POLICY in
+# mcp/agent/lib/system-prompt.ts); scripts/test-personality-defaults.mjs
+# fails if the two disagree.
+#
+# Only keys something reads belong here: `personalityMd` (rendered into
+# the system prompt) and `actionPolicy` (enforced by the chat route).
+# Blobs stored by earlier releases may carry other keys (permissionLevel,
+# defaultModel, fallbackModel, maxConcurrentRuns, dailySummary,
+# summaryTime, escalationThreshold, responseStyle, proactivity,
+# confidence, logicDepth, planningDepth, delegationStyle,
+# vertexCacheEnabled, autoCompactMinDropped, memoryMmrLambda,
+# memoryTemporalDecayLambda). The store is schemaless and never
+# validates keys, so such a blob still loads; the keys are ignored, and
+# the next UI save or reset writes the blob without them.
 DEFAULT_PERSONALITY: dict[str, Any] = {
-    "responseStyle": "balanced",
-    "proactivity": 60,
-    "confidence": 70,
-    "permissionLevel": 50,
-    "logicDepth": "balanced",
-    "planningDepth": 50,
-    "delegationStyle": "selective",
-    "defaultModel": "gemini-3.1-pro-preview",
-    "fallbackModel": "gemini-2.5-flash",
-    "maxConcurrentRuns": 3,
-    "dailySummary": True,
-    "escalationThreshold": 80,
     "personalityMd": (
         "# Phantom Personality\n\n"
         "You are Phantom, a continuous SOC simulation agent. Your job "
@@ -146,6 +149,8 @@ DEFAULT_PERSONALITY: dict[str, Any] = {
             "caldera",
             "xsiam",
             "simulations",
+            "http-sender",
+            "wec-sender",
         ],
         # When the agent's classification confidence is low, ASK the
         # operator instead of guessing. The agent must emit text with
@@ -169,6 +174,11 @@ DEFAULT_PERSONALITY: dict[str, Any] = {
         "confirmExternalActions": "off",
     },
 }
+
+
+def default_personality() -> dict[str, Any]:
+    """A fresh deep copy of DEFAULT_PERSONALITY, safe for a caller to mutate."""
+    return copy.deepcopy(DEFAULT_PERSONALITY)
 
 
 @dataclass(frozen=True)
@@ -328,7 +338,7 @@ class SqlitePersonalityStore:
             return cur
         # Return the default — caller may choose to put() it to persist.
         return Personality(
-            blob=dict(DEFAULT_PERSONALITY),
+            blob=default_personality(),
             updated_at=self._now_iso(),
             updated_by="default",
             version=0,
@@ -441,7 +451,7 @@ class SqlitePersonalityStore:
     def reset_to_default(self, *, actor: str | None = None) -> Personality:
         """Revert to DEFAULT_PERSONALITY. Tier-3 destructive op (gated via
         approvals.humanRequired[])."""
-        return self.put(dict(DEFAULT_PERSONALITY), actor=actor)
+        return self.put(default_personality(), actor=actor)
 
 
 def _diff_keys(old: dict[str, Any], new: dict[str, Any]) -> list[str]:

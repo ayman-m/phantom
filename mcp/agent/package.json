@@ -15,6 +15,7 @@
     "test:system-prompt-guardrail": "node scripts/test-system-prompt-guardrail.mjs",
     "test:auth-session-lifetime": "node scripts/test-auth-session-lifetime.mjs",
     "test:notification-display": "node scripts/test-notification-display.mjs",
+    "test:hook-builtin-topics": "node scripts/test-hook-builtin-topics.mjs",
     "test:job-form": "node scripts/test-job-form.mjs",
     "test:session-tree": "node scripts/test-session-tree.mjs",
     "test:system-prompt-skill-names": "node scripts/test-system-prompt-skill-names.mjs",
@@ -26,10 +27,12 @@
     "test:permission-policy": "node scripts/test-permission-policy.mjs",
     "test:operator-state-backup": "node scripts/test-operator-state-backup.mjs",
     "test:restore-existing": "node scripts/test-restore-existing.mjs",
-    "test": "npm run test:json-to-yaml && npm run test:auth-rate-limit && npm run test:tool-name-resolution && npm run test:tls-proxy-connections && npm run test:system-prompt-model && npm run test:system-prompt-guardrail && npm run test:auth-session-lifetime && npm run test:notification-display && npm run test:job-form && npm run test:system-prompt-skill-names && npm run test:service-health && npm run test:session-tree && npm run test:journeys-catalog && npm run test:instance-status && npm run test:connector-spec && npm run test:tool-metadata && npm run test:permission-policy && npm run test:operator-state-backup && npm run test:restore-existing"
+    "test:hooks-backup": "node scripts/test-hooks-backup.mjs",
+    "test:personality-defaults": "node scripts/test-personality-defaults.mjs",
+    "test:no-claude-code-cli": "node scripts/test-no-claude-code-cli.mjs",
+    "test": "npm run test:json-to-yaml && npm run test:auth-rate-limit && npm run test:tool-name-resolution && npm run test:tls-proxy-connections && npm run test:system-prompt-model && npm run test:system-prompt-guardrail && npm run test:auth-session-lifetime && npm run test:notification-display && npm run test:hook-builtin-topics && npm run test:job-form && npm run test:system-prompt-skill-names && npm run test:service-health && npm run test:session-tree && npm run test:journeys-catalog && npm run test:instance-status && npm run test:connector-spec && npm run test:tool-metadata && npm run test:permission-policy && npm run test:operator-state-backup && npm run test:restore-existing && npm run test:hooks-backup && npm run test:personality-defaults && npm run test:no-claude-code-cli"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.36.3",
     "@radix-ui/react-slot": "^1.1.1",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@xyflow/react": "^12.10.2",
