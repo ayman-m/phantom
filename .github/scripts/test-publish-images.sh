@@ -40,8 +40,9 @@ case "$3" in
     if [ -f "$f" ]; then cat "$f"; exit 0; fi
     echo "ERROR: $ref: not found" >&2; exit 1 ;;
   create)
-    [ "$4" = -t ] && [ "$#" -eq 6 ] || { echo "stub: create must be exactly: -t DEST SRC (got: $*)" >&2; exit 98; }
-    dest="$5"; src="$6"
+    # Must be a carbon copy: --prefer-index=false, then -t DEST SRC (the default would wrap a bare manifest in an index)
+    [ "$4" = --prefer-index=false ] && [ "$5" = -t ] && [ "$#" -eq 7 ] || { echo "stub: create must be exactly: --prefer-index=false -t DEST SRC (got: $*)" >&2; exit 98; }
+    dest="$6"; src="$7"
     echo "create $dest <- $src" >> "$STUB_DIR/calls.log"
     f="$STUB_DIR/$(key "$src")"
     [ -f "$f" ] || { echo "ERROR: $src: not found" >&2; exit 1; }

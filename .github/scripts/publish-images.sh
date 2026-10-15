@@ -17,7 +17,7 @@
 #   TAG, BASE_TAG, REBUILD (plan: auto | all), RETAG_LIST (retag, verify), BUILT_LIST (verify)
 #   GITHUB_REPOSITORY, GITHUB_REF (set by the runner), GITHUB_STEP_SUMMARY, GITHUB_OUTPUT (optional)
 #
-# The only registry writes are `imagetools create -t <pkg>:$TAG` (here) and the build steps' push of <pkg>:$TAG
+# The only registry writes are `imagetools create --prefer-index=false -t <pkg>:$TAG` (here) and the build steps' push of <pkg>:$TAG
 # (in the workflow). $TAG is validated to be X.Y.Z or X.Y.Z-rcN. `latest` and `X.Y` are never written.
 #
 # Why some images are built and others are only re-tagged: an image that is re-tagged from an earlier release has
@@ -107,7 +107,9 @@ write_tag() {
   [[ "$TAG" =~ $TAG_RE ]] || die "refusing to write tag '$TAG'"
   [ "${dst##*:}" = "$TAG" ] || die "refusing to write $dst (only :$TAG may be written)"
   for attempt in 1 2 3; do
-    if out="$(docker buildx imagetools create -t "$dst" "$src" 2>&1 </dev/null)"; then return 0; fi
+    # --prefer-index=false: a byte-for-byte copy. Without it, a source that is a bare image manifest (what buildx pushes
+    # with provenance off) is wrapped in a new index, which has a different digest and so recreates the container.
+    if out="$(docker buildx imagetools create --prefer-index=false -t "$dst" "$src" 2>&1 </dev/null)"; then return 0; fi
     echo "attempt $attempt to create $dst failed: $(printf '%s' "$out" | tail -n 2 | tr '\n' ' ' | cut -c1-300)" >&2
     if printf '%s' "$out" | grep -q -i -E "$DENIED_RE"; then
       die "registry refused the write to $dst (package Actions access?); not retrying"
