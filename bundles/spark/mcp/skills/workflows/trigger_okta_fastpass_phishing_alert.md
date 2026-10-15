@@ -51,7 +51,7 @@ One event to collector `okta_sso`, with a **different user and a different IP ea
 
 Did **not** fire: the same event body sent as syslog/CEF into `okta_sso_raw`, and the same body sent to collector `okta_okta` (dataset `okta_okta_raw`), which lands and models there but stays silent, including a Mobile-device variant.
 
-**Not tested**: a baseline user of the `phantom-lab.example` domain as the actor, a repeat of the same user or IP inside 24 h, any other `eventType`, and a country label that differs from the address.
+**Not tested**: a baseline user of the `phantom.lab` domain as the actor, a repeat of the same user or IP inside 24 h, any other `eventType`, and a country label that differs from the address.
 
 ## Step 1: send the event (exactly this call)
 
@@ -165,8 +165,8 @@ The same alert also fires through the tenant's **Cribl** route, and there the co
 ```
 
 - `count: 1` is one event and one alert. Leave `count` in: an omitted count is **20** for this scenario, and every event is a new user on a new Tor exit, so the default sends 20 users.
-- The call invents the user (`fastpass.phishing.<6 hex>@phantom-lab.example`), a Tor exit from the connector's snapshot, the `FastPass declined phishing attempt` outcome and the risk fields of Step 1 (with a reserved `.invalid` phishing host and no geolocation). Nothing is replaced by hand. If the alert stops appearing, the exit snapshot may be stale; add `"source_ip": "<a live Tor exit>"`.
-- It goes to the dedicated Okta source of the Cribl endpoint, not to the `okta_sso` HTTP collector, but the rows still land in `okta_sso_raw` (`_collector_name = "phantom-http-sender"`, `_collector_type = Okta`), so Step 2 and Step 3 below apply unchanged: filter Step 2 on the `sample_ids` value as `uuid`, and match the alert by its `host_ip` (the exit) and the `fastpass.phishing.` prefix of `user_name` (`phantom-lab\fastpass.phishing.<hex>`): Cortex shortens the login in the alert.
+- The call invents the user (`fastpass.phishing.<6 hex>@phantom.lab`), a Tor exit from the connector's snapshot, the `FastPass declined phishing attempt` outcome and the risk fields of Step 1 (with a reserved `.invalid` phishing host and no geolocation). Nothing is replaced by hand. If the alert stops appearing, the exit snapshot may be stale; add `"source_ip": "<a live Tor exit>"`.
+- It goes to the dedicated Okta source of the Cribl endpoint, not to the `okta_sso` HTTP collector, but the rows still land in `okta_sso_raw` (`_collector_name = "phantom-http-sender"`, `_collector_type = Okta`), so Step 2 and Step 3 below apply unchanged: filter Step 2 on the `sample_ids` value as `uuid`, and match the alert by its `host_ip` (the exit) and the `fastpass.phishing.` prefix of `user_name` (`phantom\fastpass.phishing.<hex>`): Cortex shortens the login in the alert.
 
 
 Step 2 returns one row: `eventtype user.authentication.auth_via_mfa`, `outcome` FAILURE with reason `FastPass declined phishing attempt`, `_collector_type` Okta. The alert is Low, MITRE `T1566 - Phishing`, tags `DS:Okta/Sso` and `DT:Identity Analytics`, typically within about 30 seconds. Hand-built events sent to the same Cribl destination fire as well.
@@ -208,3 +208,5 @@ If nothing arrives in 10 minutes: confirm Step 2 (it must have landed in **`okta
 ## Report back to the operator
 
 State the user, IP, `uuid`, the Step 2 result and either the alert id with the arrival time or that nothing arrived in 10 minutes and what you checked. Say that the user and the IP should not be reused for 24 hours.
+
+Note: the Cortex `user_name` prefix shown above (`phantom\`) is the first label of the organization's email domain (`phantom.lab`); it was `phantom-lab\` on the previous domain. It has not been re-measured on the tenant, so confirm it on the first replay.

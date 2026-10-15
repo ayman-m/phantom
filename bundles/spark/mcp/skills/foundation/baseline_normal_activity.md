@@ -70,6 +70,37 @@ which were skipped for lack of an installed data source.
 If `vendors[]` is empty entirely, stop and tell the operator: no data sources are installed —
 install at least one from the Marketplace before any log generation can run.
 
+### Pre-flight: read the organization
+
+The baseline is the ordinary day of the active organization, so its people, workstations,
+servers and ranges come from there and nowhere else. Call
+`organization_get(section="personas")` once to learn who must stay out, and
+`organization_get(section="people", limit=60)` for the staff. Rules:
+
+- **Leave out the leaver** (Phantom Lab: `ralsayegh`, a disabled account: any logon by it is the
+  finding) and **the break-glass account** (`adm.breakglass` must never log on). Neither appears
+  in any stage below.
+- **Everyone else is ordinary**, including the VIPs and the outlier. Give the outlier's
+  workstation (Phantom Lab: PHWS-036) a normal history too: attacks that start inside run from
+  it, and a rarity detector can only call the behaviour rare against a benign past.
+- **Administrators and service accounts** (`adm.*`, `svc-*`) log on only to their own hosts and
+  never browse; keep them out of the VPN, SaaS and proxy stages.
+- **Identity binding.** Do not pin lists of users and addresses in `observables_dict`: lists are
+  sampled independently, so a login would be paired with another person's workstation and one
+  person would show up at several addresses. Pass the vendor `schema_override` and leave `suser`,
+  `shost` and `src` unset: xlog then binds every record to one person of the active organization
+  together with that person's own workstation and address (`use_organization`, default true; the
+  result's `organization_defaults` lists the bound fields). Every stage block below therefore
+  carries a `schema_override` line; never drop it. **Check the result:** if `organization_defaults`
+  shows a single `actor` or an empty `bound`, the worker ran without a schema and would produce one
+  person (the outlier) or random strangers: kill that worker (`xlog.kill_worker`) and recreate it with the
+  schema. When you pin a person yourself, pin ALL of their identity fields (login, workstation name,
+  address) or none of them, because any identity field you leave unpinned is drawn from a different
+  person. To skew the volume towards a few heavy users (realism rule 2), add one small extra worker
+  per class pinned to ONE person's login, workstation and address together.
+- If the organization has no people or no servers, tell the operator and offer
+  `organization_update` instead of inventing any.
+
 The recipes reference entries as `<stack[<class>].vendor>` / `.product`. The wire format is always `CEF` (delivery doctrine).
 Call `data_sources_get_schema(<entry>.data_source_id)` per stage when a recipe needs
 `schema_override`. **Never hardcode vendor names.**
@@ -87,8 +118,9 @@ attack". Apply all five:
 3. **Overwhelmingly successful outcomes.** Benign auth is ~95–99% success. Include a *small*
    number of ordinary failures — a mistyped password, an expired session — because a dataset
    with a 100% success rate is itself anomalous and will skew any ratio-based rule.
-4. **Internal RFC1918 sources, plausible external destinations.** Employees browse from
-   `10.x`/`192.168.x` to real-world-shaped public destinations. Do not reuse the documentation
+4. **The organization's own sources, plausible external destinations.** Employees browse from
+   their workstation addresses (`organization_get section=networks`; Phantom Lab workstations sit in
+   `10.20.16.0/22`) to real-world-shaped public destinations. Do not reuse the documentation
    ranges (`192.0.2.x`, `198.51.100.x`, `203.0.113.x`) that the attack scenarios use for
    adversary infrastructure — keeping the ranges disjoint is what lets an analyst tell the two
    apart, and lets you measure a rule cleanly.
@@ -103,33 +135,44 @@ Employees connecting at the start of the day and reconnecting after drops. Nearl
 
 **Data class:** `vpn`
 
+Run one worker per person, each pinned to ONE person (login, home address and a session
+address together). Take 3 to 5 ordinary people with `SG-VPN-Users` from the organization and
+split `count` 60/36/24 (heaviest user first) with `interval = 3600 / count`, so each worker
+lasts about an hour.
+
 ```yaml
 xlog.create_data_worker:
   type:    CEF
   vendor:  <stack[vpn].vendor>
   product: <stack[vpn].product>
-  count:    120
-  interval: 30
+  count:    60
+  interval: 60
   destination: logdest:<id from log_destinations_list>
+  schema_override: <fields[] from data_sources_get_schema(<entry>.data_source_id, compact=true), verbatim>
   observables_dict:
-    suser:          ["sarah.chen", "sarah.chen", "sarah.chen",
-                    "m.okafor", "m.okafor", "j.lindqvist",
-                    "d.rossi", "a.haddad", "priya.n", "t.yamamoto"]
-    src:        ["203.0.113.200"]
-    dst:        ["10.10.0.50"]
-    assignedIp:   ["10.20.14.31", "10.20.14.52", "10.20.15.10", "10.20.15.77"]
+    suser:          ["<login of this person>"]
+    shost:      ["<workstation of this person>"]        # pin every identity field of the person, or none
+    src:        ["<home_ip of this person>"]             # their fixed internet address
+    dst:        ["<VPN gateway: 172.16.10.12 for PHDMZ-VPN01>"]
+    assignedIp:   ["<session address from the VPN pool>"]
     act:        ["login", "login", "login", "login", "logout"]
     actionStatus: ["success", "success", "success", "success", "success",
                     "success", "success", "success", "success", "failure"]
     authenticationMethod:   ["certificate", "saml", "saml"]
-    country:       ["GB", "GB", "GB", "DE", "AE"]
+    country:       ["SA"]
     sessionDuration: ["1800", "3600", "7200", "14400"]
     out:     ["120000", "480000", "2400000"]
     in: ["340000", "1200000", "8600000"]
 ```
 
-**Why this is benign:** one corporate egress IP, a stable user set, `success` dominating ~9:1,
-and countries consistent with a UK-based org with staff in DE/AE. Nothing here is impossible-
+The gateway is the organization's VPN host (`organization_get section=hosts filter=role=dmz`,
+PHDMZ-VPN01). The session address comes from the VPN pool (`section=networks`, the `vpn` network,
+`10.20.200.0/22` on Phantom Lab): a person at `site=Remote` uses their own workstation address
+(Phantom Lab: `jaljuhani`, `10.20.200.10`); anyone else gets a free pool address that is not held by
+a remote workstation (Phantom Lab holds `10.20.200.10-12`).
+
+**Why this is benign:** one fixed internet address per user (their `home_ip`), a stable user set, `success` dominating ~9:1,
+and a single country consistent with the organization (`SA` on Phantom Lab). Nothing here is impossible-
 travel — the same user never appears from two distant countries close together. *(If you want
 to test an impossible-travel rule, that is `bruteforce_vpn_to_lateral`, not this skill.)*
 
@@ -149,11 +192,9 @@ xlog.create_data_worker:
   count:    200
   interval: 18
   destination: logdest:<id from log_destinations_list>
+  schema_override: <fields[] from data_sources_get_schema(<entry>.data_source_id, compact=true), verbatim>
   observables_dict:
-    suser:          ["sarah.chen", "sarah.chen", "m.okafor", "m.okafor",
-                    "j.lindqvist", "d.rossi", "a.haddad", "priya.n",
-                    "t.yamamoto", "svc_backup"]
-    src:        ["10.20.14.31", "10.20.14.52", "10.20.15.10", "203.0.113.200"]
+    # suser, src: leave unset, bound from the organization (see Identity binding)
     eventType:    ["authentication", "authentication", "authentication", "enrollment"]
     mfaMethod:        ["duo_push", "duo_push", "duo_push", "passcode", "webauthn"]
     result:        ["success", "success", "success", "success", "success",
@@ -161,7 +202,7 @@ xlog.create_data_worker:
     app:   ["Microsoft 365", "Salesforce", "Workday", "GitHub", "Zoom"]
     device:        ["iPhone 15", "Pixel 8", "MacBook Pro", "ThinkPad X1"]
     os:            ["iOS 17.4", "Android 14", "macOS 14.4", "Windows 11"]
-    geoLocation:      ["London, GB", "London, GB", "Manchester, GB", "Berlin, DE"]
+    geoLocation:      ["Riyadh, SA", "Riyadh, SA", "Riyadh, SA", "Jeddah, SA"]   # sites of the organization
 ```
 
 **Why this is benign:** `denied`/`timeout` appear at ~1 in 10, which is the real-world rate for
@@ -184,19 +225,18 @@ xlog.create_data_worker:
   count:    400
   interval: 9
   destination: logdest:<id from log_destinations_list>
+  schema_override: <fields[] from data_sources_get_schema(<entry>.data_source_id, compact=true), verbatim>
   observables_dict:
-    suser:          ["sarah.chen", "sarah.chen", "sarah.chen", "m.okafor",
-                    "m.okafor", "j.lindqvist", "d.rossi", "a.haddad", "priya.n"]
-    src:        ["10.20.14.31", "10.20.14.52", "10.20.15.10", "10.20.15.77"]
+    # suser, src: leave unset, bound from the organization (see Identity binding)
     request:           ["https://outlook.office.com/mail/",
                     "https://teams.microsoft.com/",
-                    "https://company.sharepoint.com/sites/hr",
-                    "https://github.com/orgs/acme/repositories",
-                    "https://www.bbc.co.uk/news",
+                    "https://phantomlab.sharepoint.com/sites/hr",   # <tenant label of cloud.azure.tenant_domain>.sharepoint.com
+                    "https://github.com/orgs/phantom-lab/repositories",
+                    "https://www.arabnews.com/",
                     "https://docs.google.com/spreadsheets/",
                     "https://www.linkedin.com/feed/",
                     "https://stackoverflow.com/questions/",
-                    "https://www.amazon.co.uk/",
+                    "https://www.amazon.sa/",
                     "https://zoom.us/j/"]
     requestMethod:   ["GET", "GET", "GET", "GET", "POST"]
     httpStatusCode:   ["200", "200", "200", "200", "200", "204", "304", "302", "404"]
@@ -218,7 +258,7 @@ ordinary category-policy hit (shopping on a restricted profile), not a threat bl
 
 ### Stage 4 — Routine allowed firewall flows — ~500 events over 60 minutes
 
-Background network chatter: DNS to internal resolvers, HTTPS out, SMB to file servers.
+Background network chatter: DNS to the domain controllers (the internal resolvers, PHDC01 on Phantom Lab), HTTPS out, SMB to the file server (PHSRV-FS01).
 
 **Data class:** `firewall`
 
@@ -230,11 +270,11 @@ xlog.create_data_worker:
   count:    500
   interval: 7
   destination: logdest:<id from log_destinations_list>
+  schema_override: <fields[] from data_sources_get_schema(<entry>.data_source_id, compact=true), verbatim>
   observables_dict:
-    src:        ["10.20.14.31", "10.20.14.52", "10.20.15.10",
-                    "10.20.15.77", "10.10.30.10", "10.10.30.20"]
-    dst:        ["10.10.0.53", "10.10.30.10", "10.10.30.40",
-                    "142.250.187.206", "20.190.159.4", "140.82.121.4"]
+    # src: leave unset, bound to each person's own workstation address (see Identity binding)
+    dst:        ["10.20.0.10", "10.20.1.20", "10.20.1.21",
+                    "142.250.187.206", "20.190.159.4", "140.82.121.4"]   # PHDC01 (DNS), PHSRV-FS01 (SMB), PHSRV-APP01, then public
     spt:      ["49152", "51234", "57890", "60123", "62456"]
     dpt:      ["443", "443", "443", "53", "445", "3389", "80"]
     proto:      ["tcp", "tcp", "tcp", "udp"]
@@ -256,7 +296,7 @@ no source sweeps many ports on one host (the vertical-scan signature).
 
 ### Stage 5 — Legitimate application traffic — ~250 events over 60 minutes
 
-Real users using the web app the WAF fronts. Overwhelmingly 200s, no attack signatures.
+Real users using the web app the WAF fronts (the organization's public web host, PHDMZ-WEB01 on Phantom Lab; `organization_get section=hosts filter=role=dmz`). Overwhelmingly 200s, no attack signatures.
 
 **Data class:** `waf`
 
@@ -268,9 +308,10 @@ xlog.create_data_worker:
   count:    250
   interval: 14
   destination: logdest:<id from log_destinations_list>
+  schema_override: <fields[] from data_sources_get_schema(<entry>.data_source_id, compact=true), verbatim>
   observables_dict:
-    src:        ["10.20.14.31", "10.20.15.10", "82.14.221.6", "86.129.44.190"]
-    dst:        ["10.10.30.10"]
+    src:        ["10.20.16.20", "10.20.16.21", "10.20.16.22", "82.14.221.6", "86.129.44.190"]   # a few workstation addresses of the organization plus anonymous Internet visitors
+    dst:        ["<web server DMZ address: 172.16.10.10 for PHDMZ-WEB01>"]
     dpt:      ["443"]
     proto:      ["6"]
     request:           ["/", "/login", "/dashboard", "/api/v1/profile",
@@ -297,7 +338,8 @@ is a user hitting a page before login — routine, not credential stuffing.
 
 1. **Pre-flight** — resolve destination + installed classes (see above).
 2. **Fire the stages you have data sources for, in parallel.** Use separate
-   `xlog.create_data_worker` calls — one per stage. Space the calls **3–4 seconds apart**:
+   `xlog.create_data_worker` calls — one per stage, except the VPN stage, which is one per person
+   (3 to 5 workers), so a full run is 7 to 9 workers (plus any optional heavy-user workers). Space the calls **3–4 seconds apart**:
    worker IDs are timestamp-second-granular and a faster loop makes one worker clobber another.
 3. **Report** which stages ran, which were skipped, and the worker IDs.
 
@@ -330,7 +372,7 @@ jobs_create:
       max_events: 40
       destination: logdest:<id>
       schema_override: [...]
-      observables_dict: {...}      # pinned persona hosts, e.g. WS-LAB-10..17
+      observables_dict: {...}      # pinned hosts of the organization, e.g. the outlier's workstation plus 7 ordinary ones
 ```
 
 Design rules (a pool of 8 hosts at roughly 110-140
@@ -341,10 +383,12 @@ events/host/day works well):
    ~2 minutes and exit.
 2. **Stagger the schedules.** Give each job its own minute (`13 6-18 * * *`, `41 */2 * * *`,
    `53 */3 * * *`) so bursts don't collide on the worker slot.
-3. **Pin a stable host pool.** The same hostnames/IPs every day (e.g. WS-LAB-10..17 /
-   10.20.63.10-17) — continuity is what builds each host's 30-day profile. Future "attacker"
-   hosts should come FROM this pool: pre-seeded benign history is what makes their later
-   anomaly detectable as rare/uncommon.
+3. **Pin a stable host pool.** The same hostnames/IPs every day, taken from the organization
+   (e.g. the outlier's workstation PHWS-036 at `10.20.16.55` plus seven ordinary workstations such as
+   PHWS-001..007 at `10.20.16.20-26`) — continuity is what builds each host's 30-day profile. Future
+   "attacker" hosts should come FROM this pool, and inside attacks start from the outlier's
+   workstation: pre-seeded benign history is what makes their later anomaly detectable as
+   rare/uncommon.
 4. **One job per traffic class** (web, DNS, internal east-west, per-vendor) rather than one
    monolithic job — you can tune or disable classes independently.
 5. Business-hours weighting still applies: schedule dense inside 08:00-18:00 local, sparse or
@@ -394,11 +438,11 @@ manage them with `jobs_list` / `jobs_delete` instead.)
 
 ## Adapting per deployment
 
-- **Swap the user list** for names matching the operator's directory — the baseline is far more
-  convincing during a demo when the usernames are recognisable.
-- **Match the internal ranges** to the operator's real subnets. Keep them disjoint from the
-  documentation ranges the attack scenarios use.
-- **Shift the country mix** to the operator's actual footprint. A UK-only org with logins from
-  five continents is itself an anomaly.
+- **Users, hosts and ranges come from the active organization** (`organization_get`), so the
+  baseline already uses recognisable names. To change who appears, edit the organization
+  (`organization_update`), not the recipes. Keep its ranges disjoint from the documentation ranges
+  the attack scenarios use.
+- **Keep the country mix at the organization's footprint.** A Saudi org with logins from five
+  continents is itself an anomaly.
 - **Scale by org size.** ~1,500 events/hour models a small office. Multiply `count` across all
   stages proportionally for a larger estate; keep the inter-class ratios fixed.

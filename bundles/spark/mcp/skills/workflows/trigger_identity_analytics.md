@@ -74,8 +74,8 @@ split into one worker per leg, both pinned to the same `userPrincipalName`.
 
 ```yaml
 observables_dict:
-  userPrincipalName: ["noura.alharbi@example-isp.example"]
-  userDisplayName:   ["Noura Al-Harbi"]
+  userPrincipalName: ["noura.alharbi@phantom.lab"]   # an organization person (Finance) the baseline sign-in job covers
+  userDisplayName:   ["Noura Alharbi"]
   ipAddress:         ["171.25.193.25"]          # a REAL Tor exit node
   location.countryOrRegion: ["DE"]
   location.city:     ["Frankfurt"]
@@ -100,7 +100,7 @@ Same shape, but: one user, one source IP, **~150 events**,
 ### 3. Impossible traveler — TWO workers
 
 - **Leg 1**: `location.city: ["Riyadh"]`, `location.countryOrRegion: ["SA"]`,
-  `ipAddress: ["10.30.14.22"]`, `createdDateTime` now.
+  `ipAddress: ["<the person's home_ip: 144.86.80.11 for noura.alharbi>"]`, `createdDateTime` now.
 - **Leg 2**: `location.city: ["San Francisco"]`, `location.countryOrRegion: ["US"]`,
   `ipAddress: ["<US egress>"]`, `createdDateTime` minutes later.
 
@@ -116,7 +116,7 @@ failure.
 **Seed the baseline early**: a daily benign sign-in job per persona (normal apps, normal
 geography, `status.errorCode: ["0"]` ~97% of the time) gives the detectors their "normal" and
 makes the attack legs stand out when training completes. See `baseline_normal_activity` for the
-phantom-jobs pattern.
+phantom-jobs pattern. The persona is an organization person (`organization_get section=people`; Phantom Lab example `noura.alharbi@phantom.lab`) and the baseline job must sign in that same person, from their `home_ip`; the attack legs above must name the same UPN. The impossible-traveler recipe needs that prior normal location, so replay-verify against the organization hosts before relying on this skill.
 
 ## Landing check (before any alert check)
 

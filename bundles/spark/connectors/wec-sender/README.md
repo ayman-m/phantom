@@ -44,8 +44,7 @@ by the operator, from the WEC Sender card on `/connectors` or over the REST surf
 | `clientPfxPassword` | secret, required | The PFX password. |
 | `senderComputerName` | config | Name the sender announces when it enumerates (default `phantom-wec-sender.phantom.lab`). |
 | `timeoutSeconds` | config | Per-request timeout (default 30). |
-| `domainNetbios` / `domainDns` | config | The synthetic domain (defaults `PHANTOM` / `phantom.lab`). |
-| `hostCount` | config | Hosts in the synthetic domain, 8 to 100 (default 32). The 2 DCs and 4 servers always exist; the rest are workstations. |
+| `organization` | config | Which organization the events describe. Empty (default) follows the active organization; an organization id pins this instance to that one. The domain, people, accounts and machines all come from it; there are no domain or host-count settings. |
 
 There is no `verifyTls` option: verification is not optional.
 
@@ -56,7 +55,7 @@ Then ask the agent to run `list_subscriptions` (the connection test) and `send_t
 | Tool | What it does |
 |---|---|
 | `list_subscriptions` | Enumerates the collector's subscriptions (name, version, delivery path, max envelope, heartbeat, channels, query preview). Doubles as the connection test. |
-| `send_test_event` | One identifiable 4624 (or 4625, 4672; for 4634 the 4624 is sent first, then the paired 4634 with the same logon id, and both are reported) from `PHANTOM-WECTEST01.<domainDns>`; returns a test id (the event's `LogonGuid`) and the XQL query that finds it: `dataset = microsoft_windows_raw \| filter _collector_type = "WEC" and computer_name = "<name>"`. |
+| `send_test_event` | One identifiable 4624 (or 4625, 4672; for 4634 the 4624 is sent first, then the paired 4634 with the same logon id, and both are reported) from `<NETBIOS>-WECTEST01.<domain dns>` of the active organization (a source address from its pool of unmanaged devices); returns a test id (the event's `LogonGuid`) and the XQL query that finds it: `dataset = microsoft_windows_raw \| filter _collector_type = "WEC" and computer_name = "<name>"`. |
 | `generate_events` | Profile `windows`, scenario `baseline_logons`: `count` (1-5000), `spread_seconds` (1-604800), `start_offset_minutes` (back-dating, 0-1051200), `dry_run` (returns the first 3 events with their XML). |
 | `send_events` | Caller-supplied **structured** events (`event_id`, `computer`, `channel`, `provider`, `time`, `event_data` as an object or a list, `outcome`, `rendering` overrides, System overrides), rendered to Windows Event XML by the connector. 1 to 5000 per call. |
 
@@ -66,15 +65,20 @@ No tool returns or accepts a secret. Results never carry the PFX, its password o
 
 ## The `windows` profile
 
-A small synthetic domain whose **identities are pure functions of names**, so a baseline accumulates history on the
-tenant: the same login always has the same SID and home workstation; the same host the same address.
+The Windows domain of the **active organization** (the same people, accounts, hosts and domain every other connector uses;
+see the Organization page). Nothing is hard-coded here and there is no fallback roster: if no organization can be read the
+tools return an error that says what to fix. Identities are pure functions of the organization, so a baseline accumulates
+history on the tenant: the same login always has the same SID and home workstation; the same host the same address.
 
-- 2 domain controllers (`PHDC01`, `PHDC02`), 4 servers (`PHSRV-FS01`, `-APP01`, `-SQL01`, `-WEB01`), 26 workstations
-  (`PHWS-001` to `PHWS-026`); `Computer` is the FQDN `<name>.<domainDns>`. The probe hosts `PHTM-WEC-*` are never used.
-- About 30 accounts: 22 staff, 4 administrators (`adm.*`), 4 service accounts (`svc-*`), domain SID
-  `S-1-5-21-3623811015-3361044348-30300820`, RIDs from 1105.
+- Hosts: the organization's domain-joined domain controllers, servers and workstations (and the tool server a service
+  account runs on). `Computer` is the FQDN `<name>.<domain dns>`; the machine account SID is `<domain sid>-<host rid>`. The
+  earlier a server is listed, the busier it is (weights 4, 2, 1, 1, ...). The probe hosts `PHTM-WEC-*` are never used.
+- Accounts: staff, administrators (an account in a privileged group, including a person's separate `adm.*` account) and
+  service accounts, each with the SID `<domain sid>-<account rid>`. A leaver's account and the break-glass account are the
+  findings, so they never appear in baseline traffic. A person's accounts work at that person's workstation; service
+  accounts authenticate from the application server.
 - `baseline_logons`: interactive (type 2), unlock (7) and cached (11) logons on a user's home workstation in business hours
-  (Saudi local time, Sunday to Thursday), network (3) logons on servers and DCs, service accounts around the clock, a little
+  (the organization's working week and office hours, in its local time), network (3) logons on servers and DCs, service accounts around the clock, a little
   administrator RDP (10) with 4672 special privileges, and a **4634 logoff for each 4624 later in the window** with the same
   `TargetLogonId`. Source IP and `WorkstationName` are the user's home workstation. The result has exactly `count` events made of
   whole sessions; when `count` leaves one event over, it is a last 4624 (at most one session is left open). A logoff that would

@@ -6,6 +6,8 @@
  * Sections (one file per section in the zip root):
  *   - manifest.json        zip metadata + version + warning
  *   - personality.json     SqlitePersonalityStore blob
+ *   - organizations.json   the operator's organizations (documents) + which one is active;
+ *                          the bundled Phantom Lab re-arrives in the destination's image
  *   - instances.json       InstanceStore rows + cleartext secrets
  *   - memory.json          Memory entries (embeddings stripped — they
  *                          are dim-bound and the destination re-embeds
@@ -228,6 +230,32 @@ export async function GET() {
         `personality skipped: ${e instanceof Error ? e.message : String(e)}`,
       );
       sectionCounts.personality = 0;
+    }
+
+    // ── Section 1b: Organizations (operator-owned documents + active id) ─
+    try {
+      const list = await mcpJson<{
+        organizations?: { id: string; source: string; active: boolean }[];
+        active_id?: string | null;
+      }>("/api/v1/organizations");
+      const mine = (list.organizations ?? []).filter((o) => o.source === "operator");
+      const docs: { id: string; document: unknown }[] = [];
+      for (const o of mine) {
+        const full = await mcpJson<{ document?: unknown }>(
+          `/api/v1/organizations/${encodeURIComponent(o.id)}`,
+        );
+        docs.push({ id: o.id, document: full.document });
+      }
+      zip.file(
+        "organizations.json",
+        JSON.stringify({ active_id: list.active_id ?? null, organizations: docs }, null, 2),
+      );
+      sectionCounts.organizations = docs.length;
+    } catch (e) {
+      warnings.push(
+        `organizations skipped: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      sectionCounts.organizations = 0;
     }
 
     // ── Section 2: Instances + cleartext secrets ─────────────────────
@@ -501,6 +529,7 @@ export async function GET() {
       created_at: new Date().toISOString(),
       sections: [
         "personality",
+        "organizations",
         "instances",
         "memory",
         "jobs",
@@ -517,6 +546,7 @@ export async function GET() {
         "version control or share over unencrypted channels.",
       restore_order: [
         "personality",
+        "organizations",
         "instances",
         "skills",
         "memory",

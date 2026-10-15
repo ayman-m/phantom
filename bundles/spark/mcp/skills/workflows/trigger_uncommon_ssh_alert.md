@@ -45,7 +45,7 @@ The recipe below therefore **seeds SSH history first**, for hosts without SSH hi
 | # | Must be true | How to check |
 |---|---|---|
 | 1 | You know the operator's syslog **log destination object** (`logdest:<id>`; typically the broker's CEF port 5514) | `log_destinations_list` or the operator |
-| 2 | The source is an **ESTABLISHED host** with no alert of the family in the last 24 h: an IP that has been sending ordinary traffic to the tenant on real calendar days for **at least 7 days**. **Fresh addresses do not fire, even with SSH history seeded** (see Expected result) | `config timeframe = 30d \| dataset = panw_ngfw_traffic_raw \| filter source_ip = "<ip>" \| alter d = format_timestamp("%Y-%m-%d", _time) \| comp count() by d` shows **7 or more distinct past days**; and the Step 4 query without the time filter |
+| 2 | The source is an **ESTABLISHED host** with no alert of the family in the last 24 h: an IP that has been sending ordinary traffic to the tenant on real calendar days for **at least 7 days**. The source must be an organization host that the baseline job covers (default: the outlier's workstation, PHWS-036 at `10.20.16.55` on Phantom Lab). The 7 days are a property of that host's traffic on the tenant, so check them with the query; do not pick a host the baseline job does not cover. Replay-verify against the organization hosts before relying on this skill. **Fresh addresses do not fire, even with SSH history seeded** (see Expected result) | `config timeframe = 30d \| dataset = panw_ngfw_traffic_raw \| filter source_ip = "<ip>" \| alter d = format_timestamp("%Y-%m-%d", _time) \| comp count() by d` shows **7 or more distinct past days**; and the Step 4 query without the time filter |
 | 3 | The host has the **SSH history from Step 1** on two or three past days, to an ordinary internal server (the verified recipe) | Step 2 |
 | 4 | The trigger destinations are **external addresses on ports 22 / 2222**. Do not assume they must be unused: the addresses used in the recipe (3.33.152.147, 34.107.243.93) have already been contacted by other hosts. A destination no one ever used is untested | `dataset = panw_ngfw_traffic_raw \| filter dest_ip = "<ip>" \| comp count()` (informational) |
 | 5 | No other bounded burst is running | `phantom_list_workers` shows nothing `Running` |
@@ -90,11 +90,11 @@ they fall on at least two calendar days). Change the values marked `<CHANGE>`.
   "observables_dict": {
     "log_type": ["TRAFFIC"], "sub_type": ["end"], "action": ["allow"], "app": ["ssh"], "protocol": ["tcp"],
     "rule_matched": ["allow-internal"], "from_zone": ["trust"], "to_zone": ["trust"],
-    "source_ip": ["<CHANGE: fresh internal IPv4, e.g. 10.20.14.16>"],
-    "source_device_host": ["<CHANGE: fresh host name, e.g. WS-SSH-04>"],
-    "source_user": ["<CHANGE: bare user name, e.g. turki.alharbi>"],
+    "source_ip": ["<CHANGE: the address of an established organization host the baseline job covers, default 10.20.16.55>"],
+    "source_device_host": ["<CHANGE: that host's name, default PHWS-036>"],
+    "source_user": ["<CHANGE: that host's user as a bare name, default aalzamil>"],
     "source_port": ["53001", "53002"],
-    "dest_ip": ["<CHANGE: an ordinary internal server, e.g. 10.20.86.31>"], "dest_port": ["22"],
+    "dest_ip": ["<CHANGE: an ordinary internal Linux server of the organization, e.g. PHDMZ-WEB01 at 172.16.10.10>"], "dest_port": ["22"],
     "bytes_sent": ["4200", "9100"], "bytes_received": ["6100", "15000"], "packets_sent": ["38"], "packets_received": ["44"],
     "total_time_elapsed": ["60", "210"], "log_source": ["PA-3220-Acme"],
     "rt": ["<CHANGE: 20 values like \"1790776746573\", each between now-3.5d and now-1d, as 13-digit epoch-ms strings>"]

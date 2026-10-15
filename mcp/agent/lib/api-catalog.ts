@@ -287,7 +287,7 @@ const COGNITIVE: ApiEndpoint[] = [
         description: "List of KBs.",
         example: {
           kbs: [
-            { name: "phantom-soc", doc_count: 3, latest_loaded_at: "2026-04-29T09:07:42Z" },
+            { name: "organization", doc_count: 17, latest_loaded_at: "2026-10-15T09:07:42Z" },
             { name: "xql-examples", doc_count: 161, latest_loaded_at: "2026-05-01T08:24:09Z" },
           ],
           count: 2,
@@ -648,6 +648,102 @@ const CONFIGURATION: ApiEndpoint[] = [
       { status: "400", description: "Body missing `personality` object." },
     ],
     riskTier: "soft",
+  },
+  {
+    id: "organizations-list",
+    category: "configuration",
+    method: "GET",
+    path: "/api/agent/organizations",
+    summary: "List the organizations and which one is active",
+    description:
+      "The sample organization every generator draws its users, hosts and addresses from. Phantom ships Phantom Lab (read-only); the operator can add, edit and replace organizations. Exactly one is active.",
+    responses: [
+      {
+        status: "200",
+        description: "Organization metadata (no documents).",
+        example: {
+          organizations: [{ id: "phantom-lab", name: "Phantom Lab", source: "bundled", active: true, version: 1, people: 50, hosts: 75, domain: "phantom.lab" }],
+          active_id: "phantom-lab",
+          count: 1,
+        },
+      },
+    ],
+  },
+  {
+    id: "organizations-create",
+    category: "configuration",
+    method: "POST",
+    path: "/api/agent/organizations",
+    summary: "Add an organization (YAML, JSON text or a document)",
+    description:
+      "Validated before it is stored: duplicates, addresses outside their network, missing managers or workstations are rejected with every error listed. A bundled id cannot be replaced.",
+    body: {
+      contentType: "application/json",
+      schema: {
+        type: "object",
+        properties: {
+          text: { type: "string", description: "YAML or JSON text of the organization." },
+          format: { type: "string", description: "yaml | json (default: detected)." },
+          document: { type: "object", description: "The organization as an object (instead of text)." },
+          activate: { type: "boolean", description: "Make it active after adding." },
+          replace: { type: "boolean", description: "Replace an operator organization with the same id." },
+        },
+      },
+      example: { text: "schema_version: 1\nid: acme\nname: Acme Example\n...", format: "yaml", activate: false },
+    },
+    responses: [
+      { status: "201", description: "The stored organization with its document." },
+      { status: "400", description: "Invalid document; `errors[]` lists every problem." },
+      { status: "409", description: "An organization with that id already exists." },
+    ],
+  },
+  {
+    id: "organizations-get",
+    category: "configuration",
+    method: "GET",
+    path: "/api/agent/organizations/{id}",
+    summary: "Read one organization with its document (id `active` for the active one)",
+    description: "PUT replaces the document of an operator organization (a bundled one answers 409 bundled_read_only: duplicate it first). DELETE removes an operator organization that is not active.",
+    responses: [{ status: "200", description: "Metadata plus the full document." }, { status: "404", description: "No such organization." }],
+  },
+  {
+    id: "organizations-changes",
+    category: "configuration",
+    method: "POST",
+    path: "/api/agent/organizations/{id}/changes",
+    summary: "Apply a structured edit (the call the agent's organization_update makes)",
+    description:
+      "Id-keyed upsert and remove per collection, plus a deep-merge `set` for the scalar sections. A new person needs only given_name, family_name, title and department. Editing a bundled organization makes an editable copy (forked_from is set).",
+    body: {
+      contentType: "application/json",
+      schema: { type: "object", required: ["changes"], properties: { changes: { type: "object" }, note: { type: "string" } } },
+      example: { changes: { upsert: { people: [{ given_name: "Amira", family_name: "Alfarsi", title: "Financial Analyst", department: "Finance" }] } }, note: "new hire" },
+    },
+    responses: [
+      { status: "200", description: "The updated organization plus `notes[]` describing what was added." },
+      { status: "400", description: "The edit would make the organization inconsistent; nothing was changed." },
+    ],
+    riskTier: "soft",
+  },
+  {
+    id: "organizations-actions",
+    category: "configuration",
+    method: "POST",
+    path: "/api/agent/organizations/{id}/{action}",
+    summary: "activate | fork | restore",
+    description:
+      "activate makes the organization the one every generator uses (switching removes nothing); fork makes an editable copy ({new_id?, new_name?}); restore puts back a history entry ({seq}). GET forms: export?format=yaml|json, section?name=&filter=&limit=, cortex-setup, history.",
+    responses: [{ status: "200", description: "The resulting organization or the requested view." }],
+  },
+  {
+    id: "organizations-validate",
+    category: "configuration",
+    method: "POST",
+    path: "/api/agent/organizations/validate",
+    summary: "Check an organization without saving it",
+    description: "Returns {valid, errors[], warnings[]}. Warnings (few workstations, small departments, no outlier persona, no unmanaged network) do not block a save.",
+    body: { contentType: "application/json", schema: { type: "object", properties: { text: { type: "string" }, format: { type: "string" }, document: { type: "object" } } }, example: { text: "...", format: "yaml" } },
+    responses: [{ status: "200", description: "{valid, errors, warnings}." }],
   },
   {
     id: "instances-list",

@@ -99,13 +99,15 @@ These are PR-side filters; without them, events fall through to a sibling datase
 
 ### Step 3 — Resolve the operator's XSIAM broker destination
 
-Default broker destination: `udp:10.0.0.8:514`. If the operator has named log destinations configured, prefer the one with `type_id=syslog`:
+Never hardcode a broker host or port. Call `log_destinations_list` once (optionally `filter="syslog"`), take the `id` of the destination that matches the operator's intent (the default or only one if none is named), and pass `destination: "logdest:<id>"`. The platform resolves the reference server-side. Use a raw `udp:host:port` only when the operator names that exact endpoint in the request.
 
 ```
 log_destinations_list(filter="syslog")
 ```
 
-Pick the destination matching the operator's intent or default to `udp:10.0.0.8:514`.
+### Step 3.5: Take the identities from the organization
+
+The users, hosts and addresses in the streamed events belong to the active organization. When the operator names people, a department, a role or a host (*"as the CFO"*, *"from the finance team"*, *"to the file server"*), resolve them with one `organization_get` call (`section=personas`, `section=people filter=department=Finance`, `section=hosts filter=role=server`) and pass the returned logins, workstation names and addresses in `observables_dict`, keeping each person's login, workstation and address together. When the operator names none, leave the identity fields unset: xlog binds them from the active organization (`use_organization`, default true). Do not pin the leaver or the break-glass account unless the operator asks for exactly that finding. Pinning an identity never replaces the gate field below. If the organization lacks what the operator names, say so and offer `organization_update`.
 
 ### Step 4 — Fire `xlog.create_data_worker`
 
@@ -118,7 +120,7 @@ Pick the destination matching the operator's intent or default to `udp:10.0.0.8:
 ```
 xlog.create_data_worker(
   type="CEF",
-  destination="<udp:host:port from step 3>",
+  destination="logdest:<id from step 3>",
   count=3,                       # 3 events per tick is plenty for verification
   interval=2,                    # 2-second tick keeps total UDP volume low
   vendor="<cef_vendor from how_to_use>",     # NOT the display name

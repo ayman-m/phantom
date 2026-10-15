@@ -482,6 +482,8 @@ approvals:
     # also calls gate_and_execute with tool_name="personality_patch"
     # (see self_mod_tools.py:personality_patch).
     - "personality_patch"
+    - "organization_update"
+    - "organization_activate"
     - "settings_update"
     - "notifications_dismiss"
     - "notifications_dismiss_all"
@@ -585,6 +587,7 @@ audit:
     - "approval_resolved"
     # Agent self-modification.
     - "personality_changed"
+    - "organization_changed"
     - "agent_self_mod_requested"
     - "agent_self_mod_executed"
     # Closed-loop coverage engine.

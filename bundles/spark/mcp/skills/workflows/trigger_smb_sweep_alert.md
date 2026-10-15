@@ -37,7 +37,7 @@ It is not a correlation rule and needs nothing installed on the tenant. It is th
 | # | Must be true | How to check |
 |---|---|---|
 | 1 | You know the operator's syslog **log destination object** (`logdest:<id>`). It typically resolves to the broker's CEF port 5514. Do not send to `udp:<ip>:514` | `log_destinations_list` or the operator |
-| 2 | The source is an **ESTABLISHED host**: an IP that has been sending ordinary traffic to the tenant for several days and has used SMB (port 445) to a few hosts before. A host with about 7 days of traffic works, and the alert says it had "initiated SMB traffic to 3 different hosts in the past 30 days". A brand-new IP with no SMB history is **untested** | `config timeframe = 30d \| dataset = panw_ngfw_traffic_raw \| filter source_ip = "<ip>" \| alter d = format_timestamp("%Y-%m-%d", _time) \| comp count() by d` shows several past days; no alert of this name for the host in 24 h (Step 3 query without the time filter) |
+| 2 | The source is an **ESTABLISHED host**: an IP that has been sending ordinary traffic to the tenant for several days and has used SMB (port 445) to a few hosts before. A host with about 7 days of traffic works, and the alert says it had "initiated SMB traffic to 3 different hosts in the past 30 days". A brand-new IP with no SMB history is **untested**. The source must be an organization host that the baseline job covers (default: the outlier's workstation, PHWS-036 at `10.20.16.55` on Phantom Lab); the history is a property of that host on the tenant, so check it with the query. Replay-verify against the organization hosts before relying on this skill. | `config timeframe = 30d \| dataset = panw_ngfw_traffic_raw \| filter source_ip = "<ip>" \| alter d = format_timestamp("%Y-%m-%d", _time) \| comp count() by d` shows several past days; no alert of this name for the host in 24 h (Step 3 query without the time filter) |
 | 3 | The 40 destination addresses are `.1` to `.40` of **one internal /24 this host has never contacted** (the alert reasons about "new hosts"). Never reuse a /24 from an earlier run on the same host | `dataset = panw_ngfw_traffic_raw \| filter source_ip = "<ip>" and dest_ip ~= "^10\.20\.<third octet>\." \| comp count()` must be 0 |
 | 4 | No other bounded burst is running (xlog allows one at a time) | `phantom_list_workers`: no worker `Running` |
 
@@ -171,13 +171,13 @@ Call **`phantom_create_data_worker`**. Change only the values marked `<CHANGE>`.
       "trust"
     ],
     "source_ip": [
-      "<CHANGE: established internal IPv4, e.g. 10.20.63.14>"
+      "<CHANGE: the address of an established organization host the baseline job covers, default 10.20.16.55>"
     ],
     "source_device_host": [
-      "<CHANGE: that host's name, e.g. WS-SMB-14>"
+      "<CHANGE: that host's name, default PHWS-036>"
     ],
     "source_user": [
-      "<CHANGE: a bare user name, no backslash, e.g. f.alqahtani>"
+      "<CHANGE: that host's user as a bare name, no backslash, default aalzamil>"
     ],
     "source_port": [
       "51000",
@@ -185,7 +185,7 @@ Call **`phantom_create_data_worker`**. Change only the values marked `<CHANGE>`.
       "53000"
     ],
     "dest_ip": [
-      "<CHANGE: 40 strings, the addresses .1 to .40 of one internal /24 this host has never talked to, e.g. \"10.20.30.1\", ... \"10.20.30.40\">"
+      "<CHANGE: 40 strings, the addresses .1 to .40 of one internal /24 this host has never talked to, e.g. \"10.20.150.1\", ... \"10.20.150.40\" from the organization's unmanaged block>"
     ],
     "dest_port": [
       "445"

@@ -36,7 +36,7 @@ It is not a correlation rule; it is Cortex's own analytics (Cloud module, `XDR A
 | Activation / training (doc) | 14 days / 30 days. In practice the alert typically arrives within a minute or two |
 | Test period | single event |
 | Deduplication (doc) | **5 days** |
-| What the alert text says | *"An anonymous user system:anonymous executed Kubernetes API calls on phantom-gke-1 from <caller ip>. The operation was performed in GCP within phantom-lab-<hex> project. The activity was seen from an external IP address located in <country>"* |
+| What the alert text says | *"An anonymous user system:anonymous executed Kubernetes API calls on phantom-gke-1 from <caller ip>. The operation was performed in GCP within <project id: the organization's, `phantom-lab-prod` on Phantom Lab> project. The activity was seen from an external IP address located in <country>"* |
 
 ## Step 0: check the deduplication window BEFORE sending
 
@@ -56,7 +56,7 @@ The query returns the previous alert of this name, if any (`user_name` `system:a
 |---|---|---|
 | 1 | Step 0 shows no alert of this name in the last 5 days | the query above |
 | 2 | The `http-sender` instance is running with Cribl configured: `list_destinations` shows **`cribl_gcp_cloud_logging`** with `ready: true` | `http-sender.list_destinations` |
-| 3 | You pass **no** `destination`, `target_user` or `count` (the recipe is 1 event). The caller address is drawn from the out-of-country pool by default (`source_ip` overrides it, but it does not defeat the deduplication) and the project is invented per call | read the call below |
+| 3 | You pass **no** `destination`, `target_user` or `count` (the recipe is 1 event). The caller address is drawn from the out-of-country pool by default (`source_ip` overrides it, but it does not defeat the deduplication) and the project is the organization's GCP project | read the call below |
 
 ## Expected result
 

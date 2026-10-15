@@ -16,7 +16,7 @@ locked: false
 The operator names a specific vendor or product in their log-simulation request. Examples:
 
 - "Simulate 50 FortiGate traffic logs"
-- "Generate Okta authentication events with these IPs: 192.168.1.100"
+- "Generate Okta authentication events for the finance team"
 - "Create some PaloAlto Networks firewall logs"
 - "I need PingFederate audit events for my dashboard"
 
@@ -27,6 +27,10 @@ When the operator's request is GENERIC ("generate 100 syslog messages", "create 
 Phantom's default log simulation (`xlog.generate_fake_data_v2`) emits records using Rosetta's predefined field universe. Those records work for generic dashboards but DON'T parse cleanly through Cortex's out-of-the-box ModelingRules — the rule expects FortiGate's `srcip` / `dstip` / `srcport` / `dstport` and gets Rosetta's `local_ip` / `remote_ip`. The XDM mapping silently misses fields.
 
 The Data Sources marketplace solves this. Operators install vendor schemas extracted from Cortex ModelingRule `_schema.json` files. This skill USES those installed schemas — generated records carry the vendor's actual field names, so the matching modeling rule parses them into XDM events correctly. End result: simulated FortiGate traffic shows up in XSIAM's `xdr_data` dataset with proper XDM fields populated.
+
+## Pre-flight: read the organization
+
+The users, hosts and addresses in the simulated logs belong to the active organization, never to an invented company. When the operator names people, a department, a site or a role (*"the finance team"*, *"the CFO"*, *"the Jeddah branch"*, *"the file server"*), resolve them with one `organization_get` call (`section=people filter=department=Finance`, `section=personas`, `section=people filter=site=JED`, `section=hosts filter=role=server`) and pass the returned logins, workstation names and addresses in `observables_dict`, keeping each person's login, workstation and address together. When the operator names none, leave the identity fields unset: xlog binds them from the active organization (`use_organization`, default true) and reports which fields it bound. If the operator supplies addresses of their own, use them as given. If the organization lacks what the operator names, say so and offer `organization_update` instead of inventing it.
 
 ## Pre-flight — verify a data source is installed
 
@@ -116,7 +120,7 @@ Use `type: "JSON"` regardless of what the operator said unless they explicitly a
 When the response comes back:
 
 - `schema_applied: true` → tell the operator which schema was used + the record count:
-  > "Generated 50 vendor-faithful logs using the **FortiGate** schema (172 vendor fields from FortiGate_1_3 / fortinet_fortigate_raw). Sample record: `{srcip: "10.0.0.42", dstip: "203.0.113.5", srcport: 41872, dstport: 443, action: "allow", ...}`. Cortex's FortiGate ModelingRule will parse these into XDM events when sent to XSIAM."
+  > "Generated 50 vendor-faithful logs using the **FortiGate** schema (172 vendor fields from FortiGate_1_3 / fortinet_fortigate_raw). Sample record: `{srcip: "10.20.16.20", dstip: "203.0.113.5", srcport: 41872, dstport: 443, action: "allow", ...}`. Cortex's FortiGate ModelingRule will parse these into XDM events when sent to XSIAM."
 
 - `schema_applied: false` + `fallback_reason` is set → explain what fell back:
   > "Schema override didn't apply (`<fallback_reason>`). Generated logs use Rosetta's generic field universe instead — the FortiGate ModelingRule won't parse them. Investigate via /data-sources."

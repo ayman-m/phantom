@@ -16,11 +16,11 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from runtime.organization_view import get_view  # noqa: E402
 from src import connector, cribl, profiles  # noqa: E402
-from src.profiles import aws_cloudtrail as aws, azure_ad_audit as azure, gcp_audit as gcp, ippools, okta  # noqa: E402
+from src.profiles import _org, aws_cloudtrail as aws, azure_ad_audit as azure, gcp_audit as gcp, ippools, okta  # noqa: E402
 
 NOW = datetime(2026, 10, 4, 12, 0, 0, tzinfo=timezone.utc)
-DOMAIN = "lab.test"
 CLOUD = (aws, gcp, azure)
 TOR = {e.ip for e in ippools.ALL_TOR_EXITS}
 OKTA_TOR = {e.ip for e in ippools.TOR_EXITS}
@@ -67,7 +67,15 @@ DETECTORS = {
 def build(mod, scenario, count=None, **kw):
     count = count or max(getattr(mod, "MIN_COUNT", {}).get(scenario, 1), 2)
     kw.setdefault("seed", 7)
-    return mod.build_events(scenario, count, domain=DOMAIN, now=NOW, **kw)
+    return mod.build_events(scenario, count, view=get_view(), now=NOW, **kw)
+
+
+def domain():
+    return get_view().email_domain
+
+
+def person(login):
+    return get_view().person(login)
 
 
 def when(mod, ev):
@@ -92,14 +100,15 @@ def ips(mod, events):
 
 
 def identities(mod, events):
-    """Every identifier a replay would be recognised by."""
+    """Every identifier of the ACTOR a replay would be recognised by. The account and project are the organization's and
+    the same on every call, so they are not part of an actor's identity."""
     out: set[str] = set()
     for e in events:
         if mod is aws:
             ui = e["userIdentity"]
-            out |= {ui["arn"], ui["accessKeyId"], ui["principalId"], ui["accountId"], e["recipientAccountId"]}
+            out |= {ui["arn"], ui["accessKeyId"], ui["principalId"]}
         elif mod is gcp:
-            out |= {e["protoPayload"]["authenticationInfo"]["principalEmail"], e["resource"]["labels"].get("project_id", "")}
+            out |= {e["protoPayload"]["authenticationInfo"]["principalEmail"]}
         elif mod is azure:
             user = e["initiatedBy"]["user"]
             out |= {user["userPrincipalName"], user["id"]}
@@ -124,10 +133,10 @@ def test_the_profile_interface_is_complete_and_registered(mod):
     alias = mod.DEFAULT_DESTINATION.removeprefix(cribl.PREFIX)
     assert alias in cribl.SOURCES and profiles.for_destination(mod.DEFAULT_DESTINATION) is mod
     assert set(mod.MIN_COUNT) <= set(mod.SCENARIOS) and mod.DESCRIPTION
-    ev = mod.sample_event(domain=DOMAIN, now=NOW)
+    ev = mod.sample_event(view=get_view(), now=NOW)
     assert connector._field(ev, mod.TEST_ID_FIELD) and connector._field(ev, mod.TIME_FIELD)
     assert when(mod, ev) <= NOW and NOW - when(mod, ev) < timedelta(seconds=2)
-    assert mod.sample_event(domain=DOMAIN, now=NOW) != ev  # a fresh id and identity every time
+    assert mod.sample_event(view=get_view(), now=NOW) != ev  # a fresh id and identity every time
 
 
 def test_every_detector_that_fired_is_reachable_through_an_existing_scenario():
@@ -144,14 +153,14 @@ def test_every_detector_that_fired_is_reachable_through_an_existing_scenario():
 @pytest.mark.parametrize("mod,scenario", CASES, ids=IDS)
 def test_unknown_scenarios_and_counts_below_the_recipe_are_refused(mod, scenario):
     with pytest.raises(ValueError):
-        mod.build_events("ransomware", 3, domain=DOMAIN, now=NOW)
+        mod.build_events("ransomware", 3, view=get_view(), now=NOW)
     with pytest.raises(ValueError):
-        mod.build_events(scenario, 0, domain=DOMAIN, now=NOW)
+        mod.build_events(scenario, 0, view=get_view(), now=NOW)
     need = mod.MIN_COUNT.get(scenario, 1)
     if need > 1:
         with pytest.raises(ValueError, match=f"needs count >= {need}"):
-            mod.build_events(scenario, need - 1, domain=DOMAIN, now=NOW)
-    assert len(mod.build_events(scenario, need, domain=DOMAIN, now=NOW)) == need
+            mod.build_events(scenario, need - 1, view=get_view(), now=NOW)
+    assert len(mod.build_events(scenario, need, view=get_view(), now=NOW)) == need
 
 
 # -- events: validity, time, addresses, freshness -----------------------------------------------------------------
@@ -192,6 +201,9 @@ def test_addresses_are_real_public_ips_from_the_pools(mod, scenario):
 def test_two_calls_share_no_identity(mod, scenario):
     first = identities(mod, build(mod, scenario, seed=None))
     second = identities(mod, build(mod, scenario, seed=None))
+    if scenario == "k8s_anonymous":  # the anonymous caller is the same by definition, and the project is the organization's
+        assert not first and not second
+        return
     assert first and second and not (first & second), first & second
     assert not (identities(mod, build(mod, scenario, seed=1)) & identities(mod, build(mod, scenario, seed=2)))
 
@@ -205,7 +217,7 @@ def test_a_seed_makes_a_call_reproducible(mod, scenario):
 def test_dry_run_through_the_tool_sends_nothing(mod, scenario, monkeypatch):
     sent = []
     monkeypatch.setattr(connector, "_settings", lambda: {"url": "", "key": "", "vendor": "Okta", "product": "SSO", "extra": "",
-                                                         "extra_keys": "", "domain": DOMAIN, "verify_tls": True, "timeout": 5.0})
+                                                         "extra_keys": "", "organization": "", "verify_tls": True, "timeout": 5.0})
     monkeypatch.setattr(connector.cribl, "post", lambda *a, **k: sent.append(a))
     monkeypatch.setattr(connector.collector, "post_events", lambda *a, **k: sent.append(a))
     result = connector.phantom_generate_events(mod.NAME, scenario, count=mod.MIN_COUNT.get(scenario, 1), dry_run=True)
@@ -214,14 +226,27 @@ def test_dry_run_through_the_tool_sends_nothing(mod, scenario, monkeypatch):
 
 
 def test_target_user_and_source_ip_overrides_are_honoured():
-    ev = build(aws, "tor_api_call", target_user="DOMAIN\\Ahmed.Khalil", source_ip="203.0.113.9")
-    assert {e["userIdentity"]["userName"] for e in ev} == {"ahmed.khalil"} and ips(aws, ev) == {"203.0.113.9"}
-    ev = build(gcp, "data_asset_public", target_user="sara.nasser@elsewhere.test", source_ip="198.51.100.4")
-    assert {e["protoPayload"]["authenticationInfo"]["principalEmail"] for e in ev} == {f"sara.nasser@{DOMAIN}"}
+    ev = build(aws, "tor_api_call", target_user="DOMAIN\\Khalid.Alotaibi", source_ip="203.0.113.9")
+    assert {e["userIdentity"]["userName"] for e in ev} == {"khalid.alotaibi"} and ips(aws, ev) == {"203.0.113.9"}
+    ev = build(gcp, "data_asset_public", target_user="Sara.Almutairi", source_ip="198.51.100.4")
+    assert {e["protoPayload"]["authenticationInfo"]["principalEmail"] for e in ev} == {person("salmutairi")["email"]}
     assert ips(gcp, ev) == {"198.51.100.4"}
-    ev = build(azure, "pim_alert_disabled", target_user="rania.suleiman", source_ip="198.51.100.4")
-    assert {e["initiatedBy"]["user"]["userPrincipalName"] for e in ev} == {f"rania.suleiman.adm@{DOMAIN}"}
+    ev = build(azure, "pim_alert_disabled", target_user="reem.aldosari", source_ip="198.51.100.4")
+    assert {e["initiatedBy"]["user"]["userPrincipalName"] for e in ev} == {f"reem.aldosari.adm@{domain()}"}
     assert ips(azure, ev) == {"198.51.100.4"}
+
+
+def test_a_named_actor_acts_from_their_own_home_address_and_a_stranger_is_refused():
+    home = person("kalotaibi")["home_ip"]
+    # no source_ip: the calls come from the named person's own home address (a recipe whose every step has its own address,
+    # like pentest_tool or tor_api_call, never uses it)
+    assert ips(aws, build(aws, "guardduty_detector_deleted", target_user="kalotaibi")) == {home}
+    assert ips(gcp, build(gcp, "data_asset_public", target_user="khalid.alotaibi")) == {home}
+    assert ips(azure, build(azure, "ca_policy_deleted", target_user="Khalid.Alotaibi@" + domain())) == {home}
+    for mod, scenario in ((aws, "guardduty_detector_deleted"), (gcp, "data_asset_public"), (azure, "ca_policy_deleted")):
+        with pytest.raises(ValueError, match="nobody in the organization") as err:
+            build(mod, scenario, target_user="mallory.nobody")
+        assert person("nalharbi")["email"] in str(err.value)  # the valid choices are listed
 
 
 def test_ordinary_actors_come_from_the_saudi_home_pool_not_from_an_attacker_range():
@@ -267,7 +292,8 @@ def test_aws_records_are_cloudtrail_shaped():
                 "userAgent", "requestParameters", "responseElements", "requestID", "eventID", "readOnly", "eventType",
                 "managementEvent", "recipientAccountId", "eventCategory", "tlsDetails"} <= ev.keys()
         assert ev["eventVersion"] == "1.11" and re.fullmatch(r"\d{12}", ev["recipientAccountId"])
-        assert ev["userIdentity"]["accountId"] == ev["recipientAccountId"]
+        assert ev["userIdentity"]["accountId"] == ev["recipientAccountId"] == get_view().doc["cloud"]["aws"]["account_id"]
+        assert ev["awsRegion"] == get_view().doc["cloud"]["aws"]["region"]
 
 
 def test_aws_single_step_scenarios():
@@ -422,7 +448,7 @@ def test_gcp_new_admin_service_account_creates_it_then_grants_owner_to_that_acco
 def test_azure_scenarios_are_one_directory_audit_operation(scenario, activity, category):
     for ev in build(azure, scenario, 3):
         assert ev["activityDisplayName"] == activity and ev["category"] == category and ev["result"] == "success"
-        assert ev["initiatedBy"]["user"]["userPrincipalName"].endswith(f".adm@{DOMAIN}") and ev["initiatedBy"]["app"] is None
+        assert ev["initiatedBy"]["user"]["userPrincipalName"].endswith(f".adm@{domain()}") and ev["initiatedBy"]["app"] is None
         assert re.fullmatch(r"Directory_[0-9a-f-]{36}_\d{5}", ev["id"]) and ev["targetResources"]
         assert re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{7}Z", ev["activityDateTime"])
 
@@ -443,7 +469,7 @@ def test_azure_domain_scenarios_invent_a_new_domain_every_call():
 
 def okta_build(scenario, count=6, **kw):
     kw.setdefault("seed", 5)
-    return okta.build_events(scenario, count, domain=DOMAIN, now=NOW, **kw)
+    return okta.build_events(scenario, count, view=get_view(), now=NOW, **kw)
 
 
 def test_the_okta_profile_lists_the_two_cribl_scenarios_and_their_destination():
@@ -458,7 +484,7 @@ def test_tor_signin_is_successful_sso_by_baseline_users_from_distinct_tor_exits_
     events = okta_build("tor_signin", 8)
     assert {e["eventType"] for e in events} == {"user.authentication.sso"} and {e["outcome"]["result"] for e in events} == {"SUCCESS"}
     assert ips(okta, events) <= OKTA_TOR and len(ips(okta, events)) == 8
-    pool = {f"{f.lower()}.{l.lower()}@{DOMAIN}" for f, l in okta._USERS}
+    pool = {p["email"] for p in _org.logon_people(get_view())}
     assert {e["actor"]["alternateId"] for e in events} <= pool and len({e["actor"]["alternateId"] for e in events}) > 1
     for ev in events:
         assert ev["securityContext"]["isProxy"] is True and ev["securityContext"]["domain"] == "torproject.org"
@@ -470,8 +496,8 @@ def test_tor_signin_is_successful_sso_by_baseline_users_from_distinct_tor_exits_
 
 
 def test_tor_signin_target_user_and_source_ip_overrides():
-    events = okta_build("tor_signin", 3, target_user="DOMAIN\\Mona.Zaid", source_ip="185.220.101.140")
-    assert {e["actor"]["alternateId"] for e in events} == {f"mona.zaid@{DOMAIN}"} and ips(okta, events) == {"185.220.101.140"}
+    events = okta_build("tor_signin", 3, target_user="DOMAIN\\Mona.Alessa", source_ip="185.220.101.140")
+    assert {e["actor"]["alternateId"] for e in events} == {person("malessa")["email"]} and ips(okta, events) == {"185.220.101.140"}
     other = okta_build("tor_signin", 3, source_ip="203.0.113.5")  # an exit that is not in the snapshot still gets the Tor flags
     assert other[0]["securityContext"]["isProxy"] is True and ips(okta, other) == {"203.0.113.5"}
 
@@ -482,7 +508,7 @@ def test_fastpass_phishing_is_the_measured_blocked_phishing_shape_with_a_new_use
     for ev in events:
         assert ev["eventType"] == "user.authentication.auth_via_mfa" and ev["outcome"] == {
             "result": "FAILURE", "reason": "FastPass declined phishing attempt"}
-        assert ev["actor"]["alternateId"].startswith("fastpass.phishing.") and ev["actor"]["alternateId"].endswith(f"@{DOMAIN}")
+        assert ev["actor"]["alternateId"].startswith("fastpass.phishing.") and ev["actor"]["alternateId"].endswith(f"@{domain()}")
         dbg = ev["debugContext"]["debugData"]
         assert dbg["threatSuspected"] == "true" and dbg["risk"] == "{level=HIGH}" and dbg["factor"] == "SIGNED_NONCE"
         assert json.loads(dbg["threatDetections"]) == {"Phishing Attempt Blocked": "HIGH"}  # JSON-encoded STRINGS, as measured

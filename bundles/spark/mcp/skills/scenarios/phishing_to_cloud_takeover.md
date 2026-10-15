@@ -77,28 +77,35 @@ empty. `compact=true` is lossless for this purpose and keeps the payload inside 
 3. For each stage whose class is `MISSING` (and has no substitute in the table), say this to the operator, with the class and stage filled in: "No installed data source covers the `<class>` class, so I am skipping Stage <N> (<stage name>). I will not generate it with a generic schema. Install a `<class>` data source from the Marketplace to include it." Then create NO worker for that stage: not with a generic schema, not with another class's schema, not with a guessed vendor/product. Continue with the stages whose classes are covered. If every stage is `MISSING`, stop after saying it. Apply the table's own fallbacks first: no `proxy` means use the `firewall` entry for Stage 2; no `cloud` means end the chain at Stage 5 and say the cloud pivot would fire if cloud audit were instrumented. If `email-gateway` AND `saas` are both `MISSING`, stop after saying it.
 4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
+## Pre-flight: read the organization
+
+A chain that starts outside the company targets a person from the organization, never an invented user. Call `organization_get(section="personas")` and `organization_get(section="people", filter="department=Engineering")`, then `organization_get(section="cloud")` for the cloud accounts. Pick the victim:
+
+- **Full chain (Stages 1 to 6, default):** an ordinary, unflagged person whose `cloud_access` includes the cloud of Stage 6 (`gcp`), ideally a manager. Phantom Lab example: `salmutairi` (Sara Almutairi, Engineering Manager, `sara.almutairi@phantom.lab`), workstation PHWS-004 at `10.20.16.23`, home address `185.5.155.50`.
+- **VIP target (Stages 1 to 5 only):** the CFO or CEO from the VIP persona. No VIP has cloud access on Phantom Lab, so end the chain at Stage 5 and say Stage 6 was skipped for that reason.
+
+Take the victim's login, email, workstation, workstation address and `home_ip` from the people row, and the cloud project from `section=cloud`. For the benign noise emails use real colleagues of the same organization (the HR manager, a payroll specialist, a teammate) and the organization's mail domain (`domain.email_domain`). Do not invent a user, host, mail domain or cloud project. If no person with the needed cloud access exists, tell the operator and offer `organization_update`. The recipes show the Phantom Lab values.
+
 ## Narrative thread
 
 - **Phishing sender (Stage 1):** `invoice-portal@billing-secure-update.tk` (typo-squat domain on `.tk`)
 - **Phishing landing URL (Stage 1, 2):** `https://billing-secure-update.tk/login.aspx?ref=invoice-Q4`
-- **Target user:** `m.patel@corp.example` (claims processing manager, normal sign-ins from `GB`)
-- **Target user IP (normal baseline):** `86.150.42.18` (residential UK)
+- **Target user:** the victim chosen above (Phantom Lab example: `sara.almutairi@phantom.lab`, normal sign-ins from `SA`)
+- **Target user IP (normal baseline):** the victim's `home_ip` (`185.5.155.50` on Phantom Lab) and, from the office, the workstation address (`10.20.16.23`)
 - **Stolen-creds replay source IP (Stage 3):** `91.243.59.108` (RU — unusual for this user)
 - **Malicious OAuth app (Stage 4):** `InvoicePro Sync` — sounds plausible for a finance user
 - **OAuth client_id:** `8ba2f3d4-9c47-4a91-b81e-22f3ec9d4a7e`
-- **Inbox forward target (Stage 5):** `m.patel.archive@protonmail.com` (attacker-controlled mailbox)
-- **Bulk-download target (Stage 5):** OneDrive folder `Q4-Claims-Documents` (~120 files)
-- **Cloud project (Stage 6):** `gcp-prod-ExampleCorp`
-- **Cloud SA created (Stage 6):** `data-export-svc@gcp-prod-ExampleCorp.iam.gserviceaccount.com`
+- **Inbox forward target (Stage 5):** `<victim given name>.<victim family name>.archive@protonmail.com` (attacker-controlled mailbox; Phantom Lab example `sara.almutairi.archive@protonmail.com`)
+- **Bulk-download target (Stage 5):** OneDrive folder `Q4-Claims-Documents` (~120 files; illustrative document names)
+- **Cloud project (Stage 6):** the organization's GCP project (`cloud.gcp.project_id`; `phantom-lab-prod` on Phantom Lab)
+- **Cloud SA created (Stage 6):** `data-export-svc@<project_id>.iam.gserviceaccount.com` (`data-export-svc@phantom-lab-prod.iam.gserviceaccount.com` on Phantom Lab)
 - **Cloud SA key ID (Stage 6):** `8f3a91d2c4b7e5a8d6f9b2c1e4a7d3f5b8c2e9a1`
 - **Wall-clock time:** Stage 1 = single email (instant). Stage 2 ~3 min after delivery. Stage 3 ~8 min later. Stage 4-5 within 5 min of Stage 3 success. Stage 6 ~8 min after Stage 5.
 
-**Stage 6 narrative note:** the target user above (`m.patel`, claims processing manager) is chosen for
-plausibility through Stage 5 — a finance-adjacent role is exactly who consent-phishing and mailbox-rule
-abuse target. Stage 6 assumes this user (or the account the attacker has landed in) also carries cloud
-platform privileges — realistic in orgs with IAM over-provisioning, but if your test tenant's `m.patel`
-equivalent genuinely has no cloud access, retarget Stage 6 at a user who does (a devops/platform-engineer
-persona) rather than straining the story. The recipe itself is identity-agnostic.
+**Stage 6 narrative note:** Stage 6 assumes the victim (or the account the attacker has landed in) also
+carries cloud platform privileges, which is why the default victim above has `gcp` in `cloud_access`. A
+VIP such as the CFO has none, so for a VIP target end the chain at Stage 5 rather than straining the
+story. The recipe itself is identity-agnostic.
 
 ---
 
@@ -118,10 +125,10 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     senderEmail:    ["partners@example-supplier.com", "newsletter@industry-news.io",
-                      "noreply@hr-internal.corp.example", "alerts@payroll-svc.corp.example",
+                      "khalid.alotaibi@phantom.lab", "majed.alsaleh@phantom.lab",
                       "invoice-portal@billing-secure-update.tk"]
-    recipientEmail: ["m.patel@corp.example", "team-finance@corp.example",
-                      "all-employees@corp.example"]
+    recipientEmail: ["sara.almutairi@phantom.lab", "huda.alghamdi@phantom.lab",
+                      "khalid.alotaibi@phantom.lab"]   # the victim plus real colleagues of the organization
     emailSubject:   ["Q4 Newsletter", "Project status update",
                       "Re: Payment terms", "Quarterly summary",
                       "URGENT: Invoice #INV-Q4-2891 Action Required"]
@@ -129,7 +136,7 @@ xlog.create_data_worker:
                       "https://industry-news.io/articles/12",
                       "https://billing-secure-update.tk/login.aspx?ref=invoice-Q4"]
     senderDomain:   ["example-supplier.com", "industry-news.io",
-                      "billing-secure-update.tk", "hr-internal.corp.example"]
+                      "billing-secure-update.tk", "phantom.lab"]
     act:          ["delivered", "delivered", "quarantined", "delivered"]
     threatCategory: ["clean", "clean", "phishing", "clean"]
     threatScore:    ["10", "20", "85", "5", "15"]
@@ -151,7 +158,7 @@ xlog.create_data_worker:
 
 ### Stage 2 — User clicks the link (proxy logs the GET) — 8 events over 90 seconds
 
-Three minutes after delivery, `m.patel` opens the email and clicks. The proxy logs the HTTP GET. The credential harvester also serves a small JS bundle and posts the captured creds back, so we get 8 events total (1 GET to the login page + ~5 asset loads + 1 POST of credentials + 1 redirect).
+Three minutes after delivery, the victim opens the email and clicks. The proxy logs the HTTP GET. The credential harvester also serves a small JS bundle and posts the captured creds back, so we get 8 events total (1 GET to the login page + ~5 asset loads + 1 POST of credentials + 1 redirect).
 
 **Data class:** `proxy`
 
@@ -164,9 +171,9 @@ xlog.create_data_worker:
   interval: 11
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.20.42"]
-    shost:      ["wks-mpatel-01"]
-    user:          ["m.patel"]
+    src:        ["10.20.16.23"]
+    shost:      ["PHWS-004"]
+    user:          ["salmutairi"]
     spt:      ["49152", "51234", "57890", "60123"]
     dpt:      ["443"]
     proto:      ["6"]
@@ -188,7 +195,7 @@ xlog.create_data_worker:
 ```
 
 **Field semantics:**
-- `src_ip` / `src_host` / `user` — bound to `m.patel`'s workstation; the user attribution lets the SIEM later say "the same user whose email got delivered the phish then clicked it"
+- `src_ip` / `src_host` / `user` — bound to the victim's workstation (PHWS-004 for the Phantom Lab example); the user attribution lets the SIEM later say "the same user whose email got delivered the phish then clicked it"
 - `url` — must include the EXACT URL from Stage 1's email so the SIEM correlates inbox→browser
 - `method: POST` to `/api/auth` is the credential exfiltration — the proxy doesn't see the body but DOES see that the user just submitted form data to a new domain
 - `category: newly-registered-domain` — the proxy enriches with domain age; phishing infrastructure is typically <30 days old
@@ -201,7 +208,7 @@ xlog.create_data_worker:
 
 ### Stage 3 — Stolen creds replayed at SaaS sign-in (impossible travel) — 1 event
 
-Eight minutes after the click, the attacker replays the stolen creds against the SaaS provider (M365 or equivalent). The user has been signing in from `GB` for months; this attempt is from `RU`. MFA isn't triggered because the attacker uses an OAuth client that the user authorized in Stage 4 — but at THIS point, just a regular sign-in.
+Eight minutes after the click, the attacker replays the stolen creds against the SaaS provider (M365 or equivalent). The user has been signing in from `SA` (the organization's country) for months; this attempt is from `RU`. MFA isn't triggered because the attacker uses an OAuth client that the user authorized in Stage 4 — but at THIS point, just a regular sign-in.
 
 **Data class:** `saas`
 
@@ -214,7 +221,7 @@ xlog.create_data_worker:
   interval: 1
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    user:                  ["m.patel@corp.example"]
+    user:                  ["sara.almutairi@phantom.lab"]
     src:                ["91.243.59.108"]
     country:               ["RU"]
     act:                ["login_success"]
@@ -227,7 +234,7 @@ xlog.create_data_worker:
 ```
 
 **Field semantics:**
-- `country: RU` vs the user's normal `GB` — the geographic delta is what fires impossible travel
+- `country: RU` vs the user's normal `SA` — the geographic delta is what fires impossible travel
 - `mfa_required: false` — many tenants only enforce MFA for risky sign-ins; a "normal-looking" password sign-in skips MFA, which is exactly the bypass attackers exploit
 - `device_id: unknown` + `device_compliance: non-compliant` — the attacker's machine isn't in the tenant's intune/MDM enrollment
 - `session_id` — propagate this value into Stages 4-5 so all post-auth actions correlate
@@ -244,19 +251,19 @@ xlog.create_data_worker:
   max_events: 20
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    user:    ["m.patel@corp.example"]
-    src:  ["86.150.42.18", "86.150.42.91", "10.10.20.42"]
-    country: ["GB"]
+    user:    ["sara.almutairi@phantom.lab"]
+    src:  ["185.5.155.50", "10.20.16.23"]   # the victim's home_ip and workstation address
+    country: ["SA"]
     act:  ["login_success"]
 ```
 
-**Why this fires Rule #4:** geographic distance from the user's last successful sign-in (`GB`) to this one (`RU`) within hours is the impossible-travel signal. Some SIEMs also factor in IP reputation (`91.243.59.108` is in known-bad ranges) for higher-confidence alerts.
+**Why this fires Rule #4:** geographic distance from the user's last successful sign-in (`SA`) to this one (`RU`) within hours is the impossible-travel signal. Some SIEMs also factor in IP reputation (`91.243.59.108` is in known-bad ranges) for higher-confidence alerts.
 
 ---
 
 ### Stage 4 — OAuth consent grant to malicious app — 3 events over 90 seconds
 
-The attacker, now signed in as `m.patel`, navigates the OAuth consent flow to grant a malicious app the `Mail.ReadWrite`, `Mail.Send`, `Files.ReadWrite.All` permissions. The user already authenticated; the consent grant is a separate audit event.
+The attacker, now signed in as the victim, navigates the OAuth consent flow to grant a malicious app the `Mail.ReadWrite`, `Mail.Send`, `Files.ReadWrite.All` permissions. The user already authenticated; the consent grant is a separate audit event.
 
 **Data class:** `saas`
 
@@ -270,7 +277,7 @@ xlog.create_data_worker:
   max_events: 3
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    user:                  ["m.patel@corp.example"]
+    user:                  ["sara.almutairi@phantom.lab"]
     act:                ["consent_to_application", "add_oauth2permissiongrant",
                             "add_app_role_assignment"]
     operation:             ["Add app role assignment grant to user",
@@ -294,7 +301,7 @@ xlog.create_data_worker:
 
 ### Stage 5 — Inbox rule + bulk download (persistence + exfiltration) — ~125 events over 8 minutes
 
-With the OAuth grant, the attacker (a) creates an inbox forwarding rule so future emails to `m.patel` flow to their mailbox, and (b) bulk-downloads the user's OneDrive `Q4-Claims-Documents` folder.
+With the OAuth grant, the attacker (a) creates an inbox forwarding rule so future emails to the victim flow to their mailbox, and (b) bulk-downloads the user's OneDrive `Q4-Claims-Documents` folder.
 
 **Sub-stage 5A — inbox forwarding rule** (1 event)
 
@@ -307,7 +314,7 @@ xlog.create_data_worker:
   interval: 1
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    user:           ["m.patel@corp.example"]
+    user:           ["sara.almutairi@phantom.lab"]
     act:         ["new-inboxrule"]
     operation:      ["New-InboxRule"]
     ruleName:      ["Auto-Archive External"]
@@ -329,12 +336,12 @@ xlog.create_data_worker:
   max_events: 120
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    user:        ["m.patel@corp.example"]
+    user:        ["sara.almutairi@phantom.lab"]
     act:      ["FileDownloaded"]
     operation:   ["FileDownloaded"]
     fname:   ["claim-INV-2891-Q4.pdf", "policy-renewal-2891.docx",
                   "customer-data-export.xlsx", "claims-summary-Q4.pdf"]
-    request:    ["/personal/m_patel_acme_example/Documents/Q4-Claims-Documents"]
+    request:    ["/personal/sara_almutairi_phantom_lab/Documents/Q4-Claims-Documents"]   # /personal/<victim email with . and @ as _>/...
     out:       ["245000", "180000", "5240000", "320000", "890000"]
     src:   ["91.243.59.108"]
     externalId:  ["SaaS-SESS-d92f3e1c-44a7-4b19-8c2e-f3a91d8e7c45"]
@@ -354,8 +361,8 @@ xlog.create_data_worker:
   max_events: 20
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.20.42"]
-    user:          ["m.patel"]
+    src:        ["10.20.16.23"]
+    user:          ["salmutairi"]
     request:           ["https://www.dropbox.com/upload",
                     "https://api.dropboxapi.com/2/files/upload"]
     requestMethod:        ["POST"]
@@ -378,7 +385,7 @@ xlog.create_data_worker:
 Eight minutes after Stage 5, the attacker uses the still-live OAuth-token session to hop from SaaS into
 the cloud platform's web console (Workspace/M365 SSO reaches GCP Console the same way it reaches any
 federated app). Once in the cloud project, they create a new service account with broad permissions,
-then mint a JSON key for it — a long-lived credential that survives `m.patel` resetting their password,
+then mint a JSON key for it — a long-lived credential that survives the victim resetting their password,
 since it was never tied to the password in the first place.
 
 **Data class:** `cloud`
@@ -401,12 +408,12 @@ xlog.create_data_worker:
     requestMethod:    ["projects.serviceAccounts.create",
                     "projects.serviceAccounts.keys.create",
                     "projects.setIamPolicy"]
-    resourceName: ["projects/gcp-prod-ExampleCorp/serviceAccounts/data-export-svc@gcp-prod-ExampleCorp.iam.gserviceaccount.com",
-                    "projects/gcp-prod-ExampleCorp/serviceAccounts/data-export-svc@gcp-prod-ExampleCorp.iam.gserviceaccount.com/keys/8f3a91d2c4b7e5a8d6f9b2c1e4a7d3f5b8c2e9a1"]
+    resourceName: ["projects/phantom-lab-prod/serviceAccounts/data-export-svc@phantom-lab-prod.iam.gserviceaccount.com",
+                    "projects/phantom-lab-prod/serviceAccounts/data-export-svc@phantom-lab-prod.iam.gserviceaccount.com/keys/8f3a91d2c4b7e5a8d6f9b2c1e4a7d3f5b8c2e9a1"]
     accessLevel:  ["roles/owner",
                     "roles/iam.serviceAccountTokenCreator",
                     "roles/iam.serviceAccountUser"]
-    email:      ["data-export-svc@gcp-prod-ExampleCorp.iam.gserviceaccount.com"]
+    email:      ["data-export-svc@phantom-lab-prod.iam.gserviceaccount.com"]
     keyId:     ["8f3a91d2c4b7e5a8d6f9b2c1e4a7d3f5b8c2e9a1"]
     keyType:   ["USER_MANAGED"]
     authenticationMethod: ["oauth_token"]
@@ -418,7 +425,7 @@ xlog.create_data_worker:
 - `externalId` — the SAME session ID propagated from Stages 3-5, so this stage pivots into one case with
   everything before it rather than reading as an unrelated event
 - `src` / `country` — still the attacker's `91.243.59.108` / `RU`, not the legitimate user's IP; the
-  cloud audit log records the actor as `m.patel@corp.example` (via `authenticationMethod: oauth_token`)
+  cloud audit log records the actor as the victim (`sara.almutairi@phantom.lab` on Phantom Lab) (via `authenticationMethod: oauth_token`)
   but the network origin is the tell
 - `act: CreateServiceAccount + CreateServiceAccountKey + SetIamPolicy` — the canonical "establish
   persistent backdoor access" sequence
@@ -437,14 +444,14 @@ SA-with-Owner-and-self-impersonation pattern is suspicious enough to fire on its
 
 | Indicator | Where to check |
 |---|---|
-| Phishing email rule fired with `m.patel` recipient | XSIAM Issues, last 30 min |
+| Phishing email rule fired with the victim as recipient | XSIAM Issues, last 30 min |
 | Proxy/URL alert for `billing-secure-update.tk` | XSIAM Issues |
-| Impossible travel for `m.patel` (`GB` → `RU`) | XSIAM Issues |
+| Impossible travel for the victim (`SA` → `RU`) | XSIAM Issues |
 | OAuth consent abuse alert with `app_id=8ba2f3d4-...` | XSIAM Issues |
 | Mailbox rule abuse with `forward_to=*@protonmail.com` | XSIAM Issues |
 | Exfiltration alert tied to OneDrive bulk-download volume | XSIAM Issues |
 | Cloud IAM SA key creation with `roles/owner` | XSIAM Issues |
-| Pivotable: filter `user=m.patel`, see all 7 alerts in one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the saas entry> \| filter <its user field> = "m.patel@corp.example" \| limit 20` |
+| Pivotable: filter `user=<victim email>`, see all 7 alerts in one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the saas entry> \| filter <its user field> = "<victim email>" \| limit 20` |
 
 ## Tear-down
 
@@ -456,8 +463,4 @@ xlog.kill_worker:
 
 ## Adapting per deployment
 
-Replace `m.patel@corp.example` with the operator's chosen test user. The Stages 1-5 attack pattern is
-identity-agnostic; the OAuth consent + forwarding rule + bulk download chain is identical regardless of
-which user is targeted. Stage 6 (cloud pivot) is the exception: it's most realistic against a user who
-genuinely has cloud platform admin in the tenant, so the escalation matches their actual IAM
-hierarchy — pick accordingly, or skip Stage 6 if no target user with cloud access fits the exercise.
+The victim always comes from the active organization (`organization_get`). To target someone else (the CFO, the CEO, a finance analyst), read that person from the organization and keep the chain shape. The Stages 1-5 attack pattern is identity-agnostic; the OAuth consent + forwarding rule + bulk download chain is identical regardless of which user is targeted. Stage 6 (cloud pivot) is the exception: it is most realistic against a user whose `cloud_access` includes the cloud being attacked, so the escalation matches their actual IAM hierarchy. Pick accordingly, or skip Stage 6 if no target user with cloud access fits the exercise.

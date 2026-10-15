@@ -30,7 +30,7 @@ It is Cortex's own analytics (not a correlation rule). The call below sends **on
 | MITRE (as shown on the alert) | T1098.001 - Account Manipulation: Additional Cloud Credentials |
 | Data-source tag on the alert | `DS:msft/Azure AD Audit` (also `DT:Identity Threat`, `DOM:Security`) |
 | What triggers it | One Azure AD audit record `Add unverified domain` (category `DirectoryManagement`, service `Core Directory`, operation `Add`, result `success`) naming a domain never seen before (`<word>-<hex>.example`, new on every call), by an admin who has not done it. "Rare" is counted over 30 days across the organization: the alert text states how many users did it. |
-| What the alert text says | *"The account <name>.<hex>.adm@phantom-lab.example has added an unverified domain to Azure AD. The operation attempted was a: SUCCESS. The domain <word>-<hex>.example was added. In the past 30 days, 1 users performed this operation in the organization"* |
+| What the alert text says | *"The account <name>.<hex>.adm@phantom.lab has added an unverified domain to Azure AD. The operation attempted was a: SUCCESS. The domain <word>-<hex>.example was added. In the past 30 days, 1 users performed this operation in the organization"* |
 
 **Rarity is a count.** The description ends "In the past 30 days, N users performed this operation in the organization". It says N = 1 for the recipe's new admin and the alert fires with it each time; the count does not rise with repeated sends, and a higher N is not covered by this recipe.
 
@@ -70,7 +70,7 @@ config timeframe = 1h
 | limit 3
 ```
 
-Pass when you see **one** row for your admin: `result` is `success`, `initiatedBy` contains `<name>.<hex>.adm@phantom-lab.example` and `targetResources` is a `Domain` named `<word>-<hex>.example`. Runs from the last hour (yours and earlier ones) also appear: read the newest row first.
+Pass when you see **one** row for your admin: `result` is `success`, `initiatedBy` contains `<name>.<hex>.adm@phantom.lab` and `targetResources` is a `Domain` named `<word>-<hex>.example`. Runs from the last hour (yours and earlier ones) also appear: read the newest row first.
 
 ## Step 3: wait, then check for the alert
 
@@ -85,10 +85,12 @@ config timeframe = 1d
 | limit 5
 ```
 
-Pass when a **new** row names the identity you saw in Step 2 (the admin's name in the alert's `user_name` as `phantom-lab\<name>.adm`, and the new domain in the description); older alerts have other identities. The alert typically arrives within a minute or two of the event.
+Pass when a **new** row names the identity you saw in Step 2 (the admin's name in the alert's `user_name` as `phantom\<name>.adm`, and the new domain in the description); older alerts have other identities. The alert typically arrives within a minute or two of the event.
 
 If nothing arrives in 6 minutes: re-run Step 2 (the events must be there and carry the right operation), confirm the instance's Cribl destination is still ready, and send the call **once more** (a new call is a new actor). Do not edit the events and do not switch to an HTTP collector or syslog.
 
 ## Report back to the operator
 
 State the identity that appears in the alert description, the alert id, `Rare unverified domain addition to Azure AD`, its severity (Low), and the latency from the events to the alert (typically within a minute or two). If `xdm.*` is empty for this dataset (the Entra ID pack is not installed), say that this does not stop the detector. Say that each call uses a new identity so it can be repeated at once.
+
+Note: the Cortex `user_name` prefix shown above (`phantom\`) is the first label of the organization's email domain (`phantom.lab`); it was `phantom-lab\` on the previous domain. It has not been re-measured on the tenant, so confirm it on the first replay.

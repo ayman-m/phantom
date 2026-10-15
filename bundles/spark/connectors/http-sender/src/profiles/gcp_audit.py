@@ -9,15 +9,16 @@ Every scenario replays ONE measured detector shape; the shapes that stayed silen
 external CMEK key, heavy compute, serverless CLI, pen-test user agents) are not here. A scenario is a short recipe
 of 1-4 steps; `count` repeats it with fresh resource ids.
 
-The project id and number, the users, groups, service accounts and ids are generated per call, so a replay looks like a
-first-time actor. Addresses are real: ordinary actors come from the Saudi home pool, an anonymous or scanning caller
-from an out-of-country range, and the Tor scenario from a Tor exit. `timestamp` is UTC with nanoseconds; the
-`receiveTimestamp` follows it but is never after `now`.
+The project id, project number and region are the organization's (`cloud.gcp`); the users a recipe mints, the groups,
+service accounts and ids are generated per call, so a replay looks like a first-time actor. `target_user` names one of the
+organization's people (login, email or the part before the @), whose home address the calls then come from. Addresses are
+real: ordinary actors come from the Saudi home pool, an anonymous or scanning caller from an out-of-country range, and the
+Tor scenario from a Tor exit. `timestamp` is UTC with nanoseconds; the `receiveTimestamp` follows it but is never after `now`.
 
-`benign_activity` is the baseline and its identities are STABLE: one fixed project, twelve users (the shared persona pool,
-one home address each) and four service accounts, every name a pure function of its index. Its calls are ordinary Data
-Access reads (object list and get, bucket list, instance list, service account get, log reads, IAM policy reads); none of
-them is a shape one of the detectors above fired on.
+`benign_activity` is the baseline and its identities are STABLE: the organization's project, the organization's people who
+may log on and have GCP access (`cloud_access`), one home address each (`home_ip`), and four service accounts that call from
+the organization's public egress addresses. Its calls are ordinary Data Access reads (object list and get, bucket list,
+instance list, service account get, log reads, IAM policy reads); none of them is a shape one of the detectors above fired on.
 """
 from __future__ import annotations
 
@@ -25,7 +26,9 @@ import random
 from datetime import datetime, timedelta
 from typing import Any, Callable
 
-from . import _fresh, ippools
+from runtime.organization_view import OrganizationView
+
+from . import _fresh, _org, ippools
 from .okta import _times
 
 # The profile interface (see profiles/__init__.py).
@@ -52,14 +55,19 @@ def _stamp_text(ts: datetime, rng: random.Random) -> str:
 
 
 class _Ctx:
-    """Per-call state: the random source, the (fresh) project, the lab domain and the window's end."""
+    """Per-call state: the organization, the random source, its project and region, and the window's end."""
 
-    def __init__(self, domain: str, seed: int | None, now: datetime) -> None:
+    def __init__(self, view: OrganizationView, seed: int | None, now: datetime) -> None:
         self.rng = random.Random(seed)
-        self.domain = domain
+        self.view = view
+        self.domain = view.email_domain  # the domain of the users and groups a recipe mints
         self.now = now
-        self.project = "phantom-lab-" + _fresh.hexs(self.rng, 6)
-        self.number = _fresh.digits(self.rng, 12)
+        cloud = _org.cloud(view, "gcp", "project_id", "project_number", "region")
+        _fresh.hexs(self.rng, 6), _fresh.digits(self.rng, 12)  # the project id and number this call used to invent: the draws stay so a seeded call's other values do not move
+        self.project, self.number, self.region = cloud["project_id"], cloud["project_number"], cloud["region"]
+        self.prefix = _org.bucket_prefix(view)
+        self.buckets = {f"{self.prefix}-{name}": keys for name, keys in _BUCKET_OBJECTS.items()}
+        self._by_email = {p["email"].lower(): p for p in view.people}
         self.tor = ippools.tor_exits(self.rng, len(ippools.CLOUD_TOR_EXITS), ippools.CLOUD_TOR_EXITS)  # drawn once: a different exit per repetition
 
     def hexs(self, n: int) -> str:
@@ -68,11 +76,19 @@ class _Ctx:
     def home_ip(self) -> str:
         return ippools.home_for(self.rng.randrange(len(ippools.HOME)))[0]
 
+    def actor_ip(self, who: str) -> str:
+        """Where `who` calls from: the home address of the organization's person it is, else a random home-pool address
+        (the draw is made either way, so a seeded call's other values are the same)."""
+        ip = self.home_ip()
+        person = self._by_email.get(who.lower())
+        return _org.home(person)[0] if person else ip
+
     def abroad_ip(self) -> str:
         return ippools.abroad_pick(self.rng)[0]
 
-    def user(self, name: str | None = None) -> str:
-        return f"{name or _fresh.handle(self.rng)}@{self.domain}"
+    def user(self, person: dict[str, Any] | None = None) -> str:
+        """The organization's `person`, by email, or a user the recipe mints fresh."""
+        return _org.email(person) if person else f"{_fresh.handle(self.rng)}@{self.domain}"
 
     def sa(self, prefix: str, name: str | None = None) -> str:
         return f"{name or prefix + '-' + self.hexs(6)}@{self.project}.iam.gserviceaccount.com"
@@ -102,7 +118,7 @@ class _Ctx:
     def k8s(self, method: str, resource: str, who: str, ip: str, ua: str, *, who_type: str,
             groups: list[str] | None = None) -> dict[str, Any]:
         event = self.entry(who=who, method=method, service="k8s.io", resource_name=resource, rtype="k8s_cluster",
-                           rlabels={"project_id": self.project, "cluster_name": "phantom-gke-1", "location": "us-central1"},
+                           rlabels={"project_id": self.project, "cluster_name": "phantom-gke-1", "location": self.region},
                            ip=ip, ua=ua, who_type=who_type, log="data_access")
         auth = event["protoPayload"]["authenticationInfo"]
         del auth["principalSubject"]  # Kubernetes callers carry no principalSubject
@@ -129,15 +145,15 @@ class _Ctx:
 # -- scenario recipes: (c, actor, repetition, source_ip) -> one repetition's events --------------------------------------
 
 def _data_asset_public(c, who, k, src):
-    bucket = "phantom-lab-public-" + c.hexs(6)
-    return [c.set_iam(who, src or c.home_ip(), "projects/_/buckets/" + bucket, "gcs_bucket",
-                      {"project_id": c.project, "bucket_name": bucket, "location": "us-central1"},
+    bucket = f"{c.prefix}-public-" + c.hexs(6)
+    return [c.set_iam(who, src or c.actor_ip(who), "projects/_/buckets/" + bucket, "gcs_bucket",
+                      {"project_id": c.project, "bucket_name": bucket, "location": c.region},
                       "ADD", "roles/storage.objectViewer", "allUsers", service="storage.googleapis.com",
                       method="storage.setIamPermissions", bucket=True)]
 
 
 def _sensitive_role_to_group(c, who, k, src):
-    return [c.set_iam(who, src or c.home_ip(), "projects/" + c.project, "project", {"project_id": c.project},
+    return [c.set_iam(who, src or c.actor_ip(who), "projects/" + c.project, "project", {"project_id": c.project},
                       "ADD", "roles/owner", f"group:eng-{c.hexs(5)}@{c.domain}")]
 
 
@@ -153,17 +169,17 @@ def _k8s_vuln_scanner(c, who, k, src):
 
 
 def _tor_api_call(c, who, k, src):
-    bucket = "phantom-lab-reports-" + c.hexs(4)
+    bucket = f"{c.prefix}-reports-" + c.hexs(4)
     return [c.entry(who=who, method="storage.objects.get", service="storage.googleapis.com",
                     resource_name=f"projects/_/buckets/{bucket}/objects/q3/summary.csv", rtype="gcs_bucket",
-                    rlabels={"project_id": c.project, "bucket_name": bucket, "location": "us-central1"},
+                    rlabels={"project_id": c.project, "bucket_name": bucket, "location": c.region},
                     ip=src or c.tor[k % len(c.tor)].ip, authz=["storage.objects.get"], log="data_access",
                     severity="INFO")]
 
 
 def _new_admin_service_account(c, who, k, src):
     # CreateServiceAccount, then roles/owner on the project to that service account.
-    ip = src or c.home_ip()
+    ip = src or c.actor_ip(who)
     name = "deploy-bot-" + c.hexs(6)
     email, unique = c.sa("", name), str(c.rng.randint(10**20, 10**21 - 1))
     create = c.entry(
@@ -189,8 +205,8 @@ def _stamp(c: _Ctx, event: dict[str, Any], when: datetime) -> None:
 
 
 # scenario -> (who acts, recipe, steps in one repetition)
-_person = lambda c, name: c.user(name)  # noqa: E731
-_scanner = lambda c, name: c.sa("gke-reader", name)  # noqa: E731
+_person = lambda c, person: c.user(person)  # noqa: E731
+_scanner = lambda c, person: c.sa("gke-reader", _org.local_part(person) if person else None)  # noqa: E731
 _TABLE: dict[str, tuple[Callable, Callable, int]] = {
     "data_asset_public": (_person, _data_asset_public, 1),
     "sensitive_role_to_group": (_person, _sensitive_role_to_group, 1),
@@ -208,15 +224,12 @@ DEFAULT_COUNT = {"benign_activity": 20}
 
 # -- benign_activity: a stable pool, ordinary reads ------------------------------------------------------------------------
 
-# The project of the stable pool. Fixed: the attack scenarios invent a new project per call, so the two never share one.
-BENIGN_PROJECT = "phantom-lab-core"
-BENIGN_PROJECT_NUMBER = "412087653319"
-BENIGN_USERS = 12
 BENIGN_SERVICE_ACCOUNTS = ("app-backend", "data-pipeline", "ci-runner", "log-exporter")
-_BUCKETS = {
-    "phantom-lab-reports": ("q3/summary.csv", "q3/headcount.xlsx", "q4/forecast.pdf"),
-    "phantom-lab-datalake": ("sales/2026/09/part-0001.parquet", "sales/2026/09/part-0002.parquet", "web/2026/09/clicks.parquet"),
-    "phantom-lab-app-assets": ("img/logo.png", "css/site.min.css", "js/app.bundle.js"),
+# The buckets of the stable pool by name suffix; the organization's id is the prefix (`phantom-lab-reports`).
+_BUCKET_OBJECTS = {
+    "reports": ("q3/summary.csv", "q3/headcount.xlsx", "q4/forecast.pdf"),
+    "datalake": ("sales/2026/09/part-0001.parquet", "sales/2026/09/part-0002.parquet", "web/2026/09/clicks.parquet"),
+    "app-assets": ("img/logo.png", "css/site.min.css", "js/app.bundle.js"),
 }
 _BENIGN_OPS = (("storage.objects.get", 22), ("storage.objects.list", 18), ("compute.instances.list", 14),
                ("logging.entries.list", 14), ("iam.serviceAccounts.get", 10), ("storage.buckets.list", 10),
@@ -225,23 +238,25 @@ _UA_API_CLIENT = "google-api-python-client/2.126.0 (gzip)"
 
 
 def _benign_actor(c: _Ctx, index: int | None) -> tuple[str, str, str, str]:
-    """(email, caller address, user agent, who_type) of a pool member: user number `index`, or (None) a service account.
-    A service account's address is the next home-pool slot after the users (an office NAT, as far as Cortex can tell)."""
+    """(email, caller address, user agent, who_type) of a pool member: person number `index` of the pool, or (None) a service
+    account. A service account calls from one of the organization's public egress addresses (an office NAT, as far as Cortex
+    can tell), one per account."""
     if index is not None:
-        user = c.user(".".join(_fresh.person(index)))
+        person = c.pool[index]
+        user = c.user(person)
         ua = _UA_CONSOLE if index % 2 else _UA_GCLOUD.format(cmd="storage.ls", inv=_fresh.stable(f"gcp|inv|{user}", 32))
-        return user, ippools.home_for(index)[0], ua, "user"
+        return user, _org.home(person)[0], ua, "user"
     slot = c.rng.randrange(len(BENIGN_SERVICE_ACCOUNTS))
-    return c.sa("", BENIGN_SERVICE_ACCOUNTS[slot]), ippools.home_for(BENIGN_USERS + slot)[0], _UA_API_CLIENT, "sa"
+    return c.sa("", BENIGN_SERVICE_ACCOUNTS[slot]), c.egress[slot % len(c.egress)], _UA_API_CLIENT, "sa"
 
 
 def _benign_entry(c: _Ctx, op: str, who: str, ip: str, ua: str, who_type: str) -> dict[str, Any]:
     p = c.project
     common = {"who": who, "ip": ip, "ua": ua, "who_type": who_type, "log": "data_access", "severity": "INFO"}
-    bucket = c.rng.choice(sorted(_BUCKETS))
-    labels = {"project_id": p, "bucket_name": bucket, "location": "us-central1"}
+    bucket = c.rng.choice(sorted(c.buckets))
+    labels = {"project_id": p, "bucket_name": bucket, "location": c.region}
     if op in ("storage.objects.get", "storage.objects.list"):
-        resource = f"projects/_/buckets/{bucket}" + ("/objects/" + c.rng.choice(_BUCKETS[bucket]) if op.endswith("get") else "")
+        resource = f"projects/_/buckets/{bucket}" + ("/objects/" + c.rng.choice(c.buckets[bucket]) if op.endswith("get") else "")
         return c.entry(method=op, service="storage.googleapis.com", resource_name=resource, rtype="gcs_bucket", rlabels=labels,
                        authz=[op], **common)
     if op == "storage.buckets.get":
@@ -251,7 +266,7 @@ def _benign_entry(c: _Ctx, op: str, who: str, ip: str, ua: str, who_type: str) -
         return c.entry(method=op, service="storage.googleapis.com", resource_name=f"projects/{p}", rtype="project",
                        rlabels={"project_id": p}, authz=[op], **common)
     if op == "compute.instances.list":
-        zone = c.rng.choice(("us-central1-a", "us-central1-b"))
+        zone = c.rng.choice((f"{c.region}-a", f"{c.region}-b"))
         return c.entry(method="v1.compute.instances.list", service="compute.googleapis.com",
                        resource_name=f"projects/{p}/zones/{zone}/instances", rtype="gce_instance",
                        rlabels={"project_id": p, "zone": zone, "instance_id": ""}, authz=["compute.instances.list"], **common)
@@ -271,11 +286,11 @@ def _benign_entry(c: _Ctx, op: str, who: str, ip: str, ua: str, who_type: str) -
 
 def _benign_activity(c: _Ctx, count: int, end: datetime, spread_seconds: int) -> list[dict[str, Any]]:
     """`count` ordinary reads by the stable pool, at random moments of the window (the first at its start, the last at `end`)."""
-    c.project, c.number = BENIGN_PROJECT, BENIGN_PROJECT_NUMBER
+    c.pool, c.egress = _org.cloud_people(c.view, "gcp"), _org.egress(c.view)
     out = []
     for _ in range(count):
         # Nine calls in ten are a person's; the rest are a service account's.
-        index = c.rng.randrange(BENIGN_USERS) if c.rng.random() < 0.9 else None
+        index = c.rng.randrange(len(c.pool)) if c.rng.random() < 0.9 else None
         who, ip, ua, who_type = _benign_actor(c, index)
         out.append(_benign_entry(c, _fresh.weighted(c.rng, _BENIGN_OPS), who, ip, ua, who_type))
     for event, when in zip(out, _fresh.jittered_times(c.rng, end, count, spread_seconds)):
@@ -284,15 +299,15 @@ def _benign_activity(c: _Ctx, count: int, end: datetime, spread_seconds: int) ->
 
 
 def build_events(
-    scenario: str, count: int, *, domain: str, now: datetime,
+    scenario: str, count: int, *, view: OrganizationView, now: datetime,
     spread_seconds: int = 120, start_offset_minutes: int = 0,
     target_user: str | None = None, source_ip: str | None = None, seed: int | None = None,
 ) -> list[dict[str, Any]]:
     """Build `count` LogEntry objects for `scenario`, oldest first.
 
     The window ends `start_offset_minutes` before `now` and is `spread_seconds` wide; nothing is dated after `now`.
-    `target_user` names the acting user (a bare name; the lab `domain` is appended) or, for k8s_vuln_scanner, the service
-    account; `source_ip` is the caller address. `benign_activity` ignores both: its actors and addresses are the stable pool's.
+    `target_user` names the acting user (one of the organization's people, `view`) or, for k8s_vuln_scanner, the person
+    whose name the scanner service account carries; `source_ip` is the caller address. `benign_activity` ignores both: its actors and addresses are the stable pool's.
     """
     if scenario not in SCENARIOS:
         raise ValueError(f"unknown scenario {scenario!r}; choose one of {', '.join(SCENARIOS)}")
@@ -301,23 +316,22 @@ def build_events(
     if count < MIN_COUNT.get(scenario, 1):
         raise ValueError(f"{scenario} needs count >= {MIN_COUNT[scenario]}")
     end = now - timedelta(minutes=max(start_offset_minutes, 0))
-    c = _Ctx(domain, seed, end)
+    c = _Ctx(view, seed, end)
     if scenario == "benign_activity":
         return _benign_activity(c, count, end, spread_seconds)
     actor, recipe, _ = _TABLE[scenario]
-    name = _fresh.bare_name(target_user)
-    who = actor(c, name.split("@", 1)[0] if name else None)
+    who = actor(c, _org.resolve(view, target_user) if _fresh.bare_name(target_user) else None)
     return _fresh.run_recipe(lambda k: recipe(c, who, k, source_ip), count, _times(end, count, spread_seconds),
                              lambda event, when: _stamp(c, event, when))
 
 
-def sample_event(*, domain: str, now: datetime) -> dict[str, Any]:
-    """One benign object read by a fresh user, for proving the Cribl path."""
-    c = _Ctx(domain, None, now)
-    bucket = "phantom-lab-reports-" + c.hexs(4)
+def sample_event(*, view: OrganizationView, now: datetime) -> dict[str, Any]:
+    """One benign object read by a fresh user of the organization's project, for proving the Cribl path."""
+    c = _Ctx(view, None, now)
+    bucket = f"{c.prefix}-reports-" + c.hexs(4)
     event = c.entry(who=c.user(), method="storage.objects.get", service="storage.googleapis.com",
                     resource_name=f"projects/_/buckets/{bucket}/objects/q3/summary.csv", rtype="gcs_bucket",
-                    rlabels={"project_id": c.project, "bucket_name": bucket, "location": "us-central1"},
+                    rlabels={"project_id": c.project, "bucket_name": bucket, "location": c.region},
                     ip=c.home_ip(), authz=["storage.objects.get"], log="data_access", severity="INFO")
     _stamp(c, event, now)
     return event

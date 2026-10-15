@@ -1,0 +1,1855 @@
+{
+ "meta": {
+  "purpose": "Outputs of the six http-sender profiles before they read the organization, masked where the old code drew a value at random. tests/test_pre_organization_equivalence.py replays them through the cut organization in `org`.",
+  "now": "2026-10-04T12:00:00+00:00",
+  "serialization": "json.dumps(events, sort_keys=True, indent=1, default=str), sha256",
+  "placeholders": {
+   "aws_account": "<AWS_ACCOUNT>",
+   "gcp_project": "<GCP_PROJECT>",
+   "named_actor_home_ip": "<HOME_IP> (any of the 24 HOME-pool-derived addresses)"
+  },
+  "home_set_size": 24,
+  "count_rule": "MIN_COUNT, else DEFAULT_COUNT, else 12",
+  "seeds": [
+   1,
+   7
+  ],
+  "variants": {
+   "plain": {},
+   "target": {
+    "target_user": "khalid.alotaibi"
+   }
+  }
+ },
+ "org": {
+  "schema_version": 1,
+  "id": "phantom-lab",
+  "name": "Pre-organization pool (cut)",
+  "description": "The 12 users the profiles carried before the organization existed, as an organization document.",
+  "domain": {
+   "dns": "lab.test",
+   "netbios": "LABTEST",
+   "email_domain": "lab.test",
+   "partner_domain": "external-partner.example"
+  },
+  "locale": {
+   "timezone": "Asia/Riyadh",
+   "utc_offset_hours": 3,
+   "workweek": [
+    "sun",
+    "mon",
+    "tue",
+    "wed",
+    "thu"
+   ],
+   "work_hours": {
+    "start": "08:00",
+    "end": "17:00"
+   }
+  },
+  "egress": {
+   "ruh_nat": "188.55.20.167",
+   "jed_nat": "37.242.29.180",
+   "nat": {
+    "office": "151.254.90.193"
+   },
+   "dmz_public": {
+    "web": "51.39.134.206"
+   }
+  },
+  "people": [
+   {
+    "login": "nalharbi",
+    "given_name": "Noura",
+    "family_name": "Alharbi",
+    "display_name": "Noura Alharbi",
+    "email": "noura.alharbi@lab.test",
+    "title": "Staff",
+    "department": "Finance",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1100,
+    "workstation": "WS-001",
+    "okta_id": "00uQaDPPmuTxYHaf6IBp",
+    "groups": [],
+    "home_ip": "144.86.80.11",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ]
+   },
+   {
+    "login": "kalotaibi",
+    "given_name": "Khalid",
+    "family_name": "Alotaibi",
+    "display_name": "Khalid Alotaibi",
+    "email": "khalid.alotaibi@lab.test",
+    "title": "Staff",
+    "department": "Finance",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1101,
+    "workstation": "WS-002",
+    "okta_id": "00ufV3DEcsLHVAeLZbzz",
+    "groups": [],
+    "home_ip": "37.121.160.24",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ]
+   },
+   {
+    "login": "aalzahrani",
+    "given_name": "Abdullah",
+    "family_name": "Alzahrani",
+    "display_name": "Abdullah Alzahrani",
+    "email": "abdullah.alzahrani@lab.test",
+    "title": "Staff",
+    "department": "Finance",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1102,
+    "workstation": "WS-003",
+    "okta_id": "00ux53uIpW8bBMpmXriG",
+    "groups": [],
+    "home_ip": "51.235.191.37",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ]
+   },
+   {
+    "login": "salmutairi",
+    "given_name": "Sara",
+    "family_name": "Almutairi",
+    "display_name": "Sara Almutairi",
+    "email": "sara.almutairi@lab.test",
+    "title": "Staff",
+    "department": "Finance",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1103,
+    "workstation": "WS-004",
+    "okta_id": "00uzOiC1Ne62YoJxsRLO",
+    "groups": [],
+    "home_ip": "185.5.155.50",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ]
+   },
+   {
+    "login": "falqahtani",
+    "given_name": "Faisal",
+    "family_name": "Alqahtani",
+    "display_name": "Faisal Alqahtani",
+    "email": "faisal.alqahtani@lab.test",
+    "title": "Staff",
+    "department": "Finance",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1104,
+    "workstation": "WS-005",
+    "okta_id": "00uICwD76UZVlLBw1Rx0",
+    "groups": [],
+    "home_ip": "168.149.64.63",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ]
+   },
+   {
+    "login": "raldosari",
+    "given_name": "Reem",
+    "family_name": "Aldosari",
+    "display_name": "Reem Aldosari",
+    "email": "reem.aldosari@lab.test",
+    "title": "Staff",
+    "department": "Finance",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1105,
+    "workstation": "WS-006",
+    "okta_id": "00uHuZzkyUeSL90o6Xhx",
+    "groups": [],
+    "home_ip": "37.141.8.76",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ]
+   },
+   {
+    "login": "oalshehri",
+    "given_name": "Omar",
+    "family_name": "Alshehri",
+    "display_name": "Omar Alshehri",
+    "email": "omar.alshehri@lab.test",
+    "title": "Staff",
+    "department": "Finance",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1106,
+    "workstation": "WS-007",
+    "okta_id": "00uekOikiBjr1VhWSCxV",
+    "groups": [],
+    "home_ip": "2.90.64.89",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ]
+   },
+   {
+    "login": "halghamdi",
+    "given_name": "Huda",
+    "family_name": "Alghamdi",
+    "display_name": "Huda Alghamdi",
+    "email": "huda.alghamdi@lab.test",
+    "title": "Staff",
+    "department": "Finance",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1107,
+    "workstation": "WS-008",
+    "okta_id": "00uTHsKG3xTGMePqBI7A",
+    "groups": [],
+    "home_ip": "51.39.2.102",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ]
+   },
+   {
+    "login": "yalharthi",
+    "given_name": "Yousef",
+    "family_name": "Alharthi",
+    "display_name": "Yousef Alharthi",
+    "email": "yousef.alharthi@lab.test",
+    "title": "IT Helpdesk Analyst",
+    "department": "IT",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1108,
+    "workstation": "WS-009",
+    "okta_id": "00uZmdGQeh1isc8rBsEX",
+    "groups": [],
+    "home_ip": "77.31.81.115",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ],
+    "admin_account": {
+     "login": "adm.yalharthi",
+     "rid": 1208,
+     "groups": []
+    }
+   },
+   {
+    "login": "lalmalki",
+    "given_name": "Layla",
+    "family_name": "Almalki",
+    "display_name": "Layla Almalki",
+    "email": "layla.almalki@lab.test",
+    "title": "IT Systems Administrator",
+    "department": "IT",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1109,
+    "workstation": "WS-010",
+    "okta_id": "00uJ5hpo3pKdGZtqzlV2",
+    "groups": [],
+    "home_ip": "31.166.128.128",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ],
+    "admin_account": {
+     "login": "adm.lalmalki",
+     "rid": 1209,
+     "groups": []
+    }
+   },
+   {
+    "login": "talsubaie",
+    "given_name": "Tariq",
+    "family_name": "Alsubaie",
+    "display_name": "Tariq Alsubaie",
+    "email": "tariq.alsubaie@lab.test",
+    "title": "IT Systems Administrator",
+    "department": "IT",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1110,
+    "workstation": "WS-011",
+    "okta_id": "00uZaAKqYth7FljCgzsB",
+    "groups": [],
+    "home_ip": "176.47.64.141",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ],
+    "admin_account": {
+     "login": "adm.talsubaie",
+     "rid": 1210,
+     "groups": []
+    }
+   },
+   {
+    "login": "dalanazi",
+    "given_name": "Dana",
+    "family_name": "Alanazi",
+    "display_name": "Dana Alanazi",
+    "email": "dana.alanazi@lab.test",
+    "title": "IT Systems Administrator",
+    "department": "IT",
+    "manager": "kalotaibi",
+    "site": "RUH",
+    "rid": 1111,
+    "workstation": "WS-012",
+    "okta_id": "00uz4L2ineEkYM4zf1Z8",
+    "groups": [],
+    "home_ip": "51.36.184.154",
+    "cloud_access": [
+     "aws",
+     "azure",
+     "gcp"
+    ],
+    "admin_account": {
+     "login": "adm.dalanazi",
+     "rid": 1211,
+     "groups": []
+    }
+   }
+  ],
+  "cloud": {
+   "aws": {
+    "account_id": "512907433106",
+    "account_name": "pre-organization",
+    "region": "us-east-1"
+   },
+   "azure": {
+    "tenant_id": "b6d1f3a2-4c5e-4f60-9a71-2e8c0d5f7a11",
+    "subscription_id": "9e2c7a40-31b8-4d6f-8c15-5a0f3b7e1d22",
+    "tenant_domain": "lab.test",
+    "region": "uaenorth"
+   },
+   "gcp": {
+    "project_id": "phantom-lab-core",
+    "project_number": "412087653319",
+    "region": "us-central1"
+   }
+  }
+ },
+ "cases": {
+  "aws_cloudtrail.backup_vault_policy_modified.s1.plain": {
+   "sha256": "805c64c721eb7be0721b6bafae668293ce9d5841ac9f09fb1c3289939aeb5b08",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.backup_vault_policy_modified.s1.target": {
+   "sha256": "128718ed12bdd7a3df484807c797943e769d60c61de93af77a4625e9bcc4e4ec",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.backup_vault_policy_modified.s7.plain": {
+   "sha256": "7d74f96a7d907501a03c2fca4573a1d623df9b73a66cd4bfff4ff08359112f20",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.backup_vault_policy_modified.s7.target": {
+   "sha256": "dd62d6da4f09592fe6ba02f1a7acd0f97cd1515fe259f678e3565393fb458da0",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.bedrock_logging_deleted.s1.plain": {
+   "sha256": "3a7afe00630950fee0b062d4491757960be412aa45d971246e3507d37e008c93",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.bedrock_logging_deleted.s1.target": {
+   "sha256": "a9661c5dfdc15e1a9664eb07f7a41f11e1865966c74eea7f235f1eccd7254c1c",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.bedrock_logging_deleted.s7.plain": {
+   "sha256": "16bc4af497d2070c52f89c0683cdfcba5a4e1707bbf905aec09d6c4ec4576e62",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.bedrock_logging_deleted.s7.target": {
+   "sha256": "ab06e5f8e4230a0c7d46b88950be127d1a356a26018163ebc5f8042a5853a73b",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.benign_activity.s1.plain": {
+   "sha256": "9b5e752c8574df024141e410317cdb2b3433598315ac6bb4062930d23325e7d6",
+   "masked": [],
+   "paths": []
+  },
+  "aws_cloudtrail.benign_activity.s1.target": {
+   "sha256": "9b5e752c8574df024141e410317cdb2b3433598315ac6bb4062930d23325e7d6",
+   "masked": [],
+   "paths": []
+  },
+  "aws_cloudtrail.benign_activity.s7.plain": {
+   "sha256": "211dcc6b6756c41f4ee5d21c950c5c7a1290d103504eea9884b3b616607c59c3",
+   "masked": [],
+   "paths": []
+  },
+  "aws_cloudtrail.benign_activity.s7.target": {
+   "sha256": "211dcc6b6756c41f4ee5d21c950c5c7a1290d103504eea9884b3b616607c59c3",
+   "masked": [],
+   "paths": []
+  },
+  "aws_cloudtrail.ebs_encryption_disabled.s1.plain": {
+   "sha256": "378ca5c16f00be79d5ee17acb20db33a064cb952f624e75eb76ae2c1bd39baab",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.ebs_encryption_disabled.s1.target": {
+   "sha256": "c954ea953c5cce6e4b150327be40ab076f1de5538c1b18527281610784655109",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.ebs_encryption_disabled.s7.plain": {
+   "sha256": "e71bc659b442df89542b404cc4282e36898cc8d9048ae8c4c27e41496909a7a0",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.ebs_encryption_disabled.s7.target": {
+   "sha256": "932656470e6641af45d3b04bc24892d93ecb937dac4620637becf14ab6c2eebb",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.guardduty_detector_deleted.s1.plain": {
+   "sha256": "2f3007170ce64ccc97fe9dd8589d91c6384566a6da6dd8feab86e680ed398bac",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.guardduty_detector_deleted.s1.target": {
+   "sha256": "41137734fc1a6fabc3225acb8289fb025bff0ede02d3a9148023d491ae52e834",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.guardduty_detector_deleted.s7.plain": {
+   "sha256": "7380eb3a70b4ca8ce3568b5a1f2ddf2fd08dcd3542851c5da3f02b88e0245274",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.guardduty_detector_deleted.s7.target": {
+   "sha256": "2c35f3008d014ad4458d9acb0f650e97d5b7d627ae9228da806a9620edddfd47",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.iam_admin_user_credentials.s1.plain": {
+   "sha256": "6957994e5f56ba9f2543a307cadf9b7cfb0189b9bb46f79c2a12c377ba262a8c",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.user.arn",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.iam_admin_user_credentials.s1.target": {
+   "sha256": "f1cedb89bffb88c1ae3c49574f382f2717d1b8b0239b170579fd1ea1f760ea76",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.user.arn",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.iam_admin_user_credentials.s7.plain": {
+   "sha256": "4a94ce380a0efc7e8e7659c0b77ad19bb7bb172fcc480661f6ab9491dc8ad45d",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.user.arn",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.iam_admin_user_credentials.s7.target": {
+   "sha256": "991fa8fd150795fe7adbe803c9bf2f3515e6ae93a630f78df8f9ec8b8c7385a6",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.user.arn",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.iam_new_admin_identity.s1.plain": {
+   "sha256": "c303969ec64266bc6275228671257bc32b161156093fe3bedf9fb06f8ca20739",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.role.arn",
+    "[].responseElements.user.arn",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.iam_new_admin_identity.s1.target": {
+   "sha256": "2b82f185877fa41fcf550296cd4db844cf1c768b894cf394890e6ab0cdbc311a",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.role.arn",
+    "[].responseElements.user.arn",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.iam_new_admin_identity.s7.plain": {
+   "sha256": "e0cf2476fa99f1c2cedd08698a85c28e72b72dd753de6821203aac4d3bf2fcba",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.role.arn",
+    "[].responseElements.user.arn",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.iam_new_admin_identity.s7.target": {
+   "sha256": "0974e2299933c5eff0bbfd5a76bda79ddb363b577417a43ebf58bdc8242a0317",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.role.arn",
+    "[].responseElements.user.arn",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.pentest_tool.s1.plain": {
+   "sha256": "84eff413ae7d21d7bc62d9a69cd4d4a69ce7efb72a7ad7a4adea7326c79ff58d",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.pentest_tool.s1.target": {
+   "sha256": "54ab90cfa1fc665e1c5777aea22ab4c4b3e1ab1289ef003fb8a86eed2c5d66f4",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.pentest_tool.s7.plain": {
+   "sha256": "65eea862e18f766621f9f8719320885e568bb671ae7124e39806fcbb0b02f98d",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.pentest_tool.s7.target": {
+   "sha256": "c941f01e9989d1198d53d8ffe6004e5326daff2ac31ebbb796f765831faca352",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.route53_logging_deleted.s1.plain": {
+   "sha256": "f312812c51394031dd9d9759b1b4d89fc5056aa9d816b61f7aa807a13d7743c3",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.resolverQueryLogConfig.arn",
+    "[].responseElements.resolverQueryLogConfig.ownerId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.route53_logging_deleted.s1.target": {
+   "sha256": "03d896e76c87fd1c4c6460def2e12be37607217804162981cb1c3152901f746d",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.resolverQueryLogConfig.arn",
+    "[].responseElements.resolverQueryLogConfig.ownerId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.route53_logging_deleted.s7.plain": {
+   "sha256": "8deb57ccf154cd5921989f14c3f172d093794be49e24ca950464f0db579a12b6",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.resolverQueryLogConfig.arn",
+    "[].responseElements.resolverQueryLogConfig.ownerId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.route53_logging_deleted.s7.target": {
+   "sha256": "cbe459616e67a94b2c50fbe7d05c1ed72dac157dc7ddd3e7e75db78e820d0caf",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.resolverQueryLogConfig.arn",
+    "[].responseElements.resolverQueryLogConfig.ownerId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.s3_public_exposure.s1.plain": {
+   "sha256": "b62a99ddc30550f964802c789bb5a0afa507983be7ead0a53aef740e047e9b32",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.s3_public_exposure.s1.target": {
+   "sha256": "981ea3442cb75d26df86725c358016ee7a81157055f0fc5b83579158237c7223",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.s3_public_exposure.s7.plain": {
+   "sha256": "68e58cf6d155e33c2fe2e4cc446cdb851c1bfaafd0a074268cb2a7498bdb0f62",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.s3_public_exposure.s7.target": {
+   "sha256": "efaabff80a46e35dd026ed242e8d22372f90119e783d641c839a753498ff9a80",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.sample_keys": {
+   "sha256": "61989a010ab485853aca50b1debe43e25ba35e57e617d47029978b4044d022d8"
+  },
+  "aws_cloudtrail.security_group_open.s1.plain": {
+   "sha256": "b771c0a40f3afb6918907f93b54c1eed93d40b2984a219327e373c98309e0a30",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.securityGroupRuleSet.items[].groupOwnerId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.security_group_open.s1.target": {
+   "sha256": "46583f4dc4fde4dbf441d1ed3946db7cbbe3c933541caea59c23b827d972a9f9",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.securityGroupRuleSet.items[].groupOwnerId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.security_group_open.s7.plain": {
+   "sha256": "09b1c0f85fb18316e1729df0a94621babe825cb413aefcedc1ada6f8edc3c449",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.securityGroupRuleSet.items[].groupOwnerId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.security_group_open.s7.target": {
+   "sha256": "53e416c0e2cb9ef973a25cbf79b395a06204caa30810ece66f7c323ac83c5730",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].responseElements.securityGroupRuleSet.items[].groupOwnerId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.snapshot_public_share.s1.plain": {
+   "sha256": "bf955ad987d2e151166985eccab66b57aef2ac29f96eec07c9c94de694fbf587",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.snapshot_public_share.s1.target": {
+   "sha256": "0c089479753187f87d9db18eb0749903952f3339f4eaa2489cdf97a4f7328158",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.snapshot_public_share.s7.plain": {
+   "sha256": "e515f990ed4f059ac7c625b2334a90c3fb889e96fa32328c66a968d85d63f77c",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.snapshot_public_share.s7.target": {
+   "sha256": "faf1178f6477860eecb338008c1210b6609fd1fe351725b1dc3c5706d4612c5e",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].sourceIPAddress",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn",
+    "[].userIdentity.sessionContext.sessionIssuer.accountId",
+    "[].userIdentity.sessionContext.sessionIssuer.arn"
+   ]
+  },
+  "aws_cloudtrail.tor_api_call.s1.plain": {
+   "sha256": "48664872cef847b157301f18ed347e9619d08bff9bb25a84019af7fa1e9944ca",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.tor_api_call.s1.target": {
+   "sha256": "5f5dedf3895e5507c2a077ea70c39b6b208959eb27318d0cadcf9d40ef214bfd",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.tor_api_call.s7.plain": {
+   "sha256": "664d3d83f8068edd1f5c0c932e705207ee41646704045b5c9e980cace9b581e0",
+   "masked": [
+    "aws_account"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "aws_cloudtrail.tor_api_call.s7.target": {
+   "sha256": "aacef819239a8a36e4fe0d2318e9d18d856a664b72d77dfc9b2a5cbcf606eb32",
+   "masked": [
+    "aws_account",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].recipientAccountId",
+    "[].userIdentity.accountId",
+    "[].userIdentity.arn"
+   ]
+  },
+  "azure_ad_audit.benign_activity.s1.plain": {
+   "sha256": "041ad904e6766554008bc6908077f12e7bf36d05a77cdbd4134a4e52cb6234c0",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.benign_activity.s1.target": {
+   "sha256": "041ad904e6766554008bc6908077f12e7bf36d05a77cdbd4134a4e52cb6234c0",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.benign_activity.s7.plain": {
+   "sha256": "7b20bb0a919fba78c897a21a50736c7c39c1cd0abf0cf8e1097e3d237351285d",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.benign_activity.s7.target": {
+   "sha256": "7b20bb0a919fba78c897a21a50736c7c39c1cd0abf0cf8e1097e3d237351285d",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.ca_policy_deleted.s1.plain": {
+   "sha256": "0ffef53c980777de9671d47088a2d99ba61e79969f7c324dbcb374df897b7814",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.ca_policy_deleted.s1.target": {
+   "sha256": "13450f9574a40e667f88e55b3c2f883bd2413ed4670a524b5e3663c74e76fb16",
+   "masked": [
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].initiatedBy.user.ipAddress"
+   ]
+  },
+  "azure_ad_audit.ca_policy_deleted.s7.plain": {
+   "sha256": "a2e643db7c77d19cf4ca67f97cf13a2a817e61b4afb7c5104e27f73b4adbf33f",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.ca_policy_deleted.s7.target": {
+   "sha256": "1308b8a9c505d760bc6c51d21a45caf270c09ea612a4b18a065b6c8603d7ef66",
+   "masked": [
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].initiatedBy.user.ipAddress"
+   ]
+  },
+  "azure_ad_audit.federation_modified.s1.plain": {
+   "sha256": "fc91653208118a189214e07d0eac550aa3bfb14809d60275bc89f075874854f0",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.federation_modified.s1.target": {
+   "sha256": "74cf586b89ca1d52a2e466450866516a84c4feeb17adf79666b0b2fe9e2806a3",
+   "masked": [
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].initiatedBy.user.ipAddress"
+   ]
+  },
+  "azure_ad_audit.federation_modified.s7.plain": {
+   "sha256": "ffcf04f60131f3dfcb62c9e68ededc099e94ac44670583dbd37ee9e0e085b984",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.federation_modified.s7.target": {
+   "sha256": "9a883b7eace83fe9a695f11af9ac99c4036917c23db3f498f86083c529241dca",
+   "masked": [
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].initiatedBy.user.ipAddress"
+   ]
+  },
+  "azure_ad_audit.pim_alert_disabled.s1.plain": {
+   "sha256": "c37093a2ef759af109997b73023e6ee79894d348982fe0ada44ed7261a48330b",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.pim_alert_disabled.s1.target": {
+   "sha256": "8e391da103fed3555482182ff638cf6152f020cc374c551f9d0eb9202c196657",
+   "masked": [
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].initiatedBy.user.ipAddress"
+   ]
+  },
+  "azure_ad_audit.pim_alert_disabled.s7.plain": {
+   "sha256": "9e6c9fe943c8edd8083ffda90b5f9689841a228771eea5b702a637fa76b440f2",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.pim_alert_disabled.s7.target": {
+   "sha256": "569304a36552734ab5933c576a1628d2da84059d0a8c7a6a077ea64838eab39b",
+   "masked": [
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].initiatedBy.user.ipAddress"
+   ]
+  },
+  "azure_ad_audit.pim_role_setting_changed.s1.plain": {
+   "sha256": "2ac5243497908e5ea63095f49b3db51a9958e208610742996fd94df1504bcc4d",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.pim_role_setting_changed.s1.target": {
+   "sha256": "33e8d7f513ac1a30312218be7104dade8454bf24b9d12cabc787e98c08c234cc",
+   "masked": [
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].initiatedBy.user.ipAddress"
+   ]
+  },
+  "azure_ad_audit.pim_role_setting_changed.s7.plain": {
+   "sha256": "e41d4825a45bca93317d3abf9897382819412db32c4d4f04a5a5d0e9fdcd0727",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.pim_role_setting_changed.s7.target": {
+   "sha256": "284f976655b9ae85d2916a7556b449e89e127d3a1808d1aa6175bcb7df992b7b",
+   "masked": [
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].initiatedBy.user.ipAddress"
+   ]
+  },
+  "azure_ad_audit.sample_keys": {
+   "sha256": "9f7b6119e7790f242194530a1c83c23c6e467650382c5a32911cbeb88b6ad1b3"
+  },
+  "azure_ad_audit.unverified_domain_added.s1.plain": {
+   "sha256": "0ee1a8fdc160370e8aab72aa88849fa029587cbea77b5ed93d1b7b0cfa72ad08",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.unverified_domain_added.s1.target": {
+   "sha256": "50e44abac9131fed0f99bd016f8d8b34dfc4e40b3c4168a3d63079ad66ea1b83",
+   "masked": [
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].initiatedBy.user.ipAddress"
+   ]
+  },
+  "azure_ad_audit.unverified_domain_added.s7.plain": {
+   "sha256": "853a1c33f7a2a48d9777d07e593ec4be3c0c41ec74e32130df8378a2ee277e65",
+   "masked": [],
+   "paths": []
+  },
+  "azure_ad_audit.unverified_domain_added.s7.target": {
+   "sha256": "7aedadcb9fb73af5df723cfda5fd133ff190fc637f0794ea66d6da8def56cbdf",
+   "masked": [
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].initiatedBy.user.ipAddress"
+   ]
+  },
+  "gcp_audit.benign_activity.s1.plain": {
+   "sha256": "0442998bf2d045655bb52f22ba2472a826fe9cc1130329706698fd74ee38d758",
+   "masked": [],
+   "paths": []
+  },
+  "gcp_audit.benign_activity.s1.target": {
+   "sha256": "0442998bf2d045655bb52f22ba2472a826fe9cc1130329706698fd74ee38d758",
+   "masked": [],
+   "paths": []
+  },
+  "gcp_audit.benign_activity.s7.plain": {
+   "sha256": "1962c330757cf491f1a86ab3afd7abd53dc2bf8784cc02b8d8feb6d5c803507c",
+   "masked": [],
+   "paths": []
+  },
+  "gcp_audit.benign_activity.s7.target": {
+   "sha256": "1962c330757cf491f1a86ab3afd7abd53dc2bf8784cc02b8d8feb6d5c803507c",
+   "masked": [],
+   "paths": []
+  },
+  "gcp_audit.data_asset_public.s1.plain": {
+   "sha256": "39fa44a6391e1870ddef87d7607c6d669a549ffdb6c923669c4241b923fe82c6",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.data_asset_public.s1.target": {
+   "sha256": "f1a000f01a3e5d6f70d0727e37ca01587fb7124aecc4890e69f8d5a5ad79bfb1",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.requestMetadata.callerIp",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.data_asset_public.s7.plain": {
+   "sha256": "3f7eb3745b984f722ef1489ecae542cd9b9a140f6442e3c51b54c3d6b3273e58",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.data_asset_public.s7.target": {
+   "sha256": "3ce38c461a815b7af095f682beb85893d5ddeb8266031f3c9d66eea8ef8a1a0b",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.requestMetadata.callerIp",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.k8s_anonymous.s1.plain": {
+   "sha256": "1b646f5594f99e2a4e2a98bd4cba0e4f0da491875c42bbf96d38129b9b29e05b",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.k8s_anonymous.s1.target": {
+   "sha256": "1d37c38972eae18dccb7b6d798f53760fdb02d30910bdcf175f0b0550b8f91f4",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.k8s_anonymous.s7.plain": {
+   "sha256": "94d5f445acf341b1173305f6bf793354984c492b108d5fa23f730a637c837fc5",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.k8s_anonymous.s7.target": {
+   "sha256": "92b89bfdc1b7a50166528cc531cad5f4c17e7f5ff82e8852c59bb1562011e9d4",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.k8s_vuln_scanner.s1.plain": {
+   "sha256": "9af7331ce421fe590f96d9d5fcd358b0c4c1664d32112fddad82fb19ae0498d6",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authenticationInfo.principalEmail",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.k8s_vuln_scanner.s1.target": {
+   "sha256": "47a703d16a86ca0294b23480663e0c324f1af5e779ad237fe37fd96b86f30e5f",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authenticationInfo.principalEmail",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.k8s_vuln_scanner.s7.plain": {
+   "sha256": "2571ec5ce810ce1ff747742b9febe7652e855b27783e8327e59017efa5b96b72",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authenticationInfo.principalEmail",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.k8s_vuln_scanner.s7.target": {
+   "sha256": "3fbb2539111dd2dd8f04a2f4e3d32a18f94e2d6a57ce6ae92fac6d9b7abebdd2",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authenticationInfo.principalEmail",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.new_admin_service_account.s1.plain": {
+   "sha256": "b8e5863a33b3fd51aeebcaf002edfc533876b584878f978c113fc6b77bc8660a",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authorizationInfo[].resource",
+    "[].protoPayload.request.name",
+    "[].protoPayload.request.policy.bindings[].members[]",
+    "[].protoPayload.request.resource",
+    "[].protoPayload.resourceName",
+    "[].protoPayload.response.bindings[].members[]",
+    "[].protoPayload.response.email",
+    "[].protoPayload.response.name",
+    "[].protoPayload.response.project_id",
+    "[].protoPayload.serviceData.policyDelta.bindingDeltas[].member",
+    "[].resource.labels.email_id",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.new_admin_service_account.s1.target": {
+   "sha256": "8cc777b386b2c79ccabca220a1a5cf1021642ce6a52d6c959a07d5d44af70ba8",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authorizationInfo[].resource",
+    "[].protoPayload.request.name",
+    "[].protoPayload.request.policy.bindings[].members[]",
+    "[].protoPayload.request.resource",
+    "[].protoPayload.requestMetadata.callerIp",
+    "[].protoPayload.resourceName",
+    "[].protoPayload.response.bindings[].members[]",
+    "[].protoPayload.response.email",
+    "[].protoPayload.response.name",
+    "[].protoPayload.response.project_id",
+    "[].protoPayload.serviceData.policyDelta.bindingDeltas[].member",
+    "[].resource.labels.email_id",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.new_admin_service_account.s7.plain": {
+   "sha256": "df9f0b2698a06ae9550b02048cdef2fa68664b5353754b636e01dbf0338ac29d",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authorizationInfo[].resource",
+    "[].protoPayload.request.name",
+    "[].protoPayload.request.policy.bindings[].members[]",
+    "[].protoPayload.request.resource",
+    "[].protoPayload.resourceName",
+    "[].protoPayload.response.bindings[].members[]",
+    "[].protoPayload.response.email",
+    "[].protoPayload.response.name",
+    "[].protoPayload.response.project_id",
+    "[].protoPayload.serviceData.policyDelta.bindingDeltas[].member",
+    "[].resource.labels.email_id",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.new_admin_service_account.s7.target": {
+   "sha256": "388ff8c6cc74306c9a1a9e2d525b53106be034c0290f9cef759f019a8129e3c9",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authorizationInfo[].resource",
+    "[].protoPayload.request.name",
+    "[].protoPayload.request.policy.bindings[].members[]",
+    "[].protoPayload.request.resource",
+    "[].protoPayload.requestMetadata.callerIp",
+    "[].protoPayload.resourceName",
+    "[].protoPayload.response.bindings[].members[]",
+    "[].protoPayload.response.email",
+    "[].protoPayload.response.name",
+    "[].protoPayload.response.project_id",
+    "[].protoPayload.serviceData.policyDelta.bindingDeltas[].member",
+    "[].resource.labels.email_id",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.sample_keys": {
+   "sha256": "cc67755fada01bb152f005811006433eb44b2a1f259a459dc4ddf153b35f643d"
+  },
+  "gcp_audit.sensitive_role_to_group.s1.plain": {
+   "sha256": "e5db1e52a434f9aa80c77c9c4b02a53d4f3d0549ac0dfd56418832f5c52a487e",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authorizationInfo[].resource",
+    "[].protoPayload.request.resource",
+    "[].protoPayload.resourceName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.sensitive_role_to_group.s1.target": {
+   "sha256": "8f94be498b42e5e7ea7c3c43793d1d39a0c55d62c9596f3c80d7a2f0f74025c7",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authorizationInfo[].resource",
+    "[].protoPayload.request.resource",
+    "[].protoPayload.requestMetadata.callerIp",
+    "[].protoPayload.resourceName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.sensitive_role_to_group.s7.plain": {
+   "sha256": "512478f74a26f12a4e4b0c31b085b50e8d7779c83c0d35da79e03b336ecfa380",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authorizationInfo[].resource",
+    "[].protoPayload.request.resource",
+    "[].protoPayload.resourceName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.sensitive_role_to_group.s7.target": {
+   "sha256": "38b93c164909c371e700a6b5490f0ddc32d723df9926c5a33f63849199f29251",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].protoPayload.authorizationInfo[].resource",
+    "[].protoPayload.request.resource",
+    "[].protoPayload.requestMetadata.callerIp",
+    "[].protoPayload.resourceName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.tor_api_call.s1.plain": {
+   "sha256": "00d315b07f0ca3d04c4f2cdfe6ec37c1a2316c6e561d1beb91ae88398d863fb4",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.tor_api_call.s1.target": {
+   "sha256": "5478c44d2556bef9704308f5b2ca901694d162b5d5ba04ad538291e136a672db",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.tor_api_call.s7.plain": {
+   "sha256": "814c7c600bd1c230b84d75f20ad8ef5259e68dfdf88d7c2521045c07d2c12a17",
+   "masked": [
+    "gcp_project"
+   ],
+   "paths": [
+    "[].logName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "gcp_audit.tor_api_call.s7.target": {
+   "sha256": "22e4c0945c6bce0405bfee2622b594830fc790a016fe65f56bdb49627529d90f",
+   "masked": [
+    "gcp_project",
+    "named_actor_home_ip"
+   ],
+   "paths": [
+    "[].logName",
+    "[].resource.labels.project_id"
+   ]
+  },
+  "google_workspace.benign_drive.s1.plain": {
+   "sha256": "8e8e2368b79d5a97645a00ac428a94760ef2abfa35c8e125eb2a0b986da1e473",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.benign_drive.s1.target": {
+   "sha256": "8e8e2368b79d5a97645a00ac428a94760ef2abfa35c8e125eb2a0b986da1e473",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.benign_drive.s7.plain": {
+   "sha256": "2dbb503107f267bc0e6a23056ff3182c3ef3aa394c1ffc3d3e628eff98b5347c",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.benign_drive.s7.target": {
+   "sha256": "2dbb503107f267bc0e6a23056ff3182c3ef3aa394c1ffc3d3e628eff98b5347c",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.impossible_travel_login.s1.plain": {
+   "sha256": "f66231921b39b6abbfb3cd82e9b04a24004257221bb72be8a9f884658d54211e",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.impossible_travel_login.s1.target": {
+   "sha256": "d0228ee8dc14065d632c481cf756fd34a0a3040e60311af4fb84ae64962c5c2f",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.impossible_travel_login.s7.plain": {
+   "sha256": "38460102ef78d9209ac299e42a5de42745a438839d925fd0a904ebe0fef44ed6",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.impossible_travel_login.s7.target": {
+   "sha256": "07b6e0340113d1d93a2d9a77656c66aa0b6c82ca659a45f1fa831a879fda31d3",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.public_share.s1.plain": {
+   "sha256": "921b31dd2ecf6a2ee0ca61103d41d530bfea72f3ebcc9566054b429aea1b0d7f",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.public_share.s1.target": {
+   "sha256": "05242e0724f26cd10fd5ae687a9a43409251ea6110153dc3aada3f20f517ffa7",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.public_share.s7.plain": {
+   "sha256": "78939ca14680053a1813b0fc659eace635b4fed64beed17faf70e84d0f72f32b",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.public_share.s7.target": {
+   "sha256": "dc785a8ad06e51f9973d0299bb8036c24a2613bb632ee54f8a9ff707ba02004f",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.sample_keys": {
+   "sha256": "018058d9c8631c7b615b61a573465a49abec1d3481869a2ae8bf7341c26ebb81"
+  },
+  "google_workspace.sensitive_download.s1.plain": {
+   "sha256": "4aa7cb28f6057eca60e51fb227a68fb92cf5906bd0381a06516695b779bd54e0",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.sensitive_download.s1.target": {
+   "sha256": "114e93c3339081ab804696626641298beec0cec66d8ef3d9ad7d80a7e6cb7966",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.sensitive_download.s7.plain": {
+   "sha256": "719da4cfbec96fb374e305a6f1101cda5f6dd8984db9c72f961a76cac5f842f3",
+   "masked": [],
+   "paths": []
+  },
+  "google_workspace.sensitive_download.s7.target": {
+   "sha256": "00cda888b7b71d8cbf3fdf6e2d12194c90bf13ebe6f99003360d576bc406e234",
+   "masked": [],
+   "paths": []
+  },
+  "okta.benign_logins.s1.plain": {
+   "sha256": "c1df1688345de5d54cc36c5f5f1061a4e82a77519e1e390bf43c2201c2ff3488",
+   "masked": [],
+   "paths": []
+  },
+  "okta.benign_logins.s1.target": {
+   "sha256": "c1df1688345de5d54cc36c5f5f1061a4e82a77519e1e390bf43c2201c2ff3488",
+   "masked": [],
+   "paths": []
+  },
+  "okta.benign_logins.s7.plain": {
+   "sha256": "bb1b897dc6e56279ef382ddfa661ed2c222607449e196d62fba6fdae6421c62b",
+   "masked": [],
+   "paths": []
+  },
+  "okta.benign_logins.s7.target": {
+   "sha256": "bb1b897dc6e56279ef382ddfa661ed2c222607449e196d62fba6fdae6421c62b",
+   "masked": [],
+   "paths": []
+  },
+  "okta.failed_then_success.s1.plain": {
+   "sha256": "92ff3af8cadd1cc39552739e57e1717754a7f1e4951929553818ede8edb9659f",
+   "masked": [],
+   "paths": []
+  },
+  "okta.failed_then_success.s1.target": {
+   "sha256": "94f047e349e17d736423d02d3d1dd8001aefee7be4c89442fbe100a2844e564c",
+   "masked": [],
+   "paths": []
+  },
+  "okta.failed_then_success.s7.plain": {
+   "sha256": "55cc4cfa875f8a154b215a85f83f4ccb6a78d386dd1cbc591411d9fd21875820",
+   "masked": [],
+   "paths": []
+  },
+  "okta.failed_then_success.s7.target": {
+   "sha256": "f76a54c2314ada00a52c2f964735280231055f674cc6a616ba4b4b3cb9fc9b05",
+   "masked": [],
+   "paths": []
+  },
+  "okta.fastpass_phishing.s1.plain": {
+   "sha256": "aaa7c560ec48a1de7e7ab4e009982c6b0fb72e04e2d4a0fe8efb94f5042de9da",
+   "masked": [],
+   "paths": []
+  },
+  "okta.fastpass_phishing.s1.target": {
+   "sha256": "aaa7c560ec48a1de7e7ab4e009982c6b0fb72e04e2d4a0fe8efb94f5042de9da",
+   "masked": [],
+   "paths": []
+  },
+  "okta.fastpass_phishing.s7.plain": {
+   "sha256": "7847daba85d322b574952b51e66efd3d9081bcbfba935822f30b71c5878955ff",
+   "masked": [],
+   "paths": []
+  },
+  "okta.fastpass_phishing.s7.target": {
+   "sha256": "7847daba85d322b574952b51e66efd3d9081bcbfba935822f30b71c5878955ff",
+   "masked": [],
+   "paths": []
+  },
+  "okta.mfa_fatigue.s1.plain": {
+   "sha256": "59e73e96bad4298516ec7c78ee90db386fc9caa1937ed28bdbbed113c597d7f2",
+   "masked": [],
+   "paths": []
+  },
+  "okta.mfa_fatigue.s1.target": {
+   "sha256": "1df1176b57ff56d424024817826682b1df78134c62467b975232df066dc882e3",
+   "masked": [],
+   "paths": []
+  },
+  "okta.mfa_fatigue.s7.plain": {
+   "sha256": "c8b80c2c799cc0fc50142eb6fb84e7ee4bbe5cd067e4ef3432ab0c4267dc1420",
+   "masked": [],
+   "paths": []
+  },
+  "okta.mfa_fatigue.s7.target": {
+   "sha256": "ea6aba4b2d49133ac93f32688f95794ea6d61141ec507f50dae45acf980615ce",
+   "masked": [],
+   "paths": []
+  },
+  "okta.password_spray.s1.plain": {
+   "sha256": "a72267ae5128cc2f273b3dc67e0aa87b3efb578281879e9c89bce5bdf5156948",
+   "masked": [],
+   "paths": []
+  },
+  "okta.password_spray.s1.target": {
+   "sha256": "a72267ae5128cc2f273b3dc67e0aa87b3efb578281879e9c89bce5bdf5156948",
+   "masked": [],
+   "paths": []
+  },
+  "okta.password_spray.s7.plain": {
+   "sha256": "f1a6ef4ed7a47bc750d4053c2155fd8f7190c17d78ae85c5ba62341610c75ec6",
+   "masked": [],
+   "paths": []
+  },
+  "okta.password_spray.s7.target": {
+   "sha256": "f1a6ef4ed7a47bc750d4053c2155fd8f7190c17d78ae85c5ba62341610c75ec6",
+   "masked": [],
+   "paths": []
+  },
+  "okta.sample_keys": {
+   "sha256": "0beb662d1edec89f838e860ee27c8442254a673b831914c84b04aa8dc59e9f4e"
+  },
+  "okta.tor_signin.s1.plain": {
+   "sha256": "b66a11483b7105928a0f78f13e3807fc7955b9b9db7e38202b9c014ad4d9777c",
+   "masked": [],
+   "paths": []
+  },
+  "okta.tor_signin.s1.target": {
+   "sha256": "13b0b5056608b5deb01faea2bc0f9a953503db6777fd6969aba252fee1752a65",
+   "masked": [],
+   "paths": []
+  },
+  "okta.tor_signin.s7.plain": {
+   "sha256": "937e2767d5a736bd968924c0ee59cb09684cb29e36f941d0404ed76478c146c9",
+   "masked": [],
+   "paths": []
+  },
+  "okta.tor_signin.s7.target": {
+   "sha256": "83bf2e0194a504614c730e13a78b4f61b912604fc46f2d9b2399e8e7498e5c8d",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.bec_impostor.s1.plain": {
+   "sha256": "d0dec0b9355a9d99b1bc934a337e38739a600490161cb179b9ec76d4dee523d0",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.bec_impostor.s1.target": {
+   "sha256": "93aec67559f2d3bf625c7495e337013ca99fdaba5d7063f8b9c4cc3bf9866492",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.bec_impostor.s7.plain": {
+   "sha256": "482905cc934762940e69834d965d4f2387addccd283ed28583ed1a193a905a6b",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.bec_impostor.s7.target": {
+   "sha256": "4d358e42d5620d376e2073bc52fa06c425a2bd4dccc06863e0af880d0d32a0f2",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.benign_mail.s1.plain": {
+   "sha256": "086035a6f951fd43c39cc359d6dc9ad88dd3416245ce3ec43736fe1804fb5ff5",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.benign_mail.s1.target": {
+   "sha256": "086035a6f951fd43c39cc359d6dc9ad88dd3416245ce3ec43736fe1804fb5ff5",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.benign_mail.s7.plain": {
+   "sha256": "5c70fdf184958236358802364708b9ef0b0e69559b79c07ed472845be95a9a42",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.benign_mail.s7.target": {
+   "sha256": "5c70fdf184958236358802364708b9ef0b0e69559b79c07ed472845be95a9a42",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.click_chain.s1.plain": {
+   "sha256": "04b36dc528ea49d5676e7cb4bf86c8a32112007af6df5794d38411bcdbae7354",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.click_chain.s1.target": {
+   "sha256": "029da94d8ea905b4f6d5eed4de189cfa728ee9657fcb0e3b41136b3d385b1a94",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.click_chain.s7.plain": {
+   "sha256": "8c010ac98537df816c5fa08955d58ed207ead11e390544c57462ebc3fb1784c9",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.click_chain.s7.target": {
+   "sha256": "58a297d1eeaf969b3b08246a8afc2fe8f9d2447b580243c868b01063cf00d852",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.credential_phishing.s1.plain": {
+   "sha256": "1cbabeb89d5ad243ba00dcf47fb3bbf166f1f0b109ee2ccea6c550996533aee1",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.credential_phishing.s1.target": {
+   "sha256": "a3583232d821dd3a46f33f9cfa30511c1246eee83b5def0ecacf478d2cece8bb",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.credential_phishing.s7.plain": {
+   "sha256": "7bd74e510230c6a844d4a027d9aa7c49ee193167bbedba5072d2e7003f354404",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.credential_phishing.s7.target": {
+   "sha256": "1c4ad1c8a746c4bbde2f18867a157afd4c1b651e4290c5a1d0c1acbf750df4e8",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.malware_attachment.s1.plain": {
+   "sha256": "014f61805d443c04d8508772ae461ecfb71dfb0731a974f54e776484fc6fdf81",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.malware_attachment.s1.target": {
+   "sha256": "62a36e9b89903b4df704e82b23565e166418cbe1fc0b7f0f1a4b842bad309261",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.malware_attachment.s7.plain": {
+   "sha256": "8937ce812e1827dbb86dfe8eb050b6d9b06545fbae9ee448077e527841d49ec8",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.malware_attachment.s7.target": {
+   "sha256": "de86ca958bc36c8ee891e3b8907e196b2fd99be14e305cf6a98757907567ade1",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.phishing_url.s1.plain": {
+   "sha256": "19064ceb2fe833f73602763569f383000cb8dce0e627dd7d6db9cf764b9a49cc",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.phishing_url.s1.target": {
+   "sha256": "8cd1026dad3e9999f70067f8881ebd95217fa0f60ab06cc49d7c2acf42a7e3d0",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.phishing_url.s7.plain": {
+   "sha256": "7562e57bc1b8d9faf01e23a6107336198a50d1ded5d3cd5b7542bd823a899de5",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.phishing_url.s7.target": {
+   "sha256": "a3a2b63f92898eba56926eda7963555ee730bc2720314fb55984fcf03f22a574",
+   "masked": [],
+   "paths": []
+  },
+  "proofpoint_tap.sample_keys": {
+   "sha256": "c22bdbb7eebae997e62965044f9d7133e853afba8e08ebf79a5486a773213b04"
+  }
+ }
+}

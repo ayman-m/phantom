@@ -164,12 +164,19 @@ def host_in(pool_range: Range, host: int) -> str:
     return _host(pool_range.cidr, host)
 
 
-def index_of(login: str, numbered: Mapping[str, int]) -> int:
-    """The user number behind `login`: its number in the profile's pool, or, for an identity outside the pool,
-    a number derived from the name, so any identity keeps one home address across runs and profiles."""
-    if login in numbered:
-        return numbered[login]
-    return int(hashlib.sha1(login.encode()).hexdigest(), 16) % len(HOME)
+def derived_index(login: str) -> int:
+    """A pool number derived from the name alone: the same login keeps one home address across runs and profiles."""
+    return int(hashlib.sha1(login.lower().encode()).hexdigest(), 16) % len(HOME)
+
+
+def home_of(person: Mapping[str, object]) -> tuple[str, Range | None]:
+    """The home address of an organization person and the pool range it sits in (None when it sits in neither pool, so
+    the geography is unknown). The address is the person's own `home_ip`; a person who declares none gets a stable address
+    derived from the login, so one person has one address in every profile."""
+    ip = person.get("home_ip")
+    if ip:
+        return str(ip), range_of(str(ip))
+    return home_for(derived_index(str(person["login"])))
 
 
 def range_of(ip: str) -> Range | None:

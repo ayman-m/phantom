@@ -7,7 +7,7 @@
  * loader reconciles. So this page is intentionally a *browser*, not
  * an editor: list KBs, drill into one, search semantically. That
  * authoring workflow is developer context and lives in the architecture
- * page (#knowledge-bases), not on this operator page. Import and
+ * page (#knowledge-pipeline), not on this operator page. Import and
  * Settings tabs are added only when runtime CRUD ships.
  *
  * Phantom is single-tenant, so there is no workspace prefix.

@@ -2,7 +2,7 @@
 name: trigger_privileged_certificate_request_alert
 displayName: Trigger the Cortex "Suspicious privileged certificate request via certificate template" analytics alert
 category: workflows
-description: 'Fire Cortex XSIAM''s native "Suspicious privileged certificate request via certificate template" analytics BIOC (Low, T1078.002, ESC8 text) by sending ONE synthetic Windows Security event 4887 (Certificate Services issued a certificate) through the wec-sender connector (Windows Event Collector, Route A) or through http-sender with destination cribl_windows_events (the tenant Cribl endpoint with the Windows UUID, Route B): a machine account obtains a certificate from the DomainController template on the CA PHCA01. Use when the operator asks to trigger, demo, prove or reproduce an AD CS, ESC8 or privileged certificate template alert. It fires over both routes and never over syslog/CEF.'
+description: 'Fire Cortex XSIAM''s native "Suspicious privileged certificate request via certificate template" analytics BIOC (Low, T1078.002, ESC8 text) by sending ONE synthetic Windows Security event 4887 (Certificate Services issued a certificate) through the wec-sender connector (Windows Event Collector, Route A) or through http-sender with destination cribl_windows_events (the tenant Cribl endpoint with the Windows UUID, Route B): a machine account obtains a certificate from the DomainController template on the CA PHSRV-CA01. Use when the operator asks to trigger, demo, prove or reproduce an AD CS, ESC8 or privileged certificate template alert. It fires over both routes and never over syslog/CEF.'
 icon: security
 source: platform
 loadingMode: on-demand
@@ -27,7 +27,7 @@ The detector is **not a correlation rule**; it is Cortex's own analytics (XDR An
 | Activation / training (doc) | 14 days / 30 days in the documentation; in practice every alert arrives within minutes of its events |
 | Test period | single event |
 | Deduplication | 1 day for the family (doc) |
-| What the alert text says | *"A privileged certificate was requested by PHANTOM\<requester>$ via certificate template. This certificate was requested via the template DomainController. This may indicate abuse of the ESC8 ADCS attack"*. The alert carries no user name; it is on host `PHCA01.phantom.lab`, so attribute by the requester in the description |
+| What the alert text says | *"A privileged certificate was requested by PHANTOM\<requester>$ via certificate template. This certificate was requested via the template DomainController. This may indicate abuse of the ESC8 ADCS attack"*. The alert carries no user name; it is on host `PHSRV-CA01.phantom.lab`, so attribute by the requester in the description |
 
 Did **not** fire this alert: the same 4887 with `CertificateTemplate:Machine` (a plain machine certificate, two shapes). The same 4887 events were also meant to raise the Medium `A machine certificate was issued with a mismatch`; that alert never appeared.
 
@@ -69,7 +69,7 @@ Over both routes (WEC and Cribl) the event in Step 1, with a new machine and num
   "events": [
     {
       "event_id": 4887,
-      "computer": "PHCA01",
+      "computer": "PHSRV-CA01",
       "time": "now-120s",
       "provider": "Microsoft-Windows-Security-Auditing",
       "rendering": {
@@ -91,7 +91,7 @@ Over both routes (WEC and Cribl) the event in Step 1, with a new machine and num
 
 What matters and why:
 
-- **`event_id` 4887** on the certificate authority host **`PHCA01`**, provider `Microsoft-Windows-Security-Auditing`, task `Certification Services`: "Certificate Services approved a certificate request and issued a certificate". `event_data`: `RequestId`, `Requester` (`PHANTOM\<machine>$`), `Attributes`, `Disposition 3` (issued), `SubjectKeyIdentifier`, `SerialNumber`.
+- **`event_id` 4887** on the certificate authority host **`PHSRV-CA01`**, provider `Microsoft-Windows-Security-Auditing`, task `Certification Services`: "Certificate Services approved a certificate request and issued a certificate". `event_data`: `RequestId`, `Requester` (`PHANTOM\<machine>$`), `Attributes`, `Disposition 3` (issued), `SubjectKeyIdentifier`, `SerialNumber`.
 - **`Attributes` carries the template**: `CertificateTemplate:DomainController`, plus `ccm:PHDC02.phantom.lab` (the requested machine name). The template name is what makes the request "privileged"; `CertificateTemplate:Machine` does not fire.
 - **The requester is a new machine account**, so the alert names it (`PHANTOM\<machine>$`).
 - **`rendering.message`/`task`/`provider`** are required (not catalogued).
@@ -116,7 +116,7 @@ config timeframe = 1h | datamodel dataset = microsoft_windows_raw
 | fields _time, xdm.event.id, xdm.source.host.hostname, xdm.event.description
 ```
 
-Pass when one row returns for host `PHCA01.phantom.lab` and its description contains `CertificateTemplate:DomainController`. Over Route A add `_collector_type = "WEC"` (raw dataset) and over Route B `_transport = "cribl"` to confirm the stamp.
+Pass when one row returns for host `PHSRV-CA01.phantom.lab` and its description contains `CertificateTemplate:DomainController`. Over Route A add `_collector_type = "WEC"` (raw dataset) and over Route B `_transport = "cribl"` to confirm the stamp.
 
 ## Step 3: wait, then check for the alert
 

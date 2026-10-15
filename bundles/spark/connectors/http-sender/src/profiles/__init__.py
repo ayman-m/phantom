@@ -15,9 +15,16 @@ Each profile module provides:
   SCENARIOS         tuple of scenario names
   TEST_ID_FIELD     field in sample_event() that carries a unique id, for the verify query
   TIME_FIELD        field that carries an event's time, reported as first_time/last_time
-  build_events(scenario, count, *, domain, now, spread_seconds, start_offset_minutes,
+  build_events(scenario, count, *, view, now, spread_seconds, start_offset_minutes,
                target_user, source_ip, seed=None) -> list[dict]   (raises ValueError)
-  sample_event(*, domain, now) -> dict    one benign, identifiable event
+  sample_event(*, view, now) -> dict      one benign, identifiable event
+
+`view` is the `runtime.organization_view.OrganizationView` the identities come from: the connector reads it at call time
+(the active organization, or the one the instance's `organization` setting pins) and passes it in. A profile holds no
+roster of its own: people, emails, ids, home addresses, cloud accounts, regions and the partner domain are the
+organization's (see `_org.py`). It raises `OrganizationUnavailable` when the organization lacks something a scenario needs and
+`_org.UnknownUser` (a ValueError) when `target_user` names nobody in it. Only the actors a recipe mints fresh (so a
+first-time-seen detector fires) and the attacker's addresses (Tor exits, abroad ranges) are the profile's own.
 
 and, for a profile whose events are meant for a Cribl destination (see ../cribl.py), optionally:
 

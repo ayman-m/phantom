@@ -30,14 +30,14 @@ It is not a correlation rule; it is Cortex's own analytics (Cloud module, `XDR A
 | Activation / training (doc) | 14 days / 30 days. In practice the alert typically arrives within a minute or two |
 | Test period | single event |
 | Deduplication (doc) | 5 days. Every call invents a new user, project and bucket, so a repeat is a new identity and fires again |
-| What the alert text says | *"The cloud identity <name>.<hex>@phantom-lab.example has publicly shared projects/_/buckets/phantom-lab-public-<hex> storage. projects/_/buckets/phantom-lab-public-<hex> bucket can be accessed by identities outside of the organization. The operation was performed on GCP/phantom-lab-<hex>"* |
+| What the alert text says | *"The cloud identity <name>.<hex>@phantom.lab has publicly shared projects/_/buckets/phantom-lab-public-<hex> storage. projects/_/buckets/phantom-lab-public-<hex> bucket can be accessed by identities outside of the organization. The operation was performed on GCP/<project id: the organization's, `phantom-lab-prod` on Phantom Lab>"* |
 
 ## Preconditions: check these BEFORE sending
 
 | # | Must be true | How to check |
 |---|---|---|
 | 1 | The `http-sender` instance is running with Cribl configured: `list_destinations` shows **`cribl_gcp_cloud_logging`** with `ready: true` (dataset `google_cloud_logging_raw`) | `http-sender.list_destinations` |
-| 2 | You pass **no** `destination`, `target_user`, `source_ip` or `count`. The scenario's default destination is the Cribl one, and the actor, the project (`phantom-lab-<hex>`), the bucket and the caller address are invented per call, so the detector sees a first-time actor each time | read the call below |
+| 2 | You pass **no** `destination`, `target_user`, `source_ip` or `count`. The scenario's default destination is the Cribl one, and the actor, the bucket and the caller address are invented per call (the project is the organization's GCP project, `phantom-lab-prod` on Phantom Lab), so the detector sees a first-time actor each time | read the call below |
 | 3 | The call is one event (the recipe has 1 step). The event time is now | none |
 
 ## Expected result
@@ -65,7 +65,7 @@ config timeframe = 1h | dataset = google_cloud_logging_raw
 | fields _time, insertId, method, caller, ip, member, _collector_type
 ```
 
-Pass when one row returns with `method = storage.setIamPermissions`, `member = allUsers` and `_collector_type = GCP Pub/Sub` (caller `<name>.<hex>@phantom-lab.example`, your caller ip). Without the pack that carries the modeling rule installed, the GCP rows land without XDM; the detector does not need it, so do not wait for `xdm.*` fields.
+Pass when one row returns with `method = storage.setIamPermissions`, `member = allUsers` and `_collector_type = GCP Pub/Sub` (caller `<name>.<hex>@phantom.lab`, your caller ip). Without the pack that carries the modeling rule installed, the GCP rows land without XDM; the detector does not need it, so do not wait for `xdm.*` fields.
 
 ## Step 3: wait, then check for the alert
 
@@ -82,10 +82,12 @@ config timeframe = 1d | dataset = alerts
 
 Use the stored enum names `MAGNIFIER` and `ANALYTICS_BIOC`: the displayed names `XDR_ANALYTICS` and `XDR_ANALYTICS_BIOC` match nothing in a filter.
 
-Pass when a row names your identity (`user_name` shows `phantom-lab\<local part>`; `description` shows the full address and the bucket) and `host_ip` is your caller IP. Expect `severity` LOW and `original_tags` with `DS:Google/Cloud Logging`.
+Pass when a row names your identity (`user_name` shows `phantom\<local part>`; `description` shows the full address and the bucket) and `host_ip` is your caller IP. Expect `severity` LOW and `original_tags` with `DS:Google/Cloud Logging`.
 
 If nothing arrives in 3 minutes: re-run Step 2 (the row must be in `google_cloud_logging_raw` with `_collector_type = GCP Pub/Sub`), confirm the destination was `cribl_gcp_cloud_logging`, then retry **once** with the same call (it generates a new identity).
 
 ## Report back to the operator
 
 State the cloud identity, the bucket and project (from the alert description), the caller IP, the `insertId`, the Step 2 result and either the alert id with its arrival time and latency or that nothing arrived in 3 minutes and what you checked. Say that every call uses a new identity, so repeating it is safe: the documented 5-day deduplication does not suppress the repeat.
+
+Note: the Cortex `user_name` prefix shown above (`phantom\`) is the first label of the organization's email domain (`phantom.lab`); it was `phantom-lab\` on the previous domain. It has not been re-measured on the tenant, so confirm it on the first replay.

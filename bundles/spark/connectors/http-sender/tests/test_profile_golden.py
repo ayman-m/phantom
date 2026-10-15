@@ -7,6 +7,10 @@ hashing the sorted-key JSON of `build_events(scenario, 12, domain="lab.test", no
 and the flattened key paths of `sample_event`. A change to any of those modules that alters a seeded event, a timestamp,
 an address or a field shape fails here; if the change is intended, recompute the hashes and say why in the commit.
 
+Since the profiles read the organization, the calls go through the CUT organization (`pre_organization.cut_view()`): the old
+12-person pool written as an organization document, so the hashes below are still the 0.3.1 ones, unchanged. The wider proof
+(every profile, scenario, seed and variant) is `test_pre_organization_equivalence.py`.
+
 Run from the connector directory:  python3 -m pytest -x
 """
 from __future__ import annotations
@@ -20,7 +24,9 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import pre_organization as pre  # noqa: E402
 from src.profiles import google_workspace, okta, proofpoint_tap  # noqa: E402
 
 NOW = datetime(2026, 10, 4, 12, 0, 0, tzinfo=timezone.utc)
@@ -66,16 +72,17 @@ def flat(node, prefix=""):
     return out
 
 
-def scenario_hash(module, scenario):
+def scenario_hash(module, scenario, view=None):
+    view = view or pre.cut_view()
     digest = hashlib.sha256()
     for variant in VARIANTS:
-        events = module.build_events(scenario, 12, domain="lab.test", now=NOW, **variant)
+        events = module.build_events(scenario, 12, view=view, now=NOW, **variant)
         digest.update(json.dumps(events, sort_keys=True).encode())
     return digest.hexdigest()
 
 
 def sample_keys_hash(module):
-    keys = sorted(set(flat(module.sample_event(domain="lab.test", now=NOW))))
+    keys = sorted(set(flat(module.sample_event(view=pre.cut_view(), now=NOW))))
     return hashlib.sha256("\n".join(keys).encode()).hexdigest()
 
 
@@ -99,8 +106,10 @@ def test_every_golden_entry_is_used_and_the_scenario_lists_only_grew():
                                         "bec_impostor", "click_chain")
 
 
-def test_the_golden_test_can_fail(monkeypatch):
-    # A one-character change to a pool address must change a hash (the guard is not vacuous).
+def test_the_golden_test_can_fail():
+    # A changed home address of the organization's first person must change a hash (the guard is not vacuous).
     before = scenario_hash(okta, "benign_logins")
-    monkeypatch.setattr(okta.ippools, "home_for", lambda i: ("1.2.3.4", okta.ippools.HOME[0]))
-    assert scenario_hash(okta, "benign_logins") != before
+    other = pre.load_fixture()["org"]
+    other["people"][0]["home_ip"] = "1.2.3.4"
+    from runtime.organization_view import OrganizationView
+    assert scenario_hash(okta, "benign_logins", OrganizationView(other)) != before

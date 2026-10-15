@@ -62,6 +62,7 @@ const SECTIONS: SectionDef[] = [
   { id: "agents-ux", label: "Agents", group: "Command", icon: "smart_toy" },
   { id: "memory", label: "Memory", group: "Command", icon: "database" },
   { id: "knowledge", label: "Knowledge Bases", group: "Command", icon: "menu_book" },
+  { id: "organization", label: "Organization", group: "Command", icon: "apartment" },
   { id: "jobs", label: "Jobs", group: "Command", icon: "schedule" },
   { id: "models-providers", label: "Models & Providers", group: "Command", icon: "psychology" },
 
@@ -2102,11 +2103,14 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
             <SubSection icon="library_books" title="Bundled KBs">
               <ul className="list-disc pl-5 space-y-1.5 text-sm">
                 <li>
-                  <Term>phantom-soc</Term> — main reference content:
-                  architecture notes, scenario design rationale, run-book
-                  entries, post-mortem templates. The agent retrieves from
-                  this KB whenever you ask conceptual questions about
-                  Phantom.
+                  <Term>organization</Term> — the active organization
+                  (v1.1.0+) as readable documents: an overview, one
+                  document per department, servers and infrastructure,
+                  workstations, networks, accounts and personas. It is
+                  rebuilt whenever the organization changes. Ask the
+                  agent &ldquo;who is in Finance?&rdquo; and it reads
+                  this; for exact lists it calls{" "}
+                  <Code>organization_get</Code>.
                 </li>
                 <li>
                   <Term>xql-examples</Term> — curated Cortex XQL / XSIAM
@@ -2204,6 +2208,76 @@ downstream scenarios reuse — keeps cross-scenario telemetry coherent.
                 detail page show the same entry count, and the detail
                 page lists every entry with a filter and a search
                 playground.
+              </p>
+            </SubSection>
+          </Section>
+
+          <Section id="organization" icon="apartment" title="Organization">
+            <p>
+              <Link href="/organization" className="link">/organization</Link>{" "}
+              (v1.1.0+) is the one fictitious company Phantom generates
+              logs for: its people and their accounts, workstations,
+              servers, networks and VLANs, sites, groups and cloud
+              accounts. Every generator uses it, so a user, their
+              workstation and its address are the same in Okta, Windows,
+              firewall and cloud logs, and Cortex can group the alerts
+              into one case. Phantom ships <Term>Phantom Lab</Term> (50
+              people, domain <Code>phantom.lab</Code>); you can edit it,
+              add your own or replace it. One organization is active at a
+              time.
+            </p>
+
+            <SubSection icon="swap_horiz" title="Choosing the organization">
+              <p>
+                The cards at the top list every organization, marked
+                Built-in or Yours. Click a card to look at it, and{" "}
+                <Term>Make active</Term> to have every generator use it.
+                Switching removes nothing: the users and assets a
+                previous organization already created in Cortex stay
+                until you remove them. <Term>Import</Term> adds an
+                organization from YAML or JSON (it is checked before it
+                is accepted), <Term>Duplicate</Term> makes a copy you can
+                edit, <Term>Export YAML</Term> and <Term>Export JSON</Term>{" "}
+                download it, and <Term>History</Term> lists earlier
+                versions with a Restore button.
+              </p>
+              <p className="text-sm">
+                Phantom Lab is built in and read-only: any edit saves your
+                own copy, which becomes the active organization when Phantom
+                Lab was. Making Phantom Lab active again is the reset.
+              </p>
+            </SubSection>
+
+            <SubSection icon="tab" title="The tabs">
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li><Term>Overview</Term> — the description, domain, departments, any warnings, and the <Term>Cortex setup</Term> panel: the internal ranges and domain suffix to enter in Cortex under Inventory &gt; Assets &gt; Network Configuration, each with a copy button.</li>
+                <li><Term>People</Term> — a searchable table with each person&apos;s workstation and address. <Term>Add person</Term> needs only names, title and department; the login, email, workstation and the rest are filled in and shown after saving.</li>
+                <li><Term>Hosts</Term> and <Term>Networks</Term> — add, edit and remove. A change that would break consistency (an address outside its network, a duplicate name) is refused with the reason.</li>
+                <li><Term>Groups &amp; accounts</Term> — groups with member counts (privileged ones highlighted) and every logon account with its SID and host.</li>
+                <li><Term>YAML</Term> — the whole document for bulk edits, with Validate and Save.</li>
+              </ul>
+            </SubSection>
+
+            <SubSection icon="smart_toy" title="Asking the agent">
+              <p>The agent reads the organization before it generates anything and uses only its users, hosts and addresses. You can also change it from chat:</p>
+              <ul className="list-disc pl-5 space-y-1.5 text-sm">
+                <li>&ldquo;Who is in Finance?&rdquo; / &ldquo;What is the CFO&apos;s laptop?&rdquo; → <Code>organization_get</Code> (read-only).</li>
+                <li>&ldquo;Add a new hire to Finance with a laptop.&rdquo; → <Code>organization_update</Code>; the new person gets the next workstation and address.</li>
+                <li>&ldquo;Switch to the Acme organization.&rdquo; → <Code>organization_activate</Code>.</li>
+              </ul>
+              <p className="text-sm">
+                The write tools apply at once unless the install lists them for approval. Each change is kept in History
+                and recorded as an <Code>organization_changed</Code> audit event.
+              </p>
+            </SubSection>
+
+            <SubSection icon="cable" title="Connectors">
+              <p className="text-sm">
+                The xlog workers, http-sender, wec-sender and cie-sender read the active organization on every call, so
+                a save or a switch reaches them with no restart. A connector instance has an optional{" "}
+                <Term>Organization</Term> setting: leave it empty to follow the active organization, or enter an
+                organization id to pin that instance. If a connector cannot read the organization it returns an error
+                saying so instead of inventing users.
               </p>
             </SubSection>
           </Section>

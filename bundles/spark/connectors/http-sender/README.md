@@ -154,13 +154,12 @@ this endpoint, fires the same nine detectors that fire over WEC (the nine `trigg
   in an object (`{"data": {"_raw": "<Event ...>"}}`) the endpoint answers 200 and lands **nothing**, so `cribl.post` refuses a
   non-string event for this source. Posting stays on `cribl.post` (300 lines per request, same headers and token handling as every
   other source).
-- **Config.** `windowsDnsSuffix` (optional, default `phantom.lab`) qualifies short computer names the way `wec-sender`'s
-  `domainDns` does (`PHDC02` becomes `PHDC02.phantom.lab`; a name with a dot is left alone; the value is stripped of spaces and
-  otherwise used as given, so `<Computer>` is byte-for-byte what `wec-sender` renders for the same suffix). It is also the DNS
-  suffix of the test event's host (lower-cased there, as `wec-sender`'s test event does), and its first label (upper-cased) is the
-  test event's NetBIOS domain (`wec-sender` has a separate `domainNetbios`).
+- **Config.** None of its own: the DNS suffix that qualifies short computer names (`PHDC02` becomes `PHDC02.phantom.lab`; a name
+  with a dot is left alone), the NetBIOS domain and the SID base are the ACTIVE ORGANIZATION's (or the one the instance's
+  `organization` setting pins), read at call time. `<Computer>` is byte-for-byte what `wec-sender` renders for the same
+  organization.
 - **`send_test_event`** (`destination = cribl_windows_events`, no `profile`) sends one benign network 4624 for host
-  `PHANTOM-CRIBLTEST01.<suffix>` by a **fresh actor** (`phantom.test<6 hex>`), the test id in `LogonGuid`, and returns an XQL query
+  `<NETBIOS>-CRIBLTEST01.<dns>` (the organization's) from an address in its `unmanaged` network, by a **fresh actor** (`phantom.test<6 hex>`), the test id in `LogonGuid`, and returns an XQL query
   on `computer_name` that proves the row landed.
 - **`generate_events`** has a `windows` profile (see "Scenarios for scheduled jobs"): it builds the structured events
   and sends them here, and refuses any other destination. Another profile's object events sent to this destination keep the
@@ -194,7 +193,7 @@ on purpose:
 
 - **Benign scenarios have STABLE identities.** A baseline is only a baseline if the same actors come back. Their names, ids, keys
   and home addresses are pure functions of an index (`profiles/_fresh.py`: `person`, `stable`, `stable_guid`), so the same people
-  appear on every call, run after run. The twelve cloud personas are the Okta users (`noura.alharbi` ... `dana.alanazi`), each with
+  appear on every call, run after run. The cloud personas are the organization's people (the same users as in Okta) (`noura.alharbi` ... `dana.alanazi`), each with
   the same home address in every profile (`ippools.home_for`); AWS, GCP and Azure each use one fixed account, project or tenant
   that no attack scenario ever uses. Timestamps are current: `count` events spread at random moments over `spread_seconds` ending now
   (the first at the start of the window, the last at its end; `start_offset_minutes` back-dates it).
@@ -206,8 +205,8 @@ on purpose:
 | Profile.scenario | What it does | Detector, or benign |
 |---|---|---|
 | `aws_cloudtrail.benign_activity` | 12 IAM users and their usual roles (DataAnalyst, ReadOnlyAuditor, AppSupport, BillingViewer) in one fixed account: ConsoleLogin, ListBuckets, GetObject, ListObjects, DescribeInstances / SecurityGroups / Volumes / DBInstances, ListUsers, ListFunctions, GetCallerIdentity, AssumeRole into a usual role, from the home pool | benign |
-| `gcp_audit.benign_activity` | 12 users and 4 service accounts of one project: storage.objects.get / list, buckets get / list, compute.instances.list, GetServiceAccount, ListLogEntries, GetIamPolicy (Data Access logs) | benign |
-| `azure_ad_audit.benign_activity` | 4 IT admins and the 12 users: Update user (job title, department, office, manager), Add / Remove member of an ordinary group, Reset password (by admin, done by the helpdesk admin), Change password (self-service), Add app role assignment grant to user, Add user | benign |
+| `gcp_audit.benign_activity` | the organization's people with GCP access and its service accounts, in one project: storage.objects.get / list, buckets get / list, compute.instances.list, GetServiceAccount, ListLogEntries, GetIamPolicy (Data Access logs) | benign |
+| `azure_ad_audit.benign_activity` | the IT admins and the organization's people: Update user (job title, department, office, manager), Add / Remove member of an ordinary group, Reset password (by admin, done by the helpdesk admin), Change password (self-service), Add app role assignment grant to user, Add user | benign |
 | `windows.baseline_logons` | 4624 / 4672 / 4634 of the 30-account, 32-host domain (22 staff, 4 administrators, 4 service accounts; 2 DCs, 4 servers, 26 workstations), shaped by the time of day; the same events as `wec-sender.generate_events` | benign |
 | `windows.admin_activity` | the four IT administrators on the DCs: helpdesk password resets (4724) and unlocks (4767) of ordinary users, 4738 changes (display name, script path, home directory, password age), ordinary new users (4720), ordinary users added to / removed from department groups `SG-Finance`, `SG-HR`, `SG-Sales`, `SG-Engineering`, `SG-VPN-Users`, `SG-Project-Atlas` (4728 / 4729) | benign |
 | `windows.machine_account_domain_admins` | 1 x 4728: a computer account added to Domain Admins | Machine account was added to a domain admins group (and User added to a Windows privileged group) |

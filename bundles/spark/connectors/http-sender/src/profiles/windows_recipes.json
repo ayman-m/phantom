@@ -245,13 +245,13 @@
    "time": "<CHANGE: now minus 575 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690001-b22c-4e5f-8a00-000000000001}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SQL02.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55001\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690001-b22c-4e5f-8a00-000000000001}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SQL01.phantom.lab:1434\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55001\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "MSSQLSvc/PHSRV-SQL02.phantom.lab:1433",
+    "ServiceName": "MSSQLSvc/PHSRV-SQL01.phantom.lab:1434",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -268,13 +268,13 @@
    "time": "<CHANGE: now minus 550 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690002-b22c-4e5f-8a00-000000000002}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SQL03.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55002\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690002-b22c-4e5f-8a00-000000000002}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-APP01.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55002\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "MSSQLSvc/PHSRV-SQL03.phantom.lab:1433",
+    "ServiceName": "MSSQLSvc/PHSRV-APP01.phantom.lab:1433",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -291,13 +291,13 @@
    "time": "<CHANGE: now minus 525 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690003-b22c-4e5f-8a00-000000000003}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SQL04.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55003\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690003-b22c-4e5f-8a00-000000000003}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SCCM01.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55003\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "MSSQLSvc/PHSRV-SQL04.phantom.lab:1433",
+    "ServiceName": "MSSQLSvc/PHSRV-SCCM01.phantom.lab:1433",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -314,13 +314,13 @@
    "time": "<CHANGE: now minus 500 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690004-b22c-4e5f-8a00-000000000004}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-SQL05.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55004\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690004-b22c-4e5f-8a00-000000000004}\n\nService Information:\n\tService Name:\t\tMSSQLSvc/PHSRV-BKP01.phantom.lab:1433\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55004\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "MSSQLSvc/PHSRV-SQL05.phantom.lab:1433",
+    "ServiceName": "MSSQLSvc/PHSRV-BKP01.phantom.lab:1433",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -337,13 +337,13 @@
    "time": "<CHANGE: now minus 475 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690005-b22c-4e5f-8a00-000000000005}\n\nService Information:\n\tService Name:\t\tHTTP/web01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55005\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690005-b22c-4e5f-8a00-000000000005}\n\nService Information:\n\tService Name:\t\tHTTP/PHSRV-WEB01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55005\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "HTTP/web01.phantom.lab",
+    "ServiceName": "HTTP/PHSRV-WEB01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -360,13 +360,13 @@
    "time": "<CHANGE: now minus 450 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690006-b22c-4e5f-8a00-000000000006}\n\nService Information:\n\tService Name:\t\tHTTP/web02.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55006\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690006-b22c-4e5f-8a00-000000000006}\n\nService Information:\n\tService Name:\t\tHTTP/PHSRV-APP01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55006\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "HTTP/web02.phantom.lab",
+    "ServiceName": "HTTP/PHSRV-APP01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -383,13 +383,13 @@
    "time": "<CHANGE: now minus 425 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690007-b22c-4e5f-8a00-000000000007}\n\nService Information:\n\tService Name:\t\tHTTP/web03.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55007\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690007-b22c-4e5f-8a00-000000000007}\n\nService Information:\n\tService Name:\t\tHTTP/PHSRV-EXCH01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55007\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "HTTP/web03.phantom.lab",
+    "ServiceName": "HTTP/PHSRV-EXCH01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -406,13 +406,13 @@
    "time": "<CHANGE: now minus 400 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690008-b22c-4e5f-8a00-000000000008}\n\nService Information:\n\tService Name:\t\tHTTP/web04.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55008\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690008-b22c-4e5f-8a00-000000000008}\n\nService Information:\n\tService Name:\t\tHTTP/PHSRV-SCCM01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55008\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "HTTP/web04.phantom.lab",
+    "ServiceName": "HTTP/PHSRV-SCCM01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -429,13 +429,13 @@
    "time": "<CHANGE: now minus 375 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690009-b22c-4e5f-8a00-000000000009}\n\nService Information:\n\tService Name:\t\tHTTP/web05.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55009\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690009-b22c-4e5f-8a00-000000000009}\n\nService Information:\n\tService Name:\t\tHTTP/PHSRV-CA01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55009\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "HTTP/web05.phantom.lab",
+    "ServiceName": "HTTP/PHSRV-CA01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -452,13 +452,13 @@
    "time": "<CHANGE: now minus 350 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000a-b22c-4e5f-8a00-00000000000a}\n\nService Information:\n\tService Name:\t\tHTTP/web06.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55010\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000a-b22c-4e5f-8a00-00000000000a}\n\nService Information:\n\tService Name:\t\tHTTP/PHSRV-FS01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55010\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "HTTP/web06.phantom.lab",
+    "ServiceName": "HTTP/PHSRV-FS01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -475,13 +475,13 @@
    "time": "<CHANGE: now minus 325 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000b-b22c-4e5f-8a00-00000000000b}\n\nService Information:\n\tService Name:\t\tHTTP/web07.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55011\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000b-b22c-4e5f-8a00-00000000000b}\n\nService Information:\n\tService Name:\t\tHTTP/PHSRV-BKP01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55011\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "HTTP/web07.phantom.lab",
+    "ServiceName": "HTTP/PHSRV-BKP01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -521,13 +521,13 @@
    "time": "<CHANGE: now minus 275 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000d-b22c-4e5f-8a00-00000000000d}\n\nService Information:\n\tService Name:\t\tCIFS/PHSRV-FS02.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55013\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000d-b22c-4e5f-8a00-00000000000d}\n\nService Information:\n\tService Name:\t\tCIFS/PHSRV-BKP01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55013\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "CIFS/PHSRV-FS02.phantom.lab",
+    "ServiceName": "CIFS/PHSRV-BKP01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -544,13 +544,13 @@
    "time": "<CHANGE: now minus 250 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000e-b22c-4e5f-8a00-00000000000e}\n\nService Information:\n\tService Name:\t\tCIFS/PHSRV-FS03.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55014\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000e-b22c-4e5f-8a00-00000000000e}\n\nService Information:\n\tService Name:\t\tCIFS/PHSRV-APP01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55014\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "CIFS/PHSRV-FS03.phantom.lab",
+    "ServiceName": "CIFS/PHSRV-APP01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -567,13 +567,13 @@
    "time": "<CHANGE: now minus 225 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000f-b22c-4e5f-8a00-00000000000f}\n\nService Information:\n\tService Name:\t\tCIFS/PHSRV-FS04.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55015\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{4769000f-b22c-4e5f-8a00-00000000000f}\n\nService Information:\n\tService Name:\t\tCIFS/PHSRV-SCCM01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55015\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "CIFS/PHSRV-FS04.phantom.lab",
+    "ServiceName": "CIFS/PHSRV-SCCM01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -636,13 +636,13 @@
    "time": "<CHANGE: now minus 150 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {
-    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690012-b22c-4e5f-8a00-000000000012}\n\nService Information:\n\tService Name:\t\tLDAP/PHDC03.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55018\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
+    "message": "A Kerberos service ticket was requested.\n\nAccount Information:\n\tAccount Name:\t\t<CHANGE: actor>@PHANTOM.LAB\n\tAccount Domain:\t\tPHANTOM.LAB\n\tLogon GUID:\t\t{47690012-b22c-4e5f-8a00-000000000012}\n\nService Information:\n\tService Name:\t\tLDAP/PHRODC-JED01.phantom.lab\n\tService ID:\t\tS-1-5-21-3623811015-3361044348-30300820-1105\n\nNetwork Information:\n\tClient Address:\t\t::ffff:<CHANGE: client IP>\n\tClient Port:\t\t55018\n\nAdditional Information:\n\tTicket Options:\t\t0x40810000\n\tTicket Encryption Type:\t0x17\n\tFailure Code:\t\t0x0\n\tTransited Services:\t-",
     "task": "Kerberos Service Ticket Operations"
    },
    "event_data": {
     "TargetUserName": "<CHANGE: actor>@PHANTOM.LAB",
     "TargetDomainName": "PHANTOM.LAB",
-    "ServiceName": "LDAP/PHDC03.phantom.lab",
+    "ServiceName": "LDAP/PHRODC-JED01.phantom.lab",
     "ServiceSid": "S-1-5-21-3623811015-3361044348-30300820-1105",
     "TicketOptions": "0x40810000",
     "TicketEncryptionType": "0x17",
@@ -1338,7 +1338,7 @@
  "privileged_certificate_request": [
   {
    "event_id": 4887,
-   "computer": "PHCA01",
+   "computer": "PHSRV-CA01",
    "time": "<CHANGE: now minus 120 s>",
    "provider": "Microsoft-Windows-Security-Auditing",
    "rendering": {

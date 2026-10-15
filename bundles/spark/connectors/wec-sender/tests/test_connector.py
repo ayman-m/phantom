@@ -4,6 +4,7 @@ from __future__ import annotations
 import ast
 import importlib.util
 import inspect
+import ipaddress
 import json
 import logging
 import re
@@ -13,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from conftest import MANAGER_PATH, PFX_PASSWORD, ROOT
+from runtime import organization_view as ov
 from src import connector, wsman
 
 S, W = wsman.SOAP, wsman.WSMAN
@@ -22,8 +24,8 @@ S, W = wsman.SOAP, wsman.WSMAN
 def cfg(applet, pki, monkeypatch):
     """Instance settings pointing at the fake applet; tests may edit the dict."""
     settings = {"url": f"Server=HTTPS://127.0.0.1:{applet.port}{MANAGER_PATH},Refresh=600,IssuerCA={pki.ca_thumbprint}",
-                "sender": "phantom-wec-sender.phantom.lab", "timeout": 5.0, "netbios": "PHANTOM", "dns": "phantom.lab",
-                "host_count": 32, "pfx": pki.pfx_b64_wrapped(), "pfx_password": PFX_PASSWORD}
+                "sender": "phantom-wec-sender.phantom.lab", "timeout": 5.0, "organization": "",
+                "pfx": pki.pfx_b64_wrapped(), "pfx_password": PFX_PASSWORD}
     monkeypatch.setattr(connector, "_settings", lambda: settings)
     return settings
 
@@ -58,22 +60,28 @@ def test_list_subscriptions(cfg, applet):
 
 
 # ── send_test_event ─────────────────────────────────────────────────────────────────────────────────────────────
-def test_send_test_event(cfg, applet):
+def test_send_test_event(cfg, applet, bundled_organization):
+    view = ov.get_view()
+    expected = f"{view.netbios}-WECTEST01.{view.dns}"
     r = connector.phantom_send_test_event()
-    assert r["ok"] and r["sent"] == 1 and r["computer"] == "PHANTOM-WECTEST01.phantom.lab" and r["event_id"] == 4624
+    assert r["ok"] and r["sent"] == 1 and r["computer"] == expected and r["event_id"] == 4624
     assert r["verify_with_xql"] == ('dataset = microsoft_windows_raw | filter _collector_type = "WEC" and '
-                                    'computer_name = "PHANTOM-WECTEST01.phantom.lab"')
+                                    f'computer_name = "{expected}"')
     assert r["subscriptions"] == {"Authentication Event Logs": 1}
     (event,) = delivered_events(applet)
     guid = [d.text for d in event.findall(f"{EVT}EventData/{EVT}Data") if d.get("Name") == "LogonGuid"][0]
     assert guid == "{" + r["test_id"].upper() + "}" and r["test_id_field"] == "LogonGuid"
     assert event.find(f"{EVT}System/{EVT}Computer").text == r["computer"]
     assert event.find(f"{EVT}System/{EVT}EventRecordID").text == str(r["record_id"])
+    ip = [d.text for d in event.findall(f"{EVT}EventData/{EVT}Data") if d.get("Name") == "IpAddress"][0]
+    low, high = view.fresh_ip_range()
+    assert low <= int(ipaddress.ip_address(ip)) <= high, "the test logon comes from the organization's unmanaged pool"
+    assert all(ip != h["ip"] for h in view.hosts)
 
 
 def test_send_test_event_custom_computer_and_other_ids(cfg, applet):
     r = connector.phantom_send_test_event(computer="ws-test9", event_id=4625)
-    assert r["ok"] and r["computer"] == "ws-test9.phantom.lab"
+    assert r["ok"] and r["computer"] == f"ws-test9.{ov.get_view().dns}"
     (event,) = delivered_events(applet)
     assert event.find(f"{EVT}System/{EVT}Keywords").text == "0x8010000000000000"
     names = [d.get("Name") for d in event.findall(f"{EVT}EventData/{EVT}Data")]
@@ -86,7 +94,7 @@ def test_send_test_event_custom_computer_and_other_ids(cfg, applet):
 def test_generate_events_sends_and_summarises(cfg, applet):
     r = connector.phantom_generate_events("windows", "baseline_logons", count=75, spread_seconds=300, start_offset_minutes=30)
     assert r["ok"] and r["events"] == 75 and r["sent"] == 75 and r["profile"] == "windows"
-    assert sum(r["computers"].values()) == 75 and all(c.endswith(".phantom.lab") for c in r["computers"])
+    assert sum(r["computers"].values()) == 75 and all(c.endswith("." + ov.get_view().dns) for c in r["computers"])
     assert len(r["sample_record_ids"]) == 5 and r["first_time"] <= r["last_time"]
     events = delivered_events(applet)
     assert len(events) == 75
@@ -119,14 +127,19 @@ def test_generate_events_validation(cfg, applet, kwargs, fragment):
 
 # ── send_events ─────────────────────────────────────────────────────────────────────────────────────────────────
 def test_send_events_structured(cfg, applet):
+    view = ov.get_view()
+    person = view.people[0]
+    ws = view.host(person["workstation"])
+    adfs = f"ADFS01.{view.dns}"
     r = connector.phantom_send_events([
-        {"event_id": 4625, "computer": "PHWS-007", "outcome": "failure", "time": "2026-10-03T09:15:00.1234567Z",
-         "event_data": {"TargetUserName": "nalharbi", "IpAddress": "10.20.16.26"}},
-        {"event_id": 1200, "computer": "ADFS01.phantom.lab", "channel": "Security", "provider": "AD FS Auditing",
+        {"event_id": 4625, "computer": ws["name"], "outcome": "failure", "time": "2026-10-03T09:15:00.1234567Z",
+         "event_data": {"TargetUserName": person["login"], "IpAddress": ws["ip"]}},
+        {"event_id": 1200, "computer": adfs, "channel": "Security", "provider": "AD FS Auditing",
          "time": 1790000000, "event_data": ["a", "b", "c"], "message": "The Federation Service issued a valid token.",
          "rendering": {"task": "None"}},
     ])
-    assert r["ok"] and r["sent"] == 2 and set(r["computers"]) == {"PHWS-007.phantom.lab", "ADFS01.phantom.lab"}
+    assert r["ok"] and r["sent"] == 2 and set(r["computers"]) == {f"{ws['name']}.{view.dns}", adfs}, \
+        "a short computer name gets the active organization's DNS suffix"
     by_id = {e.find(f"{EVT}System/{EVT}EventID").text: e for e in delivered_events(applet)}
     fail = by_id["4625"]
     assert fail.find(f"{EVT}System/{EVT}TimeCreated").get("SystemTime") == "2026-10-03T09:15:00.1234560Z"
@@ -244,10 +257,11 @@ def test_connector_yaml_matches_the_code():
         assert tool["returns"]["description"]
     assert [s["name"] for s in m["secretSlots"]] == ["clientPfx", "clientPfxPassword"] and all(s["required"] for s in m["secretSlots"])
     props = m["configSchema"]["properties"]
-    assert set(props) == {"subscriptionManagerUrl", "senderComputerName", "timeoutSeconds", "domainNetbios", "domainDns", "hostCount"}
+    assert set(props) == {"subscriptionManagerUrl", "senderComputerName", "timeoutSeconds", "organization"}
     assert "verifyTls" not in props and m["configSchema"]["required"] == ["subscriptionManagerUrl"]
-    assert props["timeoutSeconds"]["default"] == 30 and props["domainNetbios"]["default"] == "PHANTOM"
-    assert props["domainDns"]["default"] == "phantom.lab" and props["hostCount"]["default"] == 32
+    assert props["timeoutSeconds"]["default"] == 30
+    assert props["organization"]["type"] == "string" and props["organization"]["default"] == ""
+    assert "active organization" in props["organization"]["description"], "empty follows the active organization"
     header = (ROOT / "connector.yaml").read_text().split("id:")[0]
     assert "syslog/CEF" in header
 

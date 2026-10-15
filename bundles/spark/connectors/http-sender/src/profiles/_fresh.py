@@ -74,7 +74,7 @@ UPPER_DIGITS = string.ascii_uppercase + string.digits
 
 
 def person(index: int) -> tuple[str, str]:
-    """The `index`-th persona of the shared pool: the same twelve people the okta profile logs in, so one person has one
+    """The `index`-th persona of the shared pool: the same organization people the okta profile logs in, so one person has one
     name and (with `ippools.home_for(index)`) one home address in every profile."""
     return _FIRST[index % len(_FIRST)], _LAST[index % len(_LAST)]
 

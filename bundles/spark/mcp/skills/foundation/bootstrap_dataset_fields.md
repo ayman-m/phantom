@@ -43,6 +43,10 @@ Each worker uses `count: 100`, `interval: 1`. These recipes pass **no** `schema_
 
 Do not set `interval` below 1 — it is an integer, so `0.1` silently became `0`, meaning no throttle at all, and is now rejected outright. Do not raise `count` to go faster either: the server caps total generation rate across all live workers, and 100 events per source is enough to populate a dataset schema.
 
+### Pre-flight: read the organization
+
+Every user, host and address in the recipes below must belong to the active organization, so the seeded rows already look like the company the rest of the platform simulates. Call `organization_get(section="overview")` once, then `organization_get(section="people", limit=5)` and `organization_get(section="hosts", filter="role=server")`. Take one ordinary person (login, email, workstation name and address, `home_ip`), because lists of several people would be sampled independently and pair a login with another person's workstation, a domain controller, the file, application and SQL servers, and the DMZ hosts (`filter=role=dmz`). The values written in the recipes are the Phantom Lab ones, labelled as examples; swap them for the active organization's own. Never use the leaver (Phantom Lab: `ralsayegh`) or the break-glass account. Attacker-side addresses (`192.0.2.42`, `203.0.113.18`) and external sample domains stay as written, because they are not part of the organization. If a recipe needs an entity the organization lacks, tell the operator and offer `organization_update` instead of inventing one.
+
 **Use parallel `xlog.create_data_worker` calls (one per installed data source), NOT a single scenario.** The scenarios tool exists for narrative kill-chains. This skill is independent per-source bootstrap; parallel workers give per-source independence (one worker failing doesn't block others) and per-source observability via `xlog.list_workers`.
 
 ## Field templates per data source class
@@ -67,7 +71,7 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     src:        ["192.0.2.42", "192.0.2.91", "203.0.113.18", "198.51.100.42"]
-    dst:        ["10.10.30.10", "10.10.0.50", "10.10.20.42", "10.10.50.20"]
+    dst:        ["172.16.10.10", "172.16.10.12", "10.20.16.20", "10.20.1.20"]   # Phantom Lab: PHDMZ-WEB01, PHDMZ-VPN01, PHWS-001, PHSRV-FS01
     spt:      ["49152", "51234", "57890", "60123"]
     dpt:      ["443", "80", "22", "3389", "445", "53"]
     proto:      ["tcp", "udp"]
@@ -102,14 +106,14 @@ xlog.create_data_worker:
   interval: 1
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    shost:       ["wks-test-01", "wks-test-02", "srv-test-01"]
-    src:         ["10.10.20.42", "10.10.20.91", "10.10.10.10"]
-    suser:           ["test.user", "admin", "svc_test"]
+    shost:       ["PHWS-001"]      # ONE Phantom Lab person: login, workstation and address together
+    src:         ["10.20.16.20"]
+    suser:           ["nalharbi"]
     sproc:   ["powershell.exe", "cmd.exe", "explorer.exe", "WINWORD.EXE", "rundll32.exe"]
     parentProcessName: ["explorer.exe", "WINWORD.EXE", "powershell.exe", "cmd.exe"]
     spid:     ["1234", "5678", "9012"]
     commandLine:   ["powershell.exe -nop -w hidden", "cmd.exe /c whoami", "WINWORD.EXE /n test.docx"]
-    filePath:      ["C:\\Users\\test\\Documents", "C:\\Windows\\Temp", "C:\\Program Files"]
+    filePath:      ["C:\\Users\\nalharbi\\Documents", "C:\\Windows\\Temp", "C:\\Program Files"]
     fname:      ["test.docx", "report.pdf", "tools.exe"]
     fileHash: ["b42c1f9e3a0d7c8b5e2f4a6d8e1b3c5a7f9d2e4b6c8a0d2f4e6c8a0b2d4f6c8e"]
     targetProcessName: ["lsass.exe", "explorer.exe"]
@@ -138,10 +142,10 @@ xlog.create_data_worker:
   interval: 1
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.20.42", "10.10.20.91", "10.10.30.10"]
-    shost:      ["wks-test-01", "wks-test-02", "web-app-01"]
-    dst:        ["10.10.10.10", "10.10.50.20", "10.10.40.20"]
-    dhost:      ["dc01", "fs01", "sql01"]
+    src:        ["10.20.16.20"]       # one workstation (PHWS-001) and one server (PHSRV-FS01), each name with its own address
+    shost:      ["PHWS-001"]
+    dst:        ["10.20.1.20"]
+    dhost:      ["PHSRV-FS01"]
     dpt:      ["445", "139", "3389", "5985", "1433"]
     proto:      ["6"]
     act:        ["alert", "monitor"]
@@ -155,7 +159,7 @@ xlog.create_data_worker:
     attackType:   ["smb_admin_access", "rdp_lateral", "wmi_remote_exec"]
     out:    ["240", "1024", "4096", "8192"]
     in: ["180", "512", "2048", "8192"]
-    suser:  ["test.user", "svc_backup"]
+    suser:  ["nalharbi"]
     externalId:    ["sess-A1", "sess-B2"]
     mitreTechnique: ["T1021.002", "T1047", "T1021.001"]
 ```
@@ -175,9 +179,9 @@ xlog.create_data_worker:
   interval: 1
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.20.42", "10.10.20.91", "10.10.30.10"]
-    shost:      ["wks-test-01", "wks-test-02"]
-    suser:          ["test.user", "admin"]
+    src:        ["10.20.16.20"]       # ONE person: login, workstation and address together
+    shost:      ["PHWS-001"]
+    suser:          ["nalharbi"]
     request:           ["https://www.example.com/", "https://api.example.com/v1/data",
                     "https://cdn.example.com/static/app.js",
                     "https://dropbox.com/upload"]
@@ -217,8 +221,8 @@ xlog.create_data_worker:
                       "invoices@billing-secure-update.tk"]
     senderDomain:   ["external-supplier.com", "industry-news.io",
                       "billing-secure-update.tk"]
-    recipientEmail: ["test.user@corp.example", "team-finance@corp.example"]
-    recipientDomain: ["corp.example"]
+    recipientEmail: ["noura.alharbi@phantom.lab", "mona.alessa@phantom.lab"]
+    recipientDomain: ["phantom.lab"]
     emailSubject:   ["Q4 Newsletter", "Payment terms",
                       "URGENT: Invoice action required"]
     emailBody:      ["[redacted body sample]"]
@@ -251,9 +255,9 @@ xlog.create_data_worker:
   interval: 1
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:       ["10.10.20.42", "10.10.20.91"]
-    shost:     ["wks-test-01", "wks-test-02"]
-    suser:         ["test.user", "admin"]
+    src:       ["10.20.16.20"]       # ONE person: login, workstation and address together
+    shost:     ["PHWS-001"]
+    suser:         ["nalharbi"]
     spt:     ["49152", "51234", "57890"]
     dpt:     ["53"]
     proto:     ["udp", "tcp"]
@@ -286,7 +290,7 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     src:        ["192.0.2.42", "203.0.113.18", "198.51.100.42"]
-    dst:        ["10.10.30.10"]
+    dst:        ["172.16.10.10"]   # Phantom Lab: PHDMZ-WEB01
     spt:      ["49152", "51234", "57890", "60123"]
     dpt:      ["443", "80"]
     proto:      ["6"]
@@ -325,8 +329,8 @@ xlog.create_data_worker:
   interval: 1
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["192.0.2.42", "203.0.113.18", "10.10.0.50"]
-    dst:        ["10.10.30.10", "10.10.30.11", "10.10.30.12"]
+    src:        ["192.0.2.42", "203.0.113.18", "10.20.16.20"]
+    dst:        ["172.16.10.10", "172.16.10.11", "172.16.10.12"]   # Phantom Lab DMZ hosts
     spt:      ["49152", "51234", "57890", "60123"]
     dpt:      ["443", "80"]
     proto:      ["6"]
@@ -334,11 +338,11 @@ xlog.create_data_worker:
     requestMethod:        ["GET", "POST"]
     httpStatusCode:   ["200", "302", "404", "500", "503"]
     responseTimeMs: ["12", "45", "120", "1200"]
-    backendServer: ["app-01", "app-02", "app-03"]
+    backendServer: ["PHSRV-APP01", "PHSRV-WEB01", "PHSRV-FS01"]
     backendStatusCode: ["200", "500"]
     backendResponseTimeMs: ["8", "32", "100", "1100"]
     poolName:     ["web_pool", "api_pool"]
-    poolMember:   ["app-01:8080", "app-02:8080"]
+    poolMember:   ["PHSRV-APP01:8080", "PHSRV-WEB01:8080"]
     virtualServer: ["vs_https", "vs_http"]
     out:    ["480", "1024", "4096"]
     in: ["240", "12480", "1280"]
@@ -361,15 +365,15 @@ xlog.create_data_worker:
   interval: 1
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    suser:                  ["test.user", "admin", "j.smith"]
-    src:                ["86.150.42.18", "192.0.2.42", "203.0.113.18"]
+    suser:                  ["jaljuhani"]           # ONE person: login, home address and session address together
+    src:                ["77.31.81.27"]           # the home_ip of jaljuhani
     act:                ["login_success", "login_failure", "logout"]
     authenticationResult: ["success", "failed"]
     authenticationMethod: ["password", "mfa", "certificate", "saml"]
     errorCode:            ["AUTH_OK", "AUTH_FAILED", "INVALID_CREDENTIALS"]
     externalId:            ["sess-001", "sess-002", "sess-003"]
-    assignedIp:           ["10.10.20.42", "10.10.20.43", ""]
-    country:               ["US", "GB", "DE", "RU"]
+    assignedIp:           ["10.20.200.10"]   # her own workstation address, inside the VPN pool
+    country:               ["SA", "US", "DE", "RU"]
     mfaMethod:            ["push", "totp", "sms", ""]
     mfaResult:            ["success", "failed", "skipped"]
     cefSeverity:              ["informational", "medium", "high"]
@@ -391,9 +395,9 @@ xlog.create_data_worker:
   interval: 1
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    principalEmail:    ["data-export-svc@test-project-prod.iam.gserviceaccount.com"]
-    src:      ["192.0.2.42", "10.10.0.0", "203.0.113.18"]
-    country:       ["US", "GB", "RU"]
+    principalEmail:    ["data-export-svc@phantom-lab-prod.iam.gserviceaccount.com"]   # <project_id> from organization_get section=cloud
+    src:      ["192.0.2.42", "188.55.20.5", "203.0.113.18"]   # 188.55.20.5 = the office NAT (egress.ruh_nat)
+    country:       ["US", "SA", "RU"]
     act:        ["google.iam.admin.v1.CreateServiceAccount",
                     "google.iam.admin.v1.CreateServiceAccountKey",
                     "google.cloud.resourcemanager.v1.SetIamPolicy",
@@ -404,10 +408,10 @@ xlog.create_data_worker:
     requestMethod:    ["projects.serviceAccounts.create",
                     "projects.setIamPolicy", "objects.get"]
     operation:     ["create", "delete", "update", "list", "get"]
-    resourceName: ["projects/test-project-prod/serviceAccounts/data-export-svc@..."]
+    resourceName: ["projects/phantom-lab-prod/serviceAccounts/data-export-svc@..."]
     resourceType: ["serviceAccount", "iamPolicy", "storageObject", "instance"]
     resourceId:   ["sa-001", "policy-002", "obj-003"]
-    suser:      ["data-export-svc@test-project-prod.iam.gserviceaccount.com"]
+    suser:      ["data-export-svc@phantom-lab-prod.iam.gserviceaccount.com"]
     keyId:     ["8f3a91d2c4b7e5a8d6f9b2c1e4a7d3f5b8c2e9a1"]
     authenticationMethod: ["oauth_token", "service_account_key", "user_credential"]
     cefSeverity:      ["informational", "medium", "high", "critical"]
@@ -430,9 +434,9 @@ xlog.create_data_worker:
   interval: 1
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    suser:                  ["test.user@corp.example"]
-    src:                ["86.150.42.18", "192.0.2.42"]
-    country:               ["US", "GB", "RU"]
+    suser:                  ["noura.alharbi@phantom.lab"]
+    src:                ["144.86.80.11", "192.0.2.42"]   # first = the home_ip of nalharbi
+    country:               ["SA", "US", "RU"]
     act:                ["login_success", "consent_to_application",
                             "new-inboxrule", "FileDownloaded",
                             "add_oauth2permissiongrant"]
@@ -443,7 +447,7 @@ xlog.create_data_worker:
     authenticationMethod: ["password", "mfa", "oauth_token"]
     externalId:            ["sess-A1B2C3D4"]
     fname:             ["report.xlsx", "policy.docx", ""]
-    request:              ["/personal/test_user_acme_example/Documents", ""]
+    request:              ["/personal/noura_alharbi_phantom_lab/Documents", ""]
     out:                 ["180000", "245000", "0"]
     cefSeverity:              ["informational", "medium", "high"]
 ```
@@ -468,7 +472,7 @@ After the skill finishes, the operator should see (within ~1 minute of skill com
 |---|---|
 | Per-dataset row count ≈100 | XSIAM Settings → Data Sources → each ingestion source |
 | Field-mapping UI no longer empty | XSIAM Settings → Data Sources → click into a source → Fields tab |
-| All field templates show ≥3 distinct values per field | Field-mapping preview, scan for the field types the parser sees |
+| All field templates show ≥3 distinct values per field, except the identity fields (user, host, address), which carry one person's values | Field-mapping preview, scan for the field types the parser sees |
 | No worker errors | `xlog.list_workers` should show all `Stopped` status |
 
 If any dataset is still empty after the skill: check the operator's XSIAM ingestion broker config (the broker might not be enabled or might be filtering on something the synthetic data doesn't match), and check `xsiam.get_issues` for any ingestion-side error.
@@ -494,6 +498,6 @@ The events are already ingested into XSIAM; tear-down doesn't unsend them. If th
 
 ## Adapting per deployment
 
-The example values in each recipe (`192.0.2.42`, `corp.example`, `test-project-prod`) are illustrative. For exercises tied to a specific customer environment, the operator can edit each per-class section's recipe to use their actual asset names — the skill just defines the *fields*; the values are open for customization. Agent's recipes are authoritative once the skill saves.
+The attacker-side example values in each recipe (`192.0.2.42`, `203.0.113.18`) are illustrative. Every company identity (users, hosts, servers, mail domain, cloud project) comes from the active organization (`organization_get`); the skill just defines the *fields*. To change who appears in the seeded rows, edit the organization (`organization_update`), not the recipes. Agent's recipes are authoritative once the skill saves.
 
 If a class isn't covered in the templates above (e.g. operator has an `IDS` or `MDR` class in their stack), the agent should fall back to a minimal fields recipe (`src_ip`, `dst_ip`, `action`, `severity`, `alert_name`) and emit a warning that the class was skipped from the curated templates. Editing this skill MD to add a new class section is the right way to extend coverage.

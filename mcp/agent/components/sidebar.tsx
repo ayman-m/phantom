@@ -56,6 +56,8 @@ const navEntries: NavEntry[] = [
       { href: "/agents", label: "Agents", icon: "groups" },
       { href: "/memory", label: "Memory", icon: "database" },
       { href: "/knowledge", label: "Knowledge", icon: "menu_book" },
+      // The one sample company (people, hosts, networks) every generator draws from.
+      { href: "/organization", label: "Organization", icon: "apartment" },
       { href: "/jobs", label: "Jobs", icon: "schedule" },
       { href: "/tasks", label: "Tasks", icon: "task_alt" },
       // /models + /providers live under Settings — they're

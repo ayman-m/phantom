@@ -22,6 +22,9 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
+from runtime.organization_reader import OrganizationUnavailable
+from runtime.organization_view import get_view
+
 from . import profiles, winevent, wsman
 
 logger = logging.getLogger(__name__)
@@ -54,9 +57,7 @@ def _settings() -> dict[str, Any]:
         "url": (get("subscriptionManagerUrl", "") or "").strip(),
         "sender": (get("senderComputerName", "") or "").strip() or wsman.DEFAULT_SENDER_COMPUTER,
         "timeout": number("timeoutSeconds", 30),
-        "netbios": (get("domainNetbios", "PHANTOM") or "PHANTOM").strip(),
-        "dns": (get("domainDns", "phantom.lab") or "phantom.lab").strip(),
-        "host_count": int(number("hostCount", 32)),
+        "organization": str(get("organization", "") or "").strip(),   # empty = follow the active organization
         "pfx": get("clientPfx", "") or "",
         "pfx_password": get("clientPfxPassword", "") or "",
     }
@@ -96,6 +97,9 @@ def _guarded(fn: Callable[..., dict[str, Any]]) -> Callable[..., dict[str, Any]]
             return _err(str(exc), **extra)
         except winevent.EventError as exc:
             return _err(str(exc))
+        except OrganizationUnavailable as exc:
+            logger.warning("wec-sender: %s cannot use the organization: %s", fn.__name__, exc)
+            return _err(f"the organization is not available: {exc}")
         except Exception as exc:  # noqa: BLE001 - last line of defence for the tool boundary
             logger.error("wec-sender: %s failed unexpectedly: %s", fn.__name__, type(exc).__name__)
             return _err(f"unexpected {type(exc).__name__} in {fn.__name__}; see the connector log")
@@ -182,7 +186,9 @@ def phantom_send_test_event(computer: str | None = None, event_id: int = 4624) -
     (logoff) is always preceded by its 4624 with the same logon id, so both are sent and reported.
 
     Args:
-      computer: host name (short or FQDN) the event claims to come from. Default: PHANTOM-WECTEST01.<domainDns>.
+      computer: host name (short or FQDN) the event claims to come from. Default: <NETBIOS>-WECTEST01.<domain dns>
+        (names from the active organization, e.g. PHANTOM-WECTEST01.phantom.lab for the bundled Phantom Lab). The test
+        logon's source address is a stable address from the organization's pool for unmanaged and newly seen devices.
       event_id: one of the catalogue ids: 4624, 4625, 4634, 4672 (default 4624).
 
     Returns:
@@ -197,10 +203,10 @@ def phantom_send_test_event(computer: str | None = None, event_id: int = 4624) -
     client, failure = _client(settings)
     if failure:
         return failure
-    directory = profiles.windows.Directory(settings["netbios"], settings["dns"], settings["host_count"])
+    directory = profiles.windows.directory(settings["organization"])
     if computer is not None and not isinstance(computer, str):
         return _err("computer must be a host name")
-    fqdn = _qualify(computer or "PHANTOM-WECTEST01", directory.dns)
+    fqdn = _qualify(computer or directory.test_computer(), directory.dns)
     now = datetime.now(timezone.utc)
     test_id = str(uuid.uuid4())
     defn = None if isinstance(event_id, bool) or not isinstance(event_id, int) else winevent.lookup(event_id)
@@ -237,12 +243,15 @@ def phantom_generate_events(profile: str = "windows", scenario: str = "baseline_
                             dry_run: bool = False) -> dict[str, Any]:
     """Generate synthetic Windows events from a built-in profile and forward them over WEC.
 
-    The profile `windows` models one small domain: 2 domain controllers (PHDC01, PHDC02), 4 servers, 26
-    workstations and about 30 accounts (staff, administrators, service accounts). Identities are stable: a login
-    always has the same SID and home workstation, a host the same address, so repeated runs build a baseline.
+    The profile `windows` uses the ACTIVE ORGANIZATION (the same people, accounts, hosts and domain every other
+    connector uses; read it with organization_get): its domain controllers, servers and workstations, and its
+    staff, administrator and service accounts. A leaver's account and the break-glass account are never part of
+    baseline traffic. Identities are stable: a login always has the same SID and home workstation, a host the same
+    address, so repeated runs build a baseline. If no organization is active the tool returns an error that says
+    what to fix; it never invents a domain.
 
-    Scenario `baseline_logons`: benign traffic shaped by the time of day (business hours are Saudi local time,
-    Sunday to Thursday): interactive, unlock and cached logons on workstations (4624), network logons on servers
+    Scenario `baseline_logons`: benign traffic shaped by the time of day (business hours are the organization's:
+    its working week and office hours in its local time): interactive, unlock and cached logons on workstations (4624), network logons on servers
     and DCs, service-account logons, occasional administrator RDP with special privileges (4672), and a 4634
     logoff for each logon later in the window. More scenarios (failed logons, Kerberos, AD FS) plug into the
     same registry later.
@@ -257,7 +266,7 @@ def phantom_generate_events(profile: str = "windows", scenario: str = "baseline_
       dry_run: true = build and return the first 3 events (with their XML) without sending anything.
 
     Returns (`sent` = events the applet ACCEPTED with HTTP 200; landing is proven only by an XQL query on the dataset):
-      {"ok": true, "events": 40, "sent": 40, "envelopes": 14, "computers": {"phws-004.phantom.lab": 6, ...},
+      {"ok": true, "events": 40, "sent": 40, "envelopes": 14, "computers": {"phws-004.<domain dns>": 6, ...},
        "first_time": "<iso>", "last_time": "<iso>", "sample_record_ids": [..], "subscriptions": {...},
        "profile": "windows", "scenario": "baseline_logons"}. dry_run adds "preview": [...] and sends nothing.
 
@@ -275,7 +284,7 @@ def phantom_generate_events(profile: str = "windows", scenario: str = "baseline_
         if message:
             return _err(message)
     settings = _settings()
-    directory = prof.Directory(settings["netbios"], settings["dns"], settings["host_count"])
+    directory = prof.directory(settings["organization"])
     try:
         events = prof.build_events(scenario, count, directory=directory, now=datetime.now(timezone.utc),
                                    spread_seconds=spread_seconds, start_offset_minutes=start_offset_minutes)
@@ -382,7 +391,7 @@ def phantom_send_events(events: list[dict[str, Any]]) -> dict[str, Any]:
 
     Args:
       events: list of 1-5000 objects, each:
-        event_id (int, required), computer (required; short names get the domain DNS suffix),
+        event_id (int, required), computer (required; short names get the active organization's DNS suffix),
         channel (default Security), provider (default: the catalogue's), time,
         event_data (object = named Data, or list = positional Data: AD FS events use unnamed Data),
         outcome ("success" | "failure", or keywords: ["Audit Failure"]; failure sets event_result=failure),
@@ -395,19 +404,24 @@ def phantom_send_events(events: list[dict[str, Any]]) -> dict[str, Any]:
        "last_time": "...", "sample_record_ids": [...], "subscriptions": {"Authentication Event Logs": 2}}
 
     Example payload:
-      {"events": [{"event_id": 4625, "computer": "PHWS-007", "outcome": "failure", "time": "2026-10-03T09:15:00Z",
-                   "event_data": {"TargetUserName": "nalharbi", "TargetDomainName": "PHANTOM",
-                                  "IpAddress": "10.20.16.26", "LogonType": "3"}}]}
+      {"events": [{"event_id": 4625, "computer": "<a workstation of the active organization>", "outcome": "failure",
+                   "time": "2026-10-03T09:15:00Z",
+                   "event_data": {"TargetUserName": "<a login of the active organization>",
+                                  "TargetDomainName": "<its NetBIOS name>", "IpAddress": "<the workstation's address>",
+                                  "LogonType": "3"}}]}
+      Take the names, NetBIOS domain and addresses from the active organization (organization_get) so the event
+      belongs to a real person and host there.
     """
     if not isinstance(events, list) or not events:
         return _err("events must be a non-empty list of objects")
     if len(events) > MAX_EVENTS_PER_CALL:
         return _err(f"at most {MAX_EVENTS_PER_CALL} events per call")
     settings = _settings()
+    default_dns = get_view(settings["organization"] or None).dns   # read now, so a missing organization is a clear error
     parsed = []
     for index, raw in enumerate(events):
         try:
-            parsed.append(_structured_event(index, raw, settings["dns"]))
+            parsed.append(_structured_event(index, raw, default_dns))
         except ValueError as exc:
             return _err(str(exc))
     try:

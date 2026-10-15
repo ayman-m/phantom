@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://phantom.local/schemas/organization.schema.json",
+  "title": "Phantom organization",
+  "description": "The people, accounts, hosts, networks, sites and cloud accounts every Phantom generator draws from. The structural rules are here; cross-references (a manager exists, an address sits inside its network, no duplicates) are checked by usecase/organization_model.py.",
+  "type": "object",
+  "required": ["schema_version", "id", "name", "domain", "networks", "hosts", "people"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "id": { "$ref": "#/$defs/slug" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "description": { "type": "string", "maxLength": 600 },
+    "domain": {
+      "type": "object",
+      "required": ["dns", "netbios"],
+      "additionalProperties": false,
+      "properties": {
+        "dns": { "$ref": "#/$defs/hostname" },
+        "netbios": { "type": "string", "pattern": "^[A-Z0-9][A-Z0-9-]{0,14}$" },
+        "sid": { "type": "string", "pattern": "^S-1-5-21-\\d+-\\d+-\\d+$" },
+        "email_domain": { "$ref": "#/$defs/hostname" },
+        "partner_domain": { "$ref": "#/$defs/hostname" }
+      }
+    },
+    "locale": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "timezone": { "type": "string", "minLength": 1 },
+        "utc_offset_hours": { "type": "integer", "minimum": -12, "maximum": 14 },
+        "workweek": {
+          "type": "array",
+          "items": { "enum": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "work_hours": {
+          "type": "object",
+          "required": ["start", "end"],
+          "additionalProperties": false,
+          "properties": {
+            "start": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+            "end": { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" }
+          }
+        }
+      }
+    },
+    "cortex": {
+      "type": "object",
+      "description": "What to enter under Inventory > Assets > Network Configuration in Cortex.",
+      "additionalProperties": false,
+      "properties": {
+        "internal_ranges": { "type": "array", "items": { "$ref": "#/$defs/cidr" } },
+        "domain_suffixes": { "type": "array", "items": { "$ref": "#/$defs/hostname" } }
+      }
+    },
+    "sites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/slug_loose" },
+          "name": { "type": "string", "minLength": 1 },
+          "city": { "type": ["string", "null"] },
+          "country": { "type": ["string", "null"] },
+          "kind": { "enum": ["office", "remote", "cloud"] }
+        }
+      }
+    },
+    "networks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "kind"],
+        "additionalProperties": false,
+        "oneOf": [{ "required": ["cidr"] }, { "required": ["range"] }],
+        "properties": {
+          "id": { "$ref": "#/$defs/slug" },
+          "name": { "type": "string", "minLength": 1 },
+          "site": { "type": ["string", "null"] },
+          "kind": {
+            "enum": ["core", "servers", "management", "security", "workstations", "wifi", "unmanaged", "guest",
+                     "vpn", "branch", "dmz", "cloud", "other"]
+          },
+          "vlan": { "type": ["integer", "null"], "minimum": 1, "maximum": 4094 },
+          "cidr": { "$ref": "#/$defs/cidr" },
+          "range": { "type": "string", "pattern": "^\\d{1,3}(\\.\\d{1,3}){3}-\\d{1,3}(\\.\\d{1,3}){3}$" }
+        }
+      }
+    },
+    "egress": {
+      "type": "object",
+      "description": "Public addresses the organization appears from on the internet.",
+      "additionalProperties": false,
+      "properties": {
+        "ruh_nat": { "$ref": "#/$defs/ipv4" },
+        "jed_nat": { "$ref": "#/$defs/ipv4" },
+        "nat": { "type": "object", "additionalProperties": { "$ref": "#/$defs/ipv4" } },
+        "dmz_public": { "type": "object", "additionalProperties": { "$ref": "#/$defs/ipv4" } }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "privileged": { "type": "boolean" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "people": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/person" }
+    },
+    "service_accounts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["login", "display_name", "kind", "host"],
+        "additionalProperties": false,
+        "properties": {
+          "login": { "$ref": "#/$defs/login" },
+          "display_name": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["service", "break_glass"] },
+          "host": { "type": "string", "minLength": 1 },
+          "rid": { "type": "integer", "minimum": 1000 },
+          "employee_number": { "type": "string" },
+          "manager": { "type": ["string", "null"] },
+          "groups": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "hosts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "role", "ip", "network"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 63, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+          "role": { "enum": ["dc", "server", "dmz", "workstation", "network", "security", "cloud"] },
+          "site": { "type": ["string", "null"] },
+          "ip": { "$ref": "#/$defs/ipv4" },
+          "network": { "type": "string" },
+          "os": { "type": "string" },
+          "rid": { "type": "integer", "minimum": 1000 },
+          "owner": { "type": "string" },
+          "purpose": { "type": "string" },
+          "domain_joined": { "type": "boolean" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "cloud": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "aws": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "account_id": { "type": "string", "pattern": "^\\d{12}$" },
+            "account_name": { "type": "string" },
+            "region": { "type": "string" }
+          }
+        },
+        "azure": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "tenant_id": { "$ref": "#/$defs/guid" },
+            "subscription_id": { "$ref": "#/$defs/guid" },
+            "tenant_domain": { "type": "string" },
+            "region": { "type": "string" }
+          }
+        },
+        "gcp": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "project_id": { "type": "string" },
+            "project_number": { "type": "string", "pattern": "^\\d+$" },
+            "region": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,62}$" },
+    "slug_loose": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,62}$" },
+    "login": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+    "hostname": { "type": "string", "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$" },
+    "cidr": { "type": "string", "pattern": "^\\d{1,3}(\\.\\d{1,3}){3}/\\d{1,2}$" },
+    "ipv4": { "type": "string", "pattern": "^\\d{1,3}(\\.\\d{1,3}){3}$" },
+    "guid": { "type": "string", "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$" },
+    "person": {
+      "type": "object",
+      "required": ["login", "given_name", "family_name", "email", "title", "department", "site", "workstation"],
+      "additionalProperties": false,
+      "properties": {
+        "login": { "$ref": "#/$defs/login" },
+        "given_name": { "type": "string", "minLength": 1 },
+        "family_name": { "type": "string", "minLength": 1 },
+        "display_name": { "type": "string" },
+        "email": { "type": "string", "pattern": "^[^@\\s]+@[^@\\s]+$" },
+        "title": { "type": "string", "minLength": 1 },
+        "department": { "type": "string", "minLength": 1 },
+        "manager": { "type": ["string", "null"] },
+        "site": { "type": "string", "minLength": 1 },
+        "employee_number": { "type": "string" },
+        "rid": { "type": "integer", "minimum": 1000 },
+        "workstation": { "type": "string", "minLength": 1 },
+        "okta_id": { "type": "string", "pattern": "^00u[A-Za-z0-9]{17}$" },
+        "home_ip": { "$ref": "#/$defs/ipv4" },
+        "groups": { "type": "array", "items": { "type": "string" } },
+        "flags": {
+          "type": "array",
+          "items": { "enum": ["vip", "contractor", "leaver", "outlier"] },
+          "uniqueItems": true
+        },
+        "contract_end": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "disabled_on": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "cloud_access": { "type": "array", "items": { "enum": ["aws", "azure", "gcp"] }, "uniqueItems": true },
+        "admin_account": {
+          "type": "object",
+          "required": ["login"],
+          "additionalProperties": false,
+          "properties": {
+            "login": { "$ref": "#/$defs/login" },
+            "display_name": { "type": "string" },
+            "rid": { "type": "integer", "minimum": 1000 },
+            "employee_number": { "type": "string" },
+            "groups": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

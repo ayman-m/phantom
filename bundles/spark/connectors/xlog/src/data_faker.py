@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Union
 from fastmcp import Context
 from pydantic import BaseModel, Field, field_validator
 
+from . import org_defaults
 from ._graphql_client import PhantomGraphQLClient
 from ._xlog_url_resolver import resolve_xlog_url
 
@@ -632,6 +633,7 @@ async def phantom_generate_fake_data(
     fields: Optional[Union[str, List[str]]] = None,
     required_fields: Optional[Union[List[str], str]] = None,
     observables_dict: Optional[Union[ObservablesDict, Dict[str, Any], str]] = None,
+    use_organization: bool = True,
     ctx: Context = None,
 ) -> Dict[str, Any]:
     """
@@ -795,6 +797,8 @@ async def phantom_generate_fake_data(
 
     required_fields = _parse_required_fields(request.required_fields)
     observables_dict = _parse_observables_dict(request.observables_dict)
+    observables_dict, _ = org_defaults.resolve(
+        schema_fields=None, observables=observables_dict, use_organization=use_organization)
     fields = _parse_fields(request.fields)
 
     variables = {

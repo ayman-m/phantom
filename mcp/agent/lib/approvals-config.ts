@@ -65,6 +65,8 @@ const SOFT_TOOLS = new Set([
   // Manifest's humanRequired lists `personality_patch` explicitly;
   // SOFT_TOOLS mirrors it here.
   'personality_patch',
+  'organization_update',
+  'organization_activate',
   'settings_update',
   'notifications_dismiss',
   'notifications_dismiss_all',

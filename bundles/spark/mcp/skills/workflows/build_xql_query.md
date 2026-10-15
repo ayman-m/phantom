@@ -72,6 +72,10 @@ Optional fifth step if needed:
 
 ## Procedure (the 7-step chain)
 
+### Pre-flight: read the organization (when the question names a company entity)
+
+When the question refers to something that belongs to the company (*"the CFO's laptop"*, *"our DMZ"*, *"finance users"*, *"internal traffic"*, *"the file server"*, *"VPN users"*), resolve it from the active organization before synthesizing, with one `organization_get` call: `section=personas` for the VIPs, the outlier and the leaver; `section=people` with `filter=department=Finance` or `filter=site=JED`; `section=hosts` with `filter=role=server` or `filter=role=dmz`; `section=networks` for ranges; `section=cortex` for the internal ranges and domain suffix. Use the returned logins, host names and addresses as the literal filter values, and name the lookup in the Evidence Summary. Never guess a host name, login or subnet; if the organization does not contain the entity, say so and ask the operator, or offer `organization_update`. Questions that name no company entity skip this step.
+
 ### Step 1 — Embed + search the KB for top-5 similar examples (MANDATORY — FIRST CALL)
 
 This step is **NOT OPTIONAL** and must be the **FIRST** tool you call in this skill — BEFORE any `cortex_xql_lookup`, BEFORE any `xdr_run_xql_query`. Even when the user's question feels "obviously" composable from first principles (anomaly detection, top-N aggregations, statistical thresholds, etc.), you MUST start by searching the operator's XQL example KB. Three concrete reasons, each grounded in a real failure mode caught during operator testing:
@@ -203,7 +207,7 @@ Synthesis principles:
 - **Lead with the dataset/preset line** that 4/5+ top matches agree on. When all 5 disagree, use the top-1's choice and note the divergence in the output.
 - **Add stages in the order they appear in the highest-frequency example.** A query rarely has random stage ordering — `filter` typically comes before `alter` which typically comes before `comp` which comes before `sort` and `limit`. The top-frequency example's order is your template.
 - **Use real field names from the examples**, not invented ones. Even if `cortex_search` (step 5) is skipped, the example body's field references are tenant-verified.
-- **Translate the user's natural-language phrase into a filter clause**: *"hosts with unusual outbound traffic"* → `filter event_type = ENUM.NETWORK | filter not incidr(action_remote_ip, "10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16")`.
+- **Translate the user's natural-language phrase into a filter clause**: *"hosts with unusual outbound traffic"* → `filter event_type = ENUM.NETWORK | filter not incidr(action_remote_ip, "<internal ranges of the organization>")`, taking the ranges from `organization_get(section="cortex")` (`internal_ranges`; Phantom Lab example: `10.20.0.0/16, 10.21.0.0/16, 172.16.10.0/24, 10.100.0.0/16, 10.110.0.0/16, 10.120.0.0/16, 192.168.160.0/24`). Fall back to the RFC1918 blocks only when the organization lists none.
 - **When the user's question implies aggregation** (*"top 10 ..."*, *"count by ..."*, *"hosts grouped by ..."*) → add `| comp count(...) as <name> by <field>` and `| sort desc <name>` and `| limit 10`.
 - **When the user implies a time window** (*"in the last hour"*, *"this week"*) → add `| filter _time > to_timestamp(current_time() - duration("PT1H"))` (for hour) or similar. The `to_timestamp(current_time() - duration(...))` pattern appears across the operator's queries.
 
@@ -380,7 +384,7 @@ A summary that names KB matches + extracted terms but doesn't list the lookups +
 
 > XDR responded `status: SUCCESS` in N seconds. Returned M rows. Fields: action_remote_ip, agent_hostname, event_count. First 5 rows:
 > ```json
-> [{ "action_remote_ip": "1.2.3.4", "agent_hostname": "host-a", "event_count": 42 }, ...]
+> [{ "action_remote_ip": "1.2.3.4", "agent_hostname": "PHWS-001", "event_count": 42 }, ...]
 > ```
 
 OR, on failure:

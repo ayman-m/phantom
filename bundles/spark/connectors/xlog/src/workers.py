@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Union
 from fastmcp import Context
 from pydantic import BaseModel, Field
 
+from . import org_defaults
 from ._graphql_client import PhantomGraphQLClient
 from ._xlog_url_resolver import resolve_xlog_url
 
@@ -475,6 +476,7 @@ async def phantom_create_data_worker(
     schema_override: Optional[List[Dict[str, Any]]] = None,
     webhook_url: Optional[str] = None,
     webhook_key: Optional[str] = None,
+    use_organization: bool = True,
     ctx: Context = None,
 ) -> List[Dict[str, Any]]:
     """
@@ -571,6 +573,15 @@ async def phantom_create_data_worker(
       }
     }
     (The fields list comes from data_sources_get_schema's response — paste it verbatim.)
+
+    Identities come from the organization. Every user, host and address that you do not pin in `observables_dict`
+    is filled from the ACTIVE ORGANIZATION (read it first with `organization_get`): on the `schema_override` path each
+    recognised user, source host, source address, destination host and destination address field is bound through
+    `__entities__`, so a person is drawn together with their own workstation and its address and a real server as the
+    destination; on the generic path one person (the designated attack-source user) and one server are pinned. The
+    result's `organization_defaults` lists exactly which fields were bound. Values you pass are never overwritten; to pin
+    a specific person, pass their login, workstation and address yourself. Pass `use_organization=false` only when the
+    operator asks for unconstrained random identities.
 
     Keeping identities consistent (`__entities__`, schema_override path only):
     every observables_dict field is otherwise sampled independently per record,
@@ -670,6 +681,9 @@ async def phantom_create_data_worker(
                 "enumValues": f.get("enum_values"),
                 "example": f.get("example"),
             })
+        override_observables, org_report = org_defaults.resolve(
+            schema_fields=vendor_fields_input, observables=_parse_observables_dict(request.observables_dict, normalize=False),
+            use_organization=use_organization)
         override_variables = {
             "input": {
                 "type": request.type.upper(),
@@ -704,9 +718,7 @@ async def phantom_create_data_worker(
                 # vendor schema supplied in schema_override, NOT the legacy
                 # 46-key faker vocabulary, so alias-renaming would destroy pins
                 # on fields like `event_id`.
-                "observablesDict": _parse_observables_dict(
-                    request.observables_dict, normalize=False
-                ),
+                "observablesDict": override_observables,
                 # Store-driven xsiam_http: MCP-resolved endpoint + key.
                 # None when the worker uses a syslog/raw destination or the env
                 # default; stripped below so the GraphQL request stays clean.
@@ -718,6 +730,8 @@ async def phantom_create_data_worker(
         override_variables["input"] = {k: v for k, v in override_variables["input"].items() if v is not None}
         result = await client.execute_query(override_query, override_variables)
         out = result.get("createDataWorker") or {}
+        if out and org_report is not None:
+            out = {**out, "organization_defaults": org_report}
         # Match the existing return shape (list of one dict) so the
         # agent's downstream logic stays compatible with the scenario
         # path's output.
@@ -758,6 +772,8 @@ async def phantom_create_data_worker(
 
     required_fields = _parse_required_fields(request.required_fields)
     observables_dict = _parse_observables_dict(request.observables_dict)
+    observables_dict, org_report = org_defaults.resolve(
+        schema_fields=None, observables=observables_dict, use_organization=use_organization)
     fields = _parse_fields(request.fields)
 
     # DEBUG LOGGING: Track observable mapping
@@ -807,7 +823,10 @@ async def phantom_create_data_worker(
     variables = {k: v for k, v in variables.items() if v is not None}
 
     result = await client.execute_query(query, variables)
-    return result.get("createScenarioWorkerFromQuery", [])
+    workers = result.get("createScenarioWorkerFromQuery", [])
+    if org_report is not None and workers and isinstance(workers[0], dict):
+        workers[0] = {**workers[0], "organization_defaults": org_report}
+    return workers
 
 
 async def phantom_list_workers(ctx: Context) -> List[Dict[str, Any]]:

@@ -70,13 +70,17 @@ empty. `compact=true` is lossless for this purpose and keeps the payload inside 
 3. For each stage whose class is `MISSING` (and has no substitute in the table), say this to the operator, with the class and stage filled in: "No installed data source covers the `<class>` class, so I am skipping Stage <N> (<stage name>). I will not generate it with a generic schema. Install a `<class>` data source from the Marketplace to include it." Then create NO worker for that stage: not with a generic schema, not with another class's schema, not with a guessed vendor/product. Continue with the stages whose classes are covered. If every stage is `MISSING`, stop after saying it. Substitutions from the table apply first: `proxy` missing means use the `firewall` entry for Stage 2; `vpn` missing means use the `saas` sign-in failures for Stage 4. Say when you substitute.
 4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
+## Pre-flight: read the organization
+
+The scan target is the organization's DMZ. Call `organization_get(section="hosts", filter="role=dmz")` for the public web server (PHDMZ-WEB01), the mail gateway (PHDMZ-MAIL01) and the VPN gateway (PHDMZ-VPN01), `organization_get(section="networks")` for the DMZ block (`172.16.10.0/24` on Phantom Lab), and `organization_get(section="accounts", limit=100)` for the logins the Stage 4 probe guesses. Do not invent a host, subnet or account. If the organization has no DMZ web host or no VPN gateway, tell the operator and offer `organization_update` instead.
+
 ## Narrative thread
 
-- **Attacker source IP:** `192.0.2.42` (TEST-NET-2 documentation range — replace with a documented threat-intel-sourced IP for real exercises)
-- **Internal IP range scanned (Stage 1):** `10.10.30.0/24` (DMZ subnet)
-- **Discovered web app (after Stage 1 finds open 443):** `app.corp.example` at `10.10.30.10`
-- **VPN portal (Stage 4 target):** `10.10.0.50`
-- **Probed account list:** common admin defaults + plausible firstname.lastname patterns + service account names
+- **Attacker source IP:** `192.0.2.42` (TEST-NET-2 documentation range — replace with a documented threat-intel-sourced IP for real exercises). The attacker is outside the organization.
+- **Internal IP range scanned (Stage 1):** the organization's DMZ block (`172.16.10.0/24` on Phantom Lab). The 10 scanned addresses include the real DMZ hosts (PHDMZ-WEB01 `172.16.10.10`, PHDMZ-MAIL01 `172.16.10.11`, PHDMZ-VPN01 `172.16.10.12`) and unused addresses of the same block.
+- **Discovered web app (after Stage 1 finds open 443):** PHDMZ-WEB01 at `172.16.10.10` (public address `egress.dmz_public.PHDMZ-WEB01`, `151.254.90.10` on Phantom Lab)
+- **VPN portal (Stage 4 target):** PHDMZ-VPN01 (`172.16.10.12`, public address `egress.dmz_public.PHDMZ-VPN01`, `151.254.90.12` on Phantom Lab)
+- **Probed account list:** common admin defaults + logins of the organization (staff, administrators, service accounts) from `section=accounts`
 - **Wall-clock time:** Stage 1 ~25 min (slow scan to evade thresholds). Stage 2 ~10 min (post-discovery enum). Stage 3 ~12 min (payload recon). Stage 4 ~15 min (account probing). Total: ~62 min — recon is patient.
 
 ---
@@ -97,10 +101,10 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     src:        ["192.0.2.42"]
-    dst:        ["10.10.30.1", "10.10.30.5", "10.10.30.10",
-                    "10.10.30.15", "10.10.30.20", "10.10.30.42",
-                    "10.10.30.50", "10.10.30.100", "10.10.30.200",
-                    "10.10.30.250"]
+    dst:        ["172.16.10.1", "172.16.10.5", "172.16.10.10",
+                    "172.16.10.11", "172.16.10.12", "172.16.10.20",
+                    "172.16.10.42", "172.16.10.50", "172.16.10.100",
+                    "172.16.10.200"]   # 10 addresses of the organization's DMZ block, including its real hosts
     dpt:      ["22", "23", "25", "80", "110", "135", "139",
                     "143", "443", "445", "1433", "3306", "3389",
                     "5432", "5985", "8080", "8443", "9000"]
@@ -116,9 +120,9 @@ xlog.create_data_worker:
 ```
 
 **Field semantics:**
-- `dst_ip` covers 10 internal IPs in the DMZ — the scan is sweeping the subnet
+- `dst_ip` covers 10 addresses in the organization's DMZ block — the scan is sweeping the subnet
 - `dst_port` covers 18 well-known service ports — characteristic port-knock pattern
-- `action: deny` predominates (firewall blocks most), with a few `allow`s for ports that have services listening (e.g. 443 to 10.10.30.10)
+- `action: deny` predominates (firewall blocks most), with a few `allow`s for ports that have services listening (e.g. 443 to PHDMZ-WEB01 at 172.16.10.10)
 - `tcp_flag: SYN` for connection attempts; `SYN-ACK` for the few that get through
 - `bytes_sent/received: 0 / 0` for denied (firewall returns nothing); larger for allowed
 
@@ -128,7 +132,7 @@ xlog.create_data_worker:
 
 ### Stage 2 — Directory-traversal & path-enumeration — ~60 events over 10 minutes
 
-After Stage 1 found the web app at `10.10.30.10:443`, the attacker probes for known sensitive paths: `.git/config`, `.env`, `phpmyadmin/`, `wp-admin/`, etc. Most return 404 or 403; a few interesting ones (e.g., `/.well-known/`, `/robots.txt`, `/sitemap.xml`) return 200 and leak structure.
+After Stage 1 found the web app on PHDMZ-WEB01 (`172.16.10.10:443`), the attacker probes for known sensitive paths: `.git/config`, `.env`, `phpmyadmin/`, `wp-admin/`, etc. Most return 404 or 403; a few interesting ones (e.g., `/.well-known/`, `/robots.txt`, `/sitemap.xml`) return 200 and leak structure.
 
 **Data class:** `proxy`
 
@@ -142,7 +146,7 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     src:        ["192.0.2.42"]
-    dst:        ["10.10.30.10"]
+    dst:        ["<web server DMZ address: 172.16.10.10 for PHDMZ-WEB01>"]
     dpt:      ["443"]
     request:           ["/.git/config", "/.env", "/.svn/entries",
                     "/phpmyadmin/", "/wp-admin/", "/wp-login.php",
@@ -196,7 +200,7 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     src:        ["192.0.2.42"]
-    dst:        ["10.10.30.10"]
+    dst:        ["<web server DMZ address: 172.16.10.10 for PHDMZ-WEB01>"]
     spt:      ["49152", "51234", "57890"]
     dpt:      ["443"]
     proto:      ["6"]
@@ -248,11 +252,14 @@ xlog.create_data_worker:
     src:                ["192.0.2.42"]
     suser:                  ["admin", "administrator", "root", "guest", "test",
                             "demo", "support", "helpdesk", "backup", "operator",
-                            "j.smith", "a.jones", "k.taylor", "m.brown", "d.wilson",
-                            "alice", "bob", "carol", "diana", "edward",
-                            "svc_backup", "svc_sql", "svc_monitor", "svc_ldap",
                             "service", "scanner", "audit", "compliance",
-                            "manager", "director", "ceo", "cfo"]
+                            "manager", "director", "ceo", "cfo",
+                            # 14 more: real logins from organization_get(section="accounts", limit=100),
+                            # service accounts first. Phantom Lab example:
+                            "svc-backup", "svc-sql", "svc-web", "svc-app",
+                            "adm.ialkhalifa", "adm.malwadi",
+                            "nalharbi", "kalotaibi", "aalzahrani", "salmutairi",
+                            "falqahtani", "raldosari", "oalshehri", "halghamdi"]
     act:                ["login_failure"]
     authenticationResult: ["failed"]
     authenticationMethod: ["password"]
@@ -263,7 +270,7 @@ xlog.create_data_worker:
 ```
 
 **Field semantics:**
-- `user` — 32 distinct usernames from one source. `error_code: USER_NOT_FOUND` tells the attacker which usernames don't exist; `INVALID_CREDENTIALS` (vs `USER_NOT_FOUND`) is the leak that the username DOES exist
+- `user` — 32 distinct usernames from one source. `error_code: USER_NOT_FOUND` tells the attacker which usernames don't exist; `INVALID_CREDENTIALS` (vs `USER_NOT_FOUND`) is the leak that the username DOES exist (across the burst, expect `INVALID_CREDENTIALS` mostly for the real logins of the organization and `USER_NOT_FOUND` mostly for the generic guesses; the single worker draws each field independently, so this is the overall mix, not a per-user pairing)
 - `src_ip: 192.0.2.42` — same source as Stages 1-3, completing the "one attacker, end-to-end recon" narrative
 
 **Why this fires Rule #1:** classic account-probing pattern — 32 distinct users from one source in 15 min. Threshold is typically ≥10 users / 5 min from one source. This crosses it 3x over.
@@ -290,4 +297,4 @@ xlog.kill_worker:
 
 ## Adapting per deployment
 
-Replace `192.0.2.42` with a real threat-intel IP if the customer wants their TI integration enriched. The destination `10.10.30.0/24` should be the customer's actual DMZ subnet for realistic detection.
+Replace `192.0.2.42` with a real threat-intel IP if the operator wants their TI integration enriched. The destination block, the web server, the VPN gateway and the probed logins always come from the active organization (`organization_get`); on another organization, read its own DMZ block and hosts.

@@ -2,7 +2,7 @@
 name: trigger_gcp_sensitive_role_to_group_alert
 displayName: Trigger the Cortex "GCP sensitive role granted to group" analytics alert
 category: workflows
-description: 'Fire Cortex XSIAM''s native "GCP sensitive role granted to group" analytics BIOC (Low, T1098.003 Additional Cloud Roles) by sending ONE synthetic Google Cloud Audit log entry through the http-sender connector in Cribl mode: a SetIamPolicy call on a new project that adds roles/owner for a Google group. Use when the operator asks to trigger, demo, prove or reproduce a privileged role granted to a group in GCP, an owner or admin role given to a group, or GCP IAM privilege escalation through a group. One http-sender generate_events call (profile gcp_audit, scenario sensitive_role_to_group) with no other argument: it goes to the cribl_gcp_cloud_logging destination, invents a fresh user, project and group on every call, and the alert typically arrives within about 15 seconds. The instance must have criblUrl and the criblToken secret.'
+description: 'Fire Cortex XSIAM''s native "GCP sensitive role granted to group" analytics BIOC (Low, T1098.003 Additional Cloud Roles) by sending ONE synthetic Google Cloud Audit log entry through the http-sender connector in Cribl mode: a SetIamPolicy call on the organization''s GCP project that adds roles/owner for a Google group. Use when the operator asks to trigger, demo, prove or reproduce a privileged role granted to a group in GCP, an owner or admin role given to a group, or GCP IAM privilege escalation through a group. One http-sender generate_events call (profile gcp_audit, scenario sensitive_role_to_group) with no other argument: it goes to the cribl_gcp_cloud_logging destination, invents a fresh user, project and group on every call, and the alert typically arrives within about 15 seconds. The instance must have criblUrl and the criblToken secret.'
 icon: group_add
 source: platform
 loadingMode: on-demand
@@ -37,7 +37,7 @@ It is not a correlation rule; it is Cortex's own analytics (Cloud module, `XDR A
 | # | Must be true | How to check |
 |---|---|---|
 | 1 | The `http-sender` instance is running with Cribl configured: `list_destinations` shows **`cribl_gcp_cloud_logging`** with `ready: true` (dataset `google_cloud_logging_raw`) | `http-sender.list_destinations` |
-| 2 | You pass **no** `destination`, `target_user`, `source_ip` or `count`. The scenario's default destination is the Cribl one, and the actor, the project (`phantom-lab-<hex>`), the group (`eng-<hex>@phantom-lab.example`) and the caller address are invented per call | read the call below |
+| 2 | You pass **no** `destination`, `target_user`, `source_ip` or `count`. The scenario's default destination is the Cribl one, and the actor, the group (`eng-<hex>@phantom.lab`) and the caller address are invented per call; the project is the organization's GCP project (`phantom-lab-prod` on Phantom Lab) | read the call below |
 | 3 | The call is one event (the recipe has 1 step). The event time is now | none |
 
 ## Expected result
@@ -54,7 +54,7 @@ Call **`http-sender.generate_events`** once. There is nothing to replace.
 
 The answer carries `sent: 1`, `batch_status: [200]`, `destination: "cribl_gcp_cloud_logging"`, `dataset: "google_cloud_logging_raw"`, `sample_ids` (the entry's `insertId`) and `first_time` (the event time). Keep the `insertId` and the time.
 
-What the one event is: a Cloud Audit `activity` log entry, `serviceName cloudresourcemanager.googleapis.com`, `methodName SetIamPolicy`, on `projects/<new project>`, whose `policyDelta` ADDs the role **`roles/owner`** for the member **`group:eng-<hex>@phantom-lab.example`**, by a new user from a Saudi home address. An owner role bound to a `group:` member is what the detector reads.
+What the one event is: a Cloud Audit `activity` log entry, `serviceName cloudresourcemanager.googleapis.com`, `methodName SetIamPolicy`, on `projects/<the organization's project id>`, whose `policyDelta` ADDs the role **`roles/owner`** for the member **`group:eng-<hex>@phantom.lab`**, by a new user from a Saudi home address. An owner role bound to a `group:` member is what the detector reads.
 
 ## Step 2: confirm the event landed (about 1 minute after Step 1)
 
@@ -82,10 +82,12 @@ config timeframe = 1d | dataset = alerts
 
 Use the stored enum names `MAGNIFIER` and `ANALYTICS_BIOC`: the displayed names `XDR_ANALYTICS` and `XDR_ANALYTICS_BIOC` match nothing in a filter.
 
-Pass when a row names your identity (`user_name` shows `phantom-lab\<local part>`) and `host_ip` is your caller IP. Expect `severity` LOW, `mitre_attack_technique` `T1098 - Account Manipulation|T1098.003 - Account Manipulation: Additional Cloud Roles` and `original_tags` with `DS:Google/Cloud Logging`.
+Pass when a row names your identity (`user_name` shows `phantom\<local part>`) and `host_ip` is your caller IP. Expect `severity` LOW, `mitre_attack_technique` `T1098 - Account Manipulation|T1098.003 - Account Manipulation: Additional Cloud Roles` and `original_tags` with `DS:Google/Cloud Logging`.
 
 If nothing arrives in 3 minutes: re-run Step 2 (the row must be in `google_cloud_logging_raw` with `_collector_type = GCP Pub/Sub`), confirm the destination was `cribl_gcp_cloud_logging`, then retry **once** with the same call (it generates a new identity).
 
 ## Report back to the operator
 
 State the cloud identity, the project and the group (from the Step 2 row), the caller IP, the `insertId`, the Step 2 result and either the alert id with its arrival time and latency or that nothing arrived in 3 minutes and what you checked. Say that every call uses a new identity, so repeating it is safe.
+
+Note: the Cortex `user_name` prefix shown above (`phantom\`) is the first label of the organization's email domain (`phantom.lab`); it was `phantom-lab\` on the previous domain. It has not been re-measured on the tenant, so confirm it on the first replay.

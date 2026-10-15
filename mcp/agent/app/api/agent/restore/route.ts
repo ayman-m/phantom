@@ -1,7 +1,7 @@
 /**
  * Restore endpoint — accepts a zip produced by GET /api/agent/backup
  * and applies each section to the destination's stores in dependency
- * order: personality → instances+secrets → skills → memory → knowledge
+ * order: personality → organizations → instances+secrets → skills → memory → knowledge
  * (no-op) → data sources → operator state → hooks → jobs.
  *
  * The body is multipart/form-data with field name "file" (the zip).
@@ -268,6 +268,7 @@ export async function POST(request: Request) {
       manifest,
       sections_present: {
         personality: !!zip.file("personality.json"),
+        organizations: !!zip.file("organizations.json"),
         instances: !!zip.file("instances.json"),
         memory: !!zip.file("memory.json"),
         jobs: !!zip.file("jobs.json"),
@@ -290,6 +291,7 @@ export async function POST(request: Request) {
       },
       restore_order: [
         "personality",
+        "organizations",
         "instances",
         "skills",
         "memory",
@@ -394,6 +396,45 @@ export async function POST(request: Request) {
         }`,
       );
     }
+  }
+
+  // ── 1b. Organizations — re-import each operator organization (replace), then restore the active one
+  const orgWrap = await readJsonFile<{
+    active_id?: string | null;
+    organizations?: { id: string; document: unknown }[];
+  }>("organizations.json");
+  if (orgWrap?.organizations) {
+    let applied = 0;
+    for (const o of orgWrap.organizations) {
+      try {
+        const resp = await fetch(`${mcp.base}/api/v1/organizations`, {
+          method: "POST",
+          headers: auth,
+          body: JSON.stringify({ text: JSON.stringify(o.document), format: "json", replace: true }),
+          signal: AbortSignal.timeout(15000),
+        });
+        if (resp.ok) applied += 1;
+        else summary.errors.push(`organization ${o.id} POST returned HTTP ${resp.status}`);
+      } catch (e) {
+        summary.errors.push(
+          `organization ${o.id} restore failed: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
+    if (orgWrap.active_id) {
+      try {
+        const resp = await fetch(
+          `${mcp.base}/api/v1/organizations/${encodeURIComponent(orgWrap.active_id)}/activate`,
+          { method: "POST", headers: auth, signal: AbortSignal.timeout(15000) },
+        );
+        if (!resp.ok) summary.errors.push(`organization activate returned HTTP ${resp.status}`);
+      } catch (e) {
+        summary.errors.push(
+          `organization activate failed: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
+    summary.applied.organizations = applied;
   }
 
   // ── 2. Instances — POST each; skip on collision unless force ─────

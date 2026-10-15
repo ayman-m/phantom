@@ -15,9 +15,14 @@ Identity is UPN-shaped (`alternateId` is an email) and bare. A `DOMAIN\\user`
 form may collapse identity in the Cortex analytics engine (UNVERIFIED hypothesis: not measured here;
 bare names are used so the question never arises).
 
+Identities are the active organization's: the users are its people who may log on (leavers excluded), the login is the
+person's email, the Okta id is the person's `okta_id` and the home address is the person's `home_ip`, so one person is the
+same entity in every profile and every connector. `target_user` names one of them (login, email or the part before the @).
+Only the actors an attack recipe mints fresh (`fastpass.phishing.<id>`) are not in the organization; their domain is.
+
 Addresses are real, geo-resolvable public IPs from `ippools`, because Cortex derives country, city and ASN
-from the IP itself and ignores any label in the event: each benign user has one stable Saudi home address, and
-the attack scenarios default to an out-of-country one. `client.geographicalContext` and `securityContext` carry
+from the IP itself and ignores any label in the event: each benign user comes from the Saudi home address the organization
+gives them, and the attack scenarios default to an out-of-country one. `client.geographicalContext` and `securityContext` carry
 what Cortex resolves for that address, so the event agrees with the enrichment the analytics engine does itself.
 Everything else here is synthetic: names and ids are fictitious.
 
@@ -31,8 +36,8 @@ not fresh by default, and `target_user` overrides that.
 differences, NOT re-measured: the phishing host in `logOnlySecurityData` is a reserved `.invalid` name (the measured one was
 real-looking); `client.geographicalContext.geolocation` is null; the country label is null when `source_ip` is given
 (otherwise the exit's country from the snapshot); `securityContext.domain` stays
-`torproject.org` for every address, and the users are `fastpass.phishing.<id>@<userDomain>` where the measured
-shape used a real-looking domain.
+`torproject.org` for every address, and the users are `fastpass.phishing.<id>@<the organization's email domain>` where the
+measured shape used a real-looking domain.
 """
 from __future__ import annotations
 
@@ -42,7 +47,9 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from . import _fresh, ippools
+from runtime.organization_view import OrganizationView
+
+from . import _fresh, _org, ippools
 
 # The profile interface (see profiles/__init__.py).
 NAME = "okta"
@@ -65,13 +72,6 @@ SCENARIO_DESTINATION = {"tor_signin": "cribl_okta_sso", "fastpass_phishing": "cr
 # (a warning is always given when they go elsewhere). The other two ("Multiple Okta MFA requests" fired from them over
 # Cribl) default to Cribl only when it is configured, so an instance without Cribl behaves as before.
 CRIBL_ONLY_SCENARIOS = ("tor_signin", "fastpass_phishing")
-
-_USERS = [
-    ("Noura", "Alharbi"), ("Khalid", "Alotaibi"), ("Abdullah", "Alzahrani"),
-    ("Sara", "Almutairi"), ("Faisal", "Alqahtani"), ("Reem", "Aldosari"),
-    ("Omar", "Alshehri"), ("Huda", "Alghamdi"), ("Yousef", "Alharthi"),
-    ("Layla", "Almalki"), ("Tariq", "Alsubaie"), ("Dana", "Alanazi"),
-]
 
 _AGENTS = [
     ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36", "Windows 10", "CHROME", "Computer"),
@@ -109,6 +109,12 @@ def _security_context(net: ippools.Range | None) -> dict[str, Any]:
             "domain": _isp_domain(net) if net else None, "isProxy": False}
 
 
+def identity(person: dict[str, Any]) -> dict[str, str]:
+    """The Okta actor of an organization person: the person's `okta_id` (derived from the email for a person who has none,
+    so the id is still one per person for life), the email as login and the display name."""
+    return {"id": person.get("okta_id") or user_id(person["email"]), "login": person["email"], "name": _org.display(person)}
+
+
 def iso(ts: datetime) -> str:
     """Okta's timestamp form: UTC, millisecond precision, trailing Z."""
     ts = ts.astimezone(timezone.utc)
@@ -129,9 +135,11 @@ def user_id(login: str) -> str:
 class _Factory:
     """Deterministic when seeded, so the tests can assert on exact output."""
 
-    def __init__(self, domain: str, seed: int | None = None) -> None:
+    def __init__(self, view: OrganizationView, seed: int | None = None) -> None:
         self.rng = random.Random(seed)
-        self.domain = domain
+        self.view = view
+        self.domain = view.email_domain  # the domain of the actors a recipe mints fresh
+        self.pool = _org.logon_people(view)
 
     # -- identities -----------------------------------------------------
     def okta_id(self, prefix: str) -> str:
@@ -141,11 +149,12 @@ class _Factory:
     def uid(self) -> str:
         return str(uuid.UUID(int=self.rng.getrandbits(128), version=4))
 
+    def person(self, index: int) -> dict[str, Any]:
+        """Person number `index` of the pool (it wraps: a spray wider than the organization repeats its people)."""
+        return self.pool[index % len(self.pool)]
+
     def user(self, index: int) -> dict[str, str]:
-        first, last = _USERS[index % len(_USERS)]
-        suffix = "" if index < len(_USERS) else str(index // len(_USERS) + 1)
-        login = f"{first.lower()}.{last.lower()}{suffix}@{self.domain}"
-        return {"id": user_id(login), "login": login, "name": f"{first} {last}{suffix}"}
+        return identity(self.person(index))
 
     # -- event pieces ---------------------------------------------------
     def event(
@@ -223,55 +232,55 @@ def _times(end: datetime, count: int, spread_seconds: int) -> list[datetime]:
 
 
 def build_events(
-    scenario: str, count: int, *, domain: str, now: datetime,
+    scenario: str, count: int, *, view: OrganizationView, now: datetime,
     spread_seconds: int = 120, start_offset_minutes: int = 0,
     target_user: str | None = None, source_ip: str | None = None, seed: int | None = None,
 ) -> list[dict[str, Any]]:
     """Build `count` events for `scenario`, oldest first.
 
     The window ends `start_offset_minutes` before `now` and is
-    `spread_seconds` wide; nothing is ever dated after `now`.
+    `spread_seconds` wide; nothing is ever dated after `now`. The users are the organization's (`view`); `target_user` is
+    one of its people (`_org.UnknownUser`, a ValueError, lists the valid ones).
     """
     if scenario not in SCENARIOS:
         raise ValueError(f"unknown scenario {scenario!r}; choose one of {', '.join(SCENARIOS)}")
     if count < 1:
         raise ValueError("count must be at least 1")
-    f = _Factory(domain, seed)
+    f = _Factory(view, seed)
     end = now - timedelta(minutes=max(start_offset_minutes, 0))
     times = _times(end, count, spread_seconds)
 
     if scenario == "benign_logins":
         return _benign(f, times)
     if scenario == "tor_signin":
-        return _tor_signin(f, times, target_user, domain, source_ip)
+        return _tor_signin(f, times, target_user, source_ip)
     if scenario == "fastpass_phishing":
-        return _fastpass_phishing(f, times, domain, source_ip)
-    victim = _named_user(f, target_user, domain)
+        return _fastpass_phishing(f, times, source_ip)
     # An attacker comes from outside the country; an overriding `source_ip` carries the geography
     # of the pool range it sits in, and none at all when it is in neither pool.
     ip, net = (source_ip, ippools.range_of(source_ip)) if source_ip else ippools.abroad_pick(f.rng)
-    if scenario == "failed_then_success":
-        return _failed_then_success(f, times, victim, ip, net)
     if scenario == "password_spray":
         return _password_spray(f, times, ip, net)
+    victim = _named_user(f, target_user)
+    if scenario == "failed_then_success":
+        return _failed_then_success(f, times, victim, ip, net)
     return _mfa_fatigue(f, times, victim, ip, net)
 
 
-def _named_user(f: _Factory, login: str | None, domain: str) -> dict[str, str]:
+def _named_user(f: _Factory, login: str | None) -> dict[str, str]:
+    """`target_user` as an Okta actor: the organization's person it names (first person of the pool when none is given).
+    Okta logins are case-insensitive and a DOMAIN\\user form collapses identity in Cortex analytics, so the person's
+    email, one spelling, is the login either way."""
     if not login:
         return f.user(0)
-    login = login.rsplit("\\", 1)[-1]  # a DOMAIN\\user form collapses identity in Cortex analytics
-    login = login.lower()  # Okta logins are case-insensitive; one spelling keeps one identity
-    login = login if "@" in login else f"{login}@{domain}"
-    first = login.split("@", 1)[0].replace(".", " ").title()
-    return {"id": user_id(login), "login": login, "name": first}
+    return identity(_org.resolve(f.view, login))
 
 
 def _benign(f: _Factory, times: list[datetime]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for i, when in enumerate(times):
-        idx = i // 2 % len(_USERS)
-        (ip, net), user = ippools.home_for(idx), f.user(idx)  # one stable address per user, on every run
+        idx = i // 2 % len(f.pool)
+        (ip, net), user = _org.home(f.person(idx)), f.user(idx)  # one stable address per user, on every run
         agent = _AGENTS[idx % len(_AGENTS)]
         if i % 2 == 0:
             out.append(f.login(when, user, ip, net, agent, ok=True))
@@ -323,16 +332,16 @@ def _tor_context(ev: dict[str, Any], exit_: ippools.TorExit | None) -> None:
     ev["securityContext"].update({"asNumber": _TOR_AS, "asOrg": org, "isp": org, "domain": "torproject.org", "isProxy": True})
 
 
-def _tor_signin(f: _Factory, times: list[datetime], target_user: str | None, domain: str,
+def _tor_signin(f: _Factory, times: list[datetime], target_user: str | None,
                 source_ip: str | None) -> list[dict[str, Any]]:
     """Successful SSO from a Tor exit: baseline users, a different exit and a never-seen app each time."""
     exits = ippools.tor_exits(f.rng, len(times))
-    victim = _named_user(f, target_user, domain) if target_user else None
-    start = f.rng.randrange(len(_USERS))
+    victim = _named_user(f, target_user) if target_user else None
+    start = f.rng.randrange(len(f.pool))
     known = {e.ip: e for e in ippools.ALL_TOR_EXITS}
     out = []
     for i, when in enumerate(times):
-        user = victim or f.user((start + i) % len(_USERS))
+        user = victim or f.user((start + i) % len(f.pool))
         ip = source_ip or exits[i].ip
         ev = f.sso(when, user, ip, None, _AGENTS[0], f"{f.rng.choice(_NEW_APPS)} {_fresh.hexs(f.rng, 4)}")
         _tor_context(ev, known.get(ip))
@@ -340,13 +349,13 @@ def _tor_signin(f: _Factory, times: list[datetime], target_user: str | None, dom
     return out
 
 
-def _fastpass_phishing(f: _Factory, times: list[datetime], domain: str, source_ip: str | None) -> list[dict[str, Any]]:
+def _fastpass_phishing(f: _Factory, times: list[datetime], source_ip: str | None) -> list[dict[str, Any]]:
     """Okta blocked a FastPass phishing attempt: a brand-new user and a new Tor exit for every event (dedup is per day)."""
     exits = ippools.tor_exits(f.rng, len(times))
     out = []
     for i, when in enumerate(times):
         tag = _fresh.hexs(f.rng, 6)
-        login = f"fastpass.phishing.{tag}@{domain}"
+        login = f"fastpass.phishing.{tag}@{f.domain}"
         user = {"id": user_id(login), "login": login, "name": f"Fastpass Phishing {tag.upper()}"}
         ip, exit_ = (source_ip, None) if source_ip else (exits[i].ip, exits[i])
         ev = f.event(
@@ -378,9 +387,10 @@ def _fastpass_phishing(f: _Factory, times: list[datetime], domain: str, source_i
     return out
 
 
-def sample_event(*, domain: str, now: datetime) -> dict[str, Any]:
-    """One benign, unmistakably-synthetic login for proving the collector path."""
-    f = _Factory(domain)
-    user = {"id": user_id(f"phantom.test@{domain}"), "login": f"phantom.test@{domain}", "name": "Phantom Test"}
+def sample_event(*, view: OrganizationView, now: datetime) -> dict[str, Any]:
+    """One benign, unmistakably-synthetic login for proving the collector path (a test user of the organization's domain)."""
+    f = _Factory(view)
+    login = f"phantom.test@{view.email_domain}"
+    user = {"id": user_id(login), "login": login, "name": "Phantom Test"}
     ip, net = ippools.home_for(0)
     return f.login(now, user, ip, net, _AGENTS[0], ok=True)

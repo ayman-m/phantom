@@ -198,6 +198,89 @@ def personality_get() -> dict[str, Any]:
 
 
 # ─────────────────────────────────────────────────────────────────
+# Organization — the one fictitious company every simulation uses.
+# Trigger phrases: "who works in Finance?", "what is the CFO's laptop?",
+# "which subnets do we have?", "simulate a login for a Sales user"
+# ─────────────────────────────────────────────────────────────────
+
+
+def organization_get(
+    section: str | None = None,
+    filter: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    detail: bool = False,
+    organization_id: str | None = None,
+) -> dict[str, Any]:
+    """Read the organization Phantom is simulating: its people, accounts, hosts, networks and cloud accounts.
+
+    CALL THIS BEFORE you generate any log, event or scenario that names a user, host or address. Use only what it returns:
+    never invent a user, a host name, an address or a domain. Every person has one primary workstation with one fixed
+    address; put that login, workstation and address together in every log about the person, so the events of different
+    sources (identity provider, Windows, firewall, cloud) stitch onto the same entities in Cortex.
+
+    Args:
+        section: what to read. One of "overview" (default: counts, domain, sites, warnings), "people" (login, name, title,
+            department, manager, site, workstation and its IP, SID, Okta id, home egress IP, flags), "accounts" (every
+            logon account with its SID, host and groups, including the adm. admin accounts, service accounts and the
+            break-glass account), "hosts" (domain controllers, servers, DMZ, network, security and cloud hosts and the
+            workstations, each with IP, network, role and purpose), "networks" (VLANs and address blocks), "sites",
+            "groups" (with members), "personas" (the VIP targets, the outlier to attack from, contractors, leavers,
+            administrators, service and break-glass accounts), "cloud" (AWS account, Azure tenant, GCP project),
+            "egress" (public NAT addresses) or "cortex" (the internal ranges and domain suffix for Cortex Network
+            Configuration).
+        filter: narrow the rows. "department=Finance", "flag=vip", "site=JED", "role=server", "kind=admin",
+            "manager=nalharbi", several joined by commas ("department=IT,site=RUH"), or a bare word matched against names,
+            logins, titles and addresses ("noura", "10.20.1.").
+        limit: most rows per page (1-500, default 50). A page is also capped at about 12 KB so the chat never cuts it:
+            `total`, `returned`, `offset` and `truncated` say exactly what you got, and `next_offset` is where the next
+            page starts. When `truncated` is true, call again with `offset=next_offset` (or add a filter) BEFORE you use
+            the list: never assume rows you have not seen.
+        offset: first row of the page (0-based). Use the previous result's `next_offset`.
+        detail: false (default) returns the columns most tasks need (login, name, email, title, department, manager,
+            site, workstation and its address, flags; for accounts the SID and host). true adds SIDs, Okta ids, home egress
+            addresses, groups, cloud access and dates for people, groups for accounts, and the OS, RID and FQDN for hosts.
+            Ask for it only when you need those columns.
+        organization_id: read an organization other than the active one. Leave empty for the active one.
+
+    Returns {section, total, offset, returned, truncated, next_offset?, rows} (the overview and the cloud/egress/cortex sections return their
+    fields directly), or {"error": ...}.
+
+    Example: organization_get(section="people", filter="department=Finance")
+    Example: organization_get(section="personas")  # who to target, who to attack from
+    Example: organization_get(section="hosts", filter="role=server")
+    """
+    from usecase import organization_model as om
+    from usecase.organization_store import organization_store
+    store = organization_store()
+    if store is None:
+        return {"error": "organization store not initialized on this MCP runtime"}
+    rec = store.get(organization_id) if organization_id else store.get_active()
+    if rec is None:
+        return {"error": f"no organization {organization_id!r}" if organization_id else "no active organization"}
+    try:
+        out = om.section(rec.document, section, filter, limit, offset, detail)
+    except om.OrganizationError as exc:
+        return {"error": str(exc)}
+    return {"organization": {"id": rec.id, "name": rec.name, "version": rec.version, "active": rec.active}, **out}
+
+
+def organization_list() -> dict[str, Any]:
+    """List the organizations Phantom has: the bundled Phantom Lab and any the operator added, and which one is active.
+
+    Returns {organizations: [{id, name, source, active, version, people, hosts, domain}], active_id, count}. The active
+    one is what every simulation uses. Trigger phrases: "which organizations do we have?", "what organization is active?".
+    """
+    from usecase.organization_store import organization_store
+    store = organization_store()
+    if store is None:
+        return {"error": "organization store not initialized on this MCP runtime"}
+    recs = store.list()
+    return {"organizations": [r.meta() for r in recs], "active_id": next((r.id for r in recs if r.active), None),
+            "count": len(recs)}
+
+
+# ─────────────────────────────────────────────────────────────────
 # Connector instances — XSIAM, Caldera, Xlog config blobs.
 # Trigger phrases: "what's my XSIAM URL?", "show me the connector
 # instances", "is Caldera configured?"
@@ -1254,6 +1337,116 @@ async def personality_patch(updates: dict[str, Any]) -> dict[str, Any]:
         return {"error": str(exc), "tool": "personality_patch"}
 
 
+# ─── Organization (2 tools) ─────────────────────────────────────
+
+
+async def organization_update(
+    changes: dict[str, Any],
+    note: str | None = None,
+    organization_id: str | None = None,
+) -> dict[str, Any]:
+    """Change the organization: add or edit people, hosts, networks and groups, or remove them. Waits for approval when the install gates it.
+
+    The change is validated as a whole and applied only if the organization stays consistent (every host address inside
+    its network, every manager and workstation existing, no duplicate login, host name or address). A rejected change
+    changes nothing and the error lists every problem. Every accepted change is kept in the organization's history, so
+    the operator can undo it. The bundled Phantom Lab is read-only: changing it makes an editable copy
+    (`phantom-lab-custom`), which becomes the active organization when Phantom Lab was; the result says so.
+
+    Args:
+        changes: an object with any of
+            "upsert": {"people": [...], "hosts": [...], "networks": [...], "sites": [...], "groups": [...],
+                       "service_accounts": [...]}  - add an entry, or merge fields into the entry with the same login
+                       (people, service_accounts), name (hosts, groups) or id (networks, sites); null deletes a field.
+            "remove": {"people": ["login", ...], "hosts": ["name", ...], ...}  - delete by login, name or id.
+            "set":    {"description": "...", "locale": {"timezone": "Asia/Dubai"}, "cortex": {...}, "egress": {...},
+                       "cloud": {...}, "domain": {...}, "name": "..."}  - deep-merge a scalar section.
+            A NEW PERSON needs only given_name, family_name, title and department (add "site" for Jeddah or Remote).
+            Their login (first initial + family name), email, workstation (a new PHWS-nnn host with the next free
+            address in the site's block), SID, Okta id, groups and manager are filled in, and `notes` says what was added.
+        note: a short reason, kept in the history ("onboarding: two Finance hires").
+        organization_id: edit an organization other than the active one. Leave empty for the active one.
+
+    Returns {organization: {id, name, version, active}, notes, forked_from} or {"error": ..., "errors": [...]}.
+
+    Trigger phrases: "add a new hire to Finance with a laptop", "add a server for the new HR system", "remove the
+    leaver", "add a /24 for the lab VLAN".
+
+    Example: organization_update({"upsert": {"people": [{"given_name": "Amira", "family_name": "Alfarsi",
+                                  "title": "Financial Analyst", "department": "Finance"}]}}, note="new hire")
+    Example: organization_update({"remove": {"hosts": ["PHSRV-BKP01"]}})
+    """
+    from usecase import organization_model as om
+    from usecase.builtin_components._approval_gate import gate_and_execute
+    from usecase.organization_store import OrganizationStoreError, organization_store
+    store = organization_store()
+    if store is None:
+        return {"error": "organization store not initialized on this MCP runtime"}
+    if not isinstance(changes, dict) or not changes:
+        return {"error": "changes must be a non-empty JSON object with upsert, remove and/or set"}
+    target = organization_id or (store.get_active().id if store.get_active() else None)
+    if target is None:
+        return {"error": "no active organization"}
+
+    def _apply() -> dict[str, Any]:
+        try:
+            rec, notes, forked_from = store.apply_changes(target, changes, actor="agent", note=note)
+        except om.OrganizationError as exc:
+            return {"error": str(exc), "errors": exc.errors}
+        except OrganizationStoreError as exc:
+            return {"error": str(exc)}
+        return {"organization": {"id": rec.id, "name": rec.name, "version": rec.version, "active": rec.active},
+                "notes": notes, "forked_from": forked_from}
+
+    try:
+        return await gate_and_execute(
+            tool_name="organization_update",
+            args={"organization": target, "collections": sorted({*(changes.get("upsert") or {}),
+                                                                 *(changes.get("remove") or {}),
+                                                                 *(changes.get("set") or {})})},
+            risk_tier="soft",
+            executor=_apply,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return {"error": str(exc), "tool": "organization_update"}
+
+
+async def organization_activate(organization_id: str) -> dict[str, Any]:
+    """Make an organization the active one, the company every simulation uses from now on. Waits for approval when the install gates it.
+
+    Nothing is removed by switching: the previous organization stays, and so do the users and assets it already created
+    in Cortex. Connector containers pick the change up on their next call. Use organization_list to see the ids.
+
+    Args:
+        organization_id: the id to activate, for example "phantom-lab".
+
+    Returns {organization: {id, name, version, active}} or {"error": ...}.
+    Trigger phrases: "switch to the Acme organization", "go back to Phantom Lab".
+    """
+    from usecase.builtin_components._approval_gate import gate_and_execute
+    from usecase.organization_store import OrganizationStoreError, organization_store
+    store = organization_store()
+    if store is None:
+        return {"error": "organization store not initialized on this MCP runtime"}
+
+    def _apply() -> dict[str, Any]:
+        try:
+            rec = store.activate(organization_id, actor="agent")
+        except OrganizationStoreError as exc:
+            return {"error": str(exc)}
+        return {"organization": {"id": rec.id, "name": rec.name, "version": rec.version, "active": rec.active}}
+
+    try:
+        return await gate_and_execute(
+            tool_name="organization_activate",
+            args={"organization": organization_id},
+            risk_tier="soft",
+            executor=_apply,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return {"error": str(exc), "tool": "organization_activate"}
+
+
 # ─── Settings (1 tool) ──────────────────────────────────────────
 
 
@@ -1761,6 +1954,8 @@ def _populate_batchable_tools() -> None:
         "jobs_run_now": jobs_run_now,
         "personality_update": personality_update,
         "personality_patch": personality_patch,
+        "organization_update": organization_update,
+        "organization_activate": organization_activate,
         "settings_update": settings_update,
         "notifications_dismiss": notifications_dismiss,
         "notifications_dismiss_all": notifications_dismiss_all,

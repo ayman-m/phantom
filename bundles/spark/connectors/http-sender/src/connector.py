@@ -15,6 +15,11 @@ XSIAM HTTP collector or, when criblUrl and the criblToken secret are set, a `cri
 the Cortex Cribl integration endpoint under that source's dedicated UUID (see cribl.py). The collector keys and the Cribl
 token are read from the instance's secret slots at call time and used only as the Authorization header. No tool returns
 one or accepts one as an argument, so the agent never handles a credential.
+
+Identities (the people, their emails, Okta ids and home addresses, the AWS account, GCP project, regions, partner domain and
+public egress addresses) are the ACTIVE ORGANIZATION's, read from the shared data volume at call time (see
+phantom-connector-runtime/runtime/organization_view.py). An instance can pin one organization with its `organization` setting.
+There is no built-in roster: with no organization the tools return {"ok": false, "error": ...} saying what to fix.
 """
 from __future__ import annotations
 
@@ -23,7 +28,11 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
+from runtime.organization_reader import OrganizationUnavailable
+from runtime.organization_view import OrganizationView, get_view
+
 from . import collector, cribl, destinations, profiles, windows_events
+from .profiles import _org
 
 logger = logging.getLogger(__name__)
 
@@ -49,15 +58,13 @@ def _settings() -> dict[str, Any]:
         "product": (get("product", "") or "").strip(),
         "extra": get("additionalDestinations", "") or "",
         "extra_keys": get("additionalKeys", "") or "",
-        "domain": (get("userDomain", "phantom-lab.example") or "phantom-lab.example").strip(),
+        # Empty follows the active organization; an id pins one (see _organization).
+        "organization": (get("organization", "") or "").strip(),
         "verify_tls": bool(verify),
         "timeout": float(get("timeoutSeconds", 15) or 15),
         "cribl_url": (get("criblUrl", "") or "").strip(),
         "cribl_token": (get("criblToken", "") or "").strip(),
         "cribl_integration": (get("criblIntegration", cribl.DEFAULT_INTEGRATION) or cribl.DEFAULT_INTEGRATION).strip(),
-        # Qualifies short computer names in Windows events, as wec-sender does with its domainDns.
-        "windows_dns": ((get("windowsDnsSuffix", windows_events.DEFAULT_DNS) or windows_events.DEFAULT_DNS).strip()
-                        or windows_events.DEFAULT_DNS),
     }
 
 
@@ -71,6 +78,12 @@ def _field(event: dict[str, Any], path: str) -> Any:
 
 def _err(message: str, **extra: Any) -> dict[str, Any]:
     return {"ok": False, "error": message, **extra}
+
+
+def _organization(settings: dict[str, Any]) -> OrganizationView:
+    """The organization the identities come from, read NOW (a save in the UI is seen by the next call): the one the
+    `organization` setting pins, else the active one. Raises OrganizationUnavailable when there is none."""
+    return get_view(settings.get("organization") or None)
 
 
 def _resolve(settings: dict[str, Any], wanted: str | None, *, need_ready: bool = True):
@@ -109,7 +122,8 @@ def _is_windows(dest: destinations.Destination) -> bool:
 
 
 def _dns(settings: dict[str, Any]) -> str:
-    return settings.get("windows_dns") or windows_events.DEFAULT_DNS
+    """The DNS suffix that qualifies a short computer name in a Windows event: the organization's."""
+    return _organization(settings).dns
 
 
 def _deliver_windows(items: list[Any], dest: destinations.Destination, settings: dict[str, Any],
@@ -118,7 +132,7 @@ def _deliver_windows(items: list[Any], dest: destinations.Destination, settings:
     A bad item returns an error naming it and nothing is sent."""
     try:
         prepared = windows_events.prepare(items, _dns(settings))
-    except ValueError as exc:
+    except (ValueError, OrganizationUnavailable) as exc:
         return _err(str(exc))
     result = _deliver([p.xml for p in prepared], dest, settings, **extra)
     result.update(windows_events.summary(prepared))  # not via **extra: its `events` is `_deliver`'s own parameter name
@@ -224,7 +238,10 @@ def phantom_send_test_event(destination: str | None = None, profile: str | None 
         if profile:
             return _err("cribl_windows_events takes no profile: its test event is one rendered Windows 4624 logon")
         test_id = str(uuid.uuid4())
-        event, facts = windows_events.build_test_event(_dns(settings), test_id, now)
+        try:
+            event, facts = windows_events.build_test_event(_organization(settings), test_id, now)
+        except OrganizationUnavailable as exc:
+            return _err(str(exc))
         return _deliver_windows(
             [event], dest, settings, test_id=test_id, test_id_field="LogonGuid", event_id=4624,
             actor=facts["actor"], logon_id=facts["logon_id"], sent_at=windows_events.iso(now),
@@ -240,7 +257,10 @@ def phantom_send_test_event(destination: str | None = None, profile: str | None 
         if getattr(prof, "WINDOWS_EVENTS", False):
             return _err("the windows profile builds structured Windows events for cribl_windows_events: send_test_event to that "
                         "destination (with no profile) sends one 4624, and generate_events sends the scenarios")
-        event, id_field = prof.sample_event(domain=settings["domain"], now=now), prof.TEST_ID_FIELD
+        try:
+            event, id_field = prof.sample_event(view=_organization(settings), now=now), prof.TEST_ID_FIELD
+        except OrganizationUnavailable as exc:
+            return _err(str(exc))
         test_id = _field(event, id_field)
     else:
         test_id, id_field = str(uuid.uuid4()), "phantom_test_id"
@@ -278,9 +298,10 @@ def phantom_generate_events(
     any other destination. For a source without a profile, build the events yourself and use `send_events`.
 
     Profile `okta`, scenarios:
-      benign_logins        alternating user.session.start / user.authentication.sso for a pool of
-                           12 users, each from one stable Saudi home address (a real ISP address;
-                           Cortex derives country and ASN from it). Baseline traffic.
+      benign_logins        alternating user.session.start / user.authentication.sso for the organization's
+                           people (those who may log on: no leavers), each from the stable home address the
+                           organization gives them (a real Saudi ISP address; Cortex derives country and ASN
+                           from it). Baseline traffic.
       failed_then_success  count-1 failed logins (INVALID_CREDENTIALS) for ONE user from ONE
                            out-of-country address, then one success. The identity brute-force shape.
       password_spray       ONE out-of-country address, one failed login per distinct user.
@@ -290,7 +311,7 @@ def phantom_generate_events(
       mfa_fatigue and failed_then_success. So when `cribl_okta_sso` is configured, mfa_fatigue, failed_then_success,
       tor_signin and fastpass_phishing all default to it; without Cribl every okta scenario keeps the primary
       destination (tor_signin and fastpass_phishing then return a warning).
-      tor_signin           successful SSO by baseline pool users (or `target_user`) from a Tor exit, a different
+      tor_signin           successful SSO by the organization's people (or `target_user`) from a Tor exit, a different
                            exit and a never-seen app per event ("A successful SSO sign-in from TOR"). Defaults to
                            `cribl_okta_sso`; the Tor list is a dated snapshot, pass a current exit as `source_ip`.
       fastpass_phishing    FastPass declined a phishing attempt: a brand-new user and a new Tor exit per event
@@ -318,12 +339,14 @@ def phantom_generate_events(
 
     Cloud profiles (`aws_cloudtrail`, `gcp_audit`, `azure_ad_audit`): each ATTACK scenario is ONE detector's measured
     shape, a short recipe of 1-5 steps by one actor (the minimum `count` is the step count; a larger count repeats the
-    recipe with fresh resource ids). Every call invents its own account, user, role, key and project ids, so it looks
-    like a first-time actor. target_user = the acting principal (a bare name); source_ip = the external address where
-    a scenario has one (below). The one BENIGN scenario of each, `benign_activity`, is the opposite and is the baseline the
-    attacks contrast with: STABLE identities (the same twelve people as the okta pool, each with one home address, plus
-    fixed roles / service accounts / admins, in one fixed AWS account, GCP project or Azure tenant), ordinary read-heavy
-    work, and nothing that any detector fires on. `count` events (default 20) spread over `spread_seconds` ending now;
+    recipe with fresh resource ids). Every call invents its own user, role, key and resource ids, so it looks like a
+    first-time actor, in the organization's own AWS account / GCP project. target_user = the acting principal, one of the
+    organization's people (login, email or the part before the @; the calls then come from that person's home address);
+    source_ip = the external address where a scenario has one (below). The one BENIGN scenario of each, `benign_activity`,
+    is the opposite and is the baseline the attacks contrast with: STABLE identities (the organization's people who have
+    that cloud in `cloud_access`, each with the home address the organization gives them, plus fixed roles / service
+    accounts / the IT staff as admins, in the organization's AWS account, GCP project or Azure directory), ordinary
+    read-heavy work, and nothing that any detector fires on. `count` events (default 20) spread over `spread_seconds` ending now;
     target_user and source_ip are ignored. Run it on a schedule so the actors an attack recipe contrasts with have a history
     (the benign scenarios are listed after the attack ones below).
       aws_cloudtrail:
@@ -366,7 +389,7 @@ def phantom_generate_events(
       `trigger_<scenario>_alert` documents the detector), timed as the skill says (now minus N seconds, so `spread_seconds` does
       not apply) with EVERY identity new per call (actor `adm.run<hex>`, RIDs, logon id, hosts, addresses), so each call looks like
       a first-time actor and fires its detector like a manual replay. `count` is the event count of the recipe (a multiple of it
-      runs it several times, each with its own identities); target_user = the acting account instead of a new one; source_ip = the
+      runs it several times, each with its own identities); target_user = the name of the NEW acting account instead of a generated one (not an organization account; unused by excessive_lockouts and privileged_certificate_request); source_ip = the
       IPv4 address of the attacking host (dcsync, weak_service_tickets, spoofed_samaccountname_tickets). The result names the
       accounts that acted (`actors`) so the alert can be found.
         machine_account_domain_admins (1 event)   a computer account added to Domain Admins (4728)
@@ -401,9 +424,15 @@ def phantom_generate_events(
         source's content pack (its parsing rule) is installed on the tenant, otherwise `_time` is
         the ingestion time.
       target_user: victim login for okta failed_then_success / mfa_fatigue / tor_signin, the recipient (TAP), the
-        actor (Google, or the acting principal of a cloud or Windows attack scenario); a bare name or an email
-        (default `noura.alharbi@<userDomain>`; cloud and Windows scenarios invent a fresh one). Never use `DOMAIN\\user`.
-        Ignored by every benign_activity / baseline_logons / admin_activity scenario.
+        actor (Google, or the acting principal of a cloud attack scenario). It must be one of the ACTIVE
+        ORGANIZATION's people, by login, email or the part of the email before the @ (an unknown value returns an error
+        that lists the valid emails); the default is the organization's first person (cloud scenarios invent
+        a fresh actor instead). The WINDOWS attack scenarios are the exception: every one except excessive_lockouts and
+        privileged_certificate_request (which have no acting account and ignore it) acts as a NEW account, because the
+        detectors fire on first-time activity, so there target_user names that new account (a bare name of letters,
+        digits, dots, dashes and underscores, at most 20, e.g. `adm.run1`) and must NOT be an organization account
+        (that returns an error). Never use `DOMAIN\\user`. Ignored by every benign_activity / baseline_logons /
+        admin_activity scenario.
       source_ip: attacker address for the attack scenarios (default a random real out-of-country
         address; for Proofpoint TAP the sending mail server, for Google Workspace the actor's
         address in public_share / sensitive_download and the far login of impossible_travel_login; for the cloud
@@ -424,9 +453,13 @@ def phantom_generate_events(
       "first_time", "last_time" and "sample_record_ids" (sample_ids are "<event id>@<computer>").
       dry_run adds "events": [...] and sends nothing.
 
-    Example payload:
+    Identities (users, emails, Okta ids, home addresses, the AWS account, GCP project, regions and the partner domain)
+    come from the active organization, so the same person is the same entity in every profile and connector. With no
+    organization the call returns {"ok": false, "error": ...}.
+
+    Example payload (use a person of the active organization as target_user):
       {"profile": "okta", "scenario": "failed_then_success", "count": 12,
-       "target_user": "noura.alharbi", "spread_seconds": 90}
+       "target_user": "<login or email of a person of the organization>", "spread_seconds": 90}
       {"profile": "aws_cloudtrail", "scenario": "s3_public_exposure", "count": 3}
       {"profile": "aws_cloudtrail", "scenario": "benign_activity"}
       {"profile": "windows", "scenario": "baseline_logons", "count": 40, "spread_seconds": 1500}
@@ -481,10 +514,14 @@ def phantom_generate_events(
         count = needed
     try:
         events = prof.build_events(
-            scenario, count, domain=settings["domain"], now=datetime.now(timezone.utc),
+            scenario, count, view=_organization(settings), now=datetime.now(timezone.utc),
             spread_seconds=spread_seconds, start_offset_minutes=start_offset_minutes,
             target_user=target_user, source_ip=source_ip,
         )
+    except OrganizationUnavailable as exc:
+        return _err(str(exc))
+    except _org.UnknownUser as exc:
+        return _err(str(exc))
     except ValueError as exc:
         return _err(str(exc), scenarios=list(prof.SCENARIOS))
     sample_id = getattr(prof, "sample_id", None) or (lambda e: _field(e, prof.TEST_ID_FIELD))
@@ -525,7 +562,7 @@ def phantom_send_events(events: list[dict[str, Any]], destination: str | None = 
     `wec-sender.send_events`: the connector renders each to Windows Event XML for you, so do NOT build XML by hand and
     do not wrap anything. Catalogued ids (4624, 4625, 4634, 4672) need only `event_id`, `computer` and `event_data`;
     any other id also needs `provider`, `rendering.message` and `rendering.task`. Give `time` (ISO-8601 UTC, or epoch
-    seconds) to back-date; the default is now. Short computer names get the `windowsDnsSuffix`. A string item that is
+    seconds) to back-date; the default is now. A short computer name gets the active organization's DNS suffix. A string item that is
     already Windows Event XML (starts with `<Event`) is passed through unchanged. Every item is validated first: a bad
     one returns an error naming it and nothing is sent. No Broker, certificate or WEC subscription is involved; the
     rows land in `microsoft_windows_raw` with `_transport = cribl` (and no `_collector_type`). AD FS events still need
@@ -550,7 +587,7 @@ def phantom_send_events(events: list[dict[str, Any]], destination: str | None = 
     Example payload:
       {"destination": "okta_sso",
        "events": [{"eventType": "user.session.start", "published": "2026-09-30T10:15:20.123Z",
-                   "outcome": {"result": "SUCCESS"}, "actor": {"alternateId": "a.b@example.com"}}]}
+                   "outcome": {"result": "SUCCESS"}, "actor": {"alternateId": "<a person's email>"}}]}
       {"destination": "cribl_aws_audit",
        "events": [{"eventVersion": "1.11", "eventTime": "2026-10-04T17:23:37Z", "eventSource": "guardduty.amazonaws.com",
                    "eventName": "DeleteDetector", "awsRegion": "us-east-1", "sourceIPAddress": "188.55.20.23"}]}

@@ -33,6 +33,19 @@ export interface ReleaseNote {
 
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: "1.1.0",
+    date: "Unreleased", // set to the ISO publish date when v1.1.0 is tagged
+    title: "Organization: one company behind every generated log.",
+    highlights: [
+      "Every log now uses one fictitious company, so Cortex can group alerts from Okta, Windows, firewalls and cloud into one case.",
+      "Phantom Lab ships built in: 50 people, their workstations, servers, VLANs and cloud accounts; edit it, import your own, or switch.",
+      "The agent reads the organization before it generates and can add people, hosts and networks from chat.",
+      "Connectors read the active organization live; a save or a switch needs no restart.",
+      "The Cortex setup panel lists the internal ranges and domain suffix to enter in Network Configuration.",
+      "cie-sender, wec-sender and http-sender settings for domains and host counts are gone: edit the organization instead.",
+    ],
+  },
+  {
     version: "1.0.6",
     date: "2026-10-15",
     title: "Connector setup: Test Connection for every connector and the HTTP Sender destination switch.",

@@ -281,6 +281,8 @@ ACTION_KB_DOC_READ = "kb_doc_read"
 # underlying operation completes. Operators can audit "what did the
 # agent change about itself?" by filtering action ∈ {agent_self_mod_*}.
 ACTION_PERSONALITY_CHANGED = "personality_changed"
+# organization_changed: every create / put / activate / delete / restore on SqliteOrganizationStore.
+ACTION_ORGANIZATION_CHANGED = "organization_changed"
 ACTION_AGENT_SELF_MOD_REQUESTED = "agent_self_mod_requested"
 ACTION_AGENT_SELF_MOD_EXECUTED = "agent_self_mod_executed"
 

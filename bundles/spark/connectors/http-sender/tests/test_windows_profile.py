@@ -9,6 +9,10 @@ What is compared, and against what:
   * `baseline_logons` against wec-sender's own profile, loaded by path, byte for byte;
   * identities: stable for the benign scenarios, new and pairwise disjoint for the attack ones.
 
+The profile reads the active organization; tests/conftest.py makes that the bundled Phantom Lab. The proof that the move to the
+organization changed nothing is in tests/test_windows_organization.py (byte-identical outputs from the organization that
+reproduces the old roster, against tests/fixtures/pre_organization_windows_baseline.json).
+
 Run from the connector directory:  python3 -m pytest -x
 """
 from __future__ import annotations
@@ -23,14 +27,19 @@ from pathlib import Path
 
 import httpx
 import pytest
+import yaml
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parents[0]))
 
 from src import connector, cribl, profiles, windows_events  # noqa: E402
 from src.profiles import windows  # noqa: E402
+from src.profiles.windows import active_view  # noqa: E402
 
 REPO = HERE.parents[4]
+LAB = yaml.safe_load((REPO / "bundles/spark/organization/phantom-lab.yaml").read_text(encoding="utf-8"))
+# The skills name Phantom Lab's hosts; the bundled organization's certificate authority is the host whose purpose says so.
+CA_NAME = next(h["name"] for h in LAB["hosts"] if "certificate authority" in (h.get("purpose") or "").lower())
 WEC_SRC = REPO / "bundles/spark/connectors/wec-sender/src"
 SKILLS = REPO / "bundles/spark/mcp/skills/workflows"
 NOW = datetime(2026, 10, 6, 9, 0, 0, tzinfo=timezone.utc)      # a Tuesday, 12:00 Saudi time (business hours)
@@ -100,7 +109,7 @@ def xml_of(events: list) -> list[str]:
 def build(scenario, count=None, *, now=NOW, **kw):
     kw.setdefault("seed", 7)
     count = count or windows.MIN_COUNT.get(scenario) or windows.DEFAULT_COUNT[scenario]
-    return windows.build_events(scenario, count, domain="lab.test", now=now, **kw)
+    return windows.build_events(scenario, count, view=active_view(), now=now, **kw)
 
 
 def parse_time(text: str) -> datetime:
@@ -137,10 +146,10 @@ def test_the_embedded_recipe_is_exactly_the_skills_first_json_block(name):
 
 def test_unknown_scenarios_and_bad_counts_are_refused():
     with pytest.raises(ValueError, match="choose one of baseline_logons, admin_activity"):
-        windows.build_events("ransomware", 3, domain="x", now=NOW)
+        windows.build_events("ransomware", 3, view=active_view(), now=NOW)
     for scenario in windows.SCENARIOS:
         with pytest.raises(ValueError):
-            windows.build_events(scenario, 0, domain="x", now=NOW)
+            windows.build_events(scenario, 0, view=active_view(), now=NOW)
 
 
 # -- the attack scenarios: parity with the skills -----------------------------------------------------------------------------
@@ -149,7 +158,7 @@ def test_unknown_scenarios_and_bad_counts_are_refused():
 @pytest.mark.parametrize("seed", [1, 2])
 def test_the_rendered_xml_equals_the_filled_skill_block_for_the_same_identities(name, seed):
     values = windows.fresh_values(name, now=NOW, seed=seed)
-    events = windows.build_events(name, windows.MIN_COUNT[name], domain="x", now=NOW, seed=seed)
+    events = windows.build_events(name, windows.MIN_COUNT[name], view=active_view(), now=NOW, seed=seed)
     expected = xml_of(fill_skill(name, values))
     assert len(expected) == windows.MIN_COUNT[name] and xml_of(events) == expected
     # Every label of the block got a value, and the identity values really are in the events (not only in the values dict).
@@ -204,7 +213,7 @@ def test_every_call_has_new_identities_that_no_other_call_shares(name):
 def test_no_identity_is_one_of_the_benign_directorys(name):
     d = windows.directory()
     taken = ({h.name for h in d.hosts} | {u.login for u in d.users} | {u.sid.rsplit("-", 1)[1] for u in d.users}
-             | {h.sid.rsplit("-", 1)[1] for h in d.hosts} | {str(rid) for _, rid in windows._GROUPS})
+             | {h.sid.rsplit("-", 1)[1] for h in d.hosts} | {sid.rsplit("-", 1)[1] for _, sid in d.groups})
     for _ in range(10):
         assert not set(identity_values(name).values()) & taken
 
@@ -264,19 +273,19 @@ def test_a_label_has_one_value_everywhere_it_appears_and_the_distinct_counts_the
     assert sam["OldTargetUserName"] == sam["NewTargetUserName"] + "$"
     cert = build("privileged_certificate_request")[0]["event_data"]
     assert cert["Attributes"].startswith("CertificateTemplate:DomainController") and cert["Requester"].startswith("PHANTOM\\PHWS-")
-    assert build("privileged_certificate_request")[0]["computer"] == "PHCA01"
+    assert build("privileged_certificate_request")[0]["computer"] == CA_NAME
 
 
 def test_a_larger_count_is_a_whole_number_of_recipes_each_with_its_own_identities():
-    events = windows.build_events("machine_account_domain_admins", 3, domain="x", now=NOW)
+    events = windows.build_events("machine_account_domain_admins", 3, view=active_view(), now=NOW)
     assert len(events) == 3 and len({e["event_data"]["SubjectUserName"] for e in events}) == 3
     assert len({e["event_data"]["MemberName"] for e in events}) == 3
-    five = windows.build_events("dcsync", 10, domain="x", now=NOW)
+    five = windows.build_events("dcsync", 10, view=active_view(), now=NOW)
     assert len(five) == 10 and len({e["event_data"]["SubjectUserName"] for e in five if e["event_id"] == 4662}) == 2
     with pytest.raises(ValueError, match="multiple of 5"):
-        windows.build_events("dcsync", 7, domain="x", now=NOW)
-    seeded = windows.build_events("dcsync", 10, domain="x", now=NOW, seed=4)
-    assert seeded == windows.build_events("dcsync", 10, domain="x", now=NOW, seed=4)
+        windows.build_events("dcsync", 7, view=active_view(), now=NOW)
+    seeded = windows.build_events("dcsync", 10, view=active_view(), now=NOW, seed=4)
+    assert seeded == windows.build_events("dcsync", 10, view=active_view(), now=NOW, seed=4)
 
 
 def test_target_user_names_the_acting_account_and_source_ip_the_attacking_host():
@@ -292,9 +301,23 @@ def test_target_user_names_the_acting_account_and_source_ip_the_attacking_host()
     for bad in ("not-an-ip", "::1", "999.1.1.1"):
         with pytest.raises(ValueError, match="source_ip"):
             build("dcsync", source_ip=bad)
+    # The attack scenarios act as a NEW account: an organization account (by login or as DOMAIN\\login / login@domain) is refused,
+    # with the accounts in use listed, and so is nothing else. A scenario with no acting account does not look at the name.
+    for given in ("kalotaibi", "PHANTOM\\kalotaibi", "kalotaibi@phantom.lab", "adm.ialkhalifa", "svc-sql", "adm.breakglass"):
+        with pytest.raises(ValueError, match=r"is an account of organization 'phantom-lab'.*NEW account.*Accounts in use: nalharbi"):
+            build("dcsync", target_user=given)
+    assert build("excessive_lockouts", target_user="kalotaibi") == build("excessive_lockouts")
+    assert build("privileged_certificate_request", target_user="kalotaibi") == build("privileged_certificate_request")
     # No acting account in the certificate recipe, and the baseline ignores both.
     assert build("privileged_certificate_request", target_user="x.y")[0]["event_data"]["Requester"].startswith("PHANTOM\\PHWS-")
     assert build("baseline_logons", target_user="x.y", source_ip="10.1.1.1") == build("baseline_logons")
+
+
+def test_the_tool_refuses_an_organization_account_as_the_acting_account(cfg):
+    refused = connector.phantom_generate_events("windows", "dcsync", target_user="kalotaibi", dry_run=True)
+    assert refused["ok"] is False and "NEW account" in refused["error"] and "kalotaibi" in refused["error"]
+    accepted = connector.phantom_generate_events("windows", "dcsync", target_user="adm.run1", dry_run=True)
+    assert accepted["ok"] and accepted["actors"] == ["adm.run1"]
 
 
 def test_the_scenarios_are_reproducible_with_a_seed():
@@ -305,20 +328,21 @@ def test_the_scenarios_are_reproducible_with_a_seed():
 # -- baseline_logons: a port of wec-sender's ---------------------------------------------------------------------------------
 
 def test_the_directory_is_wec_senders_directory():
-    mine, theirs = windows.directory(), wec_profile.Directory()
+    mine, theirs = windows.directory(), wec_profile.directory()
     assert [(h.name, h.fqdn, h.ip, h.role, h.sid, h.lsass_pid) for h in mine.hosts] == [
         (h.name, h.fqdn, h.ip, h.role, h.sid, h.lsass_pid) for h in theirs.hosts]
     assert [(u.login, u.display, u.sid, u.role, u.home) for u in mine.users] == [
         (u.login, u.display, u.sid, u.role, u.home) for u in theirs.users]
-    assert (mine.netbios, mine.dns) == (theirs.netbios, theirs.dns) and len(mine.users) == 30 and len(mine.hosts) == 32
+    assert (mine.netbios, mine.dns) == (theirs.netbios, theirs.dns)
+    assert len(mine.staff) > 22 and len(mine.workstations) == 50 and len(mine.admins) >= 4
 
 
 @pytest.mark.parametrize("now", [NOW, NIGHT], ids=["business-hours", "night"])
 @pytest.mark.parametrize("count,spread,offset", [(1, 120, 0), (2, 120, 0), (3, 90, 0), (10, 300, 0), (41, 3600, 0), (30, 900, 30)])
 @pytest.mark.parametrize("seed", [1, 2, 3])
 def test_baseline_logons_render_to_the_same_xml_as_wec_senders_for_the_same_seed(now, count, spread, offset, seed):
-    mine = windows.build_events("baseline_logons", count, domain="x", now=now, spread_seconds=spread, start_offset_minutes=offset, seed=seed)
-    theirs = wec_profile.build_events("baseline_logons", count, directory=wec_profile.Directory(), now=now,
+    mine = windows.build_events("baseline_logons", count, view=active_view(), now=now, spread_seconds=spread, start_offset_minutes=offset, seed=seed)
+    theirs = wec_profile.build_events("baseline_logons", count, directory=wec_profile.directory(), now=now,
                                       spread_seconds=spread, start_offset_minutes=offset, seed=seed)
     assert len(mine) == count
     assert xml_of(mine) == [r.xml for r in wec_winevent.render_all(theirs)]
@@ -370,7 +394,7 @@ def test_admin_activity_is_ordinary_administration_by_the_it_administrators_on_t
     staff = {u.login: u for u in d.staff}
     dcs = {h.name for h in d.dcs}
     assert {e["event_id"] for e in events} == {4720, 4724, 4728, 4729, 4738, 4767}
-    groups = {name for name, _ in windows._GROUPS}
+    groups = {name for name, _ in d.groups}
     for e in events:
         data = e["event_data"]
         assert e["computer"] in dcs and data["SubjectUserName"] in admins and data["SubjectUserSid"] == admins[data["SubjectUserName"]].sid
@@ -381,19 +405,22 @@ def test_admin_activity_is_ordinary_administration_by_the_it_administrators_on_t
             assert data["TargetUserName"] in staff and data["TargetSid"] == staff[data["TargetUserName"]].sid   # an ordinary user
         if e["event_id"] in (4728, 4729):
             assert data["TargetUserName"] in groups and data["TargetUserName"] not in PRIVILEGED
-            assert data["TargetSid"].rsplit("-", 1)[1] in {str(r) for _, r in windows._GROUPS}
+            assert data["TargetSid"] in {sid for _, sid in d.groups}
             assert data["MemberSid"] in {u.sid for u in staff.values()}
         if e["event_id"] == 4720:
             login = data["TargetUserName"]
             assert not login.endswith("$") and login not in ("guest", "defaultaccount", "administrator") and login not in staff
             assert data["SamAccountName"] == login and data["UserPrincipalName"] == f"{login}@phantom.lab" and data["DisplayName"] != "-"
-            assert data["TargetSid"].startswith(windows.DOMAIN_SID + "-") and "$" not in data["TargetSid"]
+            assert data["TargetSid"].startswith(d.domain_sid + "-") and "$" not in data["TargetSid"]
         if e["event_id"] == 4738:
             assert data["AllowedToDelegateTo"] == "-" and data["OldUacValue"] == "-" and data["NewUacValue"] == "-"
-    # Resets and unlocks are the helpdesk's (the first two administrators); account creation and groups are the directory team's.
-    helpdesk = {u.login for u in d.admins[:2]}
+    # Resets and unlocks are the helpdesk's (the first half of the administrators); account creation and groups are the
+    # directory team's (the other half).
+    half = len(d.admins) // 2
+    helpdesk = {u.login for u in d.admins[:half]}
     assert {e["event_data"]["SubjectUserName"] for e in events if e["event_id"] in (4724, 4767)} <= helpdesk
-    assert {e["event_data"]["SubjectUserName"] for e in events if e["event_id"] in (4720, 4728, 4729)} <= {u.login for u in d.admins[2:]}
+    assert {e["event_data"]["SubjectUserName"] for e in events if e["event_id"] in (4720, 4728, 4729)} <= {u.login for u in d.admins[half:]}
+    assert {e["event_data"]["SubjectUserName"] for e in events if e["event_id"] in (4724, 4767, 4720, 4728, 4729)} == {u.login for u in d.admins}
     assert len(windows_events.prepare(events, DNS)) == 300
 
 
@@ -430,7 +457,7 @@ def test_admin_activity_has_no_event_a_detector_skill_fires_on():
 def cfg(monkeypatch):
     values = {"url": "https://api-tenant.example.test/logs/v1/event", "key": "k", "vendor": "Okta", "product": "SSO", "extra": "",
               "extra_keys": "", "domain": "lab.test", "verify_tls": True, "timeout": 5.0, "cribl_url": URL, "cribl_token": TOKEN,
-              "cribl_integration": "wave-7", "windows_dns": DNS}
+              "cribl_integration": "wave-7"}
     monkeypatch.setattr(connector, "_settings", lambda: dict(values))
     return values
 

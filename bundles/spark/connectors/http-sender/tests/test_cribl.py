@@ -14,6 +14,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from runtime.organization_view import get_view  # noqa: E402
 from src import collector, connector, cribl, destinations, profiles  # noqa: E402
 
 TOKEN = "test-token-not-real"
@@ -381,7 +382,7 @@ def test_check_flags_a_non_https_cribl_url_and_passes_a_good_one():
 @pytest.fixture
 def cfg(monkeypatch):
     values = {"url": HTTP_URL, "key": HTTP_KEY, "vendor": "Okta", "product": "SSO", "extra": "", "extra_keys": "",
-              "domain": "lab.test", "verify_tls": True, "timeout": 5.0,
+              "organization": "", "verify_tls": True, "timeout": 5.0,
               "cribl_url": URL, "cribl_token": TOKEN, "cribl_integration": "wave-7"}
     monkeypatch.setattr(connector, "_settings", lambda: dict(values))
     return values
@@ -457,7 +458,7 @@ def test_other_destinations_behave_exactly_as_before(cfg, out):
     connector.phantom_send_test_event()
     assert out["cribl"] == [] and len(out["http"]) == 3
     assert all((c["url"], c["key"]) == (HTTP_URL, HTTP_KEY) for c in out["http"])
-    assert out["http"][1]["events"][0]["actor"]["alternateId"].endswith("@lab.test")  # the benign pool, as before
+    assert out["http"][1]["events"][0]["actor"]["alternateId"].endswith("@" + get_view().email_domain)  # the organization's people, as before
 
 
 def test_generate_events_defaults_a_cloud_profile_to_its_cribl_destination(cfg, out):

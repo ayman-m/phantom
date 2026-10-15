@@ -17,11 +17,11 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from runtime.organization_view import get_view  # noqa: E402
 from src import connector, cribl  # noqa: E402
-from src.profiles import aws_cloudtrail as aws, azure_ad_audit as azure, gcp_audit as gcp, ippools, okta  # noqa: E402
+from src.profiles import _org, aws_cloudtrail as aws, azure_ad_audit as azure, gcp_audit as gcp, ippools, okta  # noqa: E402
 
 NOW = datetime(2026, 10, 6, 9, 0, 0, tzinfo=timezone.utc)
-DOMAIN = "lab.test"
 CLOUD = (aws, gcp, azure)
 HOME = {r.cidr for r in ippools.HOME}
 TOR = {e.ip for e in ippools.ALL_TOR_EXITS}
@@ -31,11 +31,24 @@ TOKEN = "test-token-not-real"
 
 def build(mod, count=40, **kw):
     kw.setdefault("seed", 11)
-    return mod.build_events("benign_activity", count, domain=DOMAIN, now=NOW, **kw)
+    return mod.build_events("benign_activity", count, view=get_view(), now=NOW, **kw)
 
 
 def attack(mod, scenario, **kw):
-    return mod.build_events(scenario, max(mod.MIN_COUNT.get(scenario, 1), 2), domain=DOMAIN, now=NOW, seed=3, **kw)
+    return mod.build_events(scenario, max(mod.MIN_COUNT.get(scenario, 1), 2), view=get_view(), now=NOW, seed=3, **kw)
+
+
+def domain():
+    return get_view().email_domain
+
+
+def provider(mod):
+    return {aws: "aws", gcp: "gcp", azure: "azure"}[mod]
+
+
+def pool(mod):
+    """The organization's people the baseline of `mod` is built from: who may log on and has that cloud."""
+    return _org.cloud_people(get_view(), provider(mod))
 
 
 def when(mod, ev):
@@ -86,7 +99,7 @@ def test_the_requested_number_of_events_and_valid_complete_objects(mod):
 
 @pytest.mark.parametrize("mod", CLOUD)
 def test_every_event_has_every_key_of_the_vendors_sample_shape(mod):
-    sample = mod.sample_event(domain=DOMAIN, now=NOW)
+    sample = mod.sample_event(view=get_view(), now=NOW)
     for ev in build(mod, 60):
         missing = set(sample) - set(ev)
         # A console sign-in record has no TLS details, and no log is written for the Azure sample's shape: nothing else may be missing.
@@ -117,42 +130,54 @@ def test_the_times_are_not_evenly_spaced(mod):
 
 # -- stable identities --------------------------------------------------------------------------------------------------------
 
-# Identities of a large call: AWS 12 users plus the 24 sessions of their two usual roles each; GCP 12 users and 4 service
-# accounts; Azure 4 administrators and 12 users.
-POOL = {aws: 12 + 12 * 2, gcp: 12 + 4, azure: 4 + 12}
+def identity_count(mod):
+    """Identities of a large call: AWS every IAM user plus the sessions of their two usual roles each; GCP every user and the 4
+    service accounts; Azure every IT administrator (as `.adm`) and every user (acting for themselves)."""
+    people = len(pool(mod))
+    if mod is aws:
+        return people + people * 2
+    if mod is gcp:
+        return people + len(gcp.BENIGN_SERVICE_ACCOUNTS)
+    return len(_org.administrators(pool(mod))) + people
+
+
+# A deterministic large call: 4000 events reach every identity of the organization's pool for these seeds (the least frequent,
+# an AWS role session, is drawn about 8 times; a seed that missed one would fail every run, never one in a while).
+SEEDS = (1, 2, 5)
 
 
 @pytest.mark.parametrize("mod", CLOUD)
 def test_the_same_actors_with_the_same_ids_and_addresses_appear_on_every_call(mod):
-    # 1500 events reach every one of the pool's identities with a probability that leaves no practical flake (the least
-    # frequent, an AWS role session or an Azure user acting for themselves, is expected about 17 times).
-    first = actors(mod, build(mod, 1500, seed=None))
-    second = actors(mod, build(mod, 1500, seed=None))
-    third = actors(mod, build(mod, 1500, seed=5))
+    first, second, third = (actors(mod, build(mod, 4000, seed=seed)) for seed in SEEDS)
     assert first.keys() == second.keys() == third.keys()
-    assert len(first) == POOL[mod]
+    assert len(first) == identity_count(mod)
     assert first == second == third
 
 
 def test_an_iam_users_access_key_is_the_same_on_every_call():
     keys = [{e["userIdentity"]["arn"]: e["userIdentity"]["accessKeyId"]
-             for e in build(aws, 1500, seed=None) if e["userIdentity"]["type"] == "IAMUser" and "accessKeyId" in e["userIdentity"]} for _ in range(2)]
-    assert keys[0] == keys[1] and len(keys[0]) == 12
+             for e in build(aws, 4000, seed=seed) if e["userIdentity"]["type"] == "IAMUser" and "accessKeyId" in e["userIdentity"]}
+            for seed in (1, 2)]
+    assert keys[0] == keys[1] and len(keys[0]) == len(pool(aws))
 
 
-def test_aws_uses_one_fixed_account_and_the_attacks_never_do():
-    assert {e["recipientAccountId"] for e in build(aws, 100, seed=None)} == {aws.BENIGN_ACCOUNT}
-    assert {e["userIdentity"]["accountId"] for e in build(aws, 100, seed=None)} == {aws.BENIGN_ACCOUNT}
-    for scenario in aws.MIN_COUNT:
-        assert {e["recipientAccountId"] for e in attack(aws, scenario)} != {aws.BENIGN_ACCOUNT}
+def test_aws_uses_the_organizations_account_and_region_in_the_baseline_and_in_every_attack():
+    cloud = get_view().doc["cloud"]["aws"]
+    for events in [build(aws, 100, seed=None)] + [attack(aws, scenario) for scenario in aws.MIN_COUNT]:
+        assert {e["recipientAccountId"] for e in events} == {cloud["account_id"]}
+        assert {e["userIdentity"]["accountId"] for e in events} == {cloud["account_id"]}
+        assert {e["awsRegion"] for e in events} == {cloud["region"]}
+        # Not every event type carries tlsDetails (a console login does not); every one that does names the region.
+        assert all(f".{cloud['region']}." in e["tlsDetails"]["clientProvidedHostHeader"] for e in events if "tlsDetails" in e)
 
 
-def test_gcp_uses_one_fixed_project_and_the_attacks_never_do():
-    events = build(gcp, 100, seed=None)
-    assert {e["resource"]["labels"]["project_id"] for e in events} == {gcp.BENIGN_PROJECT}
-    assert all(gcp.BENIGN_PROJECT in e["logName"] for e in events)
-    for scenario in gcp.MIN_COUNT:
-        assert {e["resource"]["labels"]["project_id"] for e in attack(gcp, scenario)} != {gcp.BENIGN_PROJECT}
+def test_gcp_uses_the_organizations_project_and_region_in_the_baseline_and_in_every_attack():
+    cloud = get_view().doc["cloud"]["gcp"]
+    for events in [build(gcp, 100, seed=None)] + [attack(gcp, scenario) for scenario in gcp.MIN_COUNT]:
+        assert {e["resource"]["labels"]["project_id"] for e in events} == {cloud["project_id"]}
+        assert all(f"projects/{cloud['project_id']}/" in e["logName"] for e in events)
+    text = json.dumps(build(gcp, 400, seed=None))
+    assert cloud["region"] in text and "us-central1" not in text
 
 
 @pytest.mark.parametrize("mod", CLOUD)
@@ -163,17 +188,19 @@ def test_no_attack_scenario_shares_an_actor_with_the_baseline(mod):
 
 
 def test_the_pool_people_are_the_okta_users_with_the_same_home_addresses():
-    """One person, one home address in every profile (README: Client IPs)."""
+    """One person, one home address (the organization's `home_ip`) in every profile."""
+    n = 2 * len(_org.logon_people(get_view()))
     okta_ip = {e["actor"]["alternateId"].split("@")[0]: e["client"]["ipAddress"] for e in okta.build_events(
-        "benign_logins", 24, domain=DOMAIN, now=NOW, seed=1)}
-    assert len(okta_ip) == 12
-    aws_ip = {e["userIdentity"]["userName"]: e["sourceIPAddress"] for e in build(aws, 1500, seed=None) if e["userIdentity"]["type"] == "IAMUser"}
+        "benign_logins", n, view=get_view(), now=NOW, seed=1)}
+    assert len(okta_ip) == len(_org.logon_people(get_view()))
+    aws_ip = {e["userIdentity"]["userName"]: e["sourceIPAddress"] for e in build(aws, 4000, seed=1) if e["userIdentity"]["type"] == "IAMUser"}
     gcp_ip = {e["protoPayload"]["authenticationInfo"]["principalEmail"].split("@")[0]: e["protoPayload"]["requestMetadata"]["callerIp"]
-              for e in build(gcp, 1500, seed=None) if "gserviceaccount" not in e["protoPayload"]["authenticationInfo"]["principalEmail"]}
+              for e in build(gcp, 4000, seed=1) if "gserviceaccount" not in e["protoPayload"]["authenticationInfo"]["principalEmail"]}
     azure_ip = {e["initiatedBy"]["user"]["userPrincipalName"].split("@")[0]: e["initiatedBy"]["user"]["ipAddress"]
-                for e in build(azure, 1500, seed=None) if not e["initiatedBy"]["user"]["userPrincipalName"].split("@")[0].endswith(".adm")}
-    for ips in (aws_ip, gcp_ip, azure_ip):
-        assert len(ips) == 12 and all(okta_ip[name] == ip for name, ip in ips.items())
+                for e in build(azure, 4000, seed=1) if not e["initiatedBy"]["user"]["userPrincipalName"].split("@")[0].endswith(".adm")}
+    for mod, ips in ((aws, aws_ip), (gcp, gcp_ip), (azure, azure_ip)):
+        assert len(ips) == len(pool(mod)) and all(okta_ip[name] == ip for name, ip in ips.items())
+        assert set(ips) == {_org.local_part(p) for p in pool(mod)}  # exactly the people with that cloud, no leaver
 
 
 @pytest.mark.parametrize("mod", CLOUD)
@@ -264,9 +291,10 @@ def test_azure_resets_are_done_by_the_helpdesk_administrator_on_an_ordinary_user
     benign = build(azure, 600, seed=None)
     resets = [e for e in benign if e["activityDisplayName"] == "Reset password (by admin)"]
     assert resets
-    first = ".".join(azure._fresh.person(azure.BENIGN_ADMINS[0]))
+    admins = _org.administrators(pool(azure))
+    first = _org.local_part(next(p for p in admins if "helpdesk" in p["title"].lower()))
     for e in resets:
-        assert e["initiatedBy"]["user"]["userPrincipalName"] == f"{first}.adm@{DOMAIN}"
+        assert e["initiatedBy"]["user"]["userPrincipalName"] == f"{first}.adm@{domain()}"
         assert not e["targetResources"][0]["userPrincipalName"].split("@")[0].endswith(".adm")
     for e in benign:
         if e["activityDisplayName"] == "Change password (self-service)":
@@ -292,7 +320,7 @@ def test_a_seed_makes_the_call_reproducible_and_unseeded_calls_differ_only_in_ev
 @pytest.fixture
 def cfg(monkeypatch):
     values = {"url": "https://api-tenant.example.test/logs/v1/event", "key": "k", "vendor": "Okta", "product": "SSO", "extra": "",
-              "extra_keys": "", "domain": DOMAIN, "verify_tls": True, "timeout": 5.0, "cribl_url": URL, "cribl_token": TOKEN,
+              "extra_keys": "", "organization": "", "verify_tls": True, "timeout": 5.0, "cribl_url": URL, "cribl_token": TOKEN,
               "cribl_integration": "wave-7", "windows_dns": "phantom.lab"}
     monkeypatch.setattr(connector, "_settings", lambda: dict(values))
     return values
@@ -326,7 +354,7 @@ def test_the_tool_sends_to_the_profiles_cribl_destination_with_a_default_of_twen
 def test_dry_run_sends_nothing_and_needs_no_cribl(mod, monkeypatch):
     sent = []
     monkeypatch.setattr(connector, "_settings", lambda: {"url": "", "key": "", "vendor": "Okta", "product": "SSO", "extra": "",
-                                                         "extra_keys": "", "domain": DOMAIN, "verify_tls": True, "timeout": 5.0})
+                                                         "extra_keys": "", "organization": "", "verify_tls": True, "timeout": 5.0})
     monkeypatch.setattr(connector.cribl, "post", lambda *a, **k: sent.append(a))
     monkeypatch.setattr(connector.collector, "post_events", lambda *a, **k: sent.append(a))
     result = connector.phantom_generate_events(mod.NAME, "benign_activity", count=5, dry_run=True)

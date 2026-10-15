@@ -29,7 +29,7 @@ It is reproducible on demand for the baseline users. It is not a correlation rul
 | Required data | an SSO source: Okta (the doc lists AzureAD, Duo, Okta, OneLogin, PingOne ...) |
 | Test period | single event; looks back **30 days across the whole organization** |
 | Deduplication | **1 day** (per user and application: one user can get two alerts in the same minute for two apps) |
-| What the alert text says | *"The user phantom-lab\<login> accessed the resource <app> via SSO ... This resource has not been observed for the past 30 days. The IP address is routed through a known tunnel operator: TOR_PROXY. The following risk factors have been identified for this IP: ['TUNNEL'] ... The user authentication attempt was made from the country <country>, which has not been seen in the organization over the past 30 days ... the ASN ... has not been seen ...."* |
+| What the alert text says | *"The user phantom\<login> accessed the resource <app> via SSO ... This resource has not been observed for the past 30 days. The IP address is routed through a known tunnel operator: TOR_PROXY. The following risk factors have been identified for this IP: ['TUNNEL'] ... The user authentication attempt was made from the country <country>, which has not been seen in the organization over the past 30 days ... the ASN ... has not been seen ...."* |
 
 ## What makes it fire: four conditions
 
@@ -39,7 +39,7 @@ It is reproducible on demand for the baseline users. It is not a correlation rul
 3. **A desktop or scripted client, not a phone.** **Mobile user agents (iPhone, Android, Okta Mobile) do not fire; desktop or scripted agents do** (with an occasional unexplained miss, see below).
    Desktop browsers (Windows/macOS), `python-requests`, `PostmanRuntime`, Nmap scripting, AWS scanner, Boto3 and Terraform agents fire. Every mobile agent also carries `client.device: "Mobile"`, so **user agent and device class are
    confounded: use a desktop agent and `client.device: "Computer"` together.**
-4. **A known user.** Use a baseline account (`<name>@phantom-lab.example`, with about 10 workdays of ordinary logins on `okta_sso_raw`). A never-seen account is not covered by this recipe.
+4. **A known user.** Use a baseline account: a person of the organization (`organization_get(section="people")`, the email is `<name>@phantom.lab` on Phantom Lab, for example `dana.alanazi@phantom.lab` in Engineering) with about 10 workdays of ordinary logins on `okta_sso_raw`. A never-seen account is not covered by this recipe.
 
 Does **not** fire: the same kind of event for a baseline user and a never-used app **from the user's own Saudi home IP** raises no alert. That variant also drops `isProxy`, `proxyType`, `threatSuspected` and uses `risk MEDIUM`, so "the address" and "the Tor decorations" are **not separated**; send them together. The base detector for this case is Informational and would not show in the Issues view anyway.
 
@@ -78,7 +78,7 @@ published a few seconds apart in ascending order. One event looks like this; rep
   "actor": {
     "id": "<CHANGE: the user's existing actor.id from precondition 4>",
     "type": "User",
-    "alternateId": "<CHANGE: the baseline user's login, e.g. layla.almalki@phantom-lab.example>",
+    "alternateId": "<CHANGE: the baseline user's login, e.g. dana.alanazi@phantom.lab>",
     "displayName": "<CHANGE: e.g. Layla Almalki>",
     "detailEntry": null
   },
@@ -131,7 +131,7 @@ Why each value is what it is:
 - **`ipAddress` / `ipChain[0].ip`: the same live Tor exit.** The engine resolves the address itself and named it a Tor proxy in the alert text. `proxyType: TOR`, `threatDetections` and `isProxy: true` are the Okta-side markers; whether the engine needs them or only the address was not isolated, so send all of them.
 - **`threatSuspected` the string `"true"`, `risk {level=HIGH}`**: keep them as written; the doc does not say whether they are required, so keep them.
 - **The user agent and `client.device`**: desktop or scripted agents with device `Computer` fire; mobile agents (device `Mobile`) do not. Never use an iPhone, Android or "Okta Mobile" agent for this recipe.
-- **`actor.id`**: reuse the user's existing id (precondition 4) so the account stays one identity; the engine names the user `phantom-lab\<local part>` from the login.
+- **`actor.id`**: reuse the user's existing id (precondition 4) so the account stays one identity; the engine names the user `phantom\<local part>` from the login.
 - **Free to change**: every id, hash, `uuid`, `published`, the geography and AS labels. Not free: eventType, outcome, the `AppInstance`-first target order, the Tor address, the client class (desktop/scripted, device Computer).
 
 ## Step 2: confirm it landed and modeled (about 5 minutes after Step 1)
@@ -163,3 +163,5 @@ If an event is missing from the results after 10 minutes: it is usually a mobile
 ## Report back to the operator
 
 For each event: user, app, exit IP, agent class, and either the alert id and arrival time or "no alert". State how many of N fired. Say that each app is now used up for 30 days and each user/app pair for 24 hours.
+
+Note: the Cortex `user_name` prefix shown above (`phantom\`) is the first label of the organization's email domain (`phantom.lab`); it was `phantom-lab\` on the previous domain. It has not been re-measured on the tenant, so confirm it on the first replay.

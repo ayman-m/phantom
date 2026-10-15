@@ -43,6 +43,7 @@ from api.agent_definitions import register_agent_definition_routes
 from api.connectors import register_connector_routes
 from api.hooks import register_hook_routes
 from api.bench import register_bench_routes
+from api.organizations import register_organization_routes
 from api.personality import register_personality_routes
 from api.plugins import register_plugin_routes
 from api.plugin_entry_points_routes import register_plugin_entry_points_routes
@@ -100,6 +101,10 @@ from usecase.connector_state import (
 from usecase.hook_store import SqliteHookStore
 from usecase.plugin_loader import PluginLoader
 from usecase.task_store import SqliteTaskStore, set_task_store
+from usecase.organization_store import (
+    SqliteOrganizationStore,
+    set_organization_store,
+)
 from usecase.personality_store import (
     SqlitePersonalityStore,
     set_personality_store,
@@ -656,6 +661,17 @@ async def async_main(transport: str):
     personality = SqlitePersonalityStore()
     set_personality_store(personality)
 
+    # Organization store: the one sample company every simulation draws its
+    # users, hosts and addresses from. Loads the bundled Phantom Lab on first
+    # boot. Connector containers read organization.db straight from the shared
+    # data volume; the `organization` knowledge base is rebuilt from it here
+    # (off-thread, so a slow embedder never delays boot or a save).
+    from usecase import organization_kb
+    organization = SqliteOrganizationStore()
+    set_organization_store(organization)
+    organization.add_listener(lambda rec: organization_kb.sync_in_background(kb, rec))
+    organization_kb.sync_in_background(kb, organization.get_active())
+
     # Operator-registered lifecycle hooks. The
     # chat-route loads hooks fresh from this store at every event
     # fire-site (PreToolUse, PostToolUse, etc.) and dispatches them
@@ -888,6 +904,7 @@ async def async_main(transport: str):
     # manifest-declared `settings_changed` event.
     register_settings_routes(mcp, settings)
     register_personality_routes(mcp, personality)
+    register_organization_routes(mcp, organization)
     # Operator-direct skills CRUD over REST (bypasses the
     # `skills_delete` gated tool path that exists for chat-driven
     # self-mod). The Next.js `/skills` page proxies to these

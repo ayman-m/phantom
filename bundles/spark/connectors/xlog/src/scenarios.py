@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional
 from fastmcp import Context
 from pydantic import BaseModel, Field
 
+from . import org_defaults
 from ._graphql_client import PhantomGraphQLClient
 from ._xlog_url_resolver import resolve_xlog_url
 
@@ -232,6 +233,15 @@ def _normalize_log_entry(log_entry: Dict[str, Any]) -> Dict[str, Any]:
     return normalized
 
 
+def _with_organization(log_entry: Dict[str, Any], use_organization: bool) -> Dict[str, Any]:
+    """Pin the identity keys a scenario log left unset to the active organization (one actor, one server)."""
+    if not use_organization:
+        return log_entry
+    observables, _ = org_defaults.resolve(
+        schema_fields=None, observables=log_entry.get("observablesDict"), use_organization=True)
+    return {**log_entry, "observablesDict": observables}
+
+
 class CreateScenarioWorkerRequest(BaseModel):
     """Request model for creating scenario workers from a query."""
 
@@ -260,6 +270,7 @@ async def phantom_generate_scenario_fake_data(
     name: str,
     steps: List[ScenarioStep],
     tags: Optional[List[str]] = None,
+    use_organization: bool = True,
     ctx: Context = None,
 ) -> Dict[str, Any]:
     """
@@ -374,7 +385,7 @@ async def phantom_generate_scenario_fake_data(
         step_payload = step.model_dump(exclude_none=True)
         logs = step_payload.get("logs", [])
         normalized_logs = [
-            _normalize_log_entry(log) if isinstance(log, dict) else log for log in logs
+            _with_organization(_normalize_log_entry(log), use_organization) if isinstance(log, dict) else log for log in logs
         ]
         step_payload["logs"] = normalized_logs
         steps_payload.append(step_payload)
@@ -395,6 +406,7 @@ async def phantom_create_scenario_worker(
     destination: str,
     steps: List[ScenarioStep],
     tags: Optional[List[str]] = None,
+    use_organization: bool = True,
     ctx: Context = None,
 ) -> List[Dict[str, Any]]:
     """
@@ -481,7 +493,7 @@ async def phantom_create_scenario_worker(
         step_payload = step.model_dump(exclude_none=True)
         logs = step_payload.get("logs", [])
         normalized_logs = [
-            _normalize_log_entry(log) if isinstance(log, dict) else log for log in logs
+            _with_organization(_normalize_log_entry(log), use_organization) if isinstance(log, dict) else log for log in logs
         ]
         step_payload["logs"] = normalized_logs
         steps_payload.append(step_payload)

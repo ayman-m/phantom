@@ -263,7 +263,7 @@ def knowledge_search(
 
     Args:
         query: free-form text. Embedded and matched by cosine similarity.
-        kb_name: restrict to a single KB (e.g. "phantom-soc"). When
+        kb_name: restrict to a single KB (e.g. "xql-examples" or "organization"). When
             null, search every loaded KB.
         category: restrict to one schema category (e.g. "simulation").
         limit: max results (1-100). Default 5.
@@ -291,7 +291,7 @@ def knowledge_list(kb_name: str, limit: int = 20) -> dict[str, Any]:
     """List documents in a knowledge base (no semantic search).
 
     Args:
-        kb_name: the KB to list (e.g. "phantom-soc").
+        kb_name: the KB to list (e.g. "xql-examples" or "organization").
         limit: max docs (1-500). Default 20.
 
     Useful for the agent to discover what's available before

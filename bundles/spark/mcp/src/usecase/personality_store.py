@@ -140,6 +140,7 @@ DEFAULT_PERSONALITY: dict[str, Any] = {
             "api-keys",
             "memory",
             "knowledge",
+            "organization",
         ],
         # Tools that act on the SOC environment outside the agent's
         # boundary. Logs sent to a real SIEM, Caldera ops launched

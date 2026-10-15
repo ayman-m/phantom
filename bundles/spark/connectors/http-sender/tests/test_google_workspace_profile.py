@@ -15,10 +15,10 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.profiles import google_workspace as gw, ippools  # noqa: E402
+from runtime.organization_view import get_view  # noqa: E402
+from src.profiles import _org, google_workspace as gw, ippools  # noqa: E402
 
 NOW = datetime(2026, 9, 30, 12, 0, 0, tzinfo=timezone.utc)
-DOMAIN = "phantom-lab.example"
 ID_TIME = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
 
 
@@ -31,8 +31,26 @@ def country(ip):
     return pool_range.country if pool_range else None
 
 
+class _Org:
+    """The active organization as these tests need it (the bundled Phantom Lab; the conftest activates it per test)."""
+
+    @property
+    def domain(self):
+        return get_view().email_domain
+
+    @property
+    def partner(self):
+        return get_view().partner_domain
+
+    def person(self, login):
+        return get_view().person(login)
+
+
+ORG = _Org()
+
+
 def build(scenario, count, **kw):
-    return gw.build_events(scenario, count, domain=DOMAIN, now=NOW, seed=7, **kw)
+    return gw.build_events(scenario, count, view=get_view(), now=NOW, seed=7, **kw)
 
 
 def parsed(ev):
@@ -82,10 +100,10 @@ def test_every_scenario_emits_full_activity_objects(scenario):
     for ev in events:
         assert REQUIRED <= ev.keys()
         assert ev["kind"] == "admin#reports#activity"
-        assert ev["ownerDomain"] == DOMAIN
+        assert ev["ownerDomain"] == ORG.domain
         assert {"time", "uniqueQualifier", "applicationName", "customerId"} <= ev["id"].keys()
         assert ev["id"]["applicationName"] in ("drive", "login")
-        assert ev["actor"]["email"].endswith("@" + DOMAIN)
+        assert ev["actor"]["email"].endswith("@" + ORG.domain)
         assert re.fullmatch(r"\d{21}", ev["actor"]["profileId"])
         assert ev["actor"]["callerType"] == "USER"
         assert isinstance(ev["events"], list) and len(ev["events"]) == 1
@@ -134,11 +152,13 @@ def test_each_user_has_one_stable_home_address_across_runs_and_profiles():
             out.setdefault(e["actor"]["email"], set()).add(e["ipAddress"])
         return out
 
-    first, second = by_actor(build("benign_drive", 48)), by_actor(build("benign_drive", 30, start_offset_minutes=60))
-    assert len(first) == 12 and all(len(ips) == 1 for ips in first.values())
+    n = 2 * len(_org.logon_people(get_view()))
+    first, second = by_actor(build("benign_drive", n)), by_actor(build("benign_drive", 30, start_offset_minutes=60))
+    assert len(first) == len(_org.logon_people(get_view())) and all(len(ips) == 1 for ips in first.values())
     assert all(second[actor] == ips for actor, ips in first.items() if actor in second)
-    assert len({next(iter(ips)) for ips in first.values()}) == 12
-    assert first[f"noura.alharbi@{DOMAIN}"] == {ippools.home_for(0)[0]}  # the same address as in the okta profile
+    assert len({next(iter(ips)) for ips in first.values()}) == len(first)
+    noura = ORG.person("nalharbi")
+    assert first[noura["email"]] == {noura["home_ip"]}  # the person's own address, the same as in the okta profile
 
 
 def test_external_share_names_an_outside_reserved_domain_and_uses_multivalue():
@@ -146,13 +166,13 @@ def test_external_share_names_an_outside_reserved_domain_and_uses_multivalue():
     p = params(ev)
     assert ev["events"][0]["type"] == "acl_change"
     assert p["visibility"]["value"] == "shared_externally"
-    assert p["target_user"]["value"].endswith("@external-partner.example")
+    assert p["target_user"]["value"].endswith("@" + ORG.partner)
     assert p["new_value"]["multiValue"] == ["can_view"]
 
 
 def test_public_share_is_one_actor_making_sensitive_files_public():
     events = build("public_share", 5, target_user="Noura.Alharbi", source_ip="203.0.113.99")
-    assert {e["actor"]["email"] for e in events} == {f"noura.alharbi@{DOMAIN}"}
+    assert {e["actor"]["email"] for e in events} == {ORG.person("nalharbi")["email"]}
     assert {e["ipAddress"] for e in events} == {"203.0.113.99"}  # the override wins, even outside every pool
     for ev in events:
         assert (ev["events"][0]["type"], op(ev)) == ("acl_change", "change_document_visibility")
@@ -176,24 +196,24 @@ def test_sensitive_download_is_a_burst_by_one_actor_of_sensitive_filenames():
 @pytest.mark.parametrize("scenario", ["public_share", "sensitive_download"])
 def test_without_source_ip_the_actor_acts_from_their_own_home_address(scenario):
     (home,) = {e["ipAddress"] for e in build(scenario, 4, target_user="khalid.alotaibi")}
-    assert home == ippools.home_for(1)[0] and country(home) == "Saudi Arabia"
-    (stranger,) = {e["ipAddress"] for e in build(scenario, 4, target_user="someone.new")}
-    assert is_home(stranger)
-    other_seed = gw.build_events(scenario, 2, domain=DOMAIN, now=NOW, seed=5, target_user="someone.new")
-    assert {e["ipAddress"] for e in other_seed} == {stranger}
+    assert home == ORG.person("kalotaibi")["home_ip"] and country(home) == "Saudi Arabia"
+    other_seed = gw.build_events(scenario, 2, view=get_view(), now=NOW, seed=5, target_user="kalotaibi")
+    assert {e["ipAddress"] for e in other_seed} == {home}
+    with pytest.raises(ValueError, match="nobody in the organization"):
+        build(scenario, 4, target_user="someone.new")
 
 
 def test_impossible_travel_is_two_logins_for_one_actor_hours_apart_from_different_addresses():
     events = build("impossible_travel_login", 2, target_user="noura.alharbi")
     assert len(events) == 2
     a, b = events
-    assert a["actor"]["email"] == b["actor"]["email"] == f"noura.alharbi@{DOMAIN}"
+    assert a["actor"]["email"] == b["actor"]["email"] == ORG.person("nalharbi")["email"]
     assert all(e["id"]["applicationName"] == "login" and e["events"][0]["type"] == "login" for e in events)
     assert {op(a), op(b)} == {"login_success"}
     assert parsed(b) - parsed(a) > timedelta(hours=2)
     assert parsed(b) - parsed(a) <= timedelta(hours=6, seconds=120)
     assert parsed(b) <= NOW
-    assert a["ipAddress"] == ippools.home_for(0)[0] and is_home(a["ipAddress"])
+    assert a["ipAddress"] == ORG.person("nalharbi")["home_ip"] and is_home(a["ipAddress"])
     assert not is_home(b["ipAddress"]) and ippools.range_of(b["ipAddress"]) in ippools.ABROAD
     assert country(a["ipAddress"]) == "Saudi Arabia" and country(b["ipAddress"]) not in (None, "Saudi Arabia")
     assert params(a)["affected_email_address"]["value"] == a["actor"]["email"]
@@ -249,14 +269,16 @@ def test_ids_are_unique(scenario):
 def test_a_fixed_seed_is_deterministic_and_another_differs():
     for scenario in gw.SCENARIOS:
         assert build(scenario, 6) == build(scenario, 6)
-        other = gw.build_events(scenario, 6, domain=DOMAIN, now=NOW, seed=8)
+        other = gw.build_events(scenario, 6, view=get_view(), now=NOW, seed=8)
         assert other != build(scenario, 6)
 
 
 def test_actor_is_normalised_like_the_other_profiles():
-    ev = build("public_share", 1, target_user="PHANTOM\\Khalid.Alotaibi")[0]
-    assert ev["actor"]["email"] == f"khalid.alotaibi@{DOMAIN}"
-    assert build("public_share", 1, target_user="a@" + DOMAIN)[0]["actor"]["email"] == "a@" + DOMAIN
+    email = ORG.person("kalotaibi")["email"]
+    for spelling in ("PHANTOM\\Khalid.Alotaibi", "KALOTAIBI", email.upper(), "khalid.alotaibi"):
+        assert build("public_share", 1, target_user=spelling)[0]["actor"]["email"] == email
+    with pytest.raises(ValueError, match="nobody in the organization"):
+        build("public_share", 1, target_user="a@" + ORG.domain)
 
 
 def test_profile_id_is_stable_per_address():
@@ -272,10 +294,10 @@ IPV4 = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 
 @pytest.mark.parametrize("scenario", gw.SCENARIOS)
 def test_only_reserved_domains_and_addresses_from_the_pools(scenario):
-    for ev in build(scenario, 24) + [gw.sample_event(domain=DOMAIN, now=NOW)]:
+    for ev in build(scenario, 24) + [gw.sample_event(view=get_view(), now=NOW)]:
         text = json.dumps(ev)
         for host in EMAIL.findall(text):
-            assert host in (DOMAIN, "external-partner.example"), host
+            assert host in (ORG.domain, ORG.partner), host
         for raw in IPV4.findall(text):
             assert ippools.range_of(raw) is not None, raw
 
@@ -288,7 +310,7 @@ def test_a_source_ip_override_is_used_as_given():
 
 def test_the_default_far_login_is_seeded_and_varies_with_the_seed():
     def far(seed):
-        return gw.build_events("impossible_travel_login", 2, domain=DOMAIN, now=NOW, seed=seed)[1]["ipAddress"]
+        return gw.build_events("impossible_travel_login", 2, view=get_view(), now=NOW, seed=seed)[1]["ipAddress"]
 
     assert far(3) == far(3) and len({far(seed) for seed in range(30)}) > 5
 
@@ -296,8 +318,8 @@ def test_the_default_far_login_is_seeded_and_varies_with_the_seed():
 # ── sample event ────────────────────────────────────────────────────────
 
 def test_sample_event_is_a_valid_identifiable_login():
-    ev = gw.sample_event(domain=DOMAIN, now=NOW)
+    ev = gw.sample_event(view=get_view(), now=NOW)
     assert REQUIRED <= ev.keys() and ev[gw.TEST_ID_FIELD]
-    assert ev["actor"]["email"] == f"phantom.test@{DOMAIN}"
+    assert ev["actor"]["email"] == f"phantom.test@{ORG.domain}"
     assert op(ev) == "login_success" and ev["id"]["time"] == "2026-09-30T12:00:00.000Z"
     assert ev["ipAddress"] == ippools.home_for(0)[0]

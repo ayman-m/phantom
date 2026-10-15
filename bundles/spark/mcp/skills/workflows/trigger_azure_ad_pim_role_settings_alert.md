@@ -68,7 +68,7 @@ config timeframe = 1h
 | limit 3
 ```
 
-Pass when you see **one** row for your admin: `result` is `success`, `initiatedBy` contains `<name>.<hex>.adm@phantom-lab.example` and `targetResources` is the `Role` `Global Administrator` with an `ExpirationRule` change from `PT8H` to `P365D`. Runs from the last hour (yours and earlier ones) also appear: read the newest row first.
+Pass when you see **one** row for your admin: `result` is `success`, `initiatedBy` contains `<name>.<hex>.adm@phantom.lab` and `targetResources` is the `Role` `Global Administrator` with an `ExpirationRule` change from `PT8H` to `P365D`. Runs from the last hour (yours and earlier ones) also appear: read the newest row first.
 
 ## Step 3: wait, then check for the alert
 
@@ -83,10 +83,12 @@ config timeframe = 1d
 | limit 5
 ```
 
-Pass when a **new** row names the identity you saw in Step 2 (the admin's name in the alert's `user_name` as `phantom-lab\<name>.adm`); older rows from other runs have other identities. The alert typically arrives within about 20 seconds of the event, the slowest of the Azure AD audit scenarios.
+Pass when a **new** row names the identity you saw in Step 2 (the admin's name in the alert's `user_name` as `phantom\<name>.adm`); older rows from other runs have other identities. The alert typically arrives within about 20 seconds of the event, the slowest of the Azure AD audit scenarios.
 
 If nothing arrives in 6 minutes: re-run Step 2 (the events must be there and carry the right operation), confirm the instance's Cribl destination is still ready, and send the call **once more** (a new call is a new actor). Do not edit the events and do not switch to an HTTP collector or syslog.
 
 ## Report back to the operator
 
 State the identity that appears in the alert description, the alert id, `Azure AD PIM role settings change`, its severity (Low), and the latency from the events to the alert (typically within about 20 seconds). Say that `xdm.*` is empty for this dataset because the Entra ID pack is not installed and that this does not stop the detector, and that each call uses a new identity so it can be repeated at once.
+
+Note: the Cortex `user_name` prefix shown above (`phantom\`) is the first label of the organization's email domain (`phantom.lab`); it was `phantom-lab\` on the previous domain. It has not been re-measured on the tenant, so confirm it on the first replay.

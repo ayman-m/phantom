@@ -30,7 +30,7 @@ It is not a correlation rule; it is Cortex's own analytics (Cloud module, `XDR A
 | Activation / training (doc) | 14 days / 30 days. In practice the alert arrives within minutes (see Expected result) |
 | Test period (doc) | **1 hour**: the creation and the administrative grant must fall inside it. Both calls place all their events in the last 2 minutes |
 | Deduplication (doc) | 1 day. Every call invents new users, accounts and projects, so a repeat fires again |
-| What the alert text says | AWS: *"The identity audit-bot-<hex> was created by <name>.<hex>. The newly created identity was assigned administrative policy. The operation was performed on AWS/<account>"*. GCP: *"The identity deploy-bot-<hex>@phantom-lab-<hex>.iam.gserviceaccount.com was created by <name>.<hex>@phantom-lab.example. The newly created identity was assigned administrative policy. The operation was performed on GCP/phantom-lab-<hex>"* |
+| What the alert text says | AWS: *"The identity audit-bot-<hex> was created by <name>.<hex>. The newly created identity was assigned administrative policy. The operation was performed on AWS/<account>"*. GCP: *"The identity deploy-bot-<hex>@<project id>.iam.gserviceaccount.com was created by <name>.<hex>@phantom.lab. The newly created identity was assigned administrative policy. The operation was performed on GCP/<project id: the organization's, `phantom-lab-prod` on Phantom Lab>"* |
 
 **Attribution warning.** The same minutes can raise `Administrative IAM User Created with Credentials` from the AWS-only recipe `iam_admin_user_credentials`, and other runs on the tenant raise this alert name too. Credit an alert to your call only when the **identity named in its `user_name` and `description` is the one your events carry** (Step 2): the actor of every call is new.
 
@@ -39,7 +39,7 @@ It is not a correlation rule; it is Cortex's own analytics (Cloud module, `XDR A
 | # | Must be true | How to check |
 |---|---|---|
 | 1 | The `http-sender` instance is running with Cribl configured: `list_destinations` shows **`cribl_aws_audit`** and/or **`cribl_gcp_cloud_logging`** with `ready: true` (whichever cloud you send) | `http-sender.list_destinations` |
-| 2 | You pass **no** `destination`, `target_user`, `source_ip` or `count`. Each profile's default destination is its Cribl one. The default `count` is the recipe's step count (AWS 5, GCP 2) and a smaller one is refused. The actors (an IAM user `<name>.<hex>` in a new account; a user `<name>.<hex>@phantom-lab.example` in a new project) are invented per call, from the Saudi home pool | read the calls below |
+| 2 | You pass **no** `destination`, `target_user`, `source_ip` or `count`. Each profile's default destination is its Cribl one. The default `count` is the recipe's step count (AWS 5, GCP 2) and a smaller one is refused. The actors (an IAM user `<name>.<hex>` in the organization's AWS account; a user `<name>.<hex>@phantom.lab` in the organization's GCP project) are invented per call, from the Saudi home pool | read the calls below |
 | 3 | The steps of one call are spread over the last 2 minutes and end at the moment of the call | none |
 
 ## Expected result
@@ -107,10 +107,12 @@ config timeframe = 1d | dataset = alerts
 
 Use the stored enum names `MAGNIFIER` and `ANALYTICS_BIOC`: the displayed names `XDR_ANALYTICS` and `XDR_ANALYTICS_BIOC` match nothing in a filter.
 
-Pass when a row's `user_name` and `description` name **your** acting identity and `host_ip` is your caller IP (AWS: `user_name` is the bare IAM user, e.g. `<name>.<hex>`; GCP: `phantom-lab\<local part>`). Expect `severity` LOW and `original_tags` with `DS:Amazon/AWS` or `DS:Google/Cloud Logging`.
+Pass when a row's `user_name` and `description` name **your** acting identity and `host_ip` is your caller IP (AWS: `user_name` is the bare IAM user, e.g. `<name>.<hex>`; GCP: `phantom\<local part>`). Expect `severity` LOW and `original_tags` with `DS:Amazon/AWS` or `DS:Google/Cloud Logging`.
 
 If nothing arrives in 15 minutes: re-run Step 2 (all 5 / both rows must be there), confirm the destination, then retry **once** with the same call (it generates new identities). Do not change the recipe: an assumed role instead of an IAM user does not raise the alert for AWS.
 
 ## Report back to the operator
 
 State which cloud(s) you sent, the acting identity and account or project, the caller IP, the Step 2 result and, per cloud, either the alert id with its arrival time and latency or that nothing arrived in 15 minutes and what you checked. Say that every call uses new identities, so repeating it is safe, and that the AWS alert can take several minutes.
+
+Note: the Cortex `user_name` prefix shown above (`phantom\`) is the first label of the organization's email domain (`phantom.lab`); it was `phantom-lab\` on the previous domain. It has not been re-measured on the tenant, so confirm it on the first replay.

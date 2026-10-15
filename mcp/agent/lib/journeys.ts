@@ -64,6 +64,7 @@ export type JourneyComponent =
   | "skills"
   | "memory"
   | "knowledge"
+  | "organization"
   | "compaction"
   | "context-budget"
   | "vertex-cache"
@@ -303,6 +304,12 @@ export const COMPONENT_META: Record<JourneyComponent, ComponentMeta> = {
     icon: "menu_book",
     guide: "architecture",
     anchor: "knowledge-pipeline",
+  },
+  organization: {
+    label: "Organization",
+    icon: "apartment",
+    guide: "architecture",
+    anchor: "organization",
   },
   compaction: {
     label: "Compaction",
@@ -4328,6 +4335,110 @@ export const JOURNEYS: Journey[] = [
     ],
     related: ["chat-memory-recall"],
     components: ["knowledge", "mcp"],
+  },
+
+  // ── Organization (v1.1.0+) ───────────────────────────────────────────
+  {
+    id: "organization-browse-and-cortex-setup",
+    category: "ops",
+    title: "Browse the organization and copy its Cortex setup",
+    summary:
+      "Open /organization, look at the built-in Phantom Lab (people, hosts, networks, groups), and copy the internal ranges and domain suffix Cortex needs under Inventory > Assets > Network Configuration.",
+    difficulty: "starter",
+    durationMin: 5,
+    icon: "apartment",
+    prompts: [],
+    toolsExercised: [],
+    apis: [
+      { method: "GET", path: "/api/agent/organizations", description: "Lists the organizations and which one is active." },
+      { method: "GET", path: "/api/agent/organizations/active", description: "The active organization with its full document." },
+      { method: "GET", path: "/api/agent/organizations/phantom-lab/cortex-setup", description: "The internal ranges, domain suffixes and per-network CIDRs to enter in Cortex." },
+    ],
+    howToTest: [
+      "Open /organization (sidebar > Command > Organization). The Organizations cards show Phantom Lab marked Built-in and Active; the header shows 50 people and the counts of hosts and networks.",
+      "Read the banner: Phantom Lab is built in and read-only, and any edit saves your own copy.",
+      "Open the People tab and type 'finance' in the search box. Seven people remain, each with a workstation and its address (for example PHWS-001, 10.20.16.20).",
+      "Open Hosts, filter role to server: the domain controllers, file, application, SQL and web servers, the certificate authority and the others, each with an address inside the server farm network.",
+      "Open Networks: the RUH core, server farm, management, security, workstation, Wi-Fi, unmanaged-device, guest, VPN, Jeddah, DMZ and the three cloud networks, with VLANs and address blocks.",
+      "Open Overview and find the Cortex setup panel. Click the copy button next to the internal ranges and next to the domain suffix. In Cortex, paste them under Inventory > Assets > Network Configuration.",
+    ],
+    expectedResult:
+      "You can see the whole company the generators use, and you have the exact ranges and suffix to enter in Cortex so its Analytics tracks the assets correctly.",
+    verifyVia: [
+      "GET /api/agent/organizations → active_id phantom-lab, people 50",
+      "GET /api/agent/organizations/phantom-lab/cortex-setup → internal_ranges includes 10.20.0.0/16 and domain_suffixes is [phantom.lab]",
+    ],
+    related: ["organization-add-hire-via-chat", "organization-switch-and-replace"],
+    components: ["organization", "knowledge"],
+  },
+  {
+    id: "organization-add-hire-via-chat",
+    category: "ops",
+    title: "Ask the agent about the company and add a new hire",
+    summary:
+      "The agent reads the organization before it generates anything. Ask who is in Finance, add a hire with a laptop, and see the edit land in a copy of the built-in organization with its history.",
+    difficulty: "starter",
+    durationMin: 6,
+    icon: "person_add",
+    prompts: [
+      { text: "Who is in Finance, and which workstation does each person use?", note: "organization_get(section=people, filter=department=Finance): exact rows, not a guess." },
+      { text: "Add a new hire to Finance, Amira Alfarsi, Financial Analyst, with a laptop.", note: "organization_update. Phantom Lab is read-only, so the edit makes phantom-lab-custom and activates it; the reply says so and names the new workstation and address." },
+      { text: "Show me Finance again.", note: "Eight people now; the new hire has the next workstation (PHWS-051) at the next free address." },
+    ],
+    toolsExercised: ["organization_get", "organization_update"],
+    apis: [
+      { method: "POST", path: "/api/agent/organizations/{id}/changes", description: "The same structured edit the agent tool applies: {changes: {upsert|remove|set}}." },
+      { method: "GET", path: "/api/agent/organizations/{id}/history", description: "Earlier versions, each restorable." },
+    ],
+    howToTest: [
+      "Open a fresh chat and send the first prompt. The reply lists seven Finance people with their workstations and addresses, taken from the organization.",
+      "Send the second prompt. The reply says the built-in organization is read-only, so the change was made to a copy that is now active, and names the new login, workstation and address.",
+      "Send the third prompt and confirm the new person appears.",
+      "Open /organization. The cards now show 'Phantom Lab (custom)' as Yours and Active, with 51 people; the built-in Phantom Lab is still there with 50. Open the new hire's row in People.",
+      "Open History on the copy: the edit is listed. Click Restore on the earlier version to undo it, then confirm the person is gone.",
+    ],
+    expectedResult:
+      "The agent answers from the organization, edits it through one validated call, and every edit is undoable. The built-in organization is never changed.",
+    verifyVia: [
+      "GET /api/agent/organizations → phantom-lab (people 50) and phantom-lab-custom (people 51, active)",
+      "GET /api/agent/audit?action=organization_changed → rows with op put and the agent as actor",
+    ],
+    related: ["organization-browse-and-cortex-setup", "organization-switch-and-replace"],
+    components: ["chat", "organization", "knowledge"],
+  },
+  {
+    id: "organization-switch-and-replace",
+    category: "ops",
+    title: "Import your own organization and switch between organizations",
+    summary:
+      "Import a second organization, make it active so every generator uses it, then switch back. Nothing is removed by switching.",
+    difficulty: "intermediate",
+    durationMin: 8,
+    icon: "swap_horiz",
+    prompts: [
+      { text: "Which organizations do we have, and which one is active?", note: "organization_list." },
+      { text: "Switch to the Acme organization.", note: "organization_activate. Connectors read it on their next call; nothing restarts." },
+    ],
+    toolsExercised: ["organization_list", "organization_activate", "organization_get"],
+    apis: [
+      { method: "POST", path: "/api/agent/organizations", description: "Import: {text, format, activate?}. The document is validated first." },
+      { method: "POST", path: "/api/agent/organizations/{id}/activate", description: "Make it the one every generator uses." },
+    ],
+    howToTest: [
+      "On /organization click Import. Paste a small organization in YAML (export Phantom Lab, change its id, name, domain and a few people), and watch the validation list: fix anything it reports before the Import button enables.",
+      "Tick 'Make it the active organization after import' and click Import. The new card is Active.",
+      "In chat ask 'simulate a brute force against a Windows server'. The agent reads the active organization and uses ITS hosts and users: none of Phantom Lab's appear.",
+      "Back on /organization, click Make active on Phantom Lab. Ask the same again and the Phantom Lab identities return.",
+    ],
+    expectedResult:
+      "The generators follow whichever organization is active, with no restart, and the organization you switched away from is untouched.",
+    verifyVia: [
+      "GET /api/agent/organizations → both organizations listed, exactly one active",
+      "XQL over the landed rows: the distinct users and hosts all belong to the organization that was active when they were sent",
+    ],
+    related: ["organization-browse-and-cortex-setup"],
+    prerequisites: ["organization-browse-and-cortex-setup"],
+    components: ["organization", "chat", "connectors"],
   },
 
   // [v1.0.3] Retired: skills-page-toggle. Replaced by skills-page-browse because the

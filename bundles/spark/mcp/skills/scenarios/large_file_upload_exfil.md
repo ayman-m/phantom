@@ -77,14 +77,19 @@ empty. `compact=true` is lossless for this purpose and keeps the payload inside 
    - Missing `firewall`: skip only the firewall sub-stages (1B, 2B, and the firewall half of 3B).
 4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
+## Pre-flight: read the organization
+
+Call `organization_get(section="personas")` once. It names the outlier (the person and workstation an inside attack runs from) and, for Stage 2, `organization_get(section="hosts", filter="role=dmz")` gives the public web server. Every identity below comes from there; do not invent a user, host or address.
+
 ## Narrative thread
 
-- **Insider user:** `r.kowalski@corp.example` (data analyst, broad access to claims-data SharePoint; gave 2-week notice 3 days before Stage 3 — not a SIEM-visible fact, but the realistic context for why privileged bulk-download right before leaving reads as suspicious rather than routine)
-- **Workstation:** `wks-rkowalski-01` at `10.10.20.88`
-- **Compromised web server (Stage 2):** `10.10.30.10` / `web-app-01`
-- **Personal cloud destinations:** Dropbox (`162.125.x.x`), Google Drive personal (`172.217.x.x`), Mega.nz (`66.203.x.x`), WeTransfer (`paste.dropfiles.io`)
-- **SaaS source (Stage 3):** OneDrive `personal/r_kowalski_acme_example/Documents/Claims-Q4-Archive` (~600 docs, ~4 GB total)
+- **Insider user (Stages 1 and 3):** the organization's outlier persona (`flag=outlier`), so the behaviour stands out against peers. Take the login, email, workstation and workstation address from the people row. Phantom Lab example: `aalzamil` (Anas Alzamil, DevOps Engineer, `anas.alzamil@phantom.lab`), workstation PHWS-036 at `10.20.16.55`. Gave 2-week notice 3 days before Stage 3: not a SIEM-visible fact, but the realistic context for why privileged bulk-download right before leaving reads as suspicious rather than routine.
+- **Compromised web server (Stage 2):** the organization's public web host, PHDMZ-WEB01 (`organization_get section=hosts filter=role=dmz`; `172.16.10.10` on Phantom Lab). Keep its internal DMZ address in `src` (the "server initiates outbound" signal depends on it); its public egress address is `egress.dmz_public.PHDMZ-WEB01` (`151.254.90.10` on Phantom Lab) for any translated-source field.
+- **Personal cloud destinations:** Dropbox (`162.125.x.x`), Google Drive personal (`172.217.x.x`), Mega.nz (`66.203.x.x`), WeTransfer (`paste.dropfiles.io`). These are external services, not part of the organization.
+- **SaaS source (Stage 3):** OneDrive `personal/<insider email with "." and "@" replaced by "_">/Documents/Claims-Q4-Archive` (Phantom Lab example: `personal/anas_alzamil_phantom_lab/Documents/Claims-Q4-Archive`, ~600 docs, ~4 GB total)
 - **Wall-clock time:** Stage 1 ~25 min sustained upload. Stage 2 ~10 min server-side burst (more aggressive). Stage 3 ~30 min SaaS bulk download + ~25 min re-upload (overlapping). Stages 1+2 can run in parallel; Stage 3 has internal sequencing (download → upload).
+
+If the organization has no outlier persona or no public web host, tell the operator and offer `organization_update` instead of inventing one.
 
 ---
 
@@ -103,9 +108,9 @@ xlog.create_data_worker:
   interval: 6
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.20.88"]
-    shost:      ["wks-rkowalski-01"]
-    suser:          ["r.kowalski"]
+    src:        ["<insider workstation address: 10.20.16.55>"]
+    shost:      ["<insider workstation: PHWS-036>"]
+    suser:          ["<insider login: aalzamil>"]
     spt:      ["49152", "51234", "57890", "60123"]
     dpt:      ["443"]
     proto:      ["6"]
@@ -145,7 +150,7 @@ xlog.create_data_worker:
   max_events: 100
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.20.88"]
+    src:        ["<insider workstation address: 10.20.16.55>"]
     dst:        ["162.125.4.20", "162.125.5.20", "104.21.x.x",
                     "172.217.x.x", "66.203.x.x"]
     spt:      ["49152", "51234", "57890", "60123"]
@@ -173,7 +178,7 @@ xlog.create_data_worker:
 
 ### Stage 2 — Server outbound bulk upload (anomalous direction) — ~100 events over 10 minutes
 
-After web-app compromise (per `web_app_to_webshell_to_exfil`), the attacker uses the web shell to package DB content + source code, then exfiltrates it via outbound HTTPS to a file-sharing service. **This is the anomalous-direction signal: web servers should rarely initiate outbound to non-CDN destinations.**
+After web-app compromise of PHDMZ-WEB01 (per `web_app_to_webshell_to_exfil`), the attacker uses the web shell to package DB content + source code, then exfiltrates it via outbound HTTPS to a file-sharing service. **This is the anomalous-direction signal: web servers should rarely initiate outbound to non-CDN destinations.**
 
 **Sub-stage 2A — proxy**
 
@@ -186,8 +191,8 @@ xlog.create_data_worker:
   interval: 10
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.30.10"]
-    shost:      ["web-app-01"]
+    src:        ["<web server address: 172.16.10.10 for PHDMZ-WEB01>"]
+    shost:      ["<web server: PHDMZ-WEB01>"]
     spt:      ["41024", "41128", "41234", "41512"]
     dpt:      ["443"]
     proto:      ["6"]
@@ -221,7 +226,7 @@ xlog.create_data_worker:
   max_events: 40
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.30.10"]
+    src:        ["<web server address: 172.16.10.10 for PHDMZ-WEB01>"]
     dst:        ["104.21.x.x", "172.67.x.x", "66.203.x.x"]
     spt:      ["41024", "41128", "41234", "41512"]
     dpt:      ["443"]
@@ -235,7 +240,7 @@ xlog.create_data_worker:
 ```
 
 **Field semantics:**
-- `src_ip: 10.10.30.10` — the WEB SERVER initiates outbound, not a user workstation. **This is the strongest single signal.** Web servers should accept inbound connections; outbound to non-CDN destinations is suspicious by direction alone
+- `src_ip` (the web server's DMZ address, `172.16.10.10` for PHDMZ-WEB01) — the WEB SERVER initiates outbound, not a user workstation. **This is the strongest single signal.** Web servers should accept inbound connections; outbound to non-CDN destinations is suspicious by direction alone
 - `bytes_sent` — chunks up to 33 MB per session (server can stage larger archives than a workstation)
 - `domain_age_days: 1-12` — destinations are NEW (newly-stood-up attacker infrastructure for this campaign), unlike Stage 1's mature Dropbox
 
@@ -258,8 +263,8 @@ xlog.create_data_worker:
   interval: 3
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    suser:        ["r.kowalski@corp.example"]
-    src:      ["10.10.20.88"]
+    suser:        ["<insider email: anas.alzamil@phantom.lab>"]
+    src:      ["<insider workstation address: 10.20.16.55>"]
     act:      ["FileDownloaded", "FileSyncDownloadedFull",
                   "FilePreviewed", "FileAccessed",
                   "PageViewed", "FolderListed"]
@@ -270,14 +275,14 @@ xlog.create_data_worker:
                   "research-archive-2023.zip",
                   "policy-renewals-Q4.xlsx",
                   "actuarial-models-v3.zip"]
-    request:    ["/personal/r_kowalski_acme_example/Documents/Claims-Q4-Archive",
+    request:    ["/personal/<insider email with . and @ as _>/Documents/Claims-Q4-Archive",
                   "/sites/claims-data-2024",
                   "/sites/clinical-research-eu"]
     out:       ["180000", "245000", "890000", "5240000",
                   "12480000", "48800000", "4280000"]
     client_app:   ["OneDrive Sync Engine",
                   "OneDrive for Business"]
-    country:     ["GB"]
+    country:     ["<the insider's normal country: SA>"]
     cefSeverity:    ["informational", "medium"]
     fileType:   ["xlsx", "pdf", "csv", "zip"]
     sensitivity_label:   ["Confidential", "Restricted", "PHI"]
@@ -294,9 +299,9 @@ xlog.create_data_worker:
   interval: 9
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.20.88"]
-    shost:      ["wks-rkowalski-01"]
-    suser:          ["r.kowalski"]
+    src:        ["<insider workstation address: 10.20.16.55>"]
+    shost:      ["<insider workstation: PHWS-036>"]
+    suser:          ["<insider login: aalzamil>"]
     spt:      ["49251", "51380", "57902", "60127"]
     dpt:      ["443"]
     proto:      ["6"]
@@ -336,10 +341,10 @@ xlog.create_data_worker:
 | Indicator | Where to check |
 |---|---|
 | Stage 1 exfil-to-file-sharing alert (workstation → Dropbox volume) | XSIAM Issues |
-| Stage 2 server-outbound-anomaly alert (web-app-01 → uncategorized destinations) | XSIAM Issues |
-| Stage 3A bulk-SaaS-download alert (`r.kowalski` 600 downloads / 30 min) | XSIAM Issues |
+| Stage 2 server-outbound-anomaly alert (PHDMZ-WEB01 → uncategorized destinations) | XSIAM Issues |
+| Stage 3A bulk-SaaS-download alert (the insider's 600 downloads / 30 min) | XSIAM Issues |
 | Stage 3B exfil-to-file-sharing alert (re-upload following Stage 3A) | XSIAM Issues |
-| Pivotable: filter `user=r.kowalski`, see all 4 stages on one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the saas entry> \| filter <its user field> = "r.kowalski@corp.example" \| limit 20` |
+| Pivotable: filter `user=<insider login>`, see all 4 stages on one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the saas entry> \| filter <its user field> = "<insider email>" \| limit 20` |
 
 ## Tear-down
 

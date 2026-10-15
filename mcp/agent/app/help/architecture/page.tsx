@@ -152,6 +152,7 @@ const SECTIONS: SectionDef[] = [
  { id: "backup-restore", label: "Backup & Restore", group: "Operability", icon: "save" },
  { id: "settings-tuning", label: "Settings Tuning", group: "Operability", icon: "tune" },
  { id: "personality", label: "Personality Store", group: "Operability", icon: "psychology_alt" },
+ { id: "organization", label: "Organization", group: "Operability", icon: "apartment" },
  { id: "cost-tracking", label: "Cost Tracking", group: "Operability", icon: "payments" },
  { id: "benchmark-harness", label: "Benchmark Harness", group: "Operability", icon: "speed" },
  { id: "pipeline-health", label: "Pipeline Health Probes", group: "Operability", icon: "monitor_heart" },
@@ -417,6 +418,7 @@ export default function ArchitectureGuide() {
  <BackupRestore />
  <SettingsTuning />
  <Personality />
+ <Organization />
  <CostTracking />
  <BenchmarkHarness />
  <PipelineHealth />
@@ -1192,7 +1194,13 @@ MCP read connector.yaml.runtimeMapping.style
  require the agent itself.
  </li>
  <li>
- <Term>Same KEK</Term>. The container needs{" "}
+ <Term>Shared organization</Term>. The same read-only volume
+ also carries <Code>organization.db</Code>; a container reads the active
+ organization (or the one its instance pins) from it on every tool
+ call. See <Link href="#organization" className="link">Organization</Link>.
+ </li>
+ <li>
+  <Term>Same KEK</Term>. The container needs{" "}
  <Code>PHANTOM_SECRET_KEK</Code> in env to decrypt the
  instance&apos;s secrets. phantom-updater inherits it from
  the host&apos;s <Code>.env</Code> and passes it through.
@@ -2390,6 +2398,7 @@ function BackupRestore() {
 │                          created_at, section_counts,
 │                          restore_order, plaintext-secrets warning
 ├── personality.json       SqlitePersonalityStore blob
+├── organizations.json     operator organizations (documents) + the active id
 ├── instances.json         InstanceStore rows + cleartext secrets
 ├── memory.json            Memory entries (no embedding BLOBs)
 ├── jobs.json              runtime jobs only (manifest jobs reseed)
@@ -2769,6 +2778,150 @@ GET    /api/agent/personality/defaults  -- same`}</Pre>
  <li><Code>mcp/agent/app/api/agent/personality/route.ts</Code> and <Code>.../defaults/route.ts</Code> — Next.js proxies</li>
  <li><Code>mcp/agent/app/settings/personality/page.tsx</Code> — UI page (Action Policy and the persona editor); <Code>lib/personality-config.ts</Code> lays a stored blob over the defaults</li>
  <li><Code>mcp/agent/lib/system-prompt.ts</Code> — system-prompt assembly</li>
+ </ul>
+ </SubSection>
+ </Section>
+);
+}
+
+// ─── Organization ───────────────────────────────────────────────
+
+function Organization() {
+return (
+ <Section id="organization" icon="apartment" title="Organization">
+ <p>
+ Phantom generates telemetry for one fictitious company at a time. The{" "}
+ <Term>organization</Term> is that company: its people and their accounts,
+ workstations, servers, networks and VLANs, sites, groups, cloud accounts and
+ internet egress addresses. Every generator reads it (the agent, the xlog
+ workers, http-sender, wec-sender, cie-sender), so a user, their workstation and
+ its address are the same in Okta, Windows, firewall and cloud logs and Cortex
+ can stitch the alerts into one case. Phantom ships one organization, Phantom Lab
+ (50 people, domain <Code>phantom.lab</Code>); the operator can edit it, add
+ their own or replace it. One organization is active at a time.
+ </p>
+
+ <SubSection icon="storage" title="Storage: organization.db">
+ <p>
+ <Code>SqliteOrganizationStore</Code> keeps every organization in{" "}
+ <Code>/app/data/organization.db</Code>: one row per organization with its
+ document as JSON, a <Code>source</Code> (<Code>bundled</Code> or{" "}
+ <Code>operator</Code>), an <Code>active</Code> flag (a unique partial index allows
+ one) and a <Code>version</Code> that bumps on every change, plus{" "}
+ <Code>organization_history</Code> (the last 20 versions of each).
+ </p>
+ <Pre>{`organizations (id PK, name, source, active, version, document_json, updated_at, updated_by)
+organization_history (seq PK, org_id, version, document_json, updated_at, updated_by, note)`}</Pre>
+ <ul className="list-disc pl-6 space-y-1 text-sm">
+ <li>
+ <Term>Bundled organizations</Term> (<Code>bundles/spark/organization/*.yaml</Code>)
+ are loaded on every boot, are read-only, and are refreshed when a release changes
+ the file. The first boot activates Phantom Lab.
+ </li>
+ <li>
+ <Term>Editing a bundled organization saves a copy</Term> (<Code>phantom-lab-custom</Code>),
+ made active when the bundled one was, so activating the bundled organization again
+ is always the reset.
+ </li>
+ <li>
+ <Term>Switching removes nothing.</Term> Users already created in Cortex or in the
+ Cloud Identity Engine stay until the operator removes them.
+ </li>
+ <li>
+ The database stays in SQLite&apos;s rollback-journal mode, not WAL: connector containers
+ open it <Code>mode=ro</Code> on a read-only mount, which a WAL database cannot be.
+ </li>
+ <li>An organization holds no credentials. It is operator workflow state, outside the credential guardrail.</li>
+ </ul>
+ </SubSection>
+
+ <SubSection icon="rule" title="The document and its validation">
+ <p>
+ The shape is <Code>bundles/spark/organization/organization.schema.json</Code>. Beyond
+ the schema, <Code>usecase/organization_model.py</Code> rejects a save that would make a
+ generator emit something that is not there: a duplicate login, host name, address, RID or
+ employee number; a host address outside the network it names; a person whose primary
+ workstation is missing or owned by someone else; a missing manager or a manager loop; a
+ group that is not declared; a contractor without the <Code>ext.</Code> prefix; a network
+ not covered by the Cortex internal ranges. Warnings (fewer than 30 workstations, a
+ department under 5 people, no <Code>outlier</Code> persona, no <Code>unmanaged</Code> network)
+ do not block a save.
+ </p>
+ <ul className="list-disc pl-6 space-y-1 text-sm">
+ <li>A person has a normal account and, for administrators, a separate <Code>adm.</Code> account in privileged groups. Service accounts and the break-glass account are accounts without a person.</li>
+ <li>Flags mark personas: <Code>vip</Code> (phishing and MFA-fatigue targets), <Code>outlier</Code> (the user and workstation attacks run from), <Code>contractor</Code> and <Code>leaver</Code> (a disabled account).</li>
+ <li>Each person has one primary workstation, which has one address: the key that stitches user, host and IP.</li>
+ </ul>
+ </SubSection>
+
+ <SubSection icon="api" title="REST surface">
+ <Pre>{`GET    /api/v1/organizations                    -- list (meta) + active_id
+POST   /api/v1/organizations                    -- add: {document | text, format?, activate?, replace?}
+GET    /api/v1/organizations/active             -- the active one with its document
+POST   /api/v1/organizations/validate           -- {valid, errors[], warnings[]}
+GET|PUT|DELETE /api/v1/organizations/{id}       -- PUT on a bundled one answers 409 bundled_read_only
+POST   /api/v1/organizations/{id}/activate | fork | changes | restore
+GET    /api/v1/organizations/{id}/export | section | cortex-setup | history
+
+(same paths under /api/agent/organizations, gated by the session cookie)`}</Pre>
+ <p className="text-sm text-on-surface-variant">
+ <Code>changes</Code> takes the id-keyed edit the agent tool uses:{" "}
+ <Code>{`{upsert: {people: [...]}, remove: {hosts: [...]}, set: {...}}`}</Code>. A new person needs
+ only names, title and department; the login, email, workstation (a new host at the next free
+ address of the site&apos;s block), RID, Okta id, groups and manager are filled in.
+ </p>
+ </SubSection>
+
+ <SubSection icon="smart_toy" title="MCP tool surface (agent-callable)">
+ <ul className="list-disc pl-6 space-y-1 text-sm">
+ <li><Code>organization_get(section?, filter?, limit?)</Code> and <Code>organization_list()</Code>: Tier 1 reads. Exact rows in pages: a page holds at most 50 rows and about 12 KB (the chat route keeps only the head and tail of a tool result over 16 KB), and <Code>total</Code>, <Code>offset</Code>, <Code>truncated</Code> and <Code>next_offset</Code> say exactly what the page is. <Code>detail</Code> adds SIDs, Okta ids, home addresses and groups. The UI reads the same data with no byte cap.</li>
+ <li><Code>organization_update(changes, note?)</Code> and <Code>organization_activate(id)</Code>: Tier 2 writes. When the install gates them (<Code>approvals.humanRequired[]</Code>, empty by default) they render an approval card; every accepted edit is kept in history.</li>
+ </ul>
+ <p>
+ The system-prompt TAIL carries an Organization section: read it before generating, use only its
+ identities, keep each person whole (login, workstation, address), use the personas, say so when a
+ scenario needs something it lacks. The roster itself never goes into the prompt.
+ </p>
+ </SubSection>
+
+ <SubSection icon="menu_book" title="The organization knowledge base">
+ <p>
+ The active organization is rendered into the read-only <Code>organization</Code> knowledge base
+ (overview, one document per department, infrastructure, workstations, networks, accounts, personas,
+ cloud, Cortex setup), rebuilt on every save or switch by{" "}
+ <Code>usecase/organization_kb.py</Code>. It is derived state, not a second home: unchanged documents are
+ skipped by the KB&apos;s source hash, stale ones are removed, and an embedder failure only logs.{" "}
+ <Code>knowledge_search</Code> answers questions in words; the exact lists come from{" "}
+ <Code>organization_get</Code>.
+ </p>
+ </SubSection>
+
+ <SubSection icon="cable" title="Delivery to connector containers">
+ <Pre>{`phantom-agent MCP  --writes-->  /app/data/organization.db   (volume phantom_mcp_data)
+connector container (xlog, http-sender, wec-sender, cie-sender)
+  --reads, mode=ro-->  /app/data/organization.db   (the same volume, mounted :ro by phantom-updater)`}</Pre>
+ <ul className="list-disc pl-6 space-y-1 text-sm">
+ <li>Source: the MCP store. Destination: each connector container, through <Code>phantom-connector-runtime/runtime/organization_reader.py</Code> and <Code>organization_view.py</Code>. No network call, no token: the file is the interface.</li>
+ <li>Sync read per tool call. The reader checks the active row&apos;s <Code>(id, version)</Code> and re-parses the JSON only when it changed, so a save or a switch reaches the next call with no container restart.</li>
+ <li>An instance may pin an organization with the optional <Code>organization</Code> setting; empty follows the active one. Saving an instance restarts its container as for any setting.</li>
+ <li>Failure mode: connector code carries no roster and no fallback. A missing database, no active organization or an unreadable document raises <Code>OrganizationUnavailable</Code>, and the tool answers <Code>{`{ok: false, error}`}</Code> naming what to check.</li>
+ <li>xlog: <Code>phantom_create_data_worker</Code>, the scenario tools and <Code>generate_fake_data</Code> fill the user, host and address fields a caller left unset from the organization (<Code>use_organization</Code>, default true); the result&apos;s <Code>organization_defaults</Code> lists what was bound.</li>
+ </ul>
+ </SubSection>
+
+ <SubSection icon="history" title="Audit">
+ <p>
+ <Code>organization_changed</Code> is recorded for every create, put, activate, delete and restore, with the
+ operation, the organization id and the actor.
+ </p>
+ </SubSection>
+
+ <SubSection icon="construction" title="Implementation references">
+ <ul className="list-disc pl-6 space-y-1 text-sm">
+ <li><Code>bundles/spark/organization/</Code>: <Code>organization.schema.json</Code> and <Code>phantom-lab.yaml</Code></li>
+ <li><Code>bundles/spark/mcp/src/usecase/organization_model.py</Code>, <Code>organization_store.py</Code>, <Code>organization_kb.py</Code>; <Code>src/api/organizations.py</Code>; tools in <Code>builtin_components/self_mod_tools.py</Code></li>
+ <li><Code>phantom-connector-runtime/runtime/organization_reader.py</Code> and <Code>organization_view.py</Code></li>
+ <li><Code>mcp/agent/app/api/agent/organizations/**</Code> proxies; <Code>app/organization/page.tsx</Code> UI; <Code>lib/system-prompt.ts</Code> prompt section</li>
  </ul>
  </SubSection>
  </Section>

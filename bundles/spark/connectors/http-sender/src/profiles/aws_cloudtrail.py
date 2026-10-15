@@ -11,16 +11,20 @@ backup-vault policy fired for an IAM user with a foreign-account principal and s
 role; "new identity with an administrative policy" needs an IAM user, not a role). A scenario is a short recipe of
 1-5 steps by one actor; `count` repeats it with fresh resource ids.
 
-Everything is generated per call: the account ids, the IAM user / role / session names, access keys, principal ids,
-bucket and resource ids. A replay therefore looks like a first-time actor. Addresses are real: ordinary actors come
+The account and region are the organization's (`cloud.aws`). Everything else is generated per call: the IAM user / role /
+session names of an actor the recipe mints, access keys, principal ids, bucket and resource ids, and the unrelated foreign
+account an attack names. A replay therefore looks like a first-time actor. Addresses are real: ordinary actors come
 from the Saudi home pool, a pen-testing tool from an out-of-country range, and the Tor scenario from a Tor exit.
-`eventTime` is UTC at second precision, as CloudTrail writes it.
+`eventTime` is UTC at second precision, as CloudTrail writes it. `target_user` names one of the organization's people (login,
+email or the part before the @); the IAM user or role session then carries the email's local part and the calls come from
+that person's own home address.
 
 `benign_activity` is the baseline the attack scenarios contrast with, and its rule is the opposite: the identities are
-STABLE. Twelve IAM users (the shared persona pool, one home address each, see `_fresh.person`) and four ordinary roles in
-one fixed account, every name, principal id and access key a pure function of the name, so the same people appear on every
-call. Their calls are ordinary and read-heavy (console sign-in, S3 list and read, EC2/RDS/Lambda describe, IAM list,
-GetCallerIdentity, AssumeRole into their usual roles); none of them is a shape one of the detectors above fired on.
+STABLE. The organization's people who may log on and have AWS access (`cloud_access`) as IAM users, one home address each
+(`home_ip`), and four ordinary roles, in the organization's account, every name, principal id and access key a pure function
+of the name, so the same people appear on every call. Their calls are ordinary and read-heavy (console sign-in, S3 list and
+read, EC2/RDS/Lambda describe, IAM list, GetCallerIdentity, AssumeRole into their usual roles); none of them is a shape one
+of the detectors above fired on.
 """
 from __future__ import annotations
 
@@ -30,7 +34,9 @@ import urllib.parse
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
-from . import _fresh, ippools
+from runtime.organization_view import OrganizationView
+
+from . import _fresh, _org, ippools
 from . import okta
 from .okta import _times
 
@@ -77,12 +83,15 @@ def _policy(doc: dict[str, Any]) -> str:
 class _Principal:
     """A synthetic IAM user, or an assumed role with its session."""
 
-    def __init__(self, c: "_Ctx", kind: str, name: str, session: str | None = None) -> None:
+    def __init__(self, c: "_Ctx", kind: str, name: str, session: str | None = None,
+                 person: dict[str, Any] | None = None) -> None:
         self.c, self.kind, self.name, self.session = c, kind, name, session
         user = kind == "IAMUser"
         self.pid = ("AIDA" if user else "AROA") + _fresh.rid(c.rng, 17)
         self.key = ("AKIA" if user else "ASIA") + _fresh.rid(c.rng, 16)
-        self.ip = c.home_ip()
+        self.ip = c.home_ip()  # drawn even for a named person, so every other value of a seeded call is the same either way
+        if person is not None:
+            self.ip = _org.home(person)[0]
         self.mfa = "false"
 
     def ui(self) -> dict[str, Any]:
@@ -103,11 +112,18 @@ class _Principal:
 
 
 class _Ctx:
-    """Per-call state: the random source, the (fresh) account ids, and the window the events fall in."""
+    """Per-call state: the organization, the random source, the account ids, and the window the events fall in."""
 
-    def __init__(self, seed: int | None, end: datetime, spread_seconds: int) -> None:
+    def __init__(self, seed: int | None, end: datetime, spread_seconds: int, view: OrganizationView) -> None:
+        self.view = view
         self.rng = random.Random(seed)
-        self.acct = _fresh.digits(self.rng, 12)
+        cloud = _org.cloud(view, "aws", "account_id", "region")
+        _fresh.digits(self.rng, 12)  # the account id this call used to invent: the draw stays so a seeded call's other values do not move
+        self.acct = cloud["account_id"]  # the organization's account
+        self.region = cloud["region"]
+        prefix = _org.bucket_prefix(view)
+        self.buckets = {f"{prefix}-{name}": keys for name, keys in _BUCKET_OBJECTS.items()}
+        self.sessions: dict[tuple[int, str], _Principal] = {}  # (user index, role) -> the role session: it keeps its temporary key for the whole call
         self.foreign = _fresh.digits(self.rng, 12)  # an unrelated external account
         self.tor = ippools.tor_exits(self.rng, len(ippools.CLOUD_TOR_EXITS), ippools.CLOUD_TOR_EXITS)  # drawn once: a different exit per repetition
         # The actors' sessions began before the first event of the window.
@@ -122,16 +138,21 @@ class _Ctx:
     def home_ip(self) -> str:
         return ippools.home_for(self.rng.randrange(len(ippools.HOME)))[0]
 
-    def user(self, name: str | None, prefix: str | None = None) -> _Principal:
-        return _Principal(self, "IAMUser", name or (f"{prefix}-{self.hexs(6)}" if prefix else _fresh.handle(self.rng)))
+    def user(self, person: dict[str, Any] | None, prefix: str | None = None) -> _Principal:
+        """The acting IAM user: the organization's `person` named by the caller, else one the recipe mints fresh."""
+        name = _org.local_part(person) if person else None
+        return _Principal(self, "IAMUser", name or (f"{prefix}-{self.hexs(6)}" if prefix else _fresh.handle(self.rng)), person=person)
 
-    def role(self, base: str, session: str | None) -> _Principal:
-        return _Principal(self, "AssumedRole", f"{base}-{self.hexs(6)}", session=session or _fresh.handle(self.rng))
+    def role(self, base: str, person: dict[str, Any] | None) -> _Principal:
+        """A session of role `base`: named after the organization's `person` the caller named, else after a fresh one."""
+        session = _org.local_part(person) if person else None
+        return _Principal(self, "AssumedRole", f"{base}-{self.hexs(6)}", session=session or _fresh.handle(self.rng), person=person)
 
     def rec(self, who: _Principal, source: str, name: str, params: Any = None, resp: Any = None, *,
             ip: str | None = None, ua: str | None = None, read_only: bool = False,
-            extra: dict[str, Any] | None = None, region: str = "us-east-1") -> dict[str, Any]:
+            extra: dict[str, Any] | None = None, region: str | None = None) -> dict[str, Any]:
         service = source.split(".")[0]
+        region = region or self.region
         event = {
             "eventVersion": "1.11", "userIdentity": who.ui(), "eventTime": "", "eventSource": source, "eventName": name,
             "awsRegion": region, "sourceIPAddress": ip or who.ip,
@@ -156,7 +177,7 @@ def _guardduty_detector_deleted(c, who, k, src):
 
 def _s3_public_exposure(c, who, k, src):
     bucket = "acme-reports-" + c.hexs(6)
-    host = f"{bucket}.s3.us-east-1.amazonaws.com"
+    host = f"{bucket}.s3.{c.region}.amazonaws.com"
     return [
         c.rec(who, "s3.amazonaws.com", "PutBucketPolicy",
               {"bucketName": bucket, "Host": host, "bucketPolicy": {"Version": "2012-10-17", "Statement": [
@@ -200,7 +221,7 @@ def _route53_logging_deleted(c, who, k, src):
     return [c.rec(who, "route53resolver.amazonaws.com", "DeleteResolverQueryLogConfig", {"resolverQueryLogConfigId": config},
                   {"resolverQueryLogConfig": {
                       "id": config, "ownerId": c.acct, "status": "DELETING", "shareStatus": "NOT_SHARED", "associationCount": 0,
-                      "arn": f"arn:aws:route53resolver:us-east-1:{c.acct}:resolver-query-log-config/{config}",
+                      "arn": f"arn:aws:route53resolver:{c.region}:{c.acct}:resolver-query-log-config/{config}",
                       "name": "vpc-dns-query-logs", "destinationArn": "arn:aws:s3:::acme-dns-logs-" + c.hexs(6),
                       "creatorRequestId": c.hexs(32), "creationTime": _iso(c.session_start - timedelta(days=30))[:-1] + ".123Z"}})]
 
@@ -289,15 +310,13 @@ def _stamp(event: dict[str, Any], when: datetime) -> None:
 # -- benign_activity: a stable pool, ordinary calls ------------------------------------------------------------------------
 
 BENIGN_SCENARIOS = ("benign_activity",)
-# The account of the stable pool. Fixed: the attack scenarios invent a new account id per call, so the two never share one.
-BENIGN_ACCOUNT = "512907433106"
-BENIGN_USERS = 12
 BENIGN_ROLES = ("DataAnalyst", "ReadOnlyAuditor", "AppSupport", "BillingViewer")
-_BUCKETS = {
-    "phantom-lab-reports": ("reports/q3/summary.csv", "reports/q3/headcount.xlsx", "reports/q4/forecast.pdf"),
-    "phantom-lab-datalake": ("sales/2026/09/part-0001.parquet", "sales/2026/09/part-0002.parquet", "web/2026/09/clicks.parquet"),
-    "phantom-lab-app-assets": ("img/logo.png", "css/site.min.css", "js/app.bundle.js"),
-    "phantom-lab-exports": ("daily/orders.csv", "daily/returns.csv", "weekly/inventory.csv"),
+# The buckets of the stable pool by name suffix; the organization's id is the prefix (`phantom-lab-reports`).
+_BUCKET_OBJECTS = {
+    "reports": ("reports/q3/summary.csv", "reports/q3/headcount.xlsx", "reports/q4/forecast.pdf"),
+    "datalake": ("sales/2026/09/part-0001.parquet", "sales/2026/09/part-0002.parquet", "web/2026/09/clicks.parquet"),
+    "app-assets": ("img/logo.png", "css/site.min.css", "js/app.bundle.js"),
+    "exports": ("daily/orders.csv", "daily/returns.csv", "weekly/inventory.csv"),
 }
 _BENIGN_OPS = (("GetObject", 18), ("ListBuckets", 12), ("DescribeInstances", 12), ("GetCallerIdentity", 10),
                ("ListObjectsV2", 10), ("ConsoleLogin", 8), ("AssumeRole", 8), ("ListUsers", 5), ("DescribeSecurityGroups", 5),
@@ -308,12 +327,14 @@ _BROWSERS = tuple(agent[0] for agent in okta._AGENTS[:2])
 
 
 def _benign_user(c: _Ctx, index: int) -> _Principal:
-    """IAM user number `index` of the stable pool: name, principal id, access key and home address are pure functions of it."""
-    name = ".".join(_fresh.person(index))
+    """IAM user number `index` of the stable pool (a person of the organization): name, principal id, access key and home
+    address are pure functions of the person."""
+    person = c.pool[index]
+    name = _org.local_part(person)
     who = _Principal(c, "IAMUser", name)
     who.pid = "AIDA" + _fresh.stable(f"aws|user|{name}", 17, _fresh.UPPER_DIGITS)
     who.key = "AKIA" + _fresh.stable(f"aws|key|{name}", 16, _fresh.UPPER_DIGITS)
-    who.ip = ippools.home_for(index)[0]
+    who.ip = _org.home(person)[0]
     who.mfa = "true" if index % 3 else "false"
     return who
 
@@ -341,7 +362,7 @@ def _benign_call(c: _Ctx, op: str, index: int, user: _Principal) -> dict[str, An
                     "accountId": c.acct, "userName": user.name}
         event = c.rec(user, "signin.amazonaws.com", "ConsoleLogin", None, {"ConsoleLogin": "Success"}, ua=_BROWSERS[index % 2],
                       extra={"userIdentity": identity, "eventType": "AwsConsoleSignIn",
-                             "additionalEventData": {"LoginTo": "https://console.aws.amazon.com/console/home?state=hashArgsFromTB_us-east-1_" + c.hexs(16),
+                             "additionalEventData": {"LoginTo": f"https://console.aws.amazon.com/console/home?state=hashArgsFromTB_{c.region}_" + c.hexs(16),
                                                      "MobileVersion": "No", "MFAUsed": mfa}})
         del event["tlsDetails"]  # a console sign-in record carries none
         return event
@@ -359,10 +380,10 @@ def _benign_call(c: _Ctx, op: str, index: int, user: _Principal) -> dict[str, An
     if c.rng.random() >= 0.65:
         role = c.rng.choice(_usual_roles(index))
         who = c.sessions.get((index, role)) or c.sessions.setdefault((index, role), _benign_role(c, user, index, role))
-    bucket = c.rng.choice(sorted(_BUCKETS))
-    host = f"{bucket}.s3.us-east-1.amazonaws.com"
+    bucket = c.rng.choice(sorted(c.buckets))
+    host = f"{bucket}.s3.{c.region}.amazonaws.com"
     if op == "GetObject":
-        key = c.rng.choice(_BUCKETS[bucket])
+        key = c.rng.choice(c.buckets[bucket])
         return c.rec(who, "s3.amazonaws.com", "GetObject", {"bucketName": bucket, "Host": host, "key": key}, None, read_only=True,
                      extra={"managementEvent": False, "eventCategory": "Data",
                             "resources": [{"type": "AWS::S3::Object", "ARN": f"arn:aws:s3:::{bucket}/{key}"},
@@ -395,11 +416,10 @@ def _benign_call(c: _Ctx, op: str, index: int, user: _Principal) -> dict[str, An
 
 def _benign_activity(c: _Ctx, count: int, end: datetime, spread_seconds: int) -> list[dict[str, Any]]:
     """`count` ordinary calls by the stable pool, at random moments of the window (the first at its start, the last at `end`)."""
-    c.acct = BENIGN_ACCOUNT
-    c.sessions = {}  # (user index, role) -> the role session, so a session keeps its temporary key for the whole call
+    c.pool = _org.cloud_people(c.view, "aws")
     out = []
     for _ in range(count):
-        index = c.rng.randrange(BENIGN_USERS)
+        index = c.rng.randrange(len(c.pool))
         op = _fresh.weighted(c.rng, _BENIGN_OPS)
         out.append(_benign_call(c, op, index, _benign_user(c, index)))
     for event, when in zip(out, _fresh.jittered_times(c.rng, end, count, spread_seconds)):
@@ -408,8 +428,8 @@ def _benign_activity(c: _Ctx, count: int, end: datetime, spread_seconds: int) ->
 
 
 # scenario -> (who acts, recipe, steps in one repetition)
-_user = lambda prefix=None: (lambda c, name: c.user(name, prefix))  # noqa: E731
-_role = lambda base: (lambda c, name: c.role(base, name))  # noqa: E731
+_user = lambda prefix=None: (lambda c, person: c.user(person, prefix))  # noqa: E731
+_role = lambda base: (lambda c, person: c.role(base, person))  # noqa: E731
 _TABLE: dict[str, tuple[Callable, Callable, int]] = {
     "guardduty_detector_deleted": (_role("DevOpsEngineer"), _guardduty_detector_deleted, 1),
     "s3_public_exposure": (_user(), _s3_public_exposure, 3),
@@ -432,16 +452,17 @@ DEFAULT_COUNT = {"benign_activity": 20}
 
 
 def build_events(
-    scenario: str, count: int, *, domain: str, now: datetime,
+    scenario: str, count: int, *, view: OrganizationView, now: datetime,
     spread_seconds: int = 120, start_offset_minutes: int = 0,
     target_user: str | None = None, source_ip: str | None = None, seed: int | None = None,
 ) -> list[dict[str, Any]]:
     """Build `count` CloudTrail records for `scenario`, oldest first.
 
     The window ends `start_offset_minutes` before `now` and is `spread_seconds` wide; nothing is dated after `now`.
-    `target_user` names the acting IAM user (or the role session); `source_ip` is the external address of the scenarios
-    that have one (security_group_open, pentest_tool, tor_api_call). `domain` is unused: AWS names are not emails.
-    `benign_activity` ignores `target_user` and `source_ip`: its actors and addresses are the stable pool's.
+    `target_user` names the acting IAM user (or the role session): one of the organization's people (`view`), whose home
+    address the calls then come from; `source_ip` is the external address of the scenarios that have one
+    (security_group_open, pentest_tool, tor_api_call). `benign_activity` ignores `target_user` and `source_ip`: its actors
+    and addresses are the stable pool's.
     """
     if scenario not in SCENARIOS:
         raise ValueError(f"unknown scenario {scenario!r}; choose one of {', '.join(SCENARIOS)}")
@@ -450,17 +471,17 @@ def build_events(
     if count < MIN_COUNT.get(scenario, 1):
         raise ValueError(f"{scenario} needs count >= {MIN_COUNT[scenario]}")
     end = now - timedelta(minutes=max(start_offset_minutes, 0))
-    c = _Ctx(seed, end, spread_seconds)
+    c = _Ctx(seed, end, spread_seconds, view)
     if scenario == "benign_activity":
         return _benign_activity(c, count, end, spread_seconds)
     actor, recipe, _ = _TABLE[scenario]
-    who = actor(c, _fresh.bare_name(target_user))
+    who = actor(c, _org.resolve(view, target_user) if _fresh.bare_name(target_user) else None)
     return _fresh.run_recipe(lambda k: recipe(c, who, k, source_ip), count, _times(end, count, spread_seconds), _stamp)
 
 
-def sample_event(*, domain: str, now: datetime) -> dict[str, Any]:
-    """One benign, read-only call by a fresh IAM user, for proving the Cribl path."""
-    c = _Ctx(None, now, 0)
+def sample_event(*, view: OrganizationView, now: datetime) -> dict[str, Any]:
+    """One benign, read-only call by a fresh IAM user of the organization's account, for proving the Cribl path."""
+    c = _Ctx(None, now, 0, view)
     event = c.rec(c.user(None), "sts.amazonaws.com", "GetCallerIdentity", read_only=True)
     event["eventTime"] = _iso(now)
     return event

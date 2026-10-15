@@ -110,6 +110,7 @@ const KNOWN_ACTIONS: string[] = [
   "kb_searched",
   "kb_doc_read",
   "personality_changed",
+  "organization_changed",
   "agent_self_mod_requested",
   "agent_self_mod_executed",
   "detections_synced",

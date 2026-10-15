@@ -1,0 +1,559 @@
+{
+ "_about": "Captured from the http-sender tree BEFORE the windows profile read the organization (scripts: capture_baseline.py). sha256 of json.dumps(events, sort_keys=True, default=str, indent=1) for build_events(scenario, count, domain='lab.test', now=2026-10-04T12:00Z, seed, [target_user='khalid.alotaibi']); count = MIN_COUNT, else DEFAULT_COUNT.",
+ "now": "2026-10-04T12:00:00+00:00",
+ "domain": {
+  "dns": "phantom.lab",
+  "netbios": "PHANTOM",
+  "sid": "S-1-5-21-3623811015-3361044348-30300820"
+ },
+ "directory": {
+  "hosts": [
+   [
+    "PHDC01",
+    "PHDC01.phantom.lab",
+    "10.20.0.10",
+    "dc",
+    "S-1-5-21-3623811015-3361044348-30300820-1000",
+    685
+   ],
+   [
+    "PHDC02",
+    "PHDC02.phantom.lab",
+    "10.20.0.11",
+    "dc",
+    "S-1-5-21-3623811015-3361044348-30300820-1001",
+    667
+   ],
+   [
+    "PHSRV-FS01",
+    "PHSRV-FS01.phantom.lab",
+    "10.20.1.20",
+    "server",
+    "S-1-5-21-3623811015-3361044348-30300820-1002",
+    694
+   ],
+   [
+    "PHSRV-APP01",
+    "PHSRV-APP01.phantom.lab",
+    "10.20.1.21",
+    "server",
+    "S-1-5-21-3623811015-3361044348-30300820-1003",
+    799
+   ],
+   [
+    "PHSRV-SQL01",
+    "PHSRV-SQL01.phantom.lab",
+    "10.20.1.22",
+    "server",
+    "S-1-5-21-3623811015-3361044348-30300820-1004",
+    621
+   ],
+   [
+    "PHSRV-WEB01",
+    "PHSRV-WEB01.phantom.lab",
+    "10.20.1.23",
+    "server",
+    "S-1-5-21-3623811015-3361044348-30300820-1005",
+    638
+   ],
+   [
+    "PHWS-001",
+    "PHWS-001.phantom.lab",
+    "10.20.16.20",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1006",
+    611
+   ],
+   [
+    "PHWS-002",
+    "PHWS-002.phantom.lab",
+    "10.20.16.21",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1007",
+    614
+   ],
+   [
+    "PHWS-003",
+    "PHWS-003.phantom.lab",
+    "10.20.16.22",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1008",
+    618
+   ],
+   [
+    "PHWS-004",
+    "PHWS-004.phantom.lab",
+    "10.20.16.23",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1009",
+    709
+   ],
+   [
+    "PHWS-005",
+    "PHWS-005.phantom.lab",
+    "10.20.16.24",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1010",
+    699
+   ],
+   [
+    "PHWS-006",
+    "PHWS-006.phantom.lab",
+    "10.20.16.25",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1011",
+    719
+   ],
+   [
+    "PHWS-007",
+    "PHWS-007.phantom.lab",
+    "10.20.16.26",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1012",
+    676
+   ],
+   [
+    "PHWS-008",
+    "PHWS-008.phantom.lab",
+    "10.20.16.27",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1013",
+    611
+   ],
+   [
+    "PHWS-009",
+    "PHWS-009.phantom.lab",
+    "10.20.16.28",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1014",
+    606
+   ],
+   [
+    "PHWS-010",
+    "PHWS-010.phantom.lab",
+    "10.20.16.29",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1015",
+    677
+   ],
+   [
+    "PHWS-011",
+    "PHWS-011.phantom.lab",
+    "10.20.16.30",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1016",
+    614
+   ],
+   [
+    "PHWS-012",
+    "PHWS-012.phantom.lab",
+    "10.20.16.31",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1017",
+    690
+   ],
+   [
+    "PHWS-013",
+    "PHWS-013.phantom.lab",
+    "10.20.16.32",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1018",
+    601
+   ],
+   [
+    "PHWS-014",
+    "PHWS-014.phantom.lab",
+    "10.20.16.33",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1019",
+    790
+   ],
+   [
+    "PHWS-015",
+    "PHWS-015.phantom.lab",
+    "10.20.16.34",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1020",
+    682
+   ],
+   [
+    "PHWS-016",
+    "PHWS-016.phantom.lab",
+    "10.20.16.35",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1021",
+    734
+   ],
+   [
+    "PHWS-017",
+    "PHWS-017.phantom.lab",
+    "10.20.16.36",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1022",
+    662
+   ],
+   [
+    "PHWS-018",
+    "PHWS-018.phantom.lab",
+    "10.20.16.37",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1023",
+    776
+   ],
+   [
+    "PHWS-019",
+    "PHWS-019.phantom.lab",
+    "10.20.16.38",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1024",
+    707
+   ],
+   [
+    "PHWS-020",
+    "PHWS-020.phantom.lab",
+    "10.20.16.39",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1025",
+    794
+   ],
+   [
+    "PHWS-021",
+    "PHWS-021.phantom.lab",
+    "10.20.16.40",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1026",
+    625
+   ],
+   [
+    "PHWS-022",
+    "PHWS-022.phantom.lab",
+    "10.20.16.41",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1027",
+    695
+   ],
+   [
+    "PHWS-023",
+    "PHWS-023.phantom.lab",
+    "10.20.16.42",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1028",
+    757
+   ],
+   [
+    "PHWS-024",
+    "PHWS-024.phantom.lab",
+    "10.20.16.43",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1029",
+    724
+   ],
+   [
+    "PHWS-025",
+    "PHWS-025.phantom.lab",
+    "10.20.16.44",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1030",
+    672
+   ],
+   [
+    "PHWS-026",
+    "PHWS-026.phantom.lab",
+    "10.20.16.45",
+    "workstation",
+    "S-1-5-21-3623811015-3361044348-30300820-1031",
+    602
+   ]
+  ],
+  "users": [
+   [
+    "nalharbi",
+    "Noura Alharbi",
+    "S-1-5-21-3623811015-3361044348-30300820-1105",
+    "staff",
+    "PHWS-001"
+   ],
+   [
+    "kalotaibi",
+    "Khalid Alotaibi",
+    "S-1-5-21-3623811015-3361044348-30300820-1106",
+    "staff",
+    "PHWS-002"
+   ],
+   [
+    "aalzahrani",
+    "Abdullah Alzahrani",
+    "S-1-5-21-3623811015-3361044348-30300820-1107",
+    "staff",
+    "PHWS-003"
+   ],
+   [
+    "salmutairi",
+    "Sara Almutairi",
+    "S-1-5-21-3623811015-3361044348-30300820-1108",
+    "staff",
+    "PHWS-004"
+   ],
+   [
+    "falqahtani",
+    "Faisal Alqahtani",
+    "S-1-5-21-3623811015-3361044348-30300820-1109",
+    "staff",
+    "PHWS-005"
+   ],
+   [
+    "raldosari",
+    "Reem Aldosari",
+    "S-1-5-21-3623811015-3361044348-30300820-1110",
+    "staff",
+    "PHWS-006"
+   ],
+   [
+    "oalshehri",
+    "Omar Alshehri",
+    "S-1-5-21-3623811015-3361044348-30300820-1111",
+    "staff",
+    "PHWS-007"
+   ],
+   [
+    "halghamdi",
+    "Huda Alghamdi",
+    "S-1-5-21-3623811015-3361044348-30300820-1112",
+    "staff",
+    "PHWS-008"
+   ],
+   [
+    "yalharthi",
+    "Yousef Alharthi",
+    "S-1-5-21-3623811015-3361044348-30300820-1113",
+    "staff",
+    "PHWS-009"
+   ],
+   [
+    "lalmalki",
+    "Layla Almalki",
+    "S-1-5-21-3623811015-3361044348-30300820-1114",
+    "staff",
+    "PHWS-010"
+   ],
+   [
+    "talsubaie",
+    "Tariq Alsubaie",
+    "S-1-5-21-3623811015-3361044348-30300820-1115",
+    "staff",
+    "PHWS-011"
+   ],
+   [
+    "dalanazi",
+    "Dana Alanazi",
+    "S-1-5-21-3623811015-3361044348-30300820-1116",
+    "staff",
+    "PHWS-012"
+   ],
+   [
+    "malsaleh",
+    "Majed Alsaleh",
+    "S-1-5-21-3623811015-3361044348-30300820-1117",
+    "staff",
+    "PHWS-013"
+   ],
+   [
+    "lalfaifi",
+    "Lama Alfaifi",
+    "S-1-5-21-3623811015-3361044348-30300820-1118",
+    "staff",
+    "PHWS-014"
+   ],
+   [
+    "salrashid",
+    "Saud Alrashid",
+    "S-1-5-21-3623811015-3361044348-30300820-1119",
+    "staff",
+    "PHWS-015"
+   ],
+   [
+    "halkhaldi",
+    "Hessa Alkhaldi",
+    "S-1-5-21-3623811015-3361044348-30300820-1120",
+    "staff",
+    "PHWS-016"
+   ],
+   [
+    "balshammari",
+    "Bandar Alshammari",
+    "S-1-5-21-3623811015-3361044348-30300820-1121",
+    "staff",
+    "PHWS-017"
+   ],
+   [
+    "malyami",
+    "Maha Alyami",
+    "S-1-5-21-3623811015-3361044348-30300820-1122",
+    "staff",
+    "PHWS-018"
+   ],
+   [
+    "nalamri",
+    "Nasser Alamri",
+    "S-1-5-21-3623811015-3361044348-30300820-1123",
+    "staff",
+    "PHWS-019"
+   ],
+   [
+    "ralsulami",
+    "Rana Alsulami",
+    "S-1-5-21-3623811015-3361044348-30300820-1124",
+    "staff",
+    "PHWS-020"
+   ],
+   [
+    "walbishi",
+    "Waleed Albishi",
+    "S-1-5-21-3623811015-3361044348-30300820-1125",
+    "staff",
+    "PHWS-021"
+   ],
+   [
+    "aalruwaili",
+    "Amal Alruwaili",
+    "S-1-5-21-3623811015-3361044348-30300820-1126",
+    "staff",
+    "PHWS-022"
+   ],
+   [
+    "adm.ialkhalifa",
+    "Ibrahim Alkhalifa (admin)",
+    "S-1-5-21-3623811015-3361044348-30300820-1127",
+    "admin",
+    "PHWS-023"
+   ],
+   [
+    "adm.malwadi",
+    "Mansour Alwadi (admin)",
+    "S-1-5-21-3623811015-3361044348-30300820-1128",
+    "admin",
+    "PHWS-024"
+   ],
+   [
+    "adm.salotaibi",
+    "Shahad Alotaibi (admin)",
+    "S-1-5-21-3623811015-3361044348-30300820-1129",
+    "admin",
+    "PHWS-025"
+   ],
+   [
+    "adm.talsudairi",
+    "Turki Alsudairi (admin)",
+    "S-1-5-21-3623811015-3361044348-30300820-1130",
+    "admin",
+    "PHWS-026"
+   ],
+   [
+    "svc-sql",
+    "SQL Service",
+    "S-1-5-21-3623811015-3361044348-30300820-1131",
+    "service",
+    "PHSRV-SQL01"
+   ],
+   [
+    "svc-backup",
+    "Backup Service",
+    "S-1-5-21-3623811015-3361044348-30300820-1132",
+    "service",
+    "PHSRV-FS01"
+   ],
+   [
+    "svc-web",
+    "Web Service",
+    "S-1-5-21-3623811015-3361044348-30300820-1133",
+    "service",
+    "PHSRV-WEB01"
+   ],
+   [
+    "svc-app",
+    "Application Service",
+    "S-1-5-21-3623811015-3361044348-30300820-1134",
+    "service",
+    "PHSRV-APP01"
+   ]
+  ]
+ },
+ "extra_hosts": [
+  {
+   "name": "PHCA01",
+   "purpose": "Certificate authority (AD CS)"
+  }
+ ],
+ "hashes": {
+  "admin_activity.s1.plain": "f394fe0065ede0ea63c4ebfbf3cdde0ef8ee957e3a59940911cd4e1bf2c356ee",
+  "admin_activity.s1.target": "f394fe0065ede0ea63c4ebfbf3cdde0ef8ee957e3a59940911cd4e1bf2c356ee",
+  "admin_activity.s7.plain": "cf8f5b2fd84eb6b1e3c97acc715109031103bb4020e6f360e5e334eb20b569a1",
+  "admin_activity.s7.target": "cf8f5b2fd84eb6b1e3c97acc715109031103bb4020e6f360e5e334eb20b569a1",
+  "baseline_logons.s1.plain": "f88840d147a6a000c9a8b417983cc60650f448948248313bd3d718ef33a72e62",
+  "baseline_logons.s1.target": "f88840d147a6a000c9a8b417983cc60650f448948248313bd3d718ef33a72e62",
+  "baseline_logons.s7.plain": "048dc34a6b64edd80cecfa1171f547e3a73e023abde10b3183fc61b18500e4c3",
+  "baseline_logons.s7.target": "048dc34a6b64edd80cecfa1171f547e3a73e023abde10b3183fc61b18500e4c3",
+  "dcsync.s1.plain": "d345303d87ccfec53b94e378003c43b2b617c7a49e3df05e8beb08f4bdeda173",
+  "dcsync.s1.target": "53044b02750fa296277bf85c17efceaa253b242f5dca1b62b66d50f8f35e0ed9",
+  "dcsync.s7.plain": "d26d0fb832045e454f71806e6ebe0302d35ed3b732fdfef234a3fb62280d48c8",
+  "dcsync.s7.target": "3bcebd18dfd4a88835d961120e5356a9a33074819956930444d52c5ec2a9cf9e",
+  "default_account_masquerade.s1.plain": "d0967562786fe40f2890c2149a680494c9cb30dfdca2f3703fb78628f7b9a5db",
+  "default_account_masquerade.s1.target": "48fd52d03d7367dd6fb113d73e2196e0870285250febe376903f312fadf84dfa",
+  "default_account_masquerade.s7.plain": "a53be4d745a1f9b552af4ab42a22c662e45415aa7c839a05fb43ceb4cdc2eca8",
+  "default_account_masquerade.s7.target": "25dbba2f9b11bad6ea2d0244a4eb5d15393e824b1115c1faf7a603ff1ec26733",
+  "delegation_to_krbtgt.s1.plain": "f791dc1b795ae188cd1445cab1cdf5539c18c88ba3e2869b03a57094055b4894",
+  "delegation_to_krbtgt.s1.target": "af81c8a2e0586f70e1c4a3be4d2061f7321d7bb3f40d59b205c88abc7aae313f",
+  "delegation_to_krbtgt.s7.plain": "36fcb791044393d9149a7b9ddb135b528891f6c8d26a98718c7f745e445b1360",
+  "delegation_to_krbtgt.s7.target": "7369878484e66fd4f469eba4872abd69bca76b3968cfed3a64559f7087146deb",
+  "excessive_lockouts.s1.plain": "8ff4db2a8d10881bad8f060cd3992cfce06b4afea03eaf97273c08e1cbecd964",
+  "excessive_lockouts.s1.target": "8ff4db2a8d10881bad8f060cd3992cfce06b4afea03eaf97273c08e1cbecd964",
+  "excessive_lockouts.s7.plain": "6263550c5b093aad984378bbc2226f3f850967e8422583777e80021f9c3cb648",
+  "excessive_lockouts.s7.target": "6263550c5b093aad984378bbc2226f3f850967e8422583777e80021f9c3cb648",
+  "guest_account_enabled.s1.plain": "eaac6597739c1e93d9598c743ccf784ea11ab4ab8b727edc80758cb6e950f035",
+  "guest_account_enabled.s1.target": "cacd8794ae5e71f61acb274d745fa6db97748e5e1a3ede3afbc5b509907aa05f",
+  "guest_account_enabled.s7.plain": "0e78ca99025c9b748e8608f526bfcb9ef7bc5028a35499050bcfa5a34f9ffd4d",
+  "guest_account_enabled.s7.target": "7ce57f7afc79e73fcf71d3da55589ab4fc840a78b5618f4d247aac6f2163cb56",
+  "hidden_user_created.s1.plain": "1a1db1cf64f1e0bc668a69cf89f485a77883621be677353a0b1ca97879c7c9fb",
+  "hidden_user_created.s1.target": "509455b4b4e7e01e6c4357d4e83fdb3299505dc1eed78b20d50245843aeeef47",
+  "hidden_user_created.s7.plain": "17cde43a371468229657ca5cd349d0d54c48f855a59e05fafc0532d38cd72b8b",
+  "hidden_user_created.s7.target": "a67cc590da17eded3dbf8856cf02b9c2615aae2cd34b3aaef3dcfe78295d8941",
+  "machine_account_domain_admins.s1.plain": "37806067c3f4e64e5cf1a950f05412b5ee94bd946af124115467ad8e0632ac26",
+  "machine_account_domain_admins.s1.target": "56ec32732a5396edd21dbb1192f5d6aafe190e2166e7b19128be975606dde07d",
+  "machine_account_domain_admins.s7.plain": "e74178d7c0b23be6e2564aab9079e6a4501ec0ae672616a707931bd7a50e4d43",
+  "machine_account_domain_admins.s7.target": "e1453744182fe2d55faf5075f62e6727eaf712355a75bd5a06dbae12c05cc957",
+  "multiple_account_deletions.s1.plain": "08ff9c328b3bf10dd7c58d0d8878f54f2ff60a3ddad818f26144cc2e37761c4d",
+  "multiple_account_deletions.s1.target": "93d10256279259f127187112a2d1bfdccea1b16ed392ce4f8c8ed7e1cd04f83e",
+  "multiple_account_deletions.s7.plain": "0c27155f353c2e219e6cf0ffd9b3e4b5471e9e251b0e9617ff4ba8f298a6ebde",
+  "multiple_account_deletions.s7.target": "416596722b94c8869c4e24285d9054d5481dfff47310e1291db80af15c7200db",
+  "privileged_certificate_request.s1.plain": "724bd23ec7386678dbd76e64a05397244afe1e11be70d862b7f644dbbf9c865a",
+  "privileged_certificate_request.s1.target": "724bd23ec7386678dbd76e64a05397244afe1e11be70d862b7f644dbbf9c865a",
+  "privileged_certificate_request.s7.plain": "e6ff8e1519602a5aea454e51cd6dcf6710961c5ff5b5de252a5e5b36f394f025",
+  "privileged_certificate_request.s7.target": "e6ff8e1519602a5aea454e51cd6dcf6710961c5ff5b5de252a5e5b36f394f025",
+  "privileged_group_add.s1.plain": "58bdfdefdb0bf4a4185273ce00caf5c9cc645b4ea90ac61c5e03fac91a95df1c",
+  "privileged_group_add.s1.target": "bfc9a8d36fe156d2759a0cc5bfafc4926042115d215841ebe4ee65cefbdb1866",
+  "privileged_group_add.s7.plain": "e9599b6de7e57900429c479781c290151c118d0c03fb5051435383b2d40504bb",
+  "privileged_group_add.s7.target": "32f456e102ca77accf0f7e084798cd23320f8816c3c7d24f4306c90b5ef6cf8d",
+  "samaccountname_change.s1.plain": "a30df96a25f314c70576238d1d45fb372a6644b466875408e072d1c9fd6d3469",
+  "samaccountname_change.s1.target": "8f75f4ff951f7f1e2b46709979c4e13a789dd138806079188f71ea245dc7d304",
+  "samaccountname_change.s7.plain": "01e2f94406713c18e5993fff6e5d68cd38b32570ca9257ab96cd04fd2d37c2d5",
+  "samaccountname_change.s7.target": "e97dcb380fac10de7a30a00896ed1a1a9cfd0a019f673bfbb294bcf3c537d346",
+  "sample": "fc86578372ade49afbb8ac05ebd8e40c86c47c7747b6c125f23b1b7dc5d08e43",
+  "shadow_credentials.s1.plain": "a79d5ae3c150acbd087ea3e2c93f5511d9914923fb6e475c085898c742df73e4",
+  "shadow_credentials.s1.target": "9c89e3a0b99c2ff9aaafbfe11ea56122435b8f0682cac2716accdad86bc5bc23",
+  "shadow_credentials.s7.plain": "cd234e240644faea5fd561b86df448a4ef2c5510e1a8efd8ad7ac33be00dd065",
+  "shadow_credentials.s7.target": "f89777115d793098ad5c3ecb904ed5f70956c8b7e8d41852e21f1424d66c27a2",
+  "sms_admins.s1.plain": "e7099f6bc8da6270e86c1848be1cfb676c25f54f4d7970db5010325dd86a298e",
+  "sms_admins.s1.target": "d978b477fba02946203941b7c230c2ee52b5df41264922d754bec28d0ef2882d",
+  "sms_admins.s7.plain": "65601ae49a0e4f1bbb51f55ddb031b7492cd104ce8b9ebc443cbc6a2b6b0a07e",
+  "sms_admins.s7.target": "bf29ece0dea4042b129fbb1d77b68e97e7c14b3ff16a319abfa8192aedbc45a6",
+  "spoofed_samaccountname_tickets.s1.plain": "7dc436769e474497a82de587c3d2855bc8d7af647f234dfb696eb62b155ee9b3",
+  "spoofed_samaccountname_tickets.s1.target": "94134a6a807d3421de6fdfa5c753d2bf02d6dc7d69f9f2809bd3eb8dbe4d0501",
+  "spoofed_samaccountname_tickets.s7.plain": "dd1d741e8fe83e9adc310aded59883056ededdebade1affb472c0280f0e41b5e",
+  "spoofed_samaccountname_tickets.s7.target": "c4921ef1fa934a6a2de29cb739eb7131fd7083112ffc22f62287cce6235abcfe",
+  "weak_service_tickets.s1.plain": "2b4b21c1ee4a175f15e61b83bdbe5279dbb147f782a6fd208f4c4467724d4f41",
+  "weak_service_tickets.s1.target": "58683ce3808c3478f11bd9fcc9047d37105adae11e17f73e2595b743135e2efc",
+  "weak_service_tickets.s7.plain": "27231a35f5cbe2f337f62061ca6bccac5f948aaf741fb3089bcfc61271eef0c5",
+  "weak_service_tickets.s7.target": "4633912bb426e700344756524383ba953b4e75f590ce389b72782b6f1f3ec05b"
+ },
+ "directory_hash": "d81860f236637dd120ee138d917848830629ccdb84b1678763f5683f79b33fa5"
+}

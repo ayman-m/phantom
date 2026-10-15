@@ -83,10 +83,10 @@ three values marked `<CHANGE>`.
     {"name": "source_user", "type": "string"}
   ],
   "observables_dict": {
-    "source_device_host": ["<CHANGE: a host name that has NOT raised a port-scan alert in the last 24 h>"],
-    "source_ip": ["<CHANGE: that host's internal IPv4>"],
-    "source_user": ["acme\\\\khalid.alotaibi"],
-    "dest_ip": ["10.20.60.15"],
+    "source_device_host": ["<CHANGE: a host name that has NOT raised a port-scan alert in the last 24 h, e.g. PHWS-036, the outlier's workstation>"],
+    "source_ip": ["<CHANGE: that host's internal IPv4, e.g. 10.20.16.55>"],
+    "source_user": ["PHANTOM\\\\<CHANGE: that host's user, e.g. aalzamil>"],
+    "dest_ip": ["10.20.1.21"],
     "dest_port": ["21","22","23","25","69","110","111","135","139","143","161","389","445","465","514",
                   "636","873","993","995","1025","1433","1521","2049","3306","3389","5432","5900","5985",
                   "6379","11211"],
@@ -151,7 +151,7 @@ dataset = alerts
 ```
 
 Pass when a new row names your host. The description quotes your traffic back, for example
-*"WS-1001 connected or attempted to connect to 10.20.50.30 119 times over 36 or more unique ports"*.
+*"PHWS-036 connected or attempted to connect to 10.20.1.21 119 times over 36 or more unique ports"* (the target is PHSRV-APP01, an organization server; the recipe was verified earlier with a different internal target address). Replay-verify against the organization hosts before relying on this skill.
 
 If nothing arrives within 15 minutes:
 

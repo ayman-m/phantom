@@ -12,22 +12,26 @@ lets a caller pass XML it already has. `structured_event`, `qualify` and `parse_
 `_structured_event`, `_qualify` and `_parse_time`; keep them in step (tests/test_windows_events.py compares the XML both
 connectors produce for the nine WEC trigger skills).
 
-Standard library only.
+Standard library, plus the connector runtime's OrganizationView: the DNS suffix that qualifies a short computer name is the
+organization's (the caller passes it), and so is the whole domain of the test event (the caller passes the view). Nothing
+here reads the organization itself.
 """
 from __future__ import annotations
 
 import hashlib
+import ipaddress
 import re
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from typing import Any, NamedTuple
 
+from runtime.organization_view import OrganizationView
+
 from . import winevent
 
-DEFAULT_DNS = "phantom.lab"
-# The synthetic domain's SID (the one wec-sender's `windows` profile and the nine WEC trigger skills use).
-DOMAIN_SID = "S-1-5-21-3623811015-3361044348-30300820"
-TEST_COMPUTER = "PHANTOM-CRIBLTEST01"
+# The synthetic host of the test event is <NETBIOS>-CRIBLTEST01 (the organization's NetBIOS name); like wec-sender's test event
+# it is clearly synthetic. Everything else about the domain (DNS suffix, NetBIOS name, SID base, the address) is the organization's.
+TEST_HOST_SUFFIX = "CRIBLTEST01"
 
 _SYSTEM_KEYS = ("version", "level", "task", "opcode", "record_id", "process_id", "thread_id", "activity_id", "message")
 _EVENT_KEYS = {"event_id", "computer", "channel", "provider", "time", "event_data", "outcome", "keywords",
@@ -172,8 +176,9 @@ def _render_problem(ev: winevent.Event) -> str | None:
     return None
 
 
-def prepare(items: list[Any], default_dns: str = DEFAULT_DNS) -> list[Prepared]:
+def prepare(items: list[Any], default_dns: str) -> list[Prepared]:
     """Everything in `items` as XML, validated before anything is sent. Raises ValueError naming the first bad item.
+    A short computer name is qualified with `default_dns` (the organization's DNS suffix).
 
     A dict is a structured event (the wec-sender shape): rendered with the copied renderer, in time order and with
     per-computer record ids exactly as wec-sender does, and those come first in the result. A string is Windows Event XML
@@ -217,28 +222,30 @@ def iso(when: datetime) -> str:
     return when.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
-def build_test_event(dns: str, test_id: str, now: datetime) -> tuple[dict[str, Any], dict[str, str]]:
+def build_test_event(view: OrganizationView, test_id: str, now: datetime) -> tuple[dict[str, Any], dict[str, str]]:
     """One benign 4624 (network logon) as a structured event, plus what the result reports about it.
 
     Like wec-sender's test event: a clearly synthetic host, the test id in `LogonGuid` (a field that is a GUID by nature).
     The actor is fresh on every call (its name carries the start of the test id), so a test never joins another actor's
-    history. The suffix is lower-cased (wec-sender's test event goes through its Directory, which does the same) and the
-    NetBIOS domain is its first label, upper-cased."""
-    dns = dns.strip().lower()
-    netbios = (dns.split(".")[0] or "phantom").upper()
-    fqdn = qualify(TEST_COMPUTER, dns)
+    history. The domain is the active organization's: the host is `<NETBIOS>-CRIBLTEST01.<dns>`, the SID `<domain sid>-<5000 +
+    hash of the login>`, and the address one inside the organization's pool for unmanaged and newly seen devices (the last
+    usable address but four, so repeated tests reuse one entity and it cannot collide with a managed device). Raises
+    OrganizationUnavailable when the organization has no such pool."""
+    _, high = view.fresh_ip_range()
+    test_host = f"{view.netbios}-{TEST_HOST_SUFFIX}"
+    fqdn = qualify(test_host, view.dns)
     login = "phantom.test" + test_id.replace("-", "")[:6].lower()
-    sid = f"{DOMAIN_SID}-{5000 + int(hashlib.sha1(login.encode()).hexdigest(), 16) % 90000}"
+    sid = f"{view.sid_base}-{5000 + int(hashlib.sha1(login.encode()).hexdigest(), 16) % 90000}"
     digest = hashlib.sha256(f"{fqdn}|{login}|{now.isoformat()}".encode()).digest()
     logon_id = f"0x{int.from_bytes(digest[:4], 'big') % 0xFFF000 + 0x10000:X}"
     event = {
         "event_id": 4624, "computer": fqdn, "channel": "Security", "time": iso(now),
         "event_data": {
-            "SubjectUserSid": "S-1-5-18", "SubjectUserName": TEST_COMPUTER.upper() + "$", "SubjectDomainName": netbios,
-            "SubjectLogonId": "0x3E7", "TargetUserSid": sid, "TargetUserName": login, "TargetDomainName": netbios,
+            "SubjectUserSid": "S-1-5-18", "SubjectUserName": test_host.upper() + "$", "SubjectDomainName": view.netbios,
+            "SubjectLogonId": "0x3E7", "TargetUserSid": sid, "TargetUserName": login, "TargetDomainName": view.netbios,
             "TargetLogonId": logon_id, "LogonType": "3", "LogonProcessName": "Kerberos",
-            "AuthenticationPackageName": "Kerberos", "WorkstationName": TEST_COMPUTER.upper(),
+            "AuthenticationPackageName": "Kerberos", "WorkstationName": test_host.upper(),
             "LogonGuid": "{" + test_id.upper() + "}", "LmPackageName": "-", "KeyLength": "0",
-            "IpAddress": "10.20.250.250", "IpPort": "49999"},
+            "IpAddress": str(ipaddress.ip_address(high - 4)), "IpPort": "49999"},
     }
     return event, {"computer": fqdn, "actor": login, "logon_id": logon_id}

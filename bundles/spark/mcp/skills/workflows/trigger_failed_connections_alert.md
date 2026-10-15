@@ -20,7 +20,7 @@ fires from firewall logs"*.
 This is not a correlation rule and needs nothing installed on the tenant. It is the *many hosts, none
 answer* shape. For the *one target, many ports* shape use `trigger_port_scan_analytics`.
 
-> **Expected result.** From an **established** source host the alert typically arrives 3 to 5 minutes after the burst. A fresh source IP does not fire: the burst lands and models as the skill says (120 events, about 39 distinct targets, all `FAILED`) but no alert follows, even after back-dated ordinary events spread over 20 days are added and the burst is re-fired. The likely missing ingredient is real calendar history for the host (back-dated `rt` events do not substitute for it), which is why precondition 2 demands an established host.
+> **Expected result.** From an **established** source host the alert typically arrives 3 to 5 minutes after the burst. A fresh source IP does not fire: the burst lands and models as the skill says (120 events, about 39 distinct targets, all `FAILED`) but no alert follows, even after back-dated ordinary events spread over 20 days are added and the burst is re-fired. The likely missing ingredient is real calendar history for the host (back-dated `rt` events do not substitute for it), which is why precondition 2 demands an established host. Replay-verify against the organization hosts before relying on this skill.
 
 ## What the detector looks for (Cortex doc: "Failed Connections")
 
@@ -47,7 +47,7 @@ straight to an alert, and the identical call fires again on another host. The ru
 | # | Must be true | How to check |
 |---|---|---|
 | 1 | You know the operator's syslog **log destination object** (`logdest:<id>`). It typically resolves to the broker's CEF port 5514. Do not send to `udp:<ip>:514` | `log_destinations_list` or the operator |
-| 2 | The source is an **ESTABLISHED host** that has no `Failed Connections` alert in the last 24 h: an IP that has been sending ordinary traffic to the tenant, on real calendar days, for **at least 14 days**. **A fresh IP does not fire, even with 20 days of back-dated traffic added** (see Expected result). Candidates: any workstation from the baseline jobs that has been sending traffic for 14 days or more | `config timeframe = 30d \| dataset = panw_ngfw_traffic_raw \| filter source_ip = "<ip>" \| alter d = format_timestamp("%Y-%m-%d", _time) \| comp count() by d` must show **14 or more distinct past days**; and the Step 3 query without the time filter shows no alert for the host in 24 h |
+| 2 | The source is an **ESTABLISHED host** that has no `Failed Connections` alert in the last 24 h: an IP that has been sending ordinary traffic to the tenant, on real calendar days, for **at least 14 days**. **A fresh IP does not fire, even with 20 days of back-dated traffic added** (see Expected result). The source must be an organization host that the baseline job covers (default: the outlier's workstation, PHWS-036 at `10.20.16.55` on Phantom Lab; `baseline_normal_activity` gives it ordinary traffic). The 14 days are a property of that host's traffic on the tenant, not of this skill, so check them with the query. Do not pick a host the baseline job does not cover | `config timeframe = 30d \| dataset = panw_ngfw_traffic_raw \| filter source_ip = "<ip>" \| alter d = format_timestamp("%Y-%m-%d", _time) \| comp count() by d` must show **14 or more distinct past days**; and the Step 3 query without the time filter shows no alert for the host in 24 h |
 | 3 | The 40 destination addresses are **consecutive addresses `.10` to `.49` of ONE internal /24 that has never appeared** as a source or destination in `panw_ngfw_traffic_raw` in 30 days. **Never reuse a /24 from an earlier burst**: its addresses are no longer "never seen" | `dataset = panw_ngfw_traffic_raw \| filter dest_ip ~= "^10\.20\.<third octet>\." or source_ip ~= "^10\.20\.<third octet>\." \| comp count()` must be 0 |
 | 4 | No other bounded burst is running (xlog allows one at a time) | `phantom_list_workers`: no worker `Running` |
 | 5 | The log carries the keys in Step 1 exactly. No user object and no seeding step is needed beyond precondition 2 | Step 2 |
@@ -101,9 +101,9 @@ Call **`phantom_create_data_worker`**. Change only the values marked `<CHANGE>`.
     "rule_matched": ["deny-internal"],
     "from_zone": ["trust"],
     "to_zone": ["trust"],
-    "source_ip": ["<CHANGE: fresh internal IPv4, e.g. 10.20.14.12>"],
-    "source_device_host": ["<CHANGE: fresh host name, e.g. WS-FC-02>"],
-    "source_user": ["<CHANGE: a bare user name, no backslash, e.g. fahad.alotaibi>"],
+    "source_ip": ["<CHANGE: the address of an established organization host the baseline job covers, default 10.20.16.55>"],
+    "source_device_host": ["<CHANGE: that host's name, default PHWS-036>"],
+    "source_user": ["<CHANGE: that host's user as a bare name, no backslash, default aalzamil>"],
     "source_port": ["49152", "49153", "49154", "49155"],
     "dest_ip": ["<CHANGE: 40 strings, the addresses .10 to .49 of one unused internal /24 from precondition 3, e.g. \"10.20.<unused>.10\", \"10.20.<unused>.11\", ... \"10.20.<unused>.49\">"],
     "dest_port": ["445", "3389", "135", "5985", "22"],

@@ -8,6 +8,35 @@ Each release section is written in operator language, not git-shortlog language.
 
 ---
 
+## [Unreleased] — *Organization: one company behind every generated log*
+
+Every log Phantom produces now describes the same fictitious company. The people, their workstations, the servers, the subnets and the cloud accounts are defined once, and the agent, the log workers, http-sender, wec-sender and cie-sender all use them. Cortex can then group the alerts from different sources into one case, because the same user, host and address appear in all of them.
+
+**Added.**
+
+- **The Organization page (`/organization`).** Phantom ships **Phantom Lab**: 50 people in seven departments on the `phantom.lab` domain, each with one primary workstation and address; seven administrators with a separate `adm.` account; service accounts and a break-glass account; 75 hosts across a Riyadh headquarters, a Jeddah branch, a DMZ, remote workers and one account in each of AWS, Azure and GCP; the VLANs and address plan; and designated personas (two VIP targets, one outlier to attack from, two contractors, one leaver). You can look at everything, add people, hosts and networks, edit the YAML, import your own organization, duplicate, export, restore an earlier version, and switch the active one. Switching removes nothing. The Overview tab has a **Cortex setup** panel with the internal ranges and domain suffix to enter in Inventory > Assets > Network Configuration.
+- **Phantom Lab is read-only.** Editing it saves your own copy and makes that the active organization; making Phantom Lab active again is the reset.
+- **The agent knows the company.** New tools `organization_get`, `organization_list`, `organization_update` and `organization_activate`, a new `organization` knowledge base, and a system-prompt section: read the organization before generating, use only its users, hosts and addresses, keep each person whole (login, workstation, address), use the designated personas, and say so when a scenario needs something it lacks. "Add a new hire to Finance with a laptop" is one call; the login, email, workstation, address and groups are filled in.
+- **The xlog workers fill identities from the organization.** `create_data_worker`, the scenario tools and `generate_fake_data` now fill the user, host and address fields a caller leaves unset (new argument `use_organization`, default true). On the vendor-schema path a person is drawn together with their own workstation and address, with a real server as the destination. The result's `organization_defaults` lists which fields were bound.
+- **Connectors read the organization live.** The connector containers read it from the data volume they already mount, on every call, so a save or a switch reaches them with no restart. Each connector instance has an optional **Organization** setting to pin one organization; empty follows the active one.
+- **Backup and restore include your organizations.**
+
+**Changed.**
+
+- **cie-sender provisions the organization** (all people and their admin accounts, service and break-glass accounts, the leaver disabled, the organization's groups and manager chain) instead of a fixed 30-account directory. Its `directoryDomain`, `companyName` and `extra_users` settings are gone: edit the organization instead.
+- **wec-sender and http-sender build their Windows traffic from the organization.** The wec-sender `domainNetbios`, `domainDns` and `hostCount` settings and the http-sender `userDomain` and `windowsDnsSuffix` settings are gone; identities come from the organization. The baseline traffic now covers all 50 people and 50 workstations (it covered 22 people and 26 workstations).
+- **Okta and cloud identities now use the organization's addresses and domain.** The email domain is the organization's (`phantom.lab`), so the Okta user, the Active Directory user and the CIE user are one identity. Okta user ids derive from the email address, so they differ from those created under the earlier `phantom-lab.example` domain; the old users remain in the tenant until you remove them.
+- **`organization` is a new local category in the default action policy**, so editing the company is treated like editing the agent itself (no external-action confirmation). An install that already has a stored persona keeps its categories until you press Reset Defaults on the personality page.
+- **A connector with no readable organization stops with an error** that says what to check, instead of generating a different company.
+
+**Fixed.**
+
+- The system prompt advertised a `phantom-soc` knowledge base that does not ship, and the user guide described it. Both now describe what is really loaded.
+
+**Documentation.** Review `/help/architecture#organization` and `/help/user#organization`; three journeys were added (`organization-browse-and-cortex-setup`, `organization-add-hire-via-chat`, `organization-switch-and-replace`), and `/help/architecture#connector-containers` notes that containers also read `organization.db`.
+
+---
+
 ## [v1.0.6] — 2026-10-15 — *Connector setup: Test Connection for every connector and the HTTP Sender destination switch*
 
 Setting up a connector now works the same way for all nine: every one has a Test Connection that says what it checked, the Edit dialog shows every field the connector has, and the HTTP Sender asks which kind of destination you want before it shows any fields.

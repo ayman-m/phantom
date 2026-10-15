@@ -39,7 +39,7 @@ One recipe raises **two alerts per cloud** from the same events: `Suspicious API
 | # | Must be true | How to check |
 |---|---|---|
 | 1 | The `http-sender` instance is running with Cribl configured: `list_destinations` shows **`cribl_aws_audit`** and/or **`cribl_gcp_cloud_logging`** with `ready: true` (whichever cloud you send) | `http-sender.list_destinations` |
-| 2 | You pass **no** `destination`, `target_user` or `count` (AWS: 2 records, `ListUsers` then `ListBuckets`, 2 minutes apart; GCP: 1 entry). The actor (a new IAM user in a new account; a new user in a new project) and the **Tor exit** are chosen by the call, so every call is a first-time actor | read the calls below |
+| 2 | You pass **no** `destination`, `target_user` or `count` (AWS: 2 records, `ListUsers` then `ListBuckets`, 2 minutes apart; GCP: 1 entry). The actor (a new IAM user in the organization's AWS account; a new user in the organization's GCP project) and the **Tor exit** are chosen by the call, so every call is a first-time actor | read the calls below |
 | 3 | The Tor exit comes from the connector's snapshot of seven exits. Exits leave the network and an address that left stops being flagged, so a silent result may be a departed exit (see the gotchas) | the `source_ip` of the Step 2 row |
 
 ## Expected result
@@ -113,8 +113,10 @@ config timeframe = 1d | dataset = alerts
 
 Use the stored enum names `MAGNIFIER` and `ANALYTICS_BIOC`: the displayed names `XDR_ANALYTICS` and `XDR_ANALYTICS_BIOC` match nothing in a filter.
 
-Pass when two rows name your identity (AWS: `user_name` is the bare IAM user; GCP: `phantom-lab\<local part>`) and `host_ip` is your Tor exit: `Suspicious API call from a Tor exit node` (HIGH) and `Cloud activity from an unusual high-risk IP` (LOW). If nothing arrives in 3 minutes, follow the first gotcha.
+Pass when two rows name your identity (AWS: `user_name` is the bare IAM user; GCP: `phantom\<local part>`) and `host_ip` is your Tor exit: `Suspicious API call from a Tor exit node` (HIGH) and `Cloud activity from an unusual high-risk IP` (LOW). If nothing arrives in 3 minutes, follow the first gotcha.
 
 ## Report back to the operator
 
 State which cloud(s) you sent, the acting identity and account or project, the Tor exit, the Step 2 result and, per cloud, the alert ids (Tor and high-risk) with their arrival times and latency, or that nothing arrived and what you checked (the exit, the landed rows). Say that every call uses a new identity, so repeating it is safe.
+
+Note: the Cortex `user_name` prefix shown above (`phantom\`) is the first label of the organization's email domain (`phantom.lab`); it was `phantom-lab\` on the previous domain. It has not been re-measured on the tenant, so confirm it on the first replay.

@@ -30,14 +30,14 @@ It is not a correlation rule; it is Cortex's own analytics (Cloud module, `XDR A
 | Activation / training (doc) | 14 days / 30 days in the documentation; in practice the alert arrives within seconds |
 | Test period | single event |
 | Deduplication (doc) | 5 days. Every call invents a new service account, project and address, so a repeat fires again |
-| What the alert text says | *"gke-reader-<hex>@phantom-lab-<hex>.iam.gserviceaccount.com has used a known vulnerability scanning tool within cluster phantom-gke-1. The identity operated from <caller address>. The tool that was used was Kubescape. The operation was performed on GCP/phantom-lab-<hex>"* |
+| What the alert text says | *"gke-reader-<hex>@<project id>.iam.gserviceaccount.com has used a known vulnerability scanning tool within cluster phantom-gke-1. The identity operated from <caller address>. The tool that was used was Kubescape. The operation was performed on GCP/<project id: the organization's, `phantom-lab-prod` on Phantom Lab>"* |
 
 ## Preconditions: check these BEFORE sending
 
 | # | Must be true | How to check |
 |---|---|---|
 | 1 | The `http-sender` instance is running with Cribl configured: `list_destinations` shows **`cribl_gcp_cloud_logging`** with `ready: true` (dataset `google_cloud_logging_raw`) | `http-sender.list_destinations` |
-| 2 | You pass **no** `destination`, `target_user`, `source_ip` or `count`. The default `count` is the recipe's 4 steps (the minimum; a smaller one is refused). The service account (`gke-reader-<hex>@phantom-lab-<hex>.iam.gserviceaccount.com`), the project and the outside caller address are invented per call | read the call below |
+| 2 | You pass **no** `destination`, `target_user`, `source_ip` or `count`. The default `count` is the recipe's 4 steps (the minimum; a smaller one is refused). The service account (`gke-reader-<hex>@<project id>.iam.gserviceaccount.com`) and the outside caller address are invented per call; the project is the organization's GCP project (`phantom-lab-prod` on Phantom Lab) | read the call below |
 | 3 | The 4 events are spread over the last 2 minutes and end at the moment of the call, nothing in the future | none |
 
 ## Expected result

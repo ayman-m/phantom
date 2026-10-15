@@ -16,6 +16,13 @@ paths = ['''bundles/spark/connectors/http-sender/tests/test_profile_golden\.py$'
 regexes = ['''^[0-9a-f]{64}$''']
 
 [[allowlists]]
+description = "SHA-256 digests of the pre-organization Windows output, pinned by the equivalence test (hash values, not credentials; the shadow_credentials scenario name in the key trips the rule)"
+condition = "AND"
+targetRules = ["generic-api-key"]
+paths = ['''bundles/spark/connectors/http-sender/tests/fixtures/pre_organization_[a-z_]*baseline\.json$''']
+regexes = ['''^[0-9a-f]{64}$''']
+
+[[allowlists]]
 description = "Fake collector keys used as test fixtures for the HTTP sender destinations"
 condition = "AND"
 targetRules = ["generic-api-key"]

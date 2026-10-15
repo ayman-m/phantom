@@ -149,13 +149,13 @@ Call **`phantom_create_data_worker`**. Change only the values marked `<CHANGE>`.
       "51000"
     ],
     "source_ip": [
-      "<CHANGE: internal IPv4, e.g. 10.20.63.22>"
+      "<CHANGE: a new internal IPv4 from the organization's unmanaged block (10.20.100.0 to 10.20.199.255), e.g. 10.20.150.22; never the address of a person's workstation>"
     ],
     "source_device_host": [
-      "<CHANGE: host name, e.g. WS-LAB-22>"
+      "<CHANGE: a new host name PHWS-<NNN> above the organization's last workstation (PHWS-050 on Phantom Lab), e.g. PHWS-122>"
     ],
     "source_user": [
-      "<CHANGE: a bare user name, no backslash, e.g. b.iraqi>"
+      "<CHANGE: a bare user name, no backslash, that is not a person's, e.g. svc.runNNNN>"
     ],
     "dest_port": [
       "25"

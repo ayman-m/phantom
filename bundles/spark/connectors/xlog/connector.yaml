@@ -171,6 +171,7 @@ spec:
         - { name: "required_fields", type: "array",   description: "Required field enums (legacy path), e.g. ['SRC_HOST', 'DST_HOST'].",                          required: false }
         - { name: "schema_override", type: "array",   description: "Vendor-faithful field schema. Pass the `fields[]` list from data_sources_get_schema verbatim. Each item: {name, type?, is_array?, is_meta?, is_gate?, example?}. is_gate marks a field the parsing/modeling rule FILTERS on; the generator auto-pins those to their example. Every other field's example is documentation only. When present with a udp/tcp destination, routes through OverrideSender.", required: false }
         - { name: "verify_ssl",      type: "boolean", description: "Verify TLS on HTTPS destinations (XSIAM_WEBHOOK).",                                          required: false }
+        - { name: "use_organization", type: "boolean", description: "Default true: every user, host and address you do not pin in observables_dict is filled from the ACTIVE ORGANIZATION (call organization_get first), so logs from different sources share entities and Cortex can stitch them. On the schema_override path each recognised user / source host / source address / destination host / destination address field is bound through __entities__ (a person with their own workstation and address, a real server as destination); on the generic path one person and one server are pinned. The result's organization_defaults says which fields were bound. Values you pass are never overwritten. Set false ONLY when the operator asks for unconstrained random identities.", required: false }
       returns: { type: "array", description: "Worker descriptor objects (worker UUID, type, status, count, interval, destination)." }
 
     - name: "list_workers"
@@ -210,6 +211,7 @@ spec:
         - { name: "destination", type: "string", description: "Where to send logs: 'udp:host:port' | 'tcp:host:port' | 'XSIAM_WEBHOOK'.",            required: true  }
         - { name: "steps",       type: "array",  description: "Scenario steps. Each step: { tactic?, tactic_id?, technique?, technique_id?, procedure?, type?, logs: [{ type, vendor?, product?, version?, count?, datetimeIso?, fields?, requiredFields?, observablesDict? }] }. Observables use camelCase keys.", required: true  }
         - { name: "tags",        type: "array",  description: "Scenario tags (free-form labels).",                                                     required: false }
+        - { name: "use_organization", type: "boolean", description: "Default true: identity keys (srcHost, localIp, user, dstHost, serverIp, ...) you leave unset in a log's observablesDict are filled from the ACTIVE ORGANIZATION (one actor, one server). Values you set are never overwritten. Set false only for unconstrained random identities.", required: false }
       returns: { type: "array", description: "Worker descriptors for each created worker." }
 
     - name: "generate_scenario_fake_data"
@@ -219,6 +221,7 @@ spec:
         - { name: "name",  type: "string", description: "Scenario name (free-form label).", required: true  }
         - { name: "steps", type: "array",  description: "Scenario steps (same shape as create_scenario_worker's steps). Each step carries a logs[] list; observablesDict keys are camelCase.", required: true  }
         - { name: "tags",  type: "array",  description: "Scenario tags (free-form labels).", required: false }
+        - { name: "use_organization",    type: "boolean", description: "Default true: identity keys (srcHost, localIp, user, dstHost, serverIp, ...) you leave unset in a log's observablesDict are filled from the ACTIVE ORGANIZATION (one actor, one server). Values you set are never overwritten. Set false only for unconstrained random identities.", required: false }
       returns: { type: "object", description: "{ name, tags, steps }." }
 
     # ─── Vendor-faithful log simulation ──────────────────────────

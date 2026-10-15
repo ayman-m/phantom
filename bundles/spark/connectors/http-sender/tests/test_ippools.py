@@ -60,10 +60,15 @@ def test_range_of_finds_pool_addresses_and_nothing_else():
         assert ippools.range_of(other) is None
 
 
-def test_index_of_uses_the_pool_number_else_a_stable_derived_one():
-    assert ippools.index_of("a@x", {"a@x": 4}) == 4
-    derived = ippools.index_of("stranger@x", {})
-    assert derived == ippools.index_of("stranger@x", {"a@x": 4}) and 0 <= derived < len(ippools.HOME)
+def test_home_of_is_the_persons_own_address_else_a_stable_derived_one():
+    ip, pool_range = ippools.home_of({"login": "a", "home_ip": ippools.home_for(5)[0]})
+    assert (ip, pool_range) == ippools.home_for(5)
+    # an address outside both pools is kept, with unknown geography
+    assert ippools.home_of({"login": "a", "home_ip": "203.0.113.9"}) == ("203.0.113.9", None)
+    # a person with no address gets one derived from the login: stable, in the home pool, case-insensitive
+    derived = ippools.home_of({"login": "Stranger"})
+    assert derived == ippools.home_of({"login": "stranger"}) and derived[1] in ippools.HOME
+    assert 0 <= ippools.derived_index("stranger") < len(ippools.HOME)
 
 
 # -- stable Okta user ids (0.3.1) ----------------------------------------------------------------------------------
@@ -74,15 +79,20 @@ def test_okta_user_id_is_a_pure_function_of_the_login():
 
     from src.profiles import okta
 
-    a = okta.user_id("noura.alharbi@phantom-lab.example")
-    assert re.fullmatch(r"00u[A-Za-z0-9]{17}", a)
-    assert a == okta.user_id("Noura.Alharbi@Phantom-Lab.example ")           # case and padding do not matter
-    assert a != okta.user_id("khalid.alotaibi@phantom-lab.example")
+    from runtime.organization_view import get_view
+
+    view = get_view()
+    login = view.person("nalharbi")["email"]
+    derived = okta.user_id(login)
+    assert re.fullmatch(r"00u[A-Za-z0-9]{17}", derived)
+    assert derived == okta.user_id(login.title() + " ")                      # case and padding do not matter
+    assert derived != okta.user_id(view.person("kalotaibi")["email"])
+    a = view.person("nalharbi")["okta_id"]                                   # the organization's id for the person
 
     now = datetime(2026, 10, 2, 8, 0, tzinfo=timezone.utc)
 
     def ids(scenario, seed, **kw):
-        events = okta.build_events(scenario, 24, domain="phantom-lab.example", now=now, spread_seconds=600,
+        events = okta.build_events(scenario, 24, view=view, now=now, spread_seconds=600,
                                    start_offset_minutes=0, target_user=kw.get("target_user"), source_ip=None, seed=seed)
         out: dict[str, set[str]] = {}
         for e in events:
@@ -94,7 +104,7 @@ def test_okta_user_id_is_a_pure_function_of_the_login():
     two = ids("benign_logins", seed=2)
     assert all(len(v) == 1 for v in one.values())
     assert {k: next(iter(v)) for k, v in one.items()} == {k: next(iter(v)) for k, v in two.items()}
-    assert one["noura.alharbi@phantom-lab.example"] == {a}
+    assert one[login] == {a}
     # a named victim in an attack scenario is the same identity as the baseline user
     spray = ids("failed_then_success", seed=3, target_user="noura.alharbi")
-    assert spray["noura.alharbi@phantom-lab.example"] == {a}
+    assert spray[login] == {a}

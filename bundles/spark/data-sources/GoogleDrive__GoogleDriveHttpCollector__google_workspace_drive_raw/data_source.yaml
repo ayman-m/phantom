@@ -198,7 +198,7 @@ how_to_use: |
 
   ### Quick start
 
-  1. Prove the path with one identifiable event (a benign login for `phantom.test@<userDomain>`):
+  1. Prove the path with one identifiable event (a benign login for `phantom.test@<the organization's email domain>`):
      `send_test_event {"profile": "google_workspace", "destination": "google_workspace_drive"}`
      It returns a test id and a `verify_with_xql` query on `etag`.
   2. Preview, then send a scenario. Always `dry_run` first (builds and returns the first 3 events, sends nothing):

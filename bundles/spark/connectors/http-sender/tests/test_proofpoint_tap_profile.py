@@ -19,11 +19,11 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from runtime.organization_view import get_view  # noqa: E402
 from src import profiles  # noqa: E402
-from src.profiles import ippools, proofpoint_tap as tap  # noqa: E402
+from src.profiles import _org, ippools, proofpoint_tap as tap  # noqa: E402
 
 NOW = datetime(2026, 9, 30, 12, 0, 0, tzinfo=timezone.utc)
-DOMAIN = "phantom-lab.example"
 TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
 MESSAGE_TYPES = {"message-delivered", "message-blocked"}
 CLICK_TYPES = {"click-blocked", "click-permitted"}
@@ -32,7 +32,15 @@ ATTACK_SCENARIOS = ("phishing_url", "malware_attachment", "credential_phishing",
 
 def build(scenario, count, **kw):
     kw.setdefault("seed", 7)
-    return tap.build_events(scenario, count, domain=DOMAIN, now=NOW, **kw)
+    return tap.build_events(scenario, count, view=get_view(), now=NOW, **kw)
+
+
+def domain():
+    return get_view().email_domain
+
+
+def person(login):
+    return get_view().person(login)
 
 
 def parse(ts):
@@ -116,7 +124,9 @@ def test_benign_mail_is_delivered_clean_mail():
     for ev in events:
         assert ev["threatsInfoMap"] == [] and "classification" not in ev and "url" not in ev
         assert ev["quarantineFolder"] is None and ev["phishScore"] <= 15
-    assert {e["recipient"][0] for e in events} == {f"{n.lower()}.{s.lower()}@{DOMAIN}" for n, s in tap._USERS}
+    emails = {p["email"] for p in _org.logon_people(get_view())}
+    assert {e["recipient"][0] for e in events} <= emails and len({e["recipient"][0] for e in events}) == 12
+    assert {a for e in events for a in e["ccAddresses"]} <= emails
     assert any(e["ccAddresses"] for e in events) and any(len(e["messageParts"]) > 1 for e in events)
 
 
@@ -145,7 +155,7 @@ def test_bec_impostor_is_delivered_with_lookalike_sender_and_reply_to():
     for ev in events:
         assert ev["_log_type"] == "message-delivered" and ev["impostorScore"] >= 75
         assert ev["classification"] == "IMPOSTOR" and ev["threatsInfoMap"] == []
-        assert ev["sender"].endswith("@phantom-lab-secure.example")
+        assert ev["sender"].endswith(f"@{domain().split('.')[0]}-secure.example")
         assert ev["replyToAddress"] and ev["replyToAddress"][0] != ev["sender"]
 
 
@@ -169,22 +179,28 @@ def test_click_chain_clicks_follow_and_reference_their_message():
     # one user, one home address: clicks on the same message come from one address, the recipient's own
     for guid in by_guid:
         assert len({c["clickIP"] for c in clicks if c["GUID"] == guid}) == 1
+    by_email = {p["email"]: p for p in get_view().people}
     for click in clicks:
-        number = next(i for i in range(12) if click["recipient"] == tap._Factory(DOMAIN).user(i))
-        assert click["clickIP"] == ippools.home_for(number)[0]
+        assert click["clickIP"] == by_email[click["recipient"]]["home_ip"]
         assert ippools.range_of(click["clickIP"]).country == "Saudi Arabia"
 
 
 def test_a_named_recipient_clicks_from_one_stable_home_address_in_every_run():
-    first = build("click_chain", 9, target_user="someone.new", seed=1)
-    second = build("click_chain", 12, target_user="someone.new", seed=2)
+    first = build("click_chain", 9, target_user="kalotaibi", seed=1)
+    second = build("click_chain", 12, target_user="khalid.alotaibi", seed=2)
     ips = {e["clickIP"] for e in first + second if "clickIP" in e}
-    assert len(ips) == 1 and ippools.range_of(ips.pop()) in ippools.HOME
+    assert ips == {person("kalotaibi")["home_ip"]}
 
 
 def test_the_same_user_clicks_from_the_same_address_as_the_other_profiles():
     ev = build("click_chain", 6, target_user="noura.alharbi")[-1]
-    assert ev["clickIP"] == ippools.home_for(0)[0]
+    assert ev["clickIP"] == person("nalharbi")["home_ip"]
+
+
+def test_an_unknown_recipient_is_refused_with_the_valid_emails():
+    with pytest.raises(ValueError, match="nobody in the organization") as err:
+        build("click_chain", 6, target_user="someone.new")
+    assert person("nalharbi")["email"] in str(err.value)
 
 
 def test_click_chain_of_one_is_just_the_message():
@@ -222,7 +238,7 @@ def test_target_user_and_source_ip_are_honoured_by_attack_scenarios():
     for scenario in ATTACK_SCENARIOS:
         events = build(scenario, 6, target_user="Acme\\Noura.Alharbi", source_ip="203.0.113.99")
         recipients = {e["recipient"][0] if isinstance(e["recipient"], list) else e["recipient"] for e in events}
-        assert recipients == {f"noura.alharbi@{DOMAIN}"}
+        assert recipients == {person("nalharbi")["email"]}
         assert {e["senderIP"] for e in events} == {"203.0.113.99"}
 
 
@@ -275,7 +291,7 @@ def test_only_fictitious_domains_urls_and_known_pool_addresses(scenario):
     for ev in build(scenario, 30):
         blob = json.dumps(ev)
         for host in re.findall(r"@([A-Za-z0-9.-]+)", blob):
-            assert host.endswith(".example"), host
+            assert host == domain() or host.endswith(".example"), host  # the organization's own domain, else reserved
         for host in re.findall(r"https?://([^/\s\"#]+)", blob):
             assert host.endswith((".example", ".invalid")), host
         for key in ("senderIP", "clickIP"):
@@ -286,10 +302,10 @@ def test_only_fictitious_domains_urls_and_known_pool_addresses(scenario):
 # ── registry, sample, bad input ─────────────────────────────────────────
 
 def test_sample_event_is_one_valid_identifiable_message():
-    ev = tap.sample_event(domain=DOMAIN, now=NOW)
+    ev = tap.sample_event(view=get_view(), now=NOW)
     check_message(ev)
     assert ev["_log_type"] == "message-delivered" and ev["messageTime"] == "2026-09-30T12:00:00.000Z"
-    assert ev["recipient"] == [f"phantom.test@{DOMAIN}"] and ev[tap.TEST_ID_FIELD]
+    assert ev["recipient"] == [f"phantom.test@{domain()}"] and ev[tap.TEST_ID_FIELD]
     assert ippools.range_of(ev["senderIP"]) in BENIGN_NETS and ev["sender"].endswith(".example")
 
 

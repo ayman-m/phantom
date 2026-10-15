@@ -16,8 +16,9 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from runtime.organization_view import get_view  # noqa: E402
 from src import collector, connector, destinations, profiles  # noqa: E402
-from src.profiles import ippools, okta as okta_events  # noqa: E402
+from src.profiles import _org, ippools, okta as okta_events  # noqa: E402
 
 NOW = datetime(2026, 9, 30, 12, 0, 0, tzinfo=timezone.utc)
 KEY = "sekrit-collector-key-0123456789"
@@ -26,7 +27,18 @@ PUBLISHED = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$")
 
 
 def build(scenario, count, **kw):
-    return okta_events.build_events(scenario, count, domain="lab.test", now=NOW, seed=7, **kw)
+    return okta_events.build_events(scenario, count, view=get_view(), now=NOW, seed=7, **kw)
+
+
+def email(local):
+    """The email of the organization person whose address starts with `local` (the bundled organization is active)."""
+    view = get_view()
+    return f"{local}@{view.email_domain}"
+
+
+def pool():
+    """The people who may log on, as the profiles see them."""
+    return _org.logon_people(get_view())
 
 
 # ── event shape ─────────────────────────────────────────────────────────
@@ -59,7 +71,8 @@ def test_published_never_after_now_and_ascending():
 def test_failed_then_success_is_one_user_one_ip_ending_in_success():
     events = build("failed_then_success", 6, target_user="Noura.Alharbi", source_ip="203.0.113.99")
     assert [e["outcome"]["result"] for e in events] == ["FAILURE"] * 5 + ["SUCCESS"]
-    assert {e["actor"]["alternateId"] for e in events} == {"noura.alharbi@lab.test"}
+    assert {e["actor"]["alternateId"] for e in events} == {email("noura.alharbi")}
+    assert {e["actor"]["id"] for e in events} == {get_view().person("nalharbi")["okta_id"]}
     assert {e["client"]["ipAddress"] for e in events} == {"203.0.113.99"}
     assert events[0]["outcome"]["reason"] == "INVALID_CREDENTIALS"
 
@@ -83,15 +96,16 @@ def home_ips(events):
 
 
 def test_a_user_keeps_one_home_address_across_events_and_runs():
-    first, second = build("benign_logins", 48), build("benign_logins", 48, spread_seconds=900, start_offset_minutes=30)
+    n = 2 * len(pool())  # a login and an SSO event for every person who may log on
+    first, second = build("benign_logins", n), build("benign_logins", n, spread_seconds=900, start_offset_minutes=30)
     for events in (first, second):
         by_user = {}
         for ev in events:
             by_user.setdefault(ev["actor"]["alternateId"], set()).add(ev["client"]["ipAddress"])
-        assert len(by_user) == 12 and all(len(ips) == 1 for ips in by_user.values())
-    other_seed = okta_events.build_events("benign_logins", 48, domain="lab.test", now=NOW, seed=99)
+        assert len(by_user) == len(pool()) and all(len(ips) == 1 for ips in by_user.values())
+    other_seed = okta_events.build_events("benign_logins", n, view=get_view(), now=NOW, seed=99)
     assert home_ips(first) == home_ips(second) == home_ips(other_seed)
-    assert len(set(home_ips(first).values())) == 12  # twelve users, twelve addresses
+    assert len(set(home_ips(first).values())) == len(pool())  # one address per person
 
 
 def test_benign_events_come_from_a_home_range_and_agree_with_what_cortex_resolves():
@@ -106,10 +120,12 @@ def test_benign_events_come_from_a_home_range_and_agree_with_what_cortex_resolve
         assert ev["request"]["ipChain"][0] == {"ip": ip, "geographicalContext": geo, "version": "V4", "source": None}
 
 
-def test_home_addresses_match_the_shared_pool_by_user_number():
+def test_home_addresses_are_the_ones_the_organization_gives_its_people():
+    by_email = {p["email"]: p for p in get_view().people}
     for ev in build("benign_logins", 24):
-        n = next(i for i in range(12) if okta_events._USERS[i][0].lower() in ev["actor"]["alternateId"])
-        assert ev["client"]["ipAddress"] == ippools.home_for(n)[0]
+        person = by_email[ev["actor"]["alternateId"]]
+        assert ev["client"]["ipAddress"] == person["home_ip"]
+        assert ev["actor"]["id"] == person["okta_id"] and ev["actor"]["displayName"] == person["display_name"]
 
 
 @pytest.mark.parametrize("scenario", ["failed_then_success", "password_spray", "mfa_fatigue"])
@@ -129,12 +145,12 @@ def test_every_abroad_range_gets_a_harmless_domain_and_no_home_range_is_an_attac
     for r in ippools.ABROAD:
         assert re.fullmatch(r"[a-z0-9]+\.example", okta_events._isp_domain(r)), r
     for seed in range(40):
-        events = okta_events.build_events("password_spray", 3, domain="lab.test", now=NOW, seed=seed)
+        events = okta_events.build_events("password_spray", 3, view=get_view(), now=NOW, seed=seed)
         assert home_range_of(events[0]["client"]["ipAddress"]) is None
 
 
 def build_seeded(scenario, seed):
-    return okta_events.build_events(scenario, 4, domain="lab.test", now=NOW, seed=seed)
+    return okta_events.build_events(scenario, 4, view=get_view(), now=NOW, seed=seed)
 
 
 def test_attack_default_ip_is_seeded_and_varies_with_the_seed():
@@ -162,14 +178,15 @@ def test_source_ip_outside_every_pool_is_kept_with_unknown_safe_geo():
 
 
 def test_the_sample_event_comes_from_a_home_address():
-    ev = okta_events.sample_event(domain="lab.test", now=NOW)
+    ev = okta_events.sample_event(view=get_view(), now=NOW)
+    assert ev["actor"]["alternateId"] == f"phantom.test@{get_view().email_domain}"
     assert ev["client"]["ipAddress"] == ippools.home_for(0)[0]
     assert ev["client"]["geographicalContext"]["country"] == "Saudi Arabia"
 
 
 def test_domain_backslash_user_is_reduced_to_bare_name():
     events = build("failed_then_success", 2, target_user="Acme\\khalid.alotaibi")
-    assert events[0]["actor"]["alternateId"] == "khalid.alotaibi@lab.test"
+    assert events[0]["actor"]["alternateId"] == email("khalid.alotaibi")
 
 
 def test_password_spray_is_one_ip_many_users_all_failures():
@@ -364,7 +381,7 @@ def test_check_names_the_right_secret_slot():
 @pytest.fixture
 def settings(monkeypatch):
     cfg = {"url": URL, "key": KEY, "vendor": "Okta", "product": "SSO", "extra": EXTRA, "extra_keys": EXTRA_KEYS,
-           "domain": "lab.test", "verify_tls": True, "timeout": 5.0}
+           "organization": "", "verify_tls": True, "timeout": 5.0}
     monkeypatch.setattr(connector, "_settings", lambda: dict(cfg))
     return cfg
 
@@ -411,7 +428,7 @@ def test_generic_test_event_fits_any_source(settings, sent):
 def test_test_event_with_a_profile_is_that_sources_own_sample(settings, sent):
     result = connector.phantom_send_test_event(profile="okta")
     event = sent[0]["events"][0]
-    assert event["eventType"] == "user.session.start" and event["actor"]["alternateId"] == "phantom.test@lab.test"
+    assert event["eventType"] == "user.session.start" and event["actor"]["alternateId"] == f"phantom.test@{get_view().email_domain}"
     assert result["verify_with_xql"] == f'dataset = okta_sso_raw | filter uuid = "{event["uuid"]}"'
 
 
@@ -554,6 +571,9 @@ def test_tool_names_and_arguments_match_the_manifest():
 def test_the_manifest_carries_no_provider_specific_defaults():
     props = manifest()["configSchema"]["properties"]
     assert props["vendor"]["default"] == "" and props["product"]["default"] == ""
+    # identities are the organization's: no domain setting, and an optional pin of one organization (empty = the active one)
+    assert "userDomain" not in props
+    assert props["organization"]["type"] == "string" and props["organization"]["default"] == ""
     # Which fields an instance needs depends on its destination kind (destinationMode, which the connector
     # ignores and only the Add-instance form uses), so the schema requires none of them itself.
     assert not manifest()["configSchema"].get("required")

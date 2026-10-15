@@ -3,6 +3,10 @@ fastmcp>=2.13.1
 # mcp.server.fastmcp; src/pkg/connector_proxy.py imports the 1.x names.
 mcp>=1.21.2,<2
 pydantic>=2.0.0
+# Organization documents: YAML import/export and the JSON Schema they validate against (usecase/organization_model.py;
+# the data-source loader already imports both).
+pyyaml>=6.0
+jsonschema>=4.18
 pydantic-settings>=2.0.0
 python-dotenv>=1.0.0
 uvicorn>=0.30.0

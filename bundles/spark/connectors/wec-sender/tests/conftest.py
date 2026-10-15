@@ -17,19 +17,35 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import pytest
+import yaml
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import ExtendedKeyUsageOID, NameOID
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[5]
+RUNTIME = REPO / "phantom-connector-runtime"
+SEED = REPO / "bundles" / "spark" / "organization" / "phantom-lab.yaml"
 sys.path.insert(0, str(ROOT))
+if str(RUNTIME) not in sys.path:
+    sys.path.insert(0, str(RUNTIME))
 
 FIXTURE = Path(__file__).parent / "fixtures" / "enumerate_response.xml"
 FIXTURE_HOST = "HTTPS://broker.example.lab:5986"
 FIXTURE_IDENTIFIER = "61b87860-52f0-41a3-9a74-8719d8832e20"
 PFX_PASSWORD = "pfx-pass-Zq81!"
 MANAGER_PATH = "/wsman/SubscriptionManager/WEC"
+
+
+@pytest.fixture(autouse=True)
+def bundled_organization():
+    """Every test sees the bundled Phantom Lab as the active organization (the container reads organization.db instead)."""
+    from runtime import organization_view as ov
+    doc = yaml.safe_load(SEED.read_text(encoding="utf-8"))
+    ov.set_organization_loader(lambda pinned: doc)
+    yield doc
+    ov.set_organization_loader(None)
 
 
 def _name(cn: str) -> x509.Name:

@@ -70,16 +70,20 @@ empty. `compact=true` is lossless for this purpose and keeps the payload inside 
 3. The only required class is `cloud` (Stages 1-3). If it is `MISSING`, say this to the operator, with the class filled in: "No installed data source covers the `<class>` class, so I cannot run the cloud privilege escalation scenario. Install a `<class>` data source from the Marketplace and ask again." Then stop: create no worker. You may add that `phishing_to_cloud_takeover` models the SaaS to cloud pivot in its Stage 6.
 4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
+## Pre-flight: read the organization
+
+Call `organization_get(section="cloud")` for the GCP project and region, `organization_get(section="people", filter="department=Engineering")` for a person with `cloud_access` that includes `gcp`, and `organization_get(section="egress")` for the address the company's cloud calls normally leave from. Do not invent a cloud user, project or region. If no person has GCP access, tell the operator and offer `organization_update`. The recipes show the Phantom Lab values.
+
 ## Narrative thread
 
-- **Compromised cloud user:** `cicd-deployer@corp.example` (CI/CD service-account-like user with platform admin)
-- **Source IP for the malicious activity:** `194.165.16.45` (anomalous — the CI/CD pipeline normally runs from `10.10.0.0/8` internal egress)
+- **Compromised cloud user:** a DevOps or cloud engineer of the organization with platform admin, from the people row (login and email). Phantom Lab example: `dalanazi` (Dana Alanazi, DevOps Engineer, `dana.alanazi@phantom.lab`). Do not pick a flagged persona (outlier, contractor, leaver) unless the operator asks.
+- **Source IP for the malicious activity:** `194.165.16.45` (anomalous — the user's cloud calls normally leave from the company's office NAT address, `egress.ruh_nat`, `188.55.20.5` on Phantom Lab)
 - **Source country:** `RU`
-- **Cloud project:** `gcp-prod-ExampleCorp`
-- **New SA created:** `data-export-svc@gcp-prod-ExampleCorp.iam.gserviceaccount.com`
+- **Cloud project:** the organization's GCP project (`cloud.gcp.project_id`; `phantom-lab-prod` on Phantom Lab)
+- **New SA created:** `data-export-svc@<project_id>.iam.gserviceaccount.com` (`data-export-svc@phantom-lab-prod.iam.gserviceaccount.com` on Phantom Lab)
 - **New SA key ID:** `8f3a91d2c4b7e5a8d6f9b2c1e4a7d3f5b8c2e9a1`
-- **Targeted bucket:** `gs://ExampleCorp-prod-claims-data` (multi-TB customer claims data)
-- **Baseline access region (legitimate CI/CD):** `us-west1`
+- **Targeted bucket:** `gs://<project_id>-claims-data` (illustrative bucket name derived from the project; multi-TB customer claims data)
+- **Baseline access region (legitimate):** the organization's GCP region (`cloud.gcp.region`; `me-central2` on Phantom Lab)
 - **Anomalous access region (post-escalation):** `us-east4` (then `europe-west1`)
 - **Wall-clock time:** Stage 1 ~3 min (SA + key creation). Stage 2 ~5 min (role escalation). Stage 3 ~15 min (data access).
 
@@ -87,7 +91,7 @@ empty. `compact=true` is lossless for this purpose and keeps the payload inside 
 
 ### Stage 1 — SA + key creation — 4 events over 2 minutes
 
-The attacker creates a new service account in the project. Within seconds they create a USER_MANAGED key for it (a JSON key file they can download and use externally). The actor is the legitimate `cicd-deployer` user, but the IP is anomalous.
+The attacker creates a new service account in the project. Within seconds they create a USER_MANAGED key for it (a JSON key file they can download and use externally). The actor is the legitimate compromised cloud user (`dalanazi` on Phantom Lab), but the IP is anomalous.
 
 **Data class:** `cloud`
 
@@ -107,9 +111,9 @@ xlog.create_data_worker:
     apiEndpoint:  ["iam.googleapis.com"]
     requestMethod:    ["projects.serviceAccounts.create",
                     "projects.serviceAccounts.keys.create"]
-    resourceName: ["projects/gcp-prod-ExampleCorp/serviceAccounts/data-export-svc@gcp-prod-ExampleCorp.iam.gserviceaccount.com",
-                    "projects/gcp-prod-ExampleCorp/serviceAccounts/data-export-svc@gcp-prod-ExampleCorp.iam.gserviceaccount.com/keys/8f3a91d2c4b7e5a8d6f9b2c1e4a7d3f5b8c2e9a1"]
-    suser:      ["data-export-svc@gcp-prod-ExampleCorp.iam.gserviceaccount.com"]
+    resourceName: ["projects/phantom-lab-prod/serviceAccounts/data-export-svc@phantom-lab-prod.iam.gserviceaccount.com",
+                    "projects/phantom-lab-prod/serviceAccounts/data-export-svc@phantom-lab-prod.iam.gserviceaccount.com/keys/8f3a91d2c4b7e5a8d6f9b2c1e4a7d3f5b8c2e9a1"]
+    suser:      ["data-export-svc@phantom-lab-prod.iam.gserviceaccount.com"]
     keyId:     ["8f3a91d2c4b7e5a8d6f9b2c1e4a7d3f5b8c2e9a1"]
     keyType:   ["USER_MANAGED"]
     description: ["Data export service for nightly batch jobs"]
@@ -121,12 +125,12 @@ xlog.create_data_worker:
 ```
 
 **Field semantics:**
-- `actor_email: cicd-deployer@corp.example` — legitimate user; the anomaly is `actor_ip` and `country`
+- `actor_email` (the compromised cloud user, `dana.alanazi@phantom.lab` on Phantom Lab) — legitimate user; the anomaly is `actor_ip` and `country`
 - `sa_email: data-export-svc@...` — innocuous-sounding name. Attackers typically pick names that blend in with existing infrastructure; "data-export-svc" sounds like a normal data-pipeline component
 - `sa_description` — even more so; attackers fill in description fields to make the SA look legit
 - `sa_key_type: USER_MANAGED` — the riskiest key type. Cloud-managed keys auto-rotate; user-managed are long-lived
 - `caller_user_agent: google-cloud-sdk/470.0.0` — attacker is using gcloud CLI (vs the web console), suggesting scripted automation
-- `access_level: roles/owner (inherited)` — the actor (cicd-deployer) has Owner; this is what gives them permission to create a new SA at all
+- `access_level: roles/owner (inherited)` — the actor (the compromised cloud user) has Owner; this is what gives them permission to create a new SA at all
 
 **Why this fires Rule #17:** the IAM-key-creation event from anomalous `actor_ip` is high-fidelity in any modern cloud-detection ruleset. Even ignoring IP, USER_MANAGED key creation in a production project is rare and worth alerting on.
 
@@ -155,8 +159,8 @@ xlog.create_data_worker:
                     "iam.googleapis.com"]
     requestMethod:    ["projects.setIamPolicy",
                     "projects.serviceAccounts.setIamPolicy"]
-    resourceName: ["projects/gcp-prod-ExampleCorp",
-                    "projects/gcp-prod-ExampleCorp/serviceAccounts/data-export-svc@gcp-prod-ExampleCorp.iam.gserviceaccount.com"]
+    resourceName: ["projects/phantom-lab-prod",
+                    "projects/phantom-lab-prod/serviceAccounts/data-export-svc@phantom-lab-prod.iam.gserviceaccount.com"]
     accessLevel:  ["roles/owner",
                     "roles/iam.serviceAccountTokenCreator",
                     "roles/iam.serviceAccountUser"]
@@ -198,10 +202,10 @@ xlog.create_data_worker:
                     "storage.buckets.get"]
     apiEndpoint:  ["storage.googleapis.com"]
     requestMethod:    ["objects.get", "objects.list"]
-    resourceName: ["projects/_/buckets/ExampleCorp-prod-claims-data/objects/2024/Q1/claims-batch-001.parquet",
-                    "projects/_/buckets/ExampleCorp-prod-claims-data/objects/2024/Q2/claims-batch-002.parquet",
-                    "projects/_/buckets/ExampleCorp-prod-claims-data/objects/2024/Q3/claims-batch-003.parquet"]
-    bucketName:   ["ExampleCorp-prod-claims-data"]
+    resourceName: ["projects/_/buckets/phantom-lab-prod-claims-data/objects/2024/Q1/claims-batch-001.parquet",
+                    "projects/_/buckets/phantom-lab-prod-claims-data/objects/2024/Q2/claims-batch-002.parquet",
+                    "projects/_/buckets/phantom-lab-prod-claims-data/objects/2024/Q3/claims-batch-003.parquet"]
+    bucketName:   ["phantom-lab-prod-claims-data"]
     objectSize:   ["524288000", "1073741824", "2147483648"]
     authenticationMethod: ["service_account_key"]
     keyId:     ["8f3a91d2c4b7e5a8d6f9b2c1e4a7d3f5b8c2e9a1"]
@@ -212,8 +216,8 @@ xlog.create_data_worker:
 
 **Field semantics:**
 - `actor_email: data-export-svc@...` — NOT the original user. The actor is now the new SA (it authenticated with its key). This is exactly the persistence the attacker established
-- `actor_ip: 35.230.x.x / 104.196.x.x` — public-internet GCP infrastructure IPs (us-east4); the attacker is calling the API from outside the ExampleCorp internal network entirely
-- `region: us-east4 / europe-west1` — the SA was created in us-west1 normally; access from a NEW region for THIS SA is the anomaly signal
+- `actor_ip: 35.230.x.x / 104.196.x.x` — public-internet GCP infrastructure IPs (us-east4); the attacker is calling the API from outside the company network entirely
+- `region: us-east4 / europe-west1` — the organization's cloud workloads normally run in its home region (`me-central2` on Phantom Lab); access from a NEW region for THIS SA is the anomaly signal
 - `authentication_method: service_account_key` — explicit signal that the SA is being used with its USER_MANAGED key (vs OAuth token from another impersonator)
 - `object_size: 500 MB - 2 GB per file` — production data files are large
 - `caller_user_agent: python-requests/2.31.0` — a Python library, NOT gcloud CLI. Different tooling than Stage 1 — characteristic of the attacker now operating from their own infrastructure
@@ -229,7 +233,7 @@ xlog.create_data_worker:
 | IAM SA key creation alert from `actor_ip=194.165.16.45` | XSIAM Issues |
 | IAM role-binding-grants-owner alert | XSIAM Issues |
 | Cloud cross-region anomalous access by `data-export-svc@...` | XSIAM Issues |
-| Pivotable: filter by `project=gcp-prod-ExampleCorp` + actor IN (`cicd-deployer`, `data-export-svc`), see all 3 stages | XQL: `config timeframe = 24h \| dataset = <dataset_name of the cloud entry> \| filter <its project field> = "gcp-prod-ExampleCorp" \| limit 20` |
+| Pivotable: filter by `project=<project_id>` + actor IN (the compromised user, `data-export-svc`), see all 3 stages | XQL: `config timeframe = 24h \| dataset = <dataset_name of the cloud entry> \| filter <its project field> = "<project_id>" \| limit 20` |
 
 ## Tear-down
 
@@ -241,4 +245,4 @@ xlog.kill_worker:
 
 ## Adapting per deployment
 
-The cloud-provider-specific action names (`google.iam.admin.v1.CreateServiceAccount`) only match GCP. For AWS, equivalents are `iam.amazonaws.com:CreateUser` + `iam.amazonaws.com:CreateAccessKey` + `sts.amazonaws.com:AssumeRole`. For Azure, `Microsoft.Authorization/roleAssignments/write`. The skill should be retargeted to whichever cloud the operator's stack `cloud` entry references — the chain shape (create identity → escalate → use → access from new location) is universal across providers.
+The cloud-provider-specific action names (`google.iam.admin.v1.CreateServiceAccount`) only match GCP. For AWS, equivalents are `iam.amazonaws.com:CreateUser` + `iam.amazonaws.com:CreateAccessKey` + `sts.amazonaws.com:AssumeRole`. For Azure, `Microsoft.Authorization/roleAssignments/write`. The skill should be retargeted to whichever cloud the operator's stack `cloud` entry references (the AWS account id, Azure tenant or subscription id and GCP project all come from `organization_get section=cloud`) — the chain shape (create identity → escalate → use → access from new location) is universal across providers.

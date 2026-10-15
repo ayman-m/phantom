@@ -174,6 +174,11 @@ _BUILTIN_LEGACY_TOOLS: list[tuple[str, Callable]] = [
     ("jobs_runs", self_mod_tools.jobs_runs),
     ("settings_get", self_mod_tools.settings_get),
     ("personality_get", self_mod_tools.personality_get),
+    # The sample organization every simulation draws its users, hosts and addresses from. Operator workflow state, not a
+    # credential and not catalog metadata: it holds no secret, so the agent may read and edit it (history makes every
+    # edit undoable). See usecase/organization_store.py.
+    ("organization_get", self_mod_tools.organization_get),
+    ("organization_list", self_mod_tools.organization_list),
     ("instances_list", self_mod_tools.instances_list),
     ("instances_get", self_mod_tools.instances_get),
     # Log destinations read-only surface. Agent can list +
@@ -213,6 +218,8 @@ _BUILTIN_LEGACY_TOOLS: list[tuple[str, Callable]] = [
     # Same approval gate as personality_update (shares humanRequired
     # key — see self_mod_tools.personality_patch).
     ("personality_patch", self_mod_tools.personality_patch),
+    ("organization_update", self_mod_tools.organization_update),
+    ("organization_activate", self_mod_tools.organization_activate),
     ("settings_update", self_mod_tools.settings_update),
     ("notifications_dismiss", self_mod_tools.notifications_dismiss),
     ("notifications_dismiss_all", self_mod_tools.notifications_dismiss_all),

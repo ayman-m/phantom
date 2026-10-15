@@ -33,7 +33,7 @@ It fires only when one ingredient is present (below): a failed login shortly bef
 | Required data | Okta |
 | Test period | **30 minutes**: the push flood and the failed login must fall inside the same window |
 | Deduplication | **1 day** per user |
-| What the alert text says | *"The user phantom-lab\<user> received a total of 11 MFA authentication requests during the alert period. Additionally, there were 0 successful and 1 failed logon attempts. The user rejected 11 requests. A user attempted to log in from a rare country for the organization. This authentication attempt was flagged as suspicious due to these characteristics ..."* |
+| What the alert text says | *"The user phantom\<user> received a total of 11 MFA authentication requests during the alert period. Additionally, there were 0 successful and 1 failed logon attempts. The user rejected 11 requests. A user attempted to log in from a rare country for the organization. This authentication attempt was flagged as suspicious due to these characteristics ..."* |
 
 ## The two conditions that make it fire
 
@@ -46,12 +46,12 @@ Whether the Tor address is required (a non-Tor foreign address with a preceding 
 
 ## Route B: the two built-in scenarios (use this first)
 
-Two calls to **`http-sender.generate_events`** for the **same baseline user**, one right after the other. The baseline users are the twelve of the Okta profile (`noura.alharbi`, `khalid.alotaibi`, `abdullah.alzahrani`, `sara.almutairi`, `faisal.alqahtani`, `reem.aldosari`, `omar.alshehri`, `huda.alghamdi`, `yousef.alharthi`, `layla.almalki`, `tariq.alsubaie`, `dana.alanazi`); pick one with **no `Multiple Okta MFA requests ...` alert in the last 24 hours**.
+Two calls to **`http-sender.generate_events`** for the **same baseline user**, one right after the other. The baseline users are the organization's people who may log on, the pool of the Okta profile (`organization_get(section="people")`; the leaver is excluded). Use the part of the email before the `@` (Phantom Lab examples: `noura.alharbi` in Finance, `dana.alanazi` in Engineering). Pick one whose ordinary history already exists on `okta_sso_raw` (the baseline job covers the organization's people; check with precondition 3) and with **no `Multiple Okta MFA requests ...` alert in the last 24 hours**.
 
 1. The failed logins, then a success (29 failures and one success from one real out-of-country address):
 
 ```json
-{"profile": "okta", "scenario": "failed_then_success", "destination": "okta_sso", "count": 30, "spread_seconds": 900, "target_user": "<CHANGE: baseline login, bare name, e.g. reem.aldosari>"}
+{"profile": "okta", "scenario": "failed_then_success", "destination": "okta_sso", "count": 30, "spread_seconds": 900, "target_user": "<CHANGE: baseline login, bare name, e.g. noura.alharbi>"}
 ```
 
 2. The push flood (12 pushes, 12 denials and one approval, from another real out-of-country address):
@@ -62,7 +62,7 @@ Two calls to **`http-sender.generate_events`** for the **same baseline user**, o
 
 Both windows end at the moment of the call, so the 29 failures start 15 minutes earlier and the flood 10 minutes earlier: that is what puts the failed logins **before** the flood inside the 30-minute test window. Do not pass `source_ip` (the scenarios choose an address abroad themselves) and do not use `okta_okta` as the destination. When `list_destinations` shows `cribl_okta_sso` ready, use it in both calls instead of `okta_sso` (the alert fires on either); an instance whose Destination is Cribl only has no `okta_sso`.
 
-Expect an alert like: *"The user phantom-lab\<user> received a total of 12 MFA authentication requests during the alert period. Additionally, there were 0 successful and 29 failed logon attempts. The user rejected 12 requests. The user attempted to log in from a new country at least once. A user attempted to log in from a rare country for the organization. This authentication attempt was flagged as suspicious due to these characteristics"*. The alert's address is the one the failed logins came from.
+Expect an alert like: *"The user phantom\<user> received a total of 12 MFA authentication requests during the alert period. Additionally, there were 0 successful and 29 failed logon attempts. The user rejected 12 requests. The user attempted to log in from a new country at least once. A user attempted to log in from a rare country for the organization. This authentication attempt was flagged as suspicious due to these characteristics"*. The alert's address is the one the failed logins came from.
 
 Check as in Step 3 below (the alert source shows as `XDR_ANALYTICS`; match the name client-side). Step 2's landing check applies too: `dataset = okta_sso_raw | filter actor ~= "<login>" | comp count() by eventtype` should show 30 `user.session.start`, 12 `system.push.send_factor_verify_push`, 12 `user.mfa.okta_verify.deny_push` and 1 `user.authentication.auth_via_mfa`.
 
@@ -236,3 +236,5 @@ If nothing arrives in 20 minutes: re-run Step 2 (all event types present, one IP
 ## Report back to the operator
 
 State the user, exit IP and country, the number of pushes, the Step 2 counts and either the alert id with its arrival time or what you checked. Say the user is deduplicated for 24 hours.
+
+Note: the Cortex `user_name` prefix shown above (`phantom\`) is the first label of the organization's email domain (`phantom.lab`); it was `phantom-lab\` on the previous domain. It has not been re-measured on the tenant, so confirm it on the first replay.

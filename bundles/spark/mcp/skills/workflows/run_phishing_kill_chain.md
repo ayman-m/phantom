@@ -62,6 +62,10 @@ Drive Caldera to execute the bundled `Phantom phishing → ransomware kill chain
 
 11 tactics, 20 techniques. See the `attack:` frontmatter list for the full mapping.
 
+## Pre-flight: the organization does not drive this skill
+
+Every other simulation skill takes its users, hosts and addresses from the active organization (`organization_get`). This one cannot: it runs real commands on two real lab VMs through Caldera. The lab agents (`win-host-01`, `win-host-02`, the addresses `10.0.0.14`, `10.0.0.16` and `10.0.0.81`, the local `phantomlab` admin) belong to the lab, not to the organization, and the lateral ability hardcodes the victim address. Do not map them onto organization hosts or users, and do not invent a company for them. Tell the operator that the telemetry of this chain names the lab VMs, so it will not stitch onto Phantom Lab entities such as PHWS-036 or the organization's servers; to get a stitched, organization-based attack chain use the log-simulation scenarios (`lolbin_lateral_movement`, `malicious_email_to_endpoint_persistence`) instead.
+
 ## Prerequisites
 
 Call these once before firing the chain. The skill checks them and aborts with a clear error message if anything's missing.

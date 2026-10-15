@@ -76,7 +76,7 @@ how_to_use: |
 
   - `count` 1-5000 (default 20), `spread_seconds` (window width, default 120): events are spread oldest-first across the window.
   - `start_offset_minutes`: end the window that many minutes in the past (default 0). Use it to back-date; `_time` follows it only because the pack's parsing rule is installed.
-  - `target_user`: the **recipient** of the attack scenarios, a bare name or email (default: a rotating pool of 12 synthetic users at the instance's `userDomain`, e.g. `noura.alharbi@phantom-lab.example`; never `DOMAIN\user`). Clicks use the same recipient as their message.
+  - `target_user`: the **recipient** of the attack scenarios, a bare name or email (default: a rotating pool of the active organization's people, e.g. `noura.alharbi@phantom.lab`; never `DOMAIN\user`). Clicks use the same recipient as their message.
   - `source_ip`: the **sending mail server** (`senderIP`) for the attack scenarios (default a random real out-of-country address). Ignored by `benign_mail`.
   - **Addresses are real, so Cortex can geo-resolve them** (it derives country and ASN from the IP, not from labels). Each benign sender has one stable address, drawn from a pool of real Saudi ISP ranges plus six out-of-country ones; every attack scenario defaults to one of twelve other out-of-country ranges, so an attacker is never a benign sender's address. A `click-*` event's `clickIP` is the recipient's own stable real Saudi home address, the same one that user has in the `okta` and `google_workspace` profiles. A `source_ip` outside the built-in pools is sent as given.
   - `destination`: use `proofpoint_tap`. A warning is returned for any other destination.

@@ -20,9 +20,12 @@ a TIME_FIELD that is always present. Without the pack installed the dataset is r
 Addresses are real, geo-resolvable public IPs from `ippools` (Cortex derives country and ASN from the
 IP itself). Benign mail comes from a stable address per sender, drawn from the Saudi home pool and the
 first six out-of-country ranges. A click comes from the recipient's own stable home address, the one
-the same user has in the `okta` and `google_workspace` profiles. Every attack scenario sends from the
+the same person has in the `okta` and `google_workspace` profiles. Every attack scenario sends from the
 other twelve out-of-country ranges, so no attacker address is ever a benign sender's. Everything else
 here is synthetic: names and ids are fictitious, and mail and URL hosts are on `.example` / `.invalid`.
+
+The recipients are the active organization's people who may log on (leavers excluded), by their email; `target_user` names
+one of them (login, email or the part before the @). The outside senders are not the organization's and stay here.
 """
 from __future__ import annotations
 
@@ -30,7 +33,9 @@ import random
 from datetime import datetime, timedelta
 from typing import Any
 
-from . import ippools
+from runtime.organization_view import OrganizationView
+
+from . import _org, ippools
 from .okta import _times, iso  # one windowing and timestamp convention across profiles
 
 # The profile interface (see profiles/__init__.py).
@@ -50,12 +55,6 @@ TIME_FIELD = "messageTime"
 SCENARIOS = ("benign_mail", "phishing_url", "malware_attachment", "credential_phishing",
              "bec_impostor", "click_chain")
 
-_USERS = [
-    ("Noura", "Alharbi"), ("Khalid", "Alotaibi"), ("Abdullah", "Alzahrani"),
-    ("Sara", "Almutairi"), ("Faisal", "Alqahtani"), ("Reem", "Aldosari"),
-    ("Omar", "Alshehri"), ("Huda", "Alghamdi"), ("Yousef", "Alharthi"),
-    ("Layla", "Almalki"), ("Tariq", "Alsubaie"), ("Dana", "Alanazi"),
-]
 _BENIGN_SENDERS = [
     ("Acme Notifications", "notifications@acme-saas.example"),
     ("Contoso Billing", "billing@contoso-billing.example"),
@@ -108,12 +107,13 @@ _ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-
 class _Factory:
     """Deterministic when seeded, so the tests can assert on exact output."""
 
-    def __init__(self, domain: str, seed: int | None = None) -> None:
+    def __init__(self, view: OrganizationView, seed: int | None = None) -> None:
         self.rng = random.Random(seed)
-        self.domain = domain
+        self.view = view
+        self.domain = view.email_domain
         self._seen: set[str] = set()
-        # user number -> login, inverted: a recipient's number picks the same home address as in the other profiles
-        self._numbered = {self.user(i): i for i in range(len(ippools.HOME))}
+        self.pool = _org.logon_people(view)
+        self._by_email = {p["email"].lower(): p for p in view.people}
 
     # -- ids and addresses ----------------------------------------------
     def _unique(self, make: Any) -> str:
@@ -134,9 +134,8 @@ class _Factory:
         return f"{self.rng.getrandbits(bits):0{bits // 4}x}"
 
     def user(self, index: int) -> str:
-        first, last = _USERS[index % len(_USERS)]
-        suffix = "" if index < len(_USERS) else str(index // len(_USERS) + 1)
-        return f"{first.lower()}.{last.lower()}{suffix}@{self.domain}"
+        """The email of person number `index` of the pool (it wraps around the organization)."""
+        return _org.email(self.pool[index % len(self.pool)])
 
     @staticmethod
     def benign_ip(sender_index: int) -> str:
@@ -149,7 +148,7 @@ class _Factory:
 
     def home_ip(self, login: str) -> str:
         """The recipient's home address: where their clicks come from."""
-        return ippools.home_for(ippools.index_of(login, self._numbered))[0]
+        return _org.home(self._by_email.get(login.lower()) or {"login": login})[0]
 
     def url(self) -> str:
         token = self.hexdigest(64)
@@ -254,10 +253,10 @@ class _Factory:
 
 
 def _named_user(f: _Factory, login: str | None) -> str | None:
+    """`target_user` as the email of the organization's person it names (one spelling per identity)."""
     if not login:
         return None
-    login = login.rsplit("\\", 1)[-1].lower()  # one spelling per identity, no DOMAIN\\user form
-    return login if "@" in login else f"{login}@{f.domain}"
+    return _org.email(_org.resolve(f.view, login))
 
 
 def _recipients(f: _Factory, index: int, victim: str | None) -> list[str]:
@@ -359,7 +358,7 @@ def _click_chain(f: _Factory, times: list[datetime], victim: str | None, ip: str
 
 
 def build_events(
-    scenario: str, count: int, *, domain: str, now: datetime,
+    scenario: str, count: int, *, view: OrganizationView, now: datetime,
     spread_seconds: int = 120, start_offset_minutes: int = 0,
     target_user: str | None = None, source_ip: str | None = None, seed: int | None = None,
 ) -> list[dict[str, Any]]:
@@ -368,13 +367,13 @@ def build_events(
     The window ends `start_offset_minutes` before `now` and is `spread_seconds` wide; nothing
     is ever dated after `now`. `target_user` is the recipient of the attack scenarios (default:
     a rotating pool) and `source_ip` the sending mail server (default: a random out-of-country
-    address). Both are ignored by `benign_mail`.
+    address). Both are ignored by `benign_mail`. The recipients are the organization's people (`view`).
     """
     if scenario not in SCENARIOS:
         raise ValueError(f"unknown scenario {scenario!r}; choose one of {', '.join(SCENARIOS)}")
     if count < 1:
         raise ValueError("count must be at least 1")
-    f = _Factory(domain, seed)
+    f = _Factory(view, seed)
     end = now - timedelta(minutes=max(start_offset_minutes, 0))
     times = _times(end, count, spread_seconds)
 
@@ -392,9 +391,9 @@ def build_events(
     return _click_chain(f, times, victim, source_ip)
 
 
-def sample_event(*, domain: str, now: datetime) -> dict[str, Any]:
+def sample_event(*, view: OrganizationView, now: datetime) -> dict[str, Any]:
     """One benign, unmistakably-synthetic delivered message for proving the collector path."""
-    f = _Factory(domain)
+    f = _Factory(view)
     return f.message(
         when=now, log_type="message-delivered", sender=("Phantom Sender", "phantom-sender@sample-vendor.example"),
-        recipients=[f"phantom.test@{domain}"], subject="Phantom collector test message", ip=f.benign_ip(0))
+        recipients=[f"phantom.test@{view.email_domain}"], subject="Phantom collector test message", ip=f.benign_ip(0))

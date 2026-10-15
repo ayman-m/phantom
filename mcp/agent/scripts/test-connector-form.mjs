@@ -32,9 +32,9 @@ const { BUNDLE_CONFIG } = await import("../lib/bundle-connector-config.ts");
 const params = BUNDLE_CONFIG["http-sender"];
 const byName = (name) => params.find((p) => p.name === name);
 const names = (list) => list.map((p) => p.name);
-const COMMON = ["userDomain", "verifyTls", "timeoutSeconds"];
+const COMMON = ["organization", "verifyTls", "timeoutSeconds"];
 const HTTP_FIELDS = ["collectorUrl", "vendor", "product", "collectorKey", "additionalDestinations", "additionalKeys"];
-const CRIBL_FIELDS = ["criblUrl", "criblToken", "criblIntegration", "windowsDnsSuffix"];
+const CRIBL_FIELDS = ["criblUrl", "criblToken", "criblIntegration"];
 const inOrder = (shown) => params.map((p) => p.name).filter((n) => shown.includes(n));
 
 test("the mode defaults to http before anything is typed, so only the HTTP fields show", () => {
@@ -53,7 +53,7 @@ test("both shows every field", () => {
 });
 
 test("a field with no showWhen is always visible, and an unknown controller value hides", () => {
-  assert.ok(isVisible(byName("userDomain"), params, { destinationMode: "cribl" }));
+  assert.ok(isVisible(byName("organization"), params, { destinationMode: "cribl" }));
   assert.ok(!isVisible(byName("collectorUrl"), params, { destinationMode: "nonsense" }));
 });
 
@@ -80,7 +80,7 @@ test("filling the visible required fields satisfies the check, whatever the hidd
 test("a stored secret counts as filled, a default counts, blank spaces do not", () => {
   assert.deepEqual(names(missingRequired(params, { destinationMode: "cribl", criblUrl: "https://x" }, ["criblToken"])), []);
   assert.deepEqual(names(missingRequired(params, { destinationMode: "cribl", criblUrl: "  ", criblToken: "t" })), ["criblUrl"]);
-  assert.equal(valueOf(byName("userDomain"), {}), "phantom-lab.example");
+  assert.equal(valueOf(byName("timeoutSeconds"), {}), "15");
 });
 
 test("mode inference: both sides is both, only the Cribl side is cribl, anything else is http", () => {
@@ -152,7 +152,6 @@ test("Edit starts from every declared field, the saved config and the masked slo
   assert.equal(values.timeoutSeconds, "30");
   assert.equal(values.collectorKey, MASK);
   assert.equal(values.criblToken, undefined, "a slot never set stays empty so it can be filled in");
-  assert.equal(values.userDomain, "phantom-lab.example");
   assert.equal(values.destinationMode, "http");
 });
 
@@ -170,11 +169,11 @@ test("Edit infers the mode of an older instance, and keeps a saved one", () => {
 test("Create in http mode sends the HTTP fields and no Cribl ones, even if some were typed first", () => {
   const sent = buildCreatePayload(params, {
     destinationMode: "http", collectorUrl: "https://a", vendor: "Okta", product: "SSO", collectorKey: "k1",
-    criblUrl: "https://b", criblToken: "t1", criblIntegration: "x", userDomain: "phantom-lab.example", timeoutSeconds: "15", verifyTls: "true",
+    criblUrl: "https://b", criblToken: "t1", criblIntegration: "x", timeoutSeconds: "15", verifyTls: "true",
   });
   assert.deepEqual(sent.config, {
     destinationMode: "http", collectorUrl: "https://a", vendor: "Okta", product: "SSO",
-    userDomain: "phantom-lab.example", timeoutSeconds: 15, verifyTls: true,
+    timeoutSeconds: 15, verifyTls: true,
   });
   assert.deepEqual(sent.secrets, { collectorKey: "k1" });
 });
@@ -214,7 +213,7 @@ test("Edit adds the Cribl endpoint to an HTTP-only instance: the token is a new 
 test("Edit does not add never-saved fields that were left at their defaults", () => {
   const values = seedEditValues("http-sender", params, savedHttp);
   const sent = buildEditPayload(params, values, savedHttp);
-  for (const k of ["userDomain", "timeoutSeconds", "verifyTls", "criblIntegration", "windowsDnsSuffix", "destinationMode", "criblUrl"]) {
+  for (const k of ["organization", "timeoutSeconds", "verifyTls", "criblIntegration", "destinationMode", "criblUrl"]) {
     assert.ok(!(k in sent.config), k + " was never saved and was not touched");
   }
   assert.deepEqual(Object.keys(sent.config).sort(), ["additionalDestinations", "collectorUrl", "extra_flag", "product", "vendor"]);
@@ -359,8 +358,7 @@ test("the http-sender card matches connector.yaml: mode switch, defaults and per
     criblUrl: { showWhen: CRIBL, clearWhenHidden: true, required: true },
     criblToken: { showWhen: CRIBL, clearWhenHidden: undefined, required: true },
     criblIntegration: { showWhen: CRIBL, clearWhenHidden: undefined, required: false },
-    windowsDnsSuffix: { showWhen: CRIBL, clearWhenHidden: undefined, required: false },
-    userDomain: { showWhen: undefined, clearWhenHidden: undefined, required: false },
+    organization: { showWhen: undefined, clearWhenHidden: undefined, required: false },
     verifyTls: { showWhen: undefined, clearWhenHidden: undefined, required: false },
     timeoutSeconds: { showWhen: undefined, clearWhenHidden: undefined, required: false },
   };

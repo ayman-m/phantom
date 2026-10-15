@@ -87,10 +87,14 @@ The FortiGate schema has no response-code, TTL, query-length or category fields,
 
 Say in the report that Stages 1-2 ran through the FortiGate DNS subsystem, which carries the query name and type but not the response code, so the DGA and tunneling detectors that depend on NXDOMAIN ratios or TTL are less likely to fire.
 
+## Pre-flight: read the organization
+
+An implant that starts inside runs from the outlier, so its behaviour stands out against peers. Call `organization_get(section="personas")` for the outlier (the person and their workstation) and `organization_get(section="hosts", filter="role=dc")` for the internal DNS resolver. Do not invent a user, workstation or resolver.
+
 ## Narrative thread
 
-- **Compromised host:** `wks-rdavies-01` at `10.10.20.55` (sales operations, `r.davies`)
-- **Internal DNS resolver:** `10.10.0.53` (sees all internal queries, forwards external ones to `8.8.8.8`)
+- **Compromised host:** the outlier's workstation (`flag=outlier`). Take the login, workstation and address from the people row. Phantom Lab example: `aalzamil` (Anas Alzamil, DevOps Engineer) on PHWS-036 at `10.20.16.55`.
+- **Internal DNS resolver:** the organization marks no resolver host, so use a domain controller, which serves DNS for the Active Directory domain: PHDC01 (`10.20.0.10` on Phantom Lab). It sees all internal queries and forwards external ones. Say in the report that the resolver is the domain controller; if the operator runs a separate resolver, they can add it with `organization_update`.
 - **Attacker-controlled domain (Stage 1 probe pool):** `cdn-update-svc.tk`, `api-metrics-collector.cf`, `static-asset-cdn.ml`, `sync-telemetry-relay.gq`, plus 50 DGA noise siblings
 - **Tunneling base domain (Stage 2 once one is selected):** `api-metrics-collector.cf`
 - **Attacker NS (Stage 3):** `185.220.101.42` (Tor exit, threat-intel known-bad)
@@ -113,9 +117,9 @@ xlog.create_data_worker:
   interval: 12
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:       ["10.10.20.55"]
-    shost:     ["wks-rdavies-01"]
-    suser:         ["r.davies"]
+    src:       ["<outlier workstation address: 10.20.16.55>"]
+    shost:     ["<outlier workstation: PHWS-036>"]
+    suser:         ["<outlier login: aalzamil>"]
     spt:     ["49152", "51234", "57890"]
     dpt:     ["53"]
     proto:     ["udp", "tcp"]
@@ -158,9 +162,9 @@ xlog.create_data_worker:
   interval: 2
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:       ["10.10.20.55"]
-    shost:     ["wks-rdavies-01"]
-    suser:         ["r.davies"]
+    src:       ["<outlier workstation address: 10.20.16.55>"]
+    shost:     ["<outlier workstation: PHWS-036>"]
+    suser:         ["<outlier login: aalzamil>"]
     spt:     ["49251", "51234", "60127"]
     dpt:     ["53"]
     proto:     ["udp", "tcp"]
@@ -209,7 +213,7 @@ xlog.create_data_worker:
   max_events: 120
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.0.53"]
+    src:        ["<internal DNS resolver address: 10.20.0.10 for PHDC01>"]
     dst:        ["185.220.101.42"]
     dpt:      ["53"]
     proto:      ["udp", "tcp"]
@@ -223,7 +227,7 @@ xlog.create_data_worker:
 ```
 
 **Field semantics:**
-- `src_ip: 10.10.0.53` — the internal DNS resolver, NOT the workstation. The workstation queries the resolver; the resolver forwards to external NS. So at the firewall, the source is the resolver
+- `src_ip` (PHDC01 at `10.20.0.10` on Phantom Lab) — the internal DNS resolver, NOT the workstation. The workstation queries the resolver; the resolver forwards to external NS. So at the firewall, the source is the resolver
 - `dst_ip` — the attacker's name server (matches Stage 2's `response_ip`)
 - `dst_port: 53` over both UDP (most queries) and TCP (large TXT responses force fallback to TCP)
 - `country: RU` — the destination country geo-enriches as RU; legitimate authoritative servers for `.cf` domains are typically in Frankfurt, Amsterdam — not Moscow
@@ -240,7 +244,7 @@ xlog.create_data_worker:
 | DGA / high-entropy DNS alert | XSIAM Issues |
 | DNS tunneling alert against `api-metrics-collector.cf` | XSIAM Issues |
 | C2 beaconing alert with destination `185.220.101.42` | XSIAM Issues |
-| Pivotable: source host `10.10.20.55` correlates all 3 alerts | XQL: `config timeframe = 24h \| dataset = <dataset_name of the Stage 1-2 entry> \| filter <its source-host field> = "wks-rdavies-01" \| limit 20` (for FortiGate: `dataset = fortinet_fortigate_raw`, `FTNTFGTsubtype = "dns-response"`, `shost`) |
+| Pivotable: the outlier's workstation address (`10.20.16.55` on Phantom Lab) correlates all 3 alerts | XQL: `config timeframe = 24h \| dataset = <dataset_name of the Stage 1-2 entry> \| filter <its source-host field> = "<outlier workstation: PHWS-036>" \| limit 20` (for FortiGate: `dataset = fortinet_fortigate_raw`, `FTNTFGTsubtype = "dns-response"`, `shost`) |
 
 ## Tear-down
 
@@ -252,4 +256,4 @@ xlog.kill_worker:
 
 ## Adapting per deployment
 
-The attacker IP `185.220.101.42` is illustrative. In a real exercise tied to a customer's threat-intel feed, replace it with an IP / domain pulled from the customer's TI program so the alerts also light up that integration's enrichment.
+The attacker IP `185.220.101.42` is illustrative. In a real exercise tied to a threat-intel feed, replace it with an IP / domain pulled from the operator's TI program so the alerts also light up that integration's enrichment. The compromised host and the resolver always come from the active organization (`organization_get`).

@@ -33,8 +33,10 @@ only `ipAddress`, and Cortex resolves country and ASN from the address itself, s
 real Saudi home address followed by a real out-of-country one (see `ippools`).
 
 Every user has one stable Saudi home address, the same one the user has in the `okta` and
-`proofpoint_tap` profiles. Everything else here is synthetic: actors, owners and ids are fictitious
-and the external-share target is on a reserved `.example` domain.
+`proofpoint_tap` profiles. The actors and owners are the active organization's people who may log on (leavers excluded), by
+email, with the person's own `home_ip`; `ownerDomain` is the organization's email domain and the external-share target is
+on its `partner_domain`. `target_user` names one of its people (login, email or the part before the @). Everything else
+here is synthetic: ids are fictitious.
 """
 from __future__ import annotations
 
@@ -43,7 +45,9 @@ import random
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from . import ippools
+from runtime.organization_view import OrganizationView
+
+from . import _org, ippools
 
 # The profile interface (see profiles/__init__.py).
 NAME = "google_workspace"
@@ -62,14 +66,6 @@ TEST_ID_FIELD = "etag"
 TIME_FIELD = "id.time"
 SCENARIOS = ("benign_drive", "public_share", "sensitive_download", "impossible_travel_login")
 
-_USERS = [
-    ("Noura", "Alharbi"), ("Khalid", "Alotaibi"), ("Abdullah", "Alzahrani"),
-    ("Sara", "Almutairi"), ("Faisal", "Alqahtani"), ("Reem", "Aldosari"),
-    ("Omar", "Alshehri"), ("Huda", "Alghamdi"), ("Yousef", "Alharthi"),
-    ("Layla", "Almalki"), ("Tariq", "Alsubaie"), ("Dana", "Alanazi"),
-]
-# Reserved (RFC 2606) domain for the outside party of an external share.
-_PARTNER_DOMAIN = "external-partner.example"
 
 _DOC_TYPES = ["document", "spreadsheet", "presentation", "pdf"]
 _TITLES = [
@@ -114,18 +110,18 @@ def _bool_param(name: str, value: bool) -> dict[str, Any]:
 class _Factory:
     """Deterministic when seeded, so the tests can assert on exact output."""
 
-    def __init__(self, domain: str, seed: int | None = None) -> None:
+    def __init__(self, view: OrganizationView, seed: int | None = None) -> None:
         self.rng = random.Random(seed)
-        self.domain = domain
+        self.view = view
+        self.domain = view.email_domain
         self.customer_id = "C0" + "".join(self.rng.choice(_ID_CHARS[:26] + _ID_CHARS[52:]) for _ in range(7))
-        # user number -> email, inverted: an actor's number picks the same home address as in the other profiles
-        self._numbered = {self.user(i): i for i in range(len(ippools.HOME))}
+        self.pool = _org.logon_people(view)
+        self._by_email = {p["email"].lower(): p for p in view.people}
 
     # -- identities and ids ---------------------------------------------
     def user(self, index: int) -> str:
-        first, last = _USERS[index % len(_USERS)]
-        suffix = "" if index < len(_USERS) else str(index // len(_USERS) + 1)
-        return f"{first.lower()}.{last.lower()}{suffix}@{self.domain}"
+        """The email of person number `index` of the pool (it wraps around the organization)."""
+        return _org.email(self.pool[index % len(self.pool)])
 
     @staticmethod
     def profile_id(email: str) -> str:
@@ -134,13 +130,13 @@ class _Factory:
         digits = "".join(str((n // 10**i) % 10) for i in range(21))
         return "1" + digits[1:] if digits[0] == "0" else digits
 
-    @staticmethod
-    def home_ip(index: int) -> str:
-        return ippools.home_for(index)[0]
+    def home_ip(self, index: int) -> str:
+        """The home address of person number `index` of the pool."""
+        return _org.home(self.pool[index % len(self.pool)])[0]
 
     def actor_ip(self, email: str) -> str:
-        """The actor's home address (a stable one even for an identity outside the user pool)."""
-        return self.home_ip(ippools.index_of(email, self._numbered))
+        """The actor's home address: the person's own."""
+        return _org.home(self._by_email.get(email.lower()) or {"login": email})[0]
 
     def remote_ip(self) -> str:
         """An address outside the country: far from every home address."""
@@ -189,7 +185,7 @@ class _Factory:
         if kind == "share_public":
             params += [_str_param("old_visibility", "private"), _str_param("new_visibility", visibility)]
         elif kind == "share_external":
-            params += [_str_param("target_user", f"reviewer.{self.rng.randint(100, 999)}@{_PARTNER_DOMAIN}"),
+            params += [_str_param("target_user", f"reviewer.{self.rng.randint(100, 999)}@{_org.partner_domain(self.view)}"),
                        {"name": "old_value", "multiValue": ["none"]}, {"name": "new_value", "multiValue": ["can_view"]}]
         return self.activity(when=when, app="drive", actor=actor, ip=ip, etype=etype, name=name, parameters=params)
 
@@ -214,7 +210,7 @@ def _times(end: datetime, count: int, spread_seconds: int) -> list[datetime]:
 
 
 def build_events(
-    scenario: str, count: int, *, domain: str, now: datetime,
+    scenario: str, count: int, *, view: OrganizationView, now: datetime,
     spread_seconds: int = 120, start_offset_minutes: int = 0,
     target_user: str | None = None, source_ip: str | None = None, seed: int | None = None,
 ) -> list[dict[str, Any]]:
@@ -222,7 +218,8 @@ def build_events(
 
     The window ends `start_offset_minutes` before `now` and is `spread_seconds` wide; nothing is
     ever dated after `now`. `impossible_travel_login` is the one exception to a single window: its
-    earlier logins sit a further 2.5 to 6 hours back, and it needs `count` >= 2.
+    earlier logins sit a further 2.5 to 6 hours back, and it needs `count` >= 2. The actors are the organization's
+    people (`view`); `target_user` is one of them.
     """
     if scenario not in SCENARIOS:
         raise ValueError(f"unknown scenario {scenario!r}; choose one of {', '.join(SCENARIOS)}")
@@ -230,13 +227,13 @@ def build_events(
         raise ValueError("count must be at least 1")
     if scenario == "impossible_travel_login" and count < 2:
         raise ValueError("impossible_travel_login needs count >= 2")
-    f = _Factory(domain, seed)
+    f = _Factory(view, seed)
     end = now - timedelta(minutes=max(start_offset_minutes, 0))
     times = _times(end, count, spread_seconds)
 
     if scenario == "benign_drive":
         return _benign(f, times)
-    actor = _named_user(f, target_user, domain)
+    actor = _named_user(f, target_user)
     if scenario == "public_share":
         return _public_share(f, times, actor, source_ip or f.actor_ip(actor))
     if scenario == "sensitive_download":
@@ -244,17 +241,17 @@ def build_events(
     return _impossible_travel(f, times, actor, source_ip or f.remote_ip(), spread_seconds)
 
 
-def _named_user(f: _Factory, login: str | None, domain: str) -> str:
+def _named_user(f: _Factory, login: str | None) -> str:
+    """`target_user` as the email of the organization's person it names (first person of the pool when none is given)."""
     if not login:
         return f.user(0)
-    login = login.rsplit("\\", 1)[-1].lower()  # a DOMAIN\\user form collapses identity in Cortex analytics
-    return login if "@" in login else f"{login}@{domain}"
+    return _org.email(_org.resolve(f.view, login))
 
 
 def _benign(f: _Factory, times: list[datetime]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for i, when in enumerate(times):
-        idx = i // 2 % len(_USERS)
+        idx = i // 2 % len(f.pool)
         out.append(f.drive(_BENIGN_MIX[i % len(_BENIGN_MIX)], when, f.user(idx), f.user(idx + 1),
                            f.home_ip(idx), f.doc()))
     return out
@@ -267,7 +264,7 @@ def _public_share(f: _Factory, times: list[datetime], actor: str, ip: str) -> li
 
 def _sensitive_download(f: _Factory, times: list[datetime], actor: str, ip: str) -> list[dict[str, Any]]:
     """A burst of downloads of sensitive-looking files by one actor. The files belong to others."""
-    return [f.drive("download", t, actor, f.user(1 + i % (len(_USERS) - 1)), ip, f.doc(sensitive=True))
+    return [f.drive("download", t, actor, f.user(1 + i % max(len(f.pool) - 1, 1)), ip, f.doc(sensitive=True))
             for i, t in enumerate(times)]
 
 
@@ -282,7 +279,7 @@ def _impossible_travel(f: _Factory, times: list[datetime], actor: str, far_ip: s
             + [f.login(t, actor, far_ip, ok=True) for t in times[early:]])
 
 
-def sample_event(*, domain: str, now: datetime) -> dict[str, Any]:
-    """One benign, unmistakably-synthetic login for proving the collector path."""
-    f = _Factory(domain)
-    return f.login(now, f"phantom.test@{domain}", f.home_ip(0), ok=True)
+def sample_event(*, view: OrganizationView, now: datetime) -> dict[str, Any]:
+    """One benign, unmistakably-synthetic login (a test user of the organization's domain) for proving the collector path."""
+    f = _Factory(view)
+    return f.login(now, f"phantom.test@{view.email_domain}", ippools.home_for(0)[0], ok=True)

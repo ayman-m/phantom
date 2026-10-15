@@ -115,8 +115,8 @@ def mock(seen):
 @pytest.fixture
 def cfg(monkeypatch):
     values = {"url": HTTP_URL, "key": HTTP_KEY, "vendor": "Okta", "product": "SSO", "extra": "", "extra_keys": "",
-              "domain": "lab.test", "verify_tls": True, "timeout": 5.0, "cribl_url": URL, "cribl_token": TOKEN,
-              "cribl_integration": "wave-7", "windows_dns": DNS}
+              "organization": "", "verify_tls": True, "timeout": 5.0, "cribl_url": URL, "cribl_token": TOKEN,
+              "cribl_integration": "wave-7"}
     monkeypatch.setattr(connector, "_settings", lambda: dict(values))
     return values
 
@@ -324,30 +324,55 @@ def test_structured_and_xml_items_can_be_mixed_structured_first(cfg, wire):
 
 # -- the DNS suffix and the settings ------------------------------------------------------------------------------
 
-def test_short_computer_names_get_the_configured_suffix(cfg, wire):
-    cfg["windows_dns"] = "corp.example"
+def organization_with_domain(monkeypatch, bundled_organization, dns: str, netbios: str) -> None:
+    """The active organization becomes a copy of Phantom Lab on another domain (the autouse fixture restores the loader)."""
+    import copy
+
+    from runtime import organization_view as ov
+
+    other = copy.deepcopy(bundled_organization)
+    other["id"] = "corp"
+    other["domain"].update(dns=dns, netbios=netbios, email_domain=dns)
+    ov.set_organization_loader(lambda pinned: other)
+
+
+def test_short_computer_names_get_the_organizations_suffix(cfg, wire, monkeypatch, bundled_organization):
+    organization_with_domain(monkeypatch, bundled_organization, "corp.example", "CORP")
     connector.phantom_send_events([logon(computer="PHDC02"), logon(computer="srv.other.test")], destination="cribl_windows_events")
     xml = "".join(line["data"] for line in lines_of(wire[0]))
     assert "<Computer>PHDC02.corp.example</Computer>" in xml and "<Computer>srv.other.test</Computer>" in xml
 
 
-def test_a_settings_dict_without_the_suffix_uses_the_default(cfg, wire):
-    del cfg["windows_dns"]
+def test_short_computer_names_get_phantom_labs_suffix_by_default(cfg, wire):
     connector.phantom_send_events([logon(computer="PHDC02")], destination="cribl_windows_events")
     assert "<Computer>PHDC02.phantom.lab</Computer>" in lines_of(wire[0])[0]["data"]
 
 
-def test_settings_reads_windowsDnsSuffix_with_a_default(monkeypatch):
+def test_a_missing_organization_is_a_clear_error_and_nothing_is_sent(cfg, wire):
+    from runtime import organization_view as ov
+    from runtime.organization_reader import OrganizationUnavailable
+
+    def broken(pinned):
+        raise OrganizationUnavailable("organization.db not found at /app/data/organization.db")
+
+    ov.set_organization_loader(broken)
+    for result in (connector.phantom_send_events([logon(computer="PHDC02")], destination="cribl_windows_events"),
+                   connector.phantom_send_test_event(destination="cribl_windows_events")):
+        assert not result["ok"] and "organization.db not found" in result["error"]
+    assert wire == []
+    # An item that is already XML needs no DNS suffix to be checked, but the tool still reads the organization: same error.
+    assert not connector.phantom_send_events(["<Event/>"], destination="cribl_windows_events")["ok"] and wire == []
+
+
+def test_the_connector_has_no_windows_dns_setting_of_its_own(monkeypatch):
     import types
 
     cfg_mod = types.ModuleType("config.config")
     monkeypatch.setitem(sys.modules, "config", types.ModuleType("config"))
     monkeypatch.setitem(sys.modules, "config.config", cfg_mod)
-    base = dict(collectorUrl=HTTP_URL, collectorKey=HTTP_KEY, vendor="Okta", product="SSO")
-    for given, expected in (({}, "phantom.lab"), ({"windowsDnsSuffix": ""}, "phantom.lab"), ({"windowsDnsSuffix": "  "}, "phantom.lab"),
-                            ({"windowsDnsSuffix": " Corp.Example "}, "Corp.Example")):  # stripped, never re-cased: as wec-sender
-        cfg_mod.get_config = lambda given=given: types.SimpleNamespace(**base, **given)
-        assert connector._settings()["windows_dns"] == expected
+    cfg_mod.get_config = lambda: types.SimpleNamespace(collectorUrl=HTTP_URL, collectorKey=HTTP_KEY, vendor="Okta",
+                                                      product="SSO", windowsDnsSuffix="elsewhere.test")
+    assert "windows_dns" not in connector._settings() and "elsewhere.test" not in repr(connector._settings())
 
 
 # -- the test event -----------------------------------------------------------------------------------------------
@@ -373,14 +398,30 @@ def test_send_test_event_posts_one_rendered_4624_by_a_fresh_actor(cfg, wire):
     assert wire[0].headers["source-identifier"] == WIN.uuid and all(isinstance(line["data"], str) for r in wire for line in lines_of(r))
 
 
-def test_the_test_event_follows_the_dns_suffix_lower_cased_as_wec_senders_does(cfg, wire):
-    cfg["windows_dns"] = "Corp.Example"
+def test_the_test_event_follows_the_organizations_domain(cfg, wire, monkeypatch, bundled_organization):
+    organization_with_domain(monkeypatch, bundled_organization, "Corp.Example", "corp")
     result = connector.phantom_send_test_event(destination="cribl_windows_events")
     named = {d.get("Name"): d.text for d in ET.fromstring(lines_of(wire[0])[0]["data"]).iter() if d.get("Name")}
-    assert result["computers"] == {"PHANTOM-CRIBLTEST01.corp.example": 1} and named["TargetDomainName"] == "CORP"
-    # while send_events uses the suffix as given, like wec-sender's send_events
-    connector.phantom_send_events([logon(computer="PHDC02")], destination="cribl_windows_events")
-    assert "<Computer>PHDC02.Corp.Example</Computer>" in lines_of(wire[1])[0]["data"]
+    assert result["computers"] == {"CORP-CRIBLTEST01.corp.example": 1} and named["TargetDomainName"] == "CORP"
+    assert named["TargetUserSid"].startswith(bundled_organization["domain"]["sid"] + "-")
+    assert named["SubjectUserName"] == "CORP-CRIBLTEST01$" and named["WorkstationName"] == "CORP-CRIBLTEST01"
+
+
+def test_the_test_event_comes_from_the_unmanaged_pool_and_needs_one(cfg, wire, bundled_organization):
+    import copy
+    import ipaddress
+
+    from runtime import organization_view as ov
+
+    event, _ = windows_events.build_test_event(ov.get_view(), "11111111-2222-3333-4444-555555555555",
+                                              datetime(2026, 10, 5, 10, 0, 0, tzinfo=timezone.utc))
+    low, high = ov.get_view().fresh_ip_range()
+    assert low <= int(ipaddress.ip_address(event["event_data"]["IpAddress"])) <= high
+    without = copy.deepcopy(bundled_organization)
+    without["networks"] = [n for n in without["networks"] if n["kind"] != "unmanaged"]
+    ov.set_organization_loader(lambda pinned: without)
+    result = connector.phantom_send_test_event(destination="cribl_windows_events")
+    assert not result["ok"] and "unmanaged" in result["error"] and wire == []
 
 
 def test_the_windows_test_event_returns_exactly_the_declared_keys(cfg, wire):
@@ -402,14 +443,17 @@ def test_the_windows_test_event_returns_exactly_the_declared_keys(cfg, wire):
 
 def test_the_test_event_matches_wec_senders(cfg):
     """Same shape as wec-sender's phantom_send_test_event 4624, except for the actor (fresh here)."""
+    from runtime import organization_view as ov
+
     wec_profile = wec_connector.profiles.windows
-    directory = wec_profile.Directory("PHANTOM", DNS, 32)
+    directory = wec_profile.directory()
     now = datetime(2026, 10, 5, 10, 0, 0, tzinfo=timezone.utc)
     test_id = "11111111-2222-3333-4444-555555555555"
-    event, facts = windows_events.build_test_event(DNS, test_id, now)
+    event, facts = windows_events.build_test_event(ov.get_view(), test_id, now)
     theirs = wec_profile.synthetic_test_logon(directory, "PHANTOM-CRIBLTEST01." + DNS, test_id, now)
     ours = dict(event["event_data"])
-    for key in ("TargetUserName", "TargetUserSid", "TargetLogonId"):  # the actor is fresh here, fixed there
+    # The actor is fresh here and fixed there; each connector's test host has its own address inside the organization's pool.
+    for key in ("TargetUserName", "TargetUserSid", "TargetLogonId", "IpAddress"):
         ours.pop(key), theirs.data.pop(key)
     assert ours == theirs.data and event["event_id"] == theirs.event_id == 4624 and event["channel"] == "Security"
     assert facts["actor"] == "phantom.test111111"
@@ -514,7 +558,6 @@ def test_the_docstrings_and_the_manifest_tell_the_agent_not_to_build_xml():
     tools = {t["name"]: t for t in spec["spec"]["tools"]}
     for text in (connector.phantom_send_events.__doc__, tools["send_events"]["description"] + tools["send_events"]["args"][0]["description"]):
         assert "wec-sender.send_events" in text and re.search(r"(?i)do not (hand-)?build xml", text) and "4728" in text
-    assert "windowsDnsSuffix" in spec["configSchema"]["properties"]
-    assert spec["configSchema"]["properties"]["windowsDnsSuffix"]["default"] == "phantom.lab"
+    assert "windowsDnsSuffix" not in spec["configSchema"]["properties"]    # the DNS suffix is the organization's
     assert "cribl_windows_events" in tools["send_test_event"]["description"]
     assert spec["version"] == "1.0.0" and "image" not in spec  # a bundle connector pins no image

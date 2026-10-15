@@ -10,12 +10,15 @@ produced no normalized feed on that tenant and has no profile; the audit shapes 
 multiple admin role removals, first PowerShell operation, account deletion) are not here either.
 
 The admin actor, its object id, the targets (policy, domain) and every id are generated per call, so a replay looks
-like a first-time actor; the admin's address is a real one from the Saudi home pool. `activityDateTime` is UTC with
-seven fractional digits, as Graph returns it.
+like a first-time actor; the admin's address is a real one from the Saudi home pool. `target_user` instead names one of
+the organization's people (login, email or the part before the @): the admin is then `<local>.adm@<email domain>` and the
+calls come from that person's own home address. `activityDateTime` is UTC with seven fractional digits, as Graph returns it.
+The event shape carries no tenant or subscription id, so `cloud.azure` of the organization is not read here.
 
-`benign_activity` is the baseline and its identities are STABLE: four IT administrators (`<first>.<last>.adm@<domain>`) and
-the twelve ordinary users of the shared persona pool (`<first>.<last>@<domain>`), each with one object id (a pure function
-of the UPN) and one home address. They do the ordinary things a directory sees all day: update a user's job title, add or
+`benign_activity` is the baseline and its identities are STABLE: the organization's IT staff who have Azure access
+(`<local>.adm@<email domain>`, the helpdesk analyst resets passwords) and its people who may log on and have Azure access
+(`cloud_access`) as the ordinary users (their email), each with one object id (a pure function of the UPN) and one home
+address (`home_ip`). They do the ordinary things a directory sees all day: update a user's job title, add or
 remove a member of an ordinary group, reset a password (the helpdesk administrator, on a user), change one's own password,
 assign an ordinary app to a user, and now and then add a new-hire user. None of them is an operation one of the detectors
 above fired on; roles, PIM, Conditional Access, federation and domains are never touched.
@@ -26,7 +29,10 @@ import random
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
-from . import _fresh, ippools
+from runtime.organization_reader import OrganizationUnavailable
+from runtime.organization_view import OrganizationView
+
+from . import _fresh, _org, ippools
 from .okta import _times
 
 # The profile interface (see profiles/__init__.py).
@@ -46,14 +52,15 @@ _NAMES = ("northwind", "contoso", "fabrikam", "tailspin", "litware", "adatum", "
 
 
 class _Admin:
-    def __init__(self, upn: str, name: str, oid: str, ip: str) -> None:
-        self.upn, self.name, self.oid, self.ip = upn, name, oid, ip
+    def __init__(self, upn: str, name: str, oid: str, ip: str, person: dict[str, Any] | None = None) -> None:
+        self.upn, self.name, self.oid, self.ip, self.person = upn, name, oid, ip, person
 
 
 class _Ctx:
-    def __init__(self, domain: str, seed: int | None) -> None:
+    def __init__(self, view: OrganizationView, seed: int | None) -> None:
         self.rng = random.Random(seed)
-        self.domain = domain
+        self.view = view
+        self.domain = view.email_domain
 
     def hexs(self, n: int) -> str:
         return _fresh.hexs(self.rng, n)
@@ -61,10 +68,14 @@ class _Ctx:
     def guid(self) -> str:
         return _fresh.guid(self.rng)
 
-    def admin(self, name: str | None) -> _Admin:
-        local = (name or _fresh.handle(self.rng)).split("@", 1)[0]
-        ip = ippools.home_for(self.rng.randrange(len(ippools.HOME)))[0]
-        return _Admin(f"{local}.adm@{self.domain}", f"{local.replace('.', ' ').title()} (admin)", self.guid(), ip)
+    def admin(self, person: dict[str, Any] | None) -> _Admin:
+        """The acting administrator: the organization's `person` the caller named (their own home address), else a fresh one."""
+        local = _org.local_part(person) if person else _fresh.handle(self.rng)
+        ip = ippools.home_for(self.rng.randrange(len(ippools.HOME)))[0]  # drawn even for a named person: the rest of a seeded call is the same either way
+        name = _org.display(person) if person else local.replace(".", " ").title()
+        if person:
+            ip = _org.home(person)[0]
+        return _Admin(f"{local}.adm@{self.domain}", f"{name} (admin)", self.guid(), ip, person)
 
     def audit(self, who: _Admin, activity: str, category: str, service: str, op: str,
               targets: list[dict[str, Any]]) -> dict[str, Any]:
@@ -136,14 +147,13 @@ DEFAULT_COUNT = {"benign_activity": 20}
 
 # -- benign_activity: a stable pool, ordinary directory work --------------------------------------------------------------
 
-BENIGN_USERS = 12
-BENIGN_ADMINS = (8, 9, 10, 11)   # persona indexes of the IT administrators; the first of them is the helpdesk
 BENIGN_GROUPS = ("Finance Team", "Marketing Team", "Project Atlas", "All Staff", "Engineering", "Sales EMEA", "HR Portal Users", "VPN Users")
 BENIGN_APPS = ("Salesforce", "ServiceNow", "Slack", "Workday", "Zoom", "Jira Cloud")
 # (property, old, new) changes of an `Update user`: Graph writes the values as JSON strings.
+# The new value of a `Manager` change is the user's manager in the organization (filled in where it is used).
 _PROFILE_CHANGES = (("JobTitle", '"Analyst"', '"Senior Analyst"'), ("JobTitle", '"Associate"', '"Specialist"'),
                     ("Department", '"Finance"', '"Finance and Planning"'), ("OfficeLocation", '"Riyadh"', '"Dammam"'),
-                    ("Manager", None, '"Khalid Alotaibi"'))
+                    ("Manager", None, None))
 _NEW_HIRES = tuple(f"{first}.{last}" for first in ("hanan", "salman", "mona", "rakan", "aisha", "badr")
                    for last in ("alshehri", "alharbi", "alsaadi", "alnajjar"))
 _BENIGN_OPS = (("update_user", 28), ("add_member", 18), ("remove_member", 8), ("reset_password", 14), ("change_password", 14),
@@ -154,13 +164,12 @@ def _json(value: str) -> str:
     return f'"{value}"'
 
 
-def _persona(c: _Ctx, index: int, *, admin: bool) -> _Admin:
-    """Persona `index` of the pool as an actor or a target: UPN, display name, object id and address are pure functions of it."""
-    first, last = _fresh.person(index)
-    local = f"{first}.{last}" + (".adm" if admin else "")
-    upn = f"{local}@{c.domain}"
-    name = f"{first.title()} {last.title()}" + (" (admin)" if admin else "")
-    return _Admin(upn, name, _fresh.stable_guid("azure|user|" + upn), ippools.home_for(index)[0])
+def _persona(c: _Ctx, person: dict[str, Any], *, admin: bool) -> _Admin:
+    """An organization person as an actor or a target: UPN, display name, object id and address are pure functions of them.
+    An administrator's UPN is `<local>.adm@<email domain>`; an ordinary user's is their email."""
+    upn = f"{_org.local_part(person)}.adm@{c.domain}" if admin else _org.email(person)
+    name = _org.display(person) + (" (admin)" if admin else "")
+    return _Admin(upn, name, _fresh.stable_guid("azure|user|" + upn), _org.home(person)[0], person)
 
 
 def _user_target(c: _Ctx, who: _Admin, props: list[tuple[str, Any, Any]] | None = None) -> dict[str, Any]:
@@ -168,11 +177,12 @@ def _user_target(c: _Ctx, who: _Admin, props: list[tuple[str, Any, Any]] | None 
 
 
 def _benign_event(c: _Ctx, op: str) -> dict[str, Any]:
-    admin_index = c.rng.choice(BENIGN_ADMINS)
-    admin = _persona(c, admin_index, admin=True)
-    user = _persona(c, c.rng.randrange(BENIGN_USERS), admin=False)
+    admin = _persona(c, c.rng.choice(c.admins), admin=True)
+    user = _persona(c, c.users[c.rng.randrange(len(c.users))], admin=False)
     if op == "update_user":
         prop, old, new = c.rng.choice(_PROFILE_CHANGES)
+        if prop == "Manager":
+            new = _json(_org.display(_org.manager_of(c.view, user.person)))
         return c.audit(admin, "Update user", "UserManagement", "Core Directory", "Update",
                        [_user_target(c, user, [(prop, old, new), ("Included Updated Properties", None, _json(prop))])])
     if op in ("add_member", "remove_member"):
@@ -184,7 +194,7 @@ def _benign_event(c: _Ctx, op: str) -> dict[str, Any]:
         return c.audit(admin, "Add member to group" if added else "Remove member from group", "GroupManagement", "Core Directory",
                        "Assign" if added else "Unassign", [_user_target(c, user), group_target])
     if op == "reset_password":
-        helpdesk = _persona(c, BENIGN_ADMINS[0], admin=True)
+        helpdesk = _persona(c, c.helpdesk, admin=True)
         return c.audit(helpdesk, "Reset password (by admin)", "UserManagement", "Core Directory", "Update",
                        [_user_target(c, user, [("TargetId.UserType", None, _json("Member"))])])
     if op == "change_password":
@@ -207,6 +217,14 @@ def _benign_event(c: _Ctx, op: str) -> dict[str, Any]:
 def _benign_activity(c: _Ctx, count: int, end: datetime, spread_seconds: int) -> list[dict[str, Any]]:
     """`count` ordinary directory operations by the stable pool, at random moments of the window (the first at its start,
     the last at `end`)."""
+    c.users = _org.cloud_people(c.view, "azure")
+    c.admins = _org.administrators(c.users)
+    if not c.admins:
+        raise OrganizationUnavailable(
+            f"organization {c.view.id!r} has nobody in department IT with 'azure' in cloud_access: the benign directory "
+            "work needs administrators to do it")
+    # The helpdesk analyst resets passwords; without one, the first administrator does.
+    c.helpdesk = next((p for p in c.admins if "helpdesk" in p.get("title", "").lower()), c.admins[0])
     out = [_benign_event(c, _fresh.weighted(c.rng, _BENIGN_OPS)) for _ in range(count)]
     for event, when in zip(out, _fresh.jittered_times(c.rng, end, count, spread_seconds)):
         _stamp(c, event, when)
@@ -214,25 +232,26 @@ def _benign_activity(c: _Ctx, count: int, end: datetime, spread_seconds: int) ->
 
 
 def build_events(
-    scenario: str, count: int, *, domain: str, now: datetime,
+    scenario: str, count: int, *, view: OrganizationView, now: datetime,
     spread_seconds: int = 120, start_offset_minutes: int = 0,
     target_user: str | None = None, source_ip: str | None = None, seed: int | None = None,
 ) -> list[dict[str, Any]]:
     """Build `count` directoryAudit objects for `scenario`, oldest first.
 
     The window ends `start_offset_minutes` before `now` and is `spread_seconds` wide; nothing is dated after `now`.
-    `target_user` names the admin who acts (a bare name; `.adm@<domain>` is appended); `source_ip` is the admin's address.
-    `benign_activity` ignores both: its actors and addresses are the stable pool's.
+    `target_user` names the admin who acts: one of the organization's people (`view`; `.adm@<email domain>` is appended to
+    the email's local part); `source_ip` is the admin's address. `benign_activity` ignores both: its actors and addresses
+    are the stable pool's.
     """
     if scenario not in SCENARIOS:
         raise ValueError(f"unknown scenario {scenario!r}; choose one of {', '.join(SCENARIOS)}")
     if count < 1:
         raise ValueError("count must be at least 1")
     end = now - timedelta(minutes=max(start_offset_minutes, 0))
-    c = _Ctx(domain, seed)
+    c = _Ctx(view, seed)
     if scenario == "benign_activity":
         return _benign_activity(c, count, end, spread_seconds)
-    who = c.admin(_fresh.bare_name(target_user))
+    who = c.admin(_org.resolve(view, target_user) if _fresh.bare_name(target_user) else None)
     if source_ip:
         who.ip = source_ip
     recipe, _ = _TABLE[scenario]
@@ -240,11 +259,11 @@ def build_events(
                              lambda event, when: _stamp(c, event, when))
 
 
-def sample_event(*, domain: str, now: datetime) -> dict[str, Any]:
+def sample_event(*, view: OrganizationView, now: datetime) -> dict[str, Any]:
     """One benign audit event (a fresh admin adds a user), for proving the Cribl path."""
-    c = _Ctx(domain, None)
+    c = _Ctx(view, None)
     who = c.admin(None)
-    user = f"{_fresh.handle(c.rng)}@{domain}"
+    user = f"{_fresh.handle(c.rng)}@{c.domain}"
     event = c.audit(who, "Add user", "UserManagement", "Core Directory", "Add", [
         {**c.target("User", user.split("@")[0], [("UserPrincipalName", None, user)]), "userPrincipalName": user}])
     _stamp(c, event, now)

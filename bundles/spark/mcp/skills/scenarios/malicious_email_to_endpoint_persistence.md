@@ -72,15 +72,19 @@ empty. `compact=true` is lossless for this purpose and keeps the payload inside 
 3. Both `email-gateway` (Stage 1) and `edr` (Stages 2-4) are required; Stages 2-4 need the process tree, command line and memory-access events that only endpoint telemetry carries, and network-tier substitutions do not capture them. If it is `MISSING`, say this to the operator, with the class filled in: "No installed data source covers the `<class>` class, so I cannot run the email malware persistence scenario. Install a `<class>` data source from the Marketplace and ask again." Then stop: create no worker.
 4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
+## Pre-flight: read the organization
+
+A chain that starts outside the company targets a VIP. Call `organization_get(section="personas")` and take the CFO (the procurement-statement lure fits a finance executive; the CEO also works). Take the login, email, workstation and workstation address from the people row. For the benign noise emails take the HR manager and the procurement specialist from `organization_get(section="people", filter="department=HR")` and `filter="department=Operations"`. Do not invent a user, host or mail domain; the company's mail domain is the organization's `domain.email_domain`. The recipes show the Phantom Lab values; with another organization active, substitute its own.
+
 ## Narrative thread
 
 - **Phishing sender:** `invoices@panapay-procurement.com` (typo-squat of legitimate-looking procurement domain)
 - **Phishing subject:** `[ACTION REQUIRED] Q4 procurement statement — ref INV-2891`
 - **Attachment:** `Q4-Procurement-Statement.docm` (Word doc with malicious macro)
 - **Attachment SHA-256:** `b42c1f9e3a0d7c8b5e2f4a6d8e1b3c5a7f9d2e4b6c8a0d2f4e6c8a0b2d4f6c8e`
-- **Target user:** `l.thomas@corp.example`
-- **Target user IP:** `10.10.20.78`
-- **Target hostname:** `wks-lthomas-01`
+- **Target user:** the CFO from the organization's VIP persona. Phantom Lab example: `malessa` (Mona Alessa, `mona.alessa@phantom.lab`)
+- **Target user IP:** the CFO's workstation address (`10.20.16.47` on Phantom Lab)
+- **Target hostname:** the CFO's workstation (PHWS-028 on Phantom Lab)
 - **C2 IP (PowerShell stager pulls from):** `91.243.59.108`
 - **C2 domain:** `cdn-update-svc.tk` (resolved via the DNS tunneling pattern from the dns_tunneling_c2 skill, optionally chain it)
 - **Wall-clock time:** Stage 1 instant. Stage 2 ~5 min after delivery (user opens attachment). Stage 3 ~3 min after Stage 2 (post-implant credential harvest). Stage 4 ~2 min after Stage 3 (persistence + tamper).
@@ -103,13 +107,13 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     senderEmail:    ["partners@example-supplier.com",
-                      "noreply@hr-internal.corp.example",
+                      "khalid.alotaibi@phantom.lab",
                       "invoices@panapay-procurement.com"]
     senderDomain:   ["example-supplier.com",
-                      "hr-internal.corp.example",
+                      "phantom.lab",
                       "panapay-procurement.com"]
-    recipientEmail: ["l.thomas@corp.example",
-                      "team-procurement@corp.example"]
+    recipientEmail: ["mona.alessa@phantom.lab",
+                      "abeer.aljaber@phantom.lab"]
     emailSubject:   ["Q4 supplier review",
                       "Internal HR newsletter",
                       "[ACTION REQUIRED] Q4 procurement statement — ref INV-2891"]
@@ -139,7 +143,7 @@ xlog.create_data_worker:
 
 ### Stage 2 — Macro execution → PowerShell stager — ~8 events over 30 seconds
 
-Five minutes after delivery, `l.thomas` opens the document. The macro launches PowerShell with a base64-encoded payload. EDR sees the parent-child relationship `WINWORD.EXE → cmd.exe → powershell.exe` and the encoded command-line.
+Five minutes after delivery, the CFO (`malessa`) opens the document. The macro launches PowerShell with a base64-encoded payload. EDR sees the parent-child relationship `WINWORD.EXE → cmd.exe → powershell.exe` and the encoded command-line.
 
 **Data class:** `edr`
 
@@ -152,12 +156,12 @@ xlog.create_data_worker:
   interval: 4
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    shost:        ["wks-lthomas-01"]
-    src:          ["10.10.20.78"]
-    suser:            ["l.thomas"]
+    shost:        ["PHWS-028"]
+    src:          ["10.20.16.47"]
+    suser:            ["malessa"]
     sproc:    ["WINWORD.EXE", "cmd.exe", "powershell.exe"]
     parentProcessName:  ["explorer.exe", "WINWORD.EXE", "cmd.exe"]
-    commandLine:    ["WINWORD.EXE /n \"C:\\Users\\l.thomas\\Downloads\\Q4-Procurement-Statement.docm\"",
+    commandLine:    ["WINWORD.EXE /n \"C:\\Users\\malessa\\Downloads\\Q4-Procurement-Statement.docm\"",
                       "cmd.exe /c powershell.exe -nop -w hidden -ep bypass -enc <300+ chars base64>",
                       "powershell.exe -nop -w hidden -ep bypass -enc <300+ chars base64>"]
     fileHash:       ["5cae0e91 (renamed system process)"]
@@ -201,9 +205,9 @@ xlog.create_data_worker:
   interval: 12
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    shost:        ["wks-lthomas-01"]
-    src:          ["10.10.20.78"]
-    suser:            ["l.thomas"]
+    shost:        ["PHWS-028"]
+    src:          ["10.20.16.47"]
+    suser:            ["malessa"]
     sproc:    ["powershell.exe", "rundll32.exe"]
     parentProcessName:  ["powershell.exe"]
     commandLine:    ["powershell.exe -nop -w hidden -ep bypass -enc <300+ chars>",
@@ -248,9 +252,9 @@ xlog.create_data_worker:
   interval: 8
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    shost:        ["wks-lthomas-01"]
-    src:          ["10.10.20.78"]
-    suser:            ["l.thomas", "SYSTEM"]
+    shost:        ["PHWS-028"]
+    src:          ["10.20.16.47"]
+    suser:            ["malessa", "SYSTEM"]
     sproc:    ["powershell.exe", "sc.exe"]
     parentProcessName:  ["powershell.exe"]
     commandLine:    ["powershell.exe Set-MpPreference -DisableRealtimeMonitoring $true",
@@ -279,9 +283,9 @@ xlog.create_data_worker:
   interval: 5
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    shost:        ["wks-lthomas-01"]
-    src:          ["10.10.20.78"]
-    suser:            ["l.thomas"]
+    shost:        ["PHWS-028"]
+    src:          ["10.20.16.47"]
+    suser:            ["malessa"]
     sproc:    ["schtasks.exe", "powershell.exe"]
     parentProcessName:  ["powershell.exe"]
     commandLine:    ["schtasks.exe /create /sc onlogon /tn \"WindowsUpdateChk\" /tr \"powershell.exe -nop -w hidden -ep bypass -file C:\\Users\\Public\\update.ps1\" /rl highest /f",
@@ -301,7 +305,7 @@ xlog.create_data_worker:
 **Field semantics:**
 - `Set-MpPreference -DisableRealtimeMonitoring $true` — the canonical PowerShell command to disable Windows Defender real-time protection. Any modern EDR detects this command-line directly
 - `sc.exe stop WinDefend` — the service-level stop. Again, EDR-detected
-- `task_trigger: onlogon` + `task_action` running PowerShell hidden — the persistence mechanism. The fact that `l.thomas` (regular user) is creating a high-rights scheduled task that runs at every logon is the strong signal
+- `task_trigger: onlogon` + `task_action` running PowerShell hidden — the persistence mechanism. The fact that `malessa` (a regular user account, not an administrator) is creating a high-rights scheduled task that runs at every logon is the strong signal
 - `file_created: C:\Users\Public\update.ps1` — Public is world-writable, doesn't trigger UAC, and is a common attacker drop location
 
 **Why this fires Rule #19:** EDR products universally detect their own service being stopped. The `Set-MpPreference -DisableRealtimeMonitoring` PowerShell pattern is a top-tier alert in any modern EDR. Combined with the post-LSASS-dump context, this fires high-confidence "endpoint compromise complete" alerts.
@@ -317,7 +321,7 @@ xlog.create_data_worker:
 | EDR alert: LSASS memory access | XSIAM Issues |
 | EDR alert: Defender disabled | XSIAM Issues |
 | EDR alert: Persistence scheduled task | XSIAM Issues (sometimes filed under same incident as tamper) |
-| Pivotable: filter by host=`wks-lthomas-01`, see all 4 stages on one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the edr entry> \| filter <its host field> = "wks-lthomas-01" \| limit 20` |
+| Pivotable: filter by host=`PHWS-028`, see all 4 stages on one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the edr entry> \| filter <its host field> = "PHWS-028" \| limit 20` |
 
 ## Tear-down
 
@@ -329,4 +333,4 @@ xlog.kill_worker:
 
 ## Adapting per deployment
 
-The attachment hash `b42c1f9e...` and PowerShell encoded payload are illustrative. For exercises tied to a real customer's threat-model, swap in hashes from the customer's threat-intel feed so their existing TI integrations also enrich the alerts.
+The attachment hash `b42c1f9e...` and PowerShell encoded payload are illustrative. For exercises tied to a specific threat model, swap in hashes from the operator's threat-intel feed so their existing TI integrations also enrich the alerts. The target user, the workstation and the benign senders always come from the active organization (`organization_get`); to phish someone else (the CEO, a finance analyst), read that person from the organization and keep the chain shape.

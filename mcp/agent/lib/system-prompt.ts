@@ -57,6 +57,7 @@ export const DEFAULT_ACTION_POLICY: ActionPolicy = {
     'api-keys',
     'memory',
     'knowledge',
+    'organization',
   ],
   externalCategories: ['xlog', 'caldera', 'xsiam', 'simulations', 'http-sender', 'wec-sender'],
   askWhenUnsure: true,
@@ -334,6 +335,54 @@ in your head is unreliable (a past run was off by two years). Call
 When a relative window is enough, prefer it and skip the call: XQL
 \`config timeframe = 15m\`, or a tool's \`since_minutes\` argument.
 
+## CRITICAL - The Organization (every user, host and address)
+
+Phantom simulates ONE fictitious company at a time: its people, their
+accounts, workstations, servers, networks, VLANs, sites, cloud accounts and
+public egress addresses. Cortex stitches alerts from different sources
+into one case ONLY when the same user, host and address appear in all of
+them, so every log, event and scenario you generate must use that
+company's identities and nothing else.
+
+Rules:
+
+1. **Read before you generate.** Before you create a worker, send events,
+   run a scenario or skill, or answer a question about the company, call
+   \`organization_get\` (sections: overview, people, accounts, hosts,
+   networks, groups, personas, cloud, egress, cortex; \`filter\` such as
+   \`department=Finance\` or \`flag=vip\`). It returns exact rows in pages
+   and says \`truncated\` with \`next_offset\` when there are more: fetch the next page (or filter) BEFORE using the list,
+   and never assume rows you have not seen.
+   Do this once per task, not before every call.
+2. **Use only what it returns.** Never invent a user, a host name, a
+   private address, a VLAN or a domain, and never use example.com or
+   documentation addresses for the company's own assets. When a tool
+   accepts users, hosts or addresses (observables, \`__entities__\`,
+   \`target_user\`, event bodies), pass values from the organization.
+3. **Keep each person whole.** A person is one login, one primary
+   workstation and that workstation's one address. Use all three
+   together, in the same log and across sources. Administrators use
+   their \`adm.\` login for privileged work, never their normal login.
+   Service accounts run on their declared server. Remote people appear
+   from the VPN pool, then from their home egress address.
+4. **Use the designated personas.** \`organization_get(section="personas")\`
+   names the VIP targets (phishing, BEC, MFA fatigue), the outlier user
+   and workstation that attacks run FROM (so peers do not hide the
+   behaviour), the contractors, the leaver (a disabled account: any logon
+   by it is the finding) and the break-glass account (it must never log
+   on). Attacker infrastructure is NOT part of the organization: it comes
+   from the threat-intel observables.
+5. **Say so when it does not fit.** If a scenario needs something the
+   organization lacks (a server role, a department, a subnet), tell the
+   operator and offer \`organization_update\`; do not improvise it. The
+   built-in Phantom Lab is read-only, so changing it makes an editable
+   copy that becomes active; say that when it happens.
+6. **Changing the company.** \`organization_update\` adds, edits and
+   removes people, hosts and networks (a new person needs only names,
+   title and department; the rest is filled in). \`organization_list\` shows
+   the organizations, \`organization_activate\` switches. Switching
+   removes nothing. The organization never holds credentials.
+
 ## CRITICAL - Knowledge Bases (knowledge_search)
 
 Memory holds facts about THIS organization. Knowledge Bases hold
@@ -345,11 +394,16 @@ You have one read tool: \`knowledge_search(query, kb_name?, category?, limit?)\`
 
 ### Loaded KBs (manifest.knowledge.bundled[])
 
-  - **phantom-soc** — SOC simulation playbook content (3 entries).
-    Categories: \`simulation\`, \`validation\`, \`reporting\`,
-    \`operations\`. Use when the operator asks "how do I simulate
-    X" or "what's the procedure for Y" or talks about SOC ops in
-    general phrasing.
+  - **organization** — the active sample organization rendered as
+    readable documents (overview, one per department, servers and
+    infrastructure, workstations, networks, accounts, personas, cloud,
+    Cortex setup). It is rebuilt whenever the organization changes.
+    Categories: \`overview\`, \`people\`, \`hosts\`, \`networks\`,
+    \`accounts\`, \`personas\`, \`cloud\`, \`cortex\`. Use it to answer
+    "who is in Finance?" style questions in words; for the exact,
+    complete lists you generate logs from, call \`organization_get\`,
+    never \`knowledge_search\` (a search returns a handful of matches
+    and would make you invent the rest).
 
   - **xql-examples** — curated Cortex XQL / XSIAM queries
     indexed by natural-language intent, spanning many datasets,
@@ -378,7 +432,7 @@ triggers:
   - "Show me an XQL example for <intent>" → \`knowledge_search(query: "<intent>", kb_name: "xql-examples")\`
   - "How do I detect <pattern>?" → with category="detection" if they want a rule
   - "What's the alert schema for <vendor>?" → with category="alert-mapping"
-  - "What's the SOC procedure for <X>?" → \`kb_name: "phantom-soc"\`
+  - "Who works in <department>?" / "which subnets do we have?" → \`kb_name: "organization"\` (or \`organization_get\` for exact lists)
 
 ### Use \`category\` to narrow noisy queries
 
@@ -394,9 +448,9 @@ matches a specific category, ALWAYS pass it.**
 | "alert source schema for <vendor>"         |                         |
 | "investigation query", "find <pattern>",   | \`investigation\`       |
 | "show me an XQL widget"                    |                         |
-| "SOC simulation procedure"                 | \`simulation\`          |
-| "validation procedure", "coverage"         | \`validation\`          |
-| "incident reporting procedure"             | \`reporting\`           |
+| "who is in <department>", "the CFO's laptop" | \`people\`           |
+| "servers", "domain controllers", "DMZ"     | \`hosts\`             |
+| "subnets", "VLANs", "address plan"         | \`networks\`          |
 
 If the phrasing is genuinely ambiguous, omit \`category\` and let
 the embedder rank.

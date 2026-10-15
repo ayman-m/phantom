@@ -30,14 +30,14 @@ It is not a correlation rule; it is Cortex's own analytics (Identity Analytics),
 | Activation / training (doc) | 14 days / 30 days. In practice the alert typically arrives within a minute or two |
 | Test period | single event |
 | Deduplication (doc) | 1 hour. In practice it is not a per-user block (see "What `count` does") |
-| What the alert text says | *"The user phantom-lab\<login> has signed in successfully from <exit ip>. <exit ip> was a TOR exit node during the time of the event"* |
+| What the alert text says | *"The user phantom\<login> has signed in successfully from <exit ip>. <exit ip> was a TOR exit node during the time of the event"* |
 
 ## Preconditions: check these BEFORE sending
 
 | # | Must be true | How to check |
 |---|---|---|
 | 1 | The `http-sender` instance is running with Cribl configured: `list_destinations` shows **`cribl_okta_sso`** with `ready: true` | `http-sender.list_destinations` |
-| 2 | `target_user` is one of the **twelve baseline users** of the Okta profile, as a bare name: `noura.alharbi`, `khalid.alotaibi`, `abdullah.alzahrani`, `sara.almutairi`, `faisal.alqahtani`, `reem.aldosari`, `omar.alshehri`, `huda.alghamdi`, `yousef.alharthi`, `layla.almalki`, `tariq.alsubaie`, `dana.alanazi`. The detector needs a user with an ordinary history, so an invented name is not covered by this recipe | the list above |
+| 2 | `target_user` is one of the **baseline users** of the Okta profile, which are the organization's people who may log on (`organization_get(section="people")`; the leaver is excluded), as a bare name (the part of the email before the `@`). Phantom Lab examples: `noura.alharbi` (Finance), `dana.alanazi` (Engineering). The detector needs a user with an ordinary history, so an invented name is not covered by this recipe | the list above |
 | 3 | Prefer a user with **no** `A successful SSO sign-in from TOR` alert in the last 24 hours (the documented deduplication is 1 hour, and in practice it is looser, but a clean user leaves no doubt about which call raised the alert) | the query in "Pick the user" below |
 | 4 | Nothing else: the call generates the event itself, with the time set to now, a Tor exit from the connector's snapshot of exits and a never-seen app name. You never write the event | none |
 
@@ -90,7 +90,7 @@ config timeframe = 1h | datamodel dataset = okta_sso_raw
 | fields _time, xdm.event.type, xdm.event.outcome, xdm.source.user.upn, xdm.source.ipv4
 ```
 
-Pass when `xdm.event.type = authentication`, `xdm.event.outcome = SUCCESS` and `xdm.source.user.upn` is `<login>@phantom-lab.example` (the same query returns all four).
+Pass when `xdm.event.type = authentication`, `xdm.event.outcome = SUCCESS` and `xdm.source.user.upn` is `<login>@phantom.lab` (the same query returns all four).
 
 ## Step 3: wait, then check for the alert
 
@@ -107,10 +107,12 @@ config timeframe = 1d | dataset = alerts
 
 Use the stored enum names `MAGNIFIER` and `ANALYTICS_BIOC`: the displayed names `XDR_ANALYTICS` and `XDR_ANALYTICS_BIOC` match nothing.
 
-Pass when a row names your user (shown as `phantom-lab\<login>`) and `host_ip` is the exit of your event. Expect `severity` HIGH, `mitre_attack_technique` `T1090.003 - Proxy: Multi-hop Proxy|T1078 - Valid Accounts` and `original_tags` containing `DS:Okta/Sso`.
+Pass when a row names your user (shown as `phantom\<login>`) and `host_ip` is the exit of your event. Expect `severity` HIGH, `mitre_attack_technique` `T1090.003 - Proxy: Multi-hop Proxy|T1078 - Valid Accounts` and `original_tags` containing `DS:Okta/Sso`.
 
 If nothing arrives in 3 minutes: re-run Step 2 (the row must exist in `okta_sso_raw` with `_collector_type = Okta`), check that the destination was `cribl_okta_sso` and not an HTTP collector, then retry **once** with another baseline user. If that is also silent, suspect the exit snapshot (Step 1, last paragraph).
 
 ## Report back to the operator
 
 State the user, the exit IP, the event `uuid` and time, the Step 2 result and either the alert id with its arrival time and latency (the detector typically fires within a minute or two) or that nothing arrived in 3 minutes and what you checked. Say that the call sent one event and raised one alert, and that a larger `count` raises one alert per event (about 18 for `count: 20`).
+
+Note: the Cortex `user_name` prefix shown above (`phantom\`) is the first label of the organization's email domain (`phantom.lab`); it was `phantom-lab\` on the previous domain. It has not been re-measured on the tenant, so confirm it on the first replay.

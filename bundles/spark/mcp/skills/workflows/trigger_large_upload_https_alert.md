@@ -174,13 +174,13 @@ Call **`phantom_create_data_worker`**. Change only the values marked `<CHANGE>`.
       "53000"
     ],
     "source_ip": [
-      "<CHANGE: established internal IPv4, e.g. 10.20.63.16>"
+      "<CHANGE: internal IPv4 of an organization host, e.g. the outlier's workstation 10.20.16.55>"
     ],
     "source_device_host": [
-      "<CHANGE: that host's name, e.g. WS-LU-16>"
+      "<CHANGE: that host's name, e.g. PHWS-036>"
     ],
     "source_user": [
-      "<CHANGE: a bare user name, no backslash, e.g. n.almutairi>"
+      "<CHANGE: that host's user as a bare name, no backslash, e.g. aalzamil>"
     ],
     "dest_ip": [
       "104.18.32.7"

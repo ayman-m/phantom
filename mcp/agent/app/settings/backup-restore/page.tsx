@@ -244,7 +244,7 @@ export default function BackupRestorePage() {
         <div className="text-xs text-on-surface-variant/80 space-y-2 pt-2 border-t border-white/5">
           <p>
             <strong className="text-on-surface">Contents:</strong> personality
-            blob, connector instances + cleartext secrets, memory entries
+            blob, your organizations (the built-in Phantom Lab ships with the image), connector instances + cleartext secrets, memory entries
             (without embeddings), runtime job definitions, all skill MD
             files, knowledge bundle docs, your workflow state (journeys
             marked tested, saved metric bookmarks), and your hooks (from
@@ -462,7 +462,7 @@ export default function BackupRestorePage() {
           </li>
           <li>
             <strong className="text-on-surface">Restore is order-aware</strong>
-            : personality → instances+secrets → skills → memory → knowledge
+            : personality → organizations → instances+secrets → skills → memory → knowledge
             (no-op) → data sources → workflow state → hooks → jobs. Job restores after connectors so a runtime
             job referencing <code className="font-mono">phantom_create_data_worker</code>
             doesn&rsquo;t fail-closed at first cron tick.

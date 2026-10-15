@@ -116,6 +116,20 @@ export const TOOL_METADATA_TABLE: Record<string, ToolMetadata> = {
     concurrencySafe: true,
   },
 
+  // Organization: the sample company every simulation uses
+  organization_get: {
+    readOnly: true,
+    destructive: false,
+    openWorld: false,
+    concurrencySafe: true,
+  },
+  organization_list: {
+    readOnly: true,
+    destructive: false,
+    openWorld: false,
+    concurrencySafe: true,
+  },
+
   // CALDERA read-only
   caldera_get_all_agents: {
     readOnly: true,
@@ -268,6 +282,19 @@ export const TOOL_METADATA_TABLE: Record<string, ToolMetadata> = {
     hint: "Deletes a scheduled job. Irreversible.",
   },
   personality_update: {
+    readOnly: false,
+    destructive: false,
+    openWorld: false,
+    concurrencySafe: false,
+  },
+  organization_update: {
+    readOnly: false,
+    destructive: false,
+    openWorld: false,
+    concurrencySafe: false,
+    hint: "Edits the active organization (a bundled one is copied first). Every edit is kept in its history.",
+  },
+  organization_activate: {
     readOnly: false,
     destructive: false,
     openWorld: false,

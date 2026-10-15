@@ -1,0 +1,1937 @@
+# Phantom Lab: the organization every Phantom generator draws from by default.
+# Fictitious. Validated by organization.schema.json plus the checks in usecase/organization_model.py.
+# The first 30 accounts (22 staff, 4 administrators, 4 service accounts), their hosts, SIDs, addresses and Okta
+# ids are the ones the windows profile, wec-sender, cie-sender and the replay-verified skills already use.
+# Do not edit them without re-running those skills.
+schema_version: 1
+id: phantom-lab
+name: Phantom Lab
+description: A fictitious Saudi company of 50 people on one Active Directory domain, with a Riyadh headquarters, a Jeddah
+  branch, remote workers and one account in each of AWS, Azure and GCP.
+domain:
+  dns: phantom.lab
+  netbios: PHANTOM
+  sid: S-1-5-21-3623811015-3361044348-30300820
+  email_domain: phantom.lab
+  partner_domain: external-partner.example
+locale:
+  timezone: Asia/Riyadh
+  utc_offset_hours: 3
+  workweek:
+  - sun
+  - mon
+  - tue
+  - wed
+  - thu
+  work_hours:
+    start: '08:00'
+    end: '17:00'
+cortex:
+  internal_ranges:
+  - 10.20.0.0/16
+  - 10.21.0.0/16
+  - 172.16.10.0/24
+  - 10.100.0.0/16
+  - 10.110.0.0/16
+  - 10.120.0.0/16
+  - 192.168.160.0/24
+  domain_suffixes:
+  - phantom.lab
+sites:
+- id: RUH
+  name: Riyadh headquarters
+  city: Riyadh
+  country: SA
+  kind: office
+- id: JED
+  name: Jeddah branch
+  city: Jeddah
+  country: SA
+  kind: office
+- id: Remote
+  name: Remote workers (VPN)
+  city: null
+  country: SA
+  kind: remote
+- id: AWS
+  name: AWS
+  city: null
+  country: null
+  kind: cloud
+- id: Azure
+  name: Azure
+  city: null
+  country: null
+  kind: cloud
+- id: GCP
+  name: GCP
+  city: null
+  country: null
+  kind: cloud
+networks:
+- id: ruh-core
+  name: RUH core (domain controllers)
+  site: RUH
+  kind: core
+  vlan: 10
+  cidr: 10.20.0.0/24
+- id: ruh-servers
+  name: RUH server farm
+  site: RUH
+  kind: servers
+  vlan: 11
+  cidr: 10.20.1.0/24
+- id: ruh-management
+  name: RUH network management
+  site: RUH
+  kind: management
+  vlan: 20
+  cidr: 10.20.2.0/24
+- id: ruh-security
+  name: RUH security tools
+  site: RUH
+  kind: security
+  vlan: 30
+  cidr: 10.20.3.0/24
+- id: ruh-workstations
+  name: RUH workstations
+  site: RUH
+  kind: workstations
+  vlan: 100
+  cidr: 10.20.16.0/22
+- id: ruh-wifi
+  name: RUH corporate Wi-Fi
+  site: RUH
+  kind: wifi
+  vlan: 150
+  cidr: 10.20.64.0/20
+- id: ruh-unmanaged
+  name: RUH unmanaged and newly seen devices
+  site: RUH
+  kind: unmanaged
+  vlan: 199
+  range: 10.20.100.0-10.20.199.255
+- id: ruh-guest
+  name: RUH guest Wi-Fi (isolated)
+  site: RUH
+  kind: guest
+  vlan: 160
+  cidr: 192.168.160.0/24
+- id: vpn
+  name: Remote-access VPN pool
+  site: Remote
+  kind: vpn
+  vlan: null
+  cidr: 10.20.200.0/22
+- id: jed-lan
+  name: JED branch LAN
+  site: JED
+  kind: branch
+  vlan: 200
+  cidr: 10.21.0.0/16
+- id: dmz
+  name: DMZ (public-facing)
+  site: RUH
+  kind: dmz
+  vlan: 50
+  cidr: 172.16.10.0/24
+- id: aws-vpc
+  name: AWS VPC
+  site: AWS
+  kind: cloud
+  vlan: null
+  cidr: 10.100.0.0/16
+- id: azure-vnet
+  name: Azure VNet
+  site: Azure
+  kind: cloud
+  vlan: null
+  cidr: 10.110.0.0/16
+- id: gcp-vpc
+  name: GCP VPC
+  site: GCP
+  kind: cloud
+  vlan: null
+  cidr: 10.120.0.0/16
+egress:
+  ruh_nat: 188.55.20.5
+  jed_nat: 184.26.96.5
+  dmz_public:
+    PHDMZ-WEB01: 151.254.90.10
+    PHDMZ-MAIL01: 151.254.90.11
+    PHDMZ-VPN01: 151.254.90.12
+groups:
+- name: SG-Executive
+  privileged: false
+- name: SG-Finance
+  privileged: false
+- name: SG-HR
+  privileged: false
+- name: SG-Sales
+  privileged: false
+- name: SG-Engineering
+  privileged: false
+- name: SG-Operations
+  privileged: false
+- name: SG-IT
+  privileged: false
+- name: SG-VPN-Users
+  privileged: false
+- name: SG-Project-Atlas
+  privileged: false
+- name: SG-Contractors
+  privileged: false
+- name: SG-Service-Accounts
+  privileged: false
+- name: SG-IT-Admins
+  privileged: true
+- name: Domain Admins
+  privileged: true
+people:
+- login: nalharbi
+  given_name: Noura
+  family_name: Alharbi
+  display_name: Noura Alharbi
+  email: noura.alharbi@phantom.lab
+  title: Finance Manager
+  department: Finance
+  manager: malessa
+  site: RUH
+  employee_number: PH01105
+  rid: 1105
+  workstation: PHWS-001
+  okta_id: 00ujHfeOQz0ZDuoi6eN6
+  groups:
+  - SG-Finance
+  - SG-VPN-Users
+  home_ip: 144.86.80.11
+- login: kalotaibi
+  given_name: Khalid
+  family_name: Alotaibi
+  display_name: Khalid Alotaibi
+  email: khalid.alotaibi@phantom.lab
+  title: HR Manager
+  department: HR
+  manager: falqarni
+  site: RUH
+  employee_number: PH01106
+  rid: 1106
+  workstation: PHWS-002
+  okta_id: 00uGNxE5kheOOBpSkzr6
+  groups:
+  - SG-HR
+  - SG-VPN-Users
+  home_ip: 37.121.160.24
+- login: aalzahrani
+  given_name: Abdullah
+  family_name: Alzahrani
+  display_name: Abdullah Alzahrani
+  email: abdullah.alzahrani@phantom.lab
+  title: Sales Manager
+  department: Sales
+  manager: falqarni
+  site: RUH
+  employee_number: PH01107
+  rid: 1107
+  workstation: PHWS-003
+  okta_id: 00uO1w0A8a6kFHK4dz0y
+  groups:
+  - SG-Sales
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 51.235.191.37
+- login: salmutairi
+  given_name: Sara
+  family_name: Almutairi
+  display_name: Sara Almutairi
+  email: sara.almutairi@phantom.lab
+  title: Engineering Manager
+  department: Engineering
+  manager: aalhazmi
+  site: RUH
+  employee_number: PH01108
+  rid: 1108
+  workstation: PHWS-004
+  okta_id: 00uVzD7JCM9s7yEXWhgj
+  groups:
+  - SG-Engineering
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 185.5.155.50
+  cloud_access:
+  - aws
+  - azure
+  - gcp
+- login: falqahtani
+  given_name: Faisal
+  family_name: Alqahtani
+  display_name: Faisal Alqahtani
+  email: faisal.alqahtani@phantom.lab
+  title: Financial Analyst
+  department: Finance
+  manager: nalharbi
+  site: RUH
+  employee_number: PH01109
+  rid: 1109
+  workstation: PHWS-005
+  okta_id: 00uNGfgP7f8UO1w9rs8E
+  groups:
+  - SG-Finance
+  - SG-VPN-Users
+  home_ip: 168.149.64.63
+- login: raldosari
+  given_name: Reem
+  family_name: Aldosari
+  display_name: Reem Aldosari
+  email: reem.aldosari@phantom.lab
+  title: HR Business Partner
+  department: HR
+  manager: kalotaibi
+  site: RUH
+  employee_number: PH01110
+  rid: 1110
+  workstation: PHWS-006
+  okta_id: 00uEqwjkxL1TBfOl2K97
+  groups:
+  - SG-HR
+  - SG-VPN-Users
+  home_ip: 37.141.8.76
+- login: oalshehri
+  given_name: Omar
+  family_name: Alshehri
+  display_name: Omar Alshehri
+  email: omar.alshehri@phantom.lab
+  title: Account Executive
+  department: Sales
+  manager: aalzahrani
+  site: RUH
+  employee_number: PH01111
+  rid: 1111
+  workstation: PHWS-007
+  okta_id: 00uA0R3XneWyQDDdvKvv
+  groups:
+  - SG-Sales
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 2.90.64.89
+- login: halghamdi
+  given_name: Huda
+  family_name: Alghamdi
+  display_name: Huda Alghamdi
+  email: huda.alghamdi@phantom.lab
+  title: Software Engineer
+  department: Engineering
+  manager: salmutairi
+  site: RUH
+  employee_number: PH01112
+  rid: 1112
+  workstation: PHWS-008
+  okta_id: 00uDpPQpX0ppEXJo0E00
+  groups:
+  - SG-Engineering
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 51.39.2.102
+  cloud_access:
+  - aws
+  - azure
+  - gcp
+- login: yalharthi
+  given_name: Yousef
+  family_name: Alharthi
+  display_name: Yousef Alharthi
+  email: yousef.alharthi@phantom.lab
+  title: Accountant
+  department: Finance
+  manager: nalharbi
+  site: RUH
+  employee_number: PH01113
+  rid: 1113
+  workstation: PHWS-009
+  okta_id: 00unXtiBkGFt0wOfEeaG
+  groups:
+  - SG-Finance
+  - SG-VPN-Users
+  home_ip: 77.31.81.115
+- login: lalmalki
+  given_name: Layla
+  family_name: Almalki
+  display_name: Layla Almalki
+  email: layla.almalki@phantom.lab
+  title: Recruiter
+  department: HR
+  manager: kalotaibi
+  site: RUH
+  employee_number: PH01114
+  rid: 1114
+  workstation: PHWS-010
+  okta_id: 00uNnmjZf0Uc3SEqfXOH
+  groups:
+  - SG-HR
+  - SG-VPN-Users
+  home_ip: 31.166.128.128
+- login: talsubaie
+  given_name: Tariq
+  family_name: Alsubaie
+  display_name: Tariq Alsubaie
+  email: tariq.alsubaie@phantom.lab
+  title: Sales Engineer
+  department: Sales
+  manager: aalzahrani
+  site: RUH
+  employee_number: PH01115
+  rid: 1115
+  workstation: PHWS-011
+  okta_id: 00us8jOsdtDmpMbeguPr
+  groups:
+  - SG-Sales
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 176.47.64.141
+- login: dalanazi
+  given_name: Dana
+  family_name: Alanazi
+  display_name: Dana Alanazi
+  email: dana.alanazi@phantom.lab
+  title: DevOps Engineer
+  department: Engineering
+  manager: salmutairi
+  site: RUH
+  employee_number: PH01116
+  rid: 1116
+  workstation: PHWS-012
+  okta_id: 00uI4rRSbdxp7CEDX6Zl
+  groups:
+  - SG-Engineering
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 51.36.184.154
+  cloud_access:
+  - aws
+  - azure
+  - gcp
+- login: malsaleh
+  given_name: Majed
+  family_name: Alsaleh
+  display_name: Majed Alsaleh
+  email: majed.alsaleh@phantom.lab
+  title: Payroll Specialist
+  department: Finance
+  manager: nalharbi
+  site: RUH
+  employee_number: PH01117
+  rid: 1117
+  workstation: PHWS-013
+  okta_id: 00uChzqVVgXXnBaFmqe0
+  groups:
+  - SG-Finance
+  - SG-VPN-Users
+  home_ip: 188.55.20.167
+- login: lalfaifi
+  given_name: Lama
+  family_name: Alfaifi
+  display_name: Lama Alfaifi
+  email: lama.alfaifi@phantom.lab
+  title: HR Coordinator
+  department: HR
+  manager: kalotaibi
+  site: RUH
+  employee_number: PH01118
+  rid: 1118
+  workstation: PHWS-014
+  okta_id: 00u0wxWUAsghLcsofP0B
+  groups:
+  - SG-HR
+  - SG-VPN-Users
+  home_ip: 37.242.29.180
+- login: salrashid
+  given_name: Saud
+  family_name: Alrashid
+  display_name: Saud Alrashid
+  email: saud.alrashid@phantom.lab
+  title: Sales Coordinator
+  department: Sales
+  manager: aalzahrani
+  site: RUH
+  employee_number: PH01119
+  rid: 1119
+  workstation: PHWS-015
+  okta_id: 00u8Ql8dDGY4vCAvXqxY
+  groups:
+  - SG-Sales
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 151.254.90.193
+- login: halkhaldi
+  given_name: Hessa
+  family_name: Alkhaldi
+  display_name: Hessa Alkhaldi
+  email: hessa.alkhaldi@phantom.lab
+  title: QA Engineer
+  department: Engineering
+  manager: salmutairi
+  site: RUH
+  employee_number: PH01120
+  rid: 1120
+  workstation: PHWS-016
+  okta_id: 00u7ecq1EWbJX61ddp7g
+  groups:
+  - SG-Engineering
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 51.39.134.206
+  cloud_access:
+  - aws
+  - azure
+  - gcp
+- login: balshammari
+  given_name: Bandar
+  family_name: Alshammari
+  display_name: Bandar Alshammari
+  email: bandar.alshammari@phantom.lab
+  title: Financial Analyst
+  department: Finance
+  manager: nalharbi
+  site: RUH
+  employee_number: PH01121
+  rid: 1121
+  workstation: PHWS-017
+  okta_id: 00uDgiUCkpuBvglRoJaN
+  groups:
+  - SG-Finance
+  - SG-VPN-Users
+  home_ip: 184.26.96.19
+- login: malyami
+  given_name: Maha
+  family_name: Alyami
+  display_name: Maha Alyami
+  email: maha.alyami@phantom.lab
+  title: HR Business Partner
+  department: HR
+  manager: kalotaibi
+  site: RUH
+  employee_number: PH01122
+  rid: 1122
+  workstation: PHWS-018
+  okta_id: 00uxswT6Uns0mUueSVM2
+  groups:
+  - SG-HR
+  - SG-VPN-Users
+  home_ip: 176.16.208.32
+- login: nalamri
+  given_name: Nasser
+  family_name: Alamri
+  display_name: Nasser Alamri
+  email: nasser.alamri@phantom.lab
+  title: Account Executive
+  department: Sales
+  manager: aalzahrani
+  site: RUH
+  employee_number: PH01123
+  rid: 1123
+  workstation: PHWS-019
+  okta_id: 00u6oMksHDEYibhdbyiy
+  groups:
+  - SG-Sales
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 64.65.106.45
+- login: ralsulami
+  given_name: Rana
+  family_name: Alsulami
+  display_name: Rana Alsulami
+  email: rana.alsulami@phantom.lab
+  title: Software Engineer
+  department: Engineering
+  manager: salmutairi
+  site: RUH
+  employee_number: PH01124
+  rid: 1124
+  workstation: PHWS-020
+  okta_id: 00uq5qymtPoUQyebhPCz
+  groups:
+  - SG-Engineering
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 77.232.102.58
+  cloud_access:
+  - aws
+  - azure
+  - gcp
+- login: walbishi
+  given_name: Waleed
+  family_name: Albishi
+  display_name: Waleed Albishi
+  email: waleed.albishi@phantom.lab
+  title: Accountant
+  department: Finance
+  manager: nalharbi
+  site: RUH
+  employee_number: PH01125
+  rid: 1125
+  workstation: PHWS-021
+  okta_id: 00uMrvtJhHGKONJMduFa
+  groups:
+  - SG-Finance
+  - SG-VPN-Users
+  home_ip: 51.211.188.71
+- login: aalruwaili
+  given_name: Amal
+  family_name: Alruwaili
+  display_name: Amal Alruwaili
+  email: amal.alruwaili@phantom.lab
+  title: Recruiter
+  department: HR
+  manager: kalotaibi
+  site: RUH
+  employee_number: PH01126
+  rid: 1126
+  workstation: PHWS-022
+  okta_id: 00u6QeKd8Ae2DwaGae9H
+  groups:
+  - SG-HR
+  - SG-VPN-Users
+  home_ip: 109.82.16.84
+- login: ialkhalifa
+  given_name: Ibrahim
+  family_name: Alkhalifa
+  display_name: Ibrahim Alkhalifa
+  email: ibrahim.alkhalifa@phantom.lab
+  title: IT Manager
+  department: IT
+  manager: aalhazmi
+  site: RUH
+  employee_number: PH01162
+  rid: 1162
+  workstation: PHWS-023
+  okta_id: 00upbVVu7lyoeiJAI5bj
+  groups:
+  - SG-IT
+  - SG-VPN-Users
+  admin_account:
+    login: adm.ialkhalifa
+    rid: 1127
+    employee_number: PH01127
+    display_name: Ibrahim Alkhalifa (admin)
+    groups:
+    - SG-VPN-Users
+    - SG-IT-Admins
+    - Domain Admins
+  home_ip: 95.185.87.97
+  cloud_access:
+  - aws
+  - azure
+- login: malwadi
+  given_name: Mansour
+  family_name: Alwadi
+  display_name: Mansour Alwadi
+  email: mansour.alwadi@phantom.lab
+  title: Systems Administrator
+  department: IT
+  manager: ialkhalifa
+  site: RUH
+  employee_number: PH01163
+  rid: 1163
+  workstation: PHWS-024
+  okta_id: 00u3IB8Zv8WWTbQ8v8hi
+  groups:
+  - SG-IT
+  - SG-VPN-Users
+  admin_account:
+    login: adm.malwadi
+    rid: 1128
+    employee_number: PH01128
+    display_name: Mansour Alwadi (admin)
+    groups:
+    - SG-VPN-Users
+    - SG-IT-Admins
+    - Domain Admins
+  home_ip: 51.39.52.110
+  cloud_access:
+  - aws
+  - azure
+- login: salotaibi
+  given_name: Shahad
+  family_name: Alotaibi
+  display_name: Shahad Alotaibi
+  email: shahad.alotaibi@phantom.lab
+  title: Systems Administrator
+  department: IT
+  manager: ialkhalifa
+  site: RUH
+  employee_number: PH01164
+  rid: 1164
+  workstation: PHWS-025
+  okta_id: 00uWlqGIlAawSzOKUQcU
+  groups:
+  - SG-IT
+  - SG-VPN-Users
+  admin_account:
+    login: adm.salotaibi
+    rid: 1129
+    employee_number: PH01129
+    display_name: Shahad Alotaibi (admin)
+    groups:
+    - SG-VPN-Users
+    - SG-IT-Admins
+    - Domain Admins
+  home_ip: 144.86.80.123
+  cloud_access:
+  - aws
+  - azure
+- login: talsudairi
+  given_name: Turki
+  family_name: Alsudairi
+  display_name: Turki Alsudairi
+  email: turki.alsudairi@phantom.lab
+  title: Systems Administrator
+  department: IT
+  manager: ialkhalifa
+  site: RUH
+  employee_number: PH01165
+  rid: 1165
+  workstation: PHWS-026
+  okta_id: 00uRMFOUviu5BzaiObpp
+  groups:
+  - SG-IT
+  - SG-VPN-Users
+  admin_account:
+    login: adm.talsudairi
+    rid: 1130
+    employee_number: PH01130
+    display_name: Turki Alsudairi (admin)
+    groups:
+    - SG-VPN-Users
+    - SG-IT-Admins
+    - Domain Admins
+  home_ip: 37.121.160.136
+  cloud_access:
+  - aws
+  - azure
+- login: falqarni
+  given_name: Fahad
+  family_name: Alqarni
+  display_name: Fahad Alqarni
+  email: fahad.alqarni@phantom.lab
+  title: Chief Executive Officer
+  department: Executive
+  manager: null
+  site: RUH
+  employee_number: PH01138
+  rid: 1138
+  workstation: PHWS-027
+  okta_id: 00uBmgzKmyG4DCCXP61P
+  groups:
+  - SG-Executive
+  - SG-VPN-Users
+  flags:
+  - vip
+  home_ip: 51.235.191.149
+- login: malessa
+  given_name: Mona
+  family_name: Alessa
+  display_name: Mona Alessa
+  email: mona.alessa@phantom.lab
+  title: Chief Financial Officer
+  department: Executive
+  manager: falqarni
+  site: RUH
+  employee_number: PH01139
+  rid: 1139
+  workstation: PHWS-028
+  okta_id: 00uz8FpiaefMuRKhaU0Z
+  groups:
+  - SG-Executive
+  - SG-VPN-Users
+  flags:
+  - vip
+  home_ip: 185.5.155.162
+- login: aalhazmi
+  given_name: Adel
+  family_name: Alhazmi
+  display_name: Adel Alhazmi
+  email: adel.alhazmi@phantom.lab
+  title: Chief Technology Officer
+  department: Executive
+  manager: falqarni
+  site: RUH
+  employee_number: PH01140
+  rid: 1140
+  workstation: PHWS-029
+  okta_id: 00uv89FF8Gf3QwUWzqmU
+  groups:
+  - SG-Executive
+  - SG-VPN-Users
+  home_ip: 168.149.64.175
+- login: salnasser
+  given_name: Salma
+  family_name: Alnasser
+  display_name: Salma Alnasser
+  email: salma.alnasser@phantom.lab
+  title: Executive Assistant
+  department: Executive
+  manager: falqarni
+  site: RUH
+  employee_number: PH01141
+  rid: 1141
+  workstation: PHWS-030
+  okta_id: 00uVEY28Na1s3oenBj5D
+  groups:
+  - SG-Executive
+  - SG-VPN-Users
+  home_ip: 37.141.8.188
+- login: ralsayegh
+  given_name: Rawan
+  family_name: Alsayegh
+  display_name: Rawan Alsayegh
+  email: rawan.alsayegh@phantom.lab
+  title: Accountant
+  department: Finance
+  manager: nalharbi
+  site: RUH
+  employee_number: PH01142
+  rid: 1142
+  workstation: PHWS-031
+  okta_id: 00u0K5emhXefuIgWCW6T
+  groups:
+  - SG-Finance
+  flags:
+  - leaver
+  disabled_on: '2026-09-30'
+  home_ip: 2.90.64.201
+- login: halshahrani
+  given_name: Hani
+  family_name: Alshahrani
+  display_name: Hani Alshahrani
+  email: hani.alshahrani@phantom.lab
+  title: Account Executive
+  department: Sales
+  manager: aalzahrani
+  site: JED
+  employee_number: PH01143
+  rid: 1143
+  workstation: PHWS-032
+  okta_id: 00ukClWBHCLA0Ay45xjN
+  groups:
+  - SG-Sales
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 51.39.2.14
+- login: jaljuhani
+  given_name: Joud
+  family_name: Aljuhani
+  display_name: Joud Aljuhani
+  email: joud.aljuhani@phantom.lab
+  title: Sales Engineer
+  department: Sales
+  manager: aalzahrani
+  site: Remote
+  employee_number: PH01144
+  rid: 1144
+  workstation: PHWS-033
+  okta_id: 00ui2YfnsGnz1IgK8PTR
+  groups:
+  - SG-Sales
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 77.31.81.27
+- login: malduwaish
+  given_name: Meshal
+  family_name: Alduwaish
+  display_name: Meshal Alduwaish
+  email: meshal.alduwaish@phantom.lab
+  title: Account Executive
+  department: Sales
+  manager: aalzahrani
+  site: JED
+  employee_number: PH01145
+  rid: 1145
+  workstation: PHWS-034
+  okta_id: 00u0J2dp6XsMfDgAdbID
+  groups:
+  - SG-Sales
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 31.166.128.40
+- login: galmazrou
+  given_name: Ghada
+  family_name: Almazrou
+  display_name: Ghada Almazrou
+  email: ghada.almazrou@phantom.lab
+  title: Sales Coordinator
+  department: Sales
+  manager: aalzahrani
+  site: RUH
+  employee_number: PH01146
+  rid: 1146
+  workstation: PHWS-035
+  okta_id: 00u37B9Ep85Hf9jzWu3O
+  groups:
+  - SG-Sales
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 176.47.64.53
+- login: aalzamil
+  given_name: Anas
+  family_name: Alzamil
+  display_name: Anas Alzamil
+  email: anas.alzamil@phantom.lab
+  title: DevOps Engineer
+  department: Engineering
+  manager: salmutairi
+  site: RUH
+  employee_number: PH01147
+  rid: 1147
+  workstation: PHWS-036
+  okta_id: 00u0uAEQl2ZpC6vI1Sjc
+  groups:
+  - SG-Engineering
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  flags:
+  - outlier
+  home_ip: 51.36.184.66
+  cloud_access:
+  - aws
+  - azure
+  - gcp
+- login: lalshibli
+  given_name: Lina
+  family_name: Alshibli
+  display_name: Lina Alshibli
+  email: lina.alshibli@phantom.lab
+  title: Software Engineer
+  department: Engineering
+  manager: salmutairi
+  site: JED
+  employee_number: PH01148
+  rid: 1148
+  workstation: PHWS-037
+  okta_id: 00uJzYUDJ92j5yUYTYGj
+  groups:
+  - SG-Engineering
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 188.55.20.79
+  cloud_access:
+  - aws
+  - azure
+  - gcp
+- login: ext.salburaidi
+  given_name: Sultan
+  family_name: Alburaidi
+  display_name: Sultan Alburaidi
+  email: sultan.alburaidi@phantom.lab
+  title: Cloud Engineer (contractor)
+  department: Engineering
+  manager: salmutairi
+  site: Remote
+  employee_number: PH01149
+  rid: 1149
+  workstation: PHWS-038
+  okta_id: 00uHHWOhNAZigKCE16gK
+  groups:
+  - SG-Engineering
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  - SG-Contractors
+  flags:
+  - contractor
+  contract_end: '2027-03-31'
+  home_ip: 37.242.29.92
+  cloud_access:
+  - aws
+  - azure
+  - gcp
+- login: dalsahli
+  given_name: Dalal
+  family_name: Alsahli
+  display_name: Dalal Alsahli
+  email: dalal.alsahli@phantom.lab
+  title: QA Engineer
+  department: Engineering
+  manager: salmutairi
+  site: JED
+  employee_number: PH01150
+  rid: 1150
+  workstation: PHWS-039
+  okta_id: 00u3bk4jJp4tXJw4XKtW
+  groups:
+  - SG-Engineering
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  home_ip: 151.254.90.105
+  cloud_access:
+  - aws
+  - azure
+  - gcp
+- login: ext.ralmubarak
+  given_name: Rayan
+  family_name: Almubarak
+  display_name: Rayan Almubarak
+  email: rayan.almubarak@phantom.lab
+  title: Software Engineer (contractor)
+  department: Engineering
+  manager: salmutairi
+  site: Remote
+  employee_number: PH01151
+  rid: 1151
+  workstation: PHWS-040
+  okta_id: 00uF3Y97HP9M8VTWPHbN
+  groups:
+  - SG-Engineering
+  - SG-VPN-Users
+  - SG-Project-Atlas
+  - SG-Contractors
+  flags:
+  - contractor
+  contract_end: '2027-03-31'
+  home_ip: 51.39.134.118
+  cloud_access:
+  - aws
+  - azure
+  - gcp
+- login: balomari
+  given_name: Basil
+  family_name: Alomari
+  display_name: Basil Alomari
+  email: basil.alomari@phantom.lab
+  title: Operations Manager
+  department: Operations
+  manager: aalhazmi
+  site: RUH
+  employee_number: PH01152
+  rid: 1152
+  workstation: PHWS-041
+  okta_id: 00uLd9GfXN85CJiVQvsr
+  groups:
+  - SG-Operations
+  - SG-VPN-Users
+  home_ip: 184.26.96.131
+- login: walsulaiman
+  given_name: Wafa
+  family_name: Alsulaiman
+  display_name: Wafa Alsulaiman
+  email: wafa.alsulaiman@phantom.lab
+  title: Facilities Coordinator
+  department: Operations
+  manager: balomari
+  site: RUH
+  employee_number: PH01153
+  rid: 1153
+  workstation: PHWS-042
+  okta_id: 00ubkTh2DzzOM0suiGSz
+  groups:
+  - SG-Operations
+  - SG-VPN-Users
+  home_ip: 176.16.208.144
+- login: zalhumaid
+  given_name: Ziyad
+  family_name: Alhumaid
+  display_name: Ziyad Alhumaid
+  email: ziyad.alhumaid@phantom.lab
+  title: Logistics Coordinator
+  department: Operations
+  manager: balomari
+  site: RUH
+  employee_number: PH01154
+  rid: 1154
+  workstation: PHWS-043
+  okta_id: 00uaSOUibwgguukNrbuJ
+  groups:
+  - SG-Operations
+  - SG-VPN-Users
+  home_ip: 64.65.106.157
+- login: aaljaber
+  given_name: Abeer
+  family_name: Aljaber
+  display_name: Abeer Aljaber
+  email: abeer.aljaber@phantom.lab
+  title: Procurement Specialist
+  department: Operations
+  manager: balomari
+  site: RUH
+  employee_number: PH01155
+  rid: 1155
+  workstation: PHWS-044
+  okta_id: 00uxnf0bsnw6Qv5RZkyD
+  groups:
+  - SG-Operations
+  - SG-VPN-Users
+  home_ip: 77.232.102.170
+- login: malbalawi
+  given_name: Mazen
+  family_name: Albalawi
+  display_name: Mazen Albalawi
+  email: mazen.albalawi@phantom.lab
+  title: Facilities Technician
+  department: Operations
+  manager: balomari
+  site: RUH
+  employee_number: PH01156
+  rid: 1156
+  workstation: PHWS-045
+  okta_id: 00usORLniECOGT5Kl5Gb
+  groups:
+  - SG-Operations
+  - SG-VPN-Users
+  home_ip: 51.211.188.183
+- login: halsuwaidi
+  given_name: Hatem
+  family_name: Alsuwaidi
+  display_name: Hatem Alsuwaidi
+  email: hatem.alsuwaidi@phantom.lab
+  title: Network Engineer
+  department: IT
+  manager: ialkhalifa
+  site: RUH
+  employee_number: PH01157
+  rid: 1157
+  workstation: PHWS-046
+  okta_id: 00us29VH1HBbaogyv2ab
+  groups:
+  - SG-IT
+  - SG-VPN-Users
+  admin_account:
+    login: adm.halsuwaidi
+    rid: 1166
+    employee_number: PH01166
+    display_name: Hatem Alsuwaidi (admin)
+    groups:
+    - SG-VPN-Users
+    - SG-IT-Admins
+    - Domain Admins
+  home_ip: 109.82.16.196
+  cloud_access:
+  - aws
+  - azure
+- login: ralmarri
+  given_name: Ruba
+  family_name: Almarri
+  display_name: Ruba Almarri
+  email: ruba.almarri@phantom.lab
+  title: Security Engineer
+  department: IT
+  manager: ialkhalifa
+  site: RUH
+  employee_number: PH01158
+  rid: 1158
+  workstation: PHWS-047
+  okta_id: 00uRjEx1mabcD9eUVdhq
+  groups:
+  - SG-IT
+  - SG-VPN-Users
+  admin_account:
+    login: adm.ralmarri
+    rid: 1167
+    employee_number: PH01167
+    display_name: Ruba Almarri (admin)
+    groups:
+    - SG-VPN-Users
+    - SG-IT-Admins
+    - Domain Admins
+  home_ip: 95.185.87.209
+  cloud_access:
+  - aws
+  - azure
+- login: oalghanem
+  given_name: Osama
+  family_name: Alghanem
+  display_name: Osama Alghanem
+  email: osama.alghanem@phantom.lab
+  title: Helpdesk Analyst
+  department: IT
+  manager: ialkhalifa
+  site: RUH
+  employee_number: PH01159
+  rid: 1159
+  workstation: PHWS-048
+  okta_id: 00uzweY9lm1ehhvTyFBq
+  groups:
+  - SG-IT
+  - SG-VPN-Users
+  home_ip: 51.39.52.22
+  cloud_access:
+  - aws
+  - azure
+- login: lalbassam
+  given_name: Lujain
+  family_name: Albassam
+  display_name: Lujain Albassam
+  email: lujain.albassam@phantom.lab
+  title: Helpdesk Analyst
+  department: IT
+  manager: ialkhalifa
+  site: RUH
+  employee_number: PH01160
+  rid: 1160
+  workstation: PHWS-049
+  okta_id: 00uvlHsU1oYPbjLdOXAB
+  groups:
+  - SG-IT
+  - SG-VPN-Users
+  home_ip: 144.86.80.35
+  cloud_access:
+  - aws
+  - azure
+- login: jalsaif
+  given_name: Jawad
+  family_name: Alsaif
+  display_name: Jawad Alsaif
+  email: jawad.alsaif@phantom.lab
+  title: Database Administrator
+  department: IT
+  manager: ialkhalifa
+  site: RUH
+  employee_number: PH01161
+  rid: 1161
+  workstation: PHWS-050
+  okta_id: 00uqVcWbdIqxcggwkWgC
+  groups:
+  - SG-IT
+  - SG-VPN-Users
+  admin_account:
+    login: adm.jalsaif
+    rid: 1168
+    employee_number: PH01168
+    display_name: Jawad Alsaif (admin)
+    groups:
+    - SG-VPN-Users
+    - SG-IT-Admins
+    - Domain Admins
+  home_ip: 37.121.160.48
+  cloud_access:
+  - aws
+  - azure
+service_accounts:
+- login: svc-sql
+  display_name: SQL Service
+  kind: service
+  host: PHSRV-SQL01
+  rid: 1131
+  employee_number: PH01131
+  manager: ialkhalifa
+  groups:
+  - SG-Service-Accounts
+- login: svc-backup
+  display_name: Backup Service
+  kind: service
+  host: PHSRV-FS01
+  rid: 1132
+  employee_number: PH01132
+  manager: ialkhalifa
+  groups:
+  - SG-Service-Accounts
+- login: svc-web
+  display_name: Web Service
+  kind: service
+  host: PHSRV-WEB01
+  rid: 1133
+  employee_number: PH01133
+  manager: ialkhalifa
+  groups:
+  - SG-Service-Accounts
+- login: svc-app
+  display_name: Application Service
+  kind: service
+  host: PHSRV-APP01
+  rid: 1134
+  employee_number: PH01134
+  manager: ialkhalifa
+  groups:
+  - SG-Service-Accounts
+- login: svc-adsync
+  display_name: Directory Sync Service
+  kind: service
+  host: PHSRV-APP01
+  rid: 1135
+  employee_number: PH01135
+  manager: ialkhalifa
+  groups:
+  - SG-Service-Accounts
+- login: svc-scanner
+  display_name: Vulnerability Scanner Service
+  kind: service
+  host: PHSEC-SCAN01
+  rid: 1136
+  employee_number: PH01136
+  manager: ialkhalifa
+  groups:
+  - SG-Service-Accounts
+- login: adm.breakglass
+  display_name: Emergency Break-glass Administrator
+  kind: break_glass
+  host: PHDC01
+  rid: 1137
+  employee_number: PH01137
+  manager: ialkhalifa
+  groups:
+  - SG-IT-Admins
+  - Domain Admins
+hosts:
+- name: PHDC01
+  role: dc
+  site: RUH
+  ip: 10.20.0.10
+  network: ruh-core
+  os: Windows Server 2022
+  rid: 1000
+  purpose: Domain controller
+  domain_joined: true
+- name: PHDC02
+  role: dc
+  site: RUH
+  ip: 10.20.0.11
+  network: ruh-core
+  os: Windows Server 2022
+  rid: 1001
+  purpose: Domain controller
+  domain_joined: true
+- name: PHSRV-FS01
+  role: server
+  site: RUH
+  ip: 10.20.1.20
+  network: ruh-servers
+  os: Windows Server 2022
+  rid: 1002
+  purpose: File server
+  domain_joined: true
+- name: PHSRV-APP01
+  role: server
+  site: RUH
+  ip: 10.20.1.21
+  network: ruh-servers
+  os: Windows Server 2022
+  rid: 1003
+  purpose: Application server
+  domain_joined: true
+- name: PHSRV-SQL01
+  role: server
+  site: RUH
+  ip: 10.20.1.22
+  network: ruh-servers
+  os: Windows Server 2022
+  rid: 1004
+  purpose: SQL Server
+  domain_joined: true
+- name: PHSRV-WEB01
+  role: server
+  site: RUH
+  ip: 10.20.1.23
+  network: ruh-servers
+  os: Windows Server 2022
+  rid: 1005
+  purpose: Internal web server
+  domain_joined: true
+- name: PHWS-001
+  role: workstation
+  site: RUH
+  ip: 10.20.16.20
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1006
+  owner: nalharbi
+  domain_joined: true
+- name: PHWS-002
+  role: workstation
+  site: RUH
+  ip: 10.20.16.21
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1007
+  owner: kalotaibi
+  domain_joined: true
+- name: PHWS-003
+  role: workstation
+  site: RUH
+  ip: 10.20.16.22
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1008
+  owner: aalzahrani
+  domain_joined: true
+- name: PHWS-004
+  role: workstation
+  site: RUH
+  ip: 10.20.16.23
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1009
+  owner: salmutairi
+  domain_joined: true
+- name: PHWS-005
+  role: workstation
+  site: RUH
+  ip: 10.20.16.24
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1010
+  owner: falqahtani
+  domain_joined: true
+- name: PHWS-006
+  role: workstation
+  site: RUH
+  ip: 10.20.16.25
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1011
+  owner: raldosari
+  domain_joined: true
+- name: PHWS-007
+  role: workstation
+  site: RUH
+  ip: 10.20.16.26
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1012
+  owner: oalshehri
+  domain_joined: true
+- name: PHWS-008
+  role: workstation
+  site: RUH
+  ip: 10.20.16.27
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1013
+  owner: halghamdi
+  domain_joined: true
+- name: PHWS-009
+  role: workstation
+  site: RUH
+  ip: 10.20.16.28
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1014
+  owner: yalharthi
+  domain_joined: true
+- name: PHWS-010
+  role: workstation
+  site: RUH
+  ip: 10.20.16.29
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1015
+  owner: lalmalki
+  domain_joined: true
+- name: PHWS-011
+  role: workstation
+  site: RUH
+  ip: 10.20.16.30
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1016
+  owner: talsubaie
+  domain_joined: true
+- name: PHWS-012
+  role: workstation
+  site: RUH
+  ip: 10.20.16.31
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1017
+  owner: dalanazi
+  domain_joined: true
+- name: PHWS-013
+  role: workstation
+  site: RUH
+  ip: 10.20.16.32
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1018
+  owner: malsaleh
+  domain_joined: true
+- name: PHWS-014
+  role: workstation
+  site: RUH
+  ip: 10.20.16.33
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1019
+  owner: lalfaifi
+  domain_joined: true
+- name: PHWS-015
+  role: workstation
+  site: RUH
+  ip: 10.20.16.34
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1020
+  owner: salrashid
+  domain_joined: true
+- name: PHWS-016
+  role: workstation
+  site: RUH
+  ip: 10.20.16.35
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1021
+  owner: halkhaldi
+  domain_joined: true
+- name: PHWS-017
+  role: workstation
+  site: RUH
+  ip: 10.20.16.36
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1022
+  owner: balshammari
+  domain_joined: true
+- name: PHWS-018
+  role: workstation
+  site: RUH
+  ip: 10.20.16.37
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1023
+  owner: malyami
+  domain_joined: true
+- name: PHWS-019
+  role: workstation
+  site: RUH
+  ip: 10.20.16.38
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1024
+  owner: nalamri
+  domain_joined: true
+- name: PHWS-020
+  role: workstation
+  site: RUH
+  ip: 10.20.16.39
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1025
+  owner: ralsulami
+  domain_joined: true
+- name: PHWS-021
+  role: workstation
+  site: RUH
+  ip: 10.20.16.40
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1026
+  owner: walbishi
+  domain_joined: true
+- name: PHWS-022
+  role: workstation
+  site: RUH
+  ip: 10.20.16.41
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1027
+  owner: aalruwaili
+  domain_joined: true
+- name: PHWS-023
+  role: workstation
+  site: RUH
+  ip: 10.20.16.42
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1028
+  owner: ialkhalifa
+  domain_joined: true
+- name: PHWS-024
+  role: workstation
+  site: RUH
+  ip: 10.20.16.43
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1029
+  owner: malwadi
+  domain_joined: true
+- name: PHWS-025
+  role: workstation
+  site: RUH
+  ip: 10.20.16.44
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1030
+  owner: salotaibi
+  domain_joined: true
+- name: PHWS-026
+  role: workstation
+  site: RUH
+  ip: 10.20.16.45
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1031
+  owner: talsudairi
+  domain_joined: true
+- name: PHWS-027
+  role: workstation
+  site: RUH
+  ip: 10.20.16.46
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1032
+  owner: falqarni
+  domain_joined: true
+- name: PHWS-028
+  role: workstation
+  site: RUH
+  ip: 10.20.16.47
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1033
+  owner: malessa
+  domain_joined: true
+- name: PHWS-029
+  role: workstation
+  site: RUH
+  ip: 10.20.16.48
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1034
+  owner: aalhazmi
+  domain_joined: true
+- name: PHWS-030
+  role: workstation
+  site: RUH
+  ip: 10.20.16.49
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1035
+  owner: salnasser
+  domain_joined: true
+- name: PHWS-031
+  role: workstation
+  site: RUH
+  ip: 10.20.16.50
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1036
+  owner: ralsayegh
+  domain_joined: true
+- name: PHWS-032
+  role: workstation
+  site: JED
+  ip: 10.21.16.51
+  network: jed-lan
+  os: Windows 11 Enterprise
+  rid: 1037
+  owner: halshahrani
+  domain_joined: true
+- name: PHWS-033
+  role: workstation
+  site: Remote
+  ip: 10.20.200.10
+  network: vpn
+  os: Windows 11 Enterprise
+  rid: 1038
+  owner: jaljuhani
+  domain_joined: true
+- name: PHWS-034
+  role: workstation
+  site: JED
+  ip: 10.21.16.53
+  network: jed-lan
+  os: Windows 11 Enterprise
+  rid: 1039
+  owner: malduwaish
+  domain_joined: true
+- name: PHWS-035
+  role: workstation
+  site: RUH
+  ip: 10.20.16.54
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1040
+  owner: galmazrou
+  domain_joined: true
+- name: PHWS-036
+  role: workstation
+  site: RUH
+  ip: 10.20.16.55
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1041
+  owner: aalzamil
+  domain_joined: true
+- name: PHWS-037
+  role: workstation
+  site: JED
+  ip: 10.21.16.56
+  network: jed-lan
+  os: Windows 11 Enterprise
+  rid: 1042
+  owner: lalshibli
+  domain_joined: true
+- name: PHWS-038
+  role: workstation
+  site: Remote
+  ip: 10.20.200.11
+  network: vpn
+  os: Windows 11 Enterprise
+  rid: 1043
+  owner: ext.salburaidi
+  domain_joined: true
+- name: PHWS-039
+  role: workstation
+  site: JED
+  ip: 10.21.16.58
+  network: jed-lan
+  os: Windows 11 Enterprise
+  rid: 1044
+  owner: dalsahli
+  domain_joined: true
+- name: PHWS-040
+  role: workstation
+  site: Remote
+  ip: 10.20.200.12
+  network: vpn
+  os: Windows 11 Enterprise
+  rid: 1045
+  owner: ext.ralmubarak
+  domain_joined: true
+- name: PHWS-041
+  role: workstation
+  site: RUH
+  ip: 10.20.16.60
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1046
+  owner: balomari
+  domain_joined: true
+- name: PHWS-042
+  role: workstation
+  site: RUH
+  ip: 10.20.16.61
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1047
+  owner: walsulaiman
+  domain_joined: true
+- name: PHWS-043
+  role: workstation
+  site: RUH
+  ip: 10.20.16.62
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1048
+  owner: zalhumaid
+  domain_joined: true
+- name: PHWS-044
+  role: workstation
+  site: RUH
+  ip: 10.20.16.63
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1049
+  owner: aaljaber
+  domain_joined: true
+- name: PHWS-045
+  role: workstation
+  site: RUH
+  ip: 10.20.16.64
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1050
+  owner: malbalawi
+  domain_joined: true
+- name: PHWS-046
+  role: workstation
+  site: RUH
+  ip: 10.20.16.65
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1051
+  owner: halsuwaidi
+  domain_joined: true
+- name: PHWS-047
+  role: workstation
+  site: RUH
+  ip: 10.20.16.66
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1052
+  owner: ralmarri
+  domain_joined: true
+- name: PHWS-048
+  role: workstation
+  site: RUH
+  ip: 10.20.16.67
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1053
+  owner: oalghanem
+  domain_joined: true
+- name: PHWS-049
+  role: workstation
+  site: RUH
+  ip: 10.20.16.68
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1054
+  owner: lalbassam
+  domain_joined: true
+- name: PHWS-050
+  role: workstation
+  site: RUH
+  ip: 10.20.16.69
+  network: ruh-workstations
+  os: Windows 11 Enterprise
+  rid: 1055
+  owner: jalsaif
+  domain_joined: true
+- name: PHSRV-CA01
+  role: server
+  site: RUH
+  ip: 10.20.1.24
+  network: ruh-servers
+  os: Windows Server 2022
+  rid: 1057
+  purpose: Certificate authority (AD CS)
+  domain_joined: true
+- name: PHSRV-EXCH01
+  role: server
+  site: RUH
+  ip: 10.20.1.25
+  network: ruh-servers
+  os: Windows Server 2022
+  rid: 1058
+  purpose: Mail server
+  domain_joined: true
+- name: PHSRV-SCCM01
+  role: server
+  site: RUH
+  ip: 10.20.1.26
+  network: ruh-servers
+  os: Windows Server 2022
+  rid: 1059
+  purpose: Endpoint management (SCCM)
+  domain_joined: true
+- name: PHSRV-BKP01
+  role: server
+  site: RUH
+  ip: 10.20.1.27
+  network: ruh-servers
+  os: Windows Server 2022
+  rid: 1060
+  purpose: Backup server
+  domain_joined: true
+- name: PHRODC-JED01
+  role: dc
+  site: JED
+  ip: 10.21.0.10
+  network: jed-lan
+  os: Windows Server 2022
+  rid: 1056
+  purpose: Read-only domain controller, Jeddah branch
+  domain_joined: true
+- name: PHDMZ-WEB01
+  role: dmz
+  site: RUH
+  ip: 172.16.10.10
+  network: dmz
+  os: Ubuntu 22.04 LTS
+  purpose: Public web application
+  domain_joined: false
+- name: PHDMZ-MAIL01
+  role: dmz
+  site: RUH
+  ip: 172.16.10.11
+  network: dmz
+  os: Windows Server 2022
+  purpose: Mail gateway
+  domain_joined: false
+- name: PHDMZ-VPN01
+  role: dmz
+  site: RUH
+  ip: 172.16.10.12
+  network: dmz
+  os: Appliance
+  purpose: Remote-access VPN gateway
+  domain_joined: false
+- name: PHFW-RUH01
+  role: network
+  site: RUH
+  ip: 10.20.2.10
+  network: ruh-management
+  os: PAN-OS
+  purpose: Riyadh perimeter firewall
+- name: PHFW-JED01
+  role: network
+  site: JED
+  ip: 10.21.0.2
+  network: jed-lan
+  os: PAN-OS
+  purpose: Jeddah branch firewall
+- name: PHSW-CORE01
+  role: network
+  site: RUH
+  ip: 10.20.2.20
+  network: ruh-management
+  os: Switch OS
+  purpose: Core switch
+- name: PHBRK01
+  role: security
+  site: RUH
+  ip: 10.20.3.10
+  network: ruh-security
+  os: Cortex Broker VM
+  purpose: Cortex Broker VM (syslog, WEC)
+- name: PHSEC-SCAN01
+  role: security
+  site: RUH
+  ip: 10.20.3.20
+  network: ruh-security
+  os: Windows Server 2022
+  rid: 1061
+  purpose: Vulnerability scanner
+  domain_joined: true
+- name: aws-ph-web-01
+  role: cloud
+  site: AWS
+  ip: 10.100.1.10
+  network: aws-vpc
+  os: Amazon Linux 2023
+  purpose: AWS web instance
+- name: aws-ph-app-01
+  role: cloud
+  site: AWS
+  ip: 10.100.2.10
+  network: aws-vpc
+  os: Amazon Linux 2023
+  purpose: AWS application instance
+- name: az-ph-vm-01
+  role: cloud
+  site: Azure
+  ip: 10.110.1.10
+  network: azure-vnet
+  os: Windows Server 2022
+  purpose: Azure application VM
+- name: az-ph-vm-02
+  role: cloud
+  site: Azure
+  ip: 10.110.1.11
+  network: azure-vnet
+  os: Ubuntu 22.04 LTS
+  purpose: Azure worker VM
+- name: gcp-ph-vm-01
+  role: cloud
+  site: GCP
+  ip: 10.120.1.10
+  network: gcp-vpc
+  os: Debian 12
+  purpose: GCP application VM
+- name: gcp-ph-vm-02
+  role: cloud
+  site: GCP
+  ip: 10.120.1.11
+  network: gcp-vpc
+  os: Debian 12
+  purpose: GCP data VM
+cloud:
+  aws:
+    account_id: '481516234201'
+    account_name: phantom-lab-prod
+    region: me-central-1
+  azure:
+    tenant_id: b6d1f3a2-4c5e-4f60-9a71-2e8c0d5f7a11
+    subscription_id: 9e2c7a40-31b8-4d6f-8c15-5a0f3b7e1d22
+    tenant_domain: phantomlab.example
+    region: uaenorth
+  gcp:
+    project_id: phantom-lab-prod
+    project_number: '704382915306'
+    region: me-central2

