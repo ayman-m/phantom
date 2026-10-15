@@ -252,10 +252,9 @@ if [ -s "$WORK/spec.problems" ]; then while IFS= read -r l; do bad "$l"; done < 
 echo "== smoke"
 new_registry 20
 expect_ok "smoke runtime" run smoke "$RT" "$R/$RT:1.0.4"
-grep -q "runtime.organization_view" "$STUB_DIR/run-code.log" && ok || bad "the runtime check imports the organization modules"
+grep -q "pkgutil.iter_modules(runtime.__path__)" "$STUB_DIR/run-code.log" && ok || bad "the runtime check imports every runtime module"
 expect_ok "smoke http-sender" run smoke phantom-connector-http-sender-oss "$R/phantom-connector-http-sender-oss:1.0.4"
 tail -n 1 "$STUB_DIR/run-code.log" | grep -q "connectors.http-sender.src.connector" && ok || bad "a connector check imports the connector the way the entrypoint does"
-tail -n 1 "$STUB_DIR/run-code.log" | grep -q "runtime.organization_view" && ok || bad "a connector check also imports the organization view"
 : > "$STUB_DIR/runs.log"
 expect_ok "smoke agent has no check" run smoke phantom-agent-oss "$R/phantom-agent-oss:1.0.4"
 [ ! -s "$STUB_DIR/runs.log" ] && ok || bad "no container is run for a package without a check"

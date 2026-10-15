@@ -32,7 +32,7 @@ REGISTRY="ghcr.io/$OWNER"
 
 # Packages built from this checkout, one per line: package|context|dockerfile|watched paths|check
 #   watched paths   what a change to which means the image is stale (`always`: built on every run)
-#   check           `-` none, `runtime` the runtime modules import, `connector:<id>` the connector module imports as the
+#   check           `-` none, `runtime` every runtime module imports, `connector:<id>` the connector module imports as the
 #                   runtime entrypoint imports it (this is what fails on a connector built on an older runtime base)
 # The runtime comes first: every connector image is built FROM it at TAG. Keep in step with BUILDING.md and
 # installer/CLAUDE.md.
@@ -206,11 +206,13 @@ cmd_smoke() {
   check="${e##*|}"
   case "$check" in
     -) echo "no import check for $pkg"; return 0 ;;
-    runtime) code='import runtime.entrypoint, runtime.organization_reader, runtime.organization_view' ;;
+    # Every module of the runtime package imports, so a module that needs something the image lacks fails here.
+    runtime) code="import importlib, pkgutil, runtime; [importlib.import_module('runtime.' + m.name) for m in pkgutil.iter_modules(runtime.__path__)]" ;;
     connector:*)
       id="${check#connector:}"
-      # What runtime.entrypoint does at boot, plus the runtime modules the connectors read the organization through.
-      code="import importlib, runtime.organization_view; importlib.import_module('connectors.${id}.src.connector')" ;;
+      # What runtime.entrypoint does at boot. A connector whose source needs a runtime module that the image's runtime
+      # lacks (it was built on an older runtime) fails on this import.
+      code="import importlib; importlib.import_module('connectors.${id}.src.connector')" ;;
     *) die "smoke: unknown check '$check' for $pkg" ;;
   esac
   docker run --rm --entrypoint python "$image" -c "$code" || die "$pkg: the import check failed inside $image; not pushing it"
