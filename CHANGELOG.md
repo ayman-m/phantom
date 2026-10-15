@@ -8,7 +8,7 @@ Each release section is written in operator language, not git-shortlog language.
 
 ---
 
-## [v1.0.6] — Unreleased — *Connector setup: Test Connection for every connector and the HTTP Sender destination switch*
+## [v1.0.6] — 2026-10-15 — *Connector setup: Test Connection for every connector and the HTTP Sender destination switch*
 
 Setting up a connector now works the same way for all nine: every one has a Test Connection that says what it checked, the Edit dialog shows every field the connector has, and the HTTP Sender asks which kind of destination you want before it shows any fields.
 
@@ -30,7 +30,7 @@ Setting up a connector now works the same way for all nine: every one has a Test
 
 ---
 
-## [v1.0.5] — Unreleased — *Model providers: Claude and OpenAI beside Vertex, with a live model registry and one default model*
+## [v1.0.5] — shipped in v1.0.6 (2026-10-15) — *Model providers: Claude and OpenAI beside Vertex, with a live model registry and one default model*
 
 Phantom can now run on Anthropic Claude and OpenAI as well as Google Gemini. Add an API key on `/providers`, pick a model on `/models`, and chat, jobs, subagents and the benchmark all use it. Vertex is no longer required.
 
@@ -77,7 +77,7 @@ Phantom can now run on Anthropic Claude and OpenAI as well as Google Gemini. Add
 
 ---
 
-## [v1.0.4] — Unreleased — *Hook, benchmark and status fixes, and documentation coverage*
+## [v1.0.4] — shipped in v1.0.6 (2026-10-15) — *Hook, benchmark and status fixes, and documentation coverage*
 
 A patch release from a second page-by-page walkthrough: the pages the first one did not reach (Services, Hooks, Benchmark and the About and Observability pages) now have fixes and documentation.
 

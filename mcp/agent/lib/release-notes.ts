@@ -34,7 +34,7 @@ export interface ReleaseNote {
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
     version: "1.0.6",
-    date: "Unreleased", // set to the ISO publish date when v1.0.6 is tagged
+    date: "2026-10-15",
     title: "Connector setup: Test Connection for every connector and the HTTP Sender destination switch.",
     highlights: [
       "Test Connection works for all nine connectors and says what it checked and what it did not.",
@@ -46,7 +46,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   },
   {
     version: "1.0.5",
-    date: "Unreleased", // set to the ISO publish date when v1.0.5 is tagged
+    date: "2026-10-15", // shipped in v1.0.6
     title: "Model providers: Claude and OpenAI beside Vertex, with a live model registry and one default model.",
     breaking: true,
     highlights: [
@@ -60,7 +60,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
   },
   {
     version: "1.0.4",
-    date: "Unreleased", // set to the ISO publish date when v1.0.4 is tagged
+    date: "2026-10-15", // shipped in v1.0.6
     title: "Hook, benchmark and status fixes, and documentation coverage.",
     highlights: [
       "Claude Code CLI integration removed; the Anthropic card keeps only the API key field.",
