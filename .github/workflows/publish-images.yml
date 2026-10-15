@@ -1,17 +1,22 @@
 name: Publish images
 
 # Publishes a Phantom release to GHCR, run by hand (workflow_dispatch only):
-#   gh workflow run publish-images.yml -R ayman-m/phantom -f tag=X.Y.Z[-rcN] -f base_tag=A.B.C
+#   gh workflow run publish-images.yml -R ayman-m/phantom -f tag=X.Y.Z[-rcN] -f base_tag=A.B.C [-f rebuild=all]
 #
-# - phantom-agent-oss is built from this checkout (mcp/agent/Dockerfile, repo-root context, no build args)
-#   and pushed as <tag>.
-# - The other fourteen images are not rebuilt: <tag> is added to the image that <base_tag> already points
-#   at, so their digests stay identical to <base_tag>.
+# - Every image whose build context changed since base_tag is BUILT from this checkout and pushed as <tag>: the
+#   agent always, the connector runtime and the connector images when their code or the runtime changed, and xlog,
+#   the updater and the browser sidecar when their directories changed. `rebuild=all` builds every buildable image.
+#   The runtime is built first, and every connector image is built FROM the runtime at <tag>, so a connector can
+#   never sit on an older runtime than the one in the same release.
+# - Each built image runs an import check inside the image before it is pushed (the connector module imports the
+#   way the runtime entrypoint imports it); a failing image is not pushed.
+# - Unchanged images, and Caldera (which needs a build-time overlay and is never built here), get <tag> added to the
+#   image that <base_tag> already points at, so their digests stay identical to <base_tag>.
 # - Only <tag> is ever written. `latest` and X.Y are never touched, and a released (non -rcN) version
 #   is never overwritten. The guards live in .github/scripts/publish-images.sh and are tested by
 #   .github/scripts/test-publish-images.sh, which runs first.
 #
-# No stored secret: the job logs in to GHCR with the run's GITHUB_TOKEN, on a GitHub-hosted runner. That
+# No stored secret: the jobs log in to GHCR with the run's GITHUB_TOKEN, on GitHub-hosted runners. That
 # works only after each package grants this repository write access (BUILDING.md, "Publishing images").
 
 on:
@@ -22,10 +27,18 @@ on:
         required: true
         type: string
       base_tag:
-        description: "Already-published X.Y.Z whose images the unchanged services are retagged from"
+        description: "Already-published X.Y.Z whose images the unchanged services are retagged from (its git tag vX.Y.Z is what changes are compared with)"
         required: true
         default: "1.0.3"
         type: string
+      rebuild:
+        description: "auto builds what changed since base_tag; all builds every buildable image (use it when base_tag's images were not built by this workflow)"
+        required: true
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - all
 
 permissions: {}
 
@@ -33,21 +46,32 @@ concurrency:
   group: publish-images
   cancel-in-progress: false
 
+env:
+  TAG: ${{ inputs.tag }}
+  BASE_TAG: ${{ inputs.base_tag }}
+  REBUILD: ${{ inputs.rebuild }}
+
 jobs:
-  publish:
-    name: Publish ${{ inputs.tag }}
+  plan:
+    name: Plan ${{ inputs.tag }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     permissions:
       contents: read # checkout
-      packages: write # push the agent image, add tags to the other fourteen
-    env:
-      TAG: ${{ inputs.tag }}
-      BASE_TAG: ${{ inputs.base_tag }}
+      packages: read # read the existing tags
+    outputs:
+      runtime: ${{ steps.plan.outputs.runtime }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+      retag: ${{ steps.plan.outputs.retag }}
+      retag_rest: ${{ steps.plan.outputs.retag_rest }}
+      built: ${{ steps.plan.outputs.built }}
+      snapshot: ${{ steps.snapshot.outputs.snapshot }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0 # the plan diffs this checkout against the git tag of base_tag
+          fetch-tags: true
 
       - name: Validate inputs and run context
         # Fails before any login or build: bad tag, tag == base_tag, wrong repository, or a ref other than main.
@@ -69,25 +93,190 @@ jobs:
         # base_tag, latest and X.Y are recorded to be compared after the run.
         run: bash .github/scripts/publish-images.sh preflight "$RUNNER_TEMP/before.tsv"
 
-      - name: Build and push phantom-agent-oss
-        id: agent
+      - name: Decide what is built and what is retagged
+        id: plan
+        run: bash .github/scripts/publish-images.sh plan
+
+      - name: Hand the recorded digests to the last job
+        id: snapshot
+        run: |
+          {
+            echo "snapshot<<EOF_SNAPSHOT"
+            cat "$RUNNER_TEMP/before.tsv"
+            echo "EOF_SNAPSHOT"
+          } >> "$GITHUB_OUTPUT"
+
+  runtime:
+    name: Connector runtime
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read # checkout
+      packages: write # push, or add a tag
+    env:
+      PKG: phantom-connector-runtime-oss
+      IMAGE: ghcr.io/ayman-m/phantom-connector-runtime-oss:${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build the runtime (not pushed yet)
+        if: needs.plan.outputs.runtime == 'build'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          context: .
-          file: mcp/agent/Dockerfile
+          context: phantom-connector-runtime
+          file: phantom-connector-runtime/Dockerfile
+          pull: true
+          load: true
+          provenance: false
+          sbom: false
+          tags: ${{ env.IMAGE }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/ayman-m/phantom
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Import check inside the image
+        if: needs.plan.outputs.runtime == 'build'
+        run: bash .github/scripts/publish-images.sh smoke "$PKG" "$IMAGE"
+
+      - name: Push the runtime
+        id: push
+        if: needs.plan.outputs.runtime == 'build'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: phantom-connector-runtime
+          file: phantom-connector-runtime/Dockerfile
           pull: true
           push: true
+          provenance: false
+          sbom: false
+          tags: ${{ env.IMAGE }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/ayman-m/phantom
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Check what was pushed
+        if: needs.plan.outputs.runtime == 'build'
+        env:
+          PUSHED_DIGEST: ${{ steps.push.outputs.digest }}
+        run: bash .github/scripts/publish-images.sh check-pushed "$PKG" "$PUSHED_DIGEST"
+
+      - name: Add the tag to the unchanged runtime
+        if: needs.plan.outputs.runtime == 'retag'
+        env:
+          RETAG_LIST: phantom-connector-runtime-oss
+        run: bash .github/scripts/publish-images.sh retag
+
+  images:
+    name: ${{ matrix.pkg }}
+    needs: [plan, runtime]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read # checkout
+      packages: write # push
+    strategy:
+      # One failing image must not hide the others' result; a release candidate can be run again.
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      PKG: ${{ matrix.pkg }}
+      IMAGE: ghcr.io/ayman-m/${{ matrix.pkg }}:${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (not pushed yet)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          build-args: ${{ matrix.build_args }}
+          pull: true
+          load: true
           # Single image manifest, as the earlier releases: no provenance or SBOM attestation index.
           provenance: false
           sbom: false
-          tags: ghcr.io/ayman-m/phantom-agent-oss:${{ inputs.tag }}
+          tags: ${{ env.IMAGE }}
           labels: |
             org.opencontainers.image.source=https://github.com/ayman-m/phantom
+            org.opencontainers.image.revision=${{ github.sha }}
 
-      - name: Add the tag to the fourteen unchanged images
+      - name: Import check inside the image
+        run: bash .github/scripts/publish-images.sh smoke "$PKG" "$IMAGE"
+
+      - name: Push
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          build-args: ${{ matrix.build_args }}
+          pull: true
+          push: true
+          provenance: false
+          sbom: false
+          tags: ${{ env.IMAGE }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/ayman-m/phantom
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Check what was pushed
+        env:
+          PUSHED_DIGEST: ${{ steps.push.outputs.digest }}
+        run: bash .github/scripts/publish-images.sh check-pushed "$PKG" "$PUSHED_DIGEST"
+
+  finish:
+    name: Retag the unchanged images and verify
+    needs: [plan, runtime, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read # checkout
+      packages: write # add tags
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add the tag to the unchanged images
+        env:
+          RETAG_LIST: ${{ needs.plan.outputs.retag_rest }}
         run: bash .github/scripts/publish-images.sh retag
 
       - name: Verify and write the summary
         env:
-          AGENT_DIGEST: ${{ steps.agent.outputs.digest }}
-        run: bash .github/scripts/publish-images.sh verify "$RUNNER_TEMP/before.tsv"
+          RETAG_LIST: ${{ needs.plan.outputs.retag }}
+          BUILT_LIST: ${{ needs.plan.outputs.built }}
+          SNAPSHOT: ${{ needs.plan.outputs.snapshot }}
+        run: |
+          printf '%s\n' "$SNAPSHOT" > "$RUNNER_TEMP/before.tsv"
+          bash .github/scripts/publish-images.sh verify "$RUNNER_TEMP/before.tsv"

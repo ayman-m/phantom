@@ -1,45 +1,60 @@
 #!/usr/bin/env bash
-# Release-guard logic for .github/workflows/publish-images.yml. Tested by test-publish-images.sh
-# against a stub `docker`; the workflow runs that test before it touches the registry.
+# Release logic for .github/workflows/publish-images.yml. Tested by test-publish-images.sh against
+# a stub `docker` and a scratch git repository; the workflow runs that test before it touches the registry.
 #
 #   validate            check the inputs and that the run is on main of the public repo
 #   preflight FILE      refuse to overwrite a released tag, require base_tag on all 15 packages,
 #                       and record the digest of base_tag, latest and X.Y per package in FILE
-#   retag               add TAG to the 14 unchanged packages, registry-side, from BASE_TAG
+#   plan                decide, per package, whether TAG is built from this checkout or added to base_tag's image;
+#                       writes runtime=, matrix=, retag=, retag_rest= and built= to $GITHUB_OUTPUT (stdout when unset)
+#   smoke PKG IMAGE     run PKG's import check inside a locally built IMAGE (before anything is pushed)
+#   check-pushed PKG D  confirm the registry holds TAG for PKG at digest D, the one the build step pushed
+#   retag               add TAG to the packages in $RETAG_LIST, registry-side, from BASE_TAG (digest must stay equal)
+#   spec                print the BUILD_SPEC lines (the test script checks them against the Dockerfiles)
 #   verify FILE         re-read everything: recorded tags unchanged, new tags correct; write the summary
 #
 # Inputs come from the environment (never interpolated into a shell line by the workflow):
-#   TAG, BASE_TAG, AGENT_DIGEST (verify only: the digest the build step pushed)
-#   GITHUB_REPOSITORY, GITHUB_REF (set by the runner), GITHUB_STEP_SUMMARY (optional)
+#   TAG, BASE_TAG, REBUILD (plan: auto | all), RETAG_LIST (retag, verify), BUILT_LIST (verify)
+#   GITHUB_REPOSITORY, GITHUB_REF (set by the runner), GITHUB_STEP_SUMMARY, GITHUB_OUTPUT (optional)
 #
-# The only registry write in this file is `imagetools create -t <pkg>:$TAG`, and $TAG is
-# validated to be X.Y.Z or X.Y.Z-rcN. `latest` and `X.Y` are never written.
+# The only registry writes are `imagetools create -t <pkg>:$TAG` (here) and the build steps' push of <pkg>:$TAG
+# (in the workflow). $TAG is validated to be X.Y.Z or X.Y.Z-rcN. `latest` and `X.Y` are never written.
+#
+# Why some images are built and others are only re-tagged: an image that is re-tagged from an earlier release has
+# that release's code. Every package whose build context changed since BASE_TAG is therefore built from this
+# checkout, and only the unchanged ones keep BASE_TAG's digest. `auto` finds the changed ones by diffing the git
+# tag v<BASE_TAG> against HEAD; if that tag is not in the checkout, or REBUILD=all, everything buildable is built.
 set -euo pipefail
 
 OWNER=ayman-m
 REPO="$OWNER/phantom"
 REGISTRY="ghcr.io/$OWNER"
 
-# The fifteen packages. The agent is built from this checkout; the other fourteen keep the
-# image of BASE_TAG and only gain a new tag. Keep in step with installer/CLAUDE.md and BUILDING.md.
-AGENT_PKG=phantom-agent-oss
-RETAG_PKGS=(
-  phantom-xlog-oss
-  phantom-caldera-oss
-  phantom-updater-oss
-  phantom-browser-oss
-  phantom-connector-runtime-oss
-  phantom-connector-xlog-oss
-  phantom-connector-xsiam-oss
-  phantom-connector-caldera-oss
-  phantom-connector-web-oss
-  phantom-connector-cortex-docs-oss
-  phantom-connector-cortex-content-oss
-  phantom-connector-cortex-xdr-oss
-  phantom-connector-http-sender-oss
-  phantom-connector-wec-sender-oss
+# Packages built from this checkout, one per line: package|context|dockerfile|watched paths|check
+#   watched paths   what a change to which means the image is stale (`always`: built on every run)
+#   check           `-` none, `runtime` the runtime modules import, `connector:<id>` the connector module imports as the
+#                   runtime entrypoint imports it (this is what fails on a connector built on an older runtime base)
+# The runtime comes first: every connector image is built FROM it at TAG. Keep in step with BUILDING.md and
+# installer/CLAUDE.md.
+RUNTIME_PKG=phantom-connector-runtime-oss
+RUNTIME_DIR=phantom-connector-runtime
+CONNECTORS=(xlog xsiam caldera web cortex-docs cortex-content cortex-xdr http-sender wec-sender)
+BUILD_SPEC=(
+  "phantom-agent-oss|.|mcp/agent/Dockerfile|always|-"
+  "$RUNTIME_PKG|$RUNTIME_DIR|$RUNTIME_DIR/Dockerfile|$RUNTIME_DIR|runtime"
+  "phantom-xlog-oss|xlog|xlog/Dockerfile|xlog|-"
+  "phantom-updater-oss|updater|updater/Dockerfile|updater|-"
+  "phantom-browser-oss|phantom-browser|phantom-browser/Dockerfile|phantom-browser|-"
 )
-ALL_PKGS=("$AGENT_PKG" "${RETAG_PKGS[@]}")
+for _c in "${CONNECTORS[@]}"; do
+  BUILD_SPEC+=("phantom-connector-$_c-oss|.|bundles/spark/connectors/$_c/Dockerfile|bundles/spark/connectors/$_c $RUNTIME_DIR|connector:$_c")
+done
+# Never built here: Caldera needs the build-time overlay of the Phantom plugin and default.yml.
+RETAG_ONLY_PKGS=(phantom-caldera-oss)
+
+ALL_PKGS=()
+for _e in "${BUILD_SPEC[@]}"; do ALL_PKGS+=("${_e%%|*}"); done
+ALL_PKGS+=("${RETAG_ONLY_PKGS[@]}")
 
 TAG_RE='^[0-9]+\.[0-9]+\.[0-9]+(-rc[0-9]+)?$'
 BASE_RE='^[0-9]+\.[0-9]+\.[0-9]+$'
@@ -51,6 +66,11 @@ die() { echo "::error::$*" >&2; exit 1; }
 img() { printf '%s/%s:%s' "$REGISTRY" "$1" "$2"; }
 # 1.0.4 -> 1.0, 1.0.4-rc1 -> 1.0
 minor_of() { local core="${1%%-*}"; printf '%s' "${core%.*}"; }
+# The BUILD_SPEC line of a package, or nothing.
+spec_of() { local e; for e in "${BUILD_SPEC[@]}"; do [ "${e%%|*}" = "$1" ] && { printf '%s' "$e"; return 0; }; done; return 1; }
+is_known() { local p; for p in "${ALL_PKGS[@]}"; do [ "$p" = "$1" ] && return 0; done; return 1; }
+# Fails unless every word of the list is a known package; the lists come from earlier steps' outputs.
+check_list() { local w; for w in $1; do is_known "$w" || die "'$w' is not one of the 15 packages"; done; }
 
 cmd_validate() {
   [[ "${TAG-}" =~ $TAG_RE ]] || die "tag must match $TAG_RE (X.Y.Z or X.Y.Z-rcN); got: '${TAG-}'"
@@ -81,7 +101,7 @@ ref_digest() {
   return 1
 }
 
-# The only write. Re-checks the tag so no future edit can reach latest or X.Y through here.
+# The only write made by this file. Re-checks the tag so no future edit can reach latest or X.Y through here.
 write_tag() {
   local dst="$1" src="$2" attempt out
   [[ "$TAG" =~ $TAG_RE ]] || die "refusing to write tag '$TAG'"
@@ -135,10 +155,83 @@ cmd_preflight() {
   echo "preflight ok: $(wc -l < "$out" | tr -d ' ') reference digests recorded in $out"
 }
 
+# Decide build or retag for every package. Needs the git history of the checkout (fetch-depth 0, tags).
+cmd_plan() {
+  local -a paths
+  local rebuild="${REBUILD:-auto}" base_ref="refs/tags/v${BASE_TAG-}" have_base=0 e pkg ctx file watch check why paths
+  local matrix="" retag=() rest=() runtime=retag built=() sep="" args out="${GITHUB_OUTPUT:-/dev/stdout}"
+  cmd_validate
+  [ "$rebuild" = auto ] || [ "$rebuild" = all ] || die "rebuild must be 'auto' or 'all'; got: '$rebuild'"
+  if git rev-parse -q --verify "$base_ref^{commit}" >/dev/null 2>&1; then
+    have_base=1
+  elif [ "$rebuild" = auto ]; then
+    echo "::notice::git tag v$BASE_TAG is not in this checkout, so nothing can be compared: building every buildable package"
+  fi
+  for e in "${BUILD_SPEC[@]}"; do
+    IFS='|' read -r pkg ctx file watch check <<< "$e"
+    read -r -a paths <<< "$watch"
+    if [ "$watch" = always ]; then why="always built"
+    elif [ "$rebuild" = all ]; then why="rebuild=all"
+    elif [ "$have_base" = 0 ]; then why="no v$BASE_TAG to compare with"
+    elif ! git diff --quiet "$base_ref" HEAD -- "${paths[@]}"; then why="changed since v$BASE_TAG"
+    else why=""
+    fi
+    if [ -z "$why" ]; then
+      echo "retag  $pkg: unchanged since v$BASE_TAG"
+      retag+=("$pkg")
+      if [ "$pkg" != "$RUNTIME_PKG" ]; then rest+=("$pkg"); fi
+      continue
+    fi
+    echo "build  $pkg: $why"
+    built+=("$pkg")
+    if [ "$pkg" = "$RUNTIME_PKG" ]; then runtime=build; continue; fi
+    args=""; [[ "$check" == connector:* ]] && args="PHANTOM_RUNTIME_VERSION=$TAG"
+    matrix+="$sep{\"pkg\":\"$pkg\",\"context\":\"$ctx\",\"file\":\"$file\",\"build_args\":\"$args\"}"
+    sep=","
+  done
+  retag+=("${RETAG_ONLY_PKGS[@]}"); rest+=("${RETAG_ONLY_PKGS[@]}")
+  {
+    echo "runtime=$runtime"          # the runtime job builds it, or retags it when unchanged
+    echo "matrix=[$matrix]"          # every other package to build
+    echo "retag=${retag[*]}"         # every package that keeps base_tag's digest (verify reads this)
+    echo "retag_rest=${rest[*]}"     # the same without the runtime, which the runtime job retags itself
+    echo "built=${built[*]}"
+  } >> "$out"
+}
+
+# Run a package's import check inside a locally built image, before anything is pushed.
+cmd_smoke() {
+  local pkg="${1:?usage: smoke PKG IMAGE}" image="${2:?usage: smoke PKG IMAGE}" e check code id
+  e="$(spec_of "$pkg")" || die "smoke: '$pkg' is not built from this checkout"
+  check="${e##*|}"
+  case "$check" in
+    -) echo "no import check for $pkg"; return 0 ;;
+    runtime) code='import runtime.entrypoint, runtime.organization_reader, runtime.organization_view' ;;
+    connector:*)
+      id="${check#connector:}"
+      # What runtime.entrypoint does at boot, plus the runtime modules the connectors read the organization through.
+      code="import importlib, runtime.organization_view; importlib.import_module('connectors.${id}.src.connector')" ;;
+    *) die "smoke: unknown check '$check' for $pkg" ;;
+  esac
+  docker run --rm --entrypoint python "$image" -c "$code" || die "$pkg: the import check failed inside $image; not pushing it"
+  echo "import check passed for $pkg"
+}
+
+cmd_check_pushed() {
+  local pkg="${1:?usage: check-pushed PKG DIGEST}" want="${2:?usage: check-pushed PKG DIGEST}" now
+  cmd_validate
+  is_known "$pkg" || die "'$pkg' is not one of the 15 packages"
+  [[ "$want" =~ $DIGEST_RE ]] || die "digest must be sha256:...; got: '$want'"
+  now="$(ref_digest "$(img "$pkg" "$TAG")")" || die "cannot read $pkg:$TAG"
+  [ "$now" = "$want" ] || die "$pkg:$TAG is $now but the build pushed $want"
+  echo "$pkg:$TAG = $now"
+}
+
 cmd_retag() {
   local p src dst s d
   cmd_validate
-  for p in "${RETAG_PKGS[@]}"; do
+  check_list "${RETAG_LIST-}"
+  for p in ${RETAG_LIST-}; do
     src="$(img "$p" "$BASE_TAG")"; dst="$(img "$p" "$TAG")"
     write_tag "$dst" "$src"
     s="$(ref_digest "$src")" || die "cannot read $src"
@@ -149,9 +242,9 @@ cmd_retag() {
 }
 
 cmd_verify() {
-  local before="${1:?usage: verify FILE}" p ref d now b problems=0 table=""
-  [[ "${AGENT_DIGEST-}" =~ $DIGEST_RE ]] || die "AGENT_DIGEST must be the digest the build step pushed; got: '${AGENT_DIGEST-}'"
+  local before="${1:?usage: verify FILE}" p ref d now b problems=0 table="" built_s=" ${BUILT_LIST-} " retagged_s=" ${RETAG_LIST-} "
   cmd_validate
+  check_list "${BUILT_LIST-}"; check_list "${RETAG_LIST-}"
 
   # 1. Nothing that existed before may have moved: base_tag, latest, X.Y (absent stays absent).
   while IFS=$'\t' read -r p ref d; do
@@ -161,17 +254,20 @@ cmd_verify() {
     fi
   done < "$before"
 
-  # 2. The new tag is what it should be, on every package.
+  # 2. The new tag is on every package and is what it should be: a built package is present (its own job already compared
+  #    the digest it pushed), a re-tagged one equals base_tag's.
   for p in "${ALL_PKGS[@]}"; do
     ref="$(img "$p" "$TAG")"
     if ! now="$(ref_digest "$ref")"; then problems=$((problems + 1)); continue; fi
-    if [ "$p" = "$AGENT_PKG" ]; then
-      [ "$now" = "$AGENT_DIGEST" ] || { echo "::error::$ref is $now but the build pushed $AGENT_DIGEST" >&2; problems=$((problems + 1)); }
+    if [[ "$built_s" == *" $p "* ]]; then
+      [ "$now" != ABSENT ] || { echo "::error::$ref was built but is not in the registry" >&2; problems=$((problems + 1)); }
       table+="| \`$p\` | \`$REGISTRY/$p@$now\` | built from this checkout |"$'\n'
-    else
+    elif [[ "$retagged_s" == *" $p "* ]]; then
       b="$(awk -F'\t' -v r="$(img "$p" "$BASE_TAG")" '$2 == r { print $3 }' "$before")"
       [ -n "$b" ] && [ "$now" = "$b" ] || { echo "::error::$ref is $now but $BASE_TAG was $b" >&2; problems=$((problems + 1)); }
-      table+="| \`$p\` | \`$REGISTRY/$p@$now\` | retagged from $BASE_TAG |"$'\n'
+      table+="| \`$p\` | \`$REGISTRY/$p@$now\` | unchanged since $BASE_TAG, retagged |"$'\n'
+    else
+      echo "::error::$p is in neither the built nor the retagged list" >&2; problems=$((problems + 1))
     fi
   done
 
@@ -189,9 +285,13 @@ cmd_verify() {
 }
 
 case "${1-}" in
-  validate)  cmd_validate ;;
-  preflight) shift; cmd_preflight "$@" ;;
-  retag)     cmd_retag ;;
-  verify)    shift; cmd_verify "$@" ;;
-  *)         die "usage: $0 validate | preflight FILE | retag | verify FILE" ;;
+  validate)     cmd_validate ;;
+  preflight)    shift; cmd_preflight "$@" ;;
+  plan)         cmd_plan ;;
+  smoke)        shift; cmd_smoke "$@" ;;
+  spec)         printf '%s\n' "${BUILD_SPEC[@]}" ;;
+  check-pushed) shift; cmd_check_pushed "$@" ;;
+  retag)        cmd_retag ;;
+  verify)       shift; cmd_verify "$@" ;;
+  *)            die "usage: $0 validate | preflight FILE | plan | spec | smoke PKG IMAGE | check-pushed PKG DIGEST | retag | verify FILE" ;;
 esac

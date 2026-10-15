@@ -124,22 +124,38 @@ python3 tooling/validate/validate_all.py
 
 The published images come from this repository, built by [`.github/workflows/publish-images.yml`](.github/workflows/publish-images.yml). It runs only when a maintainer starts it, on a GitHub-hosted runner, and logs in to GHCR with the run's own `GITHUB_TOKEN`. No secret is stored anywhere.
 
-**What a run does.** `phantom-agent-oss` is built from the checkout (`mcp/agent/Dockerfile`, repo-root context, no build args) and pushed as `<tag>`. The other fourteen images are not rebuilt: `<tag>` is added to the image that `base_tag` already points at, so their digests are identical to `base_tag`'s. The job summary lists all fifteen digests.
+**What a run does.** Every image whose build context changed since `base_tag` is built from the checkout and pushed as `<tag>`; every image that did not change is not rebuilt, and `<tag>` is added to the image that `base_tag` already points at, so its digest stays identical to `base_tag`'s. Four jobs run in order:
 
-**Guards.** The run refuses to start unless `tag` is `X.Y.Z` or `X.Y.Z-rcN` (so never `latest` and never `X.Y`), `base_tag` is `X.Y.Z`, the two differ, and it runs on `main` of `ayman-m/phantom`. Before anything is written it checks that `base_tag` exists on all fifteen packages and that `<tag>` exists on none of them, unless `<tag>` ends in `-rcN`, which may be published again. Only `<tag>` is ever written. It records the digests of `base_tag`, `latest` and `X.Y` first and re-reads them at the end; any change fails the run. The logic is in [`.github/scripts/publish-images.sh`](.github/scripts/publish-images.sh) and its tests in `.github/scripts/test-publish-images.sh` (plain bash with a stub `docker`; the workflow runs them first).
+1. **Plan.** Validates the inputs, runs the guard tests, records the digests of `base_tag`, `latest` and `X.Y`, and decides per package, by diffing the checkout against the git tag `v<base_tag>`:
+   - `phantom-agent-oss` is built on every run (`mcp/agent/Dockerfile`, repo-root context, no build args).
+   - `phantom-connector-runtime-oss` is built when `phantom-connector-runtime/` changed.
+   - Each `phantom-connector-<id>-oss` is built when its directory under `bundles/spark/connectors/` or the runtime changed.
+   - `phantom-xlog-oss`, `phantom-updater-oss` and `phantom-browser-oss` are built when `xlog/`, `updater/` or `phantom-browser/` changed.
+   - `phantom-caldera-oss` is always retagged: it needs the build-time overlay of the Phantom plugin and `default.yml`.
+2. **Connector runtime.** Built, import-checked and pushed, or retagged when unchanged. It runs first because every connector image is built `FROM` it at `<tag>`, so a connector can never sit on an older runtime than the one in the same release.
+3. **Images.** One job per built package. Each is built into the local daemon, checked **before anything is pushed**, then pushed. The check runs `docker run` on the image: the runtime image imports the runtime modules, and a connector image imports its connector module the way `runtime.entrypoint` does (this is what fails on a connector built on an older runtime). A failing image is not pushed. After the push the job reads the registry back and compares the digest it pushed.
+4. **Finish.** Retags the unchanged images, re-reads everything, and writes the job summary with all fifteen digests and how each was produced.
+
+`rebuild=all` builds every buildable image regardless of the diff. Use it the first time after images that this workflow did not build (the earlier retag-only releases left the connector images at their first build), and whenever `base_tag`'s images are not trusted to match its git tag. If the git tag `v<base_tag>` is not in the checkout, everything is built.
+
+**Guards.** The run refuses to start unless `tag` is `X.Y.Z` or `X.Y.Z-rcN` (so never `latest` and never `X.Y`), `base_tag` is `X.Y.Z`, the two differ, and it runs on `main` of `ayman-m/phantom`. Before anything is written it checks that `base_tag` exists on all fifteen packages and that `<tag>` exists on none of them, unless `<tag>` ends in `-rcN`, which may be published again. Only `<tag>` is ever written. It records the digests of `base_tag`, `latest` and `X.Y` first and re-reads them at the end; any change fails the run. The logic is in [`.github/scripts/publish-images.sh`](.github/scripts/publish-images.sh) and its tests in `.github/scripts/test-publish-images.sh` (plain bash with a stub `docker` and a scratch git repository; the workflow runs them first). One of those tests reads every `COPY` line of every Dockerfile and fails when a package copies a path that its change detection does not watch, so a new `COPY` source cannot silently leave an image stale.
 
 **One-time setup.** A job can push to a package only if the package lets this repository in. For each of the fifteen packages, open the package from the Packages tab of the `ayman-m` profile, choose **Package settings**, go to **Manage Actions access**, choose **Add Repository**, pick `ayman-m/phantom`, and set the role to **Write**. The packages:
 
 `phantom-agent-oss`, `phantom-xlog-oss`, `phantom-caldera-oss`, `phantom-updater-oss`, `phantom-browser-oss`, `phantom-connector-runtime-oss`, `phantom-connector-xlog-oss`, `phantom-connector-xsiam-oss`, `phantom-connector-caldera-oss`, `phantom-connector-web-oss`, `phantom-connector-cortex-docs-oss`, `phantom-connector-cortex-content-oss`, `phantom-connector-cortex-xdr-oss`, `phantom-connector-http-sender-oss`, `phantom-connector-wec-sender-oss`.
 
-**Run it.** Publish a candidate first, check it, then the final version:
+**Run it.** Publish a candidate first, check it, then the final version. The final run must be on the commit that carries the git tag `vX.Y.Z`, because that tag is what the next release compares against.
 
 ```bash
-gh workflow run publish-images.yml -R ayman-m/phantom -f tag=1.0.4-rc1 -f base_tag=1.0.3
+gh workflow run publish-images.yml -R ayman-m/phantom -f tag=1.1.0-rc1 -f base_tag=1.0.3 -f rebuild=all
 gh run watch -R ayman-m/phantom
 ```
 
-**Limits.** The workflow has not been run yet. The agent image carries the `org.opencontainers.image.source` label that links the package to this repository; the fourteen retagged images keep whatever labels they were built with. If a run fails after the agent push but before every retag, a release candidate can simply be re-run, but a final version is never overwritten: publish the next patch version instead. Caldera is not rebuilt here; a new Caldera image needs the build-time overlay of the Phantom plugin and `default.yml`.
+**Limits.**
+- The agent image and every image built here carry the `org.opencontainers.image.source` label that links the package to this repository, and `org.opencontainers.image.revision` with the commit. Retagged images keep the labels they were built with.
+- A failed run leaves whatever it already pushed. A release candidate can simply be run again; a final version is never overwritten, so publish the next patch version instead. Run a candidate with the same inputs before every final tag.
+- Builds are not bit-for-bit reproducible where a `requirements.txt` has open version ranges (the connector runtime does), which is why an unchanged package is retagged rather than rebuilt.
+- Caldera is not rebuilt here.
 
 ## Known rough edges
 
