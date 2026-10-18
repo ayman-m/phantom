@@ -30,7 +30,7 @@ Re-running the installer on an existing install keeps its secrets and refreshes 
 | File | Owned by | Content |
 |---|---|---|
 | `/opt/phantom/.env` | installer at install time | Service credentials + 5 core stack-service digests (`DIGEST_PHANTOM_AGENT`, `DIGEST_PHANTOM_XLOG`, `DIGEST_PHANTOM_CALDERA`, `DIGEST_PHANTOM_UPDATER`, `DIGEST_PHANTOM_BROWSER`) + `PHANTOM_VERSION` marker |
-| `/opt/phantom/connector-digests.env` | installer at install time, **phantom-updater reads** | 7 per-connector image pins (`DIGEST_PHANTOM_CONNECTOR_*`) |
+| `/opt/phantom/connector-digests.env` | installer at install time, **phantom-updater reads** | 10 per-connector image pins (`DIGEST_PHANTOM_CONNECTOR_*`) |
 
 **The split is load-bearing:** per-connector containers aren't declared in `docker-compose.yml`, so their digests are NOT compose-substitution variables — they're consumed at runtime by phantom-updater when an operator creates a connector instance.
 
