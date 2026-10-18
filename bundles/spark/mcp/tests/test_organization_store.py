@@ -94,7 +94,27 @@ def test_put_bumps_version_and_snapshots_history(store):
     rec = store.put("acme", doc, actor="op", note="rename")
     assert rec.version == 2 and rec.name == "Acme Two" and rec.updated_by == "op"
     h = store.history("acme")
-    assert len(h) == 1 and h[0]["version"] == 1 and h[0]["note"] == "rename"
+    # Version 1 had no note of its own (create() was called with none), so its history row is
+    # unlabelled; "rename" describes how version 2 came to be, not how version 1 ended.
+    assert len(h) == 1 and h[0]["version"] == 1 and h[0]["note"] is None
+
+
+def test_history_row_is_labelled_with_its_own_origin_not_its_replacement(store):
+    # Measured 2026-10-18 (F4): a history row used to read as "what replaced me" instead of "how
+    # I was made" -- a restore's "restored history entry 1" note landed on the OLD version being
+    # overwritten rather than on the new version the restore itself produced.
+    store.create(_small_org())
+    doc = store.get("acme").document
+    doc["name"] = "Acme Two"
+    store.put("acme", doc, actor="op", note="renamed to Acme Two")
+    doc = store.get("acme").document
+    doc["name"] = "Acme Three"
+    store.put("acme", doc, actor="op", note="renamed to Acme Three")
+    h = {row["version"]: row["note"] for row in store.history("acme")}
+    assert h[1] is None  # version 1's own origin (create() passed no note)
+    assert h[2] == "renamed to Acme Two"  # version 2's own origin, not version 3's
+    current = store.get("acme")
+    assert current.version == 3 and current.note == "renamed to Acme Three"
 
 
 def test_put_rejects_invalid_document_and_leaves_the_stored_one(store):
@@ -112,6 +132,20 @@ def test_fork_makes_an_editable_copy_with_a_unique_id(store):
     assert a.id == "phantom-lab-custom" and a.source == "operator"
     assert b.id == "phantom-lab-custom-2"
     assert a.document["id"] == a.id and om.validate_document(a.document) == []
+
+
+def test_fork_with_a_name_slugifies_it_instead_of_chaining_dash_custom(store):
+    # Measured 2026-10-18 (F3): the Duplicate dialog only collects a name, so `new_id` is always
+    # None; forking a copy of a copy ("phantom-lab-custom") with no new_name produced
+    # "phantom-lab-custom-custom" -- the typed name was ignored entirely. A name should slugify
+    # to its own id regardless of what the source organization's id happens to be.
+    a = store.fork("phantom-lab", new_name="Test Copy A")
+    assert a.id == "test-copy-a" and a.name == "Test Copy A"
+    b = store.fork(a.id, new_name="Test Copy B")
+    assert b.id == "test-copy-b"  # not "test-copy-a-custom" or any suffix of a's id
+    # Forking a SECOND copy under the same name is still made unique.
+    c = store.fork("phantom-lab", new_name="Test Copy A")
+    assert c.id == "test-copy-a-2"
 
 
 def test_apply_changes_on_bundled_forks_and_keeps_it_active(store):

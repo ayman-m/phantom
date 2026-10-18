@@ -186,7 +186,7 @@ broker stamps `_id` and overwrites anything sent. `txid` on the same event survi
 comes back as `['"…"']` because the generator serialises every leaf as a JSON string. Send one
 group name; a true multi-value array is not reachable.
 
-**`email` must be `first.last@domain`** — Duo's rule splits it to derive first/last name.
+**`email` must be `first.last@domain`** — Duo's rule splits it to derive first/last name. Take it from the organization (`organization_get section=people`, the person's `email`; the domain is `phantom.lab` on Phantom Lab), never an invented address.
 
 **Windows `event_result` is case-sensitive**: exactly lowercase `success` / `failure`. Anything
 else falls through the coalesce and `xdm.event.outcome` lands as an uncoerced raw string — a
@@ -225,21 +225,38 @@ pages in the Cortex documentation:
 | Windows Event Collector | 5 | 3 | 49 | **8** |
 | Duo | 0 | 1 | 20 | **1** |
 
-- **Ungated** — runs on the base analytics engine. Reachable with synthetic logs.
+- **Ungated** — runs on the base analytics engine. "Ungated" here is a LICENSING gate only (no
+  ITDR module, no Identity Analytics/directory-sync requirement) — it says nothing about which
+  COLLECTOR SOURCE the detector reads. It is reachable with synthetic logs ONLY for detectors that
+  read the generic Analytics engine with no source-feed restriction (the two named below). A
+  separate, larger ungated-but-source-gated family exists: DCSync, excessive lockouts,
+  privileged-group tampering, Kerberos-ticket abuse, account-management attacks — 15 scenarios
+  total, each with its own `trigger_<scenario>_alert` skill under `skills/workflows/`. That family
+  reads a registered Windows source specifically (a real WEC delivery, the native Cortex XDR agent
+  feed, or Cribl with the dedicated Windows source UUID) and will NEVER fire from syslog/CEF,
+  however completely the identical event shapes map to `xdm.*` — confirmed directly: the same
+  shapes mapped `xdm.*` correctly over CEF and raised nothing. See the `microsoft_windows_raw` WEC
+  data source's `how_to_use`, or any `trigger_<scenario>_alert` skill, for the proof and the
+  delivery recipe. **This is a THIRD, independent gate this table has no column for — do not
+  conflate it with the Identity Analytics/`pan_dss_raw` row below.**
 - **Identity Threat Module** — needs the ITDR licence. Reachable when licensed.
 - **Identity Analytics** — needs a Cloud Identity Engine directory-sync pairing that populates
   `pan_dss_raw`. **No volume or quality of synthetic logs satisfies this**, and `pan_dss_raw`
   cannot be seeded. Do not promise these.
 
-The two ungated Windows detectors reachable from Security events are
-`administrator-groups-enumerated-via-ldap` (1644) and `possible-kerberos-relay-attack`, both
-**Test Period: N/A (single event)** — one well-shaped event can fire them.
+The two ungated-AND-source-unrestricted Windows detectors reachable from Security events over
+syslog/CEF are `administrator-groups-enumerated-via-ldap` (1644) and
+`possible-kerberos-relay-attack`, both **Test Period: N/A (single event)** — one well-shaped event
+can fire them. The 15-scenario Windows identity family above is also "ungated" by this table's
+licensing definition, but is NOT reachable over syslog/CEF — route it through the WEC source and
+its skills instead.
 
-**Synthetic CEF DOES drive XDR analytics** — XDR_ANALYTICS alerts carry
-`original_tags: ['DS:Fortinet/FortiGate']` when driven by a synthetic FortiGate feed. So a
-non-firing identity detector is a detector-availability problem, not a delivery problem. When the
-goal is analytics VOLUME rather than an identity story, third-party firewalls are the better
-surface — 23 of 23 of their detectors are ungated.
+**Synthetic CEF DOES drive XDR analytics for sources with no collector-source gate** —
+XDR_ANALYTICS alerts carry `original_tags: ['DS:Fortinet/FortiGate']` when driven by a synthetic
+FortiGate feed. For THOSE sources, a non-firing identity detector is a detector-availability
+problem, not a delivery problem. **That reasoning does NOT extend to the Windows identity family
+above.** When the goal is analytics VOLUME rather than an identity story, third-party firewalls are
+the better surface — 23 of 23 of their detectors are ungated AND source-unrestricted.
 
 **Reading which source drove an alert**: `dataset = alerts | fields original_tags` — the
 `DS:<vendor>/<product>` tag names it.

@@ -58,6 +58,11 @@ HISTORY_KEEP = 20
 DEFAULT_ORGANIZATION_ID = "phantom-lab"
 
 
+def _slugify(name: str) -> str:
+    """`name` as an organization id: lowercase, non-alphanumerics collapsed to one `-`, trimmed."""
+    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", name.lower())).strip("-")
+
+
 @dataclass(frozen=True)
 class OrganizationRecord:
     id: str
@@ -68,6 +73,7 @@ class OrganizationRecord:
     updated_at: str
     updated_by: str | None
     document: dict[str, Any]
+    note: str | None = None
 
     def meta(self) -> dict[str, Any]:
         s = om.summary(self.document)
@@ -126,10 +132,20 @@ class SqliteOrganizationStore:
                     version       INTEGER NOT NULL DEFAULT 1,
                     document_json TEXT NOT NULL,
                     updated_at    TEXT NOT NULL,
-                    updated_by    TEXT
+                    updated_by    TEXT,
+                    note          TEXT
                 )
                 """
             )
+            # Migration for existing organizations.db's that pre-date the `note` column
+            # (same PRAGMA introspection + ADD COLUMN pattern as audit_log.py's `trigger`
+            # column). `note` holds the note that describes how THIS live version came to
+            # be, so that when it is later snapshotted into history (see `_snapshot`) the
+            # history row is labelled with its own origin, not with whatever edit is about
+            # to replace it (F4, measured 2026-10-18).
+            cols = {r["name"] for r in c.execute("PRAGMA table_info(organizations)").fetchall()}
+            if "note" not in cols:
+                c.execute("ALTER TABLE organizations ADD COLUMN note TEXT")
             c.execute("CREATE UNIQUE INDEX IF NOT EXISTS organizations_one_active ON organizations(active) WHERE active = 1")
             c.execute(
                 """
@@ -154,6 +170,7 @@ class SqliteOrganizationStore:
         return OrganizationRecord(
             id=r["id"], name=r["name"], source=r["source"], active=bool(r["active"]), version=int(r["version"]),
             updated_at=r["updated_at"], updated_by=r["updated_by"], document=json.loads(r["document_json"]),
+            note=r["note"] if "note" in r.keys() else None,
         )
 
     def add_listener(self, fn: Callable[[OrganizationRecord | None], None]) -> None:
@@ -251,11 +268,19 @@ class SqliteOrganizationStore:
             raise OrganizationStoreError(f"no organization with id {org_id!r}", "not_found")
         return rec
 
-    def _snapshot(self, c: sqlite3.Connection, rec: OrganizationRecord, note: str | None) -> None:
+    def _snapshot(self, c: sqlite3.Connection, rec: OrganizationRecord) -> None:
+        """Archive `rec` (the version about to be replaced) into history, labelled with `rec.note` -- the note that
+        describes how `rec` itself came to be, NOT the note of the edit that is replacing it right now (that new note
+        belongs to the NEW version being created, and is written onto the live row by the caller; it will become
+        this same history row's label only once a LATER edit snapshots it in turn). Measured 2026-10-18 (F4): the
+        previous code passed the incoming edit's own note straight into this snapshot, so every history row read as
+        "what replaced me" instead of "how I was made" -- a restore's "restored history entry 1" note, for example,
+        landed on the OLD version being overwritten rather than on the new version the restore itself produced."""
         c.execute(
             "INSERT INTO organization_history (org_id, version, document_json, updated_at, updated_by, note) "
             "VALUES (?, ?, ?, ?, ?, ?)",
-            (rec.id, rec.version, json.dumps(rec.document, ensure_ascii=False), rec.updated_at, rec.updated_by, note),
+            (rec.id, rec.version, json.dumps(rec.document, ensure_ascii=False), rec.updated_at, rec.updated_by,
+             rec.note),
         )
         c.execute(
             "DELETE FROM organization_history WHERE org_id = ? AND seq NOT IN "
@@ -263,15 +288,16 @@ class SqliteOrganizationStore:
             (rec.id, rec.id, HISTORY_KEEP),
         )
 
-    def create(self, doc: dict[str, Any], *, actor: str | None = None, activate: bool = False) -> OrganizationRecord:
+    def create(self, doc: dict[str, Any], *, actor: str | None = None, activate: bool = False,
+               note: str | None = None) -> OrganizationRecord:
         om.require_valid(doc)
         with self._lock, self._conn() as c:
             if c.execute("SELECT 1 FROM organizations WHERE id = ?", (doc["id"],)).fetchone():
                 raise OrganizationStoreError(f"an organization with id {doc['id']!r} already exists", "exists")
             c.execute(
-                "INSERT INTO organizations (id, name, source, active, version, document_json, updated_at, updated_by) "
-                "VALUES (?, ?, 'operator', 0, 1, ?, ?, ?)",
-                (doc["id"], doc["name"], json.dumps(doc, ensure_ascii=False), self._now(), actor),
+                "INSERT INTO organizations (id, name, source, active, version, document_json, updated_at, "
+                "updated_by, note) VALUES (?, ?, 'operator', 0, 1, ?, ?, ?, ?)",
+                (doc["id"], doc["name"], json.dumps(doc, ensure_ascii=False), self._now(), actor, note),
             )
         self._audit("create", doc["id"], actor)
         if activate:
@@ -289,11 +315,11 @@ class SqliteOrganizationStore:
             raise OrganizationStoreError(f"the document id {doc.get('id')!r} does not match {org_id!r}", "id_mismatch")
         om.require_valid(doc)
         with self._lock, self._conn() as c:
-            self._snapshot(c, rec, note)
+            self._snapshot(c, rec)
             c.execute(
                 "UPDATE organizations SET name = ?, document_json = ?, version = version + 1, updated_at = ?, "
-                "updated_by = ? WHERE id = ?",
-                (doc["name"], json.dumps(doc, ensure_ascii=False), self._now(), actor, org_id),
+                "updated_by = ?, note = ? WHERE id = ?",
+                (doc["name"], json.dumps(doc, ensure_ascii=False), self._now(), actor, note, org_id),
             )
         self._audit("put", org_id, actor, note=note)
         self._notify()
@@ -303,7 +329,17 @@ class SqliteOrganizationStore:
              actor: str | None = None) -> OrganizationRecord:
         """A copy of `org_id` as an editable operator organization."""
         src = self._require(org_id)
-        base = new_id or f"{org_id}-custom"
+        # The Duplicate dialog collects a NAME, not an id, so `new_id` is usually None here.
+        # Measured 2026-10-18 (F3): falling back straight to `f"{org_id}-custom"` ignored the
+        # name the operator typed and, forked again, chained into `<id>-custom-custom`. Slugify
+        # the name instead, so a duplicate named "Test Copy B" becomes `test-copy-b`, not a suffix
+        # pile on whatever id its source happened to have.
+        if new_id:
+            base = new_id
+        elif new_name:
+            base = _slugify(new_name) or f"{org_id}-custom"
+        else:
+            base = f"{org_id}-custom"
         candidate, n = base, 1
         while self.get(candidate) is not None:
             n += 1
@@ -311,7 +347,7 @@ class SqliteOrganizationStore:
         doc = json.loads(json.dumps(src.document))
         doc["id"] = candidate
         doc["name"] = new_name or (f"{src.name} (custom)" if candidate == base else f"{src.name} (custom {n})")
-        return self.create(doc, actor=actor)
+        return self.create(doc, actor=actor, note=f"forked from {org_id}")
 
     def apply_changes(self, org_id: str, changes: dict[str, Any], *, actor: str | None = None,
                       note: str | None = None) -> tuple[OrganizationRecord, list[str], str | None]:

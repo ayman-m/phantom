@@ -8,6 +8,14 @@ Each release section is written in operator language, not git-shortlog language.
 
 ---
 
+## [Unreleased] — *Analytics trigger coverage documented*
+
+The 50 skills that each target one named Cortex analytics alert now have a single reference table instead of living only in their own files.
+
+**Documentation.** A new `/help/architecture#analytics-coverage` section lists every `trigger_*` skill grouped by data feed (Windows identity, AWS, Azure AD, GCP, Okta, network/firewall), with the exact detector or correlation rule it targets, the MITRE technique, and whether it fires outright, fires only for a named variant, or lands and models without a confirmed fire yet. A **Known gaps** subsection covers what still doesn't work: the Windows identity family needs Windows Event Collector or Cribl delivery (never plain syslog/CEF), firewall-shape detectors need an already-established host, two detectors have preconditions an obvious replay misses (sustained traffic, a dedup window), scenario skills don't yet call the matching trigger skill by name, and organization identity binding is name-pattern matched rather than exhaustive. `/help/user#detection-inventory` now points operators at this table. The skill-catalogue section's skill counts (previously stale at 20) are corrected to the current 72.
+
+---
+
 ## [Unreleased] — *Organization: one company behind every generated log*
 
 Every log Phantom produces now describes the same fictitious company. The people, their workstations, the servers, the subnets and the cloud accounts are defined once, and the agent, the log workers, http-sender, wec-sender and cie-sender all use them. Cortex can then group the alerts from different sources into one case, because the same user, host and address appear in all of them.
@@ -34,6 +42,14 @@ Every log Phantom produces now describes the same fictitious company. The people
 - The system prompt advertised a `phantom-soc` knowledge base that does not ship, and the user guide described it. Both now describe what is really loaded.
 
 **Documentation.** Review `/help/architecture#organization` and `/help/user#organization`; three journeys were added (`organization-browse-and-cortex-setup`, `organization-add-hire-via-chat`, `organization-switch-and-replace`), and `/help/architecture#connector-containers` notes that containers also read `organization.db`.
+
+---
+
+## [Unreleased] — *Data sources: formal `delivery: wec` catalog option*
+
+**Added.**
+
+- **`delivery: wec` is now a formal data-source catalog option**, alongside `syslog` (default) and `http`. Two new catalog entries pair with their existing validated syslog siblings — `MicrosoftWindowsEvents__MicrosoftWindowsEventsWEC__microsoft_windows_raw` (for Cortex's native Windows identity-analytics detectors — DCSync, privileged-group tampering, Kerberos ticket abuse, ... — that a syslog/CEF delivery of the same event shapes cannot reach) and `MicrosoftADFS__MicrosoftADFSWEC__microsoft_adfs_raw` (the only route that reaches the dataset's real parsing rule at all; the syslog sibling bypasses it via an unclaimed vendor/product pair). Neither new entry carries a `validated`/`raw_validated` tier; the syslog siblings' validated status and documentation are unchanged.
 
 ---
 

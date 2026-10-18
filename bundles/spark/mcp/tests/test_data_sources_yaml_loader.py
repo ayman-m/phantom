@@ -230,6 +230,52 @@ def test_get_by_3tuple(loader):
     assert loader.get_by_3tuple("X", "Y", "Z") is None
 
 
+def test_get_by_3tuple_tolerates_a_cortex_version_suffix_on_rule_name(loader):
+    # F21, measured 2026-10-18: `cortex_list_modeling_rules` hands the agent a
+    # versioned rule directory name ("FortiGate_1_3") that the bundled catalog's own
+    # rule_name never carries ("FortiGate"). An agent-driven install (and every
+    # subsequent Edit guidance / Rollback / History call, which all resolve through
+    # this same lookup) used to fail outright for any such source.
+    doc = _minimal_doc(id="fortigate", vendor="Fortinet", product="FortiGate")
+    doc["rule_name"] = "FortiGate"
+    _write_yaml(loader.bundle_root / "fortigate" / "data_source.yaml", doc)
+
+    exact = loader.get_by_3tuple("FortiGate", "FortiGate", "fortinet_fortigate_raw")
+    assert exact is not None and exact.id == "fortigate"
+
+    versioned = loader.get_by_3tuple("FortiGate", "FortiGate_1_3", "fortinet_fortigate_raw")
+    assert versioned is not None and versioned.id == "fortigate"
+
+    multi_segment = loader.get_by_3tuple("FortiGate", "FortiGate_2_0_17", "fortinet_fortigate_raw")
+    assert multi_segment is not None and multi_segment.id == "fortigate"
+
+
+def test_get_by_3tuple_version_tolerance_does_not_confuse_delivery_siblings(loader):
+    # The fallback must never let a version-looking rule_name make two UNRELATED
+    # siblings (same pack_name + dataset_name, genuinely different rule_name) collide
+    # with each other, and must never match a rule_name that merely CONTAINS the
+    # candidate's name without the required "_<version>" suffix shape.
+    http_doc = _minimal_doc(id="okta-http", vendor="Okta", product="Okta")
+    http_doc["rule_name"] = "OktaHttpCollector"
+    http_doc["dataset_name"] = "okta_sso_raw"
+    _write_yaml(loader.bundle_root / "okta-http" / "data_source.yaml", http_doc)
+
+    syslog_doc = _minimal_doc(id="okta-syslog", vendor="Okta", product="Okta")
+    syslog_doc["rule_name"] = "OktaModelingRules"
+    syslog_doc["dataset_name"] = "okta_sso_raw"
+    _write_yaml(loader.bundle_root / "okta-syslog" / "data_source.yaml", syslog_doc)
+
+    # Neither sibling's rule_name is a prefix of the other's, so an unrelated or
+    # malformed rule_name must resolve to neither, not fall back to either one.
+    assert loader.get_by_3tuple("Okta", "OktaHttpCollector_2_0", "okta_sso_raw").id == "okta-http"
+    assert loader.get_by_3tuple("Okta", "OktaModelingRules_2_0", "okta_sso_raw").id == "okta-syslog"
+    assert loader.get_by_3tuple("Okta", "OktaSomethingElse_2_0", "okta_sso_raw") is None
+    # A suffix that isn't purely digits/underscores (not version-shaped) must not match.
+    assert loader.get_by_3tuple("Okta", "OktaModelingRules_beta", "okta_sso_raw") is None
+    # A bare prefix with no "_<version>" separator must not match either.
+    assert loader.get_by_3tuple("Okta", "OktaModelingRulesExtra", "okta_sso_raw") is None
+
+
 def test_skips_directories_without_yaml(loader):
     """A directory without data_source.yaml is silently skipped."""
     (loader.bundle_root / "stub-dir").mkdir()
@@ -670,6 +716,76 @@ def test_real_loader_serves_http_and_syslog_siblings_separately():
     http = ldr.get_by_3tuple("Okta", "OktaHttpCollector", "okta_sso_raw")
     sysl = ldr.get_by_3tuple("Okta", "OktaModelingRules", "okta_sso_raw")
     assert http is not None and http.delivery == "http"
+    assert sysl is not None and sysl.delivery == "syslog"
+
+
+# ─── `delivery` (wec) ──────────────────────────────────────────
+
+
+def test_delivery_wec_round_trips():
+    doc = _minimal_doc()
+    doc["delivery"] = "wec"
+    ds = _ds_from(doc)
+    assert ds.delivery == "wec"
+    rendered = ds.to_doc()
+    assert rendered["delivery"] == "wec"
+    assert _ds_from(rendered).delivery == "wec"
+
+
+def test_delivery_wec_exposed_in_catalog_row():
+    doc = _minimal_doc()
+    doc["delivery"] = "wec"
+    assert _ds_from(doc).to_catalog_row()["delivery"] == "wec"
+
+
+WEC_YAMLS = [
+    # (wec dir, syslog sibling dir)
+    ("MicrosoftWindowsEvents__MicrosoftWindowsEventsWEC__microsoft_windows_raw",
+     "MicrosoftWindowsEvents__MicrosoftWindowsEvents__microsoft_windows_raw"),
+    ("MicrosoftADFS__MicrosoftADFSWEC__microsoft_adfs_raw",
+     "MicrosoftADFS__MicrosoftADFS__microsoft_adfs_raw"),
+]
+
+
+@pytest.mark.parametrize("wec_dir,syslog_dir", WEC_YAMLS)
+def test_real_wec_yamls_load_as_wec_with_distinct_ids(wec_dir, syslog_dir):
+    from usecase.data_sources_store import compose_data_source_id
+
+    w = _ds_from(_real_doc(wec_dir))
+    s = _ds_from(_real_doc(syslog_dir))
+    assert w.delivery == "wec"
+    assert s.delivery == "syslog"
+    # share pack + dataset, differ only in rule_name -> distinct composite id
+    assert (w.pack_name, w.dataset_name) == (s.pack_name, s.dataset_name)
+    assert w.rule_name != s.rule_name
+    wid = compose_data_source_id(w.pack_name, w.rule_name, w.dataset_name)
+    sid = compose_data_source_id(s.pack_name, s.rule_name, s.dataset_name)
+    assert wid != sid
+    # wec sources survive a round trip and validate against the schema
+    rendered = w.to_doc()
+    assert rendered["delivery"] == "wec"
+    assert _ds_from(rendered).delivery == "wec"
+    ok, errors = validate_yaml_doc(rendered)
+    assert ok, errors
+    assert w.to_catalog_row()["delivery"] == "wec"
+    assert s.to_catalog_row()["delivery"] == "syslog"
+    # the syslog sibling is untouched: still validated, still no delivery key
+    syslog_raw = _real_doc(syslog_dir)
+    assert "delivery" not in syslog_raw
+    assert syslog_raw.get("validated") is True
+
+
+def test_real_loader_serves_wec_and_syslog_siblings_separately():
+    from usecase.data_sources_yaml_loader import get_data_sources_yaml_loader
+
+    ldr = get_data_sources_yaml_loader()
+    wec = ldr.get_by_3tuple(
+        "MicrosoftWindowsEvents", "MicrosoftWindowsEventsWEC", "microsoft_windows_raw"
+    )
+    sysl = ldr.get_by_3tuple(
+        "MicrosoftWindowsEvents", "MicrosoftWindowsEvents", "microsoft_windows_raw"
+    )
+    assert wec is not None and wec.delivery == "wec"
     assert sysl is not None and sysl.delivery == "syslog"
 
 

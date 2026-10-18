@@ -10,7 +10,8 @@
  * Flash models at 1M. Prices are the ones the cost table carried (Vertex
  * public pricing page, 2026-05); the 2026-10-13 research covered only Claude
  * and OpenAI, so they are not re-dated. Models with no price here (3.7 Flash,
- * 3.5 Flash, 3.8 Flash) are unpriced rather than billed at a guess.
+ * 3.5 Flash) are unpriced rather than billed at a guess. 3.8 Flash carries its
+ * introductory price (checked 2026-10-18) with an end date.
  *
  * Erasable TypeScript only.
  */
@@ -43,11 +44,13 @@ export const VERTEX_CATALOG: readonly CuratedModel[] = [
     displayName: 'Gemini 3.8 Flash',
     contextWindow: 1_000_000,
     thinking: GEMINI_THINKING,
-    pricing: null,
-    pricingVerified: null,
-    pricingNote: 'No official price has been checked for this model.',
+    pricing: priced(0.75, 3.75),
+    pricingVerified: '2026-10-18',
+    pricingValidUntil: '2026-12-31',
+    pricingNote:
+      'Introductory price of $0.75 input and $3.75 output per million tokens through 2026-12-31; from 2027-01-01 the price is $1.50 and $7.50, and until the catalog carries that price the cost is reported as unpriced.',
     lifecycle: { stage: 'ga' },
-    unverified: ['contextWindow', 'maxOutput', 'pricing'],
+    unverified: ['contextWindow', 'maxOutput'],
   },
   {
     ...CHAT_DEFAULTS,

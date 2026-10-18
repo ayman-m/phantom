@@ -105,10 +105,27 @@ class PAPIClient(httpx.AsyncClient):
             raise PAPIClientRequestError(f"Client error {response.status_code}: {response.text}")
 
         try:
-            return response.json()
+            parsed = response.json()
         except json.JSONDecodeError as e:
             self.logger.error(f"Invalid JSON response: {response.text[:500]}")
             raise PAPIResponseError(f"Invalid JSON response: {str(e)}")
+
+        # Every caller does `resp.get("reply") or {}` (27+ call sites in
+        # connector.py) on the assumption PAPI always wraps its payload in a
+        # top-level dict. Most endpoints do, but at least one
+        # (run_snippet_code_script, measured 2026-10-18) can return a bare
+        # JSON list instead, which crashes the caller's own `.get()` with an
+        # unhelpful AttributeError. Guard it ONCE here rather than adding an
+        # isinstance check to every call site: callers still get a dict, and
+        # on a non-dict payload they get a clear, catchable PAPIResponseError
+        # (caught by connector.py's `_xsiam_wrap`, which turns it into a
+        # normal `{"ok": false, "error": "..."}` tool result) instead of a
+        # raw AttributeError with no context.
+        if not isinstance(parsed, dict):
+            raise PAPIResponseError(
+                f"Expected a JSON object, got {type(parsed).__name__}: {str(parsed)[:300]}"
+            )
+        return parsed
 
 
 class Fetcher:

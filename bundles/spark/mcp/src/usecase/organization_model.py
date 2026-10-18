@@ -22,6 +22,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import ipaddress
+import itertools
 import json
 import os
 import re
@@ -196,14 +197,26 @@ def _semantic_errors(doc: dict[str, Any]) -> list[str]:
                   + [s["employee_number"] for s in services if s.get("employee_number")], "employee number")
 
     # networks
+    bounds_by_id: dict[str, tuple[ipaddress.IPv4Address, ipaddress.IPv4Address]] = {}
     for n in networks:
         try:
-            _net_bounds(n)
+            bounds_by_id[n["id"]] = _net_bounds(n)
         except ValueError as exc:
             errs.append(f"network {n['id']}: not a valid address block ({exc})")
             continue
         if sites and n.get("site") and n["site"] not in sites:
             errs.append(f"network {n['id']}: site {n['site']!r} is not declared in sites")
+    # overlap: every declared network is a standalone block for host containment and the Cortex
+    # setup ranges, with no concept of a parent/child range, so any address shared by two networks
+    # makes both ambiguous (which network does that address belong to?). Measured 2026-10-18: `vpn`
+    # was widened from a disjoint /22 to a /18 that swallowed `ruh-unmanaged`, saved with no warning
+    # because this check did not exist. ids are sorted so the message is deterministic regardless
+    # of document order, and each pair is reported once.
+    for id_a, id_b in itertools.combinations(sorted(bounds_by_id), 2):
+        lo_a, hi_a = bounds_by_id[id_a]
+        lo_b, hi_b = bounds_by_id[id_b]
+        if max(lo_a, lo_b) <= min(hi_a, hi_b):
+            errs.append(f"network {id_a!r} and network {id_b!r} overlap")
     internal = (doc.get("cortex") or {}).get("internal_ranges") or []
     for r in internal:
         try:

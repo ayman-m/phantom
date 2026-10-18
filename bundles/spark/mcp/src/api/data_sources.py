@@ -853,7 +853,7 @@ def _yaml_ds_to_schema_payload(yaml_ds, ds_id: str, *, is_preview: bool) -> dict
             "how_to_use": yaml_ds.how_to_use,
             "fields": fields,
             "is_preview": is_preview,
-            # Explicit (also present via to_catalog_row): "syslog" | "http".
+            # Explicit (also present via to_catalog_row): "syslog" | "http" | "wec".
             "delivery": yaml_ds.delivery,
         }
     )
@@ -2467,7 +2467,7 @@ async def data_sources_get_schema(
             id, pack_name, ..., (all the basic columns), how_to_use,
             fields: [{name, type, is_array, is_meta, description, example}, ...],
             # compact=True → fields: [{name, type, is_array, is_meta}, ...]
-            delivery: "syslog" | "http",   # how synthetic logs reach Cortex
+            delivery: "syslog" | "http" | "wec",  # how synthetic logs reach Cortex
           },
         }
 
@@ -2475,8 +2475,11 @@ async def data_sources_get_schema(
     to the broker through phantom_create_data_worker. "http" = JSON to an
     XSIAM HTTP Log Collector through the `http-sender` connector tools
     (list_destinations, then generate_events / send_events); do NOT create a
-    syslog data worker for an "http" source. Read the source's `how_to_use`
-    for the profile/scenario names and the JSON shape.
+    syslog data worker for an "http" source. "wec" = Windows Event XML to the
+    Broker VM's Windows Event Collector applet through the `wec-sender`
+    connector tools (list_subscriptions, then generate_events / send_events);
+    do NOT create a syslog data worker for a "wec" source either. Read the
+    source's `how_to_use` for the profile/scenario names and the JSON shape.
 
     Resolves installed sources from the store; for any other catalog source
     (uninstalled, or a dataset cortex-content doesn't enumerate) it serves the
@@ -2552,9 +2555,12 @@ async def data_sources_install(
             the rule defines (most rules have one dataset). When
             provided, installs only that dataset. For sources bundled as
             YAML, pass BOTH rule_name AND dataset_name: the HTTP-collector
-            variants (`delivery: http`) share pack_name and dataset_name
+            variants (`delivery: http`) and WEC-delivery variants
+            (`delivery: wec`) share pack_name and dataset_name
             with their syslog siblings and differ ONLY in rule_name (e.g.
-            Okta / OktaHttpCollector / okta_sso_raw vs the syslog Okta rule),
+            Okta / OktaHttpCollector / okta_sso_raw vs the syslog Okta rule,
+            or MicrosoftWindowsEvents / MicrosoftWindowsEventsWEC /
+            microsoft_windows_raw vs the syslog Windows rule),
             so omitting dataset_name falls through to the cortex-content
             extraction path instead of the bundled YAML.
 
@@ -3049,13 +3055,19 @@ async def data_sources_installed_as_vendors() -> dict[str, Any]:
                                        # operator have a WAF vs just a firewall?)
                                        # match on this field, not `category`.
               formats: [str, ...],    # log formats this vendor supports
-                                       # (["JSON"] for delivery "http")
-              delivery: str,          # "syslog" (default) | "http".
+                                       # (["JSON"] for delivery "http",
+                                       # ["WINEVENT"] for delivery "wec")
+              delivery: str,          # "syslog" (default) | "http" | "wec".
                                        # "syslog" -> phantom_create_data_worker
                                        # (CEF/syslog to the broker). "http" ->
                                        # do NOT create a data worker; use the
                                        # `http-sender` connector tools
                                        # (list_destinations, then
+                                       # generate_events / send_events) and
+                                       # follow the source's how_to_use. "wec"
+                                       # -> do NOT create a data worker; use
+                                       # the `wec-sender` connector tools
+                                       # (list_subscriptions, then
                                        # generate_events / send_events) and
                                        # follow the source's how_to_use.
               description: str,      # one-line vendor/product description
@@ -3161,7 +3173,11 @@ async def data_sources_installed_as_vendors() -> dict[str, Any]:
             "product": pack,
             "category": category,
             "data_source_class": _PACK_DATA_SOURCE_CLASS.get(pack, "other"),
-            "formats": ["JSON"] if delivery == "http" else ["SYSLOG", "CEF", "JSON"],
+            "formats": (
+                ["JSON"] if delivery == "http"
+                else ["WINEVENT"] if delivery == "wec"
+                else ["SYSLOG", "CEF", "JSON"]
+            ),
             "delivery": delivery,
             "description": description,
             "source": "installed",

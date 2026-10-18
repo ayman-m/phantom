@@ -44,6 +44,8 @@ The detectors in this family read Windows events that arrive through a registere
 
 Do not "test it quickly" over syslog/CEF: a null result there says nothing about the rule.
 
+**This is NOT a mapping problem.** Over syslog/CEF the event already lands in `microsoft_windows_raw` and the modeling rule already fills the same `xdm.*` fields (the syslog `MicrosoftWindowsEvents` source maps 58 of them), so a good mapping there proves nothing about this alert. The alert will not fire over syslog/CEF no matter how complete the mapping is: the detector reads the registered Windows source (the WEC, native-agent or dedicated-UUID Cribl feed), not the syslog/CEF feed. `_collector_type = WEC` is stamped by a real Windows Event Collector delivery and cannot be set from an event body, so no CEF extension, field choice or schema change can reach it.
+
 ## Preconditions: check these BEFORE sending
 
 | # | Must be true | How to check |

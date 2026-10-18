@@ -1,0 +1,238 @@
+schema_version: 1
+id: MicrosoftWindowsEvents
+pack_name: MicrosoftWindowsEvents
+rule_name: MicrosoftWindowsEventsWEC
+dataset_name: microsoft_windows_raw
+vendor: Microsoft
+product: windows WEC
+delivery: wec
+description: 'The WEC-delivery variant of Microsoft Windows Security-channel events (same dataset,
+  `microsoft_windows_raw`, as the syslog/CEF Windows source): structured Windows events delivered by
+  the `wec-sender` connector to the Broker VM''s Windows Event Collector applet over WS-Management
+  instead of syslog/CEF. Simulate it to trigger Cortex''s native Windows identity-analytics detectors
+  (DCSync, privileged-group changes, Kerberos abuse, account-management attacks, ...) — the ones
+  catalogued as reading "Windows Event Collector" — which a syslog/CEF delivery of the identical
+  event shapes does not fire.'
+how_to_use: |
+  **Use this source when the goal is one of Cortex's native Windows identity-analytics alerts
+  (DCSync, privileged-group tampering, Kerberos ticket abuse, account-management attacks, ...).**
+  The syslog/CEF `MicrosoftWindowsEvents` source (rule `MicrosoftWindowsEvents`) already maps 58
+  `xdm.*` fields from the identical event shapes and is `validated: true` — this source does not
+  change that mapping or replace it for validating `xdm.*`. What it changes is the **collector-type
+  stamp**: delivery decides that, not vendor/product or the CEF header. A syslog/CEF delivery is
+  stamped `_collector_type = Syslog`; see the syslog sibling's own `how_to_use` ("Delivery over a real
+  Windows Event Collector" section) for exactly what a WEC delivery additionally creates on this same
+  dataset and why the Windows-identity-analytics detector family reads that path and not the syslog
+  one. Confirmed directly: the DCSync detector's own skill (`trigger_dcsync_alert.md`) states it
+  "reads Windows events that arrive through a registered Windows source" over two routes — WEC and
+  the Cribl `cribl_windows_events` destination — and explicitly "never over syslog/CEF", after the
+  identical event shapes raised nothing when sent as CEF.
+
+  **This is NOT a mapping problem.** The syslog/CEF sibling already maps 58 `xdm.*` fields correctly
+  from these same event shapes, and a perfect mapping there still raises nothing. These Analytics/BIOC
+  alerts will NEVER fire over syslog/CEF, however complete the mapping is, because the detectors read
+  the registered Windows source (a real WEC delivery, the native Cortex XDR agent feed, or Cribl with
+  the dedicated Windows source UUID), not the syslog/CEF feed. `_collector_type = WEC` is stamped by
+  a real Windows Event Collector delivery and can never be set from an event body, so no CEF extension,
+  field choice or schema change can reach it. "xdm.* maps over syslog" and "the alert fires over
+  syslog" are different claims; only the first is true.
+
+  **Do NOT use `phantom_create_data_worker`, syslog or CEF for this source — use the `wec-sender`
+  connector.** Both this source and its syslog sibling route to the same dataset
+  (`microsoft_windows_raw`) and the same modeling rule, but the wire shape is structured JSON (the
+  `fields[]` below, which name the `wec-sender.send_events` call's own input keys) that the connector
+  renders to real Windows Event XML, never a CEF line. The applet then re-derives the sibling's own
+  CEF-style columns from that XML: `computer` -> `System/Computer` -> `computer_name`; `provider` ->
+  `System/Provider` -> `provider_name`; `rendering.task` -> the rendered `Task` text -> `event_action`;
+  `rendering.message` and `rendering.level` -> `RenderingInfo` -> `message` and `log_level`;
+  `rendering.keywords` -> `event_result` (`failure` when the rendered Keywords say "Audit Failure",
+  else `success`); `event_data` -> the `Data` nodes -> the `event_data` JSON object the modeling
+  rule's coalesce chains read. Call `wec-sender.list_subscriptions` first (proves the client
+  certificate, its CA and the connection); then `wec-sender.generate_events` (built-in profile
+  `windows`, scenario `baseline_logons` is implemented natively) or `wec-sender.send_events` for a
+  specific event shape.
+
+  ## Built-in scenarios
+
+  `baseline_logons` is implemented natively in `wec-sender.generate_events` (its `SCENARIOS` registry
+  has this one entry) — call it directly for benign logon traffic over this route. `admin_activity`
+  and every attack scenario below are built only by the `http-sender` connector's shared `windows`
+  profile, which defaults to its Cribl destination (`cribl_windows_events`) and refuses to send
+  elsewhere; `admin_activity` has no matching skill, so use `http-sender.generate_events(profile=
+  "windows", scenario="admin_activity")` over Cribl directly for it rather than trying to replay it
+  over WEC.
+
+  For each attack scenario, a matching `trigger_<scenario>_alert` skill exists under
+  `skills/workflows/`. **Prefer copying that skill's Route A payload verbatim and passing it to
+  `wec-sender.send_events` directly** — every skill's own `description` frontmatter states it fires
+  over both the WEC route and the Cribl route, and never over syslog/CEF, and the skill's JSON is the
+  exact shape already proven to fire. `http-sender.generate_events(..., dry_run=true)` previews a
+  scenario's shape but returns only its **first 3 events** — not enough to replay a 4-, 5-, 6-, 16- or
+  19-event recipe (DCSync needs 5, the lockout storm 16, Kerberoasting 19) — so treat `dry_run` as a
+  shape preview only, never as a substitute for the skill's full payload.
+
+  Benign (baseline, no detector expected):
+  - `baseline_logons` — benign logons (4624 interactive/unlock/cached/network/RDP, 4672 for admins,
+    a 4634 logoff for each) across a stable synthetic domain, shaped by time of day.
+  - `admin_activity` — helpdesk resets/unlocks, ordinary account creation, department group changes,
+    4738 changes. Cribl only (`http-sender`); no `trigger_*_alert` skill.
+
+  Attack scenarios (one per `trigger_*_alert` skill; each skill names its own Cortex alert and MITRE
+  tag — read the skill for the exact event count and preconditions):
+  - `dcsync` — "Possible DCSync by an unusual user" (T1003.006): a 4624 logon plus four 4662
+    directory-service replication accesses on `krbtgt`.
+  - `privileged_group_add` — "User added to a Windows privileged group" (T1098): a 4728 adding a
+    user account to Domain Admins.
+  - `machine_account_domain_admins` — "Machine account was added to a domain admins group" (T1078.002):
+    the same 4728 shape with a machine account (`*$`) instead of a user.
+  - `guest_account_enabled` — "A user enabled the Windows default Guest account" (T1078.001): a 4722
+    enabling the built-in Guest account.
+  - `sms_admins` — "User added to the SMS Admins local group" (T1098): a 4732 on a member server.
+  - `weak_service_tickets` — "Abnormal issuance of weakly encrypted service tickets to a user"
+    (T1558.003 Kerberoasting): 19 RC4 (`0x17`) 4769 service-ticket requests for distinct SPNs.
+  - `excessive_lockouts` — "Excessive user account lockouts" (T1110.003): 16 `4740` lockouts across
+    11 accounts.
+  - `samaccountname_change` — "Suspicious sAMAccountName change" (T1098, CVE-2021-42278/42287 noPac):
+    a 4781 drops a machine account's trailing `$`.
+  - `multiple_account_deletions` — "A user deleted multiple users for the first time" (T1531): six
+    4726 deletions within about two minutes.
+  - `hidden_user_created` — "Suspicious hidden user created" (T1136/T1564.002): a 4720 user named to
+    mimic a machine account (trailing `$`).
+  - `default_account_masquerade` — "Masquerading as a default local account" (T1564.002/T1078.001/T1036):
+    two 4720 events creating local accounts named `DefaultAccount` and `Guest`.
+  - `spoofed_samaccountname_tickets` — the noPac pair "TGT request with a spoofed sAMAccountName" and
+    "Service ticket request with a spoofed sAMAccountName" (CVE-2021-42278/42287): a 4781 rename, a
+    4768 TGT and a 4769 service-ticket request for the domain controller's dropped-`$` name.
+  - `shadow_credentials` — "Possible shadow credentials addition" (T1556): a 5136 writing
+    `msDS-KeyCredentialLink` on a computer object.
+  - `delegation_to_krbtgt` — "User account delegation to KRBTGT" (T1558): a 4738 setting constrained
+    delegation to `krbtgt/PHANTOM.LAB`.
+  - `privileged_certificate_request` — "Suspicious privileged certificate request via certificate
+    template" (ESC8, T1078.002): a 4887 certificate issuance from the `DomainController` template.
+
+  ## Field shape (`wec-sender.send_events` contract)
+
+  Catalogued ids **4624, 4625, 4634, 4672** need only `event_id`, `computer` and `event_data` — the
+  connector fills a standard template message/task for them itself. Any **other** id (4662, 4720,
+  4728, 4738, 4767, 4769, 4776, ...) also needs `provider`, `rendering.message` and `rendering.task`,
+  or the `wec-sender` connector rejects the call itself before sending anything.
+
+  **`rendering.message` is load-bearing, not just a WEC-transport formality.** The syslog sibling's
+  own `description` says its modeling rule extracts 33 fields by regex **from this same `message`
+  text**, and the DCSync skill's payload (`trigger_dcsync_alert.md`) fires only because its `4662`
+  events' `rendering.message` carries the exact `Properties:` line the detector reads
+  (`{1131f6aa-...}` etc.) with `Access Mask: 0x100`. For a catalogued id, the connector's own
+  template is already correct; for any other id, copy the message verbatim from the matching
+  `trigger_<scenario>_alert` skill, or from the syslog sibling's own per-event-id message templates
+  if no skill covers it — never write a placeholder.
+
+  `event_data` is a JSON object of **named** Data (`{"TargetUserName": "...", "SubjectUserSid": "...",
+  ...}`); pin every member the modeling rule's coalesce chain reads for the fields you need, and
+  declare only the fields the target event type actually carries — an unpinned member earlier in a
+  coalesce wins over a pinned one further down, and a full-schema override on a logon drags in
+  unrelated noise (see the sibling source's `how_to_use` for the exact coalesce gotchas — they apply
+  here identically since the modeling rule is the same).
+categories:
+- IT Services
+- Network Security
+version: 1.0.0
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-10-14T00:00:00Z'
+updated_at: '2026-10-14T00:00:00Z'
+formats:
+- WINEVENT
+is_rawlog_only: false
+fields:
+- name: event_id
+  type: integer
+  description: Windows Event ID. 4624, 4625, 4634 and 4672 are natively rendered by the connector and
+    need no provider/rendering overrides. Any other id also needs provider and rendering.message/rendering.task.
+  example: 4624
+- name: computer
+  type: host
+  description: Host name (short or FQDN) the event claims to come from. Becomes System/Computer, which
+    the applet maps to the computer_name column (the same column the syslog sibling's CEF schema
+    populates).
+  example: PHDC02.phantom.lab
+- name: provider
+  type: string
+  description: Windows Event provider name. Required for any event_id outside the four natively-catalogued
+    ones; Security-channel events use Microsoft-Windows-Security-Auditing.
+  example: Microsoft-Windows-Security-Auditing
+- name: channel
+  type: string
+  description: Windows Event Log channel.
+  example: Security
+- name: time
+  type: datetime
+  description: Event time (ISO-8601 UTC, epoch seconds, or a relative token the connector resolves
+    with its own clock, e.g. "now-300s"). Becomes the event's TimeCreated and therefore _time.
+  example: '2026-10-14T09:15:42Z'
+- name: event_data
+  type: json
+  description: Named Data nodes as a JSON object, keyed exactly as the modeling rule's coalesce chain
+    reads them (e.g. TargetUserName, SubjectUserSid, WorkstationName, IpAddress). Shape differs per
+    event_id; declare only the keys the target event type carries.
+  example: '{}'
+- name: outcome
+  type: enum
+  enum_values:
+  - success
+  - failure
+  description: Logon/operation outcome. failure maps to xdm.event.outcome = FAILED.
+  example: success
+- name: rendering.message
+  type: string_long
+  description: 'Rendered description text (RenderingInfo/Message). Required for any event_id outside
+    the four natively-catalogued ones, or the connector rejects the call. Load-bearing, not
+    decorative -- the modeling rule reads 33 fields by regex from this same text (see the syslog
+    sibling''s description) -- copy the exact message from the matching trigger_<scenario>_alert
+    skill, never a placeholder.'
+  example: 'An account was successfully logged on.'
+- name: rendering.task
+  type: string_short
+  description: Rendered Task text (RenderingInfo/Task). Required for any event_id outside the four
+    natively-catalogued ones.
+  example: Logon
+- name: rendering.level
+  type: string_short
+  description: Rendered severity level text. Optional; defaults to Information.
+  example: Information
+- name: rendering.opcode
+  type: string_short
+  description: Rendered opcode text. Optional.
+  example: Info
+- name: rendering.channel
+  type: string_short
+  description: Rendered channel override. Optional; defaults to the top-level channel.
+  example: Security
+- name: rendering.provider
+  type: string_short
+  description: Rendered provider override. Optional; defaults to the top-level provider.
+  example: Microsoft-Windows-Security-Auditing
+- name: rendering.keywords
+  type: string
+  description: Rendered keywords text. "Audit Failure" maps event_result to failure, otherwise success.
+  example: Audit Success
+- name: record_id
+  type: integer
+  description: Windows Event record id (System/EventRecordID). Optional.
+  example: 88301
+- name: process_id
+  type: integer
+  description: Process id that logged the event (System/Execution/@ProcessID). Optional.
+  example: 656
+- name: thread_id
+  type: integer
+  description: Thread id that logged the event (System/Execution/@ThreadID). Optional.
+  example: 4120
+- name: activity_id
+  type: string_short
+  description: Correlation activity id GUID (System/Correlation/@ActivityID). Optional.
+  example: '{00000000-0000-0000-0000-000000000000}'
+use_cases:
+- Cloud
+- SaaS
+- Identity

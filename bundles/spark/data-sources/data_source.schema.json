@@ -161,9 +161,9 @@
       ]
     },
     "delivery": {
-      "description": "How Phantom delivers this source's synthetic logs. `syslog` (the default when omitted): a data worker ships CEF/syslog/LEEF to the Cortex Broker. `http`: the `http-sender` connector posts JSON to an XSIAM HTTP Log Collector, so the payload is a JSON object, the collector (not the sender) fixes vendor/product and therefore the dataset, and `phantom_create_data_worker` must NOT be used.",
+      "description": "How Phantom delivers this source's synthetic logs. `syslog` (the default when omitted): a data worker ships CEF/syslog/LEEF to the Cortex Broker. `http`: the `http-sender` connector posts JSON to an XSIAM HTTP Log Collector, so the payload is a JSON object, the collector (not the sender) fixes vendor/product and therefore the dataset, and `phantom_create_data_worker` must NOT be used. `wec`: the `wec-sender` connector delivers Windows Event XML to the Broker VM's Windows Event Collector applet over WS-Management (mutual TLS, TCP 5986), so the payload is real Windows Event XML with `_collector_type = WEC` stamped by the collection path itself; `phantom_create_data_worker` must NOT be used.",
       "type": "string",
-      "enum": ["syslog", "http"],
+      "enum": ["syslog", "http", "wec"],
       "default": "syslog"
     },
     "formats": {

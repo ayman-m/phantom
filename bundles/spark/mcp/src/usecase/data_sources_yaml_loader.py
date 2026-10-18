@@ -59,6 +59,10 @@ from typing import Any
 
 logger = logging.getLogger("Phantom MCP")
 
+# A Cortex modeling-rule version suffix: digits and underscores only, e.g. the
+# "_1_3" in "FortiGate_1_3". See `_get_by_3tuple_version_tolerant`.
+_VERSION_SUFFIX_RE = re.compile(r"^[0-9]+(_[0-9]+)*$")
+
 
 # ─── Path resolution ───────────────────────────────────────────────
 
@@ -161,7 +165,7 @@ def _validate_minimal(doc: dict[str, Any]) -> tuple[bool, list[str]]:
 # ─── Delivery ────────────────────────────────────────────────
 
 DEFAULT_DELIVERY = "syslog"
-VALID_DELIVERIES = ("syslog", "http")
+VALID_DELIVERIES = ("syslog", "http", "wec")
 
 
 def normalize_delivery(value: Any) -> str:
@@ -326,8 +330,9 @@ class YamlDataSource:
             # smoke-tested end-to-end.
             "validated": self.validated,
             "raw_validated": self.raw_validated,
-            # "syslog" | "http". Lets the UI/agent tell an HTTP-collector
-            # source (http-sender connector) from a syslog/CEF one.
+            # "syslog" | "http" | "wec". Lets the UI/agent tell an
+            # HTTP-collector source (http-sender connector) or a WEC source
+            # (wec-sender connector) from a syslog/CEF one.
             "delivery": self.delivery,
             "id": self.id,
         }
@@ -563,9 +568,10 @@ class DataSourcesYamlLoader:
         """Lookup by (pack_name, rule_name, dataset_name).
 
         Used by the install path to decide between user-YAML-based install
-        and cortex-content-based install. Bundle wins on the rare case
-        where bundle + user share the same 3-tuple (per the same
-        collision rule as get_by_id).
+        and cortex-content-based install, and by edit/rollback/versions to
+        resolve an installed row back to its catalog entry. Bundle wins on
+        the rare case where bundle + user share the same 3-tuple (per the
+        same collision rule as get_by_id).
         """
         for ds in self.list_all():
             if (
@@ -574,7 +580,43 @@ class DataSourcesYamlLoader:
                 and ds.dataset_name == dataset_name
             ):
                 return ds
-        return None
+        return self._get_by_3tuple_version_tolerant(pack_name, rule_name, dataset_name)
+
+    def _get_by_3tuple_version_tolerant(
+        self,
+        pack_name: str,
+        rule_name: str,
+        dataset_name: str,
+    ) -> YamlDataSource | None:
+        """Fallback for `get_by_3tuple`: tolerate a Cortex-style version suffix on `rule_name`.
+
+        Cortex's own modeling-rule directory names carry a version ("FortiGate_1_3",
+        "ZscalerModelingRule_1_3") that the bundled catalog's `rule_name` never does
+        ("FortiGate", "ZscalerModelingRule") -- `cortex_list_modeling_rules` is where an
+        agent read that versioned name from, and `data_sources_install` passes it straight
+        through. Measured 2026-10-18 (test-findings F21): every data source installed this
+        way permanently failed the exact-match lookup above, which broke Edit guidance /
+        Rollback / version History for the installed row (the catalog YAML could never be
+        found again), and silently skipped the bundled YAML's richer fields (descriptions,
+        examples) in favor of the thinner cortex-extracted ones during install.
+
+        Matches only when the candidate's own `rule_name` is a strict prefix of the given
+        one, immediately followed by `_` and a version-shaped remainder (digits and
+        underscores only), and exactly one such candidate exists for this pack+dataset.
+        The strict-prefix requirement is what keeps this safe for the documented
+        HTTP/WEC-delivery siblings that share a pack_name and dataset_name but differ in
+        rule_name (e.g. "OktaHttpCollector" vs "OktaModelingRules" for Okta/okta_sso_raw):
+        neither is a prefix of the other, so they never collide here.
+        """
+        candidates = [
+            ds
+            for ds in self.list_all()
+            if ds.pack_name == pack_name
+            and ds.dataset_name == dataset_name
+            and rule_name.startswith(ds.rule_name + "_")
+            and _VERSION_SUFFIX_RE.match(rule_name[len(ds.rule_name) + 1 :])
+        ]
+        return candidates[0] if len(candidates) == 1 else None
 
     def write_user(self, doc: dict[str, Any]) -> tuple[YamlDataSource | None, list[str]]:
         """Validate + write a user-uploaded YAML to disk.

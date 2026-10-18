@@ -1,0 +1,453 @@
+{
+ "domain": "phantom.lab",
+ "groups": [
+  {
+   "members": 6,
+   "name": "SG-Finance",
+   "privileged": false
+  },
+  {
+   "members": 6,
+   "name": "SG-HR",
+   "privileged": false
+  },
+  {
+   "members": 5,
+   "name": "SG-Sales",
+   "privileged": false
+  },
+  {
+   "members": 5,
+   "name": "SG-Engineering",
+   "privileged": false
+  },
+  {
+   "members": 26,
+   "name": "SG-VPN-Users",
+   "privileged": false
+  },
+  {
+   "members": 10,
+   "name": "SG-Project-Atlas",
+   "privileged": false
+  },
+  {
+   "members": 4,
+   "name": "SG-IT-Admins",
+   "privileged": true
+  },
+  {
+   "members": 4,
+   "name": "Domain Admins",
+   "privileged": true
+  },
+  {
+   "members": 4,
+   "name": "SG-Service-Accounts",
+   "privileged": false
+  }
+ ],
+ "user_name_style": "sam",
+ "users": [
+  {
+   "department": "Finance",
+   "display_name": "Noura Alharbi",
+   "email": "noura.alharbi@phantom.lab",
+   "groups": [
+    "SG-Finance",
+    "SG-VPN-Users"
+   ],
+   "manager": null,
+   "role": "staff",
+   "title": "Finance Manager",
+   "user_name": "nalharbi@phantom.lab"
+  },
+  {
+   "department": "HR",
+   "display_name": "Khalid Alotaibi",
+   "email": "khalid.alotaibi@phantom.lab",
+   "groups": [
+    "SG-HR",
+    "SG-VPN-Users"
+   ],
+   "manager": null,
+   "role": "staff",
+   "title": "HR Manager",
+   "user_name": "kalotaibi@phantom.lab"
+  },
+  {
+   "department": "Sales",
+   "display_name": "Abdullah Alzahrani",
+   "email": "abdullah.alzahrani@phantom.lab",
+   "groups": [
+    "SG-Sales",
+    "SG-VPN-Users",
+    "SG-Project-Atlas"
+   ],
+   "manager": null,
+   "role": "staff",
+   "title": "Sales Manager",
+   "user_name": "aalzahrani@phantom.lab"
+  },
+  {
+   "department": "Engineering",
+   "display_name": "Sara Almutairi",
+   "email": "sara.almutairi@phantom.lab",
+   "groups": [
+    "SG-Engineering",
+    "SG-VPN-Users",
+    "SG-Project-Atlas"
+   ],
+   "manager": null,
+   "role": "staff",
+   "title": "Engineering Manager",
+   "user_name": "salmutairi@phantom.lab"
+  },
+  {
+   "department": "Finance",
+   "display_name": "Faisal Alqahtani",
+   "email": "faisal.alqahtani@phantom.lab",
+   "groups": [
+    "SG-Finance",
+    "SG-VPN-Users"
+   ],
+   "manager": "nalharbi",
+   "role": "staff",
+   "title": "Financial Analyst",
+   "user_name": "falqahtani@phantom.lab"
+  },
+  {
+   "department": "HR",
+   "display_name": "Reem Aldosari",
+   "email": "reem.aldosari@phantom.lab",
+   "groups": [
+    "SG-HR",
+    "SG-VPN-Users"
+   ],
+   "manager": "kalotaibi",
+   "role": "staff",
+   "title": "HR Business Partner",
+   "user_name": "raldosari@phantom.lab"
+  },
+  {
+   "department": "Sales",
+   "display_name": "Omar Alshehri",
+   "email": "omar.alshehri@phantom.lab",
+   "groups": [
+    "SG-Sales",
+    "SG-VPN-Users",
+    "SG-Project-Atlas"
+   ],
+   "manager": "aalzahrani",
+   "role": "staff",
+   "title": "Account Executive",
+   "user_name": "oalshehri@phantom.lab"
+  },
+  {
+   "department": "Engineering",
+   "display_name": "Huda Alghamdi",
+   "email": "huda.alghamdi@phantom.lab",
+   "groups": [
+    "SG-Engineering",
+    "SG-VPN-Users",
+    "SG-Project-Atlas"
+   ],
+   "manager": "salmutairi",
+   "role": "staff",
+   "title": "Software Engineer",
+   "user_name": "halghamdi@phantom.lab"
+  },
+  {
+   "department": "Finance",
+   "display_name": "Yousef Alharthi",
+   "email": "yousef.alharthi@phantom.lab",
+   "groups": [
+    "SG-Finance",
+    "SG-VPN-Users"
+   ],
+   "manager": "nalharbi",
+   "role": "staff",
+   "title": "Accountant",
+   "user_name": "yalharthi@phantom.lab"
+  },
+  {
+   "department": "HR",
+   "display_name": "Layla Almalki",
+   "email": "layla.almalki@phantom.lab",
+   "groups": [
+    "SG-HR",
+    "SG-VPN-Users"
+   ],
+   "manager": "kalotaibi",
+   "role": "staff",
+   "title": "Recruiter",
+   "user_name": "lalmalki@phantom.lab"
+  },
+  {
+   "department": "Sales",
+   "display_name": "Tariq Alsubaie",
+   "email": "tariq.alsubaie@phantom.lab",
+   "groups": [
+    "SG-Sales",
+    "SG-VPN-Users",
+    "SG-Project-Atlas"
+   ],
+   "manager": "aalzahrani",
+   "role": "staff",
+   "title": "Sales Engineer",
+   "user_name": "talsubaie@phantom.lab"
+  },
+  {
+   "department": "Engineering",
+   "display_name": "Dana Alanazi",
+   "email": "dana.alanazi@phantom.lab",
+   "groups": [
+    "SG-Engineering",
+    "SG-VPN-Users",
+    "SG-Project-Atlas"
+   ],
+   "manager": "salmutairi",
+   "role": "staff",
+   "title": "DevOps Engineer",
+   "user_name": "dalanazi@phantom.lab"
+  },
+  {
+   "department": "Finance",
+   "display_name": "Majed Alsaleh",
+   "email": "majed.alsaleh@phantom.lab",
+   "groups": [
+    "SG-Finance",
+    "SG-VPN-Users"
+   ],
+   "manager": "nalharbi",
+   "role": "staff",
+   "title": "Payroll Specialist",
+   "user_name": "malsaleh@phantom.lab"
+  },
+  {
+   "department": "HR",
+   "display_name": "Lama Alfaifi",
+   "email": "lama.alfaifi@phantom.lab",
+   "groups": [
+    "SG-HR",
+    "SG-VPN-Users"
+   ],
+   "manager": "kalotaibi",
+   "role": "staff",
+   "title": "HR Coordinator",
+   "user_name": "lalfaifi@phantom.lab"
+  },
+  {
+   "department": "Sales",
+   "display_name": "Saud Alrashid",
+   "email": "saud.alrashid@phantom.lab",
+   "groups": [
+    "SG-Sales",
+    "SG-VPN-Users",
+    "SG-Project-Atlas"
+   ],
+   "manager": "aalzahrani",
+   "role": "staff",
+   "title": "Sales Coordinator",
+   "user_name": "salrashid@phantom.lab"
+  },
+  {
+   "department": "Engineering",
+   "display_name": "Hessa Alkhaldi",
+   "email": "hessa.alkhaldi@phantom.lab",
+   "groups": [
+    "SG-Engineering",
+    "SG-VPN-Users",
+    "SG-Project-Atlas"
+   ],
+   "manager": "salmutairi",
+   "role": "staff",
+   "title": "QA Engineer",
+   "user_name": "halkhaldi@phantom.lab"
+  },
+  {
+   "department": "Finance",
+   "display_name": "Bandar Alshammari",
+   "email": "bandar.alshammari@phantom.lab",
+   "groups": [
+    "SG-Finance",
+    "SG-VPN-Users"
+   ],
+   "manager": "nalharbi",
+   "role": "staff",
+   "title": "Financial Analyst",
+   "user_name": "balshammari@phantom.lab"
+  },
+  {
+   "department": "HR",
+   "display_name": "Maha Alyami",
+   "email": "maha.alyami@phantom.lab",
+   "groups": [
+    "SG-HR",
+    "SG-VPN-Users"
+   ],
+   "manager": "kalotaibi",
+   "role": "staff",
+   "title": "HR Business Partner",
+   "user_name": "malyami@phantom.lab"
+  },
+  {
+   "department": "Sales",
+   "display_name": "Nasser Alamri",
+   "email": "nasser.alamri@phantom.lab",
+   "groups": [
+    "SG-Sales",
+    "SG-VPN-Users",
+    "SG-Project-Atlas"
+   ],
+   "manager": "aalzahrani",
+   "role": "staff",
+   "title": "Account Executive",
+   "user_name": "nalamri@phantom.lab"
+  },
+  {
+   "department": "Engineering",
+   "display_name": "Rana Alsulami",
+   "email": "rana.alsulami@phantom.lab",
+   "groups": [
+    "SG-Engineering",
+    "SG-VPN-Users",
+    "SG-Project-Atlas"
+   ],
+   "manager": "salmutairi",
+   "role": "staff",
+   "title": "Software Engineer",
+   "user_name": "ralsulami@phantom.lab"
+  },
+  {
+   "department": "Finance",
+   "display_name": "Waleed Albishi",
+   "email": "waleed.albishi@phantom.lab",
+   "groups": [
+    "SG-Finance",
+    "SG-VPN-Users"
+   ],
+   "manager": "nalharbi",
+   "role": "staff",
+   "title": "Accountant",
+   "user_name": "walbishi@phantom.lab"
+  },
+  {
+   "department": "HR",
+   "display_name": "Amal Alruwaili",
+   "email": "amal.alruwaili@phantom.lab",
+   "groups": [
+    "SG-HR",
+    "SG-VPN-Users"
+   ],
+   "manager": "kalotaibi",
+   "role": "staff",
+   "title": "Recruiter",
+   "user_name": "aalruwaili@phantom.lab"
+  },
+  {
+   "department": "IT",
+   "display_name": "Ibrahim Alkhalifa (admin)",
+   "email": "adm.ibrahim.alkhalifa@phantom.lab",
+   "groups": [
+    "SG-VPN-Users",
+    "SG-IT-Admins",
+    "Domain Admins"
+   ],
+   "manager": null,
+   "role": "admin",
+   "title": "IT Manager",
+   "user_name": "adm.ialkhalifa@phantom.lab"
+  },
+  {
+   "department": "IT",
+   "display_name": "Mansour Alwadi (admin)",
+   "email": "adm.mansour.alwadi@phantom.lab",
+   "groups": [
+    "SG-VPN-Users",
+    "SG-IT-Admins",
+    "Domain Admins"
+   ],
+   "manager": "adm.ialkhalifa",
+   "role": "admin",
+   "title": "Systems Administrator",
+   "user_name": "adm.malwadi@phantom.lab"
+  },
+  {
+   "department": "IT",
+   "display_name": "Shahad Alotaibi (admin)",
+   "email": "adm.shahad.alotaibi@phantom.lab",
+   "groups": [
+    "SG-VPN-Users",
+    "SG-IT-Admins",
+    "Domain Admins"
+   ],
+   "manager": "adm.ialkhalifa",
+   "role": "admin",
+   "title": "Systems Administrator",
+   "user_name": "adm.salotaibi@phantom.lab"
+  },
+  {
+   "department": "IT",
+   "display_name": "Turki Alsudairi (admin)",
+   "email": "adm.turki.alsudairi@phantom.lab",
+   "groups": [
+    "SG-VPN-Users",
+    "SG-IT-Admins",
+    "Domain Admins"
+   ],
+   "manager": "adm.ialkhalifa",
+   "role": "admin",
+   "title": "Systems Administrator",
+   "user_name": "adm.talsudairi@phantom.lab"
+  },
+  {
+   "department": "IT",
+   "display_name": "SQL Service",
+   "email": "svc-sql@phantom.lab",
+   "groups": [
+    "SG-Service-Accounts"
+   ],
+   "manager": "adm.ialkhalifa",
+   "role": "service",
+   "title": "Service Account",
+   "user_name": "svc-sql@phantom.lab"
+  },
+  {
+   "department": "IT",
+   "display_name": "Backup Service",
+   "email": "svc-backup@phantom.lab",
+   "groups": [
+    "SG-Service-Accounts"
+   ],
+   "manager": "adm.ialkhalifa",
+   "role": "service",
+   "title": "Service Account",
+   "user_name": "svc-backup@phantom.lab"
+  },
+  {
+   "department": "IT",
+   "display_name": "Web Service",
+   "email": "svc-web@phantom.lab",
+   "groups": [
+    "SG-Service-Accounts"
+   ],
+   "manager": "adm.ialkhalifa",
+   "role": "service",
+   "title": "Service Account",
+   "user_name": "svc-web@phantom.lab"
+  },
+  {
+   "department": "IT",
+   "display_name": "Application Service",
+   "email": "svc-app@phantom.lab",
+   "groups": [
+    "SG-Service-Accounts"
+   ],
+   "manager": "adm.ialkhalifa",
+   "role": "service",
+   "title": "Service Account",
+   "user_name": "svc-app@phantom.lab"
+  }
+ ]
+}

@@ -147,6 +147,24 @@ def test_network_not_covered_by_internal_ranges(doc):
     assert _has(errs, "not covered")
 
 
+def test_overlapping_networks_are_rejected(doc):
+    # Measured 2026-10-18 (F2): widening `vpn` from its own disjoint /22 to a /18 that swallows
+    # `ruh-unmanaged`'s 10.20.100.0-10.20.199.255 saved with no warning -- the same address then
+    # resolves to two different networks, which makes the Cortex setup ranges ambiguous.
+    def widen_vpn(d):
+        vpn = next(n for n in d["networks"] if n["id"] == "vpn")
+        vpn["cidr"] = "10.20.192.0/18"
+
+    errs = _errors(doc, widen_vpn)
+    assert _has(errs, "overlap")
+    assert _has(errs, "'ruh-unmanaged'")
+    assert _has(errs, "'vpn'")
+
+
+def test_disjoint_networks_do_not_overlap(doc):
+    assert not _has(om.validate_document(doc), "overlap")
+
+
 def test_schema_error_is_reported_before_semantics(doc):
     errs = _errors(doc, lambda d: d.pop("people"))
     assert errs and all("people" in e or "required" in e for e in errs)

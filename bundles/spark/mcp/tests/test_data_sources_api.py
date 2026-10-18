@@ -978,6 +978,41 @@ def test_installed_as_vendors_exposes_delivery(store: DataSourcesStore) -> None:
     assert sysl["formats"] == ["SYSLOG", "CEF", "JSON"]
 
 
+def test_installed_as_vendors_exposes_wec_delivery(store: DataSourcesStore) -> None:
+    for rule in ("MicrosoftWindowsEventsWEC", "MicrosoftWindowsEvents"):
+        inst = asyncio.run(
+            ds_api.data_sources_install(
+                "MicrosoftWindowsEvents", rule, "microsoft_windows_raw"
+            )
+        )
+        assert inst["ok"], inst
+    out = asyncio.run(ds_api.data_sources_installed_as_vendors())
+    assert out["ok"], out
+    by_id = {v["data_source_id"]: v for v in out["vendors"]}
+    wec = by_id["MicrosoftWindowsEvents/MicrosoftWindowsEventsWEC/microsoft_windows_raw"]
+    sysl = by_id["MicrosoftWindowsEvents/MicrosoftWindowsEvents/microsoft_windows_raw"]
+    assert wec["delivery"] == "wec"
+    assert wec["formats"] == ["WINEVENT"]
+    assert sysl["delivery"] == "syslog"
+    assert sysl["formats"] == ["SYSLOG", "CEF", "JSON"]
+
+
+def test_get_schema_yaml_path_exposes_wec_delivery():
+    out = asyncio.run(
+        ds_api.data_sources_get_schema(
+            "MicrosoftADFS/MicrosoftADFSWEC/microsoft_adfs_raw", compact=True
+        )
+    )
+    assert out["ok"], out
+    assert out["data_source"]["delivery"] == "wec"
+    out2 = asyncio.run(
+        ds_api.data_sources_get_schema(
+            "MicrosoftADFS/MicrosoftADFS/microsoft_adfs_raw", compact=True
+        )
+    )
+    assert out2["data_source"]["delivery"] == "syslog"
+
+
 def test_apply_edit_preserves_delivery(vstore):
     out = ds_api._apply_edit(
         "Okta", "OktaHttpCollector", "okta_sso_raw",

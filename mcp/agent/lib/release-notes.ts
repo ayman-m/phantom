@@ -43,6 +43,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       "Connectors read the active organization live; a save or a switch needs no restart.",
       "The Cortex setup panel lists the internal ranges and domain suffix to enter in Network Configuration.",
       "cie-sender, wec-sender and http-sender settings for domains and host counts are gone: edit the organization instead.",
+      "Architecture → Analytics Trigger Coverage lists every alert-triggering skill, what it takes to fire it, and what still doesn't.",
     ],
   },
   {

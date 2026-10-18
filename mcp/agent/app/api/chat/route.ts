@@ -3193,6 +3193,29 @@ function resultFailureText(result: unknown): string | null {
   return null;
 }
 
+// True when the MCP server itself flagged this CallToolResult as an error
+// (FastMCP sets `isError: true` when the Python tool function raised — e.g.
+// xlog's GraphQL layer rejecting an oversized worker). This is a DIFFERENT
+// signal from `resultFailureText`'s `{"ok": false}` envelope: a tool can
+// return a well-formed `{ok: false}` business answer without raising, and a
+// raised exception's content is plain text, not JSON, so resultFailureText
+// never matches it. Both must be checked — neither implies the other.
+function mcpIsError(result: unknown): boolean {
+  return Boolean((result as { isError?: boolean } | undefined)?.isError);
+}
+
+// The error text to show for an `isError` CallToolResult — the actual
+// exception message the tool raised, not a generic placeholder.
+function mcpErrorText(result: unknown): string | null {
+  try {
+    const content = (result as { content?: Array<{ text?: unknown }> })?.content;
+    const text = content?.find((p) => typeof p?.text === 'string')?.text;
+    return typeof text === 'string' ? text.slice(0, 280) : null;
+  } catch {
+    return null;
+  }
+}
+
 // Poll/wait tools legitimately re-issue the SAME (tool, args) call many times
 // (e.g. caldera_wait_for_operation_progress) and may transiently report a
 // not-yet-ready state — they must never be short-circuited by the failed-call
@@ -3668,10 +3691,24 @@ export async function POST(request: NextRequest) {
         // out-of-band context. Goes into the dynamic part of the
         // prompt, NOT the cached system instruction — so this
         // doesn't bust the Vertex cache.
+        //
+        // On a brand-new session (history.length === 0, the common case for
+        // a fresh chat) this message sits directly in front of the
+        // operator's own first message, and every provider's payload
+        // builder must coalesce adjacent same-role turns into one (the
+        // Anthropic Messages API rejects consecutive 'user' turns, so
+        // buildAnthropicMessages concatenates their text blocks). Measured
+        // 2026-10-18 (F15): with no closing delimiter, Claude occasionally
+        // read the WHOLE coalesced turn as "just the injected context, no
+        // actual request" and asked what to do instead of answering the
+        // operator's message that was concatenated right after it. The
+        // explicit "end of injected context" line below gives the model an
+        // unambiguous boundary even after coalescing erases the message
+        // split.
         if (hookInjectedContext) {
           turnMessages.unshift({
             role: 'user',
-            text: `[Context injected by a UserPromptSubmit hook — treat as ground truth, do not echo back to the operator unless they ask]:\n${hookInjectedContext}`,
+            text: `[Context injected by a UserPromptSubmit hook — treat as ground truth, do not echo back to the operator unless they ask]:\n${hookInjectedContext}\n[End of injected context. The operator's own message follows below.]`,
           });
         }
 
@@ -4431,16 +4468,18 @@ export async function POST(request: NextRequest) {
                 // tool error, approval denial). Cleanup is idempotent.
                 approvalPollAbort?.abort();
               }
-              // Record failures (exception OR {ok:false} envelope)
-              // so the next identical call increments toward the short-circuit.
+              // Record failures (exception OR {ok:false} envelope OR an
+              // MCP-protocol isError result, e.g. xlog rejecting an
+              // oversized worker) so the next identical call increments
+              // toward the short-circuit.
               const failText = toolError
                 ? (toolError.message || 'tool error').slice(0, 280)
-                : resultFailureText(result);
+                : resultFailureText(result) ?? (mcpIsError(result) ? mcpErrorText(result) : null);
               if (failText) {
                 turnFailedCalls.set(turnCallKey, { count: priorFails + 1, error: failText });
               }
-              // Cache only genuine successes - never an {ok:false} result.
-              if (turnCacheKey && !toolError && result && !resultFailureText(result)) {
+              // Cache only genuine successes - never an {ok:false} result or an isError result.
+              if (turnCacheKey && !toolError && result && !mcpIsError(result) && !resultFailureText(result)) {
                 turnToolCache.set(turnCacheKey, result);
               }
               // A catalog/config mutation invalidates the static-read snapshot
@@ -4493,7 +4532,12 @@ export async function POST(request: NextRequest) {
               }
             }
 
-            if (toolError || !result) {
+            if (toolError || !result || mcpIsError(result)) {
+              const errMsg =
+                toolError?.message ??
+                (result ? mcpErrorText(result) : null) ??
+                'tool returned no result';
+
               // PostToolUseFailure hook fire-site.
               // Non-decisional. Hooks may forward the failure to an
               // external incident channel ("xsiam tool errored on
@@ -4505,15 +4549,12 @@ export async function POST(request: NextRequest) {
                   sessionId,
                   toolName,
                   args: toolArgs as Record<string, unknown>,
-                  error:
-                    toolError?.message ?? 'tool returned no result',
+                  error: errMsg,
                   durationMs: Date.now() - toolStartedAt,
                   trigger,
                 },
                 trigger,
               );
-              const errMsg =
-                toolError?.message ?? 'tool returned no result';
 
               // Record the failure in the
               // connector state machine. We classify auth errors
@@ -4850,12 +4891,24 @@ export async function POST(request: NextRequest) {
         // text. Order matches the on-screen render order so an export
         // reads top-to-bottom like the chat. Each call is best-effort
         // and isolated, so one failure doesn't drop the rest.
+        //
+        // meta.status mirrors the subagent persistence path above
+        // (safePersist(subagentSessionId, {..., meta: {status: toolError
+        // ? 'error' : 'success'}})). Without it, getSessionTelemetry()
+        // in lib/api/sessions.ts has no error signal to read and a
+        // session reload renders every historical tool call as
+        // success — including ones that actually failed mid-turn.
         for (const tc of toolCalls) {
           await safePersist(sessionId, {
             role: 'tool',
-            content: tc.result,
+            content: tc.error ? `Error: ${tc.error}` : tc.result,
             tool_call_id: tc.tool,
-            meta: { tool: tc.tool, args: tc.args },
+            meta: {
+              tool: tc.tool,
+              args: tc.args,
+              status: tc.error ? 'error' : 'success',
+              ...(tc.error ? { error: tc.error } : {}),
+            },
           }, trigger);
         }
         // Always persist an assistant row when there was anything to

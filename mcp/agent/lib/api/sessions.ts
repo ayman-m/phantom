@@ -275,15 +275,14 @@ export async function getSessionTranscript(
  *     persisted. We approximate by pairing consecutive tool messages —
  *     `finishedAt` of call N becomes `startedAt` of call N+1's window;
  *     the displayed duration is "—" rather than wrong.
- *   - Status is always `success` for replayed calls. The chat-route
- *     wraps tool results in `safePersist` only on the success path
- *     (the model already saw the error and responded; we don't keep
- *     a separate persisted error row). If we ever start persisting
- *     `role='tool',meta.status='error'`, this helper will pick that
- *     up automatically (the field is already read below).
+ *   - Status reflects `meta.status` as persisted by the chat route
+ *     (`'error'` when the tool call failed mid-turn, `'success'`
+ *     otherwise — mirrors the subagent persistence path). Defaults to
+ *     `'success'` only when `meta.status` is absent, which covers
+ *     sessions persisted before this field existed.
  *   - Persisted `tool_call_id` is the tool name, not a per-call UUID
  *     (that's a quirk of the chat-route's persistence shape — see
- *     mcp/agent/app/api/chat/route.ts:1613). We mint a synthetic id
+ *     mcp/agent/app/api/chat/route.ts:4854). We mint a synthetic id
  *     `<sessionId>-<index>` so React keys stay stable across renders.
  */
 export async function getSessionTelemetry(

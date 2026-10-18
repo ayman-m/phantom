@@ -379,6 +379,7 @@ export default function ArchitectureGuide() {
  <KnowledgePipeline />
  <SkillCatalogue />
  <SkillActivation />
+ <AnalyticsCoverage />
  {/* Slash & Plan */}
  <SlashCommands />
  <PlanMode />
@@ -6387,8 +6388,9 @@ function SkillCatalogue() {
  tools (which are runnable code), skills are{" "}
  <em>guidance</em> — they tell the agent &ldquo;when X, do
  Y&rdquo; in natural language. Three categories live under{" "}
- <Code>bundles/spark/mcp/skills/</Code>: foundation (5 skills),
- scenarios (12), workflows (3) — 20 skills total. Each MD file
+ <Code>bundles/spark/mcp/skills/</Code>: foundation (7 skills),
+ scenarios (9), workflows (56, including 50{" "}
+ <Code>trigger_*</Code> detector skills) — 72 skills total. Each MD file
  carries optional YAML frontmatter declaring its category,
  activation triggers, locked state, and loading mode.
  </p>
@@ -6647,6 +6649,236 @@ simulation_skills_activate(name)   -- explicit activation`}</Pre>
  </SubSection>
  </Section>
 );
+}
+
+// ─── Knowledge & Skills: analytics trigger coverage ────────────────
+
+type TriggerRow = { skill: string; detector: string; mitre?: string; status: string };
+
+function TriggerTable({ rows }: { rows: TriggerRow[] }) {
+ return (
+ <table className="w-full text-xs my-2 border-collapse">
+ <thead>
+ <tr style={{ borderBottom: "1px solid var(--glass-border)" }}>
+ <th className="text-left py-1.5 px-2 font-label uppercase tracking-wider text-on-surface-variant">Skill</th>
+ <th className="text-left py-1.5 px-2 font-label uppercase tracking-wider text-on-surface-variant">Detector / alert</th>
+ <th className="text-left py-1.5 px-2 font-label uppercase tracking-wider text-on-surface-variant">MITRE</th>
+ <th className="text-left py-1.5 px-2 font-label uppercase tracking-wider text-on-surface-variant">Status</th>
+ </tr>
+ </thead>
+ <tbody>
+ {rows.map((r) => (
+ <tr key={r.skill} style={{ borderBottom: "0.5px solid var(--glass-border)" }}>
+ <td className="py-1.5 px-2 align-top font-mono text-[11px] text-on-surface-variant">{r.skill}</td>
+ <td className="py-1.5 px-2 align-top">{r.detector}</td>
+ <td className="py-1.5 px-2 align-top text-on-surface-variant/70">{r.mitre || "—"}</td>
+ <td className="py-1.5 px-2 align-top">{r.status}</td>
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ );
+}
+
+const FIRES = "Fires";
+const FIRES_PARTIAL = "Fires (named variant only)";
+const LAND_ONLY = "Lands + models, no confirmed fire";
+
+const WINDOWS_ROWS: TriggerRow[] = [
+ { skill: "trigger_dcsync_alert", detector: "Possible DCSync by an unusual user", mitre: "T1003.006", status: FIRES_PARTIAL },
+ { skill: "trigger_default_account_masquerade_alert", detector: "Masquerading as a default local account", mitre: "T1036", status: FIRES },
+ { skill: "trigger_delegation_to_krbtgt_alert", detector: "User account delegation to KRBTGT", mitre: "T1558", status: FIRES_PARTIAL },
+ { skill: "trigger_excessive_lockouts_alert", detector: "Excessive user account lockouts", mitre: "T1110.003", status: FIRES_PARTIAL },
+ { skill: "trigger_guest_account_enabled_alert", detector: "A user enabled the Windows default Guest account", mitre: "T1078.001", status: FIRES },
+ { skill: "trigger_hidden_user_created_alert", detector: "Suspicious hidden user created", mitre: "T1136", status: FIRES },
+ { skill: "trigger_machine_account_domain_admins_alert", detector: "Machine account added to a domain admins group", mitre: "T1078.002", status: FIRES },
+ { skill: "trigger_multiple_account_deletions_alert", detector: "A user deleted multiple users for the first time", mitre: "T1531", status: FIRES },
+ { skill: "trigger_privileged_certificate_request_alert", detector: "Suspicious privileged certificate request via certificate template", mitre: "ESC8", status: FIRES },
+ { skill: "trigger_privileged_group_add_alert", detector: "User added to a Windows privileged group", mitre: "T1098", status: FIRES_PARTIAL },
+ { skill: "trigger_samaccountname_change_alert", detector: "Suspicious sAMAccountName change", mitre: "CVE-2021-42278", status: FIRES_PARTIAL },
+ { skill: "trigger_shadow_credentials_alert", detector: "Possible shadow credentials addition", mitre: "T1556", status: FIRES },
+ { skill: "trigger_sms_admins_alert", detector: "User added to the SMS Admins local group", mitre: "T1098", status: FIRES_PARTIAL },
+ { skill: "trigger_spoofed_samaccountname_tickets_alert", detector: "TGT / service-ticket request with a spoofed sAMAccountName", mitre: "CVE-2021-42278", status: FIRES },
+ { skill: "trigger_weak_service_tickets_alert", detector: "Abnormal issuance of weakly encrypted service tickets", mitre: "T1558.003", status: FIRES },
+];
+
+const AWS_ROWS: TriggerRow[] = [
+ { skill: "trigger_aws_admin_iam_user_alert", detector: "Administrative IAM User Created with Credentials", mitre: "T1136.003", status: FIRES },
+ { skill: "trigger_aws_backup_vault_policy_alert", detector: "A Backup vault policy was modified", mitre: "T1537", status: FIRES_PARTIAL },
+ { skill: "trigger_aws_bedrock_logging_deleted_alert", detector: "AWS Bedrock model invocation logging deleted", mitre: "T1685.002", status: FIRES },
+ { skill: "trigger_aws_encryption_disabled_alert", detector: "Disable encryption operations", mitre: "T1565", status: FIRES },
+ { skill: "trigger_aws_guardduty_detector_deleted_alert", detector: "AWS GuardDuty detector deletion", mitre: "T1685", status: FIRES },
+ { skill: "trigger_aws_pentest_tool_alert", detector: "Cloud penetration testing tool activity", mitre: "T1204", status: FIRES_PARTIAL },
+ { skill: "trigger_aws_route53_logging_deleted_alert", detector: "Route53 Resolver query-logging deletion by a non-admin identity", mitre: "T1685.002", status: FIRES },
+ { skill: "trigger_aws_s3_public_exposure_alert", detector: "AWS S3 bucket exposed to public access", mitre: "T1685", status: FIRES },
+ { skill: "trigger_aws_security_group_open_alert", detector: "Security Group remote access from an unknown external IP", mitre: "T1686.001", status: FIRES },
+ { skill: "trigger_aws_snapshot_public_alerts", detector: "Cloud snapshot configured / shared for public access (3 alerts)", mitre: "T1537, T1578", status: FIRES },
+];
+
+const AZURE_GCP_ROWS: TriggerRow[] = [
+ { skill: "trigger_azure_ad_conditional_access_policy_removed_alert", detector: "Conditional Access policy removed", mitre: "T1556.009", status: FIRES },
+ { skill: "trigger_azure_ad_federation_modified_alert", detector: "Successful Azure domain federation settings modification", mitre: "T1484", status: FIRES },
+ { skill: "trigger_azure_ad_pim_alert_disabled_alert", detector: "Azure AD PIM alert disabled", mitre: "T1484", status: FIRES },
+ { skill: "trigger_azure_ad_pim_role_settings_alert", detector: "Azure AD PIM role settings change", mitre: "T1548", status: FIRES },
+ { skill: "trigger_azure_ad_unverified_domain_alert", detector: "Rare unverified domain addition to Azure AD", mitre: "T1098.001", status: FIRES },
+ { skill: "trigger_gcp_data_asset_public_alert", detector: "GCP data asset shared public", mitre: "T1685", status: FIRES },
+ { skill: "trigger_gcp_k8s_anonymous_alert", detector: "Kubernetes API operation by an anonymous user outside the cluster", mitre: "T1078.001", status: "Fires (5-day dedup)" },
+ { skill: "trigger_gcp_k8s_vuln_scanner_alert", detector: "External Kubernetes vulnerability scanning tool usage", mitre: "T1610", status: FIRES },
+ { skill: "trigger_gcp_sensitive_role_to_group_alert", detector: "GCP sensitive role granted to a group", mitre: "T1098.003", status: FIRES },
+ { skill: "trigger_cloud_new_admin_identity_alert", detector: "New cloud identity created with administrative policy (AWS + GCP)", mitre: "T1136.003", status: FIRES },
+ { skill: "trigger_cloud_tor_api_call_alerts", detector: "Suspicious API call from a Tor exit node (AWS + GCP)", mitre: "T1090.003", status: "Fires (occasional miss)" },
+];
+
+const OKTA_ROWS: TriggerRow[] = [
+ { skill: "trigger_okta_fastpass_phishing_alert", detector: "Okta FastPass reported phishing attack suspected", mitre: "T1566", status: "Fires — HTTP/Cribl route only" },
+ { skill: "trigger_okta_first_sso_access_alert", detector: "Abnormal first access to a resource via SSO in the organization", mitre: "T1078.002", status: FIRES_PARTIAL },
+ { skill: "trigger_okta_mfa_bombing_alert", detector: "Multiple Okta MFA requests sent to a user with unusual characteristics", mitre: "T1586", status: FIRES_PARTIAL },
+ { skill: "trigger_okta_tor_signin_alert", detector: "A successful SSO sign-in from TOR", mitre: "T1090.003", status: "Fires — Cribl route only" },
+];
+
+const NETWORK_ROWS: TriggerRow[] = [
+ { skill: "trigger_failed_connections_alert", detector: "Failed Connections", mitre: "T1018", status: "Fires — established host only" },
+ { skill: "trigger_large_upload_alert", detector: "Large Upload (Generic)", status: FIRES_PARTIAL },
+ { skill: "trigger_large_upload_https_alert", detector: "Large Upload (HTTPS)", mitre: "T1048", status: FIRES },
+ { skill: "trigger_network_analytics_alerts", detector: "Spam Bot Traffic / Suspicious SMB from a DC (multi-detector)", status: "Fires — needs sustained traffic / outside 7-day dedup" },
+ { skill: "trigger_port_scan_analytics", detector: "Suspicious port scan (+ variants)", mitre: "T1046", status: FIRES },
+ { skill: "trigger_smb_sweep_alert", detector: "Abnormal SMB activity to multiple hosts", mitre: "T1021", status: "Fires — established host only" },
+ { skill: "trigger_uncommon_ssh_alert", detector: "Uncommon SSH session established (3 variants)", mitre: "T1071", status: "Fires — established host only" },
+ { skill: "trigger_spam_bot_alert", detector: "Spam Bot Traffic", mitre: "T1496", status: FIRES },
+];
+
+const LAND_ONLY_ROWS: TriggerRow[] = [
+ { skill: "trigger_identity_analytics", detector: "Identity/SSO analytics family (Tor sign-in, SSO brute force, impossible traveler) over Entra ID sign-in CEF", status: LAND_ONLY },
+ { skill: "trigger_kubernetes_analytics", detector: "AKS analytics family (anonymous secrets access, Tor API call, privileged pod, cluster-role-binding changes)", status: LAND_ONLY },
+];
+
+function AnalyticsCoverage() {
+ return (
+ <Section id="analytics-coverage" icon="radar" title="Analytics Trigger Coverage">
+ <p>
+ 50 of the 56 <Code>workflows</Code> skills (filenames{" "}
+ <Code>trigger_*_alert.md</Code>) exist for one purpose each: make a
+ specific Cortex XSIAM analytics detector or correlation rule fire,
+ on a live lab tenant, from synthetic telemetry Phantom generated —
+ not a guess at what should work, a replayed-and-observed result.
+ Each skill was built by reading the detector&apos;s own documented
+ trigger condition (or its modeling rule), shaping an event sequence
+ to match, firing it against a lab tenant, and recording whether an
+ alert actually landed, how long it took, and which near-identical
+ variant stayed silent. The table below is that record, grouped by
+ data feed. &ldquo;Fires&rdquo; means a live alert was observed;
+ where only a named variant fires (e.g. one severity tier of a
+ family) or a precondition is required, the status says so.
+ </p>
+
+ <SubSection icon="shield_lock" title="Windows identity (WEC / Cribl only — 15 skills)">
+ <div className="rounded-lg border border-tertiary/30 bg-tertiary/5 p-3 mt-3 mb-3 text-sm">
+ None of these 15 detectors fire over plain syslog/CEF, at any
+ field-mapping quality. The gate is <Code>_collector_type =
+ &quot;WEC&quot;</Code>, which only a real Windows Event
+ Collector delivery (the <Code>wec-sender</Code> connector) or
+ the Cribl Windows-events path stamps — a CEF extension of the
+ same name is shadowed, not honoured. This is a routing
+ constraint, not a mapping defect; see the data-sources WEC
+ delivery option for the two reachable routes.
+ </div>
+ <TriggerTable rows={WINDOWS_ROWS} />
+ </SubSection>
+
+ <SubSection icon="cloud" title="AWS CloudTrail, via Cribl (10 skills)">
+ <TriggerTable rows={AWS_ROWS} />
+ </SubSection>
+
+ <SubSection icon="cloud" title="Azure AD audit + GCP Cloud Audit, via Cribl (11 skills)">
+ <TriggerTable rows={AZURE_GCP_ROWS} />
+ </SubSection>
+
+ <SubSection icon="badge" title="Okta, via http-sender (4 skills)">
+ <p className="text-sm text-on-surface-variant">
+ Route matters as much as shape here: the same FastPass event
+ sent as syslog/CEF lands and models identically to the HTTP
+ route, but only the HTTP/Cribl delivery raises the alert.
+ </p>
+ <TriggerTable rows={OKTA_ROWS} />
+ </SubSection>
+
+ <SubSection icon="router" title="Network / firewall — PAN &amp; FortiGate traffic (8 skills)">
+ <p className="text-sm text-on-surface-variant">
+ These profile a host or address against its <em>own</em>{" "}
+ history. A brand-new synthetic IP with no history does not
+ fire Failed Connections, Uncommon SSH or SMB Sweep even after
+ 20 days of back-dated ordinary traffic is seeded in first —
+ use one of the organization&apos;s long-running hosts, not an
+ arbitrary fresh persona.
+ </p>
+ <TriggerTable rows={NETWORK_ROWS} />
+ </SubSection>
+
+ <SubSection icon="hourglass_top" title="Authored, not yet confirmed firing (2 skills)">
+ <p className="text-sm text-on-surface-variant">
+ Both land and model correctly (verified via XQL) but have not
+ produced a live alert in testing — expected if they are still
+ inside their documented activation/training window, but
+ unconfirmed either way. Treat as authored, not proven.
+ </p>
+ <TriggerTable rows={LAND_ONLY_ROWS} />
+ </SubSection>
+
+ <SubSection icon="warning" title="Known gaps">
+ <ul className="list-disc pl-6 space-y-1.5 text-sm">
+ <li>
+ <strong>Scenario skills don&apos;t call the trigger skills.</strong>{" "}
+ The 9 multi-stage scenario skills (
+ <Code>bundles/spark/mcp/skills/scenarios/</Code>) build
+ attack-shaped chains across several feeds for narrative
+ realism; none of them reference a <Code>trigger_*</Code> skill
+ by name. A scenario guarantees a believable story, not a
+ guaranteed alert — pair one with the matching{" "}
+ <Code>trigger_*</Code> skill when the alert itself is the point.
+ </li>
+ <li>
+ <strong>The Windows identity family needs WEC or Cribl.</strong>{" "}
+ 15 of the 50 detector skills are unreachable over syslog/CEF
+ at any mapping quality (see the callout above).
+ </li>
+ <li>
+ <strong>Firewall-shape detectors need an established host.</strong>{" "}
+ Failed Connections, Uncommon SSH and SMB Sweep profile a
+ host&apos;s own history; a fresh synthetic IP does not fire
+ them even with weeks of seeded back-dated traffic.
+ </li>
+ <li>
+ <strong>Two detectors need a precondition the obvious replay misses:</strong>{" "}
+ Spam Bot Traffic does not fire from one instantaneous burst
+ (needs sustained traffic); Suspicious SMB Connection From
+ Domain Controller has a 7-day per-source dedup, so a repeat
+ inside that window is silent.
+ </li>
+ <li>
+ <strong>Cross-source case merging is unconfirmed.</strong>{" "}
+ The Cloud Identity Engine SCIM pairing (see{" "}
+ <Code>#organization</Code>) now links an AD-style login to an
+ Okta-style email for every person, which is what Cortex needs
+ to group alerts from different sources under one case — but no
+ test run has yet produced both an Okta-side and an AD/network-
+ side alert for the same identity to confirm the merge actually
+ happens.
+ </li>
+ <li>
+ <strong>Identity/field binding from the organization is name-
+ pattern matched, not exhaustive.</strong>{" "}
+ (see <Code>#organization</Code> and{" "}
+ <Code>bundles/spark/connectors/xlog/src/org_defaults.py</Code>)
+ — a field whose name the classifier doesn&apos;t recognize as a
+ user/host/IP/email/UPN keeps xlog&apos;s own generic fallback
+ value instead of an organization identity. Observed on a WAF
+ scenario where an unrecognized field carried a generic name
+ instead of a real person.
+ </li>
+ </ul>
+ </SubSection>
+ </Section>
+ );
 }
 
 // ─── Connectors & Extensions: marketplace ──────────────────────────

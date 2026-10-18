@@ -1,0 +1,119 @@
+# cie-sender: provisions a synthetic directory into a Palo Alto Networks Cloud Identity Engine (CIE) SCIM directory.
+#
+# Cortex XSIAM takes its directory context from a paired CIE (the pan_dss_raw dataset), and its Identity Analytics
+# detectors are not active without one. CIE accepts a directory over SCIM 2.0 (RFC 7643/7644): the operator adds a SCIM
+# directory (client type Others) in the CIE app, which shows a Base URL and generates a static bearer token. This
+# connector is the SCIM client: it creates and updates users and groups there the way an identity provider's
+# provisioning service does (filtered GET, POST, path-based PATCH, DELETE), so no directory server, Cloud Identity
+# Agent or Windows host is needed.
+#
+# The directory is the ACTIVE ORGANIZATION (the Organization page): the same people, accounts and logins the Okta, Windows,
+# firewall and cloud logs are generated for, with departments, managers and groups, so Cortex joins directory context to
+# the users already in the logs.
+# Every object carries an externalId starting `phantom:`; nothing else is changed or deleted.
+
+id: "cie-sender"
+version: "0.1.0"
+description: "Provision the active organization (its users, separate admin accounts, managers, departments and groups) into a Cloud Identity Engine SCIM directory, so Cortex XSIAM gets directory context in pan_dss_raw and its Identity Analytics prerequisite. Change users and memberships to simulate directory events, and remove everything it created."
+displayName: "CIE Sender (Cloud Identity Engine SCIM)"
+tags: ["scim", "cloud-identity-engine", "identity", "directory", "xsiam"]
+logo: "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMxYjI2NDQiLz48Y2lyY2xlIGN4PSIyNCIgY3k9IjI0IiByPSI3IiBmaWxsPSIjOWZjM2ZmIi8+PHBhdGggZD0iTTEyIDQ0YzAtNyA1LTExIDEyLTExczEyIDQgMTIgMTEiIGZpbGw9IiM5ZmMzZmYiLz48Y2lyY2xlIGN4PSI0NCIgY3k9IjI2IiByPSI1IiBmaWxsPSIjZjJiODRiIi8+PHBhdGggZD0iTTM2IDQ0YzAtNSA0LTggOC04czggMyA4IDgiIGZpbGw9IiNmMmI4NGIiLz48L3N2Zz4="
+
+source:
+  language: "python"
+  entrypoint: "src.connector"
+
+runtimeMapping:
+  style: "container"
+  functionPrefix: "phantom_"
+
+executionMode: "persistent"
+
+configSchema:
+  type: "object"
+  required: ["scimBaseUrl"]
+  properties:
+    scimBaseUrl:
+      type: "string"
+      widget: "url"
+      description: "The SCIM directory's Base URL, exactly as the Cloud Identity Engine app shows it (Directory Sync > Directories > Add New Directory > Cloud Directory > SCIM). Must be https."
+      default: ""
+    organization:
+      type: "string"
+      description: "Which organization to provision. Leave empty to follow the active organization (the Organization page), or enter an organization id to pin this instance to one."
+      default: ""
+    userNameStyle:
+      type: "string"
+      enum: ["sam", "dotted"]
+      description: "userName form: sam (nalharbi@phantom.lab, the login Windows events carry) or dotted (noura.alharbi@phantom.lab, the form the Okta and cloud profiles use). Emails are always dotted. Do not change it on a provisioned directory: a new style makes a second set of users."
+      default: "sam"
+    verifyTls:
+      type: "boolean"
+      description: "Verify the SCIM server's TLS certificate. Turn off only behind a TLS-inspecting proxy."
+      default: true
+    timeoutSeconds:
+      type: "number"
+      description: "Per-request timeout in seconds."
+      default: 20
+
+secretSlots:
+  - name: "scimToken"
+    description: "The SCIM directory's static bearer token (Generate Token in the CIE app; shown once). Sent only as the Authorization: Bearer header."
+    required: true
+
+spec:
+  tools:
+    - name: "test_connection"
+      method: "GET /Users"
+      description: "Check that the SCIM Base URL and bearer token work, with a filtered GET /Users. Changes nothing. Use it first after creating or changing the instance."
+      args: []
+      returns:
+        description: "{ok, host, http_status, users_total, phantom_user_found} or {ok: false, error, http_status, hint}"
+    - name: "provision_directory"
+      method: "POST /Users, POST /Groups, PATCH"
+      description: "Create or update the active organization's directory in the Cloud Identity Engine SCIM directory: every person's account and the separate adm. account of each administrator, the service and break-glass accounts (a leaver is provisioned disabled), with departments, titles, managers and the organization's groups. To change who is in it, edit the organization, then run this again. Safe to repeat: missing users are created, Phantom-made ones updated, members added; anything it did not create is left alone."
+      args:
+        - {name: "dry_run", type: "boolean", description: "Return the directory that would be provisioned, with no SCIM call."}
+        - {name: "user_name_style", type: "string", description: "sam (default, nalharbi@phantom.lab) or dotted (noura.alharbi@phantom.lab). Default: the instance's userNameStyle. Never switch on a provisioned directory."}
+        - {name: "include_service_accounts", type: "boolean", description: "Also provision the organization's service accounts and the break-glass account (default true)."}
+      returns:
+        description: "{ok, dry_run, host, domain, user_name_style, users: {created, updated, unchanged, skipped, failed}, groups: {created, existing, skipped, failed}, members_added, errors, calls, next_step}; with dry_run {ok, dry_run, directory: {domain, user_name_style, users, groups}}"
+    - name: "list_directory"
+      method: "GET /Users | GET /Groups"
+      description: "One page of the users or groups in the SCIM directory, as summaries (id, userName or name, title, department, manager id, active, member count, whether Phantom made it)."
+      args:
+        - {name: "resource", type: "string", description: "Users (default) or Groups."}
+        - {name: "filter", type: "string", description: "Optional SCIM filter, e.g. userName eq \"nalharbi@phantom.lab\" or displayName eq \"Domain Admins\"."}
+        - {name: "count", type: "integer", description: "Page size, 1-200 (default 50)."}
+        - {name: "start_index", type: "integer", description: "1-based index of the first result (default 1)."}
+      returns:
+        description: "{ok, resource, total, start_index, items}"
+    - name: "update_user"
+      method: "PATCH /Users/{id}"
+      description: "Change one Phantom-provisioned user to simulate a directory change: a promotion (title), a move (department, manager), a renamed account (display name) or a disabled account (active false). Users not made by Phantom are refused."
+      args:
+        - {name: "user_name", type: "string", required: true, description: "userName (nalharbi@phantom.lab) or the login alone (nalharbi)."}
+        - {name: "title", type: "string", description: "New job title."}
+        - {name: "department", type: "string", description: "New department."}
+        - {name: "display_name", type: "string", description: "New display name."}
+        - {name: "manager", type: "string", description: "userName or login of the new manager."}
+        - {name: "active", type: "boolean", description: "false disables the account, true enables it."}
+      returns:
+        description: "{ok, user_name, id, changed} or {ok: false, error}"
+    - name: "set_group_membership"
+      method: "PATCH /Groups/{id}"
+      description: "Add a user to a group or remove them from it, e.g. a user added to Domain Admins. Groups not made by Phantom are refused."
+      args:
+        - {name: "group", type: "string", required: true, description: "The group's name (displayName), e.g. Domain Admins."}
+        - {name: "user_name", type: "string", required: true, description: "The member's userName or login."}
+        - {name: "action", type: "string", description: "add (default) or remove."}
+        - {name: "create_group", type: "boolean", description: "Create the group when it does not exist (add only). Default false."}
+      returns:
+        description: "{ok, group, group_id, user_name, action, changed} or {ok: false, error}"
+    - name: "remove_provisioned"
+      method: "DELETE /Users/{id}, DELETE /Groups/{id}"
+      description: "DESTRUCTIVE: delete every user and group Phantom made (externalId starting phantom:, or, when the server keeps no externalId, a name the provisioned directory uses) from the SCIM directory. Without confirm=true it only counts them. Set confirm=true only when the operator has explicitly asked to remove the provisioned directory."
+      args:
+        - {name: "confirm", type: "boolean", description: "Must be true to delete; default false reports the counts only."}
+      returns:
+        description: "{ok, confirmed, users, groups, deleted_users, deleted_groups, errors}"

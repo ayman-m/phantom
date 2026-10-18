@@ -419,6 +419,17 @@ function JobCard({
               >
                 {stateLabel(displayState)}
               </span>
+              {job.last_status === "failure" && (
+                // `stateLabel`/`stateBadge` read only `JobState` (ACTIVE/PAUSED/COMPLETED),
+                // never `job.last_status`, so a one-shot job whose only run errored still
+                // showed a plain "Completed" badge here with nothing to flag the failure —
+                // the Failed filter chip found it correctly, but scanning the default "All"
+                // list gave no visual signal at all. Mirrors the detail page's `statusColor`
+                // treatment for `last_status === "failure"`.
+                <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-tighter border text-error bg-error/15 border-error/25">
+                  Failed
+                </span>
+              )}
               {job.source === "runtime" && (
                 <SourceBadge source="runtime" />
               )}

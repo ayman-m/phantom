@@ -3365,6 +3365,27 @@ disabled        ── set with the Disable button on this page: a label only; t
                 </li>
               </ul>
             </SubSection>
+
+            <SubSection icon="checklist" title="Which skills are proven to fire something">
+              <p>
+                Phantom ships 50 skills that each target one named
+                analytics alert or correlation rule, built by testing
+                against a live Cortex tenant rather than guessing at
+                what should work. Most fire reliably; some only fire for
+                a specific variant, need an established host with real
+                history, or require delivery over Windows Event
+                Collector instead of plain syslog. The full breakdown —
+                which skill, which alert, what it takes, and what still
+                doesn&apos;t fire — is in the architecture reference at{" "}
+                <Link
+                  href="/help/architecture#analytics-coverage"
+                  className="link"
+                >
+                  Architecture → Analytics Trigger Coverage
+                </Link>
+                .
+              </p>
+            </SubSection>
           </Section>
 
           <Section id="marketplace" icon="storefront" title="Marketplace">

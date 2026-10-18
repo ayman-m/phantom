@@ -1,0 +1,164 @@
+schema_version: 1
+id: MicrosoftADFS
+pack_name: MicrosoftADFS
+rule_name: MicrosoftADFSWEC
+dataset_name: microsoft_adfs_raw
+vendor: Microsoft
+product: MicrosoftADFS WEC
+delivery: wec
+description: 'The WEC-delivery variant of Microsoft Active Directory Federation Services audit events
+  (same dataset, `microsoft_adfs_raw`, as the syslog/CEF ADFS source): structured Windows events
+  delivered by the `wec-sender` connector to the Broker VM''s Windows Event Collector applet over
+  WS-Management instead of syslog/CEF. The dataset''s real parsing rule claims `microsoft`/`windows`
+  and gates on `_collector_type = "WEC"` plus the `AD FS Auditing`/`AD FS` provider — a gate no CEF
+  event can clear — so this is the only route that reaches that rule instead of the syslog sibling''s
+  unclaimed-pair bypass.'
+how_to_use: |
+  **Use this source to go through the dataset's real parsing rule, with no derived-route trick.**
+  The syslog/CEF `MicrosoftADFS` source (rule `MicrosoftADFS`) cannot reach `microsoft_adfs_raw`'s
+  real INGEST rule at all — that rule claims `[INGEST: vendor="microsoft", product="windows",
+  target_dataset="microsoft_adfs_raw"]` and filters on `_collector_type = "WEC" AND provider_name IN
+  ("AD FS Auditing", "AD FS")`, neither of which a CEF extension can set. So the CEF sibling instead
+  routes on `microsoft`/`adfs` — a pair no INGEST block claims — relying on the broker's derived-name
+  fallback to land in the same dataset without ever passing through that real rule. A genuine WEC
+  delivery stamps `_collector_type = WEC` for real and sets `provider_name` from this entry's
+  `provider` field, so the real `microsoft`/`windows` rule's filter passes and this is the only
+  catalog entry that exercises it. This is the delivery doctrine's second sanctioned exception (root
+  CLAUDE.md), the same one the syslog sibling's `how_to_use` documents under "Delivery over a real
+  Windows Event Collector" — this catalog entry formalizes that route as its own `delivery: wec`
+  source instead of a note inside the syslog entry.
+
+  **Syslog/CEF mapping success is not WEC parity.** The syslog sibling already maps 28 `xdm.*` fields
+  from this shape (by the derived-route bypass), and that proves only parsing and modeling. Cortex
+  Analytics/BIOC detectors that depend on a registered Windows source (the Windows identity family,
+  see the `microsoft_windows_raw` WEC source and its `trigger_<scenario>_alert` skills) will NEVER fire
+  from a syslog/CEF delivery, however complete the mapping is: they read a feed that only a real WEC
+  delivery, the native agent, or Cribl with its dedicated source UUID can put them on — a real WEC
+  delivery stamps `_collector_type = WEC`, while a Cribl delivery carries `_transport = cribl` and no
+  `_collector_type` at all, so the detectors' gate is "arrived via a registered Windows source", not
+  literally `_collector_type = WEC`. Either way, `_collector_type` cannot be set from an event body, so
+  no CEF extension, field choice or schema change can reach this family over syslog.
+
+  **Do NOT use `phantom_create_data_worker`, syslog or CEF for this source — use the `wec-sender`
+  connector.** Call `wec-sender.list_subscriptions` first (proves the client certificate, its CA and
+  the connection; look for a subscription whose channels include Security), then `wec-sender.send_events`
+  with the shape below.
+
+  ## Shape the applet accepts
+
+  Provider `AD FS Auditing`, event ids **1200-1207** (or **510**), with **POSITIONAL** (unnamed) Data
+  nodes — pass `event_data` as a JSON **array**, not an object. The applet turns the array into
+  `event_data.param1..param15`, which is exactly what the modeling rule (research snapshot
+  `MicrosoftADFS_1_3`, bound to `microsoft_adfs_raw`) reads: put a GUID in the first node, the audit
+  XML in the second, and `-` in every other one (the rule's own `if(raw_param_N = "-", replace(...),
+  ...)` branches treat `-` as the vendor's "unused" filler — omitting a member instead of filling it
+  with `-` nulls the whole 15-field concatenation the rule builds, and everything after it).
+
+  **The audit XML in element 1 (`param2`) must start with `<?xml `** and carry these tags, exactly as
+  the syslog sibling's own `how_to_use` documents for the identical rule: `<AuditType>`, `<UserId>`,
+  `<MfaMethod>`, `<DeviceId>`, `<Server>`, `<AuthProtocol>`, `<IpAddress>`, `<ForwardedIpAddress>`,
+  `<UserAgentString>`. These drive `xdm.source.user.upn` (from a `<UserId>` containing `@`),
+  `xdm.auth.auth_method`, `xdm.source.host.device_id`, `xdm.target.url` (from `<Server>`, not
+  `<Endpoint>`), `xdm.network.application_protocol`, `xdm.source.ipv4` (from `<ForwardedIpAddress>`)
+  and `xdm.intermediate.ipv4` (from `<IpAddress>`, when it differs from `<ForwardedIpAddress>`) and
+  `xdm.source.user_agent`. Without the `<?xml ` prefix every one of these regex extractions matches
+  null — many of the 28 `xdm.*` fields a correct WEC delivery populates (the syslog sibling's
+  measured result for the same rule) depend on it; verify them the same way the sibling does, over
+  at least 20 rows.
+
+  None of 1200-1207/510 is one of the connector's natively-catalogued Windows logon ids
+  (4624/4625/4634/4672) — AD FS event ids are not in the connector's own event catalogue at all, so
+  `wec-sender` itself rejects the `send_events` call before anything is sent unless `provider`,
+  `rendering.message` and `rendering.task` are all supplied for every AD FS event.
+
+  Their content is NOT decorative. The modeling rule reads `message` directly — once for
+  `xdm.event.description`, and again via an `"Account Name: (\S+)"` regex, which TAKES PRIORITY over
+  the audit XML's `<UserId>` for `xdm.source.user.username` (the `<UserId>` match is only the
+  fallback when `message` carries no Account Name line, and the rule's most-preferred source, a
+  `user` JSON column with `name`/`identifier`/`domain`/`type`, is not a field `wec-sender.send_events`
+  lets you set at all). Give `rendering.message` the vendor's own `"Account Name: <value>"` line — the
+  same convention the syslog sibling's `message` field example uses — when you need username to
+  populate this way. `rendering.task` becomes the `event_action` column, which the rule also folds
+  into the event's original-type derivation — give it real, specific text rather than a placeholder.
+categories:
+- Analytics & SIEM
+version: 1.0.0
+origin: bundle
+author: phantom-bundle
+uploaded_by: null
+created_at: '2026-10-14T00:00:00Z'
+updated_at: '2026-10-14T00:00:00Z'
+formats:
+- WINEVENT
+is_rawlog_only: false
+fields:
+- name: event_id
+  type: integer
+  description: AD FS Auditing event id — one of 1200-1207, or 510. Not one of the wec-sender
+    connector's natively-catalogued Windows logon ids, so provider and rendering.message/rendering.task
+    are also required.
+  example: '1202'
+- name: computer
+  type: host
+  description: Host name (short or FQDN) of the ADFS server the event claims to come from.
+  example: PHADFS01.phantom.lab
+- name: provider
+  is_gate: true
+  type: string
+  description: The ADFS parsing rule's INGEST filter requires provider_name = "AD FS Auditing" or
+    "AD FS" (plus _collector_type = "WEC", which only a real WEC delivery stamps) before the event
+    is even considered for microsoft_adfs_raw; any other value is dropped.
+  example: AD FS Auditing
+- name: channel
+  type: string
+  description: Windows Event Log channel.
+  example: Security
+- name: time
+  type: datetime
+  description: Event time (ISO-8601 UTC, epoch seconds, or a relative token the connector resolves
+    with its own clock, e.g. "now-300s"). Becomes the event's TimeCreated and therefore _time.
+  example: '2026-10-14T09:15:42Z'
+- name: event_data
+  type: json
+  description: 'POSITIONAL (unnamed) Data nodes as a JSON ARRAY of 15 strings. Element 0 is a GUID,
+    element 1 (param2) is the audit XML payload and MUST start with "<?xml " or every tag the
+    modeling rule regex-extracts from it (AuditType, UserId, MfaMethod, DeviceId, Server,
+    AuthProtocol, IpAddress, ForwardedIpAddress, UserAgentString) matches null, elements 2-14 MUST be
+    the literal "-" filler (never omitted) -- the applet maps the array 1:1 to
+    event_data.param1..param15, which is what the modeling rule''s 15-field concatenation reads.'
+  example: '[]'
+- name: rendering.message
+  type: string_long
+  description: 'Rendered description text (RenderingInfo/Message). Required by the wec-sender
+    connector to build valid Event XML for this event_id (AD FS is not in the connector''s own event
+    catalogue, so provider/rendering.message/rendering.task must all be supplied or the call is
+    rejected before anything is sent). Load-bearing, not decorative: the modeling rule reads it
+    directly for xdm.event.description, and again via an "Account Name: (\S+)" regex that TAKES
+    PRIORITY over the audit XML''s <UserId> for xdm.source.user.username (the rule''s most-preferred
+    source, a user JSON column, is not settable via send_events at all). Give it the vendor''s own
+    "Account Name: <value>" line when you need username to populate this way.'
+  example: 'Account Name: ahmed.saleh'
+- name: rendering.task
+  type: string_short
+  description: Rendered Task text (RenderingInfo/Task), required by the wec-sender connector for this
+    event_id. Becomes the event_action column, which the modeling rule folds into the event's
+    original-type derivation — give it real, specific text rather than a placeholder. No confirmed
+    real AD FS Task string is available here, so no example is given; do not invent one and treat it
+    as authoritative.
+- name: outcome
+  type: enum
+  enum_values:
+  - success
+  - failure
+  description: Operation outcome. Drives the applet's RenderingInfo/Keywords ("Audit Failure" vs
+    "Audit Success"), which the applet turns into the event_result column, which the modeling rule
+    maps to xdm.event.outcome.
+  example: success
+- name: record_id
+  type: integer
+  description: Windows Event record id (System/EventRecordID). Optional.
+  example: 88301
+use_cases:
+- Cloud
+- SaaS
+- Identity
