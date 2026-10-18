@@ -41,7 +41,7 @@ Phantom runs as a Docker Compose stack:
 | `phantom-updater` | Starts, stops and reconciles the per-instance connector containers. It has no host port. | none |
 | `phantom-browser` | A headless browser sidecar for the `web` connector. Optional (compose profile `browser`). | internal |
 
-Connectors (`xlog`, `xsiam`, `caldera`, `cortex-content`, `cortex-docs`, `cortex-xdr`, `web`, `http-sender`, `wec-sender`) each run in their own container, one per instance, and are installed from the in-app marketplace. Provider credentials, connector secrets and API keys live in an encrypted secret store that the agent has no tools to read or write; you manage them in the UI.
+Connectors (`xlog`, `xsiam`, `caldera`, `cortex-content`, `cortex-docs`, `cortex-xdr`, `web`, `http-sender`, `wec-sender`, `cie-sender`) each run in their own container, one per instance, and are installed from the in-app marketplace. Provider credentials, connector secrets and API keys live in an encrypted secret store that the agent has no tools to read or write; you manage them in the UI.
 
 The in-product Architecture and User guides (`/help/architecture`, `/help/user`) are the detailed reference, and [`docs/architecture.md`](docs/architecture.md) has diagrams of the deployment topology and the runtime data flow.
 
