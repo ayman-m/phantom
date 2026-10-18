@@ -37,6 +37,10 @@ Inherits from the `phantom-connector-runtime` base (`../../../phantom-connector-
 
 `FROM ghcr.io/ayman-m/phantom-connector-runtime-oss:latest`. The release pipeline builds + tags each connector image at release time.
 
+## 6. Register the new connector in the publish pipeline (MANDATORY — a NEW bundle connector only)
+
+`.github/scripts/publish-images.sh`'s `CONNECTORS=(...)` array is hardcoded — a connector missing from it is silently left out of every release image. The workflow run completes with `success` and simply never builds it; nothing in the log names the missing connector. Add the new `<id>` to that array, then update every hardcoded package/retag/build count in that script AND `.github/scripts/test-publish-images.sh` (total packages, buildable packages, retag-list sizes — about ten separate assertions shift by one). Run `bash .github/scripts/test-publish-images.sh` and confirm 0 failures before trusting a release to pick up the new connector.
+
 ## Catalog vs credential boundary check (MANDATORY)
 
 Before merging, ask BOTH questions about every tool the connector exposes:
