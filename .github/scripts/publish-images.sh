@@ -71,6 +71,21 @@ spec_of() { local e; for e in "${BUILD_SPEC[@]}"; do [ "${e%%|*}" = "$1" ] && { 
 is_known() { local p; for p in "${ALL_PKGS[@]}"; do [ "$p" = "$1" ] && return 0; done; return 1; }
 # Fails unless every word of the list is a known package; the lists come from earlier steps' outputs.
 check_list() { local w; for w in $1; do is_known "$w" || die "'$w' is not one of the 16 packages"; done; }
+# True (0) when $1 cannot be shown to be new since BASE_TAG -- i.e. it should already have a BASE_TAG image.
+# False (1) only when its own watched paths provably did not exist at v$BASE_TAG (a connector added after that
+# release): git history unreadable, no BUILD_SPEC entry (e.g. a retag-only package), or "always built" all count
+# as "assume known" so this never masks a real problem, it only recognizes a genuinely brand-new package.
+pkg_known_at_base() {
+  local p="$1" e file watch base_ref="refs/tags/v${BASE_TAG-}"
+  git rev-parse -q --verify "${base_ref}^{commit}" >/dev/null 2>&1 || return 0
+  e="$(spec_of "$p")" || return 0
+  IFS='|' read -r _ _ file watch _ <<< "$e"
+  [ "$watch" = always ] && return 0
+  # The package's own Dockerfile is unique to it (unlike its watched paths, which include shared dirs such as the
+  # runtime base image that any connector's base_tag commit also has) -- its presence is what "existed" means here.
+  git cat-file -e "${base_ref}:${file}" 2>/dev/null && return 0
+  return 1
+}
 
 cmd_validate() {
   [[ "${TAG-}" =~ $TAG_RE ]] || die "tag must match $TAG_RE (X.Y.Z or X.Y.Z-rcN); got: '${TAG-}'"
@@ -141,7 +156,10 @@ cmd_preflight() {
   for p in "${ALL_PKGS[@]}"; do
     if ! b="$(ref_digest "$(img "$p" "$BASE_TAG")")"; then errors=$((errors + 1)); continue; fi
     if [ "$b" = ABSENT ]; then
-      echo "::error::$p has no $BASE_TAG to retag from or compare against" >&2; errors=$((errors + 1)); continue
+      if pkg_known_at_base "$p"; then
+        echo "::error::$p has no $BASE_TAG to retag from or compare against" >&2; errors=$((errors + 1)); continue
+      fi
+      echo "::notice::$p did not exist at $BASE_TAG: new package, nothing to retag from or compare against"
     fi
     if ! t="$(ref_digest "$(img "$p" "$TAG")")"; then errors=$((errors + 1)); continue; fi
     if [ "$t" != ABSENT ]; then

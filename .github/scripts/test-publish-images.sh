@@ -160,6 +160,22 @@ new_registry 7; export STUB_ERROR_REF="$R/phantom-xlog-oss:latest"
 expect_fail "snapshot fails closed on a registry error for latest" run preflight "$WORK/before7"
 unset STUB_ERROR_REF
 
+# A connector added after base_tag's own release has no base_tag image anywhere -- that is new, not missing.
+new_registry 7b
+mk_repo
+( cd "$SCRATCH" || exit 1
+  git rm -rq bundles/spark/connectors/wec-sender >/dev/null && git commit -q -m "drop wec-sender" \
+  && git tag -f v1.0.3 >/dev/null \
+  && mkdir -p bundles/spark/connectors/wec-sender/src && echo back > bundles/spark/connectors/wec-sender/src/a.py \
+  && git add -A && git commit -q -m "wec-sender added after v1.0.3 (simulates a brand-new connector)" )
+rm -f "$STUB_DIR/$(key "$R/phantom-connector-wec-sender-oss:1.0.3")" \
+      "$STUB_DIR/$(key "$R/phantom-connector-wec-sender-oss:latest")" \
+      "$STUB_DIR/$(key "$R/phantom-connector-wec-sender-oss:1.0")"
+( cd "$SCRATCH" || exit 1; bash -c "$(declare -f run); run preflight \"$WORK/before7b\"" ) >"$WORK/out" 2>&1 \
+  && ok || bad "preflight accepts a package new since base_tag (expected success)"
+grep -q "phantom-connector-wec-sender-oss did not exist at 1.0.3: new package" "$WORK/out" && ok || bad "preflight explains the new package with a notice, not an error"
+grep -q "^phantom-connector-wec-sender-oss	$R/phantom-connector-wec-sender-oss:1.0.3	ABSENT$" "$WORK/before7b" && ok || bad "the new package's base_tag ref is recorded as ABSENT, not refused"
+
 echo "== plan"
 mk_repo
 expect_ok "plan with nothing changed" plan
