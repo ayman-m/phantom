@@ -60,7 +60,7 @@ export PATH="$WORK/bin:$PATH"
 
 R=ghcr.io/ayman-m
 RT=phantom-connector-runtime-oss
-CONNECTOR_PKGS="phantom-connector-xlog-oss phantom-connector-xsiam-oss phantom-connector-caldera-oss phantom-connector-web-oss phantom-connector-cortex-docs-oss phantom-connector-cortex-content-oss phantom-connector-cortex-xdr-oss phantom-connector-http-sender-oss phantom-connector-wec-sender-oss"
+CONNECTOR_PKGS="phantom-connector-xlog-oss phantom-connector-xsiam-oss phantom-connector-caldera-oss phantom-connector-web-oss phantom-connector-cortex-docs-oss phantom-connector-cortex-content-oss phantom-connector-cortex-xdr-oss phantom-connector-http-sender-oss phantom-connector-wec-sender-oss phantom-connector-cie-sender-oss"
 PKGS="phantom-agent-oss phantom-xlog-oss phantom-caldera-oss phantom-updater-oss phantom-browser-oss $RT $CONNECTOR_PKGS"
 
 PASS=0; FAIL=0
@@ -101,7 +101,7 @@ mk_repo() {
   rm -rf "$SCRATCH"; mkdir -p "$SCRATCH"; ( cd "$SCRATCH" || exit 1
     git init -q . && git config user.email t@example.invalid && git config user.name t
     mkdir -p mcp/agent xlog updater phantom-browser phantom-connector-runtime
-    for c in xlog xsiam caldera web cortex-docs cortex-content cortex-xdr http-sender wec-sender; do mkdir -p "bundles/spark/connectors/$c/src"; echo "$c" > "bundles/spark/connectors/$c/src/a.py"; done
+    for c in xlog xsiam caldera web cortex-docs cortex-content cortex-xdr http-sender wec-sender cie-sender; do mkdir -p "bundles/spark/connectors/$c/src"; echo "$c" > "bundles/spark/connectors/$c/src/a.py"; done
     echo a > mcp/agent/a; echo a > xlog/a; echo a > updater/a; echo a > phantom-browser/a; echo a > phantom-connector-runtime/a
     git add -A && git commit -q -m base && git tag v1.0.3 )
 }
@@ -132,12 +132,12 @@ echo "== preflight"
 new_registry 1
 expect_ok "preflight clean registry" run preflight "$WORK/before1"
 n=$(wc -l < "$WORK/before1" | tr -d ' ')
-[ "$n" = 45 ] && ok || bad "snapshot should hold 15 packages x 3 refs (base, latest, X.Y) = 45 lines, got $n"
+[ "$n" = 48 ] && ok || bad "snapshot should hold 16 packages x 3 refs (base, latest, X.Y) = 48 lines, got $n"
 grep -q "^phantom-xlog-oss	$R/phantom-xlog-oss:latest	sha256:latest2$" "$WORK/before1" && ok || bad "snapshot records the latest digest"
 [ ! -s "$STUB_DIR/calls.log" ] && ok || bad "preflight must not write"
 TAG=1.1.0 run preflight "$WORK/before1b" >/dev/null 2>&1
 n=$(wc -l < "$WORK/before1b" | tr -d ' ')
-[ "$n" = 60 ] && ok || bad "when X.Y of tag differs from X.Y of base_tag, both are snapshotted (60 lines), got $n"
+[ "$n" = 64 ] && ok || bad "when X.Y of tag differs from X.Y of base_tag, both are snapshotted (64 lines), got $n"
 
 new_registry 2
 put "$R/phantom-connector-web-oss:1.0.4" "sha256:existing"
@@ -165,8 +165,8 @@ mk_repo
 expect_ok "plan with nothing changed" plan
 [ "$(out_of runtime)" = retag ] && ok || bad "unchanged runtime is retagged, got '$(out_of runtime)'"
 [ "$(out_of built)" = phantom-agent-oss ] && ok || bad "only the agent is built when nothing changed, got '$(out_of built)'"
-[ "$(words "$(out_of retag)")" = 14 ] && ok || bad "14 packages are retagged (everything but the agent), got $(words "$(out_of retag)")"
-[ "$(words "$(out_of retag_rest)")" = 13 ] && ok || bad "13 are retagged by the last job (the runtime is retagged by its own), got $(words "$(out_of retag_rest)")"
+[ "$(words "$(out_of retag)")" = 15 ] && ok || bad "15 packages are retagged (everything but the agent), got $(words "$(out_of retag)")"
+[ "$(words "$(out_of retag_rest)")" = 14 ] && ok || bad "14 are retagged by the last job (the runtime is retagged by its own), got $(words "$(out_of retag_rest)")"
 out_of retag_rest | grep -q "$RT" && bad "retag_rest must not contain the runtime" || ok
 out_of retag_rest | grep -q phantom-caldera-oss && ok || bad "Caldera is always retagged"
 out_of retag_rest | grep -q phantom-agent-oss && bad "the agent is never retagged" || ok
@@ -175,12 +175,12 @@ python3 -c 'import json,sys; m=json.loads(sys.argv[1]); assert [x["pkg"] for x i
 mk_repo; change phantom-connector-runtime/a
 expect_ok "plan after a runtime change" plan
 [ "$(out_of runtime)" = build ] && ok || bad "a runtime change builds the runtime"
-[ "$(words "$(out_of built)")" = 11 ] && ok || bad "runtime + 9 connectors + agent = 11 built, got $(words "$(out_of built)")"
+[ "$(words "$(out_of built)")" = 12 ] && ok || bad "runtime + 10 connectors + agent = 12 built, got $(words "$(out_of built)")"
 python3 - "$(out_of matrix)" <<'PY' && ok || bad "a runtime change builds every connector against the new runtime"
 import json, sys
 m = json.loads(sys.argv[1])
 pk = [x["pkg"] for x in m]
-assert len(m) == 10 and "phantom-agent-oss" in pk and "phantom-connector-runtime-oss" not in pk, pk
+assert len(m) == 11 and "phantom-agent-oss" in pk and "phantom-connector-runtime-oss" not in pk, pk
 for x in m:
     if x["pkg"].startswith("phantom-connector-"):
         assert x["build_args"] == "PHANTOM_RUNTIME_VERSION=1.0.4", x
@@ -208,10 +208,10 @@ expect_ok "plan after an unrelated change" plan
 
 mk_repo
 expect_ok "plan rebuild=all" plan REBUILD=all
-[ "$(out_of runtime)" = build ] && [ "$(words "$(out_of built)")" = 14 ] && [ "$(out_of retag)" = phantom-caldera-oss ] && ok || bad "rebuild=all builds all 14 buildable packages and retags only Caldera: built=$(out_of built) retag=$(out_of retag)"
+[ "$(out_of runtime)" = build ] && [ "$(words "$(out_of built)")" = 15 ] && [ "$(out_of retag)" = phantom-caldera-oss ] && ok || bad "rebuild=all builds all 15 buildable packages and retags only Caldera: built=$(out_of built) retag=$(out_of retag)"
 
 expect_ok "plan without the base git tag builds everything" plan BASE_TAG=9.9.9
-[ "$(words "$(out_of built)")" = 14 ] && ok || bad "no v9.9.9 to compare with: build all 14, got $(words "$(out_of built)")"
+[ "$(words "$(out_of built)")" = 15 ] && ok || bad "no v9.9.9 to compare with: build all 15, got $(words "$(out_of built)")"
 grep -q "^::notice::git tag v9.9.9 is not in this checkout" "$WORK/plan.log" && ok || bad "the missing tag is reported"
 
 plan REBUILD=sometimes >/dev/null 2>&1 && bad "plan rejects an unknown REBUILD" || { grep -q '^::error::rebuild must be' "$WORK/plan.log" && ok || bad "plan rejects an unknown REBUILD with a guard message"; }
@@ -221,7 +221,7 @@ echo "== build spec"
 # A Dockerfile that copies something its package does not watch would let that file change without a rebuild.
 bash "$SCRIPT" spec > "$WORK/spec.txt"
 n=$(wc -l < "$WORK/spec.txt" | tr -d ' ')
-[ "$n" = 14 ] && ok || bad "BUILD_SPEC should list the 14 buildable packages, got $n"
+[ "$n" = 15 ] && ok || bad "BUILD_SPEC should list the 15 buildable packages, got $n"
 python3 - "$REPO_ROOT" "$WORK/spec.txt" > "$WORK/spec.problems" <<'PY'
 import os, re, sys
 root, spec = sys.argv[1:3]
@@ -281,13 +281,13 @@ plan >/dev/null; LIST_REST="$(out_of retag_rest)"; LIST_ALL="$(out_of retag)"; L
 run preflight "$WORK/before8" >/dev/null 2>&1
 expect_ok "retag" with "RETAG_LIST=$LIST_REST" -- bash -c "$(declare -f run); run retag"
 c=$(wc -l < "$STUB_DIR/calls.log" | tr -d ' ')
-[ "$c" = 13 ] && ok || bad "retag should make exactly 13 create calls, got $c"
+[ "$c" = 14 ] && ok || bad "retag should make exactly 14 create calls, got $c"
 grep -q "phantom-agent-oss" "$STUB_DIR/calls.log" && bad "retag must not touch the agent image" || ok
 grep -q "$RT" "$STUB_DIR/calls.log" && bad "retag must not touch the runtime when it is not in the list" || ok
 grep -E -q "(:latest|:1\.0) <-|<- .*(:latest|:1\.0)$" "$STUB_DIR/calls.log" && bad "retag wrote or read latest / X.Y" || ok
 grep -q "create $R/phantom-xlog-oss:1.0.4 <- $R/phantom-xlog-oss:1.0.3" "$STUB_DIR/calls.log" && ok || bad "retag source/destination"
 [ "$(cat "$STUB_DIR/$(key "$R/phantom-xlog-oss:1.0.4")")" = sha256:base2 ] && ok || bad "retagged digest equals the base digest"
-expect_fail "retag rejects a package that is not one of the 15" with "RETAG_LIST=phantom-xlog-oss phantom-other-oss" -- bash -c "$(declare -f run); run retag"
+expect_fail "retag rejects a package that is not one of the 16" with "RETAG_LIST=phantom-xlog-oss phantom-other-oss" -- bash -c "$(declare -f run); run retag"
 expect_ok   "retag with an empty list does nothing" with "RETAG_LIST=" -- bash -c "$(declare -f run); run retag"
 
 new_registry 9
@@ -297,7 +297,7 @@ unset STUB_MUTATE_DEST
 
 echo "== verify"
 verify() { with "BUILT_LIST=${BUILT_OVERRIDE-$LIST_BUILT}" "RETAG_LIST=${RETAG_OVERRIDE-$LIST_ALL}" "$@" -- bash -c "$(declare -f run); run verify $VERIFY_FILE"; }
-# A finished run: the agent was built and pushed, the runtime and the other 13 retagged.
+# A finished run: the agent was built and pushed, the runtime and the other 14 retagged.
 finished_run() {
   new_registry "$1"; VERIFY_FILE="$WORK/before$1"
   run preflight "$VERIFY_FILE" >/dev/null 2>&1
@@ -309,10 +309,10 @@ finished_run 10
 SUM="$WORK/summary10"; : > "$SUM"
 expect_ok "verify happy path" verify "GITHUB_STEP_SUMMARY=$SUM"
 rows=$(grep -c 'ghcr.io/ayman-m/phantom-.*-oss@sha256:' "$SUM" | tr -d ' ')
-[ "$rows" = 15 ] && ok || bad "summary should list 15 digest rows, got $rows"
+[ "$rows" = 16 ] && ok || bad "summary should list 16 digest rows, got $rows"
 grep -q "sha256:newagent" "$SUM" && ok || bad "summary lists the agent digest"
 grep -c "built from this checkout" "$SUM" | grep -q '^1$' && ok || bad "summary marks the built image"
-grep -c "unchanged since 1.0.3, retagged" "$SUM" | grep -q '^14$' && ok || bad "summary marks the 14 retagged images"
+grep -c "unchanged since 1.0.3, retagged" "$SUM" | grep -q '^15$' && ok || bad "summary marks the 15 retagged images"
 
 put "$R/phantom-xlog-oss:latest" "sha256:MOVED"
 expect_fail "verify detects a moved latest" verify
@@ -351,7 +351,7 @@ n=0; for p in $B2; do n=$((n + 1)); put "$R/$p:1.0.4" "sha256:built$n"; done
 RETAG_LIST="$L2R" run retag >/dev/null 2>&1
 SUM="$WORK/summary13"; : > "$SUM"
 expect_ok "verify after a runtime rebuild" with "BUILT_LIST=$B2" "RETAG_LIST=$L2" "GITHUB_STEP_SUMMARY=$SUM" -- bash -c "$(declare -f run); run verify $VERIFY_FILE"
-grep -c "built from this checkout" "$SUM" | grep -q '^11$' && ok || bad "11 built rows after a runtime change"
+grep -c "built from this checkout" "$SUM" | grep -q '^12$' && ok || bad "12 built rows after a runtime change"
 
 echo "== unknown subcommand"
 expect_fail "unknown subcommand" run frobnicate

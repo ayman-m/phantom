@@ -3,7 +3,7 @@
 # a stub `docker` and a scratch git repository; the workflow runs that test before it touches the registry.
 #
 #   validate            check the inputs and that the run is on main of the public repo
-#   preflight FILE      refuse to overwrite a released tag, require base_tag on all 15 packages,
+#   preflight FILE      refuse to overwrite a released tag, require base_tag on all 16 packages,
 #                       and record the digest of base_tag, latest and X.Y per package in FILE
 #   plan                decide, per package, whether TAG is built from this checkout or added to base_tag's image;
 #                       writes runtime=, matrix=, retag=, retag_rest= and built= to $GITHUB_OUTPUT (stdout when unset)
@@ -38,7 +38,7 @@ REGISTRY="ghcr.io/$OWNER"
 # installer/CLAUDE.md.
 RUNTIME_PKG=phantom-connector-runtime-oss
 RUNTIME_DIR=phantom-connector-runtime
-CONNECTORS=(xlog xsiam caldera web cortex-docs cortex-content cortex-xdr http-sender wec-sender)
+CONNECTORS=(xlog xsiam caldera web cortex-docs cortex-content cortex-xdr http-sender wec-sender cie-sender)
 BUILD_SPEC=(
   "phantom-agent-oss|.|mcp/agent/Dockerfile|always|-"
   "$RUNTIME_PKG|$RUNTIME_DIR|$RUNTIME_DIR/Dockerfile|$RUNTIME_DIR|runtime"
@@ -70,7 +70,7 @@ minor_of() { local core="${1%%-*}"; printf '%s' "${core%.*}"; }
 spec_of() { local e; for e in "${BUILD_SPEC[@]}"; do [ "${e%%|*}" = "$1" ] && { printf '%s' "$e"; return 0; }; done; return 1; }
 is_known() { local p; for p in "${ALL_PKGS[@]}"; do [ "$p" = "$1" ] && return 0; done; return 1; }
 # Fails unless every word of the list is a known package; the lists come from earlier steps' outputs.
-check_list() { local w; for w in $1; do is_known "$w" || die "'$w' is not one of the 15 packages"; done; }
+check_list() { local w; for w in $1; do is_known "$w" || die "'$w' is not one of the 16 packages"; done; }
 
 cmd_validate() {
   [[ "${TAG-}" =~ $TAG_RE ]] || die "tag must match $TAG_RE (X.Y.Z or X.Y.Z-rcN); got: '${TAG-}'"
@@ -224,7 +224,7 @@ cmd_smoke() {
 cmd_check_pushed() {
   local pkg="${1:?usage: check-pushed PKG DIGEST}" want="${2:?usage: check-pushed PKG DIGEST}" now
   cmd_validate
-  is_known "$pkg" || die "'$pkg' is not one of the 15 packages"
+  is_known "$pkg" || die "'$pkg' is not one of the 16 packages"
   [[ "$want" =~ $DIGEST_RE ]] || die "digest must be sha256:...; got: '$want'"
   now="$(ref_digest "$(img "$pkg" "$TAG")")" || die "cannot read $pkg:$TAG"
   [ "$now" = "$want" ] || die "$pkg:$TAG is $now but the build pushed $want"
